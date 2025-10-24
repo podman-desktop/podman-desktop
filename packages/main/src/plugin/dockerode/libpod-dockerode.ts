@@ -363,6 +363,7 @@ export interface LibPod {
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
   podmanRemoveManifest(manifestName: string): Promise<void>;
   updateNetwork(networkId: string, addDNSServer: string[], removeDNSServer: string[]): Promise<void>;
+  pullImage(repoTag: string, options?: { tlsVerify?: boolean }): Promise<NodeJS.ReadableStream>;
 }
 
 // change the method from private to public as we're overriding it
@@ -1071,6 +1072,40 @@ export class LibpodDockerode {
             return reject(err);
           }
           resolve(wrapAs<void>(data));
+        });
+      });
+    };
+
+    // add pullImage with tlsVerify support for Podman
+    prototypeOfDockerode.pullImage = function (
+      repoTag: string,
+      options?: { tlsVerify?: boolean },
+    ): Promise<NodeJS.ReadableStream> {
+      // Build query parameters - only add tlsVerify if specified
+      let path = `/images/create?fromImage=${encodeURIComponent(repoTag)}`;
+
+      if (options?.tlsVerify !== undefined) {
+        path += `&tlsVerify=${options.tlsVerify}`;
+      }
+
+      const optsf = {
+        path,
+        method: 'POST',
+        isStream: true,
+        options: options,
+        statusCodes: {
+          200: true,
+          404: 'no such image',
+          500: 'server error',
+        },
+      };
+
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, stream: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<NodeJS.ReadableStream>(stream));
         });
       });
     };
