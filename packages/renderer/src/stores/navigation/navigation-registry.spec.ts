@@ -44,8 +44,8 @@ test('check navigation registry items', async () => {
   kubernetesGetCurrentContextGeneralStateMock.mockResolvedValue({});
   await fetchNavigationRegistries();
   const registries = get(navigationRegistry);
-  // expect 7 items in the registry
-  expect(registries.length).equal(7);
+  // expect 8 items in the registry
+  expect(registries.length).equal(8);
 });
 
 test('check update properties', async () => {
