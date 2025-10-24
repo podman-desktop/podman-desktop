@@ -68,3 +68,16 @@ test('Expect deleting styling', async () => {
   expect(spinner).toBeInTheDocument();
   expect(spinner).toHaveAttribute('width', '1.4em');
 });
+
+test('Expect updating styling', async () => {
+  const status = 'UPDATING';
+  render(StatusIcon, { status });
+  const icon = screen.getByRole('status');
+  expect(icon).toBeInTheDocument();
+  expect(icon).toHaveAttribute('title', status);
+  expect(icon).not.toHaveAttribute('border');
+
+  const spinner = screen.getByRole('img');
+  expect(spinner).toBeInTheDocument();
+  expect(spinner).toHaveAttribute('width', '1.4em');
+});
