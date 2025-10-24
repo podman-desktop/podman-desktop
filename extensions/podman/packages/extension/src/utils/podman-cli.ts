@@ -28,33 +28,44 @@ const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/lo
  */
 export async function findPodmanInstallations(): Promise<string[]> {
   try {
-    let result: extensionApi.RunResult;
+    let commandResult: extensionApi.RunResult;
+    const installations = new Map<string, { path: string; stats: fs.Stats }>();
     if (extensionApi.env.isWindows) {
       // Windows: Use 'where podman' command
-      result = await extensionApi.process.exec('where', ['podman']);
+      commandResult = await extensionApi.process.exec('where', ['podman']);
     } else {
       // Unix/macOS: use 'which -a podman' command
-      result = await extensionApi.process.exec('which', ['-a', 'podman']);
+      commandResult = await extensionApi.process.exec('which', ['-a', 'podman']);
     }
 
-    // Parse output for which and where combined
-    const paths: string[] = result.stdout
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter(path => {
-        if (path.length === 0) {
-          return false; // Skip empty paths
-        }
-        try {
-          const stat = fs.lstatSync(path); // Try to get file status
-          return stat.isFile() && !stat.isSymbolicLink(); // Ensure it's a file excluding symlinks
-        } catch {
-          return false; // If lstatSync fails, the path is invalid
-        }
-      });
+    for (let path of commandResult.stdout.split(/\r?\n/)) {
+      path = path.trim();
+      if (!path) continue;
 
-    // Return unique paths only
-    return paths.filter((path, index) => paths.indexOf(path) === index);
+      try {
+        const targetFile = fs.realpathSync(path);
+        const stats = fs.statSync(targetFile);
+        if (!stats.isFile()) continue; // skip directories
+        if (path === targetFile || !installations.has(targetFile)) {
+          //update only if it's not a symlink or if it's not already in the list
+          installations.set(targetFile, { path, stats });
+        }
+      } catch {
+        continue;
+      }
+    }
+    if (!extensionApi.env.isWindows) {
+      //remove hard links that have equivalent in PATH
+      const seenInodes = new Set<number>();
+      for (const [targetFile, { stats }] of installations) {
+        if (seenInodes.has(stats.ino)) {
+          installations.delete(targetFile);
+        } else {
+          seenInodes.add(stats.ino);
+        }
+      }
+    }
+    return Array.from(installations.values()).map(entry => entry.path);
   } catch (error: unknown) {
     console.warn('Failed to detect podman installations:', error);
     return [];
