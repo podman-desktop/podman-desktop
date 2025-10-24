@@ -52,7 +52,7 @@ test.afterAll(async ({ runner, page }) => {
 
 test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
-test.describe.serial('Push image to container registry', { tag: ['@smoke', '@windows_sanity'] }, () => {
+test.describe.serial('Push image to container registry', { tag: '@smoke' }, () => {
   test('Add registry', async ({ navigationBar, page }) => {
     await navigationBar.openSettings();
     const settingsBar = new SettingsBar(page);
