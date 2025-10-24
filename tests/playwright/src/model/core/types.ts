@@ -102,3 +102,9 @@ export enum PodmanVirtualizationProviders {
   Qemu = 'Qemu',
   Native = '', //not a real provider, used for 'Connection Type' check in Resources page of Linux machines
 }
+
+export enum ProxyTypes {
+  Disabled = 'Disabled',
+  Manual = 'Manual',
+  System = 'System',
+}
