@@ -55,7 +55,7 @@ const network2: NetworkInspectInfo = {
   Attachable: false,
   Ingress: false,
   ConfigOnly: false,
-  Containers: { container1: {} as unknown as NetworkContainer },
+  Containers: { container1: { Name: 'Container 1' } as unknown as NetworkContainer },
 };
 
 beforeEach(() => {
@@ -63,7 +63,7 @@ beforeEach(() => {
   networkUtils = new NetworkUtils();
 });
 
-test('should expect valid size', async () => {
+test('Should expect to have a valid NetworkInfoUI object', async () => {
   const networkInfo = networkUtils.toNetworkInfoUI(network1);
   expect(networkInfo).toEqual({
     id: '123456789012345',
@@ -76,6 +76,8 @@ test('should expect valid size', async () => {
     engineType: 'podman',
     selected: false,
     status: 'UNUSED',
+    ipv6_enabled: false,
+    containers: [],
   });
 
   const networkInfo2 = networkUtils.toNetworkInfoUI(network2);
@@ -90,5 +92,7 @@ test('should expect valid size', async () => {
     engineType: 'podman',
     selected: false,
     status: 'USED',
+    ipv6_enabled: false,
+    containers: [{ id: 'container1', name: 'Container 1' }],
   });
 });

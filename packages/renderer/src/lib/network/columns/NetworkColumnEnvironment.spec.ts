@@ -35,6 +35,8 @@ const network: NetworkInfoUI = {
   driver: '',
   selected: false,
   status: 'UNUSED',
+  containers: [],
+  ipv6_enabled: false,
 };
 
 test('Expect simple column styling', async () => {
