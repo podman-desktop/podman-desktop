@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { randomInt } from 'node:crypto';
 import fs from 'node:fs';
 
 import { type Configuration, env, process } from '@podman-desktop/api';
@@ -33,7 +34,8 @@ const config: Configuration = {
 vi.mock('node:fs', () => {
   return {
     default: {
-      lstatSync: vi.fn(),
+      realpathSync: vi.fn(),
+      statSync: vi.fn(),
     },
   };
 });
@@ -63,12 +65,26 @@ describe('findPodmanInstallations', () => {
     vi.mocked(env).isLinux = false;
 
     // Setup default fs mocks
-    vi.mocked(fs.lstatSync).mockReturnValue({
-      isFile: vi.fn().mockReturnValue(true),
-      isSymbolicLink: vi.fn().mockReturnValue(false),
-      // Cast through 'unknown' because fs.Stats has many properties we don't need to mock
-      // We only mock the methods actually used in the implementation (isFile, isSymbolicLink)
-    } as unknown as fs.Stats);
+    vi.mocked(fs.realpathSync).mockImplementation(path => {
+      if (path === '/symlink/podman') {
+        return '/opt/podman/bin/podman'; // symlink points here
+      }
+      return path as string; // not a symlink, return as-is
+    });
+
+    // Mock statSync for inode checking
+    vi.mocked(fs.statSync).mockImplementation(path => {
+      let ino = randomInt(1000000, 9999999);
+      if (path === '/hardlink/podman' || path === '/opt/podman/bin/podman') {
+        ino = 12345;
+      }
+      return {
+        ino,
+        isFile: () => {
+          return String(path) === '/usr/bin/podman-dir' || String(path) === '/inaccessible/path/podman' ? false : true; // directory or inaccessible path
+        },
+      } as unknown as fs.Stats;
+    });
   });
 
   describe('Windows platform', () => {
@@ -78,7 +94,7 @@ describe('findPodmanInstallations', () => {
       vi.mocked(env).isLinux = false;
 
       // Reset fs mocks to defaults for Windows tests
-      vi.mocked(fs.lstatSync).mockReturnValue({
+      vi.mocked(fs.statSync).mockReturnValue({
         isFile: vi.fn().mockReturnValue(true),
         isSymbolicLink: vi.fn().mockReturnValue(false),
         // Cast through 'unknown' because fs.Stats has many properties we don't need to mock
@@ -228,40 +244,61 @@ C:\\tools\\podman\\podman.exe`,
       expect(result).toEqual(['/usr/local/bin/podman', '/opt/homebrew/bin/podman']);
     });
 
-    test('should filter out symbolic links', async () => {
+    test('should filter out symbolic links that have equivalent in PATH', async () => {
       vi.mocked(process.exec).mockResolvedValue({
-        stdout: `/usr/local/bin/podman
-/usr/bin/podman-symlink
+        stdout: `/opt/podman/bin/podman
+/symlink/podman
 /opt/homebrew/bin/podman`,
         stderr: '',
         command: 'which -a podman',
       });
 
-      // Mock lstatSync to return different results for different paths
-      vi.mocked(fs.lstatSync).mockImplementation(path => {
-        const mockStats = {
-          isFile: vi.fn().mockReturnValue(true),
-          isSymbolicLink: vi.fn(),
-        };
+      const result = await findPodmanInstallations();
 
-        // Simulate that the symlink path returns true for isSymbolicLink
-        if (String(path) === '/usr/bin/podman-symlink') {
-          mockStats.isSymbolicLink.mockReturnValue(true);
-        } else {
-          mockStats.isSymbolicLink.mockReturnValue(false);
-        }
+      expect(result).toEqual(['/opt/podman/bin/podman', '/opt/homebrew/bin/podman']);
+    });
 
-        // Cast through 'unknown' to satisfy TypeScript - fs.Stats has 20+ properties
-        // but we only need to mock isFile() and isSymbolicLink() methods for this test
-        return mockStats as unknown as fs.Stats;
+    test('should not filter out symbolic links that do not have equivalent in PATH', async () => {
+      vi.mocked(process.exec).mockResolvedValue({
+        stdout: `
+/symlink/podman
+/opt/homebrew/bin/podman`,
+        stderr: '',
+        command: 'which -a podman',
       });
 
       const result = await findPodmanInstallations();
 
-      expect(result).toEqual(['/usr/local/bin/podman', '/opt/homebrew/bin/podman']);
-      expect(fs.lstatSync).toHaveBeenCalledWith('/usr/local/bin/podman');
-      expect(fs.lstatSync).toHaveBeenCalledWith('/usr/bin/podman-symlink');
-      expect(fs.lstatSync).toHaveBeenCalledWith('/opt/homebrew/bin/podman');
+      expect(result).toEqual(['/symlink/podman', '/opt/homebrew/bin/podman']);
+    });
+
+    test('should filter out hard links that have equivalent in PATH', async () => {
+      vi.mocked(process.exec).mockResolvedValue({
+        stdout: `
+/opt/podman/bin/podman
+/hardlink/podman`,
+        stderr: '',
+        command: 'which -a podman',
+      });
+
+      const result = await findPodmanInstallations();
+
+      expect(result).toEqual(['/opt/podman/bin/podman']);
+    });
+
+    test('should not filter out hard links that do not have equivalent in PATH', async () => {
+      vi.mocked(process.exec).mockResolvedValue({
+        stdout: `
+/usr/podman/bin/podman
+/homebrew/bin/podman
+/hardlink/podman`,
+        stderr: '',
+        command: 'which -a podman',
+      });
+
+      const result = await findPodmanInstallations();
+
+      expect(result).toEqual(['/usr/podman/bin/podman', '/homebrew/bin/podman', '/hardlink/podman']);
     });
 
     test('should filter out non-files (directories)', async () => {
@@ -273,34 +310,15 @@ C:\\tools\\podman\\podman.exe`,
         command: 'which -a podman',
       });
 
-      // Mock lstatSync to return different results for different paths
-      vi.mocked(fs.lstatSync).mockImplementation(path => {
-        const mockStats = {
-          isFile: vi.fn(),
-          isSymbolicLink: vi.fn().mockReturnValue(false),
-        };
-
-        // Simulate that the directory returns false for isFile
-        if (String(path) === '/usr/bin/podman-dir') {
-          mockStats.isFile.mockReturnValue(false);
-        } else {
-          mockStats.isFile.mockReturnValue(true);
-        }
-
-        // Cast through 'unknown' to satisfy TypeScript - fs.Stats has 20+ properties
-        // but we only need to mock isFile() and isSymbolicLink() methods for this test
-        return mockStats as unknown as fs.Stats;
-      });
-
       const result = await findPodmanInstallations();
 
       expect(result).toEqual(['/usr/local/bin/podman', '/opt/homebrew/bin/podman']);
-      expect(fs.lstatSync).toHaveBeenCalledWith('/usr/local/bin/podman');
-      expect(fs.lstatSync).toHaveBeenCalledWith('/usr/bin/podman-dir');
-      expect(fs.lstatSync).toHaveBeenCalledWith('/opt/homebrew/bin/podman');
+      expect(fs.statSync).toHaveBeenCalledWith('/usr/local/bin/podman');
+      expect(fs.statSync).toHaveBeenCalledWith('/usr/bin/podman-dir');
+      expect(fs.statSync).toHaveBeenCalledWith('/opt/homebrew/bin/podman');
     });
 
-    test('should filter out paths when lstatSync throws an error', async () => {
+    test('should filter out paths when statSync throws an error', async () => {
       vi.mocked(process.exec).mockResolvedValue({
         stdout: `/usr/local/bin/podman
 /inaccessible/path/podman
@@ -309,24 +327,9 @@ C:\\tools\\podman\\podman.exe`,
         command: 'which -a podman',
       });
 
-      // Mock lstatSync to throw an error for the inaccessible path
-      vi.mocked(fs.lstatSync).mockImplementation(path => {
-        if (String(path) === '/inaccessible/path/podman') {
-          throw new Error('Permission denied');
-        }
-
-        return {
-          isFile: vi.fn().mockReturnValue(true),
-          isSymbolicLink: vi.fn().mockReturnValue(false),
-        } as unknown as fs.Stats;
-      });
-
       const result = await findPodmanInstallations();
 
       expect(result).toEqual(['/usr/local/bin/podman', '/opt/homebrew/bin/podman']);
-      expect(fs.lstatSync).toHaveBeenCalledWith('/usr/local/bin/podman');
-      expect(fs.lstatSync).toHaveBeenCalledWith('/inaccessible/path/podman');
-      expect(fs.lstatSync).toHaveBeenCalledWith('/opt/homebrew/bin/podman');
     });
   });
 });
