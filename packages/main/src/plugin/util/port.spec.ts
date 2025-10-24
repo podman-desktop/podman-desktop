@@ -167,3 +167,32 @@ test('fails with range error if value is less lower range', async () => {
 test('should return message that user is trying to check unprivileged port', async () => {
   await expect(port.isFreePort(1)).rejects.toThrowError(/The port must be greater than 1024./);
 });
+
+test('should fail with range error if value is over upper range', async () => {
+  await expect(port.getFreePort(999999)).rejects.toThrowError(/Please enter a port number between 0 and 65535./);
+});
+
+test('should fail with range error if value is NaN', async () => {
+  await expect(port.getFreePort(NaN)).rejects.toThrowError(/Please enter a port number between 0 and 65535./);
+});
+
+test('should work with port at the upper boundary', async () => {
+  const freePort = await port.getFreePort(65535);
+  expect(freePort).toBe(65535);
+  expect(await port.isFreePort(freePort)).toBe(true);
+});
+
+test('should fail if all ports are exhausted starting near the upper limit', async () => {
+  const port65535 = 65535;
+
+  const server = net.createServer();
+  server.listen(port65535, '0.0.0.0');
+  await once(server, 'listening');
+
+  // as 65535 is busy and it's the last valid port, it should throw an error
+  await expect(port.getFreePort(port65535)).rejects.toThrowError(
+    /Unable to find a free port: all ports in the valid range \(1024-65535\) are busy./,
+  );
+
+  await closeServer(server);
+});

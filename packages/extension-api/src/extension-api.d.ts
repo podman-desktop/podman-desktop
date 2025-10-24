@@ -4919,7 +4919,10 @@ declare module '@podman-desktop/api' {
   export namespace net {
     /**
      * Finds a free port starting from the specified port and returns it.
-     * @param port The starting port number to search for a free port.
+     * @param port The starting port number to search for a free port. Must be between 0 and 65535.
+     *             If less than 1024, it defaults to 9000.
+     * @returns A promise that resolves to a free port number.
+     * @throws Error if the port is invalid (NaN or > 65535) or if no free port is found within the valid range (0-65535).
      */
     export function getFreePort(port: number): Promise<number>;
   }

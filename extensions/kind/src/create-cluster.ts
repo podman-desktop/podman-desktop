@@ -73,6 +73,24 @@ export async function setupIngressController(clusterName: string): Promise<void>
   await extensionApi.kubernetes.createResources('kind-' + clusterName, yml);
 }
 
+async function validateAndCheckPort(portName: string, port: number, records: AuditRecord[]): Promise<void> {
+  try {
+    const freePort = await extensionApi.net.getFreePort(port);
+    if (port !== freePort) {
+      records.push({
+        type: 'error',
+        record: `${portName} Port ${port} is not available. Please use next available port ${freePort}.`,
+      });
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    records.push({
+      type: 'error',
+      record: `Invalid ${portName} Port ${port}.\n${errorMessage}`,
+    });
+  }
+}
+
 export async function connectionAuditor(provider: string, items: AuditRequestItems): Promise<AuditResult> {
   const records: AuditRecord[] = [];
   const auditResult = {
@@ -97,21 +115,15 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
   }
 
   const httpPort = items['kind.cluster.creation.http.port'];
-  const freeHttpPort = await extensionApi.net.getFreePort(httpPort);
-  if (httpPort !== freeHttpPort) {
-    records.push({
-      type: 'error',
-      record: `HTTP Port ${httpPort} is not available. Please use next available port ${freeHttpPort}.`,
-    });
-  }
-
   const httpsPort = items['kind.cluster.creation.https.port'];
-  const freeHttpsPort = await extensionApi.net.getFreePort(httpsPort);
 
-  if (httpsPort !== freeHttpsPort) {
+  await validateAndCheckPort('HTTP', httpPort, records);
+  await validateAndCheckPort('HTTPS', httpsPort, records);
+
+  if (httpPort === httpsPort) {
     records.push({
       type: 'error',
-      record: `HTTPS Port ${httpsPort} is not available. Please use next available port ${freeHttpsPort}.`,
+      record: `HTTP and HTTPS ports must be different. Currently both are set to ${httpPort}.`,
     });
   }
 

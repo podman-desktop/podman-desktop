@@ -21,13 +21,26 @@ import { type NetworkInterfaceInfoIPv4, networkInterfaces } from 'node:os';
 
 /**
  * Find a free port starting from the given port
+ * @param port - The starting port number (must be between 0 and 65535, defaults to 9000 if < 1024)
+ * @returns A free port number
+ * @throws Error if the port is invalid (NaN or > 65535) or if no free port is found within the valid range
  */
 export async function getFreePort(port = 0): Promise<number> {
+  if (isNaN(port) || port > 65535) {
+    throw new Error('Please enter a port number between 0 and 65535.');
+  }
+
   if (port < 1024) {
     port = 9000;
   }
+
   let isFree = false;
   while (!isFree) {
+    // Check if we've exceeded the valid port range during iteration
+    if (port > 65535) {
+      throw new Error('Unable to find a free port: all ports in the valid range (1024-65535) are busy.');
+    }
+
     try {
       await isFreePort(port);
       isFree = true;

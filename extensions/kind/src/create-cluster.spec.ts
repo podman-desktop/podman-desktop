@@ -525,3 +525,84 @@ test('check that auditItems returns error message when provider is not running',
   expect(checks.records[0].type).toBe('error');
   expect(checks.records[0].record).toContain('The podman provider is not running');
 });
+
+test('check that auditItems returns error message when HTTP and HTTPS ports are the same', async () => {
+  vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 9090,
+    'kind.cluster.creation.https.port': 9090,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+  expect(checks.records[0].record).toBe('HTTP and HTTPS ports must be different. Currently both are set to 9090.');
+});
+
+test('check that auditItems returns error message when port is invalid (> 65535)', async () => {
+  vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(
+    new Error('Please enter a port number between 0 and 65535.'),
+  );
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9443);
+
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 999999,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+  expect(checks.records[0].record).toContain('Invalid HTTP Port 999999');
+  expect(checks.records[0].record).toContain('Please enter a port number between 0 and 65535.');
+});
+
+test('check that auditItems returns error message when port is invalid (< 1024)', async () => {
+  vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(new Error('The port must be greater than 1024.'));
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9443);
+
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 500,
+    'kind.cluster.creation.https.port': 9443,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(1);
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+  expect(checks.records[0].record).toContain('Invalid HTTP Port 500');
+  expect(checks.records[0].record).toContain('The port must be greater than 1024.');
+});
+
+test('check that auditItems returns multiple error messages when both ports are invalid', async () => {
+  vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(
+    new Error('Please enter a port number between 0 and 65535.'),
+  );
+  vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(
+    new Error('Please enter a port number between 0 and 65535.'),
+  );
+
+  const checks = await connectionAuditor('docker', {
+    'kind.cluster.creation.http.port': 999999,
+    'kind.cluster.creation.https.port': 888888,
+  });
+
+  expect(checks).toBeDefined();
+  expect(checks).toHaveProperty('records');
+  expect(checks.records.length).toBe(2);
+
+  expect(checks.records[0]).toHaveProperty('type');
+  expect(checks.records[0].type).toBe('error');
+  expect(checks.records[0].record).toContain('Invalid HTTP Port 999999');
+  expect(checks.records[0].record).toContain('Please enter a port number between 0 and 65535.');
+
+  expect(checks.records[1]).toHaveProperty('type');
+  expect(checks.records[1].type).toBe('error');
+  expect(checks.records[1].record).toContain('Invalid HTTPS Port 888888');
+  expect(checks.records[1].record).toContain('Please enter a port number between 0 and 65535.');
+});
