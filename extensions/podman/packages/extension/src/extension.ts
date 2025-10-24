@@ -133,7 +133,7 @@ let createWSLMachineOptionSelected = false;
 let wslAndHypervEnabledContextValue = false;
 let wslEnabled = false;
 
-const extensionNotifications = new ExtensionNotifications();
+let extensionNotifications: ExtensionNotifications;
 
 export function isIncompatibleMachineOutput(output: string | undefined): boolean {
   // apple HV v4 to v5 machine config error
@@ -1014,6 +1014,10 @@ export function initExtensionContext(extensionContext: extensionApi.ExtensionCon
   storedExtensionContext = extensionContext;
 }
 
+export function initExtensionNotification(): void {
+  extensionNotifications = new ExtensionNotifications(telemetryLogger);
+}
+
 const currentUpdatesDisposables: extensionApi.Disposable[] = [];
 export async function initCheckAndRegisterUpdate(
   provider: extensionApi.Provider,
@@ -1261,6 +1265,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   initExtensionContext(extensionContext);
 
   initTelemetryLogger();
+
+  initExtensionNotification();
 
   if (telemetryLogger) {
     await initializeCertificateDetection(telemetryLogger);

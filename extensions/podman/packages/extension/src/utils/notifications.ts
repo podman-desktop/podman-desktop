@@ -22,6 +22,7 @@ import { getSocketCompatibility } from './compatibility-mode';
 import { isDisguisedPodman } from './warnings';
 
 export class ExtensionNotifications {
+  constructor(private readonly telemetryLogger: extensionApi.TelemetryLogger) {}
   // Configuration buttons
   private static readonly configurationCompatibilityModeMacSetupNotificationDoNotShow =
     'setting.doNotShowMacHelperNotification';

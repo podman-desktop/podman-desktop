@@ -214,9 +214,10 @@ beforeEach(() => {
     },
   };
   vi.resetAllMocks();
-  extension.resetShouldNotifySetup();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
   extension.initTelemetryLogger();
+  extension.initExtensionNotification();
+  extension.resetShouldNotifySetup();
 });
 
 const originalConsoleError = console.error;
