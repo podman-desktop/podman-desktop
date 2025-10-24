@@ -22,10 +22,12 @@ import * as fs from 'node:fs';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
+import { CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE } from '/@api/configuration/constants.js';
 import type { IConfigurationNode } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
+import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
@@ -46,8 +48,10 @@ vi.mock('node:fs', () => ({
 let configurationRegistry: ConfigurationRegistry;
 
 const getConfigurationDirectoryMock = vi.fn();
+const getManagedDefaultsDirectoryMock = vi.fn();
 const directories = {
   getConfigurationDirectory: getConfigurationDirectoryMock,
+  getManagedDefaultsDirectory: getManagedDefaultsDirectoryMock,
 } as unknown as Directories;
 const apiSender = {
   send: vi.fn(),
@@ -59,10 +63,16 @@ const notificationRegistry = {
 
 let registerConfigurationsDisposable: IDisposable;
 
+const getContentMock = vi.fn();
+const defaultConfiguration = {
+  getContent: getContentMock,
+} as unknown as DefaultConfiguration;
+
 beforeEach(async () => {
   vi.resetAllMocks();
   vi.clearAllMocks();
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
+  getManagedDefaultsDirectoryMock.mockReturnValue('/usr/share/podman-desktop');
 
   // Mock basic fs functions needed for initialization
   const readFileSync = vi.mocked(fs.readFileSync);
@@ -79,7 +89,10 @@ beforeEach(async () => {
   readFileMock.mockResolvedValue(JSON.stringify({}));
   cpSync.mockReturnValue(undefined);
 
-  configurationRegistry = new ConfigurationRegistry(apiSender, directories);
+  // Setup DefaultConfiguration mock for the new functionality
+  getContentMock.mockResolvedValue({});
+
+  configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
   await configurationRegistry.init();
 
   const node: IConfigurationNode = {
@@ -197,7 +210,7 @@ test('should work with an invalid configuration file', async () => {
 
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
-  configurationRegistry = new ConfigurationRegistry(apiSender, directories);
+  configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
   readFileSync.mockReturnValue('invalid JSON content');
 
   // Mock fs.promises methods for this test
@@ -405,4 +418,43 @@ test('should remove the object configuration if value is equal to default one', 
     expect.anything(),
     expect.stringContaining(JSON.stringify({}, undefined, 2)),
   );
+});
+
+// Tests for the new managed defaults functionality
+describe('Managed Defaults', () => {
+  test('should load managed defaults configuration', async () => {
+    const managedDefaults = { 'managed.setting': 'managedValue' };
+
+    // Setup DefaultConfiguration mock to return specific defaults
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    // Create new registry instance to test the managed defaults loading
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
+    await testRegistry.init();
+
+    // Access private configurationValues to verify managed defaults were loaded
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE);
+
+    expect(managedConfig).toEqual(managedDefaults);
+  });
+
+  test('should handle empty managed defaults', async () => {
+    // Setup DefaultConfiguration mock to return empty defaults
+    getContentMock.mockResolvedValue({});
+
+    // Create new registry instance
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
+    await testRegistry.init();
+
+    // Access private configurationValues to verify empty managed defaults
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE);
+
+    expect(managedConfig).toEqual({});
+  });
 });
