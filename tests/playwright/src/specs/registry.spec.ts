@@ -40,7 +40,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Registries handling verification', { tag: ['@smoke', '@windows_sanity'] }, () => {
+test.describe.serial('Registries handling verification', { tag: '@smoke' }, () => {
   test('Check Registries page components and presence of default registries', async ({ navigationBar }) => {
     const settingsBar = await navigationBar.openSettings();
     const registryPage = await settingsBar.openTabPage(RegistriesPage);
