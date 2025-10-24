@@ -22,22 +22,30 @@ import FlatMenu from '../ui/FlatMenu.svelte';
 import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 
-export let pod: PodInfoUI;
-export let dropdownMenu = false;
-export let detailed = false;
-
 const dispatch = createEventDispatcher<{ update: PodInfoUI }>();
-export let onUpdate: (update: PodInfoUI) => void = update => {
-  dispatch('update', update);
-};
+interface Props {
+  pod: PodInfoUI;
+  dropdownMenu?: boolean;
+  detailed?: boolean;
+  onUpdate?: (update: PodInfoUI) => void;
+}
 
-let contributions: Menu[] = [];
+let {
+  pod = $bindable(),
+  dropdownMenu = false,
+  detailed = false,
+  onUpdate = (update): void => {
+    dispatch('update', update);
+  },
+}: Props = $props();
+
+let contributions = $state<Menu[]>([]);
 onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_POD);
 });
 
-let urls: Array<string> = [];
-$: openingUrls = urls;
+let urls: Array<string> = $state([]);
+const openingUrls = $derived(urls);
 
 const portRegexp = RegExp(/:(\d+)/);
 
@@ -132,12 +140,7 @@ function deployToKubernetes(): void {
 }
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
 // otherwise, leave blank.
-let actionsStyle: typeof DropdownMenu | typeof FlatMenu;
-if (dropdownMenu) {
-  actionsStyle = DropdownMenu;
-} else {
-  actionsStyle = FlatMenu;
-}
+const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
 </script>
 
 <ListItemButtonIcon
@@ -162,7 +165,7 @@ if (dropdownMenu) {
   inProgress={pod.actionInProgress && pod.status === 'DELETING'} />
 
 <!-- If dropdownMenu is true, use it, otherwise just show the regular buttons -->
-<svelte:component this={actionsStyle}>
+<MenuComponent>
   {#if !detailed}
     <ListItemButtonIcon
       title="Generate Kube"
@@ -221,4 +224,4 @@ if (dropdownMenu) {
     contributions={contributions}
     detailed={detailed}
     onError={handleError} />
-</svelte:component>
+</MenuComponent>
