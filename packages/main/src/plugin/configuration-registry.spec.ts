@@ -219,7 +219,7 @@ test('should work with an invalid configuration file', async () => {
 
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
-  configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
+  configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
   readFileSync.mockReturnValue('invalid JSON content');
 
   // Mock fs.promises methods for this test
@@ -479,7 +479,12 @@ describe('Managed Locked', () => {
     } as unknown as LockedConfiguration;
 
     // Create new registry instance to test the managed locked loading
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, testLockedConfiguration);
+    const testRegistry = new ConfigurationRegistry(
+      apiSender,
+      directories,
+      defaultConfiguration,
+      testLockedConfiguration,
+    );
     await testRegistry.init();
 
     // Access private configurationValues to verify managed locked were loaded
@@ -499,7 +504,12 @@ describe('Managed Locked', () => {
     } as unknown as LockedConfiguration;
 
     // Create new registry instance
-    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, testLockedConfiguration);
+    const testRegistry = new ConfigurationRegistry(
+      apiSender,
+      directories,
+      defaultConfiguration,
+      testLockedConfiguration,
+    );
     await testRegistry.init();
 
     // Access private configurationValues to verify empty managed locked

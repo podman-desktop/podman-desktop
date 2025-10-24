@@ -24,7 +24,7 @@ import { CloseBehavior } from './close-behavior.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
-import type { DefaultConfiguration } from './default-configuration.js';
+import type { LockedConfiguration } from './locked-configuration.js';
 
 vi.mock('./util', () => {
   return {
@@ -36,7 +36,12 @@ let closeBehavior: CloseBehavior;
 let configurationRegistry: ConfigurationRegistry;
 
 beforeEach(() => {
-  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories, {} as DefaultConfiguration);
+  configurationRegistry = new ConfigurationRegistry(
+    {} as ApiSenderType,
+    {} as Directories,
+    {} as DefaultConfiguration,
+    {} as LockedConfiguration,
+  );
   closeBehavior = new CloseBehavior(configurationRegistry);
 });
 

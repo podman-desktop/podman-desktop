@@ -33,6 +33,7 @@ import { ProxyState } from '/@api/proxy.js';
 import type { ApiSenderType } from './api.js';
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
+import type { LockedConfiguration } from './locked-configuration.js';
 import { getProxySettingsFromSystem } from './proxy-system.js';
 
 const URL = 'https://podman-desktop.io';
@@ -85,8 +86,12 @@ const defaultConfiguration = {
   getContent: vi.fn().mockResolvedValue({}),
 } as unknown as DefaultConfiguration;
 
+const lockedConfiguration = {
+  getContent: vi.fn().mockResolvedValue({}),
+} as unknown as LockedConfiguration;
+
 function getConfigurationRegistry(): ConfigurationRegistry {
-  return new ConfigurationRegistry(apiSender, directories, defaultConfiguration);
+  return new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
 }
 
 async function buildProxy(): Promise<ProxyServer> {
