@@ -21,10 +21,11 @@ import { readFile, writeFile } from 'node:fs/promises';
 // to use vi.spyOn(os, methodName)
 import * as os from 'node:os';
 
-import { commands, env, window } from '@podman-desktop/api';
+import type { Configuration, DefaultRegistry, DefaultRegistryMirror } from '@podman-desktop/api';
+import { commands, configuration, env, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RegistryConfigurationFile } from './registry-configuration';
+import type { RegistryConfigurationEntry, RegistryConfigurationFile } from './registry-configuration';
 import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
 
 let registryConfiguration: RegistryConfigurationImpl;
@@ -57,6 +58,9 @@ vi.mock('@podman-desktop/api', async () => {
     window: {
       showQuickPick: vi.fn(),
       showInputBox: vi.fn(),
+    },
+    configuration: {
+      getConfiguration: vi.fn(),
     },
   };
 });
@@ -141,6 +145,7 @@ describe('init', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(registryConfiguration, 'registerSetupRegistryCommand').mockReturnValue(fakeDisposable);
+    vi.spyOn(registryConfiguration, 'loadDefaultUserRegistries').mockResolvedValue(undefined);
   });
 
   test('check command is registered', async () => {
@@ -283,4 +288,186 @@ describe('displayRegistryQuickPick', () => {
       ],
     });
   });
+});
+
+test('loadDefaultUserRegistries', async () => {
+  const userRegistry1: DefaultRegistry = {
+    registry: {
+      prefix: 'registry1',
+      location: '/registry1/foo',
+      blocked: true,
+    },
+  };
+
+  const userRegistryMirror1: DefaultRegistryMirror = {
+    'registry.mirror': {
+      location: 'mirror1/foo',
+    },
+  };
+
+  const userRegistry2: DefaultRegistry = {
+    registry: {
+      prefix: 'registry2',
+      location: '/registry2/foo',
+      blocked: true,
+    },
+  };
+
+  const userRegistry3: DefaultRegistry = {
+    registry: {
+      prefix: 'registry3',
+      location: '/registry3/foo',
+    },
+  };
+
+  const userRegistryMirror3: DefaultRegistryMirror = {
+    'registry.mirror': {
+      location: 'mirror3/bar',
+      insecure: true,
+    },
+  };
+
+  const getMock = vi
+    .fn()
+    .mockReturnValue([userRegistry1, userRegistryMirror1, userRegistry2, userRegistry3, userRegistryMirror3]);
+
+  vi.mocked(configuration.getConfiguration).mockReturnValue({
+    get: getMock,
+  } as unknown as Configuration);
+
+  vi.spyOn(registryConfiguration, 'readRegistriesConfContent').mockResolvedValue({ registry: [] });
+  vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
+  vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(true);
+
+  vi.mocked(env).isMac = true;
+
+  await registryConfiguration.loadDefaultUserRegistries();
+
+  expect(registryConfiguration.saveRegistriesConfContent).toBeCalledWith({
+    registry: [
+      {
+        prefix: 'registry1',
+        location: '/registry1/foo',
+        blocked: true,
+        mirror: [
+          {
+            location: 'mirror1/foo',
+          },
+        ],
+      },
+      {
+        prefix: 'registry2',
+        location: '/registry2/foo',
+        blocked: true,
+      },
+      {
+        prefix: 'registry3',
+        location: '/registry3/foo',
+        mirror: [
+          {
+            location: 'mirror3/bar',
+            insecure: true,
+          },
+        ],
+      },
+    ],
+  });
+});
+
+test('resolveDefaultRegistryConflicts', () => {
+  const userRegistry1: RegistryConfigurationEntry = {
+    prefix: 'registry1',
+    location: '/registry1/foo',
+    blocked: true,
+  };
+
+  const userRegistry1dup: RegistryConfigurationEntry = {
+    prefix: 'registry1',
+    location: '/registry1/foo',
+    blocked: false,
+    mirror: [
+      {
+        location: 'mirror1/foo',
+      },
+    ],
+  };
+
+  const userRegistry2: RegistryConfigurationEntry = {
+    prefix: 'registry2',
+    location: '/registry2/foo',
+    blocked: true,
+    mirror: [
+      {
+        location: 'mirror2/foo',
+      },
+    ],
+  };
+
+  const userRegistry2dup: RegistryConfigurationEntry = {
+    prefix: 'registry2',
+    location: '/registry2/foo',
+    blocked: true,
+    mirror: [
+      {
+        location: 'mirror2/bar',
+      },
+      {
+        location: 'mirror2/foo',
+      },
+    ],
+  };
+
+  const userRegistry3: RegistryConfigurationEntry = {
+    prefix: 'registry3',
+    location: '/registry3/foo',
+    mirror: [
+      {
+        location: 'mirror3/bar',
+        insecure: true,
+      },
+    ],
+  };
+
+  const originalConsoleWarn = console.warn;
+  console.warn = vi.fn();
+
+  const resolvedRegistries = registryConfiguration.resolveDefaultRegistryConflicts(
+    [userRegistry1dup, userRegistry2dup],
+    [userRegistry1, userRegistry2, userRegistry3],
+  );
+  expect(console.warn).toBeCalledWith(
+    'Default user registry registry1 already exists in the registries.conf.d file, but some of its properties do not match. Please update this registry',
+  );
+  expect(resolvedRegistries).toStrictEqual([
+    {
+      prefix: 'registry1',
+      location: '/registry1/foo',
+      blocked: true,
+    },
+    {
+      prefix: 'registry2',
+      location: '/registry2/foo',
+      blocked: true,
+      mirror: [
+        {
+          location: 'mirror2/foo',
+        },
+        {
+          location: 'mirror2/bar',
+        },
+      ],
+    },
+    {
+      prefix: 'registry3',
+      location: '/registry3/foo',
+      mirror: [
+        {
+          location: 'mirror3/bar',
+          insecure: true,
+        },
+      ],
+    },
+  ]);
+
+  console.warn = originalConsoleWarn;
 });
