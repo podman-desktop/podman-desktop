@@ -19,7 +19,6 @@
 import { ProxyTypes } from '../model/core/types';
 import { ProxyPage } from '../model/pages/proxy-page';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { handleConfirmationDialog } from '../utility/operations';
 
 const invalidProxyUrl = 'invalid-proxy-url';
 const httpProxyUrl = 'http://http.proxy:8080';
@@ -34,14 +33,13 @@ test.beforeAll(async ({ page, runner, welcomePage }) => {
   proxyPage = new ProxyPage(page);
 });
 
-test.afterAll(async ({ navigationBar, page, runner }) => {
+test.afterAll(async ({ navigationBar, runner }) => {
   await navigationBar.openDashboard();
   const settingsBar = await navigationBar.openSettings();
   await settingsBar.proxyTab.click();
   await playExpect(proxyPage.heading).toBeVisible();
   await proxyPage.selectProxy(ProxyTypes.System);
-  await proxyPage.updateButton.click();
-  await handleConfirmationDialog(page, 'Proxy Settings', true, 'OK');
+  await proxyPage.updateProxySettings();
   await runner.close();
 });
 
@@ -62,13 +60,13 @@ test.describe.serial('Proxy settings ', { tag: '@smoke' }, () => {
     await playExpect(proxyPage.updateButton).toBeEnabled();
   });
 
-  test('Manual proxy setup, validation and update', async ({ page }) => {
+  test('Manual proxy setup, validation and update', async () => {
     await proxyPage.selectProxy(ProxyTypes.Manual);
     await playExpect(proxyPage.httpProxy).toBeEnabled();
     await playExpect(proxyPage.httpsProxy).toBeEnabled();
     await playExpect(proxyPage.noProxy).toBeEnabled();
     // validation for http proxy input
-    await proxyPage.httpProxy.fill('invalid-proxy-url');
+    await proxyPage.fillHttpProxy(invalidProxyUrl);
     await playExpect(proxyPage.proxyAlert).toBeVisible();
     await playExpect(proxyPage.proxyAlert).toContainText(`value ${invalidProxyUrl} should be an URL`, {
       ignoreCase: true,
@@ -76,7 +74,7 @@ test.describe.serial('Proxy settings ', { tag: '@smoke' }, () => {
     await proxyPage.fillHttpProxy(httpProxyUrl);
     await playExpect(proxyPage.proxyAlert).not.toBeVisible();
     // validation for https proxy input
-    await proxyPage.httpsProxy.fill(invalidProxyUrl);
+    await proxyPage.fillHttpsProxy(invalidProxyUrl);
     await playExpect(proxyPage.proxyAlert).toBeVisible();
     await playExpect(proxyPage.proxyAlert).toContainText(`value ${invalidProxyUrl} should be an URL`, {
       ignoreCase: true,
@@ -85,12 +83,7 @@ test.describe.serial('Proxy settings ', { tag: '@smoke' }, () => {
     await playExpect(proxyPage.proxyAlert).not.toBeVisible();
     // check domains for no proxy
     await proxyPage.fillNoProxy(hostsDomains);
-    await playExpect(proxyPage.updateButton).toBeEnabled();
-    // update proxy settings
-    await proxyPage.updateButton.click();
-    // dialog can be a warning or info, both has only OK button.
-    // on windows podman machine might needs to be restarted
-    await handleConfirmationDialog(page, 'Proxy Settings', true, 'OK');
+    await proxyPage.updateProxySettings();
   });
 
   test('Proxy settings persists when proxy page is switched', async () => {
@@ -106,17 +99,16 @@ test.describe.serial('Proxy settings ', { tag: '@smoke' }, () => {
     await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
   });
 
-  test('Disabled proxy setup', async ({ page }) => {
+  test('Disabled proxy setup', async () => {
     await proxyPage.selectProxy(ProxyTypes.Disabled);
     await playExpect(proxyPage.httpProxy).not.toBeEnabled();
     await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
     await playExpect(proxyPage.noProxy).not.toBeEnabled();
     await playExpect(proxyPage.updateButton).toBeEnabled();
-    await proxyPage.updateButton.click();
-    await handleConfirmationDialog(page, 'Proxy Settings', true, 'OK');
+    await proxyPage.updateProxySettings();
   });
 
-  test('Re-enabled Manual proxy settings persisted', async ({ page }) => {
+  test('Re-enabled Manual proxy settings persisted', async () => {
     await proxyPage.selectProxy(ProxyTypes.Disabled);
     await playExpect(proxyPage.httpProxy).not.toBeEnabled();
     await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
@@ -129,17 +121,19 @@ test.describe.serial('Proxy settings ', { tag: '@smoke' }, () => {
     await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
     await playExpect(proxyPage.noProxy).toBeEnabled();
     await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
-
-    await proxyPage.selectProxy(ProxyTypes.System);
-    await proxyPage.updateButton.click();
-    await handleConfirmationDialog(page, 'Proxy Settings', true, 'OK');
   });
 
-  test('Proxy values are reset', async () => {
+  test('System proxy resets the values', async ({ navigationBar }) => {
+    await proxyPage.selectProxy(ProxyTypes.System);
+    await proxyPage.updateProxySettings();
     await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.System);
     await playExpect(proxyPage.httpProxy).not.toBeEnabled();
     await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
     await playExpect(proxyPage.noProxy).not.toBeEnabled();
+    await navigationBar.openDashboard();
+    const settingsBar = await navigationBar.openSettings();
+    await settingsBar.proxyTab.click();
+    await playExpect(proxyPage.heading).toBeVisible();
     await playExpect(proxyPage.httpProxy).not.toHaveValue(httpProxyUrl);
     await playExpect(proxyPage.httpsProxy).not.toHaveValue(httpsProxyUrl);
     await playExpect(proxyPage.noProxy).not.toHaveValue(hostsDomains);

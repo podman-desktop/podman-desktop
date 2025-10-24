@@ -18,6 +18,8 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { ProxyTypes } from '../core/types';
 import { SettingsPage } from './settings-page';
 
@@ -76,12 +78,21 @@ export class ProxyPage extends SettingsPage {
 
   private async fillProxyInput(input: Locator, value: string): Promise<void> {
     const inputName = await input.evaluate(el => el.getAttribute('id'));
-    await test.step(`Filling ${inputName}: ${value}`, async () => {
+    await test.step(`Filling ${inputName} textbox`, async () => {
       await playExpect(input, `Proxy input field ${inputName} is not enabled`).toBeEnabled();
-      await input.fill('');
+      await input.clear();
       await input.pressSequentially(value, { delay: 100 });
       await playExpect(input).toHaveValue(value);
     });
+  }
+
+  public async updateProxySettings(): Promise<void> {
+    await playExpect(this.updateButton).toBeEnabled();
+    // update proxy settings
+    await this.updateButton.click();
+    // dialog can be a warning or info, both has only OK button.
+    // on windows podman machine might needs to be restarted
+    await handleConfirmationDialog(this.page, 'Proxy Settings', true, 'OK');
   }
 
   public async fillHttpProxy(value: string): Promise<void> {
