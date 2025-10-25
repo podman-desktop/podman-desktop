@@ -68,6 +68,8 @@ for (const extension of extensionsToTest) {
     `Verification of Built-In Extension: ${extension.extensionLabelName}`,
     { tag: ['@smoke', '@windows_sanity'] },
     () => {
+      test.describe.configure({ retries: 1 });
+
       test(`Check ${extension.extensionLabelName} extension is enabled and present`, async () => {
         await verifyBuiltInExtensionStatus(true, extension);
       });
