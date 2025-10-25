@@ -126,7 +126,7 @@ test('Expect to have details page', async () => {
 
   await waitRender({ extensionId });
 
-  const heading = screen.getByRole('heading', { name: 'A installed Extension extension' });
+  const heading = screen.getByRole('heading', { name: 'A installed Extension' });
   expect(heading).toBeInTheDocument();
 
   const extensionActions = screen.getByRole('group', { name: 'Extension Actions' });
@@ -188,6 +188,6 @@ test('Expect to have details page with id with spaces', async () => {
 
   await waitRender({ extensionId });
 
-  const heading = screen.getByRole('heading', { name: 'A Extension extension' });
+  const heading = screen.getByRole('heading', { name: 'A Extension' });
   expect(heading).toBeInTheDocument();
 });

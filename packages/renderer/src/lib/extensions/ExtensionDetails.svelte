@@ -39,7 +39,7 @@ $: extension = derived(
 </script>
 
 {#if $extension}
-  <DetailsPage title="{$extension.displayName} extension" subtitle={$extension.description} bind:this={detailsPage}>
+  <DetailsPage title={$extension.displayName} subtitle={$extension.description} bind:this={detailsPage}>
     {#snippet iconSnippet()}
       <div class="flex flex-col mt-1 items-baseline w-8">
         <div class="w-8 min-h-8">
@@ -105,7 +105,7 @@ $: extension = derived(
     {/snippet}
   </DetailsPage>
 {:else}
-  <DetailsPage title="{extensionId} extension" bind:this={detailsPage}>
+  <DetailsPage title={extensionId} bind:this={detailsPage}>
     {#snippet contentSnippet()}
       <div class="flex w-full h-full">
         <EmptyScreen

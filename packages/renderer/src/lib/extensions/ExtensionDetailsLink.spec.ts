@@ -58,7 +58,7 @@ test('Expect to have link with displayIcon', async () => {
 
   render(ExtensionDetailsLink, { extension });
 
-  const detailsButton = screen.getByRole('button', { name: 'foo extension details' });
+  const detailsButton = screen.getByRole('button', { name: 'View details for This is the display name' });
   expect(detailsButton).toBeInTheDocument();
 
   // check text of the button
@@ -90,7 +90,7 @@ test('Expect to have link with spaces', async () => {
 
   render(ExtensionDetailsLink, { extension });
 
-  const detailsButton = screen.getByRole('button', { name: 'foo extension details' });
+  const detailsButton = screen.getByRole('button', { name: 'View details for This is the display name' });
   expect(detailsButton).toBeInTheDocument();
 
   // click the button

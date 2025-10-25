@@ -71,6 +71,6 @@ test('Expect to see icon, link, badge and actions', async () => {
   expect(icon).toHaveAttribute('src', 'iconOfMyExtension.png');
 
   // and the link
-  const detailsButton = screen.getByRole('button', { name: 'foo extension details' });
+  const detailsButton = screen.getByRole('button', { name: 'View details for foo' });
   expect(detailsButton).toBeInTheDocument();
 });
