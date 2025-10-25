@@ -8,20 +8,33 @@ interface Props {
   searchTerm?: string;
   oninput?: (event: Event) => void;
   class?: string;
+  placeholder?: string;
 }
 
 const bubble = createBubbler();
 
-let { title = '', searchTerm = $bindable(''), oninput = bubble('input'), class: className = '' }: Props = $props();
+let {
+  title = '',
+  searchTerm = $bindable(''),
+  oninput = bubble('input'),
+  class: className = '',
+  placeholder,
+}: Props = $props();
+
+let appliedPlaceholder = '';
+let appliedAriaLabel = '';
+
+$: appliedPlaceholder = placeholder ?? `Search ${title}...`;
+$: appliedAriaLabel = placeholder ?? `search ${title}`;
 </script>
 
 <Input
   class={className}
   id="search-{title}"
   name="search-{title}"
-  placeholder="Search {title}..."
+  placeholder={appliedPlaceholder}
   bind:value={searchTerm}
-  aria-label="search {title}"
+  aria-label={appliedAriaLabel}
   clearable
   {oninput}>
   {#snippet left()}

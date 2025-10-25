@@ -61,7 +61,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} title="extensions" searchPlaceholder="Search extensions by name, publisher, or keyword...">
   {#snippet additionalActions()}
     <Button
       on:click={(): void => {
