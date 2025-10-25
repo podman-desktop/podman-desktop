@@ -222,7 +222,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <LoadImages />
         </Route>
         <Route path="/image/push/:imageId/:engineId/:base64RepoTag" breadcrumb="Push an Image" let:meta>
-          <PushImage imageId={decodeURI(meta.params.imageId)} engineId={decodeURI(meta.params.engineId)} base64RepoTag={meta.params.base64RepoTag} taskId={+meta.query.taskId}/>
+          {#key +(meta.query.taskId ?? 0) }
+            <PushImage imageId={decodeURI(meta.params.imageId)} engineId={decodeURI(meta.params.engineId)} base64RepoTag={meta.params.base64RepoTag} taskId={+(meta.query.taskId ?? 0) }/>
+          {/key}
         </Route>
         <Route path="/pods" breadcrumb="Pods" navigationHint="root">
           <PodsList />
