@@ -39,7 +39,7 @@ export const aFakeExtension: CatalogExtension = {
   publisherDisplayName: 'Foo Publisher',
   extensionName: 'a-extension',
   displayName: 'A Extension',
-  categories: [],
+  categories: ['foo'],
   keywords: [],
   unlisted: false,
   versions: [
@@ -65,7 +65,7 @@ export const bFakeExtension: CatalogExtension = {
   publisherDisplayName: 'Foo Publisher',
   extensionName: 'b-extension',
   displayName: 'B Extension',
-  categories: [],
+  categories: ['foo'],
   keywords: [],
   unlisted: false,
   versions: [
@@ -226,4 +226,20 @@ test('Expect to see local extensions tab content', async () => {
   // expect to see empty screen
   const emptyText = screen.getByText('Enable Preferences > Extensions > Development Mode to test local extensions');
   expect(emptyText).toBeInTheDocument();
+});
+
+test('Switching tabs keeps only terms in search term', async () => {
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set([]);
+
+  render(ExtensionList, { searchTerm: 'bar category:bar not:installed' });
+
+  // Click on the catalog
+  const catalogTab = screen.getByRole('button', { name: 'Catalog' });
+  await fireEvent.click(catalogTab);
+
+  // Verify that the extension containing "bar" in the description is displayed (which is not in bar category and is installed)
+  // meaning that `category:bar not:installed` has been removed from search term
+  const myExtension1 = screen.getByRole('group', { name: 'A Extension' });
+  expect(myExtension1).toBeInTheDocument();
 });
