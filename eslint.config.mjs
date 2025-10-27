@@ -270,6 +270,8 @@ export default [
       'sonarjs/no-nested-assignment': 'off',
       'sonarjs/no-alphabetical-sort': 'off',
       'svelte/no-reactive-literals': 'error',
+      // error if svelte script block do not specify attribute lang="ts".
+      'svelte/block-lang': ["error", { "script": "ts" }],
     },
   },
 
