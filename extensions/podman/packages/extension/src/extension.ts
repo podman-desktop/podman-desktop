@@ -1391,6 +1391,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       } catch (error: unknown) {
         console.debug('Error while check if the socket is disguised', error);
         await extensionApi.window.showInformationMessage('Could not get if Podman is disguised');
+        if (error instanceof Error) {
+          telemetryLogger.logError('checkIfSocketDisguisedFailed', { error: error.message });
+        }
         return;
       }
       // We use isEnabled() as we do not want to "renable" again if the user has already enabled it.
