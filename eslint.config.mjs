@@ -271,7 +271,7 @@ export default [
       'sonarjs/no-alphabetical-sort': 'off',
       'svelte/no-reactive-literals': 'error',
       // error if svelte script block do not specify attribute lang="ts".
-      'svelte/block-lang': ["error", { "script": "ts" }],
+      'svelte/block-lang': ["error", { "script": "ts", "style": ["postcss", null] }],
     },
   },
 
