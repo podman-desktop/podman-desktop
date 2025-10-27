@@ -18,6 +18,7 @@
 
 import * as fs from 'node:fs';
 
+import * as k8s from '@kubernetes/client-node';
 import type { AuditRecord, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
@@ -26,23 +27,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { connectionAuditor, createCluster, getKindClusterConfig, waitForCoreDNSReady } from './create-cluster';
 import { getKindPath, getMemTotalInfo } from './util';
 
-// Mock @kubernetes/client-node - constants for waitForCoreDNSReady tests
-const mockListNode = vi.fn();
-const mockListNamespacedPod = vi.fn();
-const mockMakeApiClient = vi.fn();
-const mockLoadFromFile = vi.fn();
-
-vi.mock('@kubernetes/client-node', () => ({
-  KubeConfig: vi.fn().mockImplementation(() => ({
-    loadFromFile: mockLoadFromFile,
-    makeApiClient: mockMakeApiClient,
-  })),
-  CoreV1Api: vi.fn().mockImplementation(() => ({
-    listNode: mockListNode,
-    listNamespacedPod: mockListNamespacedPod,
-  })),
-  loadAllYaml: vi.fn().mockReturnValue([]), // Mock for existing tests
-}));
+vi.mock('@kubernetes/client-node');
 
 vi.mock('node:fs', () => ({
   promises: {
@@ -106,24 +91,31 @@ beforeEach(() => {
     };
   });
 
-  // Reset mocks before each test to ensure clean state
-  mockListNode.mockReset();
-  mockListNamespacedPod.mockReset();
-
-  // Setup kubernetes client mocks with default success responses for all tests
-  mockMakeApiClient.mockReturnValue({
-    listNode: mockListNode,
-    listNamespacedPod: mockListNamespacedPod,
+  vi.mocked(k8s.CoreV1Api.prototype.listNode).mockResolvedValue({
+    items: [
+      {
+        status: {
+          conditions: [{ type: 'Ready', status: 'True' }],
+        },
+      },
+    ],
   });
 
-  // Default mocks for waitForCoreDNSReady to prevent timeouts in other tests
-  mockListNode.mockResolvedValue({
-    items: [{ status: { conditions: [{ type: 'Ready', status: 'True' }] } }],
-  });
-  mockListNamespacedPod.mockResolvedValue({
-    items: [{ status: { conditions: [{ type: 'Ready', status: 'True' }] } }],
+  vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod).mockResolvedValue({
+    items: [
+      {
+        status: {
+          conditions: [{ type: 'Ready', status: 'True' }],
+        },
+      },
+    ],
   });
 
+  vi.mocked(k8s.KubeConfig.prototype.makeApiClient).mockImplementation(() => {
+    return Object.create(k8s.CoreV1Api.prototype);
+  });
+  vi.mocked(k8s.KubeConfig.prototype.loadFromFile).mockImplementation(() => {});
+  vi.mocked(k8s.loadAllYaml).mockReturnValue([{ kind: 'test' }]);
   // Silence console.warn during tests
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
@@ -728,25 +720,28 @@ describe('waitForCoreDNSReady', () => {
     await waitForCoreDNSReady();
 
     // Verify nodes were checked
-    expect(mockListNode).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNode)).toHaveBeenCalledTimes(1);
 
-    // Verify all system pods were checked (scheduler, controller-manager, CoreDNS)
-    expect(mockListNamespacedPod).toHaveBeenCalledTimes(3);
+    // Verify all system pods were checked (nodes + scheduler + controller-manager + CoreDNS)
+    expect(vi.mocked(k8s.KubeConfig.prototype.makeApiClient)).toHaveBeenCalledTimes(4);
 
-    // Check scheduler call
-    expect(mockListNamespacedPod).toHaveBeenNthCalledWith(1, {
+    // Verify pods were checked 3 times (scheduler, controller-manager, coredns)
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod)).toHaveBeenCalledTimes(3);
+
+    // Check scheduler pod call
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod)).toHaveBeenNthCalledWith(1, {
       namespace: 'kube-system',
       labelSelector: 'component=kube-scheduler',
     });
 
-    // Check controller-manager call
-    expect(mockListNamespacedPod).toHaveBeenNthCalledWith(2, {
+    // Check controller-manager pod call
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod)).toHaveBeenNthCalledWith(2, {
       namespace: 'kube-system',
       labelSelector: 'component=kube-controller-manager',
     });
 
-    // Check CoreDNS call
-    expect(mockListNamespacedPod).toHaveBeenNthCalledWith(3, {
+    // Check CoreDNS pod call
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod)).toHaveBeenNthCalledWith(3, {
       namespace: 'kube-system',
       labelSelector: 'k8s-app=kube-dns',
     });
@@ -754,17 +749,19 @@ describe('waitForCoreDNSReady', () => {
 
   test('should handle errors and retry with timeout', async () => {
     // Mock nodes failing initially, then succeeding
-    mockListNode.mockRejectedValueOnce(new Error('ECONNREFUSED')).mockResolvedValue({
-      items: [{ status: { conditions: [{ type: 'Ready', status: 'True' }] } }],
-    });
+    vi.mocked(k8s.CoreV1Api.prototype.listNode)
+      .mockRejectedValueOnce(new Error('ECONNREFUSED'))
+      .mockResolvedValue({
+        items: [{ status: { conditions: [{ type: 'Ready', status: 'True' }] } }],
+      });
 
     // Uses default mockListNamespacedPod from global beforeEach (pods always ready)
     await waitForCoreDNSReady();
 
     // Should have retried nodes call (1 failure + 1 success = 2)
-    expect(mockListNode).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNode)).toHaveBeenCalledTimes(2);
     // Should have called pods 3 times (scheduler, controller-manager, coredns)
-    expect(mockListNamespacedPod).toHaveBeenCalledTimes(3);
+    expect(vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod)).toHaveBeenCalledTimes(3);
   });
 
   test('should log unexpected errors', async () => {
@@ -772,9 +769,11 @@ describe('waitForCoreDNSReady', () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Mock unexpected error once, then success
-    mockListNode.mockRejectedValueOnce(new Error('401 Unauthorized')).mockResolvedValue({
-      items: [{ status: { conditions: [{ type: 'Ready', status: 'True' }] } }],
-    });
+    vi.mocked(k8s.CoreV1Api.prototype.listNode)
+      .mockRejectedValueOnce(new Error('401 Unauthorized'))
+      .mockResolvedValue({
+        items: [{ status: { conditions: [{ type: 'Ready', status: 'True' }] } }],
+      });
 
     // Uses default mockListNamespacedPod from global beforeEach (pods always ready)
     await waitForCoreDNSReady();
