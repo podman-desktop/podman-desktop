@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "svelte.svelte-vscode",
+    "vitest.explorer",
+    "bradlc.vscode-tailwindcss",
+    "biomejs.biome",
+    "dbaeumer.vscode-eslint",
+    "ryanluker.vscode-coverage-gutters",
+    "ms-playwright.playwright"
+  ]
+}
