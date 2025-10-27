@@ -60,22 +60,22 @@ jobs:
       - name: List Build
         run: ls ./dist/
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-installer-x64
           path: ./dist/podman-desktop*-setup-x64.exe
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-installer-arm64
           path: ./dist/podman-desktop*-setup-arm64.exe
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-exe-x64
           path: ./dist/podman-desktop*-next-x64.exe
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: windows-exe-arm64
           path: ./dist/podman-desktop*-next-arm64.exe
@@ -119,12 +119,12 @@ jobs:
       - name: List Build
         run: ls -la ./dist/
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: linux
           path: ./dist/podman-desktop-*.tar.gz
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: flatpak
           path: ./dist/podman-desktop-*.flatpak
@@ -159,15 +159,15 @@ jobs:
       - name: List Build
         run: ls -la ./dist/
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: macos-x64-dmg
           path: ./dist/podman-desktop-*x64.dmg
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: macos-arm64-dmg
           path: ./dist/podman-desktop-*arm64.dmg
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: macos-universal-dmg
           path: ./dist/podman-desktop-*universal.dmg
@@ -200,7 +200,7 @@ jobs:
           echo "${{ github.event.pull_request.head.sha }}" > PR_SHA
 
       - name: Upload artifact website-content
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: website-content
           path: |
@@ -359,7 +359,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: ${{ matrix.mode }}-smoke-e2e-tests
@@ -404,7 +404,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: windows-sanity-e2e-tests
@@ -462,7 +462,7 @@ jobs:
           require_tests: true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: k8s-sanity-e2e-tests
@@ -563,7 +563,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: ${{ matrix.os }}-update-e2e-test
@@ -654,7 +654,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: always()
         with:
           name: ${{ matrix.os}}-update-e2e-test
