@@ -288,8 +288,8 @@ importers:
         specifier: ^8.46.0
         version: 8.46.0(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
       validator:
-        specifier: ^13.15.15
-        version: 13.15.15
+        specifier: ^13.15.20
+        version: 13.15.20
       vite:
         specifier: ^7.1.12
         version: 7.1.12(@types/node@22.18.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
@@ -601,8 +601,8 @@ importers:
         specifier: ^0.6.12
         version: 0.6.12
       validator:
-        specifier: ^13.15.15
-        version: 13.15.15
+        specifier: ^13.15.20
+        version: 13.15.20
     devDependencies:
       '@fortawesome/fontawesome-free':
         specifier: ^7.1.0
@@ -11531,8 +11531,8 @@ packages:
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
 
-  validator@13.15.15:
-    resolution: {integrity: sha512-BgWVbCI72aIQy937xbawcs+hrVaN/CZ2UwutgaJ36hGqRrLNM+f5LUT/YPRbo8IV/ASeFzXszezV+y2+rq3l8A==}
+  validator@13.15.20:
+    resolution: {integrity: sha512-KxPOq3V2LmfQPP4eqf3Mq/zrT0Dqp2Vmx2Bn285LwVahLc+CsxOM0crBHczm8ijlcjZ0Q5Xd6LW3z3odTPnlrw==}
     engines: {node: '>= 0.10'}
 
   value-equal@1.0.1:
@@ -24943,7 +24943,7 @@ snapshots:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
 
-  validator@13.15.15: {}
+  validator@13.15.20: {}
 
   value-equal@1.0.1: {}
 
