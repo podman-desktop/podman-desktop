@@ -51,7 +51,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Compose onboarding workflow verification', { tag: ['@smoke', '@windows_sanity'] }, () => {
+test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
   test.beforeEach(async () => {
     if (cliToolsPage.wasRateLimitReached()) {
       test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
