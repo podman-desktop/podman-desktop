@@ -1101,6 +1101,14 @@ export class ColorRegistry {
       dark: colorPalette.charcoal[500],
       light: colorPalette.gray[500],
     });
+    this.registerColor(`${tooltip}inner-border`, {
+      dark: colorPalette.white + '5',
+      light: colorPalette.white + '5',
+    });
+    this.registerColor(`${tooltip}outer-border`, {
+      dark: colorPalette.black + 'C',
+      light: colorPalette.black + '5',
+    });
   }
 
   protected initDropdown(): void {

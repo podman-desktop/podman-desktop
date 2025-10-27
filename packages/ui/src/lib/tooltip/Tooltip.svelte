@@ -148,19 +148,19 @@ $effect((): (() => void) => {
   {#if isVisible && !$tooltipHidden && (tip ?? tipSnippet)}
     <div
       bind:this={tooltipElement}
-      class="fixed tooltip-content transition-opacity duration-150 ease-in-out pointer-events-none text-sm z-[9999]"
+      class="fixed tooltip-content transition-opacity duration-150 ease-in-out pointer-events-none text-base/4 z-[9999] rounded-lg border-[1px] border-[var(--pd-tooltip-outer-border)]"
       class:opacity-0={!isPositioned}
       style="left: 0; top: 0;">
       {#if tip}
         <div
-          class="py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
+          class="py-1 px-2 rounded-lg bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-inner-border)] {className}"
           aria-label="tooltip">
           {tip}
         </div>
       {/if}
       {#if tipSnippet && !tip}
         <div
-          class="rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
+          class="py-1 px-2 rounded-lg bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-inner-border)] {className}"
           aria-label="tooltip">
           {@render tipSnippet?.()}
         </div>
