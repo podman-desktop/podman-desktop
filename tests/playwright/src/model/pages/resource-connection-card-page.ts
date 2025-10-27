@@ -28,6 +28,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
   readonly resourceElementConnectionActions: Locator;
   readonly createButton: Locator;
   readonly connectionType: Locator;
+  readonly machinePrivileges: Locator;
 
   constructor(page: Page, resourceName: string, resourceElementVisibleName?: string) {
     super(page, resourceName);
@@ -42,6 +43,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
       name: 'Create',
     });
     this.connectionType = this.resourceElement.getByLabel('Connection Type');
+    this.machinePrivileges = this.resourceElement.getByLabel('Machine with root privileges:');
   }
 
   public async doesResourceElementExist(): Promise<boolean> {

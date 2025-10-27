@@ -25,6 +25,7 @@ import test, { expect as playExpect } from '@playwright/test';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import type { PodmanVirtualizationProviders } from '../model/core/types';
+import { PodmanMachinePrivileges } from '../model/core/types';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import { ExperimentalPage } from '../model/pages/experimental-page';
 import { PreferencesPage } from '../model/pages/preferences-page';
@@ -523,6 +524,29 @@ export async function verifyVirtualizationProvider(
       .poll(async () => await resourceConnectionCardPage.doesResourceElementExist(), { timeout: 15_000 })
       .toBeTruthy();
     await playExpect(resourceConnectionCardPage.connectionType).toContainText(virtualizationProvider, {
+      ignoreCase: true,
+    });
+  });
+}
+
+/**
+ * Verifies that a Podman machine has the specified machine privileges (rootful or rootless).
+ * This method checks that the machine card exists and displays the correct machine privileges.
+ *
+ * @param resourceConnectionCardPage - The resource connection card page to verify
+ * @param machinePrivileges - The expected machine privileges (e.g., PodmanMachinePrivileges.Rootful, PodmanMachinePrivileges.Rootless)
+ * @returns A Promise that resolves when the verification is complete
+ * @throws Will throw an error if the expected machine privileges are not found or doesn't match
+ */
+export async function verifyMachinePrivileges(
+  resourceConnectionCardPage: ResourceConnectionCardPage,
+  machinePrivileges: PodmanMachinePrivileges,
+): Promise<void> {
+  return test.step(`Verify Podman Machine Privileges are ${machinePrivileges === PodmanMachinePrivileges.Rootful ? 'rootful' : 'rootless'}`, async () => {
+    await playExpect
+      .poll(async () => await resourceConnectionCardPage.doesResourceElementExist(), { timeout: 15_000 })
+      .toBeTruthy();
+    await playExpect(resourceConnectionCardPage.machinePrivileges).toContainText(machinePrivileges, {
       ignoreCase: true,
     });
   });

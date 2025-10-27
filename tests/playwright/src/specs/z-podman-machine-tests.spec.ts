@@ -19,6 +19,7 @@
 import type { Locator } from '@playwright/test';
 
 import { ResourceElementState } from '../model/core/states';
+import { PodmanMachinePrivileges } from '../model/core/types';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
@@ -29,6 +30,7 @@ import {
   deletePodmanMachine,
   handleConfirmationDialog,
   resetPodmanMachinesFromCLI,
+  verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
@@ -168,6 +170,7 @@ test.describe
 
       await playExpect(resourcesPage.heading).toBeVisible();
       const podmanResources = new ResourceConnectionCardPage(page, 'podman', ROOTLESS_PODMAN_MACHINE_VISIBLE);
+      await verifyMachinePrivileges(podmanResources, PodmanMachinePrivileges.Rootless);
       await verifyVirtualizationProvider(
         podmanResources,
         getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
