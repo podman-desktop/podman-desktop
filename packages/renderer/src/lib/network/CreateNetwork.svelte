@@ -2,11 +2,10 @@
 import { faMinusCircle, faNetworkWired, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, Dropdown, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
-import { handleNavigation } from '/@/navigation';
-import type { NetworkCreateFormInfo, NetworkCreateOptions, NetworkCreateResult } from '/@api/container-info';
-import { NavigationPage } from '/@api/navigation-page';
+import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
@@ -27,7 +26,8 @@ let networkInfo: NetworkCreateFormInfo = $state({
 });
 
 let createError: string | undefined = $state(undefined);
-let inProgress: boolean = $state(false);
+let createNetworkInProgress: boolean = $state(false);
+let createNetworkFinished: boolean = $state(false);
 
 let availableDrivers = $state<{ label: string; value: string }[]>([
   { label: 'bridge', value: 'bridge' },
@@ -53,77 +53,17 @@ function deleteLabel(index: number): void {
 
 async function createNetwork(): Promise<void> {
   createError = undefined;
-  inProgress = true;
+  createNetworkInProgress = true;
 
   try {
     if (!networkInfo.selectedProvider) {
       throw new Error('There is no container engine available.');
     }
 
-    // Parse driver-specific options with validation
-    let parsedOptions: Record<string, string> | undefined;
-    if (networkInfo.options) {
-      const pairs = networkInfo.options.map(option => option.trim()).filter(option => option.length > 0);
-      const validOptions: [string, string][] = [];
-      const malformedOptions: string[] = [];
+    // Parse driver options
+    const parsedOptions = parseKeyValueArray(networkInfo.options);
+    const parsedLabels = parseKeyValueArray(networkInfo.labels);
 
-      for (const pair of pairs) {
-        if (!pair.includes('=')) {
-          malformedOptions.push(pair);
-          continue;
-        }
-        const [key, value] = pair.split('=', 2);
-        const trimmedKey = key?.trim();
-        const trimmedValue = value?.trim();
-
-        if (trimmedKey && trimmedValue) {
-          validOptions.push([trimmedKey, trimmedValue]);
-        } else {
-          malformedOptions.push(pair);
-        }
-      }
-
-      if (malformedOptions.length > 0) {
-        console.warn(`Malformed network options ignored (expected key=value format): ${malformedOptions.join(', ')}`);
-      }
-
-      parsedOptions = validOptions.length > 0 ? Object.fromEntries(validOptions) : undefined;
-    }
-
-    // Parse labels (key=value)
-    let parsedLabels: Record<string, string> | undefined;
-    if (networkInfo.labels && Array.isArray(networkInfo.labels)) {
-      const validLabels: [string, string][] = [];
-      const malformedLabels: string[] = [];
-
-      for (const label of networkInfo.labels) {
-        const trimmed = label.trim();
-        if (!trimmed) continue;
-
-        if (!trimmed.includes('=')) {
-          malformedLabels.push(trimmed);
-          continue;
-        }
-
-        const [key, value] = trimmed.split('=', 2);
-        const trimmedKey = key?.trim();
-        const trimmedValue = value?.trim();
-
-        if (trimmedKey && trimmedValue) {
-          validLabels.push([trimmedKey, trimmedValue]);
-        } else {
-          malformedLabels.push(trimmed);
-        }
-      }
-
-      if (malformedLabels.length > 0) {
-        console.warn(`Malformed labels ignored (expected key=value format): ${malformedLabels.join(', ')}`);
-      }
-
-      parsedLabels = validLabels.length > 0 ? Object.fromEntries(validLabels) : undefined;
-    }
-
-    // Build the network create options - Docker/Podman API will ignore undefined fields
     const networkOptions: NetworkCreateOptions = {
       Name: networkInfo.networkName,
       Driver: networkInfo.driver || undefined,
@@ -144,30 +84,29 @@ async function createNetwork(): Promise<void> {
       Options: parsedOptions,
     };
 
-    const result: NetworkCreateResult = await window.createNetwork(
-      $state.snapshot(networkInfo.selectedProvider),
-      networkOptions,
-    );
+    await window.createNetwork($state.snapshot(networkInfo.selectedProvider), networkOptions);
 
-    // Verify network was created successfully
-    if (!result?.Id) {
-      throw new Error('Network creation failed: No network ID returned');
-    }
-
-    console.log('Network created successfully:', result.Id);
-
-    // Navigate back or show success
-    handleNavigation({ page: NavigationPage.IMAGES }); // TODO: Navigate to networks page when it exists
+    createNetworkFinished = true;
   } catch (error: unknown) {
     createError = error instanceof Error ? error.message : String(error);
     console.error('Error creating network:', error);
   } finally {
-    inProgress = false;
+    createNetworkInProgress = false;
   }
 }
 
-function navigateBack(): void {
-  handleNavigation({ page: NavigationPage.IMAGES });
+function parseKeyValueArray(list: string[]): Record<string, string> | undefined {
+  const validPairs: [string, string][] = [];
+  for (const entry of list.map(s => s.trim()).filter(Boolean)) {
+    const [key, value] = entry.split('=');
+    if (key && value) validPairs.push([key.trim(), value.trim()]);
+  }
+  return validPairs.length > 0 ? Object.fromEntries(validPairs) : undefined;
+}
+
+function end(): void {
+  // redirect to the networks page
+  router.goto('/networks');
 }
 
 let providerConnections = $derived(
@@ -186,14 +125,14 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
 
 <EngineFormPage
   title="Create a Network"
-  inProgress={inProgress}
-  showEmptyScreen={providerConnections.length === 0 && !inProgress}>
+  inProgress={createNetworkInProgress}
+  showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
   {#snippet icon()}
     <Icon icon={faNetworkWired} class="fa-2x" />
   {/snippet}
   {#snippet content()}
     <div class="space-y-6">
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label for="networkName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Name <span class="text-red-500">*</span></label>
         <Input
@@ -205,7 +144,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label
           for="labels"
           class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
@@ -236,7 +175,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
       
 
       {#if providerConnections.length > 1}
-        <div hidden={inProgress}>
+        <div hidden={createNetworkInProgress}>
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
             >Container engine</label>
           <ContainerConnectionDropdown
@@ -247,7 +186,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
         </div>
       {/if}
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label for="subnet" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Subnet</label>
         <Input
           bind:value={networkInfo.subnet}
@@ -257,12 +196,12 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label for="ipv6" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">IPv6</label>
         <SlideToggle id="ipv6" name="ipv6" bind:checked={networkInfo.ipv6Enabled} />
       </div>
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label for="ipRange" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">IP range</label>
         <Input
           bind:value={networkInfo.ipRange}
@@ -272,7 +211,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label for="gateway" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Gateway</label>
         <Input
           bind:value={networkInfo.gateway}
@@ -282,13 +221,13 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label for="internal" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Internal</label>
         <SlideToggle id="internal" name="internal" bind:checked={networkInfo.internalEnabled} />
       </div>
 
-      <div hidden={inProgress}>
+        <div hidden={createNetworkInProgress}>
         <label for="driver" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Driver</label>
         <Dropdown
           id="driver"
@@ -298,7 +237,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      <div hidden={inProgress}>
+      <div hidden={createNetworkInProgress}>
         <label
           for="options"
           class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
@@ -328,13 +267,24 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
       </div>
 
       <div class="w-full flex flex-row space-x-4">
-        {#if !inProgress}
-          <Button on:click={createNetwork} disabled={hasInvalidFields} class="w-full" icon={faNetworkWired}>
-            Create
-          </Button>
-          <Button on:click={navigateBack} class="w-full">Cancel</Button>
-        {/if}
-      </div>
+        <Button
+          disabled={hasInvalidFields || createNetworkInProgress || createNetworkFinished}
+          inProgress={createNetworkInProgress}
+          class="w-full"
+          hidden={createNetworkFinished}
+          icon={faNetworkWired}
+          onclick={createNetwork}>
+          Create
+        </Button>
+      
+        <Button
+          on:click={end}
+          class="w-full"
+          hidden={!createNetworkFinished}
+          onclick={end}>
+          Done
+        </Button>
+      </div>      
 
       {#if createError}
         <div class="text-red-500 text-sm">
