@@ -59,3 +59,24 @@ test('Enum with default', async () => {
   expect(input).toBeInTheDocument();
   expect(input).toHaveTextContent('world');
 });
+
+test('EnumItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    enum: ['hello', 'world'],
+  };
+
+  const onChange = vi.fn();
+  render(EnumItem, { record, value: 'hello', disabled: true, onChange });
+  const dropdown = screen.getByLabelText('record-description');
+  expect(dropdown).toBeInTheDocument();
+
+  // Verify the dropdown shows disabled styling (readonly border)
+  expect(dropdown.className).toContain('border-b-[var(--pd-input-field-stroke-readonly)]');
+
+  // Verify onChange is not called
+  expect(onChange).not.toHaveBeenCalled();
+});

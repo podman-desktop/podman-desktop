@@ -7,6 +7,7 @@ export let record: IConfigurationPropertyRecordedSchema;
 export let value: number | undefined;
 export let onChange = (_id: string, _value: number): void => {};
 export let invalidRecord = (_error: string): void => {};
+export let disabled = false;
 
 let valueUpdateTimeout: NodeJS.Timeout;
 
@@ -46,6 +47,7 @@ function onValidation(newValue: number, validationError?: string): void {
     step={record.step}
     type={record.type === 'integer' ? 'integer' : 'number'}
     maximum={record.maximum && typeof record.maximum === 'number' ? record.maximum : undefined}
-    showError={false}>
+    showError={false}
+    disabled={disabled}>
   </NumberInput>
 </Tooltip>

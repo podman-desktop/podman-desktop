@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,4 +97,26 @@ test('Ensure that after typing into the input, that onChange is called each time
   // Ensure it's been called 9 times as "new value" is 6 characters
   await userEvent.type(input, 'foobar');
   expect(onChange).toHaveBeenCalledTimes(6);
+});
+
+test('StringItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+  };
+
+  const onChange = vi.fn();
+  render(StringItem, { record, value: '', disabled: true, onChange });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+
+  // Verify the input is disabled
+  expect(input).toBeDisabled();
+
+  // Verify onChange is not called when trying to type
+  await userEvent.type(input, 'test');
+  expect(onChange).not.toHaveBeenCalled();
 });

@@ -6,6 +6,7 @@ import { uncertainStringToNumber } from '../Util';
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number;
 export let onChange = async (_id: string, _value: number): Promise<void> => {};
+export let disabled = false;
 
 async function onInput(event: Event): Promise<void> {
   const target = event.currentTarget as HTMLInputElement;
@@ -24,4 +25,5 @@ async function onInput(event: Event): Promise<void> {
   value={value}
   aria-label={record.description}
   on:input={onInput}
+  disabled={disabled}
   class="w-full h-1 bg-[var(--pd-input-toggle-on-bg)] rounded-lg appearance-none accent-[var(--pd-input-toggle-on-bg)] cursor-pointer range-xs mt-2" />

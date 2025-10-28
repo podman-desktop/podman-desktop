@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
@@ -55,4 +56,27 @@ test('Ensure HTMLInputElement readonly', async () => {
   const input = screen.getByLabelText(record.description);
   expect(input).toBeInTheDocument();
   expect((input as HTMLInputElement).readOnly).toBeTruthy();
+});
+
+test('PasswordStringItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema & { description: string } = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    format: 'password',
+  };
+
+  const onChange = vi.fn();
+  render(PasswordStringItem, { record, value: '', onChange, disabled: true });
+  const input = screen.getByLabelText(record.description);
+  expect(input).toBeInTheDocument();
+
+  // Verify the input is disabled
+  expect(input).toBeDisabled();
+
+  // Verify onChange is not called when trying to type
+  await userEvent.type(input, 'password');
+  expect(onChange).not.toHaveBeenCalled();
 });

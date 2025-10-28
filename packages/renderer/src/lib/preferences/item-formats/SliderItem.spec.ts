@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
@@ -45,4 +46,28 @@ test('Ensure HTMLInputElement', async () => {
   expect(input).toBeInTheDocument();
 
   expect(input instanceof HTMLInputElement).toBe(true);
+});
+
+test('SliderItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 4,
+    maximum: 34,
+  };
+
+  const onChange = vi.fn();
+  render(SliderItem, { record, value: 15, disabled: true, onChange });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+
+  // Verify the input is disabled
+  expect(input).toBeDisabled();
+
+  // Verify onChange is not called when trying to interact
+  await userEvent.click(input);
+  expect(onChange).not.toHaveBeenCalled();
 });

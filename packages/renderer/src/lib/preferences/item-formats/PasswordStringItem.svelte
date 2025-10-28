@@ -6,9 +6,10 @@ interface Props {
   record: IConfigurationPropertyRecordedSchema;
   value: string | undefined;
   onChange: (id: string, value: string) => Promise<void>;
+  disabled?: boolean;
 }
 
-let { record, value, onChange }: Props = $props();
+let { record, value, onChange, disabled = false }: Props = $props();
 
 let invalidEntry = $state(false);
 
@@ -26,6 +27,7 @@ function onInput(event: Event): void {
   placeholder={record.placeholder}
   password={value}
   readonly={!!record.readonly}
+  disabled={disabled}
   id="input-standard-{record.id}"
   aria-invalid={invalidEntry}
   aria-label={record.description} />

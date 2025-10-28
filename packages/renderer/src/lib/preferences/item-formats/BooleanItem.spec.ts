@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
@@ -94,4 +95,26 @@ test('Expect to see checkbox not checked if default is false', async () => {
   const button = screen.getByRole('checkbox');
   expect(button).toBeInTheDocument();
   expect(button).not.toBeChecked();
+});
+
+test('BooleanItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema & { default: boolean } = {
+    title: 'my boolean property',
+    id: 'myid',
+    parentId: '',
+    type: 'boolean',
+    default: true,
+  };
+  const onChange = vi.fn();
+  render(BooleanItem, { record, checked: record.default, disabled: true, onChange });
+  const button = screen.getByRole('checkbox');
+  expect(button).toBeInTheDocument();
+  expect(button).toBeChecked();
+
+  // Verify the checkbox is disabled
+  expect(button).toBeDisabled();
+
+  // Verify onChange is not called when trying to click
+  await userEvent.click(button);
+  expect(onChange).not.toHaveBeenCalled();
 });

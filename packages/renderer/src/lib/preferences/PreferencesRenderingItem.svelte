@@ -120,6 +120,7 @@ async function openGitHubDiscussion(): Promise<void> {
           updateResetButtonVisibility={updateResetButtonVisibility}
           resetToDefault={resetToDefault}
           enableAutoSave={true}
+          disabled={record.disabled}
           initialValue={getInitialValue(recordUI.original)} />
       {/if}
     </div>
@@ -129,6 +130,7 @@ async function openGitHubDiscussion(): Promise<void> {
         updateResetButtonVisibility={updateResetButtonVisibility}
         resetToDefault={resetToDefault}
         enableAutoSave={true}
+        disabled={record.disabled}
         initialValue={getInitialValue(recordUI.original)} />
     {/if}
   </div>

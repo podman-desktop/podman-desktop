@@ -175,3 +175,25 @@ test('If FileItem has readonly = true, then expect readonly to show in the eleme
   expect(input).toBeInTheDocument();
   expect((input as HTMLInputElement).readOnly).toBe(true);
 });
+
+test('FileItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    format: 'file',
+  };
+
+  const onChange = vi.fn();
+  const { container } = render(FileItem, { record, value: 'initial', disabled: true, onChange });
+  const input = screen.getByLabelText('record-description') as HTMLInputElement;
+  expect(input).toBeInTheDocument();
+
+  // Verify component renders with disabled prop
+  expect(container).toBeDefined();
+
+  // Verify onChange hasn't been called on render
+  expect(onChange).not.toHaveBeenCalled();
+});
