@@ -1215,7 +1215,7 @@ export class PluginSystem {
           },
         });
 
-        task.onUpdate(e => apiSender.send(`build-image-task-${e.action}`, taskId));
+        task.onUpdate(e => apiSender.send(`push-image-task-${e.action}`, taskId));
 
         return containerProviderRegistry
           .pushImage(engine, imageTag, (name: string, data: string) => {
