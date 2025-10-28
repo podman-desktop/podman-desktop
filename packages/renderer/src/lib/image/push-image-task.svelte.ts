@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { SvelteMap } from 'svelte/reactivity';
-
 let taskCounter = 0;
 
 export function getNextTaskId(): number {
@@ -33,29 +31,47 @@ export interface PushImageCallback {
   onError: (error: string) => void;
   // when build is finished, this function is called
   onEnd: () => void;
+  onReplay: (data: string) => void;
 }
 
-export const PushImageInfos = new SvelteMap<number, PushImageInfo>();
-
-export function getPushImageInfo(taskId: number): PushImageInfo | undefined {
-  return PushImageInfos.get(taskId);
+export interface PushImageInfo {
+  inProgress: boolean;
+  finished: boolean;
+  error: string;
+  replay: string;
 }
 
-export class PushImageInfo {
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+export const PushImageTasks = new Map<number, PushImageTask>();
+
+export function getPushImageTask(taskId: number): PushImageTask {
+  let bgTask = PushImageTasks.get(taskId);
+  if (!bgTask) {
+    bgTask = new PushImageTask();
+  } else {
+    if (!bgTask.inProgress) {
+      const bgTaskClone = new PushImageTask();
+      bgTaskClone.inProgress = $state.snapshot(bgTask.inProgress);
+      bgTaskClone.finished = $state.snapshot(bgTask.finished);
+      bgTaskClone.error = $state.snapshot(bgTask.error);
+      bgTaskClone.replay = $state.snapshot(bgTask.replay);
+      bgTask = bgTaskClone;
+    }
+  }
+  return bgTask;
+}
+
+export class PushImageTask {
   inProgress: boolean = $state(false);
   finished: boolean = $state(false);
   error: string = $state('');
-  cancellableTokenId?: number;
-  replay: string = '';
-  cb?: PushImageCallback;
-  taskId: number = 0;
-  constructor() {}
-
-  isCancellable(): boolean {
-    return !!this.cancellableTokenId;
+  replay: string = $state('');
+  constructor(public cb?: PushImageCallback) {
+    this.cb = cb;
   }
 
   connectUI(cb: PushImageCallback): void {
+    cb.onReplay(this.replay);
     this.cb = cb;
   }
 
@@ -63,19 +79,13 @@ export class PushImageInfo {
     this.cb = undefined;
   }
 
-  async pushImage(
-    engineId: string,
-    selectedImageTag: string,
-    imageId: string,
-    base64RepoTag: string,
-    taskId: number,
-  ): Promise<void> {
+  async start(engineId: string, selectedImageTag: string, imageId: string, base64RepoTag: string): Promise<void> {
+    const taskId = getNextTaskId();
+    PushImageTasks.set(taskId, this);
     this.error = '';
     this.inProgress = true;
     this.finished = false;
     this.replay = '';
-    this.taskId = taskId;
-    PushImageInfos.set(taskId, this);
     return window.pushImage(
       engineId,
       selectedImageTag,
@@ -105,6 +115,9 @@ export class PushImageInfo {
   }
 }
 
-export function cleanupPushImageInfo(taskId: number): void {
-  PushImageInfos.delete(taskId);
+export function deletePushImageTask(taskId: number): void {
+  PushImageTasks.delete(taskId);
 }
+
+// clean up taskId => push image task map after reference to task removed form task manager
+window.events?.receive('push-image-task-delete', deletePushImageTask as (...args: unknown[]) => void);

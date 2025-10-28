@@ -16,10 +16,9 @@ import { router } from 'tinro';
 import { providerInfos } from '/@/stores/providers';
 
 import { lastPage } from '../../stores/breadcrumb';
-import type { PushImageCallback } from '../../stores/push-images.svelte';
-import { getNextTaskId, getPushImageInfo, PushImageInfo } from '../../stores/push-images.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
+import { getPushImageTask, type PushImageCallback } from './push-image-task.svelte';
 
 interface Props {
   imageId: string;
@@ -28,37 +27,47 @@ interface Props {
   taskId?: number;
 }
 
+// Fix link for error message if fix is available and all supported fixes
 class FixLink {
   static readonly addRegistry = new FixLink('Add a registry now.', () => router.goto('/preferences/registries'));
+
   public readonly text: string;
   public readonly command: () => void;
+
   constructor(text: string, command: () => void) {
     this.text = text;
     this.command = command;
   }
 }
 
+// Error message class and all possible messages
 class ErrorMessage {
   static readonly noRegistry = new ErrorMessage('No registry with push permissions found.', FixLink.addRegistry);
   static readonly noImage = new ErrorMessage(() => `Image with ID ${imageId} does not exist.`);
   static readonly noTag = new ErrorMessage(() => `Tag '${selection}' doesn't exist locally`);
   static readonly noError = new ErrorMessage('', undefined);
+
   #text: string | (() => string);
   public readonly link?: FixLink;
+
   constructor(text: string | (() => string), link?: FixLink) {
     this.#text = text;
     this.link = link;
   }
+
   get message(): string {
     return typeof this.#text === 'function' ? this.#text() : this.#text;
   }
 }
 
+// data to render list status icon
 class StatusIcon {
   static readonly success = new StatusIcon('pd-state-success', faCheckCircle);
   static readonly warning = new StatusIcon('pd-state-warning', faTriangleExclamation);
+
   public readonly class: string;
   public readonly icon: IconDefinition;
+
   constructor(cssVariableName: string, icon: IconDefinition) {
     this.class = `text-[var(--${cssVariableName})]`;
     this.icon = icon;
@@ -67,31 +76,50 @@ class StatusIcon {
 
 let { imageId, engineId, base64RepoTag, taskId = 0 }: Props = $props();
 
+// There is always parameter represents the tag to push
+// and it is selected by default even if it is not in the list of tags
+// the error message is shown below the select input control
 let selection = $derived.by(() => {
+  let result = base64RepoTag;
   try {
-    return atob(base64RepoTag);
+    result = atob(base64RepoTag);
   } catch (decodeError) {
     console.error(`Failed to decode base64RepoTag ${base64RepoTag}:`, decodeError);
-    return base64RepoTag;
   }
+  return result;
 });
-let option: string[] = $state([]);
+
+// options[] is the list of tags to display in the select input control
+let options: string[] = $state([]);
+
+// tags[] is the list of tags of the image
 let tags: string[] = $state([]);
+
+// isLoaded is a loading guard to avoid showing the error message about missing tag
 let isLoaded = $state(false); // Loading guard
+
+// image info loading error
 let imageLoadError = $state(ErrorMessage.noError);
+
+// tagLoadError is the error message about the tag
 let tagLoadError = $derived.by(() => {
   // Only compute after data is loaded
+  // to avoid showing the error message about missing tag
+  // because tags[] is empty until the image info is loaded
   if (!isLoaded) return ErrorMessage.noError;
-
   if (tags.includes(selection)) {
     return ErrorMessage.noError;
   } else {
     return ErrorMessage.noTag;
   }
 });
+
+// authenticationCheckError is the error message about the authentication not configured for the selected tag
 let authenticationCheckError = $state(ErrorMessage.noError);
 
-let pushImageInfo = $state(new PushImageInfo());
+// push image task loading if available
+let pushImageTask = $state(getPushImageTask(taskId));
+
 let logsTerminal: Terminal | undefined = $state();
 
 let providerConnections = $derived(
@@ -112,35 +140,12 @@ function createCallback(): PushImageCallback {
     onError: (data: string): void => {
       logsTerminal?.write(data + '\n\r');
     },
-    onEnd: (): void => {
-      pushImageInfo.disconnectUI();
+    onEnd: (): void => {},
+    onReplay: (data: string): void => {
+      logsTerminal?.clear();
+      logsTerminal?.write(data);
     },
   };
-}
-
-function loadBackgroundPush(bgTaskId: number): void {
-  const bgPushImageInfo = getPushImageInfo(bgTaskId);
-  if (bgPushImageInfo) {
-    // switching from previous push image dialog which can be finished or still running
-    if (pushImageInfo.inProgress) {
-      pushImageInfo.disconnectUI();
-    }
-    if (bgPushImageInfo.inProgress) {
-      pushImageInfo = bgPushImageInfo;
-      logsTerminal?.reset();
-      logsTerminal?.write(bgPushImageInfo.replay);
-      pushImageInfo.connectUI(createCallback());
-    } else {
-      const clonePushImageInfo = new PushImageInfo();
-      clonePushImageInfo.inProgress = $state.snapshot(bgPushImageInfo.inProgress);
-      clonePushImageInfo.finished = $state.snapshot(bgPushImageInfo.finished);
-      clonePushImageInfo.error = $state.snapshot(bgPushImageInfo.error);
-      clonePushImageInfo.replay = $state.snapshot(bgPushImageInfo.replay);
-      pushImageInfo = clonePushImageInfo;
-      logsTerminal?.reset();
-      logsTerminal?.write(bgPushImageInfo.replay);
-    }
-  }
 }
 
 async function loadImageInfo(): Promise<void> {
@@ -154,11 +159,11 @@ async function loadImageInfo(): Promise<void> {
     console.warn(imageLoadError.message);
   }
 
-  option = [...tags];
+  options = [...tags];
   // Check if parameter tag exists in the original image tags
   if (selection !== '<none>' && !tags.includes(selection)) {
     // Add parameter tag to display list only, mark as added
-    option = [selection, ...option];
+    options = [selection, ...options];
     tagLoadError = ErrorMessage.noTag;
   } else {
     tagLoadError = ErrorMessage.noError;
@@ -166,10 +171,7 @@ async function loadImageInfo(): Promise<void> {
 }
 
 async function pushImage(): Promise<void> {
-  logsTerminal?.reset();
-  pushImageInfo.connectUI(createCallback());
-  const selectedBase64RepoTag = btoa(selection);
-  return pushImageInfo.pushImage(engineId, selection, imageId, selectedBase64RepoTag, getNextTaskId());
+  return pushImageTask.start(engineId, selection, imageId, btoa(selection));
 }
 
 function pushImageFinished(): void {
@@ -182,10 +184,11 @@ let errors = $derived(
 let isWarning = $derived(errors.length > 0);
 let statusIcon = $derived(isWarning ? StatusIcon.warning : StatusIcon.success);
 let selectBorderClass = $derived(`outline-[var(--${isWarning ? 'pd-state-warning' : 'pd-modal-border'})]`);
+let isPushButtonDisabled = $derived(pushImageTask.inProgress || isWarning || options.length === 0 || !isLoaded);
+let isTerminalHidden = $derived(!pushImageTask.inProgress && !pushImageTask.finished);
+let isSelectDisabled = $derived(tags.length === 0 || pushImageTask.inProgress);
 
 onMount(async () => {
-  console.log('onMount');
-  loadBackgroundPush(taskId);
   await loadImageInfo();
   isLoaded = true; // Mark as loaded - derived values will now compute
 });
@@ -199,16 +202,16 @@ $effect(() => {
     .catch((err: unknown) => console.error(`Error getting authentication required for image ${imageId}`, err));
 });
 
-onDestroy(() => pushImageInfo.disconnectUI());
+onDestroy(() => pushImageTask.disconnectUI());
 
 function onTerminalInit(): void {
-  logsTerminal?.write(pushImageInfo.replay);
-  window.dispatchEvent(new Event('resize'));
+  pushImageTask.connectUI(createCallback());
 }
 </script>
+
 <EngineFormPage
   title="Push image to a registry"
-  inProgress={pushImageInfo.inProgress}
+  inProgress={pushImageTask.inProgress}
   showEmptyScreen={providerConnections.length === 0}>
   {#snippet icon()}
     <i class="fas fa-arrow-circle-up fa-2x" aria-hidden="true"></i>
@@ -223,11 +226,11 @@ function onTerminalInit(): void {
           class="text-sm rounded-lg block w-full p-2.5 bg-[var(--pd-dropdown-bg)] pl-6 border-r-8 border-transparent outline-1 outline {selectBorderClass} placeholder-[var(--pd-content-text)] text-[var(--pd-default-text)]"
           name="imageChoice"
           bind:value={selection}
-          disabled={tags.length === 0 || pushImageInfo.inProgress}>
-          {#each option as imageTag, index (index)}
+          disabled={isSelectDisabled}>
+          {#each options as imageTag, index (index)}
             <option value={imageTag}>{imageTag}</option>
           {/each}
-          {#if option.length === 0}
+          {#if options.length === 0}
             <option value="<none>">No tags available</option>
           {/if}
         </select>
@@ -242,19 +245,19 @@ function onTerminalInit(): void {
         {/each}
       </div>
 
-      <div class="h-[185px]" hidden={!pushImageInfo.inProgress && !pushImageInfo.finished}>
+      <div class="h-[185px]" hidden={isTerminalHidden}>
         <TerminalWindow class="h-full" on:init={onTerminalInit} bind:terminal={logsTerminal} disableStdIn />
       </div>
       <div class="flex justify-middle gap-2">
         <Button class="w-auto" type="secondary" on:click={pushImageFinished}
-          >{pushImageInfo.finished ? `Done` : `Close`}</Button>
+          >{pushImageTask.finished ? `Done` : `Close`}</Button>
 
         <Button
           class="w-auto"
           icon={faCircleArrowUp}
-          disabled={pushImageInfo.inProgress || isWarning || option.length === 0 || !isLoaded}
+          disabled={isPushButtonDisabled}
           on:click={pushImage}
-          inProgress={pushImageInfo.inProgress}>
+          inProgress={pushImageTask.inProgress}>
           Push image
         </Button>
       </div>

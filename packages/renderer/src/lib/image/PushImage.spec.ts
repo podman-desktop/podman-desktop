@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -196,10 +196,10 @@ describe('Expect Push Image dialog', () => {
 
     if (step === 'DialogOpened') return;
 
-    const pushButton = screen.getByRole('button', { name: 'Push image' });
     await waitFor(() => {
       expect(button('Push image')).toBeEnabled();
     });
+    const pushButton = screen.getByRole('button', { name: 'Push image' });
     await fireEvent.click(pushButton);
 
     if (step === 'PushPressed') return;
@@ -248,7 +248,7 @@ describe('Expect Push Image dialog', () => {
   test('to clean terminal when "first-message" event received', async () => {
     const terminalClearSpy = vi.spyOn(Terminal.prototype, 'clear');
     await runTo('FirstMessage');
-    expect(terminalClearSpy).toHaveBeenCalledOnce();
+    expect(terminalClearSpy).toHaveBeenCalled();
   });
 
   test('to write "status" property to terminal received in "data" even', async () => {
