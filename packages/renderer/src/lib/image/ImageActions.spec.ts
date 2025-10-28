@@ -91,7 +91,6 @@ test('Expect showMessageBox to be called when error occurs', async () => {
   const image: ImageInfoUI = new Image('dummy', 'UNUSED') as unknown as ImageInfoUI;
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image,
   });
@@ -113,7 +112,6 @@ test('Expect no dropdown when one contribution and dropdownMenu off', async () =
   );
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image: fakedImage,
     dropdownMenu: false,
@@ -140,7 +138,6 @@ test('Expect contribution in dropdown when several contributions and dropdownMen
   );
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image: fakedImage,
     dropdownMenu: false,
@@ -168,7 +165,6 @@ test('Expect no dropdown when several contributions and dropdownMenu mode on', a
   );
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image: fakedImage,
     dropdownMenu: true, // We are showing all actions in a Dropdown
@@ -204,7 +200,6 @@ test('Expect Push image to be there', async () => {
   } as ImageInfoUI;
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image,
   });
@@ -223,7 +218,6 @@ test('Expect Save image to be there', async () => {
   } as ImageInfoUI;
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image,
   });
@@ -246,7 +240,6 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
   } as ImageInfoUI;
 
   render(ImageActions, {
-    onPushImage: vi.fn(),
     onRenameImage: vi.fn(),
     image,
   });

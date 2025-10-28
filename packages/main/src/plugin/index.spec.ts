@@ -347,9 +347,9 @@ test('push image command sends onData message with callbackId, event name and da
   const handle = handlers.get(pushImageHandlerId);
   expect(handle).not.equal(undefined);
   const defaultCallback = vi.fn();
-  let registeredCallback: (name: string, data: string) => void = defaultCallback;
+  let registeredCallback: (name: 'data' | 'end' | 'first-message', data: string) => void = defaultCallback;
   vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
-    (_engine, _imageId, callback: (name: string, data: string) => void) => {
+    (_engine, _imageId, callback: (name: 'data' | 'end' | 'first-message', data: string) => void) => {
       registeredCallback = callback;
       return Promise.resolve();
     },
@@ -370,7 +370,7 @@ test('push image sends data event with error, "end" event when fails and set tas
   const handle = handlers.get('container-provider-registry:pushImage');
   expect(handle).not.equal(undefined);
   vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
-    (_engine, _imageId, _callback: (name: string, data: string) => void) => {
+    (_engine, _imageId, _callback: (name: 'data' | 'end' | 'first-message', data: string) => void) => {
       return Promise.reject(pushError);
     },
   );
