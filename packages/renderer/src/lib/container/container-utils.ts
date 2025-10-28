@@ -301,7 +301,7 @@ export class ContainerUtils {
           // handle ${} in icon class
           // and interpret the value and replace with the class-name
           const match = contribution.value.icon.match(/\$\{(.*)\}/);
-          if (match && match.length === 2) {
+          if (match?.length === 2) {
             const className = match[1];
             icon = contribution.value.icon.replace(match[0], `podman-desktop-icon-${className}`);
             return icon;

@@ -107,7 +107,7 @@ async function uninstall(cliTool: CliToolInfo): Promise<void> {
     buttons: ['Yes', 'Cancel'],
   });
 
-  if (!result || result.response !== 0) {
+  if (result?.response !== 0) {
     return;
   }
 

@@ -444,7 +444,7 @@ export class ContainerProviderRegistry {
     // Find all the containers that match the label + key
     return containers.filter(container => {
       const labels = container.Labels;
-      return labels && labels[label] === key;
+      return labels?.[label] === key;
     });
   }
 
@@ -1611,7 +1611,7 @@ export class ContainerProviderRegistry {
       // Find all the containers that are using projectLabel and match the projectName
       const containersMatchingProject = containers.filter(container => {
         const labels = container.Labels;
-        return labels && labels[label] === key;
+        return labels?.[label] === key;
       });
 
       // Get all the container ids in containersIds

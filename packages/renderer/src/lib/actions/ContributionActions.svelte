@@ -82,7 +82,7 @@ function getIcon(menu: Menu): IconDefinition | string {
   }
 
   const match = menu.icon.match(/\$\{(.*)\}/);
-  if (match && match.length === 2) {
+  if (match?.length === 2) {
     const className = match[1];
     return menu.icon.replace(match[0], `podman-desktop-icon-${className}`);
   }

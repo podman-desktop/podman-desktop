@@ -56,7 +56,7 @@ const lineNumberPerId = new SvelteMap<string, number>();
 let lineIndex = 0;
 
 async function resolveShortname(): Promise<void> {
-  if (!selectedProviderConnection || selectedProviderConnection.type !== 'podman') {
+  if (selectedProviderConnection?.type !== 'podman') {
     return;
   }
   if (imageToPull && !imageToPull.includes('/')) {
