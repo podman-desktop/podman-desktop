@@ -28,13 +28,15 @@ import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
 import { WinVersionCheck } from '/@/checks/windows/win-version-check';
 import { WSLVersionCheck } from '/@/checks/windows/wsl-version-check';
 import { WSL2Check } from '/@/checks/windows/wsl2-check';
+import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
+import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 
-import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
 
 export class InversifyBinding {
   #inversifyContainer: InversifyContainer | undefined;
@@ -66,8 +68,10 @@ export class InversifyBinding {
 
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();
+      this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupWindows).inSingletonScope();
     } else if (envAPI.isMac) {
       this.#inversifyContainer.bind(Installer).to(MacOSInstaller).inSingletonScope();
+      this.#inversifyContainer.bind(ProviderCleanupSymbol).to(PodmanCleanupMacOS).inSingletonScope();
     }
 
     return this.#inversifyContainer;

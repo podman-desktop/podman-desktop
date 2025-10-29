@@ -15,6 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
-
 export const ExtensionContextSymbol = Symbol.for('ExtensionContext');
 export const TelemetryLoggerSymbol = Symbol.for('TelemetryLogger');
+/**
+ * Symbol for {@link import('@podman-desktop/api').ProviderCleanup}
+ */
+export const ProviderCleanupSymbol = Symbol.for('ProviderCleanup');

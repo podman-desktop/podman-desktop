@@ -21,15 +21,19 @@ import { env } from '@podman-desktop/api';
 import type { Container as InversifyContainer } from 'inversify';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { PodmanCleanupMacOS } from '/@/cleanup/podman-cleanup-macos';
+import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
 
 import { InversifyBinding } from './inversify-binding';
-import { ExtensionContextSymbol, TelemetryLoggerSymbol } from './symbols';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
 
 vi.mock(import('/@/installer/win-installer'));
 vi.mock(import('/@/installer/mac-os-installer'));
+vi.mock(import('/@/cleanup/podman-cleanup-macos'));
+vi.mock(import('/@/cleanup/podman-cleanup-windows'));
 
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
@@ -64,40 +68,77 @@ describe('inversifyBinding', () => {
     expect(container.get(TelemetryLoggerSymbol)).toBe(telemetryLoggerMock);
   });
 
-  test('InversifyBinding#init should bind WinInstaller for Installer on windows', async () => {
-    vi.mocked(env).isWindows = true;
+  describe('windows', () => {
+    let container: InversifyContainer;
+    beforeEach(async () => {
+      vi.mocked(env).isWindows = true;
+      container = await inversifyBinding.init();
+    });
 
-    const container = await inversifyBinding.init();
+    test('InversifyBinding#init should bind WinInstaller for Installer', async () => {
+      const value = container.get(Installer);
+      expect(value).not.toBeUndefined();
 
-    const value = container.get(Installer);
-    expect(value).not.toBeUndefined();
+      expect(WinInstaller).toHaveBeenCalledOnce();
+      expect(MacOSInstaller).not.toHaveBeenCalled();
+    });
 
-    expect(WinInstaller).toHaveBeenCalledOnce();
-    expect(MacOSInstaller).not.toHaveBeenCalled();
+    test('InversifyBinding#init should bind PodmanCleanupWindows for ProviderCleanupSymbol', async () => {
+      const value = container.get(ProviderCleanupSymbol);
+      expect(value).not.toBeUndefined();
+
+      expect(PodmanCleanupWindows).toHaveBeenCalledOnce();
+      expect(PodmanCleanupMacOS).not.toHaveBeenCalled();
+    });
   });
 
-  test('InversifyBinding#init should bind MacOSInstaller for Installer on macos', async () => {
-    vi.mocked(env).isMac = true;
+  describe('macos', () => {
+    let container: InversifyContainer;
+    beforeEach(async () => {
+      vi.mocked(env).isMac = true;
+      container = await inversifyBinding.init();
+    });
 
-    const container = await inversifyBinding.init();
+    test('InversifyBinding#init should bind MacOSInstaller for Installer', async () => {
+      const value = container.get(Installer);
+      expect(value).not.toBeUndefined();
 
-    const value = container.get(Installer);
-    expect(value).not.toBeUndefined();
+      expect(WinInstaller).not.toHaveBeenCalled();
+      expect(MacOSInstaller).toHaveBeenCalled();
+    });
 
-    expect(WinInstaller).not.toHaveBeenCalled();
-    expect(MacOSInstaller).toHaveBeenCalled();
+    test('InversifyBinding#init should bind PodmanCleanupMacOS for ProviderCleanupSymbol', async () => {
+      const value = container.get(ProviderCleanupSymbol);
+      expect(value).not.toBeUndefined();
+
+      expect(PodmanCleanupMacOS).toHaveBeenCalledOnce();
+      expect(PodmanCleanupWindows).not.toHaveBeenCalled();
+    });
   });
 
-  test('InversifyBinding#init should bind undefined on Installer on linux', async () => {
-    vi.mocked(env).isLinux = true;
+  describe('linux', () => {
+    let container: InversifyContainer;
+    beforeEach(async () => {
+      vi.mocked(env).isLinux = true;
+      container = await inversifyBinding.init();
+    });
 
-    const container = await inversifyBinding.init();
+    test('InversifyBinding#init should not provide any binding for Installer', async () => {
+      expect(() => {
+        container.get(Installer);
+      }).toThrowError('No bindings found for service: "Symbol(Installer)"');
 
-    expect(() => {
-      container.get(Installer);
-    }).toThrowError('No bindings found for service: "Symbol(Installer)"');
+      expect(WinInstaller).not.toHaveBeenCalled();
+      expect(MacOSInstaller).not.toHaveBeenCalled();
+    });
 
-    expect(WinInstaller).not.toHaveBeenCalled();
-    expect(MacOSInstaller).not.toHaveBeenCalled();
+    test('InversifyBinding#init should not provide any binding for ProviderCleanupSymbol', async () => {
+      expect(() => {
+        container.get(ProviderCleanupSymbol);
+      }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
+
+      expect(PodmanCleanupMacOS).not.toHaveBeenCalled();
+      expect(PodmanCleanupWindows).not.toHaveBeenCalled();
+    });
   });
 });
