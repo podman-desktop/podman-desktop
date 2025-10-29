@@ -51,6 +51,9 @@ let bulkDeleteInProgress = false;
 function key(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): string {
   return extensionFolder.path;
 }
+function label(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): string {
+  return extensionFolder.name;
+}
 </script>
 
 <Table
@@ -61,6 +64,7 @@ function key(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): strin
   bind:selectedItemsNumber
   defaultSortColumn="Name"
   key={key}
+  label={label}
   on:update={(): SelectableExtensionDevelopmentFolderInfoUI[] => (extensionFolderUIInfos = [...extensionFolderUIInfos])}>
 </Table>
 
