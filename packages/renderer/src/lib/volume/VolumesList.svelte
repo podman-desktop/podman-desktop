@@ -11,12 +11,12 @@ import {
   TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
+
 import { providerInfos } from '../../stores/providers';
-import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '../../stores/volumes';
+import { fetchVolumesWithData, filtered, volumeListInfos } from '../../stores/volumes';
 import { withBulkConfirmation } from '../actions/BulkActions';
 import type { EngineInfoUI } from '../engine/EngineInfoUI';
 import Prune from '../engine/Prune.svelte';
@@ -30,61 +30,42 @@ import VolumeColumnStatus from './VolumeColumnStatus.svelte';
 import VolumeEmptyScreen from './VolumeEmptyScreen.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-export let searchTerm = '';
-$: searchPattern.set(searchTerm);
+interface Props {
+  searchTerm?: string;
+}
 
-let volumes: VolumeInfoUI[] = [];
-let enginesList: EngineInfoUI[];
-
-$: providerConnections = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let { searchTerm = '' }: Props = $props();
 
 const volumeUtils = new VolumeUtils();
 
-let volumesUnsubscribe: Unsubscriber;
-onMount(async () => {
-  volumesUnsubscribe = filtered.subscribe(value => {
-    const computedVolumes = value
-      .map(volumeListInfo => volumeListInfo.Volumes)
-      .flat()
-      .map(volume => volumeUtils.toVolumeInfoUI(volume));
+let volumes: VolumeInfoUI[] = $derived(
+  $filtered
+    .map(volumeListInfo => volumeListInfo.Volumes)
+    .flat()
+    .map(volume => volumeUtils.toVolumeInfoUI(volume)),
+);
+let enginesList: EngineInfoUI[] = $derived(
+  Array.from(
+    volumes
+      .reduce((accumulator, current) => {
+        if (!accumulator.has(current.engineId)) {
+          accumulator.set(current.engineId, {
+            id: current.engineId,
+            name: current.engineName,
+          });
+        }
+        return accumulator;
+      }, new Map<string, EngineInfoUI>())
+      .values(),
+  ),
+);
 
-    // Map engineName, engineId and engineType from currentContainers to EngineInfoUI[]
-    const engines = computedVolumes.map(container => {
-      return {
-        name: container.engineName,
-        id: container.engineId,
-      };
-    });
-    // Remove duplicates from engines by name
-    const uniqueEngines = engines.filter(
-      (engine, index, self) => index === self.findIndex(t => t.name === engine.name),
-    );
-
-    // Set the engines to the global variable for the Prune functionality button
-    enginesList = uniqueEngines;
-
-    // update selected items based on current selected items
-    computedVolumes.forEach(volume => {
-      const matchingVolume = volumes.find(
-        currentVolume => currentVolume.name === volume.name && currentVolume.engineId === volume.engineId,
-      );
-      if (matchingVolume) {
-        volume.selected = matchingVolume.selected;
-      }
-    });
-    volumes = computedVolumes;
-  });
-});
-
-onDestroy(() => {
-  // unsubscribe from the store
-  if (volumesUnsubscribe) {
-    volumesUnsubscribe();
-  }
-});
+let providerConnections: ProviderContainerConnectionInfo[] = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 // delete the items selected in the list
 let bulkDeleteInProgress = false;
@@ -112,7 +93,7 @@ async function deleteSelectedVolumes(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
-let fetchDataInProgress = false;
+let fetchDataInProgress = $state(false);
 async function fetchUsageData(): Promise<void> {
   fetchDataInProgress = true;
   try {
@@ -126,7 +107,7 @@ function gotoCreateVolume(): void {
   router.goto('/volumes/create');
 }
 
-let selectedItemsNumber: number;
+let selectedItemsNumber: number = $state(0);
 
 let statusColumn = new TableColumn<VolumeInfoUI>('Status', {
   align: 'center',
@@ -202,7 +183,7 @@ function key(obj: VolumeInfoUI): string {
   {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={(): void =>
+        onclick={(): void =>
           withBulkConfirmation(
             deleteSelectedVolumes,
             `delete ${selectedItemsNumber} volume${selectedItemsNumber > 1 ? 's' : ''}`,
