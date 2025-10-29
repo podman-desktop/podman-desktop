@@ -52,6 +52,12 @@ const row = new TableRow<TaskInfoUI>({
 function key(task: TaskInfoUI): string {
   return task.id;
 }
+/**
+ * Utility function for the Table to get the label to use for each item
+ */
+function label(task: TaskInfoUI): string {
+  return task.name;
+}
 </script>
 
 <Table
@@ -61,4 +67,5 @@ function key(task: TaskInfoUI): string {
   columns={columns}
   row={row}
   key={key}
+  label={label}
   defaultSortColumn="Age" />
