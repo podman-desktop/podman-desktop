@@ -103,6 +103,11 @@ export enum PodmanVirtualizationProviders {
   Native = '', //not a real provider, used for 'Connection Type' check in Resources page of Linux machines
 }
 
+export enum PodmanMachinePrivileges {
+  Rootful = 'rootful',
+  Rootless = 'rootless',
+}
+
 export enum ProxyTypes {
   Disabled = 'Disabled',
   Manual = 'Manual',

@@ -20,7 +20,7 @@ import type { Locator } from '@playwright/test';
 
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
-import { PodmanVirtualizationProviders } from '../model/core/types';
+import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '../model/core/types';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -31,6 +31,7 @@ import {
   deletePodmanMachineFromCLI,
   handleConfirmationDialog,
   resetPodmanMachinesFromCLI,
+  verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux, isWindows } from '../utility/platform';
@@ -179,6 +180,10 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
 
         await playExpect(resourcePage.heading).toBeVisible();
         const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+        await verifyMachinePrivileges(
+          machineCard,
+          isRoot ? PodmanMachinePrivileges.Rootful : PodmanMachinePrivileges.Rootless,
+        );
         await verifyVirtualizationProvider(
           machineCard,
           getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),

@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { ResourceElementState } from '../model/core/states';
-import { PodmanVirtualizationProviders } from '../model/core/types';
+import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '../model/core/types';
 import { CreateMachinePage } from '../model/pages/create-machine-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -30,6 +30,7 @@ import {
   ensureCliInstalled,
   handleConfirmationDialog,
   setStatusBarProvidersFeature,
+  verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '../utility/operations';
 import { isLinux } from '../utility/platform';
@@ -123,6 +124,8 @@ test.describe.serial('Status bar providers feature verification', { tag: '@k8s_e
         (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
       { timeout: 30_000, sendError: true },
     );
+
+    await verifyMachinePrivileges(machineCard, PodmanMachinePrivileges.Rootful); //default privileges
 
     await verifyVirtualizationProvider(machineCard, getVirtualizationProvider() ?? getDefaultVirtualizationProvider());
 

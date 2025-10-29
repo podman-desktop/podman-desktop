@@ -21,7 +21,7 @@ import * as os from 'node:os';
 import type { Locator, Page } from '@playwright/test';
 
 import { ResourceElementState } from '../model/core/states';
-import { PodmanVirtualizationProviders } from '../model/core/types';
+import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '../model/core/types';
 import type { DashboardPage } from '../model/pages/dashboard-page';
 import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
@@ -29,7 +29,13 @@ import { ResourceConnectionCardPage } from '../model/pages/resource-connection-c
 import { ResourcesPage } from '../model/pages/resources-page';
 import type { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
+import {
+  createPodmanMachineFromCLI,
+  deletePodmanMachine,
+  resetPodmanMachinesFromCLI,
+  verifyMachinePrivileges,
+  verifyVirtualizationProvider,
+} from '../utility/operations';
 import { isLinux } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -193,10 +199,10 @@ test.describe
                 PODMAN_MACHINE_NAME,
               );
               await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
-              await playExpect(resourcesPodmanConnections.connectionType).toBeVisible({ timeout: 10_000 });
-              await playExpect(resourcesPodmanConnections.connectionType).toHaveText(
+              await verifyMachinePrivileges(resourcesPodmanConnections, PodmanMachinePrivileges.Rootful); //default privileges
+              await verifyVirtualizationProvider(
+                resourcesPodmanConnections,
                 getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
-                { ignoreCase: true },
               );
               await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: 20_000 });
               await playExpect(resourcesPodmanConnections.resourceElementDetailsButton).toBeVisible();
