@@ -21,9 +21,11 @@ import type * as proc from 'node:child_process';
 import * as fs from 'node:fs';
 import { arch } from 'node:os';
 
+import type { ServiceIdentifier } from '@inversifyjs/common/lib/esm';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable, provider as apiProvider } from '@podman-desktop/api';
+import type { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -39,6 +41,7 @@ import {
   PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
+import { WinPlatform } from '/@/platforms/win-platform';
 import type { Installer } from '/@/installer/installer';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
 
@@ -49,6 +52,7 @@ import {
   registerOnboardingUnsupportedPodmanMachineCommand,
   setWSLEnabled,
 } from './extension';
+import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
 import * as compatibilityModeLib from './utils/compatibility-mode';
@@ -157,6 +161,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('node:fs');
 
+vi.mock(import('./inject/inversify-binding'));
+
 // mock ps-list
 vi.mock('ps-list', async () => {
   return {
@@ -170,7 +176,17 @@ vi.mock('./compatibility-mode', async () => {
   };
 });
 
-beforeEach(() => {
+const PODMAN_INSTALL_MOCK: PodmanInstall = {
+  getUpdatePreflightChecks: vi.fn(),
+  isAbleToInstall: vi.fn(),
+  doInstallPodman: vi.fn(),
+  checkForUpdate: vi.fn(),
+} as unknown as PodmanInstall;
+const WIN_PLATFORM_MOCK: WinPlatform = {
+  isWSLEnabled: vi.fn(),
+} as unknown as WinPlatform;
+
+beforeEach(async () => {
   fakeMachineJSON = [
     {
       Name: machineDefaultName,
@@ -219,6 +235,25 @@ beforeEach(() => {
   extension.initTelemetryLogger();
   extension.initExtensionNotification();
   extension.resetShouldNotifySetup();
+
+  // mock PodmanInstall class methods
+  vi.mocked(PODMAN_INSTALL_MOCK.checkForUpdate).mockResolvedValue({
+    hasUpdate: false,
+  });
+
+  // configure inversify
+  vi.mocked(InversifyBinding.prototype.init).mockResolvedValue({
+    get: (identifier: ServiceIdentifier<unknown>) => {
+      switch (identifier) {
+        case PodmanInstall:
+          return PODMAN_INSTALL_MOCK;
+        case WinPlatform:
+          return WIN_PLATFORM_MOCK;
+      }
+      throw new Error(`Unknown identifier ${String(identifier)}`);
+    },
+  } as unknown as InversifyContainer);
+  await extension.initInversify({ subscriptions: [] } as unknown as extensionApi.ExtensionContext, telemetryLogger);
 });
 
 const originalConsoleError = console.error;
