@@ -23,7 +23,7 @@ onMount(async () => {
     if (kubepod?.metadata?.labels?.app) {
       const appName = kubepod.metadata.labels.app;
       const routes = await window.kubernetesListRoutes();
-      const appRoutes = routes.filter(r => r.metadata.labels && r.metadata.labels['app'] === appName);
+      const appRoutes = routes.filter(r => r.metadata.labels?.['app'] === appName);
       appRoutes.forEach(route => {
         openingKubernetesUrls = openingKubernetesUrls.set(
           route.metadata.name,
