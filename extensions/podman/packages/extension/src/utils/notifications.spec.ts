@@ -32,7 +32,11 @@ const config: Configuration = {
 };
 
 vi.mock('node:fs');
-const mockTelemetryLogger = {} as extensionApi.TelemetryLogger;
+
+const mockTelemetryLogger: extensionApi.TelemetryLogger = {
+  logUsage: vi.fn(),
+  logError: vi.fn(),
+} as unknown as extensionApi.TelemetryLogger;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -186,6 +190,27 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
       silent: true,
       type: 'error',
     });
+  });
+
+  test('when isDisguisedPodman throws an error, telemetryLogUsageMock should be called with error', async () => {
+    const extensionNotifications = new ExtensionNotifications(mockTelemetryLogger);
+
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.env).isWindows = false;
+    vi.mocked(extensionApi.env).isLinux = false;
+
+    const error = new Error('test error');
+    vi.mocked(isDisguisedPodman).mockRejectedValue(error);
+
+    await extensionNotifications.checkMacSocket();
+
+    expect(isDisguisedPodman).toBeCalled();
+
+    expect(mockTelemetryLogger.logError).toBeCalledWith(
+      'checkIfSocketDisguisedFailed',
+      expect.objectContaining({ error }),
+    );
+    expect(mockTelemetryLogger.logUsage).not.toBeCalled();
   });
 
   test('do not show error message OR call function if on linux', async () => {
