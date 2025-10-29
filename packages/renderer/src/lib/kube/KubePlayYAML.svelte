@@ -41,12 +41,14 @@ let playKubeResultRaw: string | undefined = $state(undefined);
 let playKubeResultJSON: unknown | undefined = $state(undefined);
 let playKubeResult: { Pods?: unknown[] } | undefined = $state(undefined);
 
-let providerConnections: ProviderContainerConnectionInfo[] = $providerInfos
-  .map(provider => provider.containerConnections)
-  .flat()
-  // keep only podman providers as it is not supported by docker
-  .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
-  .filter(providerContainerConnection => providerContainerConnection.status === 'started');
+let providerConnections: ProviderContainerConnectionInfo[] = $derived(
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    // keep only podman providers as it is not supported by docker
+    .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
+);
 
 $effect(() => {
   if (providerConnections.length > 0) {
