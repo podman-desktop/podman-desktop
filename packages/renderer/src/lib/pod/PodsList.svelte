@@ -161,6 +161,12 @@ const row = new TableRow<PodInfoUI>({ selectable: (_pod): boolean => true });
 function key(pod: PodInfoUI): string {
   return `${pod.engineId}:${pod.id}`;
 }
+/**
+ * Utility function for the Table to get the label to use for each item
+ */
+function label(pod: PodInfoUI): string {
+  return pod.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="pods">
@@ -258,6 +264,7 @@ function key(pod: PodInfoUI): string {
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
         key={key}
+        label={label}
         on:update={(): PodInfoUI[] => (pods = pods)}>
       </Table>
     {/if}
