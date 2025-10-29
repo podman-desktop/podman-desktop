@@ -51,7 +51,7 @@ let providerConnections: ProviderContainerConnectionInfo[] = $derived(
 );
 
 $effect(() => {
-  if (providerConnections.length > 0) {
+  if (!selectedProviderConnection && providerConnections.length > 0) {
     selectedProviderConnection = providerConnections[0];
   }
 });
