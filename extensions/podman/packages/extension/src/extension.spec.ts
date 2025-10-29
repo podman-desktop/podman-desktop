@@ -39,6 +39,7 @@ import {
   PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
+import type { Installer } from '/@/installer/installer';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
 
 import * as extension from './extension';
@@ -1494,7 +1495,7 @@ test('ensure showNotification is not called during update', async () => {
   );
 
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
+  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger, {} as unknown as Installer);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockImplementation((_installedPodman: InstalledPodman | undefined) => {
     return Promise.resolve({
       hasUpdate: true,
@@ -2491,7 +2492,7 @@ describe('calcPodmanMachineSetting', () => {
 
 test('checkForUpdate func should be called if there is no podman installed', async () => {
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger);
+  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger, {} as unknown as Installer);
 
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue(undefined);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
