@@ -581,6 +581,27 @@ test('Verify extension activate with a long timeout is flagged as error', async 
   expect(extensionLoader.getExtensionState().get(id)).toBe('failed');
 });
 
+test('Verify extension load triggers an onDidChange event', async () => {
+  const id = 'extension.foo';
+  const onDidChangeMock: (e: void) => unknown = vi.fn();
+  extensionLoader.onDidChange(onDidChangeMock);
+  const analyzedExtension: AnalyzedExtension = {
+    id: id,
+    name: 'id',
+    path: 'dummy',
+    api: {} as typeof containerDesktopAPI,
+    mainPath: '',
+    removable: false,
+    devMode: false,
+    manifest: {},
+    subscriptions: [],
+    readme: '',
+    dispose: vi.fn(),
+  };
+  await extensionLoader.activateExtension(analyzedExtension, {});
+  expect(onDidChangeMock).toHaveBeenCalled();
+});
+
 test('Verify extension load', async () => {
   const id = 'extension.foo';
 

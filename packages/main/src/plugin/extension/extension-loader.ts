@@ -1739,6 +1739,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       this.activatedExtensions.set(extension.id, activatedExtension);
       this.extensionState.set(extension.id, 'started');
       this.apiSender.send('extension-started');
+      this._onDidChange.fire();
     } catch (err) {
       console.log(`Activating extension ${extension.id} failed error:${err}`);
 
