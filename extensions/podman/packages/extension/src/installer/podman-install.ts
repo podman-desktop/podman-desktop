@@ -21,7 +21,7 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 
 import {
   PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
@@ -49,9 +49,7 @@ import type { InstalledPodman } from '../utils/podman-cli';
 import { getPodmanCli, getPodmanInstallation } from '../utils/podman-cli';
 import type { PodmanInfo } from '../utils/podman-info';
 import { PodmanInfoImpl } from '../utils/podman-info';
-import type { Installer } from './installer';
-import { MacOSInstaller } from './mac-os-installer';
-import { WinInstaller } from './win-installer';
+import { Installer } from './installer';
 
 export interface UpdateCheck {
   hasUpdate: boolean;
@@ -63,8 +61,6 @@ export interface UpdateCheck {
 export class PodmanInstall {
   private podmanInfo: PodmanInfo | undefined;
 
-  private installer: Installer | undefined;
-
   private readonly storagePath: string;
 
   protected providerCleanup: extensionApi.ProviderCleanup | undefined;
@@ -74,14 +70,15 @@ export class PodmanInstall {
     readonly extensionContext: extensionApi.ExtensionContext,
     @inject(TelemetryLoggerSymbol)
     readonly telemetryLogger: extensionApi.TelemetryLogger,
+    @inject(Installer)
+    @optional()
+    readonly installer: Installer | undefined,
   ) {
     this.storagePath = extensionContext.storagePath;
     if (extensionApi.env.isMac) {
       this.providerCleanup = new PodmanCleanupMacOS();
-      this.installer = new MacOSInstaller();
     } else if (extensionApi.env.isWindows) {
       this.providerCleanup = new PodmanCleanupWindows();
-      this.installer = new WinInstaller(extensionContext, telemetryLogger);
     }
   }
 

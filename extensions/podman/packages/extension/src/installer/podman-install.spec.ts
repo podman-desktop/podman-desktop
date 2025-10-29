@@ -69,6 +69,7 @@ const provider: extensionApi.Provider = {
 };
 
 const mockTelemetryLogger = {} as extensionApi.TelemetryLogger;
+const INSTALLER_MOCK: Installer = {} as unknown as Installer;
 
 // mock filesystem
 vi.mock('node:fs');
@@ -141,7 +142,7 @@ let podmanInstall: TestPodmanInstall;
 beforeEach(() => {
   vi.clearAllMocks();
 
-  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger);
+  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger, INSTALLER_MOCK);
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
   console.error = consoleErrorMock;
