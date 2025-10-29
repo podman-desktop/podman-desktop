@@ -290,6 +290,12 @@ const row = new TableRow<ImageInfoUI>({
 function key(item: ImageInfoUI): string {
   return `${item.engineId}:${item.id}`;
 }
+/**
+ * Utility function for the Table to get the label to use for each item
+ */
+function label(item: ImageInfoUI): string {
+  return item.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="images">
@@ -355,6 +361,7 @@ function key(item: ImageInfoUI): string {
         row={row}
         defaultSortColumn="Age"
         key={key}
+        label={label}
         enableLayoutConfiguration={true}
         on:update={(): ImageInfoUI[] => (images = images)}>
       </Table>
