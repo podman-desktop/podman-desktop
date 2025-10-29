@@ -21,6 +21,7 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
+import searchBarImage from '../assets/titleBar.searchBar.webp';
 import { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 
@@ -67,6 +68,7 @@ export class AppearanceInit {
           type: 'object',
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/13674',
+            image: searchBarImage,
           },
         },
       },
