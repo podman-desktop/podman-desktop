@@ -1,11 +1,4 @@
 <script lang="ts">
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
-
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
-
-let providerUnsubscribe: Unsubscriber;
-
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
@@ -14,6 +7,7 @@ import Fa from 'svelte-fa';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import { providerInfos } from '../../stores/providers';
 import MonacoEditor from '../editor/MonacoEditor.svelte';
@@ -23,51 +17,42 @@ import EngineFormPage from '../ui/EngineFormPage.svelte';
 import FileInput from '../ui/FileInput.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
 
-let runStarted = false;
-let runFinished = false;
-let runError = '';
-let kubeBuild: boolean = false;
-let runWarning = '';
-let kubernetesYamlFilePath: string | undefined = undefined;
-let customYamlContent: string = '';
-let editorKey: number = 0;
-let hasInvalidFields = true;
+let runStarted = $state(false);
+let runFinished = $state(false);
+let runError = $state('');
+let kubeBuild: boolean = $state(false);
+let runWarning = $state('');
+let kubernetesYamlFilePath: string | undefined = $state(undefined);
+let customYamlContent: string = $state('');
+let userChoice: 'podman' | 'custom' = $state('podman');
+let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = $state(undefined);
 
-let playKubeResultRaw: string;
-let playKubeResultJSON: unknown;
-let playKubeResult: { Pods?: unknown[] } | undefined = undefined;
+let hasInvalidFields = $derived.by(() => {
+  if (!selectedProviderConnection) return true;
+  switch (userChoice) {
+    case 'podman':
+      return kubernetesYamlFilePath === undefined;
+    case 'custom':
+      return customYamlContent.length === 0;
+  }
+});
 
-let userChoice: 'podman' | 'custom' = 'podman';
+let playKubeResultRaw: string | undefined = $state(undefined);
+let playKubeResultJSON: unknown | undefined = $state(undefined);
+let playKubeResult: { Pods?: unknown[] } | undefined = $state(undefined);
 
-let providers: ProviderInfo[] = [];
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
-let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
-
-$: providerConnections = providers
+let providerConnections: ProviderContainerConnectionInfo[] = $providerInfos
   .map(provider => provider.containerConnections)
   .flat()
   // keep only podman providers as it is not supported by docker
   .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
-$: hasInvalidFields =
-  (userChoice === 'podman' && kubernetesYamlFilePath === undefined) ||
-  (userChoice === 'custom' && customYamlContent.trim() === '') ||
-  !selectedProvider;
-
-$: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-$: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
-
-// Reset editor when switching modes to ensure fresh start
-let previousUserChoice: 'podman' | 'custom' = 'podman';
-$: if (userChoice !== previousUserChoice) {
-  editorKey++;
-  previousUserChoice = userChoice;
-  if (userChoice !== 'custom') {
-    // Clear custom content when switching away
-    customYamlContent = '';
+$effect(() => {
+  if (providerConnections.length > 0) {
+    selectedProviderConnection = providerConnections[0];
   }
-}
+});
 
 const kubeFileDialogOptions: OpenDialogOptions = {
   title: 'Select a .yaml file to play',
@@ -106,9 +91,9 @@ async function playKubeFile(): Promise<void> {
       yamlFilePath = kubernetesYamlFilePath!;
     }
 
-    if (yamlFilePath && selectedProvider) {
+    if (yamlFilePath && selectedProviderConnection) {
       try {
-        const result = await window.playKube(yamlFilePath, selectedProvider, {
+        const result = await window.playKube(yamlFilePath, $state.snapshot(selectedProviderConnection), {
           build: kubeBuild,
         });
 
@@ -174,23 +159,20 @@ async function playKubeFile(): Promise<void> {
   runStarted = false;
 }
 
-onMount(async () => {
-  providerUnsubscribe = providerInfos.subscribe(value => {
-    providers = value;
-  });
-});
-
-onDestroy(() => {
-  if (providerUnsubscribe) {
-    providerUnsubscribe();
-  }
-});
-
 function goBackToPodsPage(): void {
   // redirect to the pods page
   handleNavigation({
     page: NavigationPage.PODMAN_PODS,
   });
+}
+
+function toggle(choice: 'podman' | 'custom'): void {
+  userChoice = choice;
+
+  // reset custom content when switching away from custom
+  if (choice === 'podman') {
+    customYamlContent = '';
+  }
 }
 </script>
 
@@ -209,7 +191,7 @@ function goBackToPodsPage(): void {
       <div hidden={runStarted}>
         <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
           >Kubernetes YAML file</label>
-       
+
       </div>
 
       <div class="flex flex-col">
@@ -220,9 +202,7 @@ function goBackToPodsPage(): void {
           aria-pressed={userChoice === 'podman' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'podman'}
-          on:click={(): void => {
-             userChoice = 'podman';
-           }}>
+          onclick={toggle.bind(undefined, 'podman')}>
           <div class="flex flex-row align-middle items-center">
             <div
               class="text-2xl pr-2"
@@ -251,7 +231,7 @@ function goBackToPodsPage(): void {
               <ContainerConnectionDropdown
                 id="providerChoice"
                 name="providerChoice"
-                bind:value={selectedProvider}
+                bind:value={selectedProviderConnection}
                 disabled={userChoice === 'custom'}
                 connections={providerConnections}/>
             {/if}
@@ -267,9 +247,7 @@ function goBackToPodsPage(): void {
           aria-pressed={userChoice === 'custom' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'custom'}
-          on:click={(): void => {
-             userChoice = 'custom';
-           }}>
+          onclick={toggle.bind(undefined, 'custom')}>
           <div class="flex flex-row align-middle items-center">
             <div
               class="text-2xl"
@@ -294,14 +272,12 @@ function goBackToPodsPage(): void {
             Custom Kubernetes YAML Content
           </label>
           <div id="custom-yaml-editor" class="h-[400px] border">
-            {#key editorKey}
-              <MonacoEditor 
-                readOnly={false} 
-                language="yaml" 
-                on:contentChange={(e): void => {
-                  customYamlContent = e.detail;
-                }} />
-            {/key}
+            <MonacoEditor
+              readOnly={false}
+              language="yaml"
+              on:contentChange={(e): void => {
+                customYamlContent = e.detail;
+              }} />
           </div>
         </div>
       {/if}
@@ -357,7 +333,7 @@ function goBackToPodsPage(): void {
       {/if}
 
       {#if runFinished}
-        <Button on:click={goBackToPodsPage} class="w-full">Done</Button>
+        <Button onclick={goBackToPodsPage} class="w-full">Done</Button>
       {/if}
     </div>
     {/snippet}
