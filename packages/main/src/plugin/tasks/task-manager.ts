@@ -28,7 +28,6 @@ import type { NotificationTaskInfo, TaskInfo } from '/@api/taskInfo.js';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
 import taskManagerImage from '../../assets/tasks.Manager.webp';
-import tasksStatusbarImage from '../../assets/tasks.StatusBar.webp';
 import { ApiSenderType } from '../api.js';
 import { CommandRegistry } from '../command-registry.js';
 import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
@@ -77,10 +76,7 @@ export class TaskManager {
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.StatusBar}`]: {
             description: 'Show running tasks in the status bar',
             type: 'object',
-            experimental: {
-              githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10777',
-              image: tasksStatusbarImage,
-            },
+            default: true,
           },
           [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Toast}`]: {
             description: 'Display a notification toast when task is created',
