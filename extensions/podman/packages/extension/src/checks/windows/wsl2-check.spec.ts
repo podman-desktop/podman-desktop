@@ -309,8 +309,10 @@ test('expect winWSL2 check to be memoized', async () => {
   });
 
   const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
-  await winWSLCheck.execute();
-  await winWSLCheck.execute();
 
+  await winWSLCheck.execute();
+  expect(process.exec).toHaveBeenCalledTimes(3);
+
+  await winWSLCheck.execute();
   expect(process.exec).toHaveBeenCalledTimes(3);
 });
