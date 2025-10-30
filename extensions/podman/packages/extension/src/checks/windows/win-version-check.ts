@@ -21,14 +21,14 @@ import os from 'node:os';
 import type { CheckResult } from '@podman-desktop/api';
 import { injectable } from 'inversify';
 
-import { BaseCheck } from '../base-check';
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 
 @injectable()
-export class WinVersionCheck extends BaseCheck {
+export class WinVersionCheck extends MemoizedBaseCheck {
   title = 'Windows Version';
 
   private MIN_BUILD = 19043; //it represents version 21H1 windows 10
-  async execute(): Promise<CheckResult> {
+  async executeImpl(): Promise<CheckResult> {
     const winRelease = os.release();
     if (winRelease.startsWith('10.0.')) {
       const splitRelease = winRelease.split('.');

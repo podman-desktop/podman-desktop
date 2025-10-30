@@ -59,3 +59,15 @@ test('expect winversion preflight check return failure result if the version is 
   );
   expect(result.docLinks?.[0].title).equal('WSL2 Manual Installation Steps');
 });
+
+test('expect check to be memoized', async () => {
+  vi.spyOn(os, 'release').mockReturnValue('9.0.19000');
+
+  const winVersionCheck = new WinVersionCheck();
+
+  await winVersionCheck.execute();
+  expect(os.release).toHaveBeenCalledOnce();
+
+  await winVersionCheck.execute();
+  expect(os.release).toHaveBeenCalledOnce();
+});
