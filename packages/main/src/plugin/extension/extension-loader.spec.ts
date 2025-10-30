@@ -598,6 +598,7 @@ test('Verify extension load triggers an onDidChange event', async () => {
     readme: '',
     dispose: vi.fn(),
   };
+  expect(onDidChangeMock).not.toHaveBeenCalled();
   await extensionLoader.activateExtension(analyzedExtension, {});
   expect(onDidChangeMock).toHaveBeenCalled();
 });
