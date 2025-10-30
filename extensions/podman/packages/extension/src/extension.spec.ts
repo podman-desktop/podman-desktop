@@ -1550,6 +1550,8 @@ test('ensure showNotification is not called during update', async () => {
     },
   );
 
+  vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue(['/usr/local/bin/podman']);
+
   let updater: extensionApi.ProviderUpdate | undefined;
   registerUpdateMock.mockImplementation((update: extensionApi.ProviderUpdate) => {
     updater = update;
@@ -1579,6 +1581,102 @@ test('ensure showNotification is not called during update', async () => {
   await expect(extension.updateMachines(provider, podmanConfiguration)).rejects.toThrow('error');
 
   expect(showNotificationMock).toBeCalled();
+});
+
+test('should not register update when there are multiple Podman installations', async () => {
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+
+  const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    undefined,
+  );
+  const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
+
+  // Mock multiple installations
+  findPodmanInstallationsMock.mockResolvedValue([
+    '/usr/local/bin/podman',
+    '/opt/homebrew/bin/podman',
+    '/usr/bin/podman',
+  ]);
+
+  vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
+    hasUpdate: true,
+    bundledVersion: 'v5.0.0',
+    installedVersion: 'v4.9.0',
+  });
+
+  const installedPodman = { version: '4.9.0' } as InstalledPodman;
+
+  await extension.registerUpdatesIfAny(provider, installedPodman, podmanInstall);
+
+  expect(findPodmanInstallationsMock).toHaveBeenCalled();
+  expect(registerUpdateMock).not.toHaveBeenCalled();
+});
+
+test('should register update when there is single Podman installation', async () => {
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+
+  const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    undefined,
+  );
+  const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
+
+  // Mock single installation
+  findPodmanInstallationsMock.mockResolvedValue(['/usr/local/bin/podman']);
+
+  vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
+    hasUpdate: true,
+    bundledVersion: 'v5.0.0',
+    installedVersion: 'v4.9.0',
+  });
+
+  const installedPodman = { version: '4.9.0' } as InstalledPodman;
+
+  await extension.registerUpdatesIfAny(provider, installedPodman, podmanInstall);
+
+  expect(findPodmanInstallationsMock).toHaveBeenCalled();
+  expect(registerUpdateMock).toHaveBeenCalled();
+});
+
+test('should register update when there are multiple Podman installations but custom binary path is set', async () => {
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+
+  const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    undefined,
+  );
+  const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
+  vi.spyOn(podmanCli, 'getCustomBinaryPath').mockReturnValue('/custom/path/podman');
+
+  // Mock multiple installations
+  findPodmanInstallationsMock.mockResolvedValue([
+    '/usr/local/bin/podman',
+    '/opt/homebrew/bin/podman',
+    '/usr/bin/podman',
+  ]);
+
+  vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
+    hasUpdate: true,
+    bundledVersion: 'v5.0.0',
+    installedVersion: 'v4.9.0',
+  });
+
+  const installedPodman = { version: '4.9.0' } as InstalledPodman;
+
+  await extension.registerUpdatesIfAny(provider, installedPodman, podmanInstall);
+
+  expect(findPodmanInstallationsMock).not.toHaveBeenCalled();
+  expect(registerUpdateMock).toHaveBeenCalled();
 });
 
 test('provider is registered with edit capabilities on MacOS', async () => {
@@ -1948,6 +2046,8 @@ describe('initCheckAndRegisterUpdate', () => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 1.1',
     } as unknown as extensionApi.RunResult);
+
+    vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue(['/usr/local/bin/podman']);
 
     await initCheckAndRegisterUpdate(provider, podmanInstall);
 
