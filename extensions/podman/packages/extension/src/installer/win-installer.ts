@@ -32,15 +32,8 @@ import {
 import { inject, injectable } from 'inversify';
 
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { WinPlatform } from '/@/platforms/win-platform';
 
-import { OrCheck, SequenceCheck } from '../checks/base-check';
-import { HyperVCheck } from '../checks/windows/hyperv-check';
-import { VirtualMachinePlatformCheck } from '../checks/windows/virtual-machine-platform-check';
-import { WinBitCheck } from '../checks/windows/win-bit-check';
-import { WinMemoryCheck } from '../checks/windows/win-memory-check';
-import { WinVersionCheck } from '../checks/windows/win-version-check';
-import { WSLVersionCheck } from '../checks/windows/wsl-version-check';
-import { WSL2Check } from '../checks/windows/wsl2-check';
 import podman5Json from '../podman5.json';
 import { getAssetsFolder } from '../utils/util';
 import { BaseInstaller } from './base-installer';
@@ -52,6 +45,8 @@ export class WinInstaller extends BaseInstaller {
     readonly extensionContext: ExtensionContext,
     @inject(TelemetryLoggerSymbol)
     readonly telemetryLogger: TelemetryLogger,
+    @inject(WinPlatform)
+    readonly winPlatform: WinPlatform,
   ) {
     super();
   }
@@ -61,20 +56,7 @@ export class WinInstaller extends BaseInstaller {
   }
 
   getPreflightChecks(): InstallCheck[] {
-    return [
-      new WinBitCheck(),
-      new WinVersionCheck(),
-      new WinMemoryCheck(),
-      new OrCheck(
-        'Windows virtualization',
-        new SequenceCheck('WSL platform', [
-          new VirtualMachinePlatformCheck(this.telemetryLogger),
-          new WSLVersionCheck(),
-          new WSL2Check(this.telemetryLogger, this.extensionContext),
-        ]),
-        new HyperVCheck(this.telemetryLogger),
-      ),
-    ];
+    return this.winPlatform.getPreflightChecks();
   }
 
   update(): Promise<boolean> {

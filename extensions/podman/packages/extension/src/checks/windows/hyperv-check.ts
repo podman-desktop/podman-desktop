@@ -15,81 +15,34 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
+import type { CheckResult } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { TelemetryLoggerSymbol } from '/@/inject/symbols';
-
-import { getPowerShellClient } from '../../utils/powershell';
-import { BaseCheck } from '../base-check';
+import { BaseCheck, SequenceCheck } from '../base-check';
+import { HyperVInstalledCheck } from './hyperv-installed-check';
+import { HyperVRunningCheck } from './hyperv-running-check';
+import { PodmanDesktopElevatedCheck } from './podman-desktop-elevated-check';
+import { UserAdminCheck } from './user-admin-check';
 
 @injectable()
 export class HyperVCheck extends BaseCheck {
-  title = 'Hyper-V installed';
+  title = 'Hyper-V checks';
 
   constructor(
-    @inject(TelemetryLoggerSymbol)
-    private telemetryLogger: TelemetryLogger,
+    @inject(UserAdminCheck) private isUserAdminCheck: UserAdminCheck,
+    @inject(PodmanDesktopElevatedCheck) private isPodmanDesktopElevatedCheck: PodmanDesktopElevatedCheck,
+    @inject(HyperVInstalledCheck) private isHyperVInstalledCheck: HyperVInstalledCheck,
+    @inject(HyperVRunningCheck) private isHyperVRunningCheck: HyperVRunningCheck,
   ) {
     super();
   }
 
-  async isUserAdmin(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isUserAdmin();
-  }
-
-  async isPodmanDesktopElevated(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isRunningElevated();
-  }
-
-  async isHyperVInstalled(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isHyperVInstalled();
-  }
-
-  async isHyperVRunning(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isHyperVRunning();
-  }
-
   async execute(): Promise<CheckResult> {
-    if (!(await this.isUserAdmin())) {
-      return this.createFailureResult({
-        description: 'You must have administrative rights to run Hyper-V Podman machines',
-        docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
-      });
-    }
-    if (!(await this.isPodmanDesktopElevated())) {
-      return this.createFailureResult({
-        description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
-      });
-    }
-    if (!(await this.isHyperVInstalled())) {
-      return this.createFailureResult({
-        description: 'Hyper-V is not installed on your system.',
-        docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
-      });
-    }
-    if (!(await this.isHyperVRunning())) {
-      return this.createFailureResult({
-        description: 'Hyper-V is not running on your system.',
-        docLinksDescription: 'call sc start vmms in a terminal',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
-      });
-    }
-    return this.createSuccessfulResult();
+    return new SequenceCheck(this.title, [
+      this.isUserAdminCheck,
+      this.isPodmanDesktopElevatedCheck,
+      this.isHyperVInstalledCheck,
+      this.isHyperVRunningCheck,
+    ]).execute();
   }
 }

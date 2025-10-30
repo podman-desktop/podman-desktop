@@ -19,14 +19,14 @@
 import type extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
+import { docLinksHyperV } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
-import { BaseCheck } from '../base-check';
-
 @injectable()
-export class VirtualMachinePlatformCheck extends BaseCheck {
-  title = 'Virtual Machine Platform Enabled';
+export class UserAdminCheck extends MemoizedBaseCheck {
+  title = 'User is Administrator';
 
   constructor(
     @inject(TelemetryLoggerSymbol)
@@ -35,27 +35,20 @@ export class VirtualMachinePlatformCheck extends BaseCheck {
     super();
   }
 
-  protected async isVirtualMachineAvailable(): Promise<boolean> {
+  protected async checkUserAdmin(): Promise<boolean> {
     const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isVirtualMachineAvailable();
+    return client.isUserAdmin();
   }
 
-  async execute(): Promise<extensionApi.CheckResult> {
-    try {
-      const result = await this.isVirtualMachineAvailable();
-      if (result) {
-        return this.createSuccessfulResult();
-      }
-    } catch (err) {
-      // ignore error, this means that VirtualMachinePlatform not enabled
+  async executeImpl(): Promise<extensionApi.CheckResult> {
+    const result = await this.checkUserAdmin();
+    if (result) {
+      return this.createSuccessfulResult();
     }
     return this.createFailureResult({
-      description: 'Virtual Machine Platform should be enabled to be able to run Podman.',
-      docLinksDescription: 'Learn about how to enable the Virtual Machine Platform feature:',
-      docLinks: {
-        url: 'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-        title: 'Enable Virtual Machine Platform',
-      },
+      description: 'You must have administrative rights to run Hyper-V Podman machines',
+      docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
+      docLinks: docLinksHyperV,
     });
   }
 }

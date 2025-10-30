@@ -19,14 +19,14 @@
 import type extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
+import { docLinksHyperV } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
-import { BaseCheck } from '../base-check';
-
 @injectable()
-export class VirtualMachinePlatformCheck extends BaseCheck {
-  title = 'Virtual Machine Platform Enabled';
+export class HyperVInstalledCheck extends MemoizedBaseCheck {
+  title = 'Hyper-V installed';
 
   constructor(
     @inject(TelemetryLoggerSymbol)
@@ -35,27 +35,20 @@ export class VirtualMachinePlatformCheck extends BaseCheck {
     super();
   }
 
-  protected async isVirtualMachineAvailable(): Promise<boolean> {
+  protected async checkHyperVInstalled(): Promise<boolean> {
     const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isVirtualMachineAvailable();
+    return client.isHyperVInstalled();
   }
 
-  async execute(): Promise<extensionApi.CheckResult> {
-    try {
-      const result = await this.isVirtualMachineAvailable();
-      if (result) {
-        return this.createSuccessfulResult();
-      }
-    } catch (err) {
-      // ignore error, this means that VirtualMachinePlatform not enabled
+  async executeImpl(): Promise<extensionApi.CheckResult> {
+    const result = await this.checkHyperVInstalled();
+    if (result) {
+      return this.createSuccessfulResult();
     }
     return this.createFailureResult({
-      description: 'Virtual Machine Platform should be enabled to be able to run Podman.',
-      docLinksDescription: 'Learn about how to enable the Virtual Machine Platform feature:',
-      docLinks: {
-        url: 'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-        title: 'Enable Virtual Machine Platform',
-      },
+      description: 'Hyper-V is not installed on your system.',
+      docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
+      docLinks: docLinksHyperV,
     });
   }
 }

@@ -19,14 +19,13 @@
 import type extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
-import { BaseCheck } from '../base-check';
-
 @injectable()
-export class VirtualMachinePlatformCheck extends BaseCheck {
-  title = 'Virtual Machine Platform Enabled';
+export class PodmanDesktopElevatedCheck extends MemoizedBaseCheck {
+  title = 'Podman Desktop is Elevated';
 
   constructor(
     @inject(TelemetryLoggerSymbol)
@@ -35,27 +34,18 @@ export class VirtualMachinePlatformCheck extends BaseCheck {
     super();
   }
 
-  protected async isVirtualMachineAvailable(): Promise<boolean> {
+  protected async checkPodmanDesktopElevated(): Promise<boolean> {
     const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isVirtualMachineAvailable();
+    return client.isRunningElevated();
   }
 
-  async execute(): Promise<extensionApi.CheckResult> {
-    try {
-      const result = await this.isVirtualMachineAvailable();
-      if (result) {
-        return this.createSuccessfulResult();
-      }
-    } catch (err) {
-      // ignore error, this means that VirtualMachinePlatform not enabled
+  async executeImpl(): Promise<extensionApi.CheckResult> {
+    const result = await this.checkPodmanDesktopElevated();
+    if (result) {
+      return this.createSuccessfulResult();
     }
     return this.createFailureResult({
-      description: 'Virtual Machine Platform should be enabled to be able to run Podman.',
-      docLinksDescription: 'Learn about how to enable the Virtual Machine Platform feature:',
-      docLinks: {
-        url: 'https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-3---enable-virtual-machine-feature',
-        title: 'Enable Virtual Machine Platform',
-      },
+      description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
     });
   }
 }
