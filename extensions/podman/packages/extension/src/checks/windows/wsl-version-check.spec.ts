@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import { process } from '@podman-desktop/api';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { WSLVersionCheck } from './wsl-version-check';
 
@@ -26,6 +26,10 @@ vi.mock('@podman-desktop/api', () => ({
     exec: vi.fn(),
   },
 }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 test('expect WSLVersion preflight check return fail result if wsl --version command fails its execution', async () => {
   vi.mocked(process.exec).mockRejectedValue('');
@@ -105,4 +109,18 @@ test('expect WSLVersion preflight check return successful result if first line o
   const winWSLCheck = new WSLVersionCheck();
   const result = await winWSLCheck.execute();
   expect(result.successful).toBeTruthy();
+});
+
+test('expect WSLVersion to be memoized', async () => {
+  vi.mocked(process.exec).mockResolvedValue({
+    stdout: 'WSL version: 1.2.5.0',
+    stderr: '',
+    command: 'command',
+  });
+
+  const winWSLCheck = new WSLVersionCheck();
+  await winWSLCheck.execute();
+  await winWSLCheck.execute();
+
+  expect(process.exec).toHaveBeenCalledTimes(1);
 });
