@@ -70,6 +70,9 @@ const provider: extensionApi.Provider = {
 
 const mockTelemetryLogger = {} as extensionApi.TelemetryLogger;
 const INSTALLER_MOCK: Installer = {} as unknown as Installer;
+const PROVIDER_CLEANUP_MOCK = {
+  getActions: vi.fn(),
+} as unknown as extensionApi.ProviderCleanup;
 
 // mock filesystem
 vi.mock('node:fs');
@@ -142,7 +145,7 @@ let podmanInstall: TestPodmanInstall;
 beforeEach(() => {
   vi.clearAllMocks();
 
-  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger, INSTALLER_MOCK);
+  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger, INSTALLER_MOCK, PROVIDER_CLEANUP_MOCK);
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
   console.error = consoleErrorMock;
@@ -164,13 +167,6 @@ class TestPodmanInstall extends PodmanInstall {
 
   async wipeAllDataBeforeUpdatingToV5(installed: InstalledPodman, updateCheck: UpdateCheck): Promise<boolean> {
     return super.wipeAllDataBeforeUpdatingToV5(installed, updateCheck);
-  }
-
-  getProviderCleanup(): extensionApi.ProviderCleanup {
-    if (!this.providerCleanup) {
-      throw new Error('providerCleanup is not defined');
-    }
-    return this.providerCleanup;
   }
 
   getInstaller(): Installer | undefined {
@@ -228,10 +224,6 @@ describe('update checks', () => {
   });
 
   test('wipeAllDataBeforeUpdatingToV5 with podman 4.9 -> 5.0', async () => {
-    // mock the getActions
-    const providerCleanup = podmanInstall.getProviderCleanup();
-    expect(providerCleanup).toBeDefined();
-
     // fake actions
     const action1Exectute = vi.fn();
     const action1 = {
@@ -239,7 +231,7 @@ describe('update checks', () => {
       execute: action1Exectute,
     };
 
-    vi.spyOn(providerCleanup, 'getActions').mockResolvedValue([action1]);
+    vi.mocked(PROVIDER_CLEANUP_MOCK.getActions).mockResolvedValue([action1]);
 
     // mock user response
     vi.spyOn(extensionApi.window, 'showInformationMessage').mockResolvedValue('Yes');
@@ -257,18 +249,13 @@ describe('update checks', () => {
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
 
     // getActions should have been called
-    expect(providerCleanup.getActions).toHaveBeenCalled();
+    expect(PROVIDER_CLEANUP_MOCK.getActions).toHaveBeenCalled();
 
     // action should have been called
     expect(action1Exectute).toHaveBeenCalled();
   });
 
   test('wipeAllDataBeforeUpdatingToV5 no action with podman 4.9.1 -> 4.9.2', async () => {
-    // mock the getActions
-    const providerCleanup = podmanInstall.getProviderCleanup();
-    expect(providerCleanup).toBeDefined();
-    vi.spyOn(providerCleanup, 'getActions');
-
     await podmanInstall.wipeAllDataBeforeUpdatingToV5(
       {
         version: '4.9.1',
@@ -282,7 +269,7 @@ describe('update checks', () => {
     expect(extensionApi.window.showInformationMessage).not.toHaveBeenCalled();
 
     // getActions should not have been called
-    expect(providerCleanup.getActions).not.toHaveBeenCalled();
+    expect(PROVIDER_CLEANUP_MOCK.getActions).not.toHaveBeenCalled();
   });
 });
 

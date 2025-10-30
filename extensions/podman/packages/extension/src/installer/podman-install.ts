@@ -29,12 +29,10 @@ import {
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '/@/constants';
-import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { MachineJSON } from '/@/types';
 
 import { getDetectionChecks } from '../checks/detection-checks';
-import { PodmanCleanupMacOS } from '../cleanup/podman-cleanup-macos';
-import { PodmanCleanupWindows } from '../cleanup/podman-cleanup-windows';
 import {
   calcPodmanMachineSetting,
   getJSONMachineList,
@@ -63,8 +61,6 @@ export class PodmanInstall {
 
   private readonly storagePath: string;
 
-  protected providerCleanup: extensionApi.ProviderCleanup | undefined;
-
   constructor(
     @inject(ExtensionContextSymbol)
     readonly extensionContext: extensionApi.ExtensionContext,
@@ -73,13 +69,11 @@ export class PodmanInstall {
     @inject(Installer)
     @optional()
     readonly installer: Installer | undefined,
+    @inject(ProviderCleanupSymbol)
+    @optional()
+    readonly providerCleanup: extensionApi.ProviderCleanup | undefined,
   ) {
     this.storagePath = extensionContext.storagePath;
-    if (extensionApi.env.isMac) {
-      this.providerCleanup = new PodmanCleanupMacOS();
-    } else if (extensionApi.env.isWindows) {
-      this.providerCleanup = new PodmanCleanupWindows();
-    }
   }
 
   public async doInstallPodman(provider: extensionApi.Provider): Promise<void> {

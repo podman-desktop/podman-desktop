@@ -1495,7 +1495,12 @@ test('ensure showNotification is not called during update', async () => {
   );
 
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger, {} as unknown as Installer);
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    {} as unknown as extensionApi.ProviderCleanup,
+  );
   vi.spyOn(podmanInstall, 'checkForUpdate').mockImplementation((_installedPodman: InstalledPodman | undefined) => {
     return Promise.resolve({
       hasUpdate: true,
@@ -2492,7 +2497,12 @@ describe('calcPodmanMachineSetting', () => {
 
 test('checkForUpdate func should be called if there is no podman installed', async () => {
   const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
-  const podmanInstall: PodmanInstall = new PodmanInstall(extensionContext, telemetryLogger, {} as unknown as Installer);
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    {} as unknown as extensionApi.ProviderCleanup,
+  );
 
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue(undefined);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
