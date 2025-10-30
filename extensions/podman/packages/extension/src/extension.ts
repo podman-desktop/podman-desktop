@@ -54,8 +54,6 @@ import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { HyperVCheck } from './checks/windows/hyperv-check';
 import { HyperVPodmanVersionCheck } from './checks/windows/hyperv-podman-version-check';
-import { WSLVersionCheck } from './checks/windows/wsl-version-check';
-import { WSL2Check } from './checks/windows/wsl2-check';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { KrunkitHelper } from './helpers/krunkit-helper';
@@ -1498,7 +1496,7 @@ export async function start(
   await initCheckAndRegisterUpdate(provider, podmanInstall);
 
   if (version) {
-    wslEnabled = await isWSLEnabled();
+    wslEnabled = await winPlatform.isWSLEnabled();
     const isWslAndHyperEnabled = wslEnabled && (await isHyperVEnabled());
     updateWSLHyperVEnabledContextValue(isWslAndHyperEnabled);
   }
@@ -1828,11 +1826,9 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   }
 
   let hypervEnabled = false;
-  if (await isWSLEnabled()) {
-    wslEnabled = true;
+  wslEnabled = await winPlatform.isWSLEnabled();
+  if (wslEnabled) {
     containerMachineProviders.push('wsl');
-  } else {
-    wslEnabled = false;
   }
 
   if (await isHyperVEnabled()) {
@@ -1940,18 +1936,6 @@ export function isLibkrunSupported(podmanVersion: string): boolean {
 // Set wslEnabled. Used for testing purposes
 export function setWSLEnabled(enabled: boolean): void {
   wslEnabled = enabled;
-}
-
-export async function isWSLEnabled(): Promise<boolean> {
-  if (!extensionApi.env.isWindows) {
-    return false;
-  }
-  const wslCheck = new SequenceCheck('WSL platform', [
-    new WSLVersionCheck(),
-    new WSL2Check(telemetryLogger, storedExtensionContext),
-  ]);
-  const wslCheckResult = await wslCheck.execute();
-  return wslCheckResult.successful;
 }
 
 export async function isHyperVEnabled(): Promise<boolean> {
