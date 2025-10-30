@@ -46,3 +46,16 @@ test('expect winMemory preflight check return failure result if the machine has 
   expect(result.docLinks).toBeUndefined();
   expect(result.fixCommand).toBeUndefined();
 });
+
+test('expect winMemory preflight check to be memoized', async () => {
+  const SYSTEM_MEM = 4 * 1024 * 1024 * 1024;
+  vi.spyOn(os, 'totalmem').mockReturnValue(SYSTEM_MEM);
+
+  const winMemoryCheck = new WinMemoryCheck();
+
+  await winMemoryCheck.execute();
+  expect(os.totalmem).toHaveBeenCalledOnce();
+
+  await winMemoryCheck.execute();
+  expect(os.totalmem).toHaveBeenCalledOnce();
+});

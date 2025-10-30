@@ -21,14 +21,14 @@ import os from 'node:os';
 import type { CheckResult } from '@podman-desktop/api';
 import { injectable } from 'inversify';
 
-import { BaseCheck } from '../base-check';
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 
 @injectable()
-export class WinMemoryCheck extends BaseCheck {
+export class WinMemoryCheck extends MemoizedBaseCheck {
   title = 'RAM';
   private REQUIRED_MEM = 5 * 1024 * 1024 * 1024; // 5Gb
 
-  async execute(): Promise<CheckResult> {
+  async executeImpl(): Promise<CheckResult> {
     const totalMem = os.totalmem();
     if (this.REQUIRED_MEM <= totalMem) {
       return this.createSuccessfulResult();
