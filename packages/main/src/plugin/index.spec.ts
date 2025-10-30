@@ -354,11 +354,17 @@ test('push image command sends onData message with callbackId, event name and da
       return Promise.resolve();
     },
   );
-  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 'imageId', 'base64tag', 1, 1);
   expect(registeredCallback).not.equal(defaultCallback);
   registeredCallback('data', 'push image output');
   expect(createTaskSpy).toHaveBeenCalledOnce();
-  expect(createTaskSpy).toHaveBeenCalledWith({ title: `Push image '${'registry.com/repo/image:latest'}'` });
+  expect(createTaskSpy).toHaveBeenCalledWith({
+    title: `Push image '${'registry.com/repo/image:latest'}'`,
+    action: {
+      execute: expect.toSatisfy(func => typeof func === 'function'),
+      name: 'Go to task >',
+    },
+  });
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'data', 'push image output');
   registeredCallback('end', '');
   expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
@@ -374,8 +380,7 @@ test('push image sends data event with error, "end" event when fails and set tas
       return Promise.reject(pushError);
     },
   );
-  vi.mocked(webContents.send).mockReset();
-  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 'imageId', 'base64tag', 1, 1);
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'error', String(pushError));
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'end');
   expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));
