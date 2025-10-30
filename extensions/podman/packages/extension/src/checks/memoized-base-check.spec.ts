@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 
@@ -31,6 +31,10 @@ class PositiveCheck extends MemoizedBaseCheck {
     return this.createSuccessfulResult();
   }
 }
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('MemoizedBaseCheck', () => {
   test('check PositiveCheck only calls execute once', async () => {
