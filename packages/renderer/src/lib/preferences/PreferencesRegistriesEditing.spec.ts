@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { Registry } from '@podman-desktop/api';
 import { waitFor } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { registriesInfos } from '../../stores/registries';
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
-
-beforeEach(() => {
-  (window as any).window.ddExtensionInstall = vi.fn().mockResolvedValue(undefined);
-  (window as any).window.getImageRegistryProviderNames = vi.fn().mockResolvedValue(undefined);
-  (window as any).window.showMessageBox = vi.fn();
-  (window as any).window.checkImageCredentials = vi.fn();
-  (window as any).window.createImageRegistry = vi.fn().mockImplementation((...args: any[]) => {
-    console.log(args);
-  });
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
 
 describe('PreferencesRegistriesEditing', () => {
   test('Expect that add registry button is visible and enabled', async () => {
@@ -94,7 +76,7 @@ describe('PreferencesRegistriesEditing', () => {
     render(PreferencesRegistriesEditing);
     const addRegistryBtn = screen.getByRole('button', { name: 'Add registry' });
     await userEvent.click(addRegistryBtn);
-    const button = screen.getByRole('button', { name: 'Add' });
+    let button = screen.getByRole('button', { name: 'Add' });
     const password = screen.getByPlaceholderText('password');
     const username = screen.getByPlaceholderText('username');
     const url = screen.getByPlaceholderText('https://registry.io');
@@ -112,6 +94,7 @@ describe('PreferencesRegistriesEditing', () => {
       .mockRejectedValueOnce(new Error('self signed certificate in certificate chain'));
     vi.mocked(window.showMessageBox).mockResolvedValueOnce({ response: 1 }).mockResolvedValueOnce({ response: 0 });
     await userEvent.click(button);
+    button = screen.getByRole('button', { name: 'Add' });
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);
     expect(window.showMessageBox).toHaveBeenCalledTimes(2);
