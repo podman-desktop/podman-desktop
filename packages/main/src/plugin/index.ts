@@ -747,7 +747,6 @@ export class PluginSystem {
 
     container.bind<ExploreFeatures>(ExploreFeatures).toSelf().inSingletonScope();
     const exploreFeatures = container.get<ExploreFeatures>(ExploreFeatures);
-    await exploreFeatures.init();
 
     // do not wait
     featured.init().catch((e: unknown) => {
@@ -3240,6 +3239,7 @@ export class PluginSystem {
       apiSender.send('extensions-started');
       this.markAsExtensionsStarted();
     }
+    await exploreFeatures.init();
     extensionsUpdater.init().catch((err: unknown) => console.error('Unable to perform extension updates', err));
     autoStartEngine.start().catch((err: unknown) => console.error('Unable to perform autostart', err));
     return this.extensionLoader;
