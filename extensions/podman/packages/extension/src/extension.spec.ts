@@ -41,8 +41,8 @@ import {
   PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
-import { WinPlatform } from '/@/platforms/win-platform';
 import type { Installer } from '/@/installer/installer';
+import { WinPlatform } from '/@/platforms/win-platform';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
 
 import * as extension from './extension';
