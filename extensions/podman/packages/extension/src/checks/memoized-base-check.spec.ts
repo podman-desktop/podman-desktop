@@ -21,13 +21,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 
-const execute = vi.fn();
-
 class PositiveCheck extends MemoizedBaseCheck {
   title = 'successful check';
+  constructor(private executeFn: () => void) {
+    super();
+  }
 
   async executeImpl(): Promise<extensionApi.CheckResult> {
-    execute();
+    this.executeFn();
     return this.createSuccessfulResult();
   }
 }
@@ -38,15 +39,17 @@ beforeEach(() => {
 
 describe('MemoizedBaseCheck', () => {
   test('check PositiveCheck only calls execute once', async () => {
-    const positiveCheck = new PositiveCheck();
+    const executeFn = vi.fn();
+    const positiveCheck = new PositiveCheck(executeFn);
     expect(positiveCheck.title).toBe('successful check');
-    let result = await positiveCheck.execute();
 
-    expect(execute).toHaveBeenCalledTimes(1);
-    expect(result.successful).toBeTruthy();
+    const runCheck = async (): Promise<void> => {
+      const result = await positiveCheck.execute();
+      expect(executeFn).toHaveBeenCalledTimes(1);
+      expect(result.successful).toBeTruthy();
+    };
 
-    result = await positiveCheck.execute();
-    expect(execute).toHaveBeenCalledTimes(1);
-    expect(result.successful).toBeTruthy();
+    await runCheck();
+    await runCheck();
   });
 });
