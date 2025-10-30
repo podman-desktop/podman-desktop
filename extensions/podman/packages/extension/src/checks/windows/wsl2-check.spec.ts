@@ -290,3 +290,27 @@ test('expect winWSL2 command to be registered as disposable', async () => {
   expect(extensionContext.subscriptions[0]).toBeDefined();
   expect(extensionContext.subscriptions[0].dispose).toBeDefined();
 });
+
+test('expect winWSL2 check to be memoized', async () => {
+  vi.mocked(process.exec).mockImplementation(command => {
+    if (command === 'powershell.exe') {
+      return Promise.resolve({
+        stdout: 'True',
+        stderr: '',
+        command: 'command',
+      });
+    } else {
+      return Promise.resolve({
+        stdout: '',
+        stderr: '',
+        command: 'command',
+      });
+    }
+  });
+
+  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
+  await winWSLCheck.execute();
+  await winWSLCheck.execute();
+
+  expect(process.exec).toHaveBeenCalledTimes(3);
+});

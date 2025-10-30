@@ -21,14 +21,14 @@ import type extensionApi from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getPowerShellClient } from '../../utils/powershell';
 import { normalizeWSLOutput } from '../../utils/util';
-import { BaseCheck } from '../base-check';
 
 @injectable()
-export class WSL2Check extends BaseCheck {
+export class WSL2Check extends MemoizedBaseCheck {
   title = 'WSL2 Installed';
   installWSLCommandId = 'podman.onboarding.installWSL';
 
@@ -59,7 +59,7 @@ export class WSL2Check extends BaseCheck {
     return client.isUserAdmin();
   }
 
-  async execute(): Promise<CheckResult> {
+  async executeImpl(): Promise<CheckResult> {
     try {
       const isAdmin = await this.isUserAdmin();
       const isWSL = await this.isWSLPresent();
