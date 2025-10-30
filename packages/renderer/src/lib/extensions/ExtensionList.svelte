@@ -16,9 +16,10 @@ import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelt
 
 interface Props {
   searchTerm?: string;
+  screen?: 'installed' | 'catalog' | 'development';
 }
 
-let { searchTerm = '' }: Props = $props();
+let { searchTerm = '', screen = 'installed' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
@@ -48,7 +49,6 @@ function closeModal(): void {
   installManualImageModal = false;
 }
 
-let screen: 'installed' | 'catalog' | 'development' = $state('installed');
 let installManualImageModal: boolean = $state(false);
 
 function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void {

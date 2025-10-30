@@ -388,7 +388,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <TroubleshootingPage />
         </Route>
         <Route path="/extensions" breadcrumb="Extensions" navigationHint="root">
-          <ExtensionList />
+          <ExtensionList searchTerm={decodeURIComponent(meta.query.searchTerm ?? '')} screen={
+            ['installed', 'catalog', 'development'].includes(meta.query.screen) ? meta.query.screen as 'installed' | 'catalog' | 'development' : 'installed'
+          } />
         </Route>
         <Route path="/extensions/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
           <ExtensionDetails extensionId={meta.params.id} />

@@ -285,3 +285,16 @@ test(`Test navigationHandle for ${NavigationPage.CREATE_PROVIDER_CONNECTION}`, (
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/provider/dummyProviderId');
 });
+
+test(`Test navigationHandle for ${NavigationPage.EXTENSIONS_CATALOG}`, () => {
+  handleNavigation({
+    page: NavigationPage.EXTENSIONS_CATALOG,
+    parameters: {
+      searchTerm: 'not:installed category:foo keyword:bar red hat',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
+    '/extensions?screen=catalog&searchTerm=not%3Ainstalled%20category%3Afoo%20keyword%3Abar%20red%20hat',
+  );
+});

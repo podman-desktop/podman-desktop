@@ -142,5 +142,8 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.CREATE_PROVIDER_CONNECTION:
       router.goto(`/preferences/provider/${request.parameters.provider}`);
       break;
+    case NavigationPage.EXTENSIONS_CATALOG:
+      router.goto(`/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`);
+      break;
   }
 };

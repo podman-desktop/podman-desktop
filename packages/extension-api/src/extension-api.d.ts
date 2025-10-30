@@ -4927,6 +4927,10 @@ declare module '@podman-desktop/api' {
     export function getFreePort(port: number): Promise<number>;
   }
 
+  export interface NavigateToExtensionsCatalogOptions {
+    readonly searchTerm?: string;
+  }
+
   export namespace navigation {
     // Navigate to the Dashboard page
     export function navigateToDashboard(): Promise<void>;
@@ -4991,6 +4995,12 @@ declare module '@podman-desktop/api' {
      * @param extensionId The id of the extension to navigate to or if missing, default to the extension calling the method
      */
     export function navigateToOnboarding(extensionId?: string): Promise<void>;
+
+    /**
+     * Navigate to the Catalog tab of the Extensions page
+     * @param searchTerm The search term to use to filter the extensions
+     */
+    export function navigateToExtensionsCatalog(options: NavigateToExtensionsCatalogOptions): Promise<void>;
 
     /**
      * Allow to define custom route for an extension.

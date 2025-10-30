@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderContainerConnection } from '@podman-desktop/api';
+import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { ApiSenderType } from '/@/plugin/api.js';
@@ -339,6 +339,15 @@ export class NavigationManager {
       page: NavigationPage.CREATE_PROVIDER_CONNECTION,
       parameters: {
         provider: internalId,
+      },
+    });
+  }
+
+  async navigateToExtensionsCatalog(options: NavigateToExtensionsCatalogOptions): Promise<void> {
+    this.navigateTo({
+      page: NavigationPage.EXTENSIONS_CATALOG,
+      parameters: {
+        searchTerm: options.searchTerm,
       },
     });
   }
