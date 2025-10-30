@@ -9,18 +9,24 @@ import {
   type DashboardPageRegistryEntry,
   defaultSectionNames,
   setupDashboardPageRegistry,
-} from '../../stores/dashboard/dashboard-page-registry.svelte';
+} from '/@/stores/dashboard/dashboard-page-registry.svelte';
+
 import NotificationsBox from './NotificationsBox.svelte';
 
 // Dashboard section configuration managed by dashboard page registry
 let dashboardSections = $state<ListOrganizerItem[]>([]);
-// eslint-disable-next-line svelte/no-unnecessary-state-wrap
-let dashboardOrdering = $state(new SvelteMap<string, number>());
-let isInitialized = false;
-let isLoading = false;
+let dashboardOrdering = new SvelteMap<string, number>();
 
 let orderedSections = $derived(getOrderedDashboardSections());
 let updatedEntries = $derived(convertFromListOrganizerItems(orderedSections, dashboardPageRegistry.entries));
+
+// Filter and sort dashboard registry items based on LayoutEditor configuration
+let sortedDashboardRegistry = $derived(
+  orderedSections
+    .filter(section => section.enabled)
+    .map(section => dashboardPageRegistry.entries.find(item => item.id === section.id))
+    .filter((item): item is DashboardPageRegistryEntry => item?.component !== undefined),
+);
 
 // Initialize default dashboard configuration
 function getDefaultDashboardItems(): ListOrganizerItem[] {
@@ -34,54 +40,45 @@ function getDefaultDashboardItems(): ListOrganizerItem[] {
 
 // Initialize dashboard configuration
 async function initializeDashboard(): Promise<void> {
-  if (isInitialized || isLoading) return;
-
-  isLoading = true;
   try {
     if (dashboardPageRegistry.entries.length > 0) {
       const loadedItems = await loadDashboardConfiguration();
       dashboardSections = loadedItems;
     }
-    isInitialized = true;
   } catch (error: unknown) {
-    console.error('Failed to load dashboard configuration:', error);
+    console.error(`Failed to load dashboard configuration: ${error}`);
     // Fallback to default configuration
     dashboardSections = getDefaultDashboardItems();
-    isInitialized = true;
-  } finally {
-    isLoading = false;
   }
 }
 
-// Load configuration from settings (like Table.svelte does)
+// Load configuration from settings
 async function loadDashboardConfiguration(): Promise<ListOrganizerItem[]> {
-  if (tablePersistence.storage) {
-    const loadedItems = await tablePersistence.storage.load('dashboard', defaultSectionNames);
+  if (!tablePersistence.storage) return getDefaultDashboardItems();
 
-    if (loadedItems.length > 0) {
-      // Ensure loaded items have proper originalOrder from defaults if missing
-      const defaultItems = getDefaultDashboardItems();
-      const items = loadedItems.map((item: ListOrganizerItem) => ({
-        ...item,
-        originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
-      }));
+  const loadedItems = await tablePersistence.storage.load('dashboard', defaultSectionNames);
 
-      // Build ordering map from loaded items
-      // Check if items are in a different order than their original order
-      const isReordered = items.some((item: ListOrganizerItem, index: number) => item.originalOrder !== index);
-      if (isReordered) {
-        const ordering = new SvelteMap<string, number>();
-        items.forEach((item: ListOrganizerItem, index: number) => {
-          ordering.set(item.id, index);
-        });
-        dashboardOrdering = ordering;
-      } else {
-        dashboardOrdering.clear();
-      }
+  if (loadedItems.length > 0) {
+    // Ensure loaded items have proper originalOrder from defaults if missing
+    const defaultItems = getDefaultDashboardItems();
+    const items = loadedItems.map((item: ListOrganizerItem) => ({
+      ...item,
+      originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+    }));
 
-      return items;
+    // Build ordering map from loaded items
+    // Check if items are in a different order than their original order
+    const isReordered = items.some((item: ListOrganizerItem, index: number) => item.originalOrder !== index);
+    dashboardOrdering.clear();
+    if (isReordered) {
+      items.forEach((item, index) => {
+        dashboardOrdering.set(item.id, index);
+      });
     }
+
+    return items;
   }
+
   return getDefaultDashboardItems();
 }
 
@@ -90,26 +87,27 @@ function getOrderedDashboardSections(): ListOrganizerItem[] {
   if (dashboardOrdering.size === 0) {
     return dashboardSections;
   }
-  return [...dashboardSections].toSorted((a, b) => {
+  return dashboardSections.toSorted((a, b) => {
     const aOrder = dashboardOrdering.get(a.id) ?? a.originalOrder;
     const bOrder = dashboardOrdering.get(b.id) ?? b.originalOrder;
     return aOrder - bOrder;
   });
 }
 
-// Save configuration (like Table.svelte does)
+// Save configuration
 async function saveDashboardConfiguration(): Promise<void> {
-  if (tablePersistence.storage) {
-    const orderedItems = getOrderedDashboardSections();
-    const serializableItems = orderedItems.map(item => ({
-      id: item.id,
-      label: item.label,
-      enabled: item.enabled,
-      originalOrder: item.originalOrder,
-    }));
+  if (!tablePersistence.storage) return;
 
-    await tablePersistence.storage.save('dashboard', serializableItems);
-  }
+  const orderedItems = getOrderedDashboardSections();
+  const serializableItems = orderedItems.map(item => ({
+    id: item.id,
+    label: item.label,
+    enabled: item.enabled,
+    originalOrder: item.originalOrder,
+  }));
+
+  await tablePersistence.storage.save('dashboard', serializableItems);
+  dashboardPageRegistry.entries = updatedEntries;
 }
 
 // Initialize dashboard on mount
@@ -117,42 +115,36 @@ onMount(async () => {
   await initializeDashboard();
 });
 
-// Save configuration whenever dashboardSections or ordering changes
-$effect(() => {
-  if (isInitialized && dashboardSections.length > 0) {
-    dashboardPageRegistry.entries = updatedEntries;
-  }
-});
-
 // Reset function for dashboard layout
 async function resetDashboardLayout(): Promise<void> {
-  if (tablePersistence.storage) {
-    try {
-      // Reset using the persistence callbacks (clears saved config)
-      dashboardSections = await tablePersistence.storage.reset('dashboard', defaultSectionNames);
-      dashboardOrdering.clear();
+  if (!tablePersistence.storage) return;
+  try {
+    // Reset using the persistence callbacks (clears saved config)
+    dashboardSections = await tablePersistence.storage.reset('dashboard', defaultSectionNames);
+    dashboardOrdering.clear();
 
-      // Reset the registry to default state
-      setupDashboardPageRegistry();
+    // Reset the registry to default state
+    setupDashboardPageRegistry();
 
-      // Ensure the registry reflects the reset state
-      if (dashboardPageRegistry.entries.length > 0) {
-        const updatedEntries = convertFromListOrganizerItems(dashboardSections, dashboardPageRegistry.entries);
-        dashboardPageRegistry.entries = updatedEntries;
-      }
-    } catch (error: unknown) {
-      console.error('Failed to reset dashboard layout:', error);
+    // Ensure the registry reflects the reset state
+    if (dashboardPageRegistry.entries.length > 0) {
+      dashboardPageRegistry.entries = convertFromListOrganizerItems(dashboardSections, dashboardPageRegistry.entries);
     }
+  } catch (error: unknown) {
+    console.error(`Failed to reset dashboard layout: ${error}`);
   }
 }
 
 // Handle dashboard order changes from ListOrganizer
 function handleDashboardOrderChange(newOrdering: SvelteMap<string, number>): void {
-  dashboardOrdering = new SvelteMap(newOrdering);
+  dashboardOrdering.clear();
+  newOrdering.entries().forEach(([id, order]) => {
+    dashboardOrdering.set(id, order);
+  });
 
   // Save configuration immediately when order changes
   saveDashboardConfiguration().catch((error: unknown) => {
-    console.error('Failed to save dashboard configuration after order change:', error);
+    console.error(`Failed to save dashboard configuration after order change: ${error}`);
   });
 }
 
@@ -162,29 +154,9 @@ function handleDashboardToggle(itemId: string, enabled: boolean): void {
 
   // Save configuration immediately when toggle changes
   saveDashboardConfiguration().catch((error: unknown) => {
-    console.error('Failed to save dashboard configuration after toggle change:', error);
+    console.error(`Failed to save dashboard configuration after toggle change: ${error}`);
   });
 }
-
-// Filter and sort dashboard registry items based on LayoutEditor configuration
-let sortedDashboardRegistry = $derived.by(() => {
-  // Get ordered sections inline to ensure reactivity
-  const orderedSections =
-    dashboardOrdering.size === 0
-      ? [...dashboardSections]
-      : [...dashboardSections].toSorted((a, b) => {
-          const aOrder = dashboardOrdering.get(a.id) ?? a.originalOrder;
-          const bOrder = dashboardOrdering.get(b.id) ?? b.originalOrder;
-          return aOrder - bOrder;
-        });
-
-  const result = orderedSections
-    .filter(section => section.enabled)
-    .map(section => dashboardPageRegistry.entries.find(item => item.id === section.id))
-    .filter((item): item is DashboardPageRegistryEntry => item?.component !== undefined);
-
-  return result;
-});
 </script>
 
 <NavPage searchEnabled={false} title="Dashboard">
@@ -208,7 +180,8 @@ let sortedDashboardRegistry = $derived.by(() => {
       <NotificationsBox />
       <div class="px-5 space-y-5 h-full">
         {#each sortedDashboardRegistry as dashboardRegistryItem (dashboardRegistryItem.id)}
-          <dashboardRegistryItem.component />
+          {@const Component = dashboardRegistryItem.component}
+          <Component />
         {/each}
       </div>
     </div>
