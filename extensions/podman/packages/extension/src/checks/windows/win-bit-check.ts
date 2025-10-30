@@ -18,16 +18,16 @@
 import type { CheckResult } from '@podman-desktop/api';
 import { injectable } from 'inversify';
 
-import { BaseCheck } from '../base-check';
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 
 @injectable()
-export class WinBitCheck extends BaseCheck {
+export class WinBitCheck extends MemoizedBaseCheck {
   title = 'Windows 64bit';
 
   private ARCH_X64 = 'x64';
   private ARCH_ARM = 'arm64';
 
-  async execute(): Promise<CheckResult> {
+  async executeImpl(): Promise<CheckResult> {
     const currentArch = process.arch;
     if (this.ARCH_X64 === currentArch || this.ARCH_ARM === currentArch) {
       return this.createSuccessfulResult();

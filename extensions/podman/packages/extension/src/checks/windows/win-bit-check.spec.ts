@@ -64,3 +64,15 @@ test('expect winbit preflight check return failure result if the arch is not sup
   );
   expect(result.docLinks?.[0].title).equal('WSL2 Manual Installation Steps');
 });
+
+test('expect winbit preflight check to be memoized', async () => {
+  const archSpy = vi.spyOn(process, 'arch', 'get');
+  archSpy.mockReturnValue('x64');
+
+  const winBitCheck = new WinBitCheck();
+  await winBitCheck.execute();
+  expect(archSpy).toHaveBeenCalledOnce();
+
+  await winBitCheck.execute();
+  expect(archSpy).toHaveBeenCalledOnce();
+});
