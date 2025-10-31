@@ -34,13 +34,11 @@ beforeEach(() => {
 });
 
 test('expect winVirtualMachine preflight check return successful result if the virtual machine platform feature is enabled', async () => {
-  vi.mocked(process.exec).mockImplementation(() =>
-    Promise.resolve({
-      stdout: 'VirtualMachinePlatform',
-      stderr: '',
-      command: 'command',
-    }),
-  );
+  vi.mocked(process.exec).mockResolvedValue({
+    stdout: 'VirtualMachinePlatform',
+    stderr: '',
+    command: 'command',
+  });
 
   const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   const result = await winVirtualMachinePlatformCheck.execute();
@@ -51,13 +49,11 @@ test('expect winVirtualMachine preflight check return successful result if the v
 });
 
 test('expect winVirtualMachine preflight check return successful result if the virtual machine platform feature is disabled', async () => {
-  vi.mocked(process.exec).mockImplementation(() =>
-    Promise.resolve({
-      stdout: 'some message',
-      stderr: '',
-      command: 'command',
-    }),
-  );
+  vi.mocked(process.exec).mockResolvedValue({
+    stdout: 'some message',
+    stderr: '',
+    command: 'command',
+  });
 
   const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   const result = await winVirtualMachinePlatformCheck.execute();
@@ -70,9 +66,7 @@ test('expect winVirtualMachine preflight check return successful result if the v
 });
 
 test('expect winVirtualMachine preflight check return successful result if there is an error when checking if virtual machine platform feature is enabled', async () => {
-  vi.mocked(process.exec).mockImplementation(() => {
-    throw new Error();
-  });
+  vi.mocked(process.exec).mockRejectedValue(new Error());
 
   const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   const result = await winVirtualMachinePlatformCheck.execute();
@@ -85,13 +79,11 @@ test('expect winVirtualMachine preflight check return successful result if there
 });
 
 test('expect winVirtualMachine preflight check to be memoized', async () => {
-  vi.mocked(process.exec).mockImplementation(() =>
-    Promise.resolve({
-      stdout: 'VirtualMachinePlatform',
-      stderr: '',
-      command: 'command',
-    }),
-  );
+  vi.mocked(process.exec).mockResolvedValue({
+    stdout: 'VirtualMachinePlatform',
+    stderr: '',
+    command: 'command',
+  });
 
   const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
   await winVirtualMachinePlatformCheck.execute();
