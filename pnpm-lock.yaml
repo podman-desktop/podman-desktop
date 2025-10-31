@@ -1024,11 +1024,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^3.1.2
-        version: 3.1.2
+        specifier: ^3.2.0
+        version: 3.2.0
       '@argos-ci/playwright':
-        specifier: ^6.1.10
-        version: 6.1.10
+        specifier: ^6.2.0
+        version: 6.2.0
       '@playwright/test':
         specifier: 1.56.1
         version: 1.56.1
@@ -1133,25 +1133,25 @@ packages:
   '@antfu/utils@9.2.0':
     resolution: {integrity: sha512-Oq1d9BGZakE/FyoEtcNeSwM7MpDO2vUBi11RWBZXf75zPsbUVWmUs03EqkRFrcgbXyKTas0BdZWC1wcuSoqSAw==}
 
-  '@argos-ci/api-client@0.12.0':
-    resolution: {integrity: sha512-WfhI+StLJKIKERWQaIm7Kv1/k+YO/CYIp3djDVhZIU6mv/8yalyNXHnkRC6ofq1kPpmRvoag1KW79/C2WsB4Ag==}
+  '@argos-ci/api-client@0.13.0':
+    resolution: {integrity: sha512-/z1EaroMxTtDP+2loGoqcZFNfXElVwet3vGsTebek5x9ewNZ4bWb8meCLS7/L0caU6/1CBlXDL7lwGakRYHVow==}
     engines: {node: '>=20.0.0'}
 
   '@argos-ci/browser@5.0.0':
     resolution: {integrity: sha512-SKAD7EXoLX4u50dzTIT/ABnpD284+DnBfoJM0ZrTIav2eiiVJyknNKSznF5w118lYGnYvugTXbKMnukGPzJeOA==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/cli@3.1.2':
-    resolution: {integrity: sha512-HyvRr2ufNTk4W3cc1UeZOb+86DVIK/kdmdo65p1aLoKUz1c6lO5SSD95YLjZtU/3ixfHiBiLXCXpBctkk3Wu8g==}
+  '@argos-ci/cli@3.2.0':
+    resolution: {integrity: sha512-CJWe8Bjraa/pmaZyIZJD3Jx7u7UqyXuncDMyzlvwCc4O7khpWm9IpkNn6Jk90beTfY1pkg82wyGw4getHXPr6Q==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  '@argos-ci/core@4.3.1':
-    resolution: {integrity: sha512-9K1AN8RLXNmhr9JscvKHV4wzCSkZ4dh+CIi88Wrj8KvS4+vSXfy62pqjzgqxQ9d2JPBKxPObDempA2MoOZrS5A==}
+  '@argos-ci/core@4.4.0':
+    resolution: {integrity: sha512-4Z9fpAGX/W9ym58C1wni1y1hKk5O3xVQh559957caJK8VmDgR1QPW26vvBerlKqUSb4KPhCxX+/jUJzkw4oycQ==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/playwright@6.1.10':
-    resolution: {integrity: sha512-DVvdBl0e420oCJtAE+wQFcMC2hnRGxo2az4puqYGYIv/gK9RJgvf4AJAJrgvAdVQ8UYke/eEwg8l8w1h4zrNVw==}
+  '@argos-ci/playwright@6.2.0':
+    resolution: {integrity: sha512-z/JJRqiUQq8EFmA205pRX9enAPInXAin4nzl3dMCRVEKJhjFMD4Hra0k0VZXKQMrVdoU5Bgl2ZnE+QkJNx2lhg==}
     engines: {node: '>=20.0.0'}
 
   '@argos-ci/util@3.1.1':
@@ -9050,8 +9050,8 @@ packages:
     resolution: {integrity: sha512-OhYaY5sDsIka7H7AtijtI9jwGYLyl29eQn/W623DiN/MIv5sUqc4g7BIDThX+gb7di9f6xK02nkp8sdfFWZLTg==}
     engines: {node: '>=10'}
 
-  node-abi@3.79.0:
-    resolution: {integrity: sha512-Pr/5KdBQGG8TirdkS0qN3B+f3eo8zTOfZQWAxHoJqopMz2/uvRnG+S4fWu/6AZxKei2CP2p/psdQ5HFC2Ap5BA==}
+  node-abi@3.80.0:
+    resolution: {integrity: sha512-LyPuZJcI9HVwzXK1GPxWNzrr+vr8Hp/3UqlmWxxh8p54U1ZbclOqbSog9lWHaCX+dBaiGi6n/hIX+mKu74GmPA==}
     engines: {node: '>=10'}
 
   node-addon-api@1.7.2:
@@ -9204,8 +9204,8 @@ packages:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
 
-  openapi-fetch@0.14.1:
-    resolution: {integrity: sha512-l7RarRHxlEZYjMLd/PR0slfMVse2/vvIAGm75/F7J6MlQ8/b9uUQmUF2kCPrQhJqMXSxmYWObVgeYXbFYzZR+A==}
+  openapi-fetch@0.15.0:
+    resolution: {integrity: sha512-OjQUdi61WO4HYhr9+byCPMj0+bgste/LtSBEcV6FzDdONTs7x0fWn8/ndoYwzqCsKWIxEZwo4FN/TG1c1rI8IQ==}
 
   openapi-typescript-helpers@0.0.15:
     resolution: {integrity: sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==}
@@ -11754,8 +11754,8 @@ packages:
   whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
-  when-exit@2.1.4:
-    resolution: {integrity: sha512-4rnvd3A1t16PWzrBUcSDZqcAmsUIy4minDXT/CZ8F2mVDgd65i4Aalimgz1aQkRGU0iH5eT5+6Rx2TK8o443Pg==}
+  when-exit@2.1.5:
+    resolution: {integrity: sha512-VGkKJ564kzt6Ms1dbgPP/yuIoQCrsFAnRbptpC5wOEsDaNsbCB2bnfnaA8i/vRs5tjUSEOtIuvl9/MyVsvQZCg==}
 
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
@@ -12088,27 +12088,27 @@ snapshots:
 
   '@antfu/utils@9.2.0': {}
 
-  '@argos-ci/api-client@0.12.0':
+  '@argos-ci/api-client@0.13.0':
     dependencies:
       debug: 4.4.3
-      openapi-fetch: 0.14.1
+      openapi-fetch: 0.15.0
     transitivePeerDependencies:
       - supports-color
 
   '@argos-ci/browser@5.0.0': {}
 
-  '@argos-ci/cli@3.1.2':
+  '@argos-ci/cli@3.2.0':
     dependencies:
-      '@argos-ci/core': 4.3.1
+      '@argos-ci/core': 4.4.0
       commander: 14.0.2
       ora: 9.0.0
       update-notifier: 7.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@4.3.1':
+  '@argos-ci/core@4.4.0':
     dependencies:
-      '@argos-ci/api-client': 0.12.0
+      '@argos-ci/api-client': 0.13.0
       '@argos-ci/util': 3.1.1
       convict: 6.2.4
       debug: 4.4.3
@@ -12118,10 +12118,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@6.1.10':
+  '@argos-ci/playwright@6.2.0':
     dependencies:
       '@argos-ci/browser': 5.0.0
-      '@argos-ci/core': 4.3.1
+      '@argos-ci/core': 4.4.0
       '@argos-ci/util': 3.1.1
       chalk: 5.6.2
       debug: 4.4.3
@@ -14308,7 +14308,7 @@ snapshots:
       detect-libc: 2.1.2
       fs-extra: 10.1.0
       got: 11.8.6
-      node-abi: 3.79.0
+      node-abi: 3.80.0
       node-api-version: 0.2.1
       node-gyp: 9.4.1
       ora: 5.4.1
@@ -17222,7 +17222,7 @@ snapshots:
   atomically@2.1.0:
     dependencies:
       stubborn-fs: 2.0.0
-      when-exit: 2.1.4
+      when-exit: 2.1.5
 
   autoprefixer@10.4.21(postcss@8.5.6):
     dependencies:
@@ -20701,7 +20701,7 @@ snapshots:
   istanbul-lib-source-maps@5.0.6:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      debug: 4.4.1
+      debug: 4.4.3
       istanbul-lib-coverage: 3.2.2
     transitivePeerDependencies:
       - supports-color
@@ -22089,7 +22089,7 @@ snapshots:
     dependencies:
       semver: 7.7.3
 
-  node-abi@3.79.0:
+  node-abi@3.80.0:
     dependencies:
       semver: 7.7.3
 
@@ -22265,7 +22265,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openapi-fetch@0.14.1:
+  openapi-fetch@0.15.0:
     dependencies:
       openapi-typescript-helpers: 0.0.15
 
@@ -25332,7 +25332,7 @@ snapshots:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
 
-  when-exit@2.1.4: {}
+  when-exit@2.1.5: {}
 
   which-boxed-primitive@1.1.1:
     dependencies:
