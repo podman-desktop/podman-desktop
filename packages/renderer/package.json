@@ -27,7 +27,7 @@
     "@types/validator": "^13.15.3",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@xterm/addon-serialize": "^0.13.0",
-    "eslint-plugin-svelte": "^3.12.5",
+    "eslint-plugin-svelte": "^3.13.0",
     "filesize": "^11.0.13",
     "humanize-duration": "^3.33.1",
     "jsdom": "^27.0.0-beta.3",
