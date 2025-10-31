@@ -16,7 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const DOC_LINKS_HYPERV = {
+import type { CheckResultLink } from '@podman-desktop/api';
+
+export const DOC_LINKS_HYPERV: CheckResultLink = {
   url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
   title: 'Hyper-V Manual Installation Steps',
 };
