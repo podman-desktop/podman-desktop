@@ -59,7 +59,7 @@ async function refreshTerminal(): Promise<void> {
     theme: getTerminalTheme(),
     convertEol: convertEol,
     screenReaderMode: screenReaderMode,
-    scrollback: scrollback,
+    scrollback,
   });
   const fitAddon = new FitAddon();
   terminal.loadAddon(fitAddon);

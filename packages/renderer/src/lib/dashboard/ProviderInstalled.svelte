@@ -89,7 +89,7 @@ async function refreshTerminal(): Promise<void> {
     disableStdin: true,
     theme: getTerminalTheme(),
     convertEol: true,
-    scrollback: scrollback,
+    scrollback,
   });
   termFit = new FitAddon();
   logsTerminal.loadAddon(termFit);

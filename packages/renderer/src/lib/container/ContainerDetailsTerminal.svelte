@@ -127,7 +127,7 @@ async function refreshTerminal(): Promise<void> {
     lineHeight,
     screenReaderMode,
     theme: getTerminalTheme(),
-    scrollback: scrollback,
+    scrollback,
   });
   if (existingTerminal) {
     ignoreFirstData = true;

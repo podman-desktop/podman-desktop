@@ -64,7 +64,7 @@ onMount(async () => {
     disableStdin: true,
     theme: getTerminalTheme(),
     convertEol: true,
-    scrollback: scrollback,
+    scrollback,
   });
   // Refresh the terminal on initial load
   await refreshTerminal();
