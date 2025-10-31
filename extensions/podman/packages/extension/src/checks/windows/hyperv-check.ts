@@ -18,6 +18,7 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { docLinksHyperV } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getPowerShellClient } from '../../utils/powershell';
@@ -59,10 +60,7 @@ export class HyperVCheck extends BaseCheck {
       return this.createFailureResult({
         description: 'You must have administrative rights to run Hyper-V Podman machines',
         docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
+        docLinks: docLinksHyperV,
       });
     }
     if (!(await this.isPodmanDesktopElevated())) {
@@ -74,20 +72,14 @@ export class HyperVCheck extends BaseCheck {
       return this.createFailureResult({
         description: 'Hyper-V is not installed on your system.',
         docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
+        docLinks: docLinksHyperV,
       });
     }
     if (!(await this.isHyperVRunning())) {
       return this.createFailureResult({
         description: 'Hyper-V is not running on your system.',
         docLinksDescription: 'call sc start vmms in a terminal',
-        docLinks: {
-          url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-          title: 'Hyper-V Manual Installation Steps',
-        },
+        docLinks: docLinksHyperV,
       });
     }
     return this.createSuccessfulResult();
