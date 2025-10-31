@@ -89,7 +89,7 @@ test('expect HyperV preflight check return failure result if HyperV not running'
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isHyperVInstalled).mockResolvedValue(true);
-  vi.spyOn(isHyperVRunningCheck, 'execute').mockResolvedValue({
+  vi.mocked(isHyperVRunningCheck.execute).mockResolvedValue({
     ...FAILED_CHECK_RESULT,
     description: 'isHyperVRunningCheck',
   });
@@ -103,7 +103,7 @@ test('expect HyperV preflight check return OK', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isHyperVInstalled).mockResolvedValue(true);
-  vi.spyOn(isHyperVRunningCheck, 'execute').mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(isHyperVRunningCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
 
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeTruthy();
