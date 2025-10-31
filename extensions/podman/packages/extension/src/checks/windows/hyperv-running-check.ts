@@ -19,7 +19,7 @@ import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { BaseCheck } from '/@/checks/base-check';
-import { docLinksHyperV } from '/@/checks/windows/constants';
+import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
@@ -37,7 +37,7 @@ export class HyperVRunningCheck extends BaseCheck {
       return this.createFailureResult({
         description: 'Hyper-V is not running on your system.',
         docLinksDescription: 'call sc start vmms in a terminal',
-        docLinks: docLinksHyperV,
+        docLinks: HYPER_V_DOC_LINKS,
       });
     }
     return this.createSuccessfulResult();

@@ -20,7 +20,7 @@ import type extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
-import { docLinksHyperV } from '/@/checks/windows/constants';
+import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
@@ -48,7 +48,7 @@ export class HyperVInstalledCheck extends MemoizedBaseCheck {
     return this.createFailureResult({
       description: 'Hyper-V is not installed on your system.',
       docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
-      docLinks: docLinksHyperV,
+      docLinks: HYPER_V_DOC_LINKS,
     });
   }
 }
