@@ -759,9 +759,9 @@ describe('waitForCoreDNSReady', () => {
     await waitForCoreDNSReady();
 
     // Should have retried nodes call (1 failure + 1 success = 2)
-    expect(vi.mocked(k8s.CoreV1Api.prototype.listNode)).toHaveBeenCalledTimes(2);
+    expect(k8s.CoreV1Api.prototype.listNode).toHaveBeenCalledTimes(2);
     // Should have called pods 3 times (scheduler, controller-manager, coredns)
-    expect(vi.mocked(k8s.CoreV1Api.prototype.listNamespacedPod)).toHaveBeenCalledTimes(3);
+    expect(k8s.CoreV1Api.prototype.listNamespacedPod).toHaveBeenCalledTimes(3);
   });
 
   test('should log unexpected errors', async () => {
