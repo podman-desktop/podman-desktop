@@ -48,6 +48,10 @@ async function refreshTerminal(): Promise<void> {
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
 
+  const scrollback = await window.getConfigurationValue<number>(
+    TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
+  );
+
   terminal = new Terminal({
     fontSize,
     lineHeight,
@@ -55,6 +59,7 @@ async function refreshTerminal(): Promise<void> {
     theme: getTerminalTheme(),
     convertEol: convertEol,
     screenReaderMode: screenReaderMode,
+    scrollback: scrollback,
   });
   const fitAddon = new FitAddon();
   terminal.loadAddon(fitAddon);

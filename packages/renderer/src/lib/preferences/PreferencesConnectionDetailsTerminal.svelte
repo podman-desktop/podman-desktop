@@ -133,6 +133,10 @@ async function refreshTerminal(): Promise<void> {
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
 
+  const scrollback = await window.getConfigurationValue<number>(
+    TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
+  );
+
   // get terminal if any
   const existingTerminal = getExistingTerminal(provider.internalId, connectionInfo.name);
   shellTerminal = new Terminal({
@@ -140,6 +144,7 @@ async function refreshTerminal(): Promise<void> {
     lineHeight,
     screenReaderMode,
     theme: getTerminalTheme(),
+    scrollback: scrollback,
   });
 
   if (existingTerminal) {

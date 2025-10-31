@@ -55,12 +55,16 @@ onMount(async () => {
   const lineHeight = await window.getConfigurationValue<number>(
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
+  const scrollback = await window.getConfigurationValue<number>(
+    TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
+  );
   logsTerminal = new Terminal({
     fontSize,
     lineHeight,
     disableStdin: true,
     theme: getTerminalTheme(),
     convertEol: true,
+    scrollback: scrollback,
   });
   // Refresh the terminal on initial load
   await refreshTerminal();

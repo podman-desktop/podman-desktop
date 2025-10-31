@@ -112,6 +112,9 @@ test('terminal constructor should contains fontSize and lineHeight from configur
   expect(window.getConfigurationValue).toHaveBeenCalledWith(
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
+  expect(window.getConfigurationValue).toHaveBeenCalledWith(
+    TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
+  );
 });
 
 test('addon fit should be loaded on mount', async () => {

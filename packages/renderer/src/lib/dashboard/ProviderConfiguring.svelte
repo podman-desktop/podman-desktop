@@ -44,12 +44,17 @@ async function refreshTerminal(): Promise<void> {
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
 
+  const scrollback = await window.getConfigurationValue<number>(
+    TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
+  );
+
   logsTerminal = new Terminal({
     fontSize,
     lineHeight,
     disableStdin: true,
     theme: getTerminalTheme(),
     convertEol: true,
+    scrollback: scrollback,
   });
   termFit = new FitAddon();
   logsTerminal.loadAddon(termFit);
