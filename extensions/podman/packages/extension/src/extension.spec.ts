@@ -2473,6 +2473,7 @@ describe('calcPodmanMachineSetting', () => {
       version: '5.2.1',
     });
     vi.spyOn(WIN_PLATFORM_MOCK, 'isHyperVEnabled').mockResolvedValue(true);
+
     await extension.calcPodmanMachineSetting();
     expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_CPU_SUPPORTED_KEY, true);
     expect(extensionApi.context.setValue).toBeCalledWith(PODMAN_MACHINE_MEMORY_SUPPORTED_KEY, true);
