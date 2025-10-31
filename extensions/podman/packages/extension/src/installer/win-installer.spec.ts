@@ -22,6 +22,8 @@ import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { WinPlatform } from '/@/platforms/win-platform';
+
 import { getAssetsFolder } from '../utils/util';
 import { WinInstaller } from './win-installer';
 
@@ -50,12 +52,16 @@ const progress = {
 };
 
 const mockTelemetryLogger = {} as TelemetryLogger;
+const mockWinPlatform = {} as WinPlatform;
 
 vi.mock(import('./../utils/util'), () => ({
   getAssetsFolder: vi.fn(),
 }));
 
+let installer: WinInstaller;
+
 beforeEach(() => {
+  installer = new WinInstaller(extensionContext, mockTelemetryLogger, mockWinPlatform);
   vi.resetAllMocks();
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
@@ -73,7 +79,6 @@ test('expect update on windows to show notification in case of 0 exit code', asy
   vi.mocked(existsSync).mockReturnValue(true);
   vi.mocked(readdirSync).mockReturnValue([]);
 
-  const installer = new WinInstaller(extensionContext, mockTelemetryLogger);
   const result = await installer.update();
   expect(result).toBeTruthy();
   expect(extensionApi.window.showNotification).toHaveBeenCalled();
@@ -88,7 +93,6 @@ test('expect update on windows not to show notification in case of 1602 exit cod
   vi.mocked(existsSync).mockReturnValue(true);
   vi.mocked(readdirSync).mockReturnValue([]);
 
-  const installer = new WinInstaller(extensionContext, mockTelemetryLogger);
   const result = await installer.update();
   expect(result).toBeTruthy();
   expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
@@ -104,7 +108,6 @@ test('expect update on windows to throw error if non zero exit code', async () =
   vi.mocked(existsSync).mockReturnValue(true);
   vi.mocked(readdirSync).mockReturnValue([]);
 
-  const installer = new WinInstaller(extensionContext, mockTelemetryLogger);
   const result = await installer.update();
   expect(result).toBeFalsy();
   expect(extensionApi.window.showErrorMessage).toHaveBeenCalled();
