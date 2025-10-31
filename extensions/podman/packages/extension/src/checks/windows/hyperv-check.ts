@@ -19,6 +19,7 @@ import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
+import { HyperVInstalledCheck } from '/@/checks/windows/hyperv-installed-check';
 import { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
@@ -33,6 +34,7 @@ export class HyperVCheck extends BaseCheck {
     @inject(TelemetryLoggerSymbol)
     private telemetryLogger: TelemetryLogger,
     @inject(HyperVRunningCheck) private isHyperVRunningCheck: HyperVRunningCheck,
+    @inject(HyperVInstalledCheck) private isHyperVInstalledCheck: HyperVInstalledCheck,
   ) {
     super();
   }
@@ -65,12 +67,10 @@ export class HyperVCheck extends BaseCheck {
         description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
       });
     }
-    if (!(await this.isHyperVInstalled())) {
-      return this.createFailureResult({
-        description: 'Hyper-V is not installed on your system.',
-        docLinksDescription: 'call DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V in a terminal',
-        docLinks: HYPER_V_DOC_LINKS,
-      });
+
+    const hyperVInstalledResult = await this.isHyperVInstalledCheck.execute();
+    if (!hyperVInstalledResult.successful) {
+      return hyperVInstalledResult;
     }
 
     return this.isHyperVRunningCheck.execute();

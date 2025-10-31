@@ -21,6 +21,7 @@ import { env as envAPI } from '@podman-desktop/api';
 import { Container as InversifyContainer } from 'inversify';
 
 import { HyperVCheck } from '/@/checks/windows/hyperv-check';
+import { HyperVInstalledCheck } from '/@/checks/windows/hyperv-installed-check';
 import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyperv-podman-version-check';
 import { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
@@ -67,6 +68,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(WSLVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVRunningCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(HyperVInstalledCheck).toSelf().inSingletonScope();
 
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();

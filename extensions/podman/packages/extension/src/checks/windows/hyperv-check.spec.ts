@@ -18,6 +18,7 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { HyperVInstalledCheck } from '/@/checks/windows/hyperv-installed-check';
 import type { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
 
 import type { PowerShellClient } from '../../utils/powershell';
@@ -31,6 +32,7 @@ vi.mock(import('../../utils/powershell'), () => ({
 
 const mockTelemetryLogger = {} as TelemetryLogger;
 const isHyperVRunningCheck = { execute: vi.fn() } as unknown as HyperVRunningCheck;
+const isHyperVInstalledCheck = { execute: vi.fn() } as unknown as HyperVInstalledCheck;
 
 const SUCCESSFUL_CHECK_RESULT: CheckResult = { successful: true };
 const FAILED_CHECK_RESULT: CheckResult = { successful: false };
@@ -48,7 +50,7 @@ const POWERSHELL_CLIENT: PowerShellClient = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getPowerShellClient).mockResolvedValue(POWERSHELL_CLIENT);
-  hyperVCheck = new HyperVCheck(mockTelemetryLogger, isHyperVRunningCheck);
+  hyperVCheck = new HyperVCheck(mockTelemetryLogger, isHyperVRunningCheck, isHyperVInstalledCheck);
 });
 
 test('expect HyperV preflight check return failure result if non admin user', async () => {
@@ -75,20 +77,20 @@ test('expect HyperV preflight check return failure result if Podman Desktop is n
 test('expect HyperV preflight check return failure result if HyperV not installed', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
+  vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue({
+    ...FAILED_CHECK_RESULT,
+    description: 'isHyperVInstalledCheck',
+  });
 
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
-  expect(result.description).equal('Hyper-V is not installed on your system.');
-  expect(result.docLinks?.[0].url).equal(
-    'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-  );
-  expect(result.docLinks?.[0].title).equal('Hyper-V Manual Installation Steps');
+  expect(result.description).equal('isHyperVInstalledCheck');
 });
 
 test('expect HyperV preflight check return failure result if HyperV not running', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
-  vi.mocked(POWERSHELL_CLIENT.isHyperVInstalled).mockResolvedValue(true);
+  vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVRunningCheck.execute).mockResolvedValue({
     ...FAILED_CHECK_RESULT,
     description: 'isHyperVRunningCheck',
@@ -102,7 +104,7 @@ test('expect HyperV preflight check return failure result if HyperV not running'
 test('expect HyperV preflight check return OK', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
   vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
-  vi.mocked(POWERSHELL_CLIENT.isHyperVInstalled).mockResolvedValue(true);
+  vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVRunningCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
 
   const result = await hyperVCheck.execute();
