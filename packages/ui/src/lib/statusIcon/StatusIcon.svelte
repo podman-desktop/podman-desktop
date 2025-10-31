@@ -4,9 +4,9 @@ import StarIcon from '../icons/StarIcon.svelte';
 import Spinner from '../progress/Spinner.svelte';
 
 interface Props {
-  // status: one of RUNNING, STARTING, USED, CREATED, DELETING, or DEGRADED
+  // status: one of RUNNING, STARTING, USED, CREATED, DELETING, UPDATING, or DEGRADED
   // any other status will result in a standard outlined box
-  status?: 'RUNNING' | 'STARTING' | 'USED' | 'DEGRADED' | 'DELETING' | 'CREATED' | string;
+  status?: 'RUNNING' | 'STARTING' | 'USED' | 'DEGRADED' | 'DELETING' | 'UPDATING' | 'CREATED' | string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon?: any;
   size?: number;
@@ -22,7 +22,7 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     class:bg-[var(--pd-status-running)]={status === 'RUNNING' || status === 'USED'}
     class:bg-[var(--pd-status-starting)]={status === 'STARTING'}
     class:bg-[var(--pd-status-degraded)]={status === 'DEGRADED'}
-    class:border-2={!solid && status !== 'DELETING'}
+    class:border-2={!solid && status !== 'DELETING' && status !== 'UPDATING'}
     class:p-0.5={!solid}
     class:p-1={solid}
     class:border-[var(--pd-status-not-running)]={!solid}
@@ -30,7 +30,7 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     class:text-[var(--pd-status-contrast)]={solid}
     role="status"
     title={status}>
-    {#if status === 'DELETING'}
+    {#if status === 'DELETING' || status === 'UPDATING'}
       <Spinner size="1.4em" />
     {:else if typeof icon === 'string'}
        <Icon icon={icon} />
