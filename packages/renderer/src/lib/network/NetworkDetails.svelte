@@ -8,8 +8,8 @@ import Route from '../../Route.svelte';
 import VolumeIcon from '../images/VolumeIcon.svelte';
 import DetailsPage from '../ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '../ui/Util';
-import NetworkActions from './columns/NetworkActions.svelte';
 import { NetworkUtils } from './network-utils';
+import NetworkActions from './NetworkActions.svelte';
 import NetworkDetailsInspect from './NetworkDetailsInspect.svelte';
 import NetworkDetailsSummary from './NetworkDetailsSummary.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
@@ -46,7 +46,7 @@ $effect(() => {
     {/snippet}
     {#snippet actionsSnippet()}
       {#if network}
-        <NetworkActions network={network} detailed={true} />
+        <NetworkActions object={network} detailed={true} />
       {/if}
     {/snippet}
     {#snippet tabsSnippet()}

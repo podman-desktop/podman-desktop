@@ -37,6 +37,8 @@ const network: NetworkInfoUI = {
   driver: '',
   selected: false,
   status: 'USED',
+  containers: [],
+  ipv6_enabled: false,
 };
 
 const closeDialog = vi.fn();
