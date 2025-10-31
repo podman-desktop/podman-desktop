@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const docLinksHyperV = {
+export const DOC_LINKS_HYPERV = {
   url: 'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
   title: 'Hyper-V Manual Installation Steps',
 };
