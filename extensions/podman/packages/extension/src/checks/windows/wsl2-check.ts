@@ -23,8 +23,8 @@ import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { getPowerShellClient } from '/@/utils/powershell';
 
-import { getPowerShellClient } from '../../utils/powershell';
 import { normalizeWSLOutput } from '../../utils/util';
 
 @injectable()

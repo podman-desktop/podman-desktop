@@ -49,11 +49,8 @@ import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, M
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
 import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
-import { SequenceCheck } from './checks/base-check';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
-import { HyperVCheck } from './checks/windows/hyperv-check';
-import { HyperVPodmanVersionCheck } from './checks/windows/hyperv-podman-version-check';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
 import { PodmanCleanupWindows } from './cleanup/podman-cleanup-windows';
 import { KrunkitHelper } from './helpers/krunkit-helper';
@@ -1497,7 +1494,7 @@ export async function start(
 
   if (version) {
     wslEnabled = await winPlatform.isWSLEnabled();
-    const isWslAndHyperEnabled = wslEnabled && (await isHyperVEnabled());
+    const isWslAndHyperEnabled = wslEnabled && (await winPlatform.isHyperVEnabled());
     updateWSLHyperVEnabledContextValue(isWslAndHyperEnabled);
   }
 
@@ -1766,7 +1763,7 @@ export async function calcPodmanMachineSetting(): Promise<void> {
   let diskSupported = true;
 
   if (extensionApi.env.isWindows) {
-    const isHyperV = await isHyperVEnabled();
+    const isHyperV = await winPlatform.isHyperVEnabled();
     cpuSupported = isHyperV;
     memorySupported = isHyperV;
     diskSupported = isHyperV;
@@ -1831,7 +1828,7 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
     containerMachineProviders.push('wsl');
   }
 
-  if (await isHyperVEnabled()) {
+  if (await winPlatform.isHyperVEnabled()) {
     hypervEnabled = true;
     containerMachineProviders.push('hyperv');
   }
@@ -1936,18 +1933,6 @@ export function isLibkrunSupported(podmanVersion: string): boolean {
 // Set wslEnabled. Used for testing purposes
 export function setWSLEnabled(enabled: boolean): void {
   wslEnabled = enabled;
-}
-
-export async function isHyperVEnabled(): Promise<boolean> {
-  if (!extensionApi.env.isWindows) {
-    return false;
-  }
-  const hyperVCheck = new SequenceCheck('Hyper-V Platform', [
-    new HyperVPodmanVersionCheck(),
-    new HyperVCheck(telemetryLogger),
-  ]);
-  const hyperVCheckResult = await hyperVCheck.execute();
-  return hyperVCheckResult.successful;
 }
 
 export function isPodman5OrLater(podmanVersion: string): boolean {
