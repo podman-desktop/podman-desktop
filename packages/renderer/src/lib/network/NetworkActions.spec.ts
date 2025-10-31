@@ -37,6 +37,8 @@ const network1: NetworkInfoUI = {
   driver: '',
   selected: false,
   status: 'UNUSED',
+  containers: [],
+  ipv6_enabled: false,
 };
 
 const network2: NetworkInfoUI = {
@@ -50,6 +52,8 @@ const network2: NetworkInfoUI = {
   driver: '',
   selected: false,
   status: 'USED',
+  containers: [],
+  ipv6_enabled: false,
 };
 
 beforeEach(() => {
