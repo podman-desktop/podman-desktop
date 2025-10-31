@@ -166,12 +166,16 @@ async function waitForSystemPodsReady(labelSelector: string): Promise<void> {
  * Wait for CoreDNS to be ready before installing ingress controller
  * This prevents DNS timeout issues when Contour tries to resolve names
  */
-export async function waitForCoreDNSReady(): Promise<void> {
+export async function waitForCoreDNSReady(logger?: extensionApi.Logger): Promise<void> {
   try {
     await waitForNodesReady();
+    logger?.log('Nodes ready');
     await waitForSystemPodsReady('component=kube-scheduler');
+    logger?.log('Scheduler pod ready');
     await waitForSystemPodsReady('component=kube-controller-manager');
+    logger?.log('Controller-manager pod ready');
     await waitForSystemPodsReady('k8s-app=kube-dns');
+    logger?.log('CoreDNS pod ready');
   } catch (error) {
     throw new Error(`Cluster not ready: ${String(error)}`);
   }
@@ -385,7 +389,7 @@ export async function createCluster(
     // Wait for CoreDNS to be ready before installing ingress controller
     // This prevents DNS timeout issues when Contour tries to resolve names
     if (ingressController) {
-      await waitForCoreDNSReady();
+      await waitForCoreDNSReady(logger);
     }
 
     // Create ingress controller resources depending on whether a configFile was provided or not
