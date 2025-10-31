@@ -198,6 +198,8 @@ describe('update checks', () => {
   });
 
   test('stopPodmanMachinesIfAnyBeforeUpdating with one machine running', async () => {
+    await extensionObj.initInversify(extensionContext, mockTelemetryLogger);
+
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
       stdout: 'podman version 5.0.0',
     } as extensionApi.RunResult);
