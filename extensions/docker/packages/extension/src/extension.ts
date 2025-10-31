@@ -187,7 +187,8 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     }
   });
   return {
-    dummy: '',
+    createContext: dockerContextHandler.createContext.bind(dockerContextHandler),
+    removeContext: dockerContextHandler.removeContext.bind(dockerContextHandler),
   };
 }
 

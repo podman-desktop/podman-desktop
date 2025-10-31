@@ -183,4 +183,40 @@ export class DockerContextHandler {
     // write back the file with the current context and using tabs for indentation
     await promises.writeFile(this.getDockerConfigPath(), JSON.stringify(config, null, '\t'));
   }
+
+  async createContext(context: DockerContextParsingInfo): Promise<void> {
+    if (context.name === 'default') {
+      throw new Error('Cannot create a context with the name default');
+    }
+    // create the context directory
+    const dockerContextsMetaPath = join(this.#dockerConfig.getPath(), 'contexts', 'meta');
+    const sha256ContextName = createHash('sha256').update(context.name).digest('hex');
+    const dockerContextDirectory = join(dockerContextsMetaPath, sha256ContextName);
+    await promises.mkdir(dockerContextDirectory, { recursive: true });
+
+    // write the meta.json file
+    const metaFilePath = join(dockerContextDirectory, 'meta.json');
+    const meta = {
+      Name: context.name,
+      Metadata: {
+        Description: context.metadata.description,
+      },
+      Endpoints: {
+        docker: {
+          Host: context.endpoints.docker.host,
+        },
+      },
+    };
+    await promises.writeFile(metaFilePath, JSON.stringify(meta));
+  }
+
+  async removeContext(name: string): Promise<void> {
+    if (name !== 'default') {
+      // remove the context directory
+      const dockerContextsMetaPath = join(this.#dockerConfig.getPath(), 'contexts', 'meta');
+      const sha256ContextName = createHash('sha256').update(name).digest('hex');
+      const dockerContextDirectory = join(dockerContextsMetaPath, sha256ContextName);
+      await promises.rm(dockerContextDirectory, { recursive: true, force: true });
+    }
+  }
 }
