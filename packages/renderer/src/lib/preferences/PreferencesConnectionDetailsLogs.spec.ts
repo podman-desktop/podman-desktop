@@ -41,7 +41,17 @@ const containerConnection: ProviderContainerConnectionInfo = {
   type: 'podman',
 };
 
+const getConfigurationValueMock = vi.fn();
+
 beforeAll(async () => {
+  Object.defineProperty(window, 'getConfigurationValue', {
+    value: getConfigurationValueMock.mockImplementation((key: string) => {
+      if (key === 'terminal.integrated.scrollback') {
+        return 1000;
+      }
+      return undefined;
+    }),
+  });
   global.ResizeObserver = vi.fn().mockImplementation(() => ({
     observe: vi.fn(),
     unobserve: vi.fn(),

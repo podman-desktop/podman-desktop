@@ -116,11 +116,20 @@ const providerInfo = {
   installationSupport: undefined,
 } as unknown as ProviderInfo;
 
+const getConfigurationValueMock = vi.fn();
+
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.resetAllMocks();
+  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   vi.mocked(window.listImages).mockResolvedValue(localImageList);
   vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);
+  getConfigurationValueMock.mockImplementation((key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000;
+    }
+    return undefined;
+  });
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   Object.defineProperty(window, 'matchMedia', {
     value: () => {

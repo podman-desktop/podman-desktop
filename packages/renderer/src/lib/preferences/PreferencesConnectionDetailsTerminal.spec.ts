@@ -47,6 +47,12 @@ vi.mock('xterm', () => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  getConfigurationValueMock.mockImplementation((key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000; // A standard default value for scrollback
+    }
+    return undefined;
+  });
   Object.defineProperties(window, {
     getConfigurationValue: {
       value: getConfigurationValueMock,

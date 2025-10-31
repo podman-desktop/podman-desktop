@@ -28,6 +28,12 @@ const getConfigurationValueMock = vi.fn();
 const attachContainerMock = vi.fn();
 
 beforeAll(() => {
+  getConfigurationValueMock.mockImplementation((key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000;
+    }
+    return undefined;
+  });
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'attachContainer', { value: attachContainerMock });
   Object.defineProperty(window, 'attachContainerSend', { value: vi.fn() });
