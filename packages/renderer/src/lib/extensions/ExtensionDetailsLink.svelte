@@ -24,21 +24,24 @@ function resolveLabel(...candidates: Array<string | undefined | null>): string {
   return '';
 }
 
-let extensionLabel = resolveLabel(extension.displayName, extension.name, extension.id);
-let detailsLabel = extensionLabel ? `View details for ${extensionLabel}` : 'View extension details';
+function getExtensionLabel(): string {
+  return resolveLabel(extension.displayName, extension.name, extension.id);
+}
 
-$: extensionLabel = resolveLabel(extension.displayName, extension.name, extension.id);
-$: detailsLabel = extensionLabel ? `View details for ${extensionLabel}` : 'View extension details';
+function getDetailsLabel(): string {
+  const label = getExtensionLabel();
+  return label ? `View details for ${label}` : 'View extension details';
+}
 </script>
 
-<Tooltip top tip={detailsLabel}>
-  <button aria-label={detailsLabel} type="button" on:click={openDetailsExtension}>
+<Tooltip top tip={getDetailsLabel()}>
+  <button aria-label={getDetailsLabel()} type="button" on:click={openDetailsExtension}>
     <div class="flex flex-row items-center text-[var(--pd-content-header)]">
       {#if displayIcon}
         <Fa icon={faArrowUpRightFromSquare} />
       {/if}
       <div class="text-left before:{$$props.class}">
-        {extensionLabel}
+        {getExtensionLabel()}
       </div>
     </div>
   </button>
