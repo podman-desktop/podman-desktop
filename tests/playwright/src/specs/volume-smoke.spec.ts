@@ -175,8 +175,9 @@ test.describe.serial('Volume workflow verification', { tag: ['@smoke', '@windows
     //check that four volumes are created (in addition to the existing ones)
     volumesPage = await navigationBar.openVolumes();
     await playExpect(volumesPage.heading).toBeVisible();
-    const newVolumes = await volumesPage.countVolumesFromTable();
-    playExpect(newVolumes - previousVolumes).toBe(4);
+    await playExpect
+      .poll(async () => (await volumesPage.countVolumesFromTable()) - previousVolumes, { timeout: 30_000 })
+      .toBe(4);
 
     //check the container is stopped and delete it
     containers = await navigationBar.openContainers();

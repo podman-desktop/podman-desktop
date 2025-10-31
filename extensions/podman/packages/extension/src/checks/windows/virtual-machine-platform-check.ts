@@ -19,13 +19,12 @@
 import type extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
-import { BaseCheck } from '../base-check';
-
 @injectable()
-export class VirtualMachinePlatformCheck extends BaseCheck {
+export class VirtualMachinePlatformCheck extends MemoizedBaseCheck {
   title = 'Virtual Machine Platform Enabled';
 
   constructor(
@@ -40,7 +39,7 @@ export class VirtualMachinePlatformCheck extends BaseCheck {
     return client.isVirtualMachineAvailable();
   }
 
-  async execute(): Promise<extensionApi.CheckResult> {
+  async executeImpl(): Promise<extensionApi.CheckResult> {
     try {
       const result = await this.isVirtualMachineAvailable();
       if (result) {

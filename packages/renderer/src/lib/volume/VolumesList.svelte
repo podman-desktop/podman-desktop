@@ -179,6 +179,13 @@ const row = new TableRow<VolumeInfoUI>({
 function key(obj: VolumeInfoUI): string {
   return `${obj.engineId}:${obj.name}`;
 }
+
+/**
+ * Utility function for the Table to get the label to use for each item
+ */
+function label(obj: VolumeInfoUI): string {
+  return obj.name;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="volumes">
@@ -235,6 +242,7 @@ function key(obj: VolumeInfoUI): string {
         defaultSortColumn="Name"
         enableLayoutConfiguration={true}
         key={key}
+        label={label}
         on:update={(): VolumeInfoUI[] => (volumes = volumes)}>
       </Table>
     {/if}

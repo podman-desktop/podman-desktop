@@ -20,16 +20,17 @@ import type extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 import { injectable } from 'inversify';
 
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
+
 import { WslHelper } from '../../helpers/wsl-helper';
-import { BaseCheck } from '../base-check';
 
 @injectable()
-export class WSLVersionCheck extends BaseCheck {
+export class WSLVersionCheck extends MemoizedBaseCheck {
   title = 'WSL Version';
 
   minVersion = '1.2.5';
 
-  async execute(): Promise<extensionApi.CheckResult> {
+  async executeImpl(): Promise<extensionApi.CheckResult> {
     try {
       const wslHelper = new WslHelper();
       const wslVersionData = await wslHelper.getWSLVersionData();

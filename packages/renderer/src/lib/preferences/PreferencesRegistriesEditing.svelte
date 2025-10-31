@@ -180,13 +180,14 @@ async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<
   // if we happen to get a certificate verification issue, as the user if they would like to
   // continue with the registry anyway.
   try {
-    await window.checkImageCredentials(registry);
+    await window.checkImageCredentials($state.snapshot(registry));
   } catch (error) {
     if (
       error instanceof Error &&
       (error.message.includes('unable to verify the first certificate') ||
         error.message.includes('self signed certificate in certificate chain'))
     ) {
+      showNewRegistryForm = false;
       const result = await window.showMessageBox({
         title: 'Invalid Certificate',
         type: 'warning',
@@ -198,6 +199,7 @@ async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<
       } else {
         setErrorResponse(registry.serverUrl, error.message);
         loggingIn = false;
+        showNewRegistryForm = true;
         return;
       }
     }

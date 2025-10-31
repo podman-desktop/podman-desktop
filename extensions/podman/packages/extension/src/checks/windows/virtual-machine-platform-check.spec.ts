@@ -83,3 +83,20 @@ test('expect winVirtualMachine preflight check return successful result if there
   );
   expect(result.docLinks?.[0].title).equal('Enable Virtual Machine Platform');
 });
+
+test('expect winVirtualMachine preflight check to be memoized', async () => {
+  vi.mocked(process.exec).mockImplementation(() =>
+    Promise.resolve({
+      stdout: 'VirtualMachinePlatform',
+      stderr: '',
+      command: 'command',
+    }),
+  );
+
+  const winVirtualMachinePlatformCheck = new VirtualMachinePlatformCheck(mockTelemetryLogger);
+  await winVirtualMachinePlatformCheck.execute();
+  expect(process.exec).toHaveBeenCalledOnce();
+
+  await winVirtualMachinePlatformCheck.execute();
+  expect(process.exec).toHaveBeenCalledOnce();
+});
