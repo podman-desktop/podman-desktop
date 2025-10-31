@@ -58,7 +58,7 @@ beforeEach(() => {
 
 test('Expect non-podman unused network to have delete option and disabled edit', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
-  render(NetworkActions, { network: network1 });
+  render(NetworkActions, { object: network1 });
 
   expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
   expect(screen.queryByTitle('Update Network')).toBeInTheDocument();
@@ -70,7 +70,7 @@ test('Expect non-podman unused network to have delete option and disabled edit',
 });
 
 test('Expect podman used network to have edit option and disabled delete', async () => {
-  render(NetworkActions, { network: network2 });
+  render(NetworkActions, { object: network2 });
 
   expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
   expect(screen.queryByTitle('Delete Network')).toBeDisabled();

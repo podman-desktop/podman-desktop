@@ -8,23 +8,23 @@ import type { NetworkInfoUI } from './NetworkInfoUI';
 import UpdateNetworkDialog from './UpdateNetworkDialog.svelte';
 
 interface Props {
-  network: NetworkInfoUI;
+  object: NetworkInfoUI;
   detailed?: boolean;
 }
 
-let { network, detailed = false }: Props = $props();
+let { object, detailed = false }: Props = $props();
 
 let showUpdateNetworkDialog = $state(false);
 
 async function removeNetwork(): Promise<void> {
-  const oldStatus = network.status;
-  network.status = 'DELETING';
+  const oldStatus = object.status;
+  object.status = 'DELETING';
 
   try {
-    await window.removeNetwork(network.engineId, network.id);
+    await window.removeNetwork(object.engineId, object.id);
   } catch (error) {
-    console.error(`error while removing network ${network.name}`, error);
-    network.status = oldStatus;
+    console.error(`error while removing network ${object.name}`, error);
+    object.status = oldStatus;
   }
 }
 
@@ -38,15 +38,15 @@ function closeUpdateDialog(): void {
   onClick={(): void => {showUpdateNetworkDialog = true;}}
   icon={faEdit}
   detailed={detailed}
-  enabled={network.engineType === 'podman'} />
+  enabled={object.engineType === 'podman'} />
 
 <ListItemButtonIcon
   title="Delete Network"
-  onClick={(): void => withConfirmation(removeNetwork, `delete network ${network.name}`)}
+  onClick={(): void => withConfirmation(removeNetwork, `delete network ${object.name}`)}
   icon={faTrash}
   detailed={detailed}
-  enabled={network.status === 'UNUSED'} />
+  enabled={object.status === 'UNUSED'} />
 
 {#if showUpdateNetworkDialog}
-  <UpdateNetworkDialog network={network} closeDialog={closeUpdateDialog} />
+  <UpdateNetworkDialog network={object} onClose={closeUpdateDialog} />
 {/if}

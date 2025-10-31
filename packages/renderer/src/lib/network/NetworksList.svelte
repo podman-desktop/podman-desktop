@@ -8,12 +8,12 @@ import { providerInfos } from '/@/stores/providers';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
-import NetworkColumnActions from './columns/NetworkColumnActions.svelte';
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
 import NetworkColumnEnvironment from './columns/NetworkColumnEnvironment.svelte';
 import NetworkColumnId from './columns/NetworkColumnId.svelte';
 import NetworkColumnName from './columns/NetworkColumnName.svelte';
 import { NetworkUtils } from './network-utils';
+import NetworkActions from './NetworkActions.svelte';
 import NetworkEmptyScreen from './NetworkEmptyScreen.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
@@ -93,7 +93,7 @@ const columns = [
   nameColumn,
   envColumn,
   driverColumn,
-  new TableColumn<NetworkInfoUI>('Actions', { align: 'right', renderer: NetworkColumnActions, overflow: true }),
+  new TableColumn<NetworkInfoUI>('Actions', { align: 'right', renderer: NetworkActions, overflow: true }),
 ];
 
 const row = new TableRow<NetworkInfoUI>({

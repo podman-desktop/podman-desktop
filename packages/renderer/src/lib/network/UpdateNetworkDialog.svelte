@@ -6,10 +6,10 @@ import type { NetworkInfoUI } from './NetworkInfoUI';
 
 interface Props {
   network: NetworkInfoUI;
-  closeDialog: () => void;
+  onClose: () => void;
 }
 
-let { network, closeDialog = (): void => {} }: Props = $props();
+let { network, onClose = (): void => {} }: Props = $props();
 
 let addDNSServers = $state('');
 
@@ -21,12 +21,12 @@ async function updateNetwork(): Promise<void> {
   await window.updateNetwork(network.engineId, network.id, addList, removeList);
   addDNSServers = '';
   removeDNSServers = '';
-  closeDialog();
+  onClose();
 }
 </script>
 <Dialog
   title={`Edit Network ${network.name}`}
-  onclose={closeDialog}>
+  onclose={onClose}>
   {#snippet content()}
     <div  class="flex flex-col text-[var(--pd-modal-text)] space-y-5">
       <div>
@@ -43,7 +43,7 @@ async function updateNetwork(): Promise<void> {
   {/snippet}
   {#snippet buttons()}
     
-    <Button type="link" onclick={closeDialog}>Cancel</Button>
+    <Button type="link" onclick={onClose}>Cancel</Button>
     <Button
       type="primary"
       disabled={!addDNSServers.trim() &&
