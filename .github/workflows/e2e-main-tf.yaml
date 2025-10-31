@@ -33,7 +33,7 @@ on:
         type: string
         required: true
       podman_version:
-        default: 'nightly'
+        default: 'latest'
         description: 'Podman version to install (e.g., "5.5.2", "5.6.0~rc1"). Use "latest" for stable or "nightly" for the latest development build.'
         type: string
         required: true
@@ -62,7 +62,7 @@ jobs:
           DEFAULT_NPM_TARGET: 'all'
           DEFAULT_FORK: 'podman-desktop'
           DEFAULT_BRANCH: 'main'
-          DEFAULT_PODMAN_VERSION: 'nightly'
+          DEFAULT_PODMAN_VERSION: 'latest'
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
           echo "FORK=${{ github.event.inputs.fork || env.DEFAULT_FORK }}" >> $GITHUB_ENV
