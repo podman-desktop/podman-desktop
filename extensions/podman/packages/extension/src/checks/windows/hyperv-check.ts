@@ -19,6 +19,7 @@ import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
+import { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getPowerShellClient } from '../../utils/powershell';
@@ -31,6 +32,7 @@ export class HyperVCheck extends BaseCheck {
   constructor(
     @inject(TelemetryLoggerSymbol)
     private telemetryLogger: TelemetryLogger,
+    @inject(HyperVRunningCheck) private isHyperVRunningCheck: HyperVRunningCheck,
   ) {
     super();
   }
@@ -48,11 +50,6 @@ export class HyperVCheck extends BaseCheck {
   async isHyperVInstalled(): Promise<boolean> {
     const client = await getPowerShellClient(this.telemetryLogger);
     return client.isHyperVInstalled();
-  }
-
-  async isHyperVRunning(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isHyperVRunning();
   }
 
   async execute(): Promise<CheckResult> {
@@ -75,13 +72,7 @@ export class HyperVCheck extends BaseCheck {
         docLinks: HYPER_V_DOC_LINKS,
       });
     }
-    if (!(await this.isHyperVRunning())) {
-      return this.createFailureResult({
-        description: 'Hyper-V is not running on your system.',
-        docLinksDescription: 'call sc start vmms in a terminal',
-        docLinks: HYPER_V_DOC_LINKS,
-      });
-    }
-    return this.createSuccessfulResult();
+
+    return this.isHyperVRunningCheck.execute();
   }
 }
