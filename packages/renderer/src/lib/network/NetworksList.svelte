@@ -93,6 +93,13 @@ const row = new TableRow<NetworkInfoUI>({
   selectable: (network): boolean => network.status === 'UNUSED',
   disabledText: 'Network is used by a container',
 });
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(network: NetworkInfoUI): string {
+  return `${network.engineId}:${network.id}`;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="networks">
@@ -130,6 +137,7 @@ const row = new TableRow<NetworkInfoUI>({
         data={networks}
         columns={columns}
         row={row}
+        key={key}
         defaultSortColumn="Name">
       </Table>
     {/if}
