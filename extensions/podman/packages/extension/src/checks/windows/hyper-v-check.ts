@@ -19,12 +19,12 @@ import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
-import { HyperVInstalledCheck } from '/@/checks/windows/hyperv-installed-check';
-import { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getPowerShellClient } from '../../utils/powershell';
 import { BaseCheck } from '../base-check';
+import { HyperVInstalledCheck } from './hyper-v-installed-check';
+import { HyperVRunningCheck } from './hyper-v-running-check';
 
 @injectable()
 export class HyperVCheck extends BaseCheck {

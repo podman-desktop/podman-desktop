@@ -21,7 +21,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { PowerShellClient } from '/@/utils/powershell';
 import { getPowerShellClient } from '/@/utils/powershell';
 
-import { HyperVInstalledCheck } from './hyperv-installed-check';
+import { HyperVRunningCheck } from './hyper-v-running-check';
 
 vi.mock(import('@podman-desktop/api'));
 vi.mock(import('../../utils/powershell'), () => ({
@@ -43,24 +43,24 @@ beforeEach(() => {
   vi.mocked(getPowerShellClient).mockResolvedValue(POWERSHELL_CLIENT);
 });
 
-test('expect HyperVInstalledCheck preflight check return failure result if HyperV not installed', async () => {
-  vi.mocked(POWERSHELL_CLIENT.isHyperVInstalled).mockResolvedValue(false);
+test('expect HyperVRunningCheck preflight check return failure result if HyperV not running', async () => {
+  vi.mocked(POWERSHELL_CLIENT.isHyperVRunning).mockResolvedValue(false);
 
-  const hyperVInstalledCheck = new HyperVInstalledCheck(mockTelemetryLogger);
-  const result = await hyperVInstalledCheck.execute();
+  const hyperVRunningCheck = new HyperVRunningCheck(mockTelemetryLogger);
+  const result = await hyperVRunningCheck.execute();
   expect(result.successful).toBeFalsy();
-  expect(result.description).equal('Hyper-V is not installed on your system.');
+  expect(result.description).equal('Hyper-V is not running on your system.');
   expect(result.docLinks?.[0].url).equal(
     'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
   );
   expect(result.docLinks?.[0].title).equal('Hyper-V Manual Installation Steps');
 });
 
-test('expect HyperVInstalledCheck preflight check return OK if HyperV is installed', async () => {
-  vi.mocked(POWERSHELL_CLIENT.isHyperVInstalled).mockResolvedValue(true);
+test('expect HyperVRunningCheck preflight check return OK if HyperV is running', async () => {
+  vi.mocked(POWERSHELL_CLIENT.isHyperVRunning).mockResolvedValue(true);
 
-  const hyperVInstalledCheck = new HyperVInstalledCheck(mockTelemetryLogger);
-  const result = await hyperVInstalledCheck.execute();
+  const hyperVRunningCheck = new HyperVRunningCheck(mockTelemetryLogger);
+  const result = await hyperVRunningCheck.execute();
   expect(result.successful).toBeTruthy();
   expect(result.description).toBeUndefined();
   expect(result.docLinks).toBeUndefined();

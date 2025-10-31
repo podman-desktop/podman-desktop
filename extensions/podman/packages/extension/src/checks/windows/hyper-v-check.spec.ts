@@ -18,12 +18,11 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { HyperVInstalledCheck } from '/@/checks/windows/hyperv-installed-check';
-import type { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
-
 import type { PowerShellClient } from '../../utils/powershell';
 import { getPowerShellClient } from '../../utils/powershell';
-import { HyperVCheck } from './hyperv-check';
+import { HyperVCheck } from './hyper-v-check';
+import type { HyperVInstalledCheck } from './hyper-v-installed-check';
+import type { HyperVRunningCheck } from './hyper-v-running-check';
 
 vi.mock(import('@podman-desktop/api'));
 vi.mock(import('../../utils/powershell'), () => ({
