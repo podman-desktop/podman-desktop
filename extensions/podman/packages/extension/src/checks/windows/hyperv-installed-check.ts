@@ -19,13 +19,13 @@
 import type extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
 @injectable()
-export class HyperVInstalledCheck extends BaseCheck {
+export class HyperVInstalledCheck extends MemoizedBaseCheck {
   title = 'Hyper-V installed';
 
   constructor(
@@ -40,7 +40,7 @@ export class HyperVInstalledCheck extends BaseCheck {
     return client.isHyperVInstalled();
   }
 
-  async execute(): Promise<extensionApi.CheckResult> {
+  async executeImpl(): Promise<extensionApi.CheckResult> {
     const result = await this.checkHyperVInstalled();
     if (result) {
       return this.createSuccessfulResult();
