@@ -1,7 +1,8 @@
 <script lang="ts">
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
+import { router } from 'tinro';
 
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
@@ -66,6 +67,10 @@ async function deleteSelectedNetworks(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
+function gotoCreateNetwork(): void {
+  router.goto('/networks/create');
+}
+
 let idColumn = new TableColumn<NetworkInfoUI>('Id', {
   width: '100px',
   renderer: NetworkColumnId,
@@ -111,6 +116,13 @@ function key(network: NetworkInfoUI): string {
 
 <NavPage bind:searchTerm={searchTerm} title="networks">
 
+  {#snippet additionalActions()}
+    {#if providerConnections.length > 0}
+      <Button on:click={gotoCreateNetwork} icon={faPlusCircle} title="Create a volume" aria-label="Create"
+        >Create</Button>
+    {/if}
+  {/snippet}
+
   {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <Button
@@ -127,7 +139,7 @@ function key(network: NetworkInfoUI): string {
   {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full h-full">  
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
