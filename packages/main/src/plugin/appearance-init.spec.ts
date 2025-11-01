@@ -25,7 +25,9 @@ import type { ApiSenderType } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AppearanceSettings } from './appearance-settings.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
+import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
+import type { LockedConfiguration } from './locked-configuration.js';
 
 let configurationRegistry: ConfigurationRegistry;
 
@@ -42,7 +44,12 @@ const apiSender: ApiSenderType = {
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
-  configurationRegistry = new ConfigurationRegistry({} as ApiSenderType, {} as Directories);
+  configurationRegistry = new ConfigurationRegistry(
+    {} as ApiSenderType,
+    {} as Directories,
+    {} as DefaultConfiguration,
+    {} as LockedConfiguration,
+  );
   configurationRegistry.registerConfigurations = vi.fn();
   configurationRegistry.deregisterConfigurations = vi.fn();
 });

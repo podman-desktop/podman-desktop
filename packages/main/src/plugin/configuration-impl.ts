@@ -18,7 +18,11 @@
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import {
+  CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
+} from '/@api/configuration/constants.js';
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
 import type { ApiSenderType } from './api.js';
@@ -51,12 +55,70 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
   get<T>(section: string, defaultValue?: unknown): T | undefined {
     const localKey = this.getLocalKey(section);
 
-    // now look if we have this value
+    // First thing!
+    // Check if this config key is "locked" by a "managed-by" policy, and if so, return the "managed-by" value.
+    //
+    // Locked keys ignore user settings and force the managed default value instead, if there is a value there
+    // in the first place, if not, we fall back to the user value.
+    //
+    // We retrieve the information from from a system file:
+    // (ex macOS: /Library/Application Support/com.podman.desktop/locked.json, Linux: /usr/share/podman-desktop/locked.json)
+    //
+    // This only applies when we are getting values from the default scope, as getting them SPECIFICALLY
+    // from managed defaults or locked scopes would be counter-intuitive... (or Onboarding scope, but that doesn't make sense either)
+    if (this.scope === CONFIGURATION_DEFAULT_SCOPE) {
+      // Pass in the key we are wanting to get and check locked config for the key
+      const managedValue = this.getLockedConfigValue<T>(localKey);
+
+      // Before we go ahead and return the value, we want to log to console
+      // this information so that if users are confused why they can't change a setting, they know why,
+      // however, this information should only stay in console.debug considering that it could be noisy (returning configuration values multiple times)
+      //
+      // FUTURE CHANGES:
+      // In the future, we will be implementing a UI to show this "overridden" information, so this information to
+      // console.debug will be temporary until we are able to store it in the UI (stores).
+      if (managedValue !== undefined) {
+        console.debug(
+          `[Managed-by]: Configuration key '${localKey}' is locked. Returning managed default value instead of user value.`,
+        );
+        return managedValue;
+      }
+    }
+
+    // If the above isn't applicable (no locked keys + managed by scope), we return the key as normal.
     const localView = this.getLocalView();
     if (localView[localKey] !== undefined) {
       return localView[localKey] as T;
     }
+
+    // Last resort: Return the fallback default value
     return defaultValue as T;
+  }
+
+  // Helper to check if a config key is locked and return its managed value
+  // Returns undefined if the key isn't locked or has no managed value
+  private getLockedConfigValue<T>(localKey: string): T | undefined {
+    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
+
+    // Bail early if there's no locked config or it's malformed
+    if (!lockedConfig?.['locked'] || !Array.isArray(lockedConfig['locked'])) {
+      return undefined;
+    }
+
+    const lockedKeys = lockedConfig['locked'] as string[];
+
+    // Bail early if this key isn't in the locked list
+    if (!lockedKeys.includes(localKey)) {
+      return undefined;
+    }
+
+    // This key IS locked - grab the managed default value for it
+    const managedDefaults = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE);
+    if (managedDefaults && managedDefaults[localKey] !== undefined) {
+      return managedDefaults[localKey] as T;
+    }
+
+    return undefined;
   }
 
   has(section: string): boolean {
@@ -153,6 +215,10 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
       return `container-connection:${this.scope.name}.${this.scope.endpoint.socketPath}`;
     } else if (this.isKubernetesProviderConnection(this.scope)) {
       return `kubernetes-connection:${this.scope.endpoint.apiURL}`;
+    } else if (this.scope === CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE) {
+      return CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE;
+    } else if (this.scope === CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE) {
+      return CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE;
     } else {
       return CONFIGURATION_DEFAULT_SCOPE;
     }
