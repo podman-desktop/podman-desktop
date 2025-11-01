@@ -52,6 +52,9 @@ export interface IConfigurationPropertyRecordedSchema extends IConfigurationProp
   title: string;
   parentId: string;
   extension?: IConfigurationExtensionInfo;
+
+  // Indicated if this property has been "disabled" for the UI (readonly / unable to change)
+  disabled?: boolean;
 }
 
 export interface IConfigurationPropertySchema {
