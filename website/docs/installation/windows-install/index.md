@@ -8,15 +8,19 @@ keywords: [podman desktop, containers, podman, installing, installation, windows
 
 # Installing Podman Desktop and Podman on Windows
 
+You can install Podman Desktop by using:
+
+- The Windows installer
+- Other alternative methods
+
 ## Installing Podman Desktop
 
-To install Podman Desktop:
-
 1. [Download the Windows installer](/downloads/windows).
-
-1. To start the Podman Desktop installer, open the downloaded file.
-
-   ![Podman Desktop Setup installing](img/podman-desktop-setup-installing.png)
+1. Locate the file in the Downloads folder, and double-click on it. The Podman Desktop Setup screen opens.
+1. Select one of the installation options.
+1. Click **Install**. Wait for the installation to complete.
+   ![install button](img/install-button-for-podman-desktop.png)
+1. Click **Finish** to close the screen. The **Get started with Podman Desktop** screen opens.
 
 <details>
 <summary>
@@ -83,6 +87,8 @@ Main benefits are:
 - Ease of use.
 - WSL 2 native virtualization performance.
 
+#### Prerequisites
+
 Check that your environment has:
 
 - 6 GB RAM for the Podman Machine.
@@ -92,11 +98,11 @@ Check that your environment has:
   - Windows 10 Build 19043 or greater, or Windows 11.
   - On a virtual machine: [Nested Virtualization enabled](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/nested-virtualization#configure-nested-virtualization).
 
-To install the Podman Machine:
+#### Procedure: Enable the WSL feature
 
-1. To prepare your system, enable the WSL feature, without installing the default Ubuntu distribution of Linux.
+If your administrator has already enabled the WSL feature, you can skip the procedure.
 
-   Open the Command Prompt, and run:.
+1. Open the command prompt, and run the following command to enable the WSL feature without installing the default Ubuntu distribution of Linux.
 
    ```shell-session
    > wsl --update
@@ -111,21 +117,32 @@ To install the Podman Machine:
 
 1. Restart your computer.
 
-1. The **Dashboard** screen displays: _<Icon icon="fa-solid fa-info" size="lg" /> Podman needs to be set up_.
+#### Procedure: Install Podman Desktop dependencies
 
-   ![Podman needs set up screen](img/dashboard-podman-needs-set-up.png)
+After installing Podman Desktop, the **Get started with Podman Desktop** screen opens to help you start onboarding. You can install Podman, `kubectl` CLI and `compose` CLI or completely skip this onboarding setup and do it later by using:
 
-1. Click the **Set up** button.
+- The **Set up** button shown in the notification on the Dashboard page.
+- The **Setup Podman** button shown in the Podman tile on the Resources page.
 
-1. Review and validate all confirmation screens to set up the Podman machine.
+Perform the following procedure to set up Podman and create the Podman machine:
 
-1. When necessary, follow the instructions to install system prerequisites.
+1. Click **Set up** in the notification on the Dashboard page.
+   ![set up button](img/podman-set-up-button.png)
+1. Click **Next**. A confirmation notification to install Podman opens.
+1. Click **Yes**. The Podman Setup screen opens with the default WSLv2 virtualization provider selected.
+1. Click **Install**. A notification stating `Installation Successfully Completed` appears on the screen.
+   ![install button for Podman](img/install-podman-through-installer.png)
+1. Click **Close**. A page notifying that Podman has been set up correctly opens.
+1. Click **Next**. A page notifying you to create a Podman machine opens.
+1. Click **Next**, and then click **Create**.
+   ![install button for Podman](img/notification-to-create-podman-machine.png)
+1. Click **Next** to navigate back to the Dashboard page.
 
-To verify that Podman is set up:
+To verify that Podman is set up, go to **Settings > Resources** and view the running Podman machine in the **Podman** tile.
 
-- In the **Dashboard**, the **Podman** tile displays _Podman is running_.
+![Podman is running screen](img/podman-machine-running.png)
 
-  ![Podman is running screen](img/dashboard-podman-is-running.png)
+You are now ready to use the application.
 
 ### Use Hyper-V as machine provider
 
