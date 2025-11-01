@@ -129,6 +129,8 @@ export class ExploreFeatures {
 
     this.configurationRegistry.registerConfigurations([exploreFeaturesConfiguration]);
 
+    await this.updateShowRequirements();
+
     for (const feature of featuresJson.features as ExploreFeature[]) {
       const imageFile = path.resolve(ExploreFeatures.MAIN_IMAGES_FOLDER, `${feature.id}.png`);
       if (existsSync(imageFile)) {

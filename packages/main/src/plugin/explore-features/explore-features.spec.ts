@@ -24,6 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { Context } from '/@/plugin/context/context.js';
 import type { ContainerInfo } from '/@api/container-info.js';
+import type { ExploreFeature } from '/@api/explore-feature.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info.js';
 
@@ -188,6 +189,15 @@ test('init explore features in the configuration registry', async () => {
 });
 
 test('Get features list', async () => {
+  vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([]);
+
+  vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([]);
+
+  vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([]);
+
+  vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
+    get: vi.fn().mockReturnValueOnce(false).mockReturnValueOnce([]).mockReturnValueOnce(false),
+  } as unknown as Configuration);
   await exploreFeaturesMock.init();
   const features = await exploreFeaturesMock.downloadFeaturesList();
 
@@ -214,7 +224,10 @@ test('Get features list', async () => {
   );
 });
 
-test('Context value are set when calling downloadFeaturesList', async () => {
+test.each([
+  ['downloadFeaturesList', (): Promise<ExploreFeature[]> => exploreFeaturesMock.downloadFeaturesList()],
+  ['init', (): Promise<void> => exploreFeaturesMock.init()],
+])('Context value are set when calling %s', async (funcName, func) => {
   vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([containerInfoMock]);
 
   vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([
@@ -227,11 +240,17 @@ test('Context value are set when calling downloadFeaturesList', async () => {
     { ...extensionInfoMock, removable: true },
   ]);
 
-  vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
-    get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(false),
-  } as unknown as Configuration);
+  if (funcName === 'downloadFeaturesList') {
+    vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
+      get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(false),
+    } as unknown as Configuration);
+  } else if (funcName === 'init') {
+    vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
+      get: vi.fn().mockReturnValueOnce(false),
+    } as unknown as Configuration);
+  }
 
-  await exploreFeaturesMock.downloadFeaturesList();
+  await func();
 
   expect(contextMock.setValue).toHaveBeenCalledWith('containerListLength', 1);
   expect(contextMock.setValue).toHaveBeenCalledWith('runningContainerConnections', 2);
