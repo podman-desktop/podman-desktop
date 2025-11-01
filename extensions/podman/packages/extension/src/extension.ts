@@ -986,7 +986,8 @@ export async function registerUpdatesIfAny(
   podmanInstall: PodmanInstall,
 ): Promise<extensionApi.Disposable | undefined> {
   const updateInfo = await podmanInstall.checkForUpdate(installedPodman);
-  if (updateInfo.hasUpdate && updateInfo.bundledVersion) {
+  const warnings = await getMultiplePodmanInstallationsWarnings(installedPodman);
+  if (updateInfo.hasUpdate && updateInfo.bundledVersion && warnings.length === 0) {
     return provider.registerUpdate({
       version: updateInfo.bundledVersion,
       update: () => {
