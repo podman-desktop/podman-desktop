@@ -33,6 +33,12 @@ const kubernetesExecMock = vi.fn();
 const kubernetesExecResizeMock = vi.fn();
 
 beforeAll(() => {
+  getConfigurationValueMock.mockImplementation((key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000;
+    }
+    return undefined;
+  });
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'kubernetesExec', { value: kubernetesExecMock });
   Object.defineProperty(window, 'kubernetesExecResize', { value: kubernetesExecResizeMock });

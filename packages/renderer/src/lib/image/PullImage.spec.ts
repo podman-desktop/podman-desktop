@@ -30,13 +30,22 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 
 import PullImage from './PullImage.svelte';
 
+const getConfigurationValueMock = vi.fn();
+const resolveShortnameImageMock = vi.fn();
+const pullImageMock = vi.fn();
+const listImageTagsInRegistryMock = vi.fn();
+
 beforeAll(() => {
+  vi.stubGlobal('getConfigurationValue', getConfigurationValueMock);
+  vi.stubGlobal('resolveShortnameImage', resolveShortnameImageMock);
+  vi.stubGlobal('pullImage', pullImageMock);
+  vi.stubGlobal('listImageTagsInRegistry', listImageTagsInRegistryMock);
+
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
 
   Object.defineProperty(window, 'matchMedia', {
     value: () => {
@@ -74,7 +83,15 @@ const PROVIDER_INFO_MOCK: ProviderInfo = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.restoreAllMocks();
+  getConfigurationValueMock.mockImplementation((key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000;
+    }
+    return undefined;
+  });
+  resolveShortnameImageMock.mockResolvedValue(['docker.io/test1']);
+  pullImageMock.mockResolvedValue(undefined);
+  listImageTagsInRegistryMock.mockResolvedValue(['latest', 'other']);
 
   providerInfos.set([PROVIDER_INFO_MOCK]);
 });

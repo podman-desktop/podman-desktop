@@ -121,6 +121,12 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.listImages).mockResolvedValue(localImageList);
   vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);
+  vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000;
+    }
+    return undefined;
+  });
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
   Object.defineProperty(window, 'matchMedia', {
     value: () => {

@@ -29,12 +29,22 @@ import type { ContainerInfoUI } from './ContainerInfoUI';
 
 let shellInContainerMock = vi.fn();
 
+const getConfigurationValueMock = vi.fn();
+
 beforeAll(() => {
+  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'matchMedia', { value: vi.fn() });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
+
+  getConfigurationValueMock.mockImplementation((key: string) => {
+    if (key === 'terminal.integrated.scrollback') {
+      return 1000;
+    }
+    return undefined;
+  });
   shellInContainerMock = vi.mocked(window.shellInContainer);
   vi.mocked(window.matchMedia).mockReturnValue({
     addListener: vi.fn(),
@@ -279,7 +289,7 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
   const terminals = get(containerTerminals);
   expect(terminals.length).toBe(0);
 
-  // destroy the the terminal tab
+  // destroy the terminal tab
   renderObject.unmount();
   shellInContainerMock.mockClear();
 

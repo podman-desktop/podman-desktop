@@ -96,11 +96,16 @@ async function initializeNewTerminal(container: HTMLElement): Promise<void> {
     TerminalSettings.SectionName + '.' + TerminalSettings.LineHeight,
   );
 
+  const scrollback = await window.getConfigurationValue<number>(
+    TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback,
+  );
+
   shellTerminal = new Terminal({
     fontSize,
     lineHeight,
     screenReaderMode,
     theme: getTerminalTheme(),
+    scrollback,
   });
 
   id = await window.kubernetesExec(
