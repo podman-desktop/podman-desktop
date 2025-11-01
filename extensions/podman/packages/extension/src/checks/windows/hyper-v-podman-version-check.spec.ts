@@ -19,7 +19,7 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { getPodmanInstallation } from '../../utils/podman-cli';
-import { HyperVPodmanVersionCheck } from './hyperv-podman-version-check';
+import { HyperVPodmanVersionCheck } from './hyper-v-podman-version-check';
 
 vi.mock(import('@podman-desktop/api'));
 vi.mock(import('../../utils/podman-cli'), () => ({

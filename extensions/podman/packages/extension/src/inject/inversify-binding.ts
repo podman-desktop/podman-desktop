@@ -20,10 +20,10 @@ import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import { env as envAPI } from '@podman-desktop/api';
 import { Container as InversifyContainer } from 'inversify';
 
-import { HyperVCheck } from '/@/checks/windows/hyperv-check';
-import { HyperVInstalledCheck } from '/@/checks/windows/hyperv-installed-check';
-import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyperv-podman-version-check';
-import { HyperVRunningCheck } from '/@/checks/windows/hyperv-running-check';
+import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
+import { HyperVInstalledCheck } from '/@/checks/windows/hyper-v-installed-check';
+import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
+import { HyperVRunningCheck } from '/@/checks/windows/hyper-v-running-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';

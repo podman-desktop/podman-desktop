@@ -21,8 +21,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { OrCheck, SequenceCheck } from '/@/checks/base-check';
-import { HyperVCheck } from '/@/checks/windows/hyperv-check';
-import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyperv-podman-version-check';
+import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
+import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
