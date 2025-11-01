@@ -49,6 +49,14 @@ function closeModal(): void {
 }
 
 let screen: 'installed' | 'catalog' | 'development' = $state('installed');
+const searchPlaceholder = $derived(
+  screen === 'installed'
+    ? 'Search installed extensions...'
+    : screen === 'catalog'
+      ? 'Search catalog extensions...'
+      : 'Search local extensions...',
+);
+
 let installManualImageModal: boolean = $state(false);
 
 function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void {
@@ -60,7 +68,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} title="extensions" searchPlaceholder={searchPlaceholder}>
   {#snippet additionalActions()}
     <Button
       on:click={(): void => {
