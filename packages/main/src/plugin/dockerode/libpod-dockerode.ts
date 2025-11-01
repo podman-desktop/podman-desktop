@@ -49,6 +49,44 @@ export interface PlayKubeInfo {
   Volumes: { Name: string }[];
 }
 
+export interface LibpodNetworkInspectInfo {
+  containers: { [key: string]: NetworkContainerInfo };
+  created: string;
+  dns_enabled: boolean;
+  driver: string;
+  id: string;
+  internal: boolean;
+  ipam_options: { [key: string]: string };
+  ipv6_enabled: boolean;
+  labels: { [key: string]: string };
+  name: string;
+  network_dns_servers: string[];
+  network_interface: string;
+  options: { [key: string]: string };
+  routes: { destination: string; gateway: string; metric: number }[];
+  subnets: { gateway: string; lease_renage: LeaseRange; subnet: string }[];
+}
+
+export interface NetworkContainerInfo {
+  interfaces: { [key: string]: NetInterface };
+  name: string;
+}
+
+export interface NetInterface {
+  mac_address: string;
+  subnets: { gateway: string; ipnet: IPNet }[];
+}
+
+export interface IPNet {
+  IP: string;
+  Mask: number[];
+}
+
+export interface LeaseRange {
+  end_ip: string;
+  start_ip: string;
+}
+
 export interface PodCreatePortOptions {
   host_ip: string;
   container_port: number;
