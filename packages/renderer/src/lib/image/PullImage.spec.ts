@@ -36,10 +36,10 @@ const pullImageMock = vi.fn();
 const listImageTagsInRegistryMock = vi.fn();
 
 beforeAll(() => {
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
-  Object.defineProperty(window, 'resolveShortnameImage', { value: resolveShortnameImageMock });
-  Object.defineProperty(window, 'pullImage', { value: pullImageMock });
-  Object.defineProperty(window, 'listImageTagsInRegistry', { value: listImageTagsInRegistryMock });
+  vi.stubGlobal('getConfigurationValue', getConfigurationValueMock);
+  vi.stubGlobal('resolveShortnameImage', resolveShortnameImageMock);
+  vi.stubGlobal('pullImage', pullImageMock);
+  vi.stubGlobal('listImageTagsInRegistry', listImageTagsInRegistryMock);
 
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
