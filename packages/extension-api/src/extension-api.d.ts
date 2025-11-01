@@ -640,6 +640,18 @@ declare module '@podman-desktop/api' {
   }
 
   /**
+   * Interface representing a provider that manages the autostop feature.
+   * Can be turned on / off by the user.
+   *
+   * @param {Logger} logger - the logger to use to log messages
+   * @param {boolean} value - true to enable autostop, false to disable autostop
+   * @returns {Promise<void>} - a promise that resolves when the autostop feature has been enabled / disabled
+   */
+  export interface ProviderAutostop {
+    setAutostop(logger: Logger, value: boolean): Promise<void>;
+  }
+
+  /**
    * Allow to clean some resources in case for example
    */
   export interface ProviderCleanup {
@@ -701,6 +713,9 @@ declare module '@podman-desktop/api' {
 
     // register autostart flow
     registerAutostart(autostart: ProviderAutostart): Disposable;
+
+    // register autostop flow
+    registerAutostop(autostop: ProviderAutostop): Disposable;
 
     registerCleanup(cleanup: ProviderCleanup): Disposable;
 
