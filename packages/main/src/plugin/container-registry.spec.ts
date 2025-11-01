@@ -478,14 +478,14 @@ test('push should reject if no provider', async () => {
 
 test('push should succeed if provider', async () => {
   const engine = {
-    getImage: vi.fn().mockReturnValue({ push: vi.fn().mockResolvedValue({ on: vi.fn() }) }),
+    getImage: vi.fn().mockReturnValue({ push: vi.fn().mockResolvedValue({ on: vi.fn(), once: vi.fn() }) }),
   };
   vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
   const result = await containerRegistry.pushImage('dummy', 'image:latest', () => {});
   expect(result).toBeUndefined();
 });
 
-test('restartContainersByLabel should succeed successfully if project name is provided and call restartContainer', async () => {
+test('restartC=tainersByLabel should succeed successfully if project name is provided and call restartContainer', async () => {
   const engine = {
     // Fake that we have 3 containers of the same project
     listSimpleContainers: vi
@@ -1277,7 +1277,7 @@ test('pulling an image with platform linux/arm64 will add platform to pull optio
 
   // Pull the image and check that we were able to
   const engine = {
-    getImage: vi.fn().mockReturnValue({ push: vi.fn().mockResolvedValue({ on: vi.fn() }) }),
+    getImage: vi.fn().mockReturnValue({ push: vi.fn().mockResolvedValue({ on: vi.fn(), once: vi.fn() }) }),
   };
   vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
   const result = await containerRegistry.pullImage(providerConnectionInfo, 'unknown-image', () => {}, 'linux/arm64');

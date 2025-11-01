@@ -18,7 +18,6 @@ import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {
-  onPushImage: (imageInfo: ImageInfoUI) => void;
   onRenameImage: (imageInfo: ImageInfoUI) => void;
   image: ImageInfoUI;
   dropdownMenu?: boolean;
@@ -27,7 +26,6 @@ interface Props {
 }
 
 let {
-  onPushImage,
   onRenameImage,
   image = $bindable(),
   dropdownMenu = false,
@@ -78,8 +76,8 @@ async function renameImage(imageInfo: ImageInfoUI): Promise<void> {
   onRenameImage(imageInfo);
 }
 
-async function pushImage(imageInfo: ImageInfoUI): Promise<void> {
-  onPushImage(imageInfo);
+function openPushImagePage(image: ImageInfoUI): void {
+  router.goto(`/image/push/${image.id}/${image.engineId}/${image.base64RepoTag}`);
 }
 
 async function showLayersImage(): Promise<void> {
@@ -117,7 +115,7 @@ function saveImage(): void {
   }}>
   <ListItemButtonIcon
     title="Push Image"
-    onClick={(): Promise<void> => pushImage(image)}
+    onClick={(): void => openPushImagePage(image)}
     menu={dropdownMenu}
     detailed={detailed}
     icon={faArrowUp} />

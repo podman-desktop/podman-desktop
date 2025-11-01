@@ -347,18 +347,24 @@ test('push image command sends onData message with callbackId, event name and da
   const handle = handlers.get(pushImageHandlerId);
   expect(handle).not.equal(undefined);
   const defaultCallback = vi.fn();
-  let registeredCallback: (name: string, data: string) => void = defaultCallback;
+  let registeredCallback: (name: 'data' | 'end' | 'first-message', data: string) => void = defaultCallback;
   vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
-    (_engine, _imageId, callback: (name: string, data: string) => void) => {
+    (_engine, _imageId, callback: (name: 'data' | 'end' | 'first-message', data: string) => void) => {
       registeredCallback = callback;
       return Promise.resolve();
     },
   );
-  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 'imageId', 'base64tag', 1, 1);
   expect(registeredCallback).not.equal(defaultCallback);
   registeredCallback('data', 'push image output');
   expect(createTaskSpy).toHaveBeenCalledOnce();
-  expect(createTaskSpy).toHaveBeenCalledWith({ title: `Push image '${'registry.com/repo/image:latest'}'` });
+  expect(createTaskSpy).toHaveBeenCalledWith({
+    title: `Push image '${'registry.com/repo/image:latest'}'`,
+    action: {
+      execute: expect.toSatisfy(func => typeof func === 'function'),
+      name: 'Go to task >',
+    },
+  });
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'data', 'push image output');
   registeredCallback('end', '');
   expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
@@ -370,12 +376,11 @@ test('push image sends data event with error, "end" event when fails and set tas
   const handle = handlers.get('container-provider-registry:pushImage');
   expect(handle).not.equal(undefined);
   vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
-    (_engine, _imageId, _callback: (name: string, data: string) => void) => {
+    (_engine, _imageId, _callback: (name: 'data' | 'end' | 'first-message', data: string) => void) => {
       return Promise.reject(pushError);
     },
   );
-  vi.mocked(webContents.send).mockReset();
-  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
+  await handle(undefined, 'podman', 'registry.com/repo/image:latest', 'imageId', 'base64tag', 1, 1);
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'error', String(pushError));
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'end');
   expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));

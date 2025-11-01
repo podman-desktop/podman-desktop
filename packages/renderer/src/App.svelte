@@ -42,6 +42,7 @@ import ImagesList from './lib/image/ImagesList.svelte';
 import ImportContainersImages from './lib/image/ImportContainersImages.svelte';
 import LoadImages from './lib/image/LoadImages.svelte';
 import PullImage from './lib/image/PullImage.svelte';
+import PushImage from './lib/image/PushImage.svelte';
 import RunImage from './lib/image/RunImage.svelte';
 import SaveImages from './lib/image/SaveImages.svelte';
 import IngressDetails from './lib/ingresses-routes/IngressDetails.svelte';
@@ -219,6 +220,11 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/images/load" breadcrumb="Load Images">
           <LoadImages />
+        </Route>
+        <Route path="/image/push/:imageId/:engineId/:base64RepoTag" breadcrumb="Push an Image" let:meta>
+          {#key +(meta.query.taskId ?? 0) }
+            <PushImage imageId={decodeURI(meta.params.imageId)} engineId={decodeURI(meta.params.engineId)} base64RepoTag={meta.params.base64RepoTag} taskId={+(meta.query.taskId ?? 0) }/>
+          {/key}
         </Route>
         <Route path="/pods" breadcrumb="Pods" navigationHint="root">
           <PodsList />
