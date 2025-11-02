@@ -29,17 +29,13 @@ import type { ContainerInfoUI } from './ContainerInfoUI';
 
 let shellInContainerMock = vi.fn();
 
-const getConfigurationValueMock = vi.fn();
-
 beforeAll(() => {
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'matchMedia', { value: vi.fn() });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-
-  getConfigurationValueMock.mockImplementation((key: string) => {
+  vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
       return 1000;
     }

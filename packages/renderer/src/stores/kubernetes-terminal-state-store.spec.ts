@@ -24,16 +24,14 @@ import KubernetesTerminal from '/@/lib/kube/pods/terminal/KubernetesTerminal.sve
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
 
 const kubernetesExecMock = vi.fn();
-const getConfigurationValueMock = vi.fn();
 
 beforeAll(() => {
-  getConfigurationValueMock.mockImplementation((key: string) => {
+  vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
       return 1000;
     }
     return undefined;
   });
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'kubernetesExec', { value: kubernetesExecMock });
   Object.defineProperty(window, 'kubernetesExecResize', { value: vi.fn() });
 
