@@ -104,7 +104,7 @@ test('Expect light mode using light configuration', async () => {
   const { baseElement } = renderComponent();
 
   // expect to have class being ""  as we should be in light mode
-  expect(getRootElementClassesValue(baseElement)).toBe('');
+  await vi.waitFor(() => expect(getRootElementClassesValue(baseElement)).toBe(''));
 
   // expect to have color-scheme: light
   expect(getRootElement(baseElement)).toHaveStyle('color-scheme: light');
@@ -117,7 +117,7 @@ test('Expect dark mode using dark configuration', async () => {
   const { baseElement } = renderComponent();
 
   // expect to have class being "dark" as we should be in dark mode
-  expect(getRootElementClassesValue(baseElement)).toBe('dark');
+  await vi.waitFor(() => expect(getRootElementClassesValue(baseElement)).toBe('dark'));
 
   // expect to have color-scheme: dark
   expect(getRootElement(baseElement)).toHaveStyle('color-scheme: dark');
