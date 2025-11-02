@@ -35,6 +35,9 @@ let availableDrivers = $state<{ label: string; value: string }[]>([
   { label: 'ipvlan', value: 'ipvlan' },
 ]);
 
+// Track previous driver for auto-population
+let previousDriver = $state<string>('bridge');
+
 function addOption(): void {
   networkInfo.options.push('');
 }
@@ -84,7 +87,11 @@ async function createNetwork(): Promise<void> {
       Options: parsedOptions,
     };
 
-    await window.createNetwork($state.snapshot(networkInfo.selectedProvider), networkOptions);
+    const result = await window.createNetwork($state.snapshot(networkInfo.selectedProvider), networkOptions);
+
+    if (!result.Id) {
+      throw new Error('Network creation failed: No network ID returned');
+    }
 
     createNetworkFinished = true;
   } catch (error: unknown) {
@@ -120,6 +127,18 @@ $effect(() => {
   networkInfo.selectedProvider = selectedProvider;
 });
 
+// Auto-populate default subnet for ipvlan to help beginners
+$effect(() => {
+  // Only auto-populate when switching TO ipvlan from another driver
+  if (networkInfo.driver === 'ipvlan' && previousDriver !== 'ipvlan' && !networkInfo.subnet) {
+    // eslint-disable-next-line sonarjs/no-hardcoded-ip
+    networkInfo.subnet = '192.168.210.0/24';
+    // eslint-disable-next-line sonarjs/no-hardcoded-ip
+    networkInfo.gateway = '192.168.210.1';
+  }
+  previousDriver = networkInfo.driver;
+});
+
 let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selectedProvider);
 </script>
 
@@ -152,23 +171,25 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
         >
       
         {#each networkInfo.labels as _, index (index)}
-          <div class="flex flex-row justify-center items-center w-full py-1">
-            <Input
-              bind:value={networkInfo.labels[index]}
-              placeholder="e.g., env=prod or app=backend"
-              class="ml-2 w-full" />
-      
-            <Button
-              type="link"
-              hidden={index === networkInfo.labels.length - 1}
-              on:click={(): void => deleteLabel(index)}
-              icon={faMinusCircle} />
-      
-            <Button
-              type="link"
-              hidden={index < networkInfo.labels.length - 1}
-              on:click={addLabel}
-              icon={faPlusCircle} />
+          <div class="flex flex-col w-full py-1">
+            <div class="flex flex-row justify-center items-center w-full">
+              <Input
+                bind:value={networkInfo.labels[index]}
+                placeholder="e.g., env=prod or app=backend"
+                class="ml-2 w-full" />
+
+              <Button
+                type="link"
+                hidden={index === networkInfo.labels.length - 1}
+                on:click={(): void => deleteLabel(index)}
+                icon={faMinusCircle} />
+
+              <Button
+                type="link"
+                hidden={index < networkInfo.labels.length - 1}
+                on:click={addLabel}
+                icon={faPlusCircle} />
+            </div>
           </div>
         {/each}
       </div>
@@ -192,12 +213,13 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           bind:value={networkInfo.subnet}
           name="subnet"
           id="subnet"
-          placeholder="Subnet (e.g., 10.89.0.0/24)"
+          placeholder="Subnet (e.g., 10.89.0.0/24 or 2001:db8::/32)"
           class="w-full" />
       </div>
 
       <div hidden={createNetworkInProgress}>
-        <label for="ipv6" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">IPv6</label>
+        <label for="ipv6" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >IPv6 (Dual Stack)</label>
         <SlideToggle id="ipv6" name="ipv6" bind:checked={networkInfo.ipv6Enabled} />
       </div>
 
@@ -207,7 +229,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           bind:value={networkInfo.ipRange}
           name="ipRange"
           id="ipRange"
-          placeholder="IP range (e.g., 10.89.0.0/25)"
+          placeholder="IP range (e.g., 10.89.0.0/25 or 2001:db8::/64)"
           class="w-full" />
       </div>
 
@@ -217,7 +239,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           bind:value={networkInfo.gateway}
           name="gateway"
           id="gateway"
-          placeholder="Gateway (e.g., 10.89.0.1)"
+          placeholder="Gateway (e.g., 10.89.0.1 or 2001:db8::1)"
           class="w-full" />
       </div>
 
@@ -245,23 +267,25 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
         >
       
         {#each networkInfo.options as _, index (index)}
-          <div class="flex flex-row justify-center items-center w-full py-1">
-            <Input
-              bind:value={networkInfo.options[index]}
-              placeholder="e.g., com.docker.network.bridge.name=mybr0"
-              class="ml-2 w-full" />
-      
-            <Button
-              type="link"
-              hidden={index === networkInfo.options.length - 1}
-              on:click={(): void => deleteOption(index)}
-              icon={faMinusCircle} />
-      
-            <Button
-              type="link"
-              hidden={index < networkInfo.options.length - 1}
-              on:click={addOption}
-              icon={faPlusCircle} />
+          <div class="flex flex-col w-full py-1">
+            <div class="flex flex-row justify-center items-center w-full">
+              <Input
+                bind:value={networkInfo.options[index]}
+                placeholder="e.g., com.docker.network.bridge.name=mybr0"
+                class="ml-2 w-full" />
+
+              <Button
+                type="link"
+                hidden={index === networkInfo.options.length - 1}
+                on:click={(): void => deleteOption(index)}
+                icon={faMinusCircle} />
+
+              <Button
+                type="link"
+                hidden={index < networkInfo.options.length - 1}
+                on:click={addOption}
+                icon={faPlusCircle} />
+            </div>
           </div>
         {/each}
       </div>
