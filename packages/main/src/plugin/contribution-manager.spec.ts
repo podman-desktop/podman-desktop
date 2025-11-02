@@ -738,9 +738,12 @@ test('init', async () => {
 
   vi.spyOn(contributionManager, 'loadBase64Icon').mockResolvedValue('icon');
 
-  vi.mocked(fs.promises.readdir).mockResolvedValue([
-    { isDirectory: () => true, name: 'contrib1' } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
-    { isDirectory: () => true, name: 'contrib2' } as unknown as fs.Dirent<Buffer<ArrayBufferLike>>,
+  const readdirMock = vi.mocked(
+    fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent<string>[]>,
+  );
+  readdirMock.mockResolvedValue([
+    { isDirectory: () => true, name: 'contrib1' } as unknown as fs.Dirent<string>,
+    { isDirectory: () => true, name: 'contrib2' } as unknown as fs.Dirent<string>,
   ]);
 
   // initialize the contribution manager

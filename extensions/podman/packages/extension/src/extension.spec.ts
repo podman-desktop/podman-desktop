@@ -160,6 +160,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('node:fs');
+// mock fs.promises.readdir and use string[] as return type
+const fsPromisesReaddirMock = vi.mocked(
+  fs.promises.readdir as (path: string, options?: { withFileTypes: false }) => Promise<string[]>,
+);
 
 vi.mock(import('./inject/inversify-binding'));
 
@@ -2352,7 +2356,7 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
       stderr: 'incompatible machine config',
     } as unknown as extensionApi.RunResult);
 
-    vi.mocked(fs.promises.readdir).mockResolvedValue(['foo.json'] as unknown as fs.Dirent<Buffer<ArrayBufferLike>>[]);
+    fsPromisesReaddirMock.mockResolvedValue(['foo.json']);
 
     // mock readfile
     vi.mocked(fs.promises.readFile).mockResolvedValueOnce('{"Driver": "podman"}');
@@ -2410,10 +2414,7 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
       stderr: 'cannot unmarshal string',
     } as unknown as extensionApi.RunResult);
 
-    vi.mocked(fs.promises.readdir).mockResolvedValue([
-      'foo.json',
-      'podman-machine-default.json',
-    ] as unknown as fs.Dirent<Buffer<ArrayBufferLike>>[]);
+    fsPromisesReaddirMock.mockResolvedValue(['foo.json', 'podman-machine-default.json']);
 
     // mock readfile
     vi.mocked(fs.promises.readFile).mockResolvedValueOnce('{"Driver": "podman"}');
