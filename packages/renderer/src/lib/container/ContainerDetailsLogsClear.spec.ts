@@ -75,7 +75,7 @@ test('expect clear button is working', async () => {
   const callback = vi.mocked(window.logsContainer).mock.calls[0][0].callback;
 
   callback('data', '2025-07-31T18:10:34Z some log message');
-  expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T18:10:35.000Z');
+  await vi.waitFor(() => expect(get(containerLogsClearTimestamps)[container.id]).toBe('2025-07-31T18:10:35.000Z'));
 });
 
 test('expect containerLogsClearTimestamps change only when callback is executed for the first time after clicking the clear button', async () => {
