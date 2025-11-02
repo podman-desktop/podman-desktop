@@ -260,26 +260,30 @@ describe('Command Palette', () => {
   });
 
   test('Check filtering', async () => {
+    const commandId0 = 'my-command-0';
     const commandTitle0 = 'Another Command';
+    const commandId1 = 'my-command-1';
     const commandTitle1 = 'My command 1';
+    const commandId2 = 'my-command-2';
     const commandTitle2 = 'My command 2';
+    const commandId3 = 'my-command-3';
     const commandTitle3 = 'command 3';
 
     commandsInfos.set([
       {
-        id: 'my-command-0',
+        id: commandId0,
         title: commandTitle0,
       },
       {
-        id: 'my-command-1',
+        id: commandId1,
         title: commandTitle1,
       },
       {
-        id: 'my-command-2',
+        id: commandId2,
         title: commandTitle2,
       },
       {
-        id: 'my-command-3',
+        id: commandId3,
         title: commandTitle3,
       },
     ]);
@@ -291,26 +295,24 @@ describe('Command Palette', () => {
     expect(filterInput).toBeInTheDocument();
 
     // Check items are displayed
-    const item0 = screen.getByRole('button', { name: commandTitle0 });
+    const item0 = screen.getByRole('listitem', { name: commandId0 });
     expect(item0).toBeInTheDocument();
-    const item1 = screen.getByRole('button', { name: commandTitle1 });
+    const item1 = screen.getByRole('listitem', { name: commandId1 });
     expect(item1).toBeInTheDocument();
-    const item2 = screen.getByRole('button', { name: commandTitle2 });
+    const item2 = screen.getByRole('listitem', { name: commandId2 });
     expect(item2).toBeInTheDocument();
-    const item3 = screen.getByRole('button', { name: commandTitle3 });
+    const item3 = screen.getByRole('listitem', { name: commandId3 });
     expect(item3).toBeInTheDocument();
 
     // now enter the text 'My '
     await userEvent.type(filterInput, 'My ');
 
     // check only command 1 and 2 are displayed
-    const searchingItem0 = screen.queryByRole('button', { name: commandTitle0 });
+    const searchingItem0 = screen.queryByRole('listitem', { name: commandId0 });
     expect(searchingItem0).not.toBeInTheDocument();
-    const searchingItem1 = screen.queryByRole('button', { name: commandTitle1 });
-    expect(searchingItem1).toBeInTheDocument();
-    const searchingItem2 = screen.queryByRole('button', { name: commandTitle2 });
-    expect(searchingItem2).toBeInTheDocument();
-    const searchingItem3 = screen.queryByRole('button', { name: commandTitle3 });
+    await vi.waitFor(() => expect(screen.getByRole('listitem', { name: commandId1 })).toBeInTheDocument());
+    await vi.waitFor(() => expect(screen.getByRole('listitem', { name: commandId2 })).toBeInTheDocument());
+    const searchingItem3 = screen.queryByRole('listitem', { name: commandId3 });
     expect(searchingItem3).not.toBeInTheDocument();
 
     // Focus the input to ensure keydown events are handled
