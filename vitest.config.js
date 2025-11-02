@@ -25,11 +25,11 @@ const PODMAN_DESKTOP_EXCLUDED = [
 ];
 
 /**
- * vitest workspace configuration for unit tests
+ * vitest projects configuration for unit tests
  */
 export default defineConfig({
   test: {
-    workspace: [
+    projects: [
       '{extensions,packages,tools,storybook,website,scripts}/**/{vitest,vite}.config.{js,ts}',
       '!**/builtin/**',
     ],
@@ -37,7 +37,6 @@ export default defineConfig({
     reporters: process.env.CI ? [['junit', { includeConsoleOutput: false }], 'default'] : ['default'],
     outputFile: process.env.CI ? { junit: 'coverage/junit-results.xml' } : {},
     coverage: {
-      all: true,
       clean: true,
       excludeAfterRemap: true,
       provider: 'v8',
