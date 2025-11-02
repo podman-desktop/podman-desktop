@@ -75,7 +75,6 @@ const PROVIDER_INFO_MOCK: ProviderInfo = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
-    // <-- Now async
     if (key === 'terminal.integrated.scrollback') {
       return 1000;
     }
