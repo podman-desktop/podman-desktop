@@ -1,0 +1,148 @@
+#
+# Copyright (C) 2025 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Update Podman Version
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Every day at midnight UTC
+  workflow_dispatch:
+jobs:
+  update-podman:
+    name: Update Podman version
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Get current Podman version
+        id: get_current_version
+        run: |
+          CURRENT_VERSION=$(jq -r '.version' extensions/podman/packages/extension/src/podman5.json)
+          echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
+
+      - name: Fetch latest Podman release
+        id: fetch_latest_podman_release
+        run: |
+          LATEST_PODMAN_RELEASE=$(curl -s https://api.github.com/repos/containers/podman/releases/latest)
+          LATEST_VERSION=$(echo "$LATEST_PODMAN_RELEASE" | jq -r '.tag_name' | sed 's/^v//')
+          ASSETS=$(echo "$LATEST_PODMAN_RELEASE" | jq -r '.assets[].name' | tr '\n' ' ')
+          echo $LATEST_VERSION
+          echo $ASSETS
+          echo "LATEST_VERSION=${LATEST_VERSION}" >> $GITHUB_ENV
+          echo "$ASSETS" > assets.txt
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+
+      - name: Compare version numbers using semver
+        id: compare_version_numbers
+        run: |
+
+          echo "Current version: $CURRENT_VERSION"
+          echo "Latest version: $LATEST_VERSION"
+
+          if npx semver "$LATEST_VERSION" -r ">$CURRENT_VERSION"; then
+            echo "New version available: $LATEST_VERSION"
+            echo "NEW_VERSION=$LATEST_VERSION" >> $GITHUB_ENV
+          else
+            echo "No new version available."
+            echo "newVersion=none" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+      - name: Check for required assets in Podman release
+        if: steps.compare_version_numbers.outputs.newVersion != 'none'
+        id: check_assets
+        run: |
+          REQUIRED_ASSETS=("podman-installer-windows-amd64.exe" "podman-installer-windows-arm64.exe" "podman-installer-macos-amd64.pkg" "podman-installer-macos-arm64.pkg" "podman-installer-macos-universal.pkg")
+          MISSING_ASSETS=()
+          echo "Assets found in release:"
+          cat assets.txt
+
+          for ASSET in "${REQUIRED_ASSETS[@]}"; do
+            if ! grep -q "$ASSET" assets.txt; then
+              MISSING_ASSETS+=("$ASSET")
+            fi
+          done
+
+          if [ ${#MISSING_ASSETS[@]} -ne 0 ]; then
+            echo "Error: Missing assets:"
+            for asset in "${MISSING_ASSETS[@]}"; do
+              echo "  - $asset"
+            done
+            exit 1
+          else
+            echo "All required assets are present."
+          fi
+
+      - name: Update podman5.json
+        if: steps.compare_version_numbers.outputs.newVersion != 'none'
+        run: |
+          set -euo pipefail
+
+          FILE="extensions/podman/packages/extension/src/podman5.json"
+
+          echo "Validating JSON before modification..."
+          jq empty "$FILE"
+
+          # Replace the version and filenames for assets
+          sed -i -E "s/$CURRENT_VERSION/$NEW_VERSION/g" "$FILE"
+
+          echo "Validating JSON after modification..."
+          jq empty "$FILE"
+
+          echo "Update complete and JSON is valid."
+
+      - name: Create PR
+        if: steps.compare_version_numbers.outputs.newVersion != 'none'
+        id: create_pr
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git config --local user.name "${{ github.actor }}"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+
+          bumpedVersion="${NEW_VERSION}"
+          bumpedBranchName="update-podman-version-${bumpedVersion}"
+          echo "branch name: $bumpedBranchName"
+
+          git checkout -b "$bumpedBranchName"
+
+          echo "Adding the file to the commit"
+          git add extensions/podman/packages/extension/src/podman5.json
+
+          echo "Committing the file"
+          git commit --signoff -m "chore: Update Podman version to v${bumpedVersion}"
+
+          git push origin "${bumpedBranchName}"
+          echo -e "Bump Podman version to ${bumpedVersion}\n\nVersion ${bumpedVersion} has been released.\n\nThis PR updates Podman to the latest version." > /tmp/pr-body
+
+          echo "Creating pull request"
+          pullRequestUrl=$(gh pr create \
+            --title "chore: Bump Podman version to ${bumpedVersion}" \
+            --body-file /tmp/pr-body \
+            --head "$bumpedBranchName" \
+            --base "main")
+
+          echo "Pull request created: $pullRequestUrl"
+
+          echo "Adding reviewers"
+          gh pr edit "$pullRequestUrl" --add-reviewer podman-desktop/qe-reviewers

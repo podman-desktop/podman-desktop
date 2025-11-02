@@ -13,6 +13,7 @@ import NetworkColumnEnvironment from './columns/NetworkColumnEnvironment.svelte'
 import NetworkColumnId from './columns/NetworkColumnId.svelte';
 import NetworkColumnName from './columns/NetworkColumnName.svelte';
 import { NetworkUtils } from './network-utils';
+import NetworkActions from './NetworkActions.svelte';
 import NetworkEmptyScreen from './NetworkEmptyScreen.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
@@ -87,7 +88,13 @@ let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
-const columns = [idColumn, nameColumn, envColumn, driverColumn];
+const columns = [
+  idColumn,
+  nameColumn,
+  envColumn,
+  driverColumn,
+  new TableColumn<NetworkInfoUI>('Actions', { align: 'right', renderer: NetworkActions, overflow: true }),
+];
 
 const row = new TableRow<NetworkInfoUI>({
   selectable: (network): boolean => network.status === 'UNUSED',
