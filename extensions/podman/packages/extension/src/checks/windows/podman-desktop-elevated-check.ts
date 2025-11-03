@@ -18,12 +18,12 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
 @injectable()
-export class PodmanDesktopElevatedCheck extends BaseCheck {
+export class PodmanDesktopElevatedCheck extends MemoizedBaseCheck {
   title = 'Podman Desktop Elevated';
 
   constructor(
@@ -33,7 +33,7 @@ export class PodmanDesktopElevatedCheck extends BaseCheck {
     super();
   }
 
-  async execute(): Promise<CheckResult> {
+  async executeImpl(): Promise<CheckResult> {
     const client = await getPowerShellClient(this.telemetryLogger);
     if (!(await client.isRunningElevated())) {
       return this.createFailureResult({
