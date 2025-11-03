@@ -17,15 +17,14 @@
  ***********************************************************************/
 
 import type { CheckResult, ExtensionContext, RunError } from '@podman-desktop/api';
-import type extensionApi from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
-import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { ExtensionContextSymbol } from '/@/inject/symbols';
 
-import { getPowerShellClient } from '../../utils/powershell';
 import { normalizeWSLOutput } from '../../utils/util';
+import { UserAdminCheck } from './user-admin-check';
 
 @injectable()
 export class WSL2Check extends MemoizedBaseCheck {
@@ -33,8 +32,8 @@ export class WSL2Check extends MemoizedBaseCheck {
   installWSLCommandId = 'podman.onboarding.installWSL';
 
   constructor(
-    @inject(TelemetryLoggerSymbol)
-    private telemetryLogger: extensionApi.TelemetryLogger,
+    @inject(UserAdminCheck)
+    private userAdminCheck: UserAdminCheck,
     @inject(ExtensionContextSymbol)
     private extensionContext?: ExtensionContext,
   ) {
@@ -54,14 +53,11 @@ export class WSL2Check extends MemoizedBaseCheck {
     }
   }
 
-  async isUserAdmin(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isUserAdmin();
-  }
-
   async executeImpl(): Promise<CheckResult> {
     try {
-      const isAdmin = await this.isUserAdmin();
+      const userAdminResult = await this.userAdminCheck.execute();
+      const isAdmin = userAdminResult.successful;
+
       const isWSL = await this.isWSLPresent();
       const isRebootNeeded = await this.isRebootNeeded();
 

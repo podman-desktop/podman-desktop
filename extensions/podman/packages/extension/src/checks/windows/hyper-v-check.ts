@@ -18,7 +18,6 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 
 import { getPowerShellClient } from '../../utils/powershell';
@@ -26,6 +25,7 @@ import { BaseCheck } from '../base-check';
 import { HyperVInstalledCheck } from './hyper-v-installed-check';
 import { HyperVRunningCheck } from './hyper-v-running-check';
 import { PodmanDesktopElevatedCheck } from './podman-desktop-elevated-check';
+import { UserAdminCheck } from './user-admin-check';
 
 @injectable()
 export class HyperVCheck extends BaseCheck {
@@ -37,13 +37,9 @@ export class HyperVCheck extends BaseCheck {
     @inject(HyperVRunningCheck) private isHyperVRunningCheck: HyperVRunningCheck,
     @inject(HyperVInstalledCheck) private isHyperVInstalledCheck: HyperVInstalledCheck,
     @inject(PodmanDesktopElevatedCheck) private isPodmanDesktopElevatedCheck: PodmanDesktopElevatedCheck,
+    @inject(UserAdminCheck) private userAdminCheck: UserAdminCheck,
   ) {
     super();
-  }
-
-  async isUserAdmin(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isUserAdmin();
   }
 
   async isHyperVInstalled(): Promise<boolean> {
@@ -52,12 +48,9 @@ export class HyperVCheck extends BaseCheck {
   }
 
   async execute(): Promise<CheckResult> {
-    if (!(await this.isUserAdmin())) {
-      return this.createFailureResult({
-        description: 'You must have administrative rights to run Hyper-V Podman machines',
-        docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
-        docLinks: HYPER_V_DOC_LINKS,
-      });
+    const userAdminResult = await this.userAdminCheck.execute();
+    if (!userAdminResult.successful) {
+      return userAdminResult;
     }
 
     const podmanDesktopElevatedResult = await this.isPodmanDesktopElevatedCheck.execute();

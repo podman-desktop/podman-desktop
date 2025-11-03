@@ -16,12 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionContext, RunResult, TelemetryLogger } from '@podman-desktop/api';
+import type { CheckResult, ExtensionContext, RunResult } from '@podman-desktop/api';
 import { commands, process } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { UserAdminCheck } from '/@/checks/windows/user-admin-check';
+
 import { normalizeWSLOutput } from '../../utils/util';
 import { WSL2Check } from './wsl2-check';
+
+const userAdminCheck = { execute: vi.fn() } as unknown as UserAdminCheck;
 
 vi.mock('@podman-desktop/api', () => ({
   process: {
@@ -56,7 +60,9 @@ const extensionContext = {
   subscriptions: [],
 } as unknown as ExtensionContext;
 
-const mockTelemetryLogger = {} as TelemetryLogger;
+const SUCCESSFUL_CHECK_RESULT: CheckResult = { successful: true };
+
+let winWSLCheck: WSL2Check;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -64,6 +70,8 @@ beforeEach(() => {
   extensionContext.subscriptions.length = 0;
 
   vi.mocked(normalizeWSLOutput).mockImplementation((s: string) => s);
+
+  winWSLCheck = new WSL2Check(userAdminCheck, extensionContext);
 });
 
 test('expect winWSL2 preflight check return successful result if the machine has WSL2 installed and do not need to reboot', async () => {
@@ -82,8 +90,8 @@ test('expect winWSL2 preflight check return successful result if the machine has
       });
     }
   });
+  vi.mocked(userAdminCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
 
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.successful).toBeTruthy();
 });
@@ -117,8 +125,7 @@ test('expect winWSL2 preflight check return failure result if the machine has WS
       });
     }
   });
-
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
+  vi.mocked(userAdminCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   const result = await winWSLCheck.execute();
   expect(result.description).equal(
     'WSL2 seems to be installed but the system needs to be restarted so the changes can take effect.',
@@ -158,8 +165,8 @@ test('expect winWSL2 preflight check return successful result if the machine has
       });
     }
   });
+  vi.mocked(userAdminCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
 
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.successful).toBeTruthy();
 });
@@ -193,8 +200,7 @@ test('expect winWSL2 preflight check return successful result if the machine has
       });
     }
   });
-
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
+  vi.mocked(userAdminCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   const result = await winWSLCheck.execute();
   expect(result.successful).toBeTruthy();
 });
@@ -216,7 +222,7 @@ test('expect winWSL2 preflight check return failure result if user do not have w
     }
   });
 
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
+  vi.mocked(userAdminCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL2 is not installed.');
   expect(result.docLinksDescription).equal(`Call 'wsl --install --no-distribution' in a terminal.`);
@@ -240,8 +246,8 @@ test('expect winWSL2 preflight check return failure result if user do not have w
       });
     }
   });
+  vi.mocked(userAdminCheck.execute).mockResolvedValue({ successful: false });
 
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.description).equal('WSL2 is not installed or you do not have permissions to run WSL2.');
   expect(result.docLinksDescription).equal('Contact your Administrator to setup WSL2.');
@@ -261,8 +267,8 @@ test('expect winWSL2 preflight check return failure result if it fails when chec
       throw new Error();
     }
   });
+  vi.mocked(userAdminCheck.execute).mockRejectedValue({ successful: false });
 
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   const result = await winWSLCheck.execute();
   expect(result.description).equal('Could not detect WSL2');
   expect(result.docLinks?.[0].url).equal('https://learn.microsoft.com/en-us/windows/wsl/install');
@@ -271,7 +277,6 @@ test('expect winWSL2 preflight check return failure result if it fails when chec
 
 test('expect winWSL2 init to register WSLInstall command', async () => {
   const registerCommandMock = vi.mocked(commands.registerCommand);
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   await winWSLCheck.init?.();
   expect(registerCommandMock).toBeCalledWith('podman.onboarding.installWSL', expect.any(Function));
 });
@@ -282,7 +287,6 @@ test('expect winWSL2 command to be registered as disposable', async () => {
     dispose: vi.fn(),
   };
   registerCommandMock.mockReturnValue(disposableMock);
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
   await winWSLCheck.init?.();
   expect(registerCommandMock).toBeCalledWith('podman.onboarding.installWSL', expect.any(Function));
 
@@ -307,12 +311,13 @@ test('expect winWSL2 check to be memoized', async () => {
       });
     }
   });
-
-  const winWSLCheck = new WSL2Check(mockTelemetryLogger, extensionContext);
-
-  await winWSLCheck.execute();
-  expect(process.exec).toHaveBeenCalledTimes(3);
+  vi.mocked(userAdminCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
 
   await winWSLCheck.execute();
-  expect(process.exec).toHaveBeenCalledTimes(3);
+  expect(userAdminCheck.execute).toHaveBeenCalledTimes(1);
+  expect(process.exec).toHaveBeenCalledTimes(2);
+
+  await winWSLCheck.execute();
+  expect(userAdminCheck.execute).toHaveBeenCalledTimes(1);
+  expect(process.exec).toHaveBeenCalledTimes(2);
 });
