@@ -109,7 +109,7 @@
     "watch": "vite build -w"
   },
   "dependencies": {
-    "@octokit/rest": "^22.0.0",
+    "@octokit/rest": "^22.0.1",
     "@kubernetes/client-node": "^1.4.0",
     "@podman-desktop/api": "workspace:*",
     "mustache": "^4.2.0",

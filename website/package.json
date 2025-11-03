@@ -44,7 +44,7 @@
     "@docusaurus/module-type-aliases": "^3.8.1",
     "@docusaurus/tsconfig": "^3.8.1",
     "@docusaurus/types": "^3.8.1",
-    "@octokit/rest": "^22.0.0",
+    "@octokit/rest": "^22.0.1",
     "@tailwindcss/postcss": "^4.1.16",
     "markdownlint": "^0.39.0",
     "markdownlint-cli2": "^0.18.1",
