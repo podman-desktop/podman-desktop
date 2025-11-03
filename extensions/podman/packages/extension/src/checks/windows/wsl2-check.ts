@@ -55,14 +55,12 @@ export class WSL2Check extends MemoizedBaseCheck {
 
   async executeImpl(): Promise<CheckResult> {
     try {
-      const userAdminResult = await this.userAdminCheck.execute();
-      const isAdmin = userAdminResult.successful;
-
       const isWSL = await this.isWSLPresent();
       const isRebootNeeded = await this.isRebootNeeded();
 
       if (!isWSL) {
-        if (isAdmin) {
+        const userAdminResult = await this.userAdminCheck.execute();
+        if (userAdminResult.successful) {
           return this.createFailureResult({
             description: 'WSL2 is not installed.',
             docLinksDescription: `Call 'wsl --install --no-distribution' in a terminal.`,
