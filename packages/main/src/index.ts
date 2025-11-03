@@ -34,6 +34,8 @@ import { TrayMenu } from './tray-menu.js';
 import { isMac, isWindows, stoppedExtensions } from './util.js';
 
 let extensionLoader: ExtensionLoader | undefined;
+// Track the initialization promise to handle race conditions during startup
+let extensionInitializationPromise: Promise<ExtensionLoader> | undefined;
 
 // Main startup
 const podmanDesktopMain = new Main(app);
@@ -55,23 +57,53 @@ app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unk
 });
 
 app.once('before-quit', event => {
-  if (!extensionLoader) {
-    stoppedExtensions.val = true;
-    return;
-  }
+  // Prevent quit to handle cleanup properly
   event.preventDefault();
-  extensionLoader
-    .asyncDispose()
-    .then(() => {
-      console.log('Stopped all extensions');
-    })
-    .catch((error: unknown) => {
-      console.log('Error stopping extensions', error);
-    })
-    .finally(() => {
-      stoppedExtensions.val = true;
-      app.quit();
-    });
+
+  // If initialization is still in progress, wait for it to complete first
+  const handleQuit = async (): Promise<void> => {
+    if (extensionInitializationPromise) {
+      let timeoutId: NodeJS.Timeout | undefined;
+      try {
+        // Wait for initialization to complete, but don't wait forever
+        const timeout = new Promise<ExtensionLoader>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error('Initialization timeout')), 5000);
+        });
+        // If initialization completes during quit, capture the result
+        const loader = await Promise.race([extensionInitializationPromise, timeout]);
+        // Clear the timeout since initialization completed
+        clearTimeout(timeoutId);
+        // Update extensionLoader if it was resolved but not yet assigned
+        extensionLoader ??= loader;
+      } catch (error: unknown) {
+        // Clear the timeout if it was set (in case initialization promise rejected before timeout)
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        console.log('Initialization did not complete, proceeding with quit', error);
+      }
+    }
+
+    // Now check if extensionLoader is available
+    if (extensionLoader) {
+      try {
+        await extensionLoader.asyncDispose();
+        console.log('Stopped all extensions');
+      } catch (error: unknown) {
+        console.log('Error stopping extensions', error);
+      }
+    }
+
+    // Mark extensions as stopped and quit
+    stoppedExtensions.val = true;
+    app.quit();
+  };
+
+  handleQuit().catch((error: unknown) => {
+    console.error('Error during quit handling', error);
+    stoppedExtensions.val = true;
+    app.quit();
+  });
 });
 
 let tray: Tray;
@@ -98,6 +130,9 @@ app.whenReady().then(
 
     // Start extensions
     const pluginSystem = new PluginSystem(trayMenu, podmanDesktopMain.mainWindowDeferred);
+
+    // Track the initialization promise
+    extensionInitializationPromise = pluginSystem.initExtensions(_onDidCreatedConfigurationRegistry);
 
     onDidCreatedConfigurationRegistry(async (configurationRegistry: ConfigurationRegistry) => {
       // If we've manually set the tray icon color, update the tray icon. This can only be done
@@ -144,7 +179,7 @@ app.whenReady().then(
       await automaticStartup.configure();
     });
 
-    extensionLoader = await pluginSystem.initExtensions(_onDidCreatedConfigurationRegistry);
+    extensionLoader = await extensionInitializationPromise;
   },
   (e: unknown) => console.error('Failed to start app:', e),
 );
