@@ -24,6 +24,7 @@ import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
 import { HyperVInstalledCheck } from '/@/checks/windows/hyper-v-installed-check';
 import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
 import { HyperVRunningCheck } from '/@/checks/windows/hyper-v-running-check';
+import { PodmanDesktopElevatedCheck } from '/@/checks/windows/podman-desktop-elevated-check';
 import { VirtualMachinePlatformCheck } from '/@/checks/windows/virtual-machine-platform-check';
 import { WinBitCheck } from '/@/checks/windows/win-bit-check';
 import { WinMemoryCheck } from '/@/checks/windows/win-memory-check';
@@ -69,6 +70,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(WSL2Check).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVRunningCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVInstalledCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(PodmanDesktopElevatedCheck).toSelf().inSingletonScope();
 
     if (envAPI.isWindows) {
       this.#inversifyContainer.bind(Installer).to(WinInstaller).inSingletonScope();

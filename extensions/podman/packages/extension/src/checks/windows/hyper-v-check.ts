@@ -25,6 +25,7 @@ import { getPowerShellClient } from '../../utils/powershell';
 import { BaseCheck } from '../base-check';
 import { HyperVInstalledCheck } from './hyper-v-installed-check';
 import { HyperVRunningCheck } from './hyper-v-running-check';
+import { PodmanDesktopElevatedCheck } from './podman-desktop-elevated-check';
 
 @injectable()
 export class HyperVCheck extends BaseCheck {
@@ -35,6 +36,7 @@ export class HyperVCheck extends BaseCheck {
     private telemetryLogger: TelemetryLogger,
     @inject(HyperVRunningCheck) private isHyperVRunningCheck: HyperVRunningCheck,
     @inject(HyperVInstalledCheck) private isHyperVInstalledCheck: HyperVInstalledCheck,
+    @inject(PodmanDesktopElevatedCheck) private isPodmanDesktopElevatedCheck: PodmanDesktopElevatedCheck,
   ) {
     super();
   }
@@ -42,11 +44,6 @@ export class HyperVCheck extends BaseCheck {
   async isUserAdmin(): Promise<boolean> {
     const client = await getPowerShellClient(this.telemetryLogger);
     return client.isUserAdmin();
-  }
-
-  async isPodmanDesktopElevated(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isRunningElevated();
   }
 
   async isHyperVInstalled(): Promise<boolean> {
@@ -62,10 +59,10 @@ export class HyperVCheck extends BaseCheck {
         docLinks: HYPER_V_DOC_LINKS,
       });
     }
-    if (!(await this.isPodmanDesktopElevated())) {
-      return this.createFailureResult({
-        description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
-      });
+
+    const podmanDesktopElevatedResult = await this.isPodmanDesktopElevatedCheck.execute();
+    if (!podmanDesktopElevatedResult.successful) {
+      return podmanDesktopElevatedResult;
     }
 
     const hyperVInstalledResult = await this.isHyperVInstalledCheck.execute();

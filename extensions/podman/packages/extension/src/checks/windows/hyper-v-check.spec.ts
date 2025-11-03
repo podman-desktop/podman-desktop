@@ -18,6 +18,8 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { PodmanDesktopElevatedCheck } from '/@/checks/windows/podman-desktop-elevated-check';
+
 import type { PowerShellClient } from '../../utils/powershell';
 import { getPowerShellClient } from '../../utils/powershell';
 import { HyperVCheck } from './hyper-v-check';
@@ -32,6 +34,7 @@ vi.mock(import('../../utils/powershell'), () => ({
 const mockTelemetryLogger = {} as TelemetryLogger;
 const isHyperVRunningCheck = { execute: vi.fn() } as unknown as HyperVRunningCheck;
 const isHyperVInstalledCheck = { execute: vi.fn() } as unknown as HyperVInstalledCheck;
+const isPodmanDesktopElevatedCheck = { execute: vi.fn() } as unknown as PodmanDesktopElevatedCheck;
 
 const SUCCESSFUL_CHECK_RESULT: CheckResult = { successful: true };
 const FAILED_CHECK_RESULT: CheckResult = { successful: false };
@@ -49,7 +52,12 @@ const POWERSHELL_CLIENT: PowerShellClient = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getPowerShellClient).mockResolvedValue(POWERSHELL_CLIENT);
-  hyperVCheck = new HyperVCheck(mockTelemetryLogger, isHyperVRunningCheck, isHyperVInstalledCheck);
+  hyperVCheck = new HyperVCheck(
+    mockTelemetryLogger,
+    isHyperVRunningCheck,
+    isHyperVInstalledCheck,
+    isPodmanDesktopElevatedCheck,
+  );
 });
 
 test('expect HyperV preflight check return failure result if non admin user', async () => {
@@ -64,18 +72,21 @@ test('expect HyperV preflight check return failure result if non admin user', as
 
 test('expect HyperV preflight check return failure result if Podman Desktop is not run with elevated privileges', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
+  vi.mocked(isPodmanDesktopElevatedCheck.execute).mockResolvedValue({
+    ...FAILED_CHECK_RESULT,
+    description: 'isPodmanDesktopElevatedCheck',
+  });
 
   const result = await hyperVCheck.execute();
   expect(result.successful).toBeFalsy();
-  expect(result.description).equal(
-    'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
-  );
+  expect(result.description).equal('isPodmanDesktopElevatedCheck');
   expect(result.docLinks).toBeUndefined();
 });
 
 test('expect HyperV preflight check return failure result if HyperV not installed', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
-  vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
+  vi.mocked(isPodmanDesktopElevatedCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
+  vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue({
     ...FAILED_CHECK_RESULT,
     description: 'isHyperVInstalledCheck',
@@ -88,7 +99,7 @@ test('expect HyperV preflight check return failure result if HyperV not installe
 
 test('expect HyperV preflight check return failure result if HyperV not running', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
-  vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
+  vi.mocked(isPodmanDesktopElevatedCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVRunningCheck.execute).mockResolvedValue({
     ...FAILED_CHECK_RESULT,
@@ -102,7 +113,7 @@ test('expect HyperV preflight check return failure result if HyperV not running'
 
 test('expect HyperV preflight check return OK', async () => {
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(true);
-  vi.mocked(POWERSHELL_CLIENT.isRunningElevated).mockResolvedValue(true);
+  vi.mocked(isPodmanDesktopElevatedCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVInstalledCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
   vi.mocked(isHyperVRunningCheck.execute).mockResolvedValue(SUCCESSFUL_CHECK_RESULT);
 
