@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowUpRightFromSquare, faGear, faTerminal } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo, faGear, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import type { ContainerProviderConnection } from '@podman-desktop/api';
 import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import { Buffer } from 'buffer';
@@ -544,7 +544,7 @@ $effect(() => {
                           container.name,
                         ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/summary`,
                       )}>
-                    <Fa icon={faArrowUpRightFromSquare} />
+                    <Fa icon={faCircleInfo} />
                   </button>
                 </Tooltip>
               </div>
@@ -552,7 +552,7 @@ $effect(() => {
                 {container.displayName}
                 {#if rootfulInfo}
                   <span class="ml-2 text-sm text-[var(--pd-content-sub-header)]">
-                    (<BooleanEnumDisplay 
+                    (<BooleanEnumDisplay
                       value={rootfulInfo.value}
                       options={rootfulInfo.enum ?? []}
                       ariaLabel="{rootfulInfo.description}: {rootfulInfo.value}" />)
@@ -664,7 +664,7 @@ $effect(() => {
                           kubeConnection.endpoint.apiURL,
                         ).toString('base64')}/summary`,
                       )}>
-                    <Fa icon={faArrowUpRightFromSquare} />
+                    <Fa icon={faCircleInfo} />
                   </button>
                 </Tooltip>
               </div>
@@ -700,7 +700,7 @@ $effect(() => {
                     router.goto(
                       `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
                     )}>
-                  <Fa icon={faArrowUpRightFromSquare} />
+                  <Fa icon={faCircleInfo} />
                 </button>
               </Tooltip>
             </div>
