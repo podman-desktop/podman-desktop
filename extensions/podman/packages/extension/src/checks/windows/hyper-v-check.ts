@@ -15,12 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
+import type { CheckResult } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { TelemetryLoggerSymbol } from '/@/inject/symbols';
-
-import { getPowerShellClient } from '../../utils/powershell';
 import { BaseCheck } from '../base-check';
 import { HyperVInstalledCheck } from './hyper-v-installed-check';
 import { HyperVRunningCheck } from './hyper-v-running-check';
@@ -32,19 +29,12 @@ export class HyperVCheck extends BaseCheck {
   title = 'Hyper-V installed';
 
   constructor(
-    @inject(TelemetryLoggerSymbol)
-    private telemetryLogger: TelemetryLogger,
     @inject(HyperVRunningCheck) private isHyperVRunningCheck: HyperVRunningCheck,
     @inject(HyperVInstalledCheck) private isHyperVInstalledCheck: HyperVInstalledCheck,
     @inject(PodmanDesktopElevatedCheck) private isPodmanDesktopElevatedCheck: PodmanDesktopElevatedCheck,
     @inject(UserAdminCheck) private userAdminCheck: UserAdminCheck,
   ) {
     super();
-  }
-
-  async isHyperVInstalled(): Promise<boolean> {
-    const client = await getPowerShellClient(this.telemetryLogger);
-    return client.isHyperVInstalled();
   }
 
   async execute(): Promise<CheckResult> {

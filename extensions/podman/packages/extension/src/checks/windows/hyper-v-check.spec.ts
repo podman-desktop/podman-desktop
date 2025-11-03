@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
+import type { CheckResult } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { PodmanDesktopElevatedCheck } from '/@/checks/windows/podman-desktop-elevated-check';
@@ -32,7 +32,6 @@ vi.mock(import('../../utils/powershell'), () => ({
   getPowerShellClient: vi.fn(),
 }));
 
-const mockTelemetryLogger = {} as TelemetryLogger;
 const isHyperVRunningCheck = { execute: vi.fn() } as unknown as HyperVRunningCheck;
 const isHyperVInstalledCheck = { execute: vi.fn() } as unknown as HyperVInstalledCheck;
 const isPodmanDesktopElevatedCheck = { execute: vi.fn() } as unknown as PodmanDesktopElevatedCheck;
@@ -55,7 +54,6 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(getPowerShellClient).mockResolvedValue(POWERSHELL_CLIENT);
   hyperVCheck = new HyperVCheck(
-    mockTelemetryLogger,
     isHyperVRunningCheck,
     isHyperVInstalledCheck,
     isPodmanDesktopElevatedCheck,
