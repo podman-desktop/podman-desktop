@@ -57,9 +57,6 @@ test('expect UserAdminCheck returns failure result if user is not admin', async 
   vi.mocked(POWERSHELL_CLIENT.isUserAdmin).mockResolvedValue(false);
   const result = await userAdminCheck.execute();
   expect(result.successful).toBeFalsy();
-  expect(result.description).equal('You must have administrative rights to run Hyper-V Podman machines');
-  expect(result.docLinks?.[0].url).equal(
-    'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-  );
-  expect(result.docLinks?.[0].title).equal('Hyper-V Manual Installation Steps');
+  expect(result.description).equal('You must have administrative rights');
+  expect(result.docLinks?.[0]).toBeUndefined();
 });

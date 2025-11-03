@@ -19,7 +19,6 @@ import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
-import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
@@ -44,9 +43,7 @@ export class UserAdminCheck extends MemoizedBaseCheck {
       return this.createSuccessfulResult();
     } else {
       return this.createFailureResult({
-        description: 'You must have administrative rights to run Hyper-V Podman machines',
-        docLinksDescription: 'Contact your Administrator to setup Hyper-V.',
-        docLinks: HYPER_V_DOC_LINKS,
+        description: 'You must have administrative rights',
       });
     }
   }
