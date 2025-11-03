@@ -18,13 +18,13 @@
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { BaseCheck } from '/@/checks/base-check';
+import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { getPowerShellClient } from '/@/utils/powershell';
 
 @injectable()
-export class UserAdminCheck extends BaseCheck {
+export class UserAdminCheck extends MemoizedBaseCheck {
   title = 'User is Administrator';
 
   constructor(
@@ -39,7 +39,7 @@ export class UserAdminCheck extends BaseCheck {
     return client.isUserAdmin();
   }
 
-  async execute(): Promise<CheckResult> {
+  async executeImpl(): Promise<CheckResult> {
     if (await this.isUserAdmin()) {
       return this.createSuccessfulResult();
     } else {
