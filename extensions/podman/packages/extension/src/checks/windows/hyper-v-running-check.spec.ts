@@ -18,6 +18,7 @@
 import type { TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { HYPER_V_DOC_LINKS } from '/@/checks/windows/constants';
 import type { PowerShellClient } from '/@/utils/powershell';
 import { getPowerShellClient } from '/@/utils/powershell';
 
@@ -50,10 +51,8 @@ test('expect HyperVRunningCheck preflight check return failure result if HyperV 
   const result = await hyperVRunningCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal('Hyper-V is not running on your system.');
-  expect(result.docLinks?.[0].url).equal(
-    'https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v',
-  );
-  expect(result.docLinks?.[0].title).equal('Hyper-V Manual Installation Steps');
+  expect(result.docLinks?.[0].url).equal(HYPER_V_DOC_LINKS.url);
+  expect(result.docLinks?.[0].title).equal(HYPER_V_DOC_LINKS.title);
 });
 
 test('expect HyperVRunningCheck preflight check return OK if HyperV is running', async () => {
