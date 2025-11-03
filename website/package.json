@@ -48,7 +48,7 @@
     "@tailwindcss/postcss": "^4.1.16",
     "markdownlint": "^0.39.0",
     "markdownlint-cli2": "^0.18.1",
-    "markdownlint-cli2-formatter-summarize": "^0.0.7",
+    "markdownlint-cli2-formatter-summarize": "^0.0.8",
     "msw": "^2.11.6",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",

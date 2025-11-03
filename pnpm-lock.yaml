@@ -997,8 +997,8 @@ importers:
         specifier: ^0.18.1
         version: 0.18.1
       markdownlint-cli2-formatter-summarize:
-        specifier: ^0.0.7
-        version: 0.0.7(markdownlint-cli2@0.18.1)
+        specifier: ^0.0.8
+        version: 0.0.8(markdownlint-cli2@0.18.1)
       msw:
         specifier: ^2.11.6
         version: 2.11.6(@types/node@24.9.2)(typescript@5.9.3)
@@ -8528,8 +8528,8 @@ packages:
     peerDependencies:
       markdownlint-cli2: '>=0.0.4'
 
-  markdownlint-cli2-formatter-summarize@0.0.7:
-    resolution: {integrity: sha512-WYIuEen9A7B+OkTeAF8peRWysHKYUGYZQ8EIGAIXUm21S+UnPwxgz1EgUDpkvGlcbD/XS4474v8cnOI5so2MvQ==}
+  markdownlint-cli2-formatter-summarize@0.0.8:
+    resolution: {integrity: sha512-Uif/EDMzqbbRVb9I67botIQnFluw+XGuqBd+m8n4jo95MegKOA+CJm/QlJCqUDMDBDnnYnyR6SaDlCyMkBUcXA==}
     peerDependencies:
       markdownlint-cli2: '>=0.0.4'
 
@@ -21232,7 +21232,7 @@ snapshots:
     dependencies:
       markdownlint-cli2: 0.18.1
 
-  markdownlint-cli2-formatter-summarize@0.0.7(markdownlint-cli2@0.18.1):
+  markdownlint-cli2-formatter-summarize@0.0.8(markdownlint-cli2@0.18.1):
     dependencies:
       markdownlint-cli2: 0.18.1
 
