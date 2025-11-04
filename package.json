@@ -145,6 +145,7 @@
     "@types/node": "^22",
     "@types/tar": "^6.1.13",
     "@types/tar-fs": "^2.0.4",
+    "@types/culori": "^4.0.1",
     "@types/validator": "^13.15.3",
     "@typescript-eslint/eslint-plugin": "^8.46.3",
     "@typescript-eslint/parser": "^8.46.3",
