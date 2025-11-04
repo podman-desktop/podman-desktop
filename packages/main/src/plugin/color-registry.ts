@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
+import { formatCss, parse } from 'culori';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
@@ -1548,10 +1549,25 @@ export class ColorRegistry {
     });
   }
 
+  /**
+   * Adds alpha transparency to a color string using culori.
+   * @param color - The color string (e.g., 'oklch(86.9% 0.005 56.366)')
+   * @param alpha - The alpha value (0-1)
+   * @returns The color string with alpha transparency (e.g., 'oklch(86.9% 0.005 56.366 / 0.4)')
+   */
+  private addAlphaToColor(color: string, alpha: number): string {
+    const parsed = parse(color);
+    if (!parsed) {
+      return color;
+    }
+    parsed.alpha = alpha;
+    return formatCss(parsed);
+  }
+
   protected initCommon(): void {
     this.registerColor(`item-disabled`, {
-      dark: colorPalette.stone[300].replace(')', ' / 0.4)'), // semi-transparent
-      light: colorPalette.stone[600].replace(')', ' / 0.4)'), // semi-transparent
+      dark: this.addAlphaToColor(colorPalette.stone[300], 0.4),
+      light: this.addAlphaToColor(colorPalette.stone[600], 0.4),
       // TODO: light HC + dark HC
     });
   }

@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { formatCss, parse } from 'culori';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -691,19 +692,31 @@ describe('initCommon', () => {
   test('item-disabled color', () => {
     expect(spyOnRegisterColor).toHaveBeenCalled();
 
+    // Helper function to add alpha using culori (same as in ColorRegistry)
+    const addAlphaToColor = (color: string, alpha: number): string => {
+      const parsed = parse(color);
+      if (!parsed) {
+        return color;
+      }
+      parsed.alpha = alpha;
+      return formatCss(parsed);
+    };
+
+    const expectedDark = addAlphaToColor(colorPalette.stone[300], 0.4);
+    const expectedLight = addAlphaToColor(colorPalette.stone[600], 0.4);
+
     // check the call
     expect(spyOnRegisterColor).toBeCalledWith('item-disabled', {
-      dark: colorPalette.stone[300].replace(')', ' / 0.4)'),
-      light: colorPalette.stone[600].replace(')', ' / 0.4)'),
+      dark: expectedDark,
+      light: expectedLight,
     });
 
     // verify the transparency is applied correctly
-    const darkColor = colorPalette.stone[300].replace(')', ' / 0.4)');
-    const lightColor = colorPalette.stone[600].replace(')', ' / 0.4)');
-
-    expect(darkColor).toContain(' / 0.4)');
-    expect(lightColor).toContain(' / 0.4)');
-    expect(darkColor).toBe('oklch(86.9% 0.005 56.366 / 0.4)');
-    expect(lightColor).toBe('oklch(44.4% 0.011 73.639 / 0.4)');
+    expect(expectedDark).toContain(' / 0.4)');
+    expect(expectedLight).toContain(' / 0.4)');
+    // culori formats percentages as decimals (0.869 instead of 86.9%)
+    // Account for floating point precision variations (e.g., 0.8690000000000001)
+    expect(expectedDark).toMatch(/^oklch\(0\.869\d* 0\.005 56\.366 \/ 0\.4\)$/);
+    expect(expectedLight).toMatch(/^oklch\(0\.444\d* 0\.011 73\.639 \/ 0\.4\)$/);
   });
 });
