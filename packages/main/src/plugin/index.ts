@@ -152,6 +152,7 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
+import { DefaultConfiguration } from './default-configuration.js';
 import { DialogRegistry } from './dialog-registry.js';
 import { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
@@ -483,6 +484,7 @@ export class PluginSystem {
     const safeStorageRegistry = container.get<SafeStorageRegistry>(SafeStorageRegistry);
     notifications.push(...(await safeStorageRegistry.init()));
 
+    container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
     container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
