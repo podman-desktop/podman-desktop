@@ -1549,25 +1549,20 @@ export class ColorRegistry {
     });
   }
 
-  /**
-   * Adds alpha transparency to a color string using culori.
-   * @param color - The color string (e.g., 'oklch(86.9% 0.005 56.366)')
-   * @param alpha - The alpha value (0-1)
-   * @returns The color string with alpha transparency (e.g., 'oklch(86.9% 0.005 56.366 / 0.4)')
-   */
-  private addAlphaToColor(color: string, alpha: number): string {
-    const parsed = parse(color);
-    if (!parsed) {
-      return color;
-    }
-    parsed.alpha = alpha;
-    return formatCss(parsed);
-  }
-
   protected initCommon(): void {
+    const darkParsed = parse(colorPalette.stone[300]);
+    const lightParsed = parse(colorPalette.stone[600]);
+
+    if (!darkParsed || !lightParsed) {
+      throw new Error('Failed to parse stone palette colors');
+    }
+
+    darkParsed.alpha = 0.4;
+    lightParsed.alpha = 0.4;
+
     this.registerColor(`item-disabled`, {
-      dark: this.addAlphaToColor(colorPalette.stone[300], 0.4),
-      light: this.addAlphaToColor(colorPalette.stone[600], 0.4),
+      dark: formatCss(darkParsed),
+      light: formatCss(lightParsed),
       // TODO: light HC + dark HC
     });
   }
