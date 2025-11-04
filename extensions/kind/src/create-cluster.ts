@@ -19,7 +19,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { CoreV1Api, KubeConfig, loadAllYaml } from '@kubernetes/client-node';
+import { KubeConfig, loadAllYaml } from '@kubernetes/client-node';
 import type { AuditRecord, AuditRequestItems, AuditResult, CancellationToken } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 // @ts-expect-error ignore type error https://github.com/janl/mustache.js/issues/797
@@ -29,6 +29,7 @@ import { parseAllDocuments, stringify } from 'yaml';
 
 import ingressManifests from '/@/resources/contour.yaml?raw';
 
+import { KindClusterWatcher } from './kind-cluster-watcher';
 import createClusterConfTemplate from './templates/create-cluster-conf.mustache?raw';
 import { getKindPath, getMemTotalInfo } from './util';
 
@@ -67,6 +68,9 @@ function getTags(tags: Tags): Tags {
   return tags;
 }
 
+/**
+ * Expected errors during cluster startup that should not be logged as warnings
+ */
 const expectedErrorsInStartup: string[] = [
   'ECONNREFUSED',
   'ETIMEDOUT',
@@ -76,6 +80,7 @@ const expectedErrorsInStartup: string[] = [
   '404',
   '503 Service Unavailable',
   'connection refused',
+  'AbortError',
 ];
 
 /**
@@ -103,81 +108,27 @@ function getKubeConfig(): KubeConfig {
 }
 
 /**
- * Wait for nodes to be ready using Kubernetes Watch API
- */
-async function waitForNodesReady(): Promise<void> {
-  const kc = getKubeConfig();
-  const k8sApi = kc.makeApiClient(CoreV1Api);
-
-  let timeout = 0;
-  while (timeout < 300) {
-    try {
-      const nodes = await k8sApi.listNode();
-      if (nodes.items.length > 0) {
-        const allReady = nodes.items.every(node =>
-          node.status?.conditions?.some(condition => condition.type === 'Ready' && condition.status === 'True'),
-        );
-        if (allReady) return;
-      }
-    } catch (error) {
-      handleStartupError(error, 'waiting for nodes to be ready');
-    }
-
-    await new Promise(f => setTimeout(f, 100));
-    timeout++;
-  }
-
-  throw new Error('Nodes not ready within timeout');
-}
-
-/**
- * Wait for system pods to be ready using Kubernetes client
- */
-async function waitForSystemPodsReady(labelSelector: string): Promise<void> {
-  const kc = getKubeConfig();
-  const k8sApi = kc.makeApiClient(CoreV1Api);
-
-  let timeout = 0;
-  while (timeout < 300) {
-    try {
-      const pods = await k8sApi.listNamespacedPod({
-        namespace: 'kube-system',
-        labelSelector: labelSelector,
-      });
-
-      if (pods.items.length > 0) {
-        const allReady = pods.items.every(pod =>
-          pod.status?.conditions?.some(condition => condition.type === 'Ready' && condition.status === 'True'),
-        );
-        if (allReady) return;
-      }
-    } catch (error) {
-      handleStartupError(error, `waiting for system pods (${labelSelector})`);
-    }
-
-    await new Promise(f => setTimeout(f, 100));
-    timeout++;
-  }
-
-  throw new Error(`System pods with selector ${labelSelector} not ready within timeout`);
-}
-
-/**
  * Wait for CoreDNS to be ready before installing ingress controller
  * This prevents DNS timeout issues when Contour tries to resolve names
  */
 export async function waitForCoreDNSReady(logger?: extensionApi.Logger): Promise<void> {
+  const kubeConfig = getKubeConfig();
+  const watcher = new KindClusterWatcher(kubeConfig);
+
   try {
-    await waitForNodesReady();
+    await watcher.waitForNodesReady(handleStartupError);
     logger?.log('Nodes ready');
-    await waitForSystemPodsReady('component=kube-scheduler');
-    logger?.log('Scheduler pod ready');
-    await waitForSystemPodsReady('component=kube-controller-manager');
-    logger?.log('Controller-manager pod ready');
-    await waitForSystemPodsReady('k8s-app=kube-dns');
-    logger?.log('CoreDNS pod ready');
+    await watcher.waitForSystemPodsReady('component=kube-scheduler', handleStartupError);
+    logger?.log('Scheduler ready');
+    await watcher.waitForSystemPodsReady('component=kube-controller-manager', handleStartupError);
+    logger?.log('Controller manager ready');
+    await watcher.waitForSystemPodsReady('k8s-app=kube-dns', handleStartupError);
+    logger?.log('CoreDNS ready');
+    logger?.log('All cluster components ready');
   } catch (error) {
     throw new Error(`Cluster not ready: ${String(error)}`);
+  } finally {
+    watcher.cleanup();
   }
 }
 
