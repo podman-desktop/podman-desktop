@@ -1024,11 +1024,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^3.2.0
-        version: 3.2.0
+        specifier: ^3.2.1
+        version: 3.2.1
       '@argos-ci/playwright':
-        specifier: ^6.2.0
-        version: 6.2.0
+        specifier: ^6.3.1
+        version: 6.3.1
       '@playwright/test':
         specifier: 1.56.1
         version: 1.56.1
@@ -1133,29 +1133,29 @@ packages:
   '@antfu/utils@9.2.0':
     resolution: {integrity: sha512-Oq1d9BGZakE/FyoEtcNeSwM7MpDO2vUBi11RWBZXf75zPsbUVWmUs03EqkRFrcgbXyKTas0BdZWC1wcuSoqSAw==}
 
-  '@argos-ci/api-client@0.13.0':
-    resolution: {integrity: sha512-/z1EaroMxTtDP+2loGoqcZFNfXElVwet3vGsTebek5x9ewNZ4bWb8meCLS7/L0caU6/1CBlXDL7lwGakRYHVow==}
+  '@argos-ci/api-client@0.14.0':
+    resolution: {integrity: sha512-lVWN8MrRYEbCjcZcutTzdJEA9tNB1IBqjIUJyjxR1iHMXZJYVLQbWQcmlZz33sIHkicLgAKTKrSVUOjf34MXAA==}
     engines: {node: '>=20.0.0'}
 
   '@argos-ci/browser@5.0.0':
     resolution: {integrity: sha512-SKAD7EXoLX4u50dzTIT/ABnpD284+DnBfoJM0ZrTIav2eiiVJyknNKSznF5w118lYGnYvugTXbKMnukGPzJeOA==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/cli@3.2.0':
-    resolution: {integrity: sha512-CJWe8Bjraa/pmaZyIZJD3Jx7u7UqyXuncDMyzlvwCc4O7khpWm9IpkNn6Jk90beTfY1pkg82wyGw4getHXPr6Q==}
+  '@argos-ci/cli@3.2.1':
+    resolution: {integrity: sha512-U/i68TWYR/leXzVs4AhE9MjLgiN37ydxC4CqvrS9haDqIO1duNXcQBdxRpX9EwX4eyDo58eG/VYFCEnYVf48gg==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
-  '@argos-ci/core@4.4.0':
-    resolution: {integrity: sha512-4Z9fpAGX/W9ym58C1wni1y1hKk5O3xVQh559957caJK8VmDgR1QPW26vvBerlKqUSb4KPhCxX+/jUJzkw4oycQ==}
+  '@argos-ci/core@4.5.0':
+    resolution: {integrity: sha512-jERRoj+da36Y9NwFyws00LKFmCLHBTklIE0DYRptrPUSf3aitly6KmllkKHGi2UU1XcIqAO2Pzy1l5shCs/FXw==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/playwright@6.2.0':
-    resolution: {integrity: sha512-z/JJRqiUQq8EFmA205pRX9enAPInXAin4nzl3dMCRVEKJhjFMD4Hra0k0VZXKQMrVdoU5Bgl2ZnE+QkJNx2lhg==}
+  '@argos-ci/playwright@6.3.1':
+    resolution: {integrity: sha512-E4zl8i/+l4v7eK8NUzp0J3clok+urHGe2WP/FRtOMPuQ9vmZ/FF4LTZ3obMhmeyu9/PMIdV545w4KPaTZl3Y5w==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/util@3.1.1':
-    resolution: {integrity: sha512-sGb9PS7yqdVVtxpxRD1Nfter3kaioC4nPPTknVmMSqo2GQKO1gdmjMJtwHY+Nf9FgiMfwpTCnk8Rrf0pjS3Sug==}
+  '@argos-ci/util@3.2.0':
+    resolution: {integrity: sha512-/Bn0qCH8VsdPv5WB9TUEf3oTgsIqsTMUEjPVDopHLzKK+j7nQYGOF3MnN7VhBow82BXeStBfJCS3UiZ6cgxRlw==}
     engines: {node: '>=20.0.0'}
 
   '@asamuzakjp/css-color@3.2.0':
@@ -2446,8 +2446,8 @@ packages:
   '@emnapi/runtime@1.4.3':
     resolution: {integrity: sha512-pBPWdu6MLKROBX05wSNKcNb++m5Er+KQ9QkB+WVM+pW2Kx9hoSrVTnu3BdkI5eBLZoKu/J6mW/B6i6bJB2ytXQ==}
 
-  '@emnapi/runtime@1.6.0':
-    resolution: {integrity: sha512-obtUmAHTMjll499P+D9A3axeJFlhdjOWdKUNs/U6QIGT7V5RjcUW1xToAzjvmgTSQhDbYn/NwfTRoJcQ2rNBxA==}
+  '@emnapi/runtime@1.7.0':
+    resolution: {integrity: sha512-oAYoQnCYaQZKVS53Fq23ceWMRxq5EhQsE0x0RdQ55jT7wagMu5k+fS39v1fiSLrtrLQlXwVINenqhLMtTrV/1Q==}
 
   '@emnapi/wasi-threads@1.0.2':
     resolution: {integrity: sha512-5n3nTJblwRi8LlXkJ9eBzu+kZR8Yxcc7ubakyQTFzPMtIhFpUBRbsnc2Dv88IZDIbCDlBiWrknhB4Lsz7mg6BA==}
@@ -8785,6 +8785,10 @@ packages:
     resolution: {integrity: sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==}
     engines: {node: '>= 0.6'}
 
+  mime-types@3.0.1:
+    resolution: {integrity: sha512-xRc4oEhT6eaBpU1XF7AjpOFD+xQmXNB5OVKwp4tqCuBpHLS/ZbBDrc07mYTDqVMg6PfxUjjNp85O6Cd2Z/5HWA==}
+    engines: {node: '>= 0.6'}
+
   mime@1.6.0:
     resolution: {integrity: sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==}
     engines: {node: '>=4'}
@@ -10850,8 +10854,8 @@ packages:
   stubborn-fs@2.0.0:
     resolution: {integrity: sha512-Y0AvSwDw8y+nlSNFXMm2g6L51rBGdAQT20J3YSOqxC53Lo3bjWRtr2BKcfYoAf352WYpsZSTURrA0tqhfgudPA==}
 
-  stubborn-utils@1.0.1:
-    resolution: {integrity: sha512-bwtct4FpoH1eYdSMFc84fxnYynWwsy2u0joj94K+6caiPnjZIpwTLHT2u7CFAS0GumaBZVB5Y2GkJ46mJS76qg==}
+  stubborn-utils@1.0.2:
+    resolution: {integrity: sha512-zOh9jPYI+xrNOyisSelgym4tolKTJCQd5GBhK0+0xJvcYDcwlOoxF/rnFKQ2KRZknXSG9jWAp66fwP6AxN9STg==}
 
   style-to-object@0.4.4:
     resolution: {integrity: sha512-HYNoHZa2GorYNyqiCaBgsxvcJIn7OHq6inEga+E6Ke3m5JkoqpQbnFssk4jwe+K7AhGa2fcha4wSOf1Kn01dMg==}
@@ -12054,7 +12058,7 @@ snapshots:
 
   '@antfu/utils@9.2.0': {}
 
-  '@argos-ci/api-client@0.13.0':
+  '@argos-ci/api-client@0.14.0':
     dependencies:
       debug: 4.4.3
       openapi-fetch: 0.15.0
@@ -12063,38 +12067,39 @@ snapshots:
 
   '@argos-ci/browser@5.0.0': {}
 
-  '@argos-ci/cli@3.2.0':
+  '@argos-ci/cli@3.2.1':
     dependencies:
-      '@argos-ci/core': 4.4.0
+      '@argos-ci/core': 4.5.0
       commander: 14.0.2
       ora: 9.0.0
       update-notifier: 7.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@4.4.0':
+  '@argos-ci/core@4.5.0':
     dependencies:
-      '@argos-ci/api-client': 0.13.0
-      '@argos-ci/util': 3.1.1
+      '@argos-ci/api-client': 0.14.0
+      '@argos-ci/util': 3.2.0
       convict: 6.2.4
       debug: 4.4.3
       fast-glob: 3.3.3
+      mime-types: 3.0.1
       sharp: 0.34.4
       tmp: 0.2.5
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@6.2.0':
+  '@argos-ci/playwright@6.3.1':
     dependencies:
       '@argos-ci/browser': 5.0.0
-      '@argos-ci/core': 4.4.0
-      '@argos-ci/util': 3.1.1
+      '@argos-ci/core': 4.5.0
+      '@argos-ci/util': 3.2.0
       chalk: 5.6.2
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/util@3.1.1': {}
+  '@argos-ci/util@3.2.0': {}
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -14329,7 +14334,7 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@emnapi/runtime@1.6.0':
+  '@emnapi/runtime@1.7.0':
     dependencies:
       tslib: 2.8.1
     optional: true
@@ -14733,7 +14738,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.34.4':
     dependencies:
-      '@emnapi/runtime': 1.6.0
+      '@emnapi/runtime': 1.7.0
     optional: true
 
   '@img/sharp-win32-arm64@0.34.4':
@@ -21784,6 +21789,10 @@ snapshots:
     dependencies:
       mime-db: 1.52.0
 
+  mime-types@3.0.1:
+    dependencies:
+      mime-db: 1.54.0
+
   mime@1.6.0: {}
 
   mime@2.6.0: {}
@@ -24141,9 +24150,9 @@ snapshots:
 
   stubborn-fs@2.0.0:
     dependencies:
-      stubborn-utils: 1.0.1
+      stubborn-utils: 1.0.2
 
-  stubborn-utils@1.0.1: {}
+  stubborn-utils@1.0.2: {}
 
   style-to-object@0.4.4:
     dependencies:
