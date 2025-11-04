@@ -49,6 +49,7 @@ const network1: NetworkInspectInfo = {
 beforeEach(() => {
   vi.resetAllMocks();
   networksListInfo.set([]);
+  vi.mocked(window.inspectNetwork).mockResolvedValue(network1);
 });
 
 test('Expect to have network name and shortId and network actions in Details page', async () => {

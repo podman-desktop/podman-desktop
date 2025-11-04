@@ -12,7 +12,7 @@ interface Props {
 
 let { network }: Props = $props();
 
-let inspectDetails: string = $state();
+let inspectDetails: string = $state('');
 
 onMount(async () => {
   // grab inspect result from the container
