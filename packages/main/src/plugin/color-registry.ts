@@ -256,6 +256,7 @@ export class ColorRegistry {
     this.initTerminal();
     this.initProgressBar();
     this.initBadge();
+    this.initCommon();
   }
 
   protected initDefaults(): void {
@@ -1544,6 +1545,14 @@ export class ColorRegistry {
     this.registerColor(`${badge}gray`, {
       dark: colorPalette.gray[600],
       light: colorPalette.gray[600],
+    });
+  }
+
+  protected initCommon(): void {
+    this.registerColor(`item-disabled`, {
+      dark: colorPalette.stone[300].replace(')', ' / 0.4)'), // semi-transparent
+      light: colorPalette.stone[600].replace(')', ' / 0.4)'), // semi-transparent
+      // TODO: light HC + dark HC
     });
   }
 }
