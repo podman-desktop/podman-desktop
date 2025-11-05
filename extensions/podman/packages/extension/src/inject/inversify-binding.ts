@@ -39,6 +39,7 @@ import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
+import { PodmanBinary } from '/@/utils/podman-binary';
 
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
 
@@ -60,6 +61,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(TelemetryLoggerSymbol).toConstantValue(this.#telemetryLogger);
     this.#inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(PodmanBinary).toSelf().inSingletonScope();
 
     this.#inversifyContainer.bind(WinBitCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinVersionCheck).toSelf().inSingletonScope();
