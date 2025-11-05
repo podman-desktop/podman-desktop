@@ -46,14 +46,13 @@ export class KindClusterWatcher implements Disposable {
     return new Promise((resolve, reject) => {
       const informer = makeInformer(this.kubeConfig, path, listFn);
       let isCompleted = false;
-
+      // Set timeout
+      const timeoutHandle = setTimeout(() => {
+        complete(false, new Error(`Timeout waiting for resources at ${path}`));
+      }, timeoutMs);
       const complete = (success: boolean, error?: unknown): void => {
         if (isCompleted) return;
         isCompleted = true;
-        // Set timeout
-        const timeoutHandle = setTimeout(() => {
-          complete(false, new Error(`Timeout waiting for resources at ${path}`));
-        }, timeoutMs);
         clearTimeout(timeoutHandle);
 
         // Remove from active informers first
@@ -110,9 +109,6 @@ export class KindClusterWatcher implements Disposable {
       informer.start().catch((error: unknown) => {
         complete(false, error);
       });
-
-      // Initial readiness check
-      setTimeout(checkReadiness, 100);
     });
   }
   /**
