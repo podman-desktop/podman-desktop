@@ -37,6 +37,7 @@ import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
+import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
 import type { LoggerWithEnd } from './index.js';
@@ -60,6 +61,12 @@ class TestPluginSystem extends PluginSystem {
   ): Promise<ConfigurationRegistry> {
     if (!container.isBound(ConfigurationRegistry)) {
       container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
+    }
+    if (!container.isBound(DefaultConfiguration)) {
+      const defaultConfigurationMock = {
+        getContent: vi.fn().mockResolvedValue({}),
+      } as unknown as DefaultConfiguration;
+      container.bind<DefaultConfiguration>(DefaultConfiguration).toConstantValue(defaultConfigurationMock);
     }
     return super.initConfigurationRegistry(container, notifications, configurationRegistryEmitter);
   }
@@ -322,10 +329,14 @@ test('configurationRegistry propagated', async () => {
   const directoriesMock = {
     getConfigurationDirectory: vi.fn().mockReturnValue(tmpdir()),
   } as unknown as Directories;
+  const defaultConfigurationMock = {
+    getContent: vi.fn().mockResolvedValue({}),
+  } as unknown as DefaultConfiguration;
   const notifications: NotificationCardOptions[] = [];
 
   inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
   inversifyContainer.bind<Directories>(Directories).toConstantValue(directoriesMock);
+  inversifyContainer.bind<DefaultConfiguration>(DefaultConfiguration).toConstantValue(defaultConfigurationMock);
 
   const configurationRegistry = await pluginSystem.initConfigurationRegistry(
     inversifyContainer,
