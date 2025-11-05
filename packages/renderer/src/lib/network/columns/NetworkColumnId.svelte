@@ -1,5 +1,6 @@
 <script lang="ts">
-import { router } from 'tinro';
+import { handleNavigation } from '/@/navigation';
+import { NavigationPage } from '/@api/navigation-page';
 
 import type { NetworkInfoUI } from '../NetworkInfoUI';
 
@@ -10,7 +11,7 @@ interface Props {
 let { object }: Props = $props();
 
 function openDetailsNetwork(network: NetworkInfoUI): void {
-  router.goto(`/networks/${encodeURI(network.name)}/${encodeURI(network.engineId)}/summary`);
+  handleNavigation({ page: NavigationPage.NETWORK, parameters: { name: network.name, engineId: network.engineId } });
 }
 </script>
 

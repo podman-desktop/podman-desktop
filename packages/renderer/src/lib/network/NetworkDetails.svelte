@@ -2,12 +2,12 @@
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { networksListInfo } from '/@/stores/networks';
 
-import Route from '../../Route.svelte';
-import VolumeIcon from '../images/VolumeIcon.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { NetworkUtils } from './network-utils';
 import NetworkActions from './NetworkActions.svelte';
 import NetworkDetailsInspect from './NetworkDetailsInspect.svelte';
@@ -21,19 +21,19 @@ interface Props {
 
 let { networkName, engineId }: Props = $props();
 
-let network: NetworkInfoUI | undefined = $state();
-let detailsPage: DetailsPage | undefined = $state();
-
 const networkUtils = new NetworkUtils();
 
 let matchingNetwork = $derived(
   $networksListInfo.find(network => network.Name === networkName && network.engineId === engineId),
 );
 
+let network: NetworkInfoUI | undefined = $derived(
+  matchingNetwork ? networkUtils.toNetworkInfoUI(matchingNetwork) : undefined,
+);
+let detailsPage: DetailsPage | undefined = $state();
+
 $effect(() => {
-  if (matchingNetwork) {
-    network = networkUtils.toNetworkInfoUI(matchingNetwork);
-  } else if (detailsPage) {
+  if (!network && detailsPage) {
     detailsPage.close();
   }
 });
@@ -45,23 +45,19 @@ $effect(() => {
       <StatusIcon icon={VolumeIcon} size={24} status={network?.status} />
     {/snippet}
     {#snippet actionsSnippet()}
-      {#if network}
-        <NetworkActions object={network} detailed={true} />
-      {/if}
+      <NetworkActions object={network} detailed={true} />
     {/snippet}
     {#snippet tabsSnippet()}
       <Tab title="Summary" selected={isTabSelected($router.path, 'summary')} url={getTabUrl($router.path, 'summary')} />
       <Tab title="Inspect" selected={isTabSelected($router.path, 'inspect')} url={getTabUrl($router.path, 'inspect')} />
     {/snippet}
     {#snippet contentSnippet()}
-      {#if network}
-        <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
-          <NetworkDetailsSummary network={network} />
-        </Route>
-        <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
-         <NetworkDetailsInspect network={network} />
-        </Route>
-      {/if}
+      <Route path="/summary" breadcrumb="Summary" navigationHint="tab">
+        <NetworkDetailsSummary network={network} />
+      </Route>
+      <Route path="/inspect" breadcrumb="Inspect" navigationHint="tab">
+        <NetworkDetailsInspect network={network} />
+      </Route>
     {/snippet}
   </DetailsPage>
 {/if}

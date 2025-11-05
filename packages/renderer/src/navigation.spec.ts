@@ -285,3 +285,8 @@ test(`Test navigationHandle for ${NavigationPage.CREATE_PROVIDER_CONNECTION}`, (
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/provider/dummyProviderId');
 });
+
+test(`Test navigationHandle for ${NavigationPage.NETWORK}`, () => {
+  handleNavigation({ page: NavigationPage.NETWORK, parameters: { name: 'network1', engineId: 'engineId1' } });
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/networks/network1/engineId1/summary');
+});

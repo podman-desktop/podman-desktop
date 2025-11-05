@@ -18,8 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte';
+import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -64,14 +63,13 @@ test('Expect to have network name and shortId and network actions in Details pag
     { timeout: 2000 },
   );
 
-  render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
-  await tick();
+  const { getByRole, getByText } = render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
 
   await waitFor(() => {
-    expect(screen.getByText('Network 1')).toBeInTheDocument();
-    expect(screen.getByText('123456789012')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete Network' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Update Network' })).toBeInTheDocument();
+    expect(getByText('Network 1')).toBeInTheDocument();
+    expect(getByText('123456789012')).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Delete Network' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Update Network' })).toBeInTheDocument();
   });
 });
 
@@ -98,22 +96,21 @@ test('Expect redirect to previous page if current network is deleted', async () 
   lastPage.set({ name: 'Fake Previous', path: '/last' });
 
   // render the component
-  render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
-  await tick();
+  const { getByRole, queryByRole } = render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
 
   // grab current route
   const currentRoute = window.location;
   expect(currentRoute.href).toBe('http://localhost:3000/');
 
   await waitFor(() => {
-    screen.getByRole('button', { name: 'Delete Network' });
+    getByRole('button', { name: 'Delete Network' });
   });
 
-  const deleteButton = screen.getByRole('button', { name: 'Delete Network' });
+  const deleteButton = getByRole('button', { name: 'Delete Network' });
   await fireEvent.click(deleteButton);
 
   // Wait for confirmation modal to disappear after clicking on delete
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  await waitFor(() => expect(queryByRole('dialog')).not.toBeInTheDocument());
 
   // check that remove method has been called
   expect(window.removeNetwork).toHaveBeenCalled();
@@ -139,22 +136,21 @@ test('Expect to have summary and inspect tabs', async () => {
     { timeout: 2000 },
   );
 
-  render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
-  await tick();
+  const { getByRole } = render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
 
   await waitFor(() => {
-    screen.getByRole('link', { name: 'Summary' });
-    screen.getByRole('link', { name: 'Inspect' });
+    getByRole('link', { name: 'Summary' });
+    getByRole('link', { name: 'Inspect' });
   });
 
-  const summaryTab = screen.getByRole('link', { name: 'Summary' });
+  const summaryTab = getByRole('link', { name: 'Summary' });
   expect(summaryTab).toBeInTheDocument();
 
   await fireEvent.click(summaryTab);
 
   expect(window.location.href.endsWith('/summary')).toBeTruthy();
 
-  const inspectTab = screen.getByRole('link', { name: 'Inspect' });
+  const inspectTab = getByRole('link', { name: 'Inspect' });
   expect(inspectTab).toBeInTheDocument();
 
   await fireEvent.click(inspectTab);

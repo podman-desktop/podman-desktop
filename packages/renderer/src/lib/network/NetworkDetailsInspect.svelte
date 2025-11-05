@@ -1,9 +1,9 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import type { NetworkInspectInfo } from '/@api/network-info';
 
-import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
 interface Props {
