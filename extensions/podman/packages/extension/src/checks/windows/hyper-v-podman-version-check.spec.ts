@@ -18,13 +18,15 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { getPodmanInstallation } from '../../utils/podman-cli';
+import type { PodmanBinary } from '/@/utils/podman-binary';
+
 import { HyperVPodmanVersionCheck } from './hyper-v-podman-version-check';
 
 vi.mock(import('@podman-desktop/api'));
-vi.mock(import('../../utils/podman-cli'), () => ({
-  getPodmanInstallation: vi.fn(),
-}));
+
+const podmanBinaryMock: PodmanBinary = {
+  getBinaryInfo: vi.fn(),
+} as unknown as PodmanBinary;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -49,11 +51,11 @@ test.each<SuccessfulTestCase>([
     version: '5.3.0-dev',
   },
 ])('$name', async ({ version }) => {
-  vi.mocked(getPodmanInstallation).mockResolvedValue({
+  vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue({
     version: version,
   });
 
-  const hyperVPodmanVersionCheck = new HyperVPodmanVersionCheck();
+  const hyperVPodmanVersionCheck = new HyperVPodmanVersionCheck(podmanBinaryMock);
   const result = await hyperVPodmanVersionCheck.execute();
 
   expect(result.successful).toBeTruthy();
@@ -77,10 +79,10 @@ test.each<FailureTestCase>([
     version: '4.4.0',
   },
 ])('$name', async ({ version, errorDescription }) => {
-  vi.mocked(getPodmanInstallation).mockResolvedValue({
+  vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue({
     version: version,
   });
-  const hyperVPodmanVersionCheck = new HyperVPodmanVersionCheck();
+  const hyperVPodmanVersionCheck = new HyperVPodmanVersionCheck(podmanBinaryMock);
   const result = await hyperVPodmanVersionCheck.execute();
   expect(result.successful).toBeFalsy();
   expect(result.description).equal(errorDescription);
