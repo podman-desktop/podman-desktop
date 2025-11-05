@@ -69,4 +69,51 @@ describe('KindClusterWatcher', () => {
       expect.any(Function),
     );
   });
+
+  test('should timeout when resources are not ready within timeout period', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const promise = watcher.waitForNodesReady();
+
+      vi.advanceTimersByTime(30000);
+
+      await expect(promise).rejects.toThrow('Timeout waiting for resources');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('should call error handler when informer emits error', async () => {
+    const errorHandler = vi.fn();
+    const mockError = new Error('Connection failed');
+
+    const mockInformer = {
+      on: vi.fn((event, callback) => {
+        if (event === 'error') {
+          callback(mockError);
+        }
+      }),
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockReturnValue([]),
+      get: vi.fn(),
+      off: vi.fn(),
+    };
+
+    vi.mocked(k8s.makeInformer).mockReturnValue(mockInformer);
+
+    watcher.waitForNodesReady(errorHandler).catch(() => {});
+
+    expect(errorHandler).toHaveBeenCalledWith(mockError, expect.stringContaining('watching'));
+  });
+
+  test('should stop all informers when cleanup is called', async () => {
+    watcher.waitForNodesReady().catch(() => {});
+    watcher.waitForSystemPodsReady('k8s-app=kube-dns').catch(() => {});
+
+    watcher.cleanup();
+
+    expect(k8s.makeInformer).toHaveBeenCalledTimes(2);
+  });
 });
