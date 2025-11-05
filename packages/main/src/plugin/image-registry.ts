@@ -820,7 +820,8 @@ export class ImageRegistry {
     const urlOptions = {
       require_tld: false,
     };
-    const isUrl = validator.default.isURL(serviceUrl, urlOptions);
+    // Validate the URL using http prefix protocol (to satisfy the validator)
+    const isUrl = validator.default.isURL(`http://${serviceUrl}`, urlOptions);
 
     // Check if the URL is undefined or not a valid URL
     if (serviceUrl === undefined || !isUrl) {
