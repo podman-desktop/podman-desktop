@@ -22,7 +22,10 @@ import * as fs from 'node:fs';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
-import { CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE } from '/@api/configuration/constants.js';
+import {
+  CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
+} from '/@api/configuration/constants.js';
 import type { IConfigurationNode } from '/@api/configuration/models.js';
 import type { IDisposable } from '/@api/disposable.js';
 
@@ -491,7 +494,6 @@ describe('Managed Locked', () => {
     const configurationValues = (
       testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
     ).configurationValues;
-    const { CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE } = await import('/@api/configuration/constants.js');
     const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
 
     expect(managedConfig).toEqual(managedLocked);
@@ -516,7 +518,6 @@ describe('Managed Locked', () => {
     const configurationValues = (
       testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
     ).configurationValues;
-    const { CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE } = await import('/@api/configuration/constants.js');
     const managedConfig = configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
 
     expect(managedConfig).toEqual({});
