@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import { inject, injectable } from 'inversify';
@@ -39,7 +39,7 @@ export class DefaultConfiguration {
     // It's important that we at least log to console what is happening here, as it's common for logs
     // to be shared when there are issues loading "managed-by" defaults, so having this information in the logs is useful.
     try {
-      const managedDefaultsContent = await fs.promises.readFile(managedDefaultsFile, 'utf-8');
+      const managedDefaultsContent = await readFile(managedDefaultsFile, 'utf-8');
       managedDefaultsData = JSON.parse(managedDefaultsContent);
       console.log(`[Managed-by]: Loaded managed defaults from: ${managedDefaultsFile}`);
     } catch (error) {

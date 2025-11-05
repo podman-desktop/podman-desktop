@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { promises as fsPromises } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -24,7 +24,7 @@ import { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 
 // mock the fs module
-vi.mock('node:fs');
+vi.mock('node:fs/promises');
 
 let defaultConfiguration: DefaultConfiguration;
 const getManagedDefaultsDirectoryMock = vi.fn();
@@ -42,7 +42,7 @@ describe('DefaultConfiguration', () => {
   test('should load managed defaults when file exists', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const managedDefaults = { 'managed.setting': 'managedValue' };
-    vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(managedDefaults));
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(managedDefaults));
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -57,7 +57,7 @@ describe('DefaultConfiguration', () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
     error.code = 'ENOENT';
-    vi.mocked(fsPromises.readFile).mockRejectedValue(error);
+    vi.mocked(readFile).mockRejectedValue(error);
 
     const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
@@ -70,7 +70,7 @@ describe('DefaultConfiguration', () => {
 
   test('should handle corrupted managed defaults file gracefully', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
-    vi.mocked(fsPromises.readFile).mockResolvedValue('invalid json');
+    vi.mocked(readFile).mockResolvedValue('invalid json');
 
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -87,7 +87,7 @@ describe('DefaultConfiguration', () => {
   test('should load managed defaults configuration with valid JSON', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const managedDefaults = { 'managed.setting': 'managedValue', 'another.setting': 'anotherValue' };
-    vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(managedDefaults));
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(managedDefaults));
 
     const result = await defaultConfiguration.getContent();
 
