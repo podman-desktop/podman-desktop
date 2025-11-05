@@ -46,6 +46,8 @@ import {
 } from '/@/constants';
 import { WinPlatform } from '/@/platforms/win-platform';
 import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, MachineListOutput } from '/@/types';
+import type { InstalledPodman } from '/@/utils/podman-binary';
+import { PodmanBinary } from '/@/utils/podman-binary';
 
 import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
 import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
@@ -63,8 +65,7 @@ import { PodmanInstall } from './installer/podman-install';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
 import { getSocketCompatibility } from './utils/compatibility-mode';
 import { ExtensionNotifications } from './utils/notifications';
-import type { InstalledPodman } from './utils/podman-cli';
-import { getPodmanCli, getPodmanInstallation } from './utils/podman-cli';
+import { getPodmanCli } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
@@ -112,6 +113,7 @@ const containerProviderConnections = new Map<string, extensionApi.ContainerProvi
 let telemetryLogger: extensionApi.TelemetryLogger;
 
 let winPlatform: WinPlatform;
+let podmanBinary: PodmanBinary;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -176,7 +178,7 @@ async function doUpdateMachines(
   // parse output
   const machines = machineListOutput.list;
   extensionApi.context.setValue('podmanMachineExists', machines.length > 0, 'onboarding');
-  const installedPodman = await getPodmanInstallation();
+  const installedPodman = await podmanBinary.getBinaryInfo();
   let shouldCleanMachine = false;
   if (installedPodman) {
     shouldCleanMachine = shouldNotifyQemuMachinesWithV5(installedPodman);
@@ -687,7 +689,7 @@ export async function monitorProvider(
 
 export async function doMonitorProvider(provider: extensionApi.Provider): Promise<void> {
   try {
-    const installedPodman = await getPodmanInstallation();
+    const installedPodman = await podmanBinary.getBinaryInfo();
     provider.updateDetectionChecks(getDetectionChecks(installedPodman));
 
     const warnings = await getMultiplePodmanInstallationsWarnings(installedPodman);
@@ -1034,7 +1036,7 @@ export async function initCheckAndRegisterUpdate(
       disposable.dispose();
     }
     currentUpdatesDisposables.length = 0;
-    const podmanInstalledValue = await getPodmanInstallation();
+    const podmanInstalledValue = await podmanBinary.getBinaryInfo();
     const disposable = await registerUpdatesIfAny(provider, podmanInstalledValue, podmanInstall);
     if (disposable) {
       currentUpdatesDisposables.push(disposable);
@@ -1044,6 +1046,7 @@ export async function initCheckAndRegisterUpdate(
 
   // register onDidUpdateVersion
   provider.onDidUpdateVersion(async () => {
+    podmanBinary.invalidate();
     await checkForUpdate();
   });
 
@@ -1082,7 +1085,7 @@ export function registerOnboardingMachineExistsCommand(): extensionApi.Disposabl
 export function registerOnboardingUnsupportedPodmanMachineCommand(): extensionApi.Disposable {
   return extensionApi.commands.registerCommand('podman.onboarding.checkUnsupportedPodmanMachine', async () => {
     let isUnsupported = false;
-    const installedPodman = await getPodmanInstallation();
+    const installedPodman = await podmanBinary.getBinaryInfo();
     if (installedPodman) {
       isUnsupported = shouldNotifyQemuMachinesWithV5(installedPodman);
     }
@@ -1110,7 +1113,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
     const fileAndFoldersToRemove = [];
     const wslMachinesToUnregister = [];
 
-    const installedPodman = await getPodmanInstallation();
+    const installedPodman = await podmanBinary.getBinaryInfo();
 
     if (extensionApi.env.isMac && installedPodman?.version.startsWith('5.')) {
       // remove the qemu machines folder
@@ -1258,6 +1261,7 @@ export async function initInversify(
 
   const podmanInstall = inversifyContainer.get(PodmanInstall);
   winPlatform = inversifyContainer.get(WinPlatform);
+  podmanBinary = inversifyContainer.get(PodmanBinary);
 
   return { podmanInstall, winPlatform };
 }
@@ -1277,7 +1281,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   const { podmanInstall } = await initInversify(extensionContext, telemetryLogger);
 
-  const installedPodman = await getPodmanInstallation();
+  const installedPodman = await podmanBinary.getBinaryInfo();
   const version: string | undefined = installedPodman?.version;
 
   if (version) {
@@ -1616,7 +1620,7 @@ export async function start(
   const onboardingCheckInstallationCommand = extensionApi.commands.registerCommand(
     'podman.onboarding.checkInstalledCommand',
     async () => {
-      const installation = await getPodmanInstallation();
+      const installation = await podmanBinary.getBinaryInfo();
       const installed = installation ? true : false;
       extensionApi.context.setValue('podmanIsNotInstalled', !installed, 'onboarding');
       telemetryLogger?.logUsage('podman.onboarding.checkInstalledCommand', {
@@ -1695,7 +1699,7 @@ export async function start(
       const telemetryOptions: Record<string, unknown> = {};
       try {
         await podmanInstall.doInstallPodman(provider);
-        installation = await getPodmanInstallation();
+        installation = await podmanBinary.getBinaryInfo();
         installed = installation ? true : false;
         extensionApi.context.setValue('podmanIsNotInstalled', !installed, 'onboarding');
       } catch (e) {
@@ -1822,7 +1826,7 @@ async function stopAutoStartedMachine(): Promise<void> {
 }
 
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
-  const installedPodman = await getPodmanInstallation();
+  const installedPodman = await podmanBinary.getBinaryInfo();
 
   const containerMachineProviders: (string | undefined)[] = [];
   // if libkrun is supported we want to show both applehv and libkrun machines
@@ -1954,7 +1958,7 @@ export function sendTelemetryRecords(
 ): void {
   const sendJob = async (): Promise<void> => {
     // add CLI version
-    const installedPodman = await getPodmanInstallation();
+    const installedPodman = await podmanBinary.getBinaryInfo();
     if (installedPodman) {
       telemetryRecords.podmanCliVersion = installedPodman.version;
     }
@@ -2107,7 +2111,7 @@ export async function createMachine(
     telemetryRecords.diskSize = params['podman.factory.machine.diskSize'];
   }
 
-  const podmanInstallation = await getPodmanInstallation();
+  const podmanInstallation = await podmanBinary.getBinaryInfo();
   const version = podmanInstallation?.version;
   // check for podman major version
   const isPodmanV5OrLater = version ? isPodman5OrLater(version) : false;
