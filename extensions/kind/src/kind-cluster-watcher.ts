@@ -18,16 +18,19 @@
 
 import type { KubeConfig, KubernetesObject, ListPromise, V1Node, V1Pod } from '@kubernetes/client-node';
 import { CoreV1Api, makeInformer } from '@kubernetes/client-node';
+import type { Disposable } from '@podman-desktop/api';
 
 /**
  * Utility class to manage informer lifecycle for Kind cluster readiness checks
  */
-export class KindClusterWatcher {
+export class KindClusterWatcher implements Disposable {
   private informers: Map<string, { stop?: () => void }> = new Map();
   private kubeConfig: KubeConfig;
+  private errorHandler?: (error: unknown, context: string) => void;
 
-  constructor(kubeConfig: KubeConfig) {
+  constructor(kubeConfig: KubeConfig, errorHandler?: (error: unknown, context: string) => void) {
     this.kubeConfig = kubeConfig;
+    this.errorHandler = errorHandler;
   }
 
   /**
@@ -47,6 +50,10 @@ export class KindClusterWatcher {
       const complete = (success: boolean, error?: unknown): void => {
         if (isCompleted) return;
         isCompleted = true;
+        // Set timeout
+        const timeoutHandle = setTimeout(() => {
+          complete(false, new Error(`Timeout waiting for resources at ${path}`));
+        }, timeoutMs);
         clearTimeout(timeoutHandle);
 
         // Remove from active informers first
@@ -76,11 +83,6 @@ export class KindClusterWatcher {
           console.debug(`Ignoring list() error during readiness check for ${path}: ${String(error)}`);
         }
       };
-
-      // Set timeout
-      const timeoutHandle = setTimeout(() => {
-        complete(false, new Error(`Timeout waiting for resources at ${path}`));
-      }, timeoutMs);
 
       // Event handlers
       informer.on('add', checkReadiness);
@@ -138,21 +140,18 @@ export class KindClusterWatcher {
   /**
    * Wait for nodes to be ready using Watch API
    */
-  async waitForNodesReady(onError?: (error: unknown, context: string) => void): Promise<void> {
+  async waitForNodesReady(): Promise<void> {
     const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
     const listFn = (): Promise<{ items: V1Node[] }> => k8sApi.listNode();
     const path = '/api/v1/nodes';
 
-    await this.waitForResources(path, listFn, this.areNodesReady.bind(this), onError);
+    await this.waitForResources(path, listFn, this.areNodesReady.bind(this), this.errorHandler);
   }
 
   /**
    * Wait for system pods to be ready using Watch API
    */
-  async waitForSystemPodsReady(
-    labelSelector: string,
-    onError?: (error: unknown, context: string) => void,
-  ): Promise<void> {
+  async waitForSystemPodsReady(labelSelector: string): Promise<void> {
     const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
     const listFn = (): Promise<{ items: V1Pod[] }> =>
       k8sApi.listNamespacedPod({
@@ -161,15 +160,15 @@ export class KindClusterWatcher {
       });
     const path = `/api/v1/namespaces/kube-system/pods?labelSelector=${encodeURIComponent(labelSelector)}`;
 
-    await this.waitForResources(path, listFn, this.arePodsReady.bind(this), onError);
+    await this.waitForResources(path, listFn, this.arePodsReady.bind(this), this.errorHandler);
   }
 
   /**
    * Cleanup all active informers
    */
-  cleanup(): void {
+  dispose(): void {
     // Create a copy of the current informers and clear the original map
-    const informersToStop = Array.from(this.informers.entries());
+    const informersToStop = new Map(this.informers);
     this.informers.clear();
 
     for (const [id, informerEntry] of informersToStop) {

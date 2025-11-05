@@ -26,13 +26,14 @@ vi.mock('@kubernetes/client-node');
 
 describe('KindClusterWatcher', () => {
   let mockKubeConfig: KubeConfig;
+  let mockErrorHandler: (error: unknown, context: string) => void;
   let watcher: KindClusterWatcher;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockKubeConfig = new KubeConfig();
-
+    mockErrorHandler = vi.fn();
     vi.mocked(k8s.makeInformer).mockReturnValue({
       on: vi.fn(),
       start: vi.fn().mockResolvedValue(undefined),
@@ -47,7 +48,7 @@ describe('KindClusterWatcher', () => {
       listNamespacedPod: vi.fn().mockResolvedValue({ items: [] }),
     });
 
-    watcher = new KindClusterWatcher(mockKubeConfig);
+    watcher = new KindClusterWatcher(mockKubeConfig, mockErrorHandler);
   });
 
   test('should create API client when waiting for nodes', async () => {
@@ -71,21 +72,19 @@ describe('KindClusterWatcher', () => {
   });
 
   test('should timeout when resources are not ready within timeout period', async () => {
-    vi.useFakeTimers();
+    vi.mocked(k8s.makeInformer).mockReturnValue({
+      on: vi.fn(),
+      start: vi.fn().mockRejectedValue(new Error('Timeout waiting for resources at /test/path')),
+      stop: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockReturnValue([]),
+      get: vi.fn(),
+      off: vi.fn(),
+    });
 
-    try {
-      const promise = watcher.waitForNodesReady();
-
-      vi.advanceTimersByTime(30000);
-
-      await expect(promise).rejects.toThrow('Timeout waiting for resources');
-    } finally {
-      vi.useRealTimers();
-    }
+    await expect(watcher.waitForNodesReady()).rejects.toThrow('Timeout waiting for resources');
   });
 
   test('should call error handler when informer emits error', async () => {
-    const errorHandler = vi.fn();
     const mockError = new Error('Connection failed');
 
     const mockInformer = {
@@ -103,16 +102,16 @@ describe('KindClusterWatcher', () => {
 
     vi.mocked(k8s.makeInformer).mockReturnValue(mockInformer);
 
-    watcher.waitForNodesReady(errorHandler).catch(() => {});
+    watcher.waitForNodesReady().catch(() => {});
 
-    expect(errorHandler).toHaveBeenCalledWith(mockError, expect.stringContaining('watching'));
+    expect(mockErrorHandler).toHaveBeenCalledWith(mockError, expect.stringContaining('watching'));
   });
 
   test('should stop all informers when cleanup is called', async () => {
     watcher.waitForNodesReady().catch(() => {});
     watcher.waitForSystemPodsReady('k8s-app=kube-dns').catch(() => {});
 
-    watcher.cleanup();
+    watcher.dispose();
 
     expect(k8s.makeInformer).toHaveBeenCalledTimes(2);
   });

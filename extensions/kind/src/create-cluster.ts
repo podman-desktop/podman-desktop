@@ -100,9 +100,8 @@ function handleStartupError(error: unknown, context: string): void {
 /**
  * Get Kubernetes client configuration
  */
-function getKubeConfig(): KubeConfig {
+function getKubeConfig(kubeConfigPath: string): KubeConfig {
   const kc = new KubeConfig();
-  const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
   kc.loadFromFile(kubeConfigPath);
   return kc;
 }
@@ -111,24 +110,23 @@ function getKubeConfig(): KubeConfig {
  * Wait for CoreDNS to be ready before installing ingress controller
  * This prevents DNS timeout issues when Contour tries to resolve names
  */
-export async function waitForCoreDNSReady(logger?: extensionApi.Logger): Promise<void> {
-  const kubeConfig = getKubeConfig();
-  const watcher = new KindClusterWatcher(kubeConfig);
+export async function waitForCoreDNSReady(kubeConfig: KubeConfig, logger?: extensionApi.Logger): Promise<void> {
+  const watcher = new KindClusterWatcher(kubeConfig, handleStartupError);
 
   try {
-    await watcher.waitForNodesReady(handleStartupError);
+    await watcher.waitForNodesReady();
     logger?.log('Nodes ready');
-    await watcher.waitForSystemPodsReady('component=kube-scheduler', handleStartupError);
+    await watcher.waitForSystemPodsReady('component=kube-scheduler');
     logger?.log('Scheduler ready');
-    await watcher.waitForSystemPodsReady('component=kube-controller-manager', handleStartupError);
+    await watcher.waitForSystemPodsReady('component=kube-controller-manager');
     logger?.log('Controller manager ready');
-    await watcher.waitForSystemPodsReady('k8s-app=kube-dns', handleStartupError);
+    await watcher.waitForSystemPodsReady('k8s-app=kube-dns');
     logger?.log('CoreDNS ready');
     logger?.log('All cluster components ready');
   } catch (error) {
     throw new Error(`Cluster not ready: ${String(error)}`);
   } finally {
-    watcher.cleanup();
+    watcher.dispose();
   }
 }
 
@@ -340,7 +338,8 @@ export async function createCluster(
     // Wait for CoreDNS to be ready before installing ingress controller
     // This prevents DNS timeout issues when Contour tries to resolve names
     if (ingressController) {
-      await waitForCoreDNSReady(logger);
+      const kubeConfig = getKubeConfig(kubeConfigPath);
+      await waitForCoreDNSReady(kubeConfig, logger);
     }
 
     // Create ingress controller resources depending on whether a configFile was provided or not
