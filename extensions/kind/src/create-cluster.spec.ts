@@ -729,3 +729,24 @@ test('waitForCoreDNSReady should call watcher methods in correct order', async (
   // Verify cleanup was called
   expect(mockWatcher.cleanup).toHaveBeenCalled();
 });
+
+test('waitForCoreDNSReady should handle errors and cleanup properly', async () => {
+  const mockError = new Error('Nodes not ready');
+  const mockWatcher = {
+    waitForNodesReady: vi.fn().mockRejectedValue(mockError),
+    waitForSystemPodsReady: vi.fn(),
+    cleanup: vi.fn(),
+  };
+
+  vi.mocked(KindClusterWatcher).mockImplementation(() => mockWatcher as unknown as KindClusterWatcher);
+
+  const logger = {
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  await expect(waitForCoreDNSReady(logger)).rejects.toThrow('Cluster not ready: Error: Nodes not ready');
+
+  expect(mockWatcher.cleanup).toHaveBeenCalled();
+});
