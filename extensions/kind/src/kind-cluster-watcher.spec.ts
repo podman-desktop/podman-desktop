@@ -51,6 +51,11 @@ describe('KindClusterWatcher', () => {
     watcher = new KindClusterWatcher(mockKubeConfig, mockErrorHandler);
   });
 
+  test('should create watcher without error handler', () => {
+    const watcherWithoutHandler = new KindClusterWatcher(mockKubeConfig);
+    expect(watcherWithoutHandler).toBeDefined();
+  });
+
   test('should create API client when waiting for nodes', async () => {
     watcher.waitForNodesReady().catch(() => {});
     expect(mockKubeConfig.makeApiClient).toHaveBeenCalled();
@@ -107,6 +112,33 @@ describe('KindClusterWatcher', () => {
     expect(mockErrorHandler).toHaveBeenCalledWith(mockError, expect.stringContaining('watching'));
   });
 
+  test('should use console.warn when no error handler is provided', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const watcherWithoutHandler = new KindClusterWatcher(mockKubeConfig);
+
+    const mockError = new Error('Connection failed');
+    const mockInformer = {
+      on: vi.fn((event, callback) => {
+        if (event === 'error') {
+          callback(mockError);
+        }
+      }),
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockReturnValue([]),
+      get: vi.fn(),
+      off: vi.fn(),
+    };
+
+    vi.mocked(k8s.makeInformer).mockReturnValue(mockInformer);
+
+    watcherWithoutHandler.waitForNodesReady().catch(() => {});
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Error while watching'));
+
+    consoleSpy.mockRestore();
+  });
+
   test('should stop all informers when cleanup is called', async () => {
     watcher.waitForNodesReady().catch(() => {});
     watcher.waitForSystemPodsReady('k8s-app=kube-dns').catch(() => {});
@@ -114,5 +146,32 @@ describe('KindClusterWatcher', () => {
     watcher.dispose();
 
     expect(k8s.makeInformer).toHaveBeenCalledTimes(2);
+  });
+
+  test('should handle list() errors gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const mockInformer = {
+      on: vi.fn((event, callback) => {
+        if (event === 'add') {
+          callback({}); // Trigger checkReadiness
+        }
+      }),
+      start: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockImplementation(() => {
+        throw new Error('List failed');
+      }),
+      get: vi.fn(),
+      off: vi.fn(),
+    };
+
+    vi.mocked(k8s.makeInformer).mockReturnValue(mockInformer);
+
+    watcher.waitForNodesReady().catch(() => {});
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Ignoring list() error'));
+
+    consoleSpy.mockRestore();
   });
 });
