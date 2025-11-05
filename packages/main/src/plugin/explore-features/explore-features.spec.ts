@@ -239,9 +239,9 @@ test('Get features list', async () => {
 });
 
 test.each([
-  ['downloadFeaturesList', (): Promise<ExploreFeature[]> => exploreFeaturesMock.downloadFeaturesList()],
-  ['init', (): Promise<void> => exploreFeaturesMock.init()],
-])('Context value are set when calling %s', async (funcName, func) => {
+  (): Promise<ExploreFeature[]> => exploreFeaturesMock.downloadFeaturesList(),
+  (): Promise<void> => exploreFeaturesMock.init(),
+])('Context value are set when calling %s', async func => {
   vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([containerInfoMock]);
 
   vi.mocked(providerRegistryMock.getProviderInfos).mockReturnValue([
