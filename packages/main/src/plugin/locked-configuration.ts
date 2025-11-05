@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { inject, injectable } from 'inversify';
 
@@ -33,13 +33,13 @@ export class LockedConfiguration {
 
   public async getContent(): Promise<{ [key: string]: unknown }> {
     // Get the managed locked file path from directories
-    const managedLockedFile = path.join(this.directories.getManagedDefaultsDirectory(), SYSTEM_LOCKED_FILENAME);
+    const managedLockedFile = join(this.directories.getManagedDefaultsDirectory(), SYSTEM_LOCKED_FILENAME);
     let managedLockedData = {};
 
     // It's important that we at least log to console what is happening here, as it's common for logs
     // to be shared when there are issues loading "managed-by" locked, so having this information in the logs is useful.
     try {
-      const managedLockedContent = await fs.promises.readFile(managedLockedFile, 'utf-8');
+      const managedLockedContent = await readFile(managedLockedFile, 'utf-8');
       managedLockedData = JSON.parse(managedLockedContent);
       console.log(`[Managed-by]: Loaded managed locked from: ${managedLockedFile}`);
     } catch (error: unknown) {

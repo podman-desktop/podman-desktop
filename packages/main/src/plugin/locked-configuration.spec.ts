@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { promises as fsPromises } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Directories } from './directories.js';
 import { LockedConfiguration } from './locked-configuration.js';
 
-// mock the fs module
-vi.mock('node:fs');
+// mock the fs/promises module
+vi.mock('node:fs/promises');
 
 let lockedConfiguration: LockedConfiguration;
 const getManagedDefaultsDirectoryMock = vi.fn();
@@ -42,7 +42,7 @@ describe('LockedConfiguration', () => {
   test('should load managed locked when file exists', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const managedLocked = { locked: ['telemetry.enabled', 'some.other.setting'] };
-    vi.mocked(fsPromises.readFile).mockResolvedValue(JSON.stringify(managedLocked));
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(managedLocked));
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -57,7 +57,7 @@ describe('LockedConfiguration', () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
     error.code = 'ENOENT';
-    vi.mocked(fsPromises.readFile).mockRejectedValue(error);
+    vi.mocked(readFile).mockRejectedValue(error);
 
     const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
@@ -70,7 +70,7 @@ describe('LockedConfiguration', () => {
 
   test('should handle corrupted managed locked file gracefully', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
-    vi.mocked(fsPromises.readFile).mockResolvedValue('invalid json');
+    vi.mocked(readFile).mockResolvedValue('invalid json');
 
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
