@@ -156,7 +156,14 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
-    get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(false),
+    get: vi.fn().mockImplementation((key: string): unknown => {
+      if (key === 'hiddenFeatures') {
+        return [];
+      } else if (key === 'enabled') {
+        return false;
+      }
+      return undefined;
+    }),
   } as unknown as Configuration);
 
   vi.mocked(containerProviderRegistryMock.listContainers).mockResolvedValue([]);
@@ -196,7 +203,14 @@ test('Get features list', async () => {
   vi.mocked(extensionLoaderMock.listExtensions).mockResolvedValue([]);
 
   vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
-    get: vi.fn().mockReturnValueOnce(false).mockReturnValueOnce([]).mockReturnValueOnce(false),
+    get: vi.fn().mockImplementation((key: string): unknown => {
+      if (key === 'hiddenFeatures') {
+        return [];
+      } else if (key === 'enabled') {
+        return false;
+      }
+      return undefined;
+    }),
   } as unknown as Configuration);
   await exploreFeaturesMock.init();
   const features = await exploreFeaturesMock.downloadFeaturesList();
@@ -240,15 +254,16 @@ test.each([
     { ...extensionInfoMock, removable: true },
   ]);
 
-  if (funcName === 'downloadFeaturesList') {
-    vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValueOnce([]).mockReturnValueOnce(false),
-    } as unknown as Configuration);
-  } else if (funcName === 'init') {
-    vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValueOnce(false),
-    } as unknown as Configuration);
-  }
+  vi.mocked(configurationRegistryMock.getConfiguration).mockReturnValue({
+    get: vi.fn().mockImplementation((key: string): unknown => {
+      if (key === 'hiddenFeatures') {
+        return [];
+      } else if (key === 'enabled') {
+        return false;
+      }
+      return undefined;
+    }),
+  } as unknown as Configuration);
 
   await func();
 
