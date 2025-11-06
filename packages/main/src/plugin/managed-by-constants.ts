@@ -23,6 +23,9 @@
 // Filename for the managed defaults file
 export const SYSTEM_DEFAULTS_FILENAME = 'default-settings.json';
 
+// Filename for the managed locked file
+export const SYSTEM_LOCKED_FILENAME = 'locked.json';
+
 // Folders for managed defaults on different platforms
 export const SYSTEM_DEFAULTS_FOLDER_MACOS = '/Library/Application Support/com.podman.desktop';
 export const SYSTEM_DEFAULTS_FOLDER_WINDOWS = 'PodmanDesktop';

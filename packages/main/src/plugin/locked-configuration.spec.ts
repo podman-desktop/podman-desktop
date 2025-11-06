@@ -20,13 +20,13 @@ import { readFile } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
+import { LockedConfiguration } from './locked-configuration.js';
 
-// mock the fs module
+// mock the fs/promises module
 vi.mock('node:fs/promises');
 
-let defaultConfiguration: DefaultConfiguration;
+let lockedConfiguration: LockedConfiguration;
 const getManagedDefaultsDirectoryMock = vi.fn();
 const directories = {
   getManagedDefaultsDirectory: getManagedDefaultsDirectoryMock,
@@ -35,25 +35,25 @@ const directories = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  defaultConfiguration = new DefaultConfiguration(directories);
+  lockedConfiguration = new LockedConfiguration(directories);
 });
 
-describe('DefaultConfiguration', () => {
-  test('should load managed defaults when file exists', async () => {
+describe('LockedConfiguration', () => {
+  test('should load managed locked when file exists', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
-    const managedDefaults = { 'managed.setting': 'managedValue' };
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(managedDefaults));
+    const managedLocked = { locked: ['telemetry.enabled', 'some.other.setting'] };
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(managedLocked));
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    const result = await defaultConfiguration.getContent();
+    const result = await lockedConfiguration.getContent();
 
-    expect(result).toEqual(managedDefaults);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Loaded managed defaults from:'));
+    expect(result).toEqual(managedLocked);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Loaded managed locked from:'));
     consoleSpy.mockRestore();
   });
 
-  test('should handle missing managed defaults file gracefully', async () => {
+  test('should handle missing managed locked file gracefully', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     const error = new Error('ENOENT: no such file or directory') as NodeJS.ErrnoException;
     error.code = 'ENOENT';
@@ -61,36 +61,26 @@ describe('DefaultConfiguration', () => {
 
     const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
-    const result = await defaultConfiguration.getContent();
+    const result = await lockedConfiguration.getContent();
 
     expect(result).toEqual({});
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No managed defaults file found'));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No managed locked file found'));
     consoleSpy.mockRestore();
   });
 
-  test('should handle corrupted managed defaults file gracefully', async () => {
+  test('should handle corrupted managed locked file gracefully', async () => {
     getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
     vi.mocked(readFile).mockResolvedValue('invalid json');
 
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const result = await defaultConfiguration.getContent();
+    const result = await lockedConfiguration.getContent();
 
     expect(result).toEqual({});
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to parse managed defaults from'),
-      expect.anything(),
+      expect.stringContaining('[Managed-by]: Failed to parse managed locked from'),
+      expect.any(Error),
     );
     consoleErrorSpy.mockRestore();
-  });
-
-  test('should load managed defaults configuration with valid JSON', async () => {
-    getManagedDefaultsDirectoryMock.mockReturnValue('/test/path');
-    const managedDefaults = { 'managed.setting': 'managedValue', 'another.setting': 'anotherValue' };
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(managedDefaults));
-
-    const result = await defaultConfiguration.getContent();
-
-    expect(result).toEqual(managedDefaults);
   });
 });

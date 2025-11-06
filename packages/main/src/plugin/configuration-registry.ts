@@ -27,6 +27,7 @@ import { inject, injectable } from 'inversify';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
 import type {
   ConfigurationScope,
@@ -44,6 +45,7 @@ import { ConfigurationImpl } from './configuration-impl.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
 
 @injectable()
@@ -71,12 +73,15 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     private directories: Directories,
     @inject(DefaultConfiguration)
     private defaultConfiguration: DefaultConfiguration,
+    @inject(LockedConfiguration)
+    private lockedConfiguration: LockedConfiguration,
   ) {
     this.configurationProperties = {};
     this.configurationContributors = [];
     this.configurationValues = new Map();
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, {});
+    this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
   }
 
   protected getSettingsFile(): string {
@@ -132,6 +137,10 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     // Load managed defaults
     const defaults = await this.defaultConfiguration.getContent();
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, defaults);
+
+    // Load managed locked
+    const locked = await this.lockedConfiguration.getContent();
+    this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, locked);
 
     return notifications;
   }

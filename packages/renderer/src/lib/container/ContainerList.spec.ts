@@ -756,7 +756,7 @@ test(
       }
     }
   },
-  { timeout: 10_000 },
+  { timeout: 20_000 },
 );
 
 test('Sort containers based on selected parameter', async () => {

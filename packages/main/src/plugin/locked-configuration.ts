@@ -17,41 +17,41 @@
  ***********************************************************************/
 
 import { readFile } from 'node:fs/promises';
-import * as path from 'node:path';
+import { join } from 'node:path';
 
 import { inject, injectable } from 'inversify';
 
 import { Directories } from './directories.js';
-import { SYSTEM_DEFAULTS_FILENAME } from './managed-by-constants.js';
+import { SYSTEM_LOCKED_FILENAME } from './managed-by-constants.js';
 
 @injectable()
-export class DefaultConfiguration {
+export class LockedConfiguration {
   constructor(
     @inject(Directories)
     private directories: Directories,
   ) {}
 
   public async getContent(): Promise<{ [key: string]: unknown }> {
-    // Get the managed defaults file path from directories
-    const managedDefaultsFile = path.join(this.directories.getManagedDefaultsDirectory(), SYSTEM_DEFAULTS_FILENAME);
-    let managedDefaultsData = {};
+    // Get the managed locked file path from directories
+    const managedLockedFile = join(this.directories.getManagedDefaultsDirectory(), SYSTEM_LOCKED_FILENAME);
+    let managedLockedData = {};
 
     // It's important that we at least log to console what is happening here, as it's common for logs
-    // to be shared when there are issues loading "managed-by" defaults, so having this information in the logs is useful.
+    // to be shared when there are issues loading "managed-by" locked, so having this information in the logs is useful.
     try {
-      const managedDefaultsContent = await readFile(managedDefaultsFile, 'utf-8');
-      managedDefaultsData = JSON.parse(managedDefaultsContent);
-      console.log(`[Managed-by]: Loaded managed defaults from: ${managedDefaultsFile}`);
-    } catch (error) {
+      const managedLockedContent = await readFile(managedLockedFile, 'utf-8');
+      managedLockedData = JSON.parse(managedLockedContent);
+      console.log(`[Managed-by]: Loaded managed locked from: ${managedLockedFile}`);
+    } catch (error: unknown) {
       // Handle file-not-found errors gracefully - this is expected when no managed config exists
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-        console.debug(`[Managed-by]: No managed defaults file found at ${managedDefaultsFile}`);
+        console.debug(`[Managed-by]: No managed locked file found at ${managedLockedFile}`);
       } else {
         // For other errors (like JSON parse errors), log as error
-        console.error(`[Managed-by]: Failed to parse managed defaults from ${managedDefaultsFile}:`, error);
+        console.error(`[Managed-by]: Failed to parse managed locked from ${managedLockedFile}:`, error);
       }
     }
 
-    return managedDefaultsData;
+    return managedLockedData;
   }
 }
