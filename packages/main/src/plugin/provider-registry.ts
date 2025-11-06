@@ -235,6 +235,8 @@ export class ProviderRegistry {
             .then((result: ProviderAvailability) => {
               if (this.hasAvailabilityChanged(cached, result)) {
                 this.updateProviderAvailability(providerKey, result);
+              } else {
+                this.refreshProviderAvailabilityTimestamp(providerKey);
               }
             })
             .catch((error: unknown) => {
@@ -254,6 +256,16 @@ export class ProviderRegistry {
     newResult: ProviderAvailability,
   ): boolean {
     return !current || current.canCreate !== newResult.canCreate || current.reason !== newResult.reason;
+  }
+
+  private refreshProviderAvailabilityTimestamp(providerKey: string): void {
+    const current = this.kubernetesProviderConnectionCreationAvailability.get(providerKey);
+    if (current) {
+      this.kubernetesProviderConnectionCreationAvailability.set(providerKey, {
+        ...current,
+        timestamp: Date.now(),
+      });
+    }
   }
 
   private updateProviderAvailability(providerKey: string, result: ProviderAvailability): void {
