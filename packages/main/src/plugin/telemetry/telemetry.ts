@@ -33,6 +33,8 @@ import getos from 'getos';
 import { inject, injectable } from 'inversify';
 import * as osLocale from 'os-locale';
 
+import { DefaultConfiguration } from '/@/plugin/default-configuration.js';
+import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
@@ -95,6 +97,10 @@ export class Telemetry {
   constructor(
     @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
+    @inject(DefaultConfiguration)
+    private defaultConfiguration: DefaultConfiguration,
+    @inject(LockedConfiguration)
+    private lockedConfiguration: LockedConfiguration,
   ) {
     this.identity = new Identity();
     this.lastTimeEvents = new Map();
@@ -149,6 +155,8 @@ export class Telemetry {
         this.pendingItems.length = 0;
       }
     }
+
+    this.loadEnterpriseTelemetry();
   }
 
   // notify if the configuration change for enablement of the telemetry
@@ -504,6 +512,19 @@ export class Telemetry {
       }
     }
     return undefined;
+  }
+
+  protected loadEnterpriseTelemetry(): void {
+    const defaultTelemetryInfo = this.defaultConfiguration.getTelemetryInfo();
+    const lockedTelemetryInfo = this.lockedConfiguration.getTelemetryInfo();
+
+    if (defaultTelemetryInfo) {
+      this.track(defaultTelemetryInfo.event, defaultTelemetryInfo.eventProperties);
+    }
+
+    if (lockedTelemetryInfo) {
+      this.track(lockedTelemetryInfo.event, lockedTelemetryInfo.eventProperties);
+    }
   }
 }
 

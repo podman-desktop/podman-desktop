@@ -82,6 +82,10 @@ describe('LockedConfiguration', () => {
       expect.stringContaining('[Managed-by]: Failed to parse managed locked from'),
       expect.any(Error),
     );
+    expect(lockedConfiguration.getTelemetryInfo()).toStrictEqual({
+      event: 'lockedConfigurationStartupFailed',
+      eventProperties: expect.anything(),
+    });
     consoleErrorSpy.mockRestore();
   });
 });

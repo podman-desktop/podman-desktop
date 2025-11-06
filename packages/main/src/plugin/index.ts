@@ -450,22 +450,6 @@ export class PluginSystem {
     return configurationRegistry;
   }
 
-  protected loadEnterpriseTelemetry(container: Container): void {
-    const defaultConfiguration = container.get<DefaultConfiguration>(DefaultConfiguration);
-    const defaultTelemetryInfo = defaultConfiguration.getTelemetryInfo();
-    const lockedConfiguration = container.get<LockedConfiguration>(LockedConfiguration);
-    const lockedTelemetryInfo = lockedConfiguration.getTelemetryInfo();
-    const telemetry = container.get<Telemetry>(Telemetry);
-
-    if (defaultTelemetryInfo) {
-      telemetry.track(defaultTelemetryInfo.event, defaultTelemetryInfo.eventProperties);
-    }
-
-    if (lockedTelemetryInfo) {
-      telemetry.track(lockedTelemetryInfo.event, lockedTelemetryInfo.eventProperties);
-    }
-  }
-
   // initialize extension loader mechanism
   async initExtensions(configurationRegistryEmitter: Emitter<ConfigurationRegistry>): Promise<ExtensionLoader> {
     const notifications: NotificationCardOptions[] = [];
@@ -534,8 +518,6 @@ export class PluginSystem {
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
-
-    this.loadEnterpriseTelemetry(container);
 
     container.bind<CommandRegistry>(CommandRegistry).toSelf().inSingletonScope();
     const commandRegistry = container.get<CommandRegistry>(CommandRegistry);

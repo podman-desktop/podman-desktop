@@ -57,6 +57,7 @@ export class LockedConfiguration {
       } else {
         // For other errors (like JSON parse errors), log as error
         console.error(`[Managed-by]: Failed to parse managed locked from ${managedLockedFile}:`, error);
+        this.telemetryInfo = { event: 'lockedConfigurationStartupFailed', eventProperties: error };
       }
     }
 
