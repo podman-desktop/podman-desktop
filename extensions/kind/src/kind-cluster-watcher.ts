@@ -41,7 +41,6 @@ export class KindClusterWatcher implements Disposable {
     listFn: ListPromise<T>,
     isReady: (items: T[]) => boolean,
     onError?: (error: unknown, context: string) => void,
-    labelSelector?: string,
     timeoutMs = 30000,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -55,12 +54,6 @@ export class KindClusterWatcher implements Disposable {
         if (isCompleted) return;
         isCompleted = true;
         clearTimeout(timeoutHandle);
-
-        this.informers.delete(path);
-        // Stop the informer asynchronously without waiting
-        informer.stop().catch((err: unknown) => {
-          console.debug(`Error stopping informer for ${path}: ${err}`);
-        });
 
         if (success) {
           resolve();
@@ -96,14 +89,7 @@ export class KindClusterWatcher implements Disposable {
       });
 
       // Store informer reference for cleanup
-      const uniqueKey = labelSelector ? `${path}?${labelSelector}` : path;
-      this.informers.set(uniqueKey, {
-        stop: () => {
-          informer.stop().catch((err: unknown) => {
-            console.debug(`Error stopping informer for ${path}: ${err}`);
-          });
-        },
-      });
+      this.informers.set(path, informer);
 
       // Start the informer
       informer.start().catch((error: unknown) => {
@@ -156,7 +142,7 @@ export class KindClusterWatcher implements Disposable {
       });
     const path = `/api/v1/namespaces/kube-system/pods?labelSelector=${encodeURIComponent(labelSelector)}`;
 
-    await this.waitForResources(path, listFn, this.arePodsReady.bind(this), this.errorHandler, labelSelector);
+    await this.waitForResources(path, listFn, this.arePodsReady.bind(this), this.errorHandler);
   }
 
   /**
