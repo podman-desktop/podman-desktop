@@ -24,7 +24,7 @@ import type { Disposable } from '@podman-desktop/api';
  * Utility class to manage informer lifecycle for Kind cluster readiness checks
  */
 export class KindClusterWatcher implements Disposable {
-  private informers: Map<string, { stop?: () => void }> = new Map();
+  private informers: Array<{ stop?: () => void }> = [];
   private kubeConfig: KubeConfig;
   private errorHandler?: (error: unknown, context: string) => void;
 
@@ -89,7 +89,7 @@ export class KindClusterWatcher implements Disposable {
       });
 
       // Store informer reference for cleanup
-      this.informers.set(path, informer);
+      this.informers.push(informer);
 
       // Start the informer
       informer.start().catch((error: unknown) => {
@@ -149,17 +149,15 @@ export class KindClusterWatcher implements Disposable {
    * Cleanup all active informers
    */
   dispose(): void {
-    // Create a copy of the current informers and clear the original map
-    const informersToStop = new Map(this.informers);
-    this.informers.clear();
+    // Create a copy of the current informers and clear the original array
+    const informersToStop = [...this.informers];
+    this.informers.length = 0; // Clear array
 
-    for (const [id, informerEntry] of informersToStop) {
+    for (const informerEntry of informersToStop) {
       try {
-        if (informerEntry.stop) {
-          informerEntry.stop();
-        }
+        informerEntry.stop?.();
       } catch (error) {
-        console.warn(`Error stopping informer ${id}:`, error);
+        console.warn('Error stopping informer:', error);
       }
     }
   }
