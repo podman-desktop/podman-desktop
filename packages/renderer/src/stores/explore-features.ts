@@ -43,7 +43,7 @@ const listExploreFeatures = (): Promise<ExploreFeature[]> => {
   return window.listFeatures();
 };
 
-const iconsEventStore = new EventStore<ExploreFeature[]>(
+const exploreFeaturesEventStore = new EventStore<ExploreFeature[]>(
   'exploreFeatures',
   exploreFeaturesInfo,
   checkForUpdate,
@@ -51,4 +51,4 @@ const iconsEventStore = new EventStore<ExploreFeature[]>(
   windowListeners,
   listExploreFeatures,
 );
-iconsEventStore.setup();
+exploreFeaturesEventStore.setup();
