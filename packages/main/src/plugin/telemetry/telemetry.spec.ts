@@ -39,16 +39,14 @@ const configurationRegistryMock = {
   registerConfigurations: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
-const getDefaultTelemetryInfo = vi.fn();
 const defaultConfigurationMock = {
   getContent: vi.fn(),
-  getTelemetryInfo: getDefaultTelemetryInfo,
+  getTelemetryInfo: vi.fn(),
 } as unknown as DefaultConfiguration;
 
-const getLockedTelemetryInfo = vi.fn();
 const lockedConfigurationMock = {
   getContent: vi.fn(),
-  getTelemetryInfo: getLockedTelemetryInfo,
+  getTelemetryInfo: vi.fn(),
 } as unknown as LockedConfiguration;
 
 vi.mock('../../../../../telemetry.json', () => ({
@@ -192,8 +190,8 @@ test('Check propagate enablement event if configuration is updated', async () =>
 
 test('Enterprise configuration telemetry info is loaded upon init', async () => {
   await telemetry.init();
-  expect(getDefaultTelemetryInfo).toHaveBeenCalled();
-  expect(getLockedTelemetryInfo).toHaveBeenCalled();
+  expect(vi.mocked(defaultConfigurationMock.getTelemetryInfo)).toHaveBeenCalled();
+  expect(vi.mocked(lockedConfigurationMock.getTelemetryInfo)).toHaveBeenCalled();
 });
 
 describe('TelemetryLoggerImpl', () => {
