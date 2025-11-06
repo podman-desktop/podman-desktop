@@ -26,6 +26,7 @@ import { inject, injectable } from 'inversify';
 
 import {
   CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
@@ -203,7 +204,13 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
   // Simple helper to just get all the locked keys as a Set for easy lookup
   private getAllLockedKeys(): Set<string> {
     const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
-    const lockedKeys = (lockedConfig?.['locked'] as string[]) ?? [];
+
+    // Check the casting + existence and return early (empty) if not found.
+    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
+      return new Set();
+    }
+
+    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
     return new Set(lockedKeys);
   }
 
