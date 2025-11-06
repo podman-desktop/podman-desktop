@@ -19,49 +19,48 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
 
-import { LockedKeys } from './lock-configuration.js';
+import { LockConfiguration } from './lock-configuration.js';
 
-describe('Simple tests covering .get for LockedKeys', () => {
+describe('Simple tests convering .get for LockConfiguration', () => {
   let configurationValues: Map<string, { [key: string]: unknown }>;
-  let lockedKeys: LockedKeys;
+  let lockConfiguration: LockConfiguration;
 
   beforeEach(() => {
     configurationValues = new Map();
-    lockedKeys = new LockedKeys(configurationValues);
+    lockConfiguration = new LockConfiguration(configurationValues);
   });
 
   test('should return undefined when no locked configuration exists', () => {
-    const result = lockedKeys.get('some.key');
+    const result = lockConfiguration.get('some.key');
     expect(result).toBeUndefined();
   });
 
   test('should return undefined when locked configuration has no "locked" property', () => {
     configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
-    const result = lockedKeys.get('some.key');
+    const result = lockConfiguration.get('some.key');
     expect(result).toBeUndefined();
   });
 
   test('should return undefined when key is not in locked list', () => {
     configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {
-      [CONFIGURATION_LOCKED_KEY]: ['other.key', 'another.key'],
+      locked: ['other.key', 'another.key'],
     });
-    const result = lockedKeys.get('some.key');
+    const result = lockConfiguration.get('some.key');
     expect(result).toBeUndefined();
   });
 
   test('should return managed default value when key is locked', () => {
     configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {
-      [CONFIGURATION_LOCKED_KEY]: ['some.key'],
+      locked: ['some.key'],
     });
     configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, {
       'some.key': 'managed-value',
     });
-    const result = lockedKeys.get('some.key');
+    const result = lockConfiguration.get('some.key');
     expect(result).toBe('managed-value');
   });
 });
