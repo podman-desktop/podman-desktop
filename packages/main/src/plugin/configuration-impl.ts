@@ -26,7 +26,7 @@ import {
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
 import type { ApiSenderType } from './api.js';
-import { LockConfiguration } from './lock-configuration.js';
+import { LockedKeys } from './lock-configuration.js';
 
 /**
  * Local view of the configuration values for a given scope
@@ -35,7 +35,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
   [key: string]: unknown;
 
   private scope: containerDesktopAPI.ConfigurationScope;
-  private lockConfiguration: LockConfiguration;
+  private lockedKeys: LockedKeys;
 
   constructor(
     private apiSender: ApiSenderType,
@@ -52,7 +52,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     } else {
       this.scope = paramScope;
     }
-    this.lockConfiguration = new LockConfiguration(configurationValues);
+    this.lockedKeys = new LockedKeys(configurationValues);
   }
 
   get<T>(section: string, defaultValue?: unknown): T | undefined {
@@ -63,7 +63,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     // This happens in the configuration default scope only (dont need to worry about onboarding scope, etc.)
     if (this.scope === CONFIGURATION_DEFAULT_SCOPE) {
       // Pass in the key we are wanting to get and check locked config for the key
-      const managedValue = this.lockConfiguration.get<T>(localKey);
+      const managedValue = this.lockedKeys.get<T>(localKey);
 
       // Return the managedValue vs the user value if we got one
       if (managedValue !== undefined) {

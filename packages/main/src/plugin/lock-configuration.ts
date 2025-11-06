@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import {
+  CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
@@ -24,7 +25,7 @@ import {
 /**
  * Handles any "locked" configuration values managed by the managed-by configuration scopes.
  */
-export class LockConfiguration {
+export class LockedKeys {
   constructor(private configurationValues: Map<string, { [key: string]: unknown }>) {}
 
   /**
@@ -38,11 +39,11 @@ export class LockConfiguration {
     const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
 
     // Bail early if there's no locked config or it's malformed
-    if (!lockedConfig?.['locked'] || !Array.isArray(lockedConfig['locked'])) {
+    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
       return undefined;
     }
 
-    const lockedKeys = lockedConfig['locked'] as string[];
+    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
 
     // Bail early if this key isn't in the locked list
     if (!lockedKeys.includes(localKey)) {
