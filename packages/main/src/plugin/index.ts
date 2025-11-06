@@ -457,9 +457,13 @@ export class PluginSystem {
     const lockedTelemetryInfo = lockedConfiguration.getTelemetryInfo();
     const telemetry = container.get<Telemetry>(Telemetry);
 
-    if (defaultTelemetryInfo) telemetry.track(defaultTelemetryInfo.event, defaultTelemetryInfo.eventProperties);
+    if (defaultTelemetryInfo) {
+      telemetry.track(defaultTelemetryInfo.event, defaultTelemetryInfo.eventProperties);
+    }
 
-    if (lockedTelemetryInfo) telemetry.track(lockedTelemetryInfo.event, defaultTelemetryInfo?.eventProperties);
+    if (lockedTelemetryInfo) {
+      telemetry.track(lockedTelemetryInfo.event, lockedTelemetryInfo.eventProperties);
+    }
   }
 
   // initialize extension loader mechanism
