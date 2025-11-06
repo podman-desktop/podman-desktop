@@ -25,7 +25,7 @@ import {
 
 import { LockConfiguration } from './lock-configuration.js';
 
-describe('Simple tests convering .get for LockConfiguration', () => {
+describe('Simple tests covering .get for LockConfiguration', () => {
   let configurationValues: Map<string, { [key: string]: unknown }>;
   let lockConfiguration: LockConfiguration;
 
