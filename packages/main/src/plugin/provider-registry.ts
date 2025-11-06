@@ -310,6 +310,7 @@ export class ProviderRegistry {
 
   disposeProvider(providerImpl: ProviderImpl): void {
     this.providers.delete(providerImpl.internalId);
+    this.kubernetesProviderConnectionCreationAvailability.delete(providerImpl.internalId);
     this.listeners.forEach(listener => listener('provider:delete', this.toProviderInfo(providerImpl)));
     this.apiSender.send('provider-delete', providerImpl.id);
   }
