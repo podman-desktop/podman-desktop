@@ -190,8 +190,8 @@ test('Check propagate enablement event if configuration is updated', async () =>
 
 test('Enterprise configuration telemetry info is loaded upon init', async () => {
   await telemetry.init();
-  expect(vi.mocked(defaultConfigurationMock.getTelemetryInfo)).toHaveBeenCalled();
-  expect(vi.mocked(lockedConfigurationMock.getTelemetryInfo)).toHaveBeenCalled();
+  expect(defaultConfigurationMock.getTelemetryInfo).toHaveBeenCalled();
+  expect(lockedConfigurationMock.getTelemetryInfo).toHaveBeenCalled();
 });
 
 describe('TelemetryLoggerImpl', () => {
