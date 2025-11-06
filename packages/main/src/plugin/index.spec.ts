@@ -27,7 +27,6 @@ import { Container as InversifyContainer } from 'inversify';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import { Updater } from '/@/plugin/updater.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 import type { ProviderInfo } from '/@api/provider-info.js';
@@ -337,9 +336,6 @@ test('configurationRegistry propagated', async () => {
   const directoriesMock = {
     getConfigurationDirectory: vi.fn().mockReturnValue(tmpdir()),
   } as unknown as Directories;
-  const telemetryMock: Telemetry = {
-    track: vi.fn().mockReturnValue(undefined),
-  } as unknown as Telemetry;
   const defaultConfigurationMock = {
     getContent: vi.fn().mockResolvedValue({}),
   } as unknown as DefaultConfiguration;
@@ -350,7 +346,6 @@ test('configurationRegistry propagated', async () => {
 
   inversifyContainer.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSenderMock);
   inversifyContainer.bind<Directories>(Directories).toConstantValue(directoriesMock);
-  inversifyContainer.bind<Telemetry>(Telemetry).toConstantValue(telemetryMock);
   inversifyContainer.bind<DefaultConfiguration>(DefaultConfiguration).toConstantValue(defaultConfigurationMock);
   inversifyContainer.bind<LockedConfiguration>(LockedConfiguration).toConstantValue(lockedConfigurationMock);
 

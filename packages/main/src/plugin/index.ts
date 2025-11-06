@@ -450,6 +450,18 @@ export class PluginSystem {
     return configurationRegistry;
   }
 
+  protected loadEnterpriseTelemetry(container: Container): void {
+    const defaultConfiguration = container.get<DefaultConfiguration>(DefaultConfiguration);
+    const defaultTelemetryInfo = defaultConfiguration.getTelemetryInfo();
+    const lockedConfiguration = container.get<LockedConfiguration>(LockedConfiguration);
+    const lockedTelemetryInfo = lockedConfiguration.getTelemetryInfo();
+    const telemetry = container.get<Telemetry>(Telemetry);
+
+    if (defaultTelemetryInfo) telemetry.track(defaultTelemetryInfo.event, defaultTelemetryInfo.eventProperties);
+
+    if (lockedTelemetryInfo) telemetry.track(lockedTelemetryInfo.event, defaultTelemetryInfo?.eventProperties);
+  }
+
   // initialize extension loader mechanism
   async initExtensions(configurationRegistryEmitter: Emitter<ConfigurationRegistry>): Promise<ExtensionLoader> {
     const notifications: NotificationCardOptions[] = [];
@@ -485,20 +497,15 @@ export class PluginSystem {
     const safeStorageRegistry = container.get<SafeStorageRegistry>(SafeStorageRegistry);
     notifications.push(...(await safeStorageRegistry.init()));
 
+    container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
+    container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
+    container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
       container,
       notifications,
       configurationRegistryEmitter,
     );
-
-    container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
-    const telemetry = container.get<Telemetry>(Telemetry);
-    await telemetry.init();
-
-    container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
-    container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
-    container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
 
     container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
     const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
@@ -519,6 +526,12 @@ export class PluginSystem {
 
     const exec = new Exec(proxy);
     container.bind<Exec>(Exec).toConstantValue(exec);
+
+    container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
+    const telemetry = container.get<Telemetry>(Telemetry);
+    await telemetry.init();
+
+    this.loadEnterpriseTelemetry(container);
 
     container.bind<CommandRegistry>(CommandRegistry).toSelf().inSingletonScope();
     const commandRegistry = container.get<CommandRegistry>(CommandRegistry);

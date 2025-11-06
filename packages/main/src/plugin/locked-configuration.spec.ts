@@ -20,8 +20,6 @@ import { readFile } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-
 import type { Directories } from './directories.js';
 import { LockedConfiguration } from './locked-configuration.js';
 
@@ -34,14 +32,10 @@ const directories = {
   getManagedDefaultsDirectory: getManagedDefaultsDirectoryMock,
 } as unknown as Directories;
 
-const telemetry: Telemetry = {
-  track: vi.fn(),
-} as unknown as Telemetry;
-
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  lockedConfiguration = new LockedConfiguration(directories, telemetry);
+  lockedConfiguration = new LockedConfiguration(directories);
 });
 
 describe('LockedConfiguration', () => {
@@ -56,7 +50,7 @@ describe('LockedConfiguration', () => {
 
     expect(result).toEqual(managedLocked);
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Loaded managed locked from:'));
-    expect(telemetry.track).toHaveBeenCalledWith('managedConfigurationEnabledAndLocked');
+    expect(lockedConfiguration.getTelemetryInfo()).toStrictEqual({ event: 'managedConfigurationEnabledAndLocked' });
     consoleSpy.mockRestore();
   });
 

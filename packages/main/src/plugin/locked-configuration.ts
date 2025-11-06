@@ -21,18 +21,21 @@ import { join } from 'node:path';
 
 import { inject, injectable } from 'inversify';
 
-import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-
 import { Directories } from './directories.js';
 import { SYSTEM_LOCKED_FILENAME } from './managed-by-constants.js';
 
+interface TelemetryInfo {
+  event: string;
+  eventProperties?: unknown;
+}
+
 @injectable()
 export class LockedConfiguration {
+  private telemetryInfo: TelemetryInfo | undefined;
+
   constructor(
     @inject(Directories)
     private directories: Directories,
-    @inject(Telemetry)
-    private readonly telemetry: Telemetry,
   ) {}
 
   public async getContent(): Promise<{ [key: string]: unknown }> {
@@ -46,7 +49,7 @@ export class LockedConfiguration {
       const managedLockedContent = await readFile(managedLockedFile, 'utf-8');
       managedLockedData = JSON.parse(managedLockedContent);
       console.log(`[Managed-by]: Loaded managed locked from: ${managedLockedFile}`);
-      this.telemetry.track('managedConfigurationEnabledAndLocked');
+      this.telemetryInfo = { event: 'managedConfigurationEnabledAndLocked' };
     } catch (error: unknown) {
       // Handle file-not-found errors gracefully - this is expected when no managed config exists
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
@@ -58,5 +61,9 @@ export class LockedConfiguration {
     }
 
     return managedLockedData;
+  }
+
+  public getTelemetryInfo(): TelemetryInfo | undefined {
+    return this.telemetryInfo;
   }
 }
