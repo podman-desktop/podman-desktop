@@ -24,6 +24,16 @@ async function openTutorial(): Promise<void> {
 async function closeCard(): Promise<void> {
   closeFeature(feature.id);
   await window.closeFeatureCard(feature.id);
+  await window.telemetryTrack('dashboard.exploreFeatureDismissed', {
+    feature: feature.title,
+  });
+}
+
+async function handleAction(): Promise<void> {
+  await window.telemetryTrack('dashboard.exploreFeatureClicked', {
+    feature: feature.title,
+  });
+  router.goto(feature.buttonLink);
 }
 </script>
 
@@ -42,7 +52,7 @@ async function closeCard(): Promise<void> {
       <Link class="flex flex-row w-fit" onclick={openLearnMore}>Learn more <Icon class="ml-1 self-center" icon={faUpRightFromSquare}/></Link>
     {/if}
     <div class="flex flex-row justify-start items-end flex-1 pt-4 gap-2">
-      <Button type="primary" icon={feature.buttonIcon} onclick={(): void => router.goto(feature.buttonLink)} title={feature.buttonTitle}
+      <Button type="primary" icon={feature.buttonIcon} onclick={handleAction} title={feature.buttonTitle}
         >{feature.buttonTitle}</Button>
       {#if feature.tutorialLink}
         <Button type="secondary" icon={faCirclePlay} onclick={openTutorial} title="Watch Tutorial">Watch Tutorial</Button>

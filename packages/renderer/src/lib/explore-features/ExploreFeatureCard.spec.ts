@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ExploreFeature } from '/@api/explore-feature';
 
@@ -47,6 +47,10 @@ const featureMock: ExploreFeature = {
 };
 
 const closeFeature = vi.fn();
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 test('expect feature card to have all Feature properties', async () => {
   const { rerender } = render(ExploreFeatureCard, { feature: featureMock, closeFeature: closeFeature });
@@ -83,6 +87,9 @@ test('Click on close card', async () => {
 
   expect(closeFeature).toHaveBeenCalledWith('feature1');
   expect(window.closeFeatureCard).toHaveBeenCalledWith('feature1');
+  expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith('dashboard.exploreFeatureDismissed', {
+    feature: 'Feature 1',
+  });
 });
 
 test('Click on learn more link', async () => {
@@ -104,6 +111,9 @@ test('Click on primary button', async () => {
 
   await fireEvent.click(primaryButton);
 
+  expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith('dashboard.exploreFeatureClicked', {
+    feature: 'Feature 1',
+  });
   expect(router.goto).toHaveBeenCalledWith(featureMock.buttonLink);
 });
 
