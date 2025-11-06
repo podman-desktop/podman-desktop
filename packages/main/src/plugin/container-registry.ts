@@ -842,10 +842,11 @@ export class ContainerProviderRegistry {
         throw new Error('no running provider for the matching engine');
       }
       const network = provider.api.getNetwork(networkId);
-      const networkInspect = await network.inspect();
+      const networkInspect: Dockerode.NetworkInspectInfo = await network.inspect();
       return {
         engineName: provider.name,
         engineId: provider.id,
+        engineType: provider.connection.type,
         ...networkInspect,
       };
     } catch (error: unknown) {

@@ -20,6 +20,7 @@ onMount(async () => {
   // remove engine* properties from the inspect result as it's more internal
   delete inspectResult.engineId;
   delete inspectResult.engineName;
+  delete inspectResult.engineType;
 
   inspectDetails = JSON.stringify(inspectResult, undefined, 2);
 });
