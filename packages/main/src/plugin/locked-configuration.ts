@@ -21,6 +21,8 @@ import { join } from 'node:path';
 
 import { inject, injectable } from 'inversify';
 
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+
 import { Directories } from './directories.js';
 import { SYSTEM_LOCKED_FILENAME } from './managed-by-constants.js';
 
@@ -29,6 +31,8 @@ export class LockedConfiguration {
   constructor(
     @inject(Directories)
     private directories: Directories,
+    @inject(Telemetry)
+    private readonly telemetry: Telemetry,
   ) {}
 
   public async getContent(): Promise<{ [key: string]: unknown }> {
@@ -42,6 +46,7 @@ export class LockedConfiguration {
       const managedLockedContent = await readFile(managedLockedFile, 'utf-8');
       managedLockedData = JSON.parse(managedLockedContent);
       console.log(`[Managed-by]: Loaded managed locked from: ${managedLockedFile}`);
+      this.telemetry.track('managedConfigurationEnabledAndLocked');
     } catch (error: unknown) {
       // Handle file-not-found errors gracefully - this is expected when no managed config exists
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {

@@ -20,6 +20,8 @@ import { readFile } from 'node:fs/promises';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+
 import { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 
@@ -32,10 +34,14 @@ const directories = {
   getManagedDefaultsDirectory: getManagedDefaultsDirectoryMock,
 } as unknown as Directories;
 
+const telemetry: Telemetry = {
+  track: vi.fn(),
+} as unknown as Telemetry;
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
-  defaultConfiguration = new DefaultConfiguration(directories);
+  defaultConfiguration = new DefaultConfiguration(directories, telemetry);
 });
 
 describe('DefaultConfiguration', () => {
@@ -50,6 +56,7 @@ describe('DefaultConfiguration', () => {
 
     expect(result).toEqual(managedDefaults);
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Loaded managed defaults from:'));
+    expect(telemetry.track).toHaveBeenCalledWith('managedConfigurationEnabled');
     consoleSpy.mockRestore();
   });
 
@@ -81,6 +88,7 @@ describe('DefaultConfiguration', () => {
       expect.stringContaining('Failed to parse managed defaults from'),
       expect.anything(),
     );
+    expect(telemetry.track).toHaveBeenCalledWith('managedConfigurationStartupFailed', expect.anything());
     consoleErrorSpy.mockRestore();
   });
 

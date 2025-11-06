@@ -21,6 +21,8 @@ import * as path from 'node:path';
 
 import { inject, injectable } from 'inversify';
 
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+
 import { Directories } from './directories.js';
 import { SYSTEM_DEFAULTS_FILENAME } from './managed-by-constants.js';
 
@@ -29,6 +31,8 @@ export class DefaultConfiguration {
   constructor(
     @inject(Directories)
     private directories: Directories,
+    @inject(Telemetry)
+    private readonly telemetry: Telemetry,
   ) {}
 
   public async getContent(): Promise<{ [key: string]: unknown }> {
@@ -42,6 +46,7 @@ export class DefaultConfiguration {
       const managedDefaultsContent = await readFile(managedDefaultsFile, 'utf-8');
       managedDefaultsData = JSON.parse(managedDefaultsContent);
       console.log(`[Managed-by]: Loaded managed defaults from: ${managedDefaultsFile}`);
+      this.telemetry.track('managedConfigurationEnabled');
     } catch (error) {
       // Handle file-not-found errors gracefully - this is expected when no managed config exists
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
@@ -49,6 +54,7 @@ export class DefaultConfiguration {
       } else {
         // For other errors (like JSON parse errors), log as error
         console.error(`[Managed-by]: Failed to parse managed defaults from ${managedDefaultsFile}:`, error);
+        this.telemetry.track('managedConfigurationStartupFailed', error);
       }
     }
 

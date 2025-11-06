@@ -485,15 +485,20 @@ export class PluginSystem {
     const safeStorageRegistry = container.get<SafeStorageRegistry>(SafeStorageRegistry);
     notifications.push(...(await safeStorageRegistry.init()));
 
-    container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
-    container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
-    container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
     container.bind<IConfigurationRegistry>(IConfigurationRegistry).toService(ConfigurationRegistry);
     const configurationRegistry = await this.initConfigurationRegistry(
       container,
       notifications,
       configurationRegistryEmitter,
     );
+
+    container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
+    const telemetry = container.get<Telemetry>(Telemetry);
+    await telemetry.init();
+
+    container.bind<DefaultConfiguration>(DefaultConfiguration).toSelf().inSingletonScope();
+    container.bind<ConfigurationRegistry>(ConfigurationRegistry).toSelf().inSingletonScope();
+    container.bind<LockedConfiguration>(LockedConfiguration).toSelf().inSingletonScope();
 
     container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
     const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
@@ -514,10 +519,6 @@ export class PluginSystem {
 
     const exec = new Exec(proxy);
     container.bind<Exec>(Exec).toConstantValue(exec);
-
-    container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
-    const telemetry = container.get<Telemetry>(Telemetry);
-    await telemetry.init();
 
     container.bind<CommandRegistry>(CommandRegistry).toSelf().inSingletonScope();
     const commandRegistry = container.get<CommandRegistry>(CommandRegistry);
