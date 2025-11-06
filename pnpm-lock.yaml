@@ -28,9 +28,6 @@ importers:
       '@segment/analytics-node':
         specifier: ^2.3.0
         version: 2.3.0(encoding@0.1.13)
-      '@types/culori':
-        specifier: ^4.0.1
-        version: 4.0.1
       '@types/semver':
         specifier: ^7.7.1
         version: 7.7.1
@@ -52,9 +49,6 @@ importers:
       compare-versions:
         specifier: ^6.1.1
         version: 6.1.1
-      culori:
-        specifier: ^4.0.2
-        version: 4.0.2
       date.js:
         specifier: ^0.3.3
         version: 0.3.3
@@ -331,7 +325,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -359,7 +353,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -396,7 +390,7 @@ importers:
         specifier: ^4.20.6
         version: 4.20.6
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -421,7 +415,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -458,7 +452,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -480,7 +474,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -502,7 +496,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
-        specifier: ^7.1.9
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -572,7 +566,7 @@ importers:
         specifier: ^4.20.6
         version: 4.20.6
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -591,7 +585,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -735,7 +729,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -826,7 +820,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -892,8 +886,8 @@ importers:
         specifier: 10.1.0
         version: 10.1.0
       eslint-plugin-storybook:
-        specifier: 10.0.4
-        version: 10.0.4(eslint@9.39.1(jiti@2.6.1))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@24.10.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3)
+        specifier: 10.0.5
+        version: 10.0.5(eslint@9.39.1(jiti@2.6.1))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@24.10.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3)
       eslint-plugin-svelte:
         specifier: ^3.13.0
         version: 3.13.0(eslint@9.39.1(jiti@2.6.1))(svelte@5.43.3)
@@ -925,7 +919,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.1.12
+        specifier: ^7.2.0
         version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: ^3.2.4
@@ -952,19 +946,19 @@ importers:
   website:
     dependencies:
       '@docusaurus/core':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(acorn@8.15.0)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
       '@docusaurus/plugin-client-redirects':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(acorn@8.15.0)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
       '@docusaurus/preset-classic':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(@algolia/client-search@5.42.0)(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(@types/react@18.3.12)(acorn@8.15.0)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(search-insights@2.17.3)(typescript@5.9.3)
       '@docusaurus/theme-common':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(@docusaurus/plugin-content-docs@3.9.2(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(acorn@8.15.0)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(acorn@8.15.0)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/theme-mermaid':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(@docusaurus/plugin-content-docs@3.9.2(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(acorn@8.15.0)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(typescript@5.9.3))(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(acorn@8.15.0)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
       '@fortawesome/fontawesome-svg-core':
         specifier: ^7.1.0
@@ -1004,13 +998,13 @@ importers:
         version: 3.3.3(@types/react@18.3.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@docusaurus/module-type-aliases':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(acorn@8.15.0)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/tsconfig':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2
       '@docusaurus/types':
-        specifier: ^3.8.1
+        specifier: ^3.9.2
         version: 3.9.2(acorn@8.15.0)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@octokit/rest':
         specifier: ^22.0.1
@@ -4102,9 +4096,6 @@ packages:
   '@types/conventional-commits-parser@5.0.1':
     resolution: {integrity: sha512-7uz5EHdzz2TqoMfV7ee61Egf5y6NkcO4FB/1iCCQnbeiI1F3xzv3vK5dBCXUCLQgGYS+mUeigK1iKQzvED+QnQ==}
 
-  '@types/culori@4.0.1':
-    resolution: {integrity: sha512-43M51r/22CjhbOXyGT361GZ9vncSVQ39u62x5eJdBQFviI8zWp2X5jzqg7k4M6PVgDQAClpy2bUe2dtwEgEDVQ==}
-
   '@types/d3-array@3.2.1':
     resolution: {integrity: sha512-Y2Jn2idRrLzUfAKV2LyRImR+y4oa2AntrgID95SHJxuMUrkNXmanDSed71sRNZysveJVt1hLLemQZIady0FpEg==}
 
@@ -6004,10 +5995,6 @@ packages:
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
-  culori@4.0.2:
-    resolution: {integrity: sha512-1+BhOB8ahCn4O0cep0Sh2l9KCOfOdY+BXJnKMHFFzDEouSr/el18QwXEMRlOj9UY5nCeA8UN3a/82rUWRBeyBw==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   custom-media-element@1.4.5:
     resolution: {integrity: sha512-cjrsQufETwxjvwZbYbKBCJNvmQ2++G9AvT45zDi7NXL9k2PdVcs2h0jQz96J6G4TMKRCcEsoJ+QTgQD00Igtjw==}
 
@@ -6808,11 +6795,11 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
-  eslint-plugin-storybook@10.0.4:
-    resolution: {integrity: sha512-etAC9C/x6SQZksQQkCZpSms7O9CLTzwPtion2e8hQSnzT3BIyhSP4JHGJyNwEQ2Mt71XROWuOwqnH776cZiXqw==}
+  eslint-plugin-storybook@10.0.5:
+    resolution: {integrity: sha512-XjQH47eX4nFvYBtaClrjmY+f7/beWYsW3TSXLTztlIhVNk8AH14ePmXB2xCUbFXVEZaD6L+BjZtFV5rN/b+nyA==}
     peerDependencies:
       eslint: '>=8'
-      storybook: ^10.0.4
+      storybook: ^10.0.5
 
   eslint-plugin-svelte@3.13.0:
     resolution: {integrity: sha512-2ohCCQJJTNbIpQCSDSTWj+FN0OVfPmSO03lmSNT7ytqMaWF6kpT86LdzDqtm4sh7TVPl/OEWJ/d7R87bXP2Vjg==}
@@ -16005,8 +15992,6 @@ snapshots:
     dependencies:
       '@types/node': 22.19.0
 
-  '@types/culori@4.0.1': {}
-
   '@types/d3-array@3.2.1': {}
 
   '@types/d3-axis@3.0.6':
@@ -18318,8 +18303,6 @@ snapshots:
 
   csstype@3.1.3: {}
 
-  culori@4.0.2: {}
-
   custom-media-element@1.4.5: {}
 
   cytoscape-cose-bilkent@4.1.0(cytoscape@3.30.3):
@@ -19326,7 +19309,7 @@ snapshots:
       semver: 7.7.2
       typescript: 5.9.3
 
-  eslint-plugin-storybook@10.0.4(eslint@9.39.1(jiti@2.6.1))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@24.10.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3):
+  eslint-plugin-storybook@10.0.5(eslint@9.39.1(jiti@2.6.1))(storybook@9.1.10(@testing-library/dom@10.4.1)(msw@2.11.6(@types/node@24.10.0)(typescript@5.9.3))(prettier@3.6.2)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.20.6)(yaml@2.8.1)))(typescript@5.9.3):
     dependencies:
       '@typescript-eslint/utils': 8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.39.1(jiti@2.6.1)
