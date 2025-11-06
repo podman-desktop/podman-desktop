@@ -4,12 +4,21 @@ import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
+import { exploreFeaturesInfo } from '/@/stores/explore-features';
 import type { ExploreFeature } from '/@api/explore-feature';
 
 import { ContextKeyExpr } from '../context/contextKey';
 import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 
-let features: ExploreFeature[] = $state([]);
+let features: ExploreFeature[] = $derived(
+  $exploreFeaturesInfo.filter(feature => {
+    if (feature.when) {
+      const whenDeserialized = ContextKeyExpr.deserialize(feature.when);
+      return whenDeserialized?.evaluate($context) && (feature.show ?? true);
+    }
+    return feature.show ?? true;
+  }),
+);
 let expanded: boolean = $state(true);
 let initialized: boolean = $state(false);
 
@@ -25,13 +34,8 @@ const listener: EventListener = (obj: object) => {
 const CONFIGURATION_KEY = 'exploreFeatures.expanded';
 
 onMount(async () => {
-  features = (await window.listFeatures()).filter(feature => {
-    if (feature.when) {
-      const whenDeserialized = ContextKeyExpr.deserialize(feature.when);
-      return whenDeserialized?.evaluate($context) && (feature.show ?? true);
-    }
-    return feature.show ?? true;
-  });
+  // event for the exploreFeaturesInfo store to check for an update
+  window.dispatchEvent(new CustomEvent('update-explore-features', {}));
 
   onDidChangeConfiguration.addEventListener(CONFIGURATION_KEY, listener);
   expanded = (await window.getConfigurationValue<boolean>(CONFIGURATION_KEY)) ?? true;

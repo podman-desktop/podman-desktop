@@ -3239,9 +3239,10 @@ export class PluginSystem {
       apiSender.send('extensions-started');
       this.markAsExtensionsStarted();
     }
-    await exploreFeatures.init();
     extensionsUpdater.init().catch((err: unknown) => console.error('Unable to perform extension updates', err));
     autoStartEngine.start().catch((err: unknown) => console.error('Unable to perform autostart', err));
+    await exploreFeatures.init();
+    apiSender.send('explore-features-loaded');
     return this.extensionLoader;
   }
 

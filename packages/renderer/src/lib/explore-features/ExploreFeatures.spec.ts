@@ -22,6 +22,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { exploreFeaturesInfo } from '/@/stores/explore-features';
 import type { ExploreFeature } from '/@api/explore-feature';
 
 import ExploreFeatures from './ExploreFeatures.svelte';
@@ -67,11 +68,12 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  vi.mocked(window.listFeatures).mockResolvedValue(exploreFeatures);
+  exploreFeaturesInfo.set(exploreFeatures);
 });
 
 afterEach(() => {
   vi.resetAllMocks();
+  exploreFeaturesInfo.set([]);
 });
 
 test('Explore features carousel shows features', async () => {
@@ -84,7 +86,7 @@ test('Explore features carousel shows features', async () => {
 });
 
 test('Carousel does not show when there are 0 features to show', async () => {
-  vi.mocked(window.listFeatures).mockResolvedValue([{ ...exploreFeatures[0], show: false }]);
+  exploreFeaturesInfo.set([{ ...exploreFeatures[0], show: false }]);
 
   render(ExploreFeatures);
   await tick();
@@ -165,6 +167,7 @@ test('When a feature card is closed, it is removed from the carousel', async () 
   await vi.waitFor(() => {
     const carouselTitle = screen.getByText('Explore Features');
     expect(carouselTitle).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'Close' })).not.toHaveLength(0);
   });
 
   const closeButtons = screen.getAllByRole('button', { name: 'Close' });
