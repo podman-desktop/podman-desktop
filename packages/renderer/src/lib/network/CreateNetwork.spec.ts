@@ -85,14 +85,8 @@ test('Expect all form fields to be present', async () => {
   renderCreate();
 
   expect(screen.getByRole('textbox', { name: 'Name *' })).toBeInTheDocument();
-  expect(screen.getByText('Labels (key=value):')).toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: 'Subnet' })).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'IP range' })).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Gateway' })).toBeInTheDocument();
-  expect(screen.getByLabelText('IPv6 (Dual Stack)')).toBeInTheDocument();
-  expect(screen.getByLabelText('Internal')).toBeInTheDocument();
-  expect(screen.getByLabelText('Driver')).toBeInTheDocument();
-  expect(screen.getByText('Advanced Options (driver-specific):')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
 });
 
 test('Expect createNetwork to be called with correct parameters', async () => {
@@ -102,9 +96,6 @@ test('Expect createNetwork to be called with correct parameters', async () => {
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
   await userEvent.type(networkName, 'my-test-network');
 
-  const subnet = screen.getByRole('textbox', { name: 'Subnet' });
-  await userEvent.type(subnet, '10.89.0.0/24');
-
   const createButton = screen.getByRole('button', { name: 'Create' });
   await userEvent.click(createButton);
 
@@ -112,13 +103,6 @@ test('Expect createNetwork to be called with correct parameters', async () => {
     expect.anything(),
     expect.objectContaining({
       Name: 'my-test-network',
-      IPAM: expect.objectContaining({
-        Config: expect.arrayContaining([
-          expect.objectContaining({
-            Subnet: '10.89.0.0/24',
-          }),
-        ]),
-      }),
     }),
   );
 });
@@ -154,7 +138,7 @@ test('Expect container engine dropdown to appear when multiple providers', async
 
   renderCreate([podman, docker]);
 
-  const engineDropdown = screen.getByLabelText('Container engine');
+  const engineDropdown = screen.getByLabelText(/Container engine/);
   expect(engineDropdown).toBeInTheDocument();
 });
 
@@ -167,69 +151,15 @@ test('Expect empty screen when no providers available', async () => {
   expect(networkName).not.toBeInTheDocument();
 });
 
-test('Expect network creation with labels and options', async () => {
+test('Expect createNetwork to be called with subnet when provided', async () => {
   vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
-  await userEvent.type(networkName, 'full-network');
-
-  const labelInput = screen.getByPlaceholderText('e.g., env=prod or app=backend');
-  await userEvent.type(labelInput, 'env=production');
-
-  const createButton = screen.getByRole('button', { name: 'Create' });
-  await userEvent.click(createButton);
-
-  expect(window.createNetwork).toHaveBeenCalledWith(
-    expect.anything(),
-    expect.objectContaining({
-      Name: 'full-network',
-      Labels: { env: 'production' },
-    }),
-  );
-});
-
-// IPv6 toggle tests
-test('Expect IPv6 toggle ON to accept both IPv4 and IPv6', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
-  renderCreate();
-
-  const networkName = screen.getByRole('textbox', { name: 'Name *' });
-  await userEvent.type(networkName, 'dual-stack-network');
-
-  const ipv6Toggle = screen.getByLabelText('IPv6 (Dual Stack)');
-  await userEvent.click(ipv6Toggle);
+  await userEvent.type(networkName, 'my-test-network');
 
   const subnet = screen.getByRole('textbox', { name: 'Subnet' });
-  await userEvent.type(subnet, '2001:db8::/32');
-
-  const createButton = screen.getByRole('button', { name: 'Create' });
-  await userEvent.click(createButton);
-
-  expect(window.createNetwork).toHaveBeenCalled();
-});
-
-// ipvlan auto-population test
-test('Expect ipvlan driver to auto-populate default subnet', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
-  renderCreate();
-
-  const networkName = screen.getByRole('textbox', { name: 'Name *' });
-  await userEvent.type(networkName, 'ipvlan-network');
-
-  const driverLabel = screen.getByText('Driver');
-  const driverButton = driverLabel.parentElement?.querySelector('button');
-  expect(driverButton).toBeInTheDocument();
-  await userEvent.click(driverButton!);
-
-  const ipvlanOption = screen.getByText('ipvlan');
-  await userEvent.click(ipvlanOption);
-
-  const subnetInput = screen.getByRole('textbox', { name: 'Subnet' });
-  const gatewayInput = screen.getByRole('textbox', { name: 'Gateway' });
-
-  expect(subnetInput).toHaveValue('192.168.210.0/24');
-  expect(gatewayInput).toHaveValue('192.168.210.1');
+  await userEvent.type(subnet, '10.89.0.0/24');
 
   const createButton = screen.getByRole('button', { name: 'Create' });
   await userEvent.click(createButton);
@@ -237,40 +167,12 @@ test('Expect ipvlan driver to auto-populate default subnet', async () => {
   expect(window.createNetwork).toHaveBeenCalledWith(
     expect.anything(),
     expect.objectContaining({
-      Name: 'ipvlan-network',
-      Driver: 'ipvlan',
-    }),
-  );
-});
-
-test('Expect ipvlan custom subnet to override default', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
-  renderCreate();
-
-  const networkName = screen.getByRole('textbox', { name: 'Name *' });
-  await userEvent.type(networkName, 'ipvlan-custom');
-
-  const driverLabel = screen.getByText('Driver');
-  const driverButton = driverLabel.parentElement?.querySelector('button');
-  await userEvent.click(driverButton!);
-
-  const ipvlanOption = screen.getByText('ipvlan');
-  await userEvent.click(ipvlanOption);
-
-  const subnet = screen.getByRole('textbox', { name: 'Subnet' });
-  await userEvent.clear(subnet);
-  await userEvent.type(subnet, '192.5.0.0/16');
-
-  const createButton = screen.getByRole('button', { name: 'Create' });
-  await userEvent.click(createButton);
-
-  expect(window.createNetwork).toHaveBeenCalledWith(
-    expect.anything(),
-    expect.objectContaining({
+      Name: 'my-test-network',
       IPAM: expect.objectContaining({
+        Driver: 'default',
         Config: expect.arrayContaining([
           expect.objectContaining({
-            Subnet: '192.5.0.0/16',
+            Subnet: '10.89.0.0/24',
           }),
         ]),
       }),

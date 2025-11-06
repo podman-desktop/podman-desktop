@@ -118,7 +118,7 @@ function key(network: NetworkInfoUI): string {
 
   {#snippet additionalActions()}
     {#if providerConnections.length > 0}
-      <Button on:click={gotoCreateNetwork} icon={faPlusCircle} title="Create a volume" aria-label="Create"
+      <Button onclick={gotoCreateNetwork} icon={faPlusCircle} title="Create a network" aria-label="Create"
         >Create</Button>
     {/if}
   {/snippet}
@@ -126,7 +126,7 @@ function key(network: NetworkInfoUI): string {
   {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}
       <Button
-        on:click={(): void =>
+        onclick={(): void =>
           withBulkConfirmation(
             deleteSelectedNetworks,
             `delete ${selectedItemsNumber} network${selectedItemsNumber > 1 ? 's' : ''}`,
