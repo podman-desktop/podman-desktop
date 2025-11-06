@@ -98,6 +98,12 @@ export interface ProviderInfo {
   // optional creation button title (if defined)
   kubernetesProviderConnectionCreationButtonTitle?: string;
 
+  // indicates if kubernetes provider connection creation is currently disabled
+  kubernetesProviderConnectionCreationDisabled?: boolean;
+
+  // reason why kubernetes provider connection creation is disabled
+  kubernetesProviderConnectionCreationDisabledReason?: string;
+
   // can create provider connection from VmProviderConnectionFactory params
   vmProviderConnectionCreation: boolean;
   // can initialize provider connection from VmProviderConnectionFactory params

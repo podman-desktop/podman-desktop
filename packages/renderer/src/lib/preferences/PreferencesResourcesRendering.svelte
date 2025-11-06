@@ -274,6 +274,17 @@ async function doCreateNew(provider: ProviderInfo, displayName: string): Promise
   }
 }
 
+function isProviderCreationDisabled(provider: ProviderInfo): boolean {
+  if (provider.kubernetesProviderConnectionCreation) {
+    return provider.kubernetesProviderConnectionCreationDisabled ?? false;
+  }
+  return false;
+}
+
+function getProviderCreationDisabledReason(provider: ProviderInfo): string | undefined {
+  return provider.kubernetesProviderConnectionCreationDisabledReason;
+}
+
 async function performInstallation(provider: ProviderInfo): Promise<void> {
   const checksStatus: CheckStatus[] = [];
   let checkSuccess = false;
@@ -489,10 +500,13 @@ $effect(() => {
                           : provider.vmProviderConnectionCreation
                             ? provider.vmProviderConnectionCreationButtonTitle
                             : undefined) ?? 'Create new'}
+                    {@const isDisabled = isProviderCreationDisabled(provider)}
+                    {@const disabledReason = getProviderCreationDisabledReason(provider)}
                     <!-- create new provider button -->
-                    <Tooltip bottom tip="Create new {providerDisplayName}">
+                    <Tooltip bottom tip={isDisabled && disabledReason ? disabledReason : `Create new ${providerDisplayName}`}>
                       <Button
                         aria-label="Create new {providerDisplayName}"
+                        disabled={isDisabled}
                         inProgress={providerInstallationInProgress.get(provider.name)}
                         onclick={(): Promise<void> => doCreateNew(provider, providerDisplayName)}>
                         {buttonTitle} ...

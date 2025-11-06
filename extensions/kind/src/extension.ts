@@ -20,7 +20,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
-import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@podman-desktop/api';
+import type {
+  AuditRequestItems,
+  CancellationToken,
+  CliTool,
+  ConnectionCreationCapability,
+  Logger,
+  ProviderContainerConnection,
+} from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
@@ -93,6 +100,61 @@ async function installLatestKind(): Promise<string> {
   return cliPath;
 }
 
+/**
+ * Result of checking whether container engines are available and running.
+ * Used to determine if Kind has the required prerequisites (running container engines) for cluster creation.
+ */
+interface ContainerEngineAvailabilityCheck {
+  available: boolean;
+  reason?: string;
+}
+
+const ERROR_MESSAGES = {
+  NO_CONTAINER_ENGINE_LINUX: 'A container engine is needed (e.g. Podman) to be able to create a kind cluster',
+  NO_CONTAINER_PROVIDER: 'You need a running container provider (e.g. Podman) to create a kind cluster',
+  UNABLE_TO_CHECK: 'Unable to check container provider status',
+} as const;
+
+async function checkContainerProviderAvailability(): Promise<ContainerEngineAvailabilityCheck> {
+  try {
+    const runningConnections = getRunningContainerConnections();
+
+    if (runningConnections.length > 0) {
+      return { available: true };
+    }
+
+    return {
+      available: false,
+      reason: getNoProviderErrorMessage(),
+    };
+  } catch (error) {
+    console.error('Error checking container provider availability:', error);
+    return {
+      available: false,
+      reason: ERROR_MESSAGES.UNABLE_TO_CHECK,
+    };
+  }
+}
+
+function getRunningContainerConnections(): ProviderContainerConnection[] {
+  const containerConnections = extensionApi.provider.getContainerConnections();
+  return containerConnections.filter(conn => conn.connection.status() === 'started');
+}
+
+function getNoProviderErrorMessage(): string {
+  return extensionApi.env.isLinux ? ERROR_MESSAGES.NO_CONTAINER_ENGINE_LINUX : ERROR_MESSAGES.NO_CONTAINER_PROVIDER;
+}
+
+async function updateKindRequirementsContext(): Promise<void> {
+  const availability = await checkContainerProviderAvailability();
+
+  extensionApi.context.setValue('kind.canCreateCluster', availability.available, 'onboarding');
+  extensionApi.context.setValue('kind.cannotCreateClusterReason', availability.reason ?? '', 'onboarding');
+
+  // Update provider status
+  provider.updateStatus(availability.available ? 'ready' : 'configured');
+}
+
 async function registerProvider(
   extensionContext: extensionApi.ExtensionContext,
   provider: extensionApi.Provider,
@@ -115,6 +177,13 @@ async function registerProvider(
         return createCluster(params, kindPath, telemetryLogger, logger, token);
       },
       creationDisplayName: 'Kind cluster',
+      canCreate: async (): Promise<ConnectionCreationCapability> => {
+        const availability = await checkContainerProviderAvailability();
+        return {
+          canCreate: availability.available,
+          reason: availability.reason,
+        };
+      },
     },
     {
       auditItems: async (items: AuditRequestItems) => {
@@ -126,6 +195,9 @@ async function registerProvider(
 
   // search
   await searchKindClusters(provider);
+
+  await updateKindRequirementsContext();
+
   console.log('kind extension is active');
 }
 
@@ -285,8 +357,18 @@ async function searchKindClusters(provider: extensionApi.Provider): Promise<void
 export function refreshKindClustersOnProviderConnectionUpdate(provider: extensionApi.Provider): void {
   // when a provider is changing, update the status
   extensionApi.provider.onDidUpdateContainerConnection(async () => {
-    // needs to search for kind clusters
     await searchKindClusters(provider);
+    // update Kind requirements when container connections change
+    await updateKindRequirementsContext();
+  });
+
+  // also listen to container connection register/unregister
+  extensionApi.provider.onDidRegisterContainerConnection(async () => {
+    await updateKindRequirementsContext();
+  });
+
+  extensionApi.provider.onDidUnregisterContainerConnection(async () => {
+    await updateKindRequirementsContext();
   });
 }
 
