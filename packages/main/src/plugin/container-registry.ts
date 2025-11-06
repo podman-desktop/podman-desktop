@@ -848,8 +848,8 @@ export class ContainerProviderRegistry {
         engineId: provider.id,
         ...networkInspect,
       };
-    } catch (error) {
-      telemetryOptions = { error: error };
+    } catch (error: unknown) {
+      telemetryOptions = { error };
       throw error;
     } finally {
       this.telemetryService.track('inspectNetwork', telemetryOptions);

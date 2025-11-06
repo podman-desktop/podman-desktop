@@ -1,6 +1,5 @@
 <script lang="ts">
-import { handleNavigation } from '/@/navigation';
-import { NavigationPage } from '/@api/navigation-page';
+import { openDetailsNetwork } from '/@/lib/network/network-utils';
 
 import type { NetworkInfoUI } from '../NetworkInfoUI';
 
@@ -9,10 +8,6 @@ interface Props {
 }
 
 let { object }: Props = $props();
-
-function openDetailsNetwork(network: NetworkInfoUI): void {
-  handleNavigation({ page: NavigationPage.NETWORK, parameters: { name: network.name, engineId: network.engineId } });
-}
 </script>
 
 <button

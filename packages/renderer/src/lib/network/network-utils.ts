@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { handleNavigation } from '/@/navigation';
+import { NavigationPage } from '/@api/navigation-page';
 import type { NetworkInspectInfo } from '/@api/network-info';
 
 import type { NetworkContainer, NetworkInfoUI } from './NetworkInfoUI';
@@ -41,10 +43,14 @@ export class NetworkUtils {
   getNetworkContainers(networkInspectInfo: NetworkInspectInfo): NetworkContainer[] {
     if (networkInspectInfo.Containers) {
       return Object.keys(networkInspectInfo.Containers).map(containerId => {
-        return { name: networkInspectInfo.Containers?.[containerId].Name ?? '', id: containerId } as NetworkContainer;
+        return { name: networkInspectInfo.Containers?.[containerId].Name ?? '', id: containerId };
       });
     } else {
       return [];
     }
   }
+}
+
+export function openDetailsNetwork(network: NetworkInfoUI): void {
+  handleNavigation({ page: NavigationPage.NETWORK, parameters: { name: network.name, engineId: network.engineId } });
 }

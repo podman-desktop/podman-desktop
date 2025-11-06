@@ -265,7 +265,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <NetworksList />
         </Route>
         <Route path="/networks/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
-          <NetworkDetails networkName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+          <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">

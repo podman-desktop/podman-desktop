@@ -46,6 +46,10 @@ function openContainer(containerID: string): void {
     <DetailsCell>{network.driver}</DetailsCell>
   </tr>
   <tr>
+    <DetailsCell>IPV6 enabled</DetailsCell>
+    <DetailsCell>{network.ipv6_enabled}</DetailsCell>
+  </tr>
+  <tr>
     <DetailsCell>Engine ID</DetailsCell>
     <DetailsCell>{network.engineId}</DetailsCell>
   </tr>
