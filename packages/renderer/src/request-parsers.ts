@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 export function parseParamId(request: { params?: Record<string, string> }): { id: string } | undefined {
-  if (!request.params) {
+  if (!request.params?.id) {
     return undefined;
   }
   return { id: request.params.id };

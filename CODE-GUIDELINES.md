@@ -37,7 +37,7 @@ The `Route` component also provides a `request` property to its children, and th
 
 ```ts
 function parseParamId(request: { params?: Record<string, string> }): { id: string } | undefined {
-  if (!request.params) {
+  if (!request.params?.id) {
     return undefined;
   }
   return { id: request.params.id };
