@@ -485,7 +485,7 @@ test('push should succeed if provider', async () => {
   expect(result).toBeUndefined();
 });
 
-test('restartC=tainersByLabel should succeed successfully if project name is provided and call restartContainer', async () => {
+test('restartContainersByLabel should succeed successfully if project name is provided and call restartContainer', async () => {
   const engine = {
     // Fake that we have 3 containers of the same project
     listSimpleContainers: vi
