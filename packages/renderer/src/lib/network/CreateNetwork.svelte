@@ -8,6 +8,7 @@ import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdow
 import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
+import { networksListInfo } from '../../stores/networks';
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 
@@ -15,7 +16,7 @@ let networkInfo: NetworkCreateFormInfo = $state({
   networkName: '',
   subnet: '',
   selectedProvider: undefined,
-  // Unused fields for the simplified form
+  // Unused fields for simplified form (will be used in the future)
   labels: [],
   ipRange: '',
   gateway: '',
@@ -27,7 +28,6 @@ let networkInfo: NetworkCreateFormInfo = $state({
 
 let createError: string | undefined = $state(undefined);
 let createNetworkInProgress: boolean = $state(false);
-let createNetworkFinished: boolean = $state(false);
 
 async function createNetwork(): Promise<void> {
   createError = undefined;
@@ -58,7 +58,11 @@ async function createNetwork(): Promise<void> {
       throw new Error('Network creation failed: No network ID returned');
     }
 
-    createNetworkFinished = true;
+    // Wait for the network store to be updated with the new network
+    await waitForNetworkInStore(result.Id, networkInfo.networkName);
+
+    // Route back to networks list
+    router.goto('/networks');
   } catch (error: unknown) {
     createError = error instanceof Error ? error.message : String(error);
     console.error('Error creating network:', error);
@@ -66,8 +70,31 @@ async function createNetwork(): Promise<void> {
     createNetworkInProgress = false;
   }
 }
+/**
+ * Wait for the network to be created and added to the store
+ * This is a temporary function to wait for network creation before routing back to the networks list
+ * Eventually we will want to route back to the network details page
+ */
+async function waitForNetworkInStore(networkId: string, networkName: string): Promise<void> {
+  return new Promise<void>(resolve => {
+    // Set a timeout to avoid waiting indefinitely
+    const timeout = setTimeout(() => {
+      unsubscribe();
+      resolve();
+    }, 10000); // 10 second timeout
 
-function end(): void {
+    const unsubscribe = networksListInfo.subscribe(networks => {
+      // Check both ID and name to handle cases where Docker and Podman might have overlapping IDs
+      if (networks.some(network => network.Id === networkId && network.Name === networkName)) {
+        clearTimeout(timeout);
+        unsubscribe();
+        resolve();
+      }
+    });
+  });
+}
+
+function cancelRoute(): void {
   router.goto('/networks');
 }
 
@@ -89,7 +116,6 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
 
 <EngineFormPage
   title="Create a Network"
-  inProgress={createNetworkInProgress}
   showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
   {#snippet icon()}
     <Icon icon={faNetworkWired} class="fa-2x" />
@@ -98,7 +124,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
     <div class="space-y-6">
 
       {#if providerConnections.length > 1}
-        <div hidden={createNetworkInProgress}>
+        <div>
           <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
             >Container engine <span class="text-red-500">*</span></label>
           <ContainerConnectionDropdown
@@ -109,7 +135,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
         </div>
       {/if}
 
-      <div hidden={createNetworkInProgress}>
+      <div>
         <label for="networkName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Name <span class="text-red-500">*</span></label>
         <Input
@@ -121,7 +147,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      <div hidden={createNetworkInProgress}>
+      <div>
         <label for="subnet" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">Subnet</label>
         <Input
           bind:value={networkInfo.subnet}
@@ -131,9 +157,8 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           class="w-full" />
       </div>
 
-      {#if createNetworkFinished}
-        <Button class="w-full" onclick={end}>Done</Button>
-      {:else}
+      <div class="w-full flex flex-row space-x-4">
+        <Button type="secondary" class="w-full" onclick={cancelRoute}>Cancel</Button>
         <Button
           disabled={hasInvalidFields || createNetworkInProgress}
           inProgress={createNetworkInProgress}
@@ -142,7 +167,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           onclick={createNetwork}>
           Create
         </Button>
-      {/if}      
+      </div>
 
       {#if createError}
         <div class="text-red-500 text-sm">

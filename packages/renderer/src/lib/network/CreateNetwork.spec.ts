@@ -19,17 +19,32 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import CreateNetwork from '/@/lib/network/CreateNetwork.svelte';
+import { networksListInfo } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
+import type { NetworkInspectInfo } from '/@api/network-info';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
+
+vi.mock('tinro', () => {
+  return {
+    router: {
+      goto: vi.fn(),
+    },
+  };
+});
+
+const mockRouter = await import('tinro');
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+
+  // Reset stores
+  networksListInfo.set([]);
 });
 
 // Helper to create a provider connection
@@ -87,6 +102,7 @@ test('Expect all form fields to be present', async () => {
   expect(screen.getByRole('textbox', { name: 'Name *' })).toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: 'Subnet' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 });
 
 test('Expect createNetwork to be called with correct parameters', async () => {
@@ -177,5 +193,39 @@ test('Expect createNetwork to be called with subnet when provided', async () => 
         ]),
       }),
     }),
+  );
+});
+
+test('Expect cancel button to navigate to networks page', async () => {
+  renderCreate();
+
+  const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+  await userEvent.click(cancelButton);
+
+  expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
+});
+
+test('Expect automatic routing after successful network creation when network appears in store', async () => {
+  const networkId = 'network123';
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId });
+
+  renderCreate();
+
+  const networkNameInput = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkNameInput, 'my-test-network');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  // Simulate network appearing in store after creation with both matching ID and Name
+  setTimeout(() => {
+    networksListInfo.set([{ Id: networkId, Name: 'my-test-network' } as NetworkInspectInfo]);
+  }, 100);
+
+  await waitFor(
+    () => {
+      expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
+    },
+    { timeout: 3000 },
   );
 });
