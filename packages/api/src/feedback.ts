@@ -16,7 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export type FeedbackCategory = 'developers' | 'feature' | 'bug';
+export type DirectFeedbackCategory = 'developers' | 'design';
+
+export type FeedbackCategory = DirectFeedbackCategory | 'feature' | 'bug';
 
 export interface FeedbackProperties {
   category: FeedbackCategory;

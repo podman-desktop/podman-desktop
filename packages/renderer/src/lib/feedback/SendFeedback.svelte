@@ -13,6 +13,7 @@ let hasContent: boolean = false;
 
 const FEEDBACK_CATEGORIES = new Map<FeedbackCategory, string>([
   ['developers', '💬 Direct your words to the developers'],
+  ['design', '🎨 User experience or design thoughts'],
   ['feature', '🚀 Feature request'],
   ['bug', '🪲 Bug'],
 ]);
@@ -69,8 +70,8 @@ function handleUpdate(e: boolean): void {
       </Dropdown>
     </div>
 
-    {#if category === 'developers'}
-      <DirectFeedback onCloseForm={hideModal} contentChange={handleUpdate}/>
+    {#if category === 'developers' || category === 'design'}
+      <DirectFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate}/>
     {:else if category === 'bug'}
       <GitHubIssueFeedback onCloseForm={hideModal} category="bug" contentChange={handleUpdate}/>
     {:else if category === 'feature'}

@@ -12,13 +12,14 @@ import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
-import type { FeedbackProperties } from '/@api/feedback';
+import type { DirectFeedbackCategory, FeedbackProperties } from '/@api/feedback';
 
 import WarningMessage from '../../ui/WarningMessage.svelte';
 
 interface Props {
   onCloseForm: (confirmation: boolean) => void;
   contentChange: (e: boolean) => void;
+  category: DirectFeedbackCategory;
 }
 
 // feedback of the user
@@ -30,7 +31,7 @@ let hasFeedback = $derived(
     (contactInformation && contactInformation.trim().length > 4),
 );
 
-let { onCloseForm, contentChange }: Props = $props();
+let { onCloseForm, contentChange, category }: Props = $props();
 
 $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contactInformation)));
 
@@ -40,7 +41,7 @@ function selectSmiley(item: number): void {
 
 async function sendFeedback(): Promise<void> {
   const properties: FeedbackProperties = {
-    category: 'developers',
+    category,
     rating: smileyRating,
   };
 

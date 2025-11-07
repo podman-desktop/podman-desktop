@@ -50,6 +50,11 @@ test('Expect developers feedback form to be rendered by default', () => {
   render(SendFeedback);
 
   expect(DirectFeedback).toHaveBeenCalledOnce();
+  expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
+    onCloseForm: expect.any(Function),
+    category: 'developers',
+    contentChange: expect.any(Function),
+  });
   expect(GitHubIssueFeedback).not.toHaveBeenCalled();
 });
 
@@ -58,6 +63,7 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
 
   expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
     onCloseForm: expect.any(Function),
+    category: 'developers',
     contentChange: expect.any(Function),
   });
 
@@ -83,6 +89,7 @@ test('Expect no confirmation dialog to be displayed if content has not changed',
 
   expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
     onCloseForm: expect.any(Function),
+    category: 'developers',
     contentChange: expect.any(Function),
   });
 
@@ -93,6 +100,27 @@ test('Expect no confirmation dialog to be displayed if content has not changed',
 
   // expect no confirm dialog
   expect(window.showMessageBox).not.toHaveBeenCalled();
+});
+
+test('Expect DirectFeedback form to be rendered when design category is selected', async () => {
+  render(SendFeedback, {});
+
+  const categorySelect = screen.getByRole('button', { name: /Direct your words to the developers/ });
+  expect(categorySelect).toBeInTheDocument();
+  categorySelect.focus();
+
+  // select the Design category
+  await userEvent.keyboard('[ArrowDown]');
+  const designCategory = screen.getByRole('button', { name: /User experience or design thoughts/ });
+  expect(designCategory).toBeInTheDocument();
+  await fireEvent.click(designCategory);
+
+  expect(DirectFeedback).toHaveBeenLastCalledWith(expect.anything(), {
+    onCloseForm: expect.any(Function),
+    category: 'design',
+    contentChange: expect.any(Function),
+  });
+  expect(GitHubIssueFeedback).not.toHaveBeenCalled();
 });
 
 test('Expect GitHubIssue feedback form to be rendered if category is not developers', async () => {
