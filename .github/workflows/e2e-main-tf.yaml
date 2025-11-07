@@ -22,16 +22,6 @@ on:
     
   workflow_dispatch:
     inputs:
-      fork:
-        default: 'podman-desktop'
-        description: 'Podman Desktop repo fork'
-        type: string
-        required: true
-      branch:
-        default: 'main'
-        description: 'Podman Desktop repo branch'
-        type: string
-        required: true
       podman_version:
         default: 'latest'
         description: 'Podman version to install (e.g., "5.5.2", "5.6.0~rc1"). Use "latest" for stable or "nightly" for the latest development build.'
@@ -60,13 +50,9 @@ jobs:
       - name: Set the default env. variables
         env:
           DEFAULT_NPM_TARGET: 'all'
-          DEFAULT_FORK: 'podman-desktop'
-          DEFAULT_BRANCH: 'main'
           DEFAULT_PODMAN_VERSION: 'latest'
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
-          echo "FORK=${{ github.event.inputs.fork || env.DEFAULT_FORK }}" >> $GITHUB_ENV
-          echo "BRANCH=${{ github.event.inputs.branch || env.DEFAULT_BRANCH }}" >> $GITHUB_ENV
           echo "PODMAN_VERSION=${{ github.event.inputs.podman_version || env.DEFAULT_PODMAN_VERSION }}" >> $GITHUB_ENV
 
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
@@ -77,7 +63,7 @@ jobs:
           create_github_summary: "false"
           compose: ${{ matrix.fedora-version }}
           tmt_plan_filter: 'name:/tests/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}'
-          variables: FORK=${{ env.FORK }};BRANCH=${{ env.BRANCH }};COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }}
+          variables: COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }}
 
       - name: Extract Testing Farm work ID and base URL
         if: always()
