@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="Request">
 import { onDestroy } from 'svelte';
 import type { TinroBreadcrumb, TinroRouteMeta } from 'tinro';
 import { createRouteObject } from 'tinro/dist/tinro_lib';
@@ -13,10 +13,14 @@ export let redirect = false;
 export let firstmatch = false;
 export let breadcrumb: string | undefined = undefined;
 export let navigationHint: NavigationHint | undefined = undefined;
+export let requestParser:
+  | ((request: { query: Record<string, string>; params: Record<string, string> }) => Request)
+  | undefined = undefined;
 
 let showContent = false;
 let params: Record<string, string> = {};
 let meta: TinroRouteMeta = {} as TinroRouteMeta;
+let request: Request = {} as Request;
 
 const route = createRouteObject({
   fallback,
@@ -74,11 +78,13 @@ $: route.update({
   breadcrumb,
 });
 
+$: request = requestParser && meta ? requestParser(meta) : ({} as Request);
+
 onDestroy(() => {
   TelemetryService.getService().handlePageClose();
 });
 </script>
 
 {#if showContent}
-  <slot params={params} meta={meta} />
+  <slot params={params} meta={meta} request={request} />
 {/if}
