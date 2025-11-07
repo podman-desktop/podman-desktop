@@ -7,6 +7,7 @@ import { router } from 'tinro';
 
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
+import { parseParamId } from '/@/request-parsers';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation';
 import type { NavigationRequest } from '/@api/navigation-request';
@@ -161,12 +162,16 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/containers" breadcrumb="Containers" navigationHint="root">
           <ContainerList searchTerm={meta.query.filter ?? ''} />
         </Route>
-        <Route path="/containers/:id/*" let:meta firstmatch>
-          <Route path="/export" breadcrumb="Export Container">
-            <ContainerExport containerID={meta.params.id} />
-          </Route>
-          <Route breadcrumb="Container Details" navigationHint="details" path="/*">
-            <ContainerDetails containerID={meta.params.id} />
+        <Route path="/containers/:id/*" firstmatch>
+          <Route path="/export" breadcrumb="Export Container" requestParser={parseParamId} let:request>
+            {#if request}
+              <ContainerExport containerID={request.id} />
+            {/if}
+          </Route>  
+          <Route breadcrumb="Container Details" navigationHint="details" path="/*" requestParser={parseParamId} let:request>
+            {#if request}
+              <ContainerDetails containerID={request.id} />
+            {/if}
           </Route>
         </Route>
 
@@ -381,8 +386,10 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/contribs/:name/*" breadcrumb="Extension" let:meta>
           <DockerExtension name={decodeURI(meta.params.name)} />
         </Route>
-        <Route path="/webviews/:id/*" breadcrumb="Webview" let:meta>
-          <Webview id={meta.params.id} />
+        <Route path="/webviews/:id/*" breadcrumb="Webview" requestParser={parseParamId} let:request>
+          {#if request}
+            <Webview id={request.id} />
+          {/if}
         </Route>
         <Route path="/troubleshooting/*" breadcrumb="Troubleshooting">
           <TroubleshootingPage />
@@ -390,8 +397,10 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/extensions" breadcrumb="Extensions" navigationHint="root">
           <ExtensionList />
         </Route>
-        <Route path="/extensions/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
-          <ExtensionDetails extensionId={meta.params.id} />
+        <Route path="/extensions/details/:id/*" breadcrumb="Extension Details" requestParser={parseParamId} let:request navigationHint="details">
+          {#if request}
+            <ExtensionDetails extensionId={request.id} />
+          {/if}
         </Route>
       </div>
     </div>

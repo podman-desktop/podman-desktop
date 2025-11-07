@@ -19,6 +19,39 @@ import { WinPlatform } from './win-platform';
 import type { WSL2Check } from '../checks/windows/wsl2-check';
 ```
 
+### Parsing route parameters
+
+The `Route` component provides a `meta` property to its children, containing the untyped route parameters. Using this property is deprecated.
+
+The `Route` component also provides a `request` property to its children, and the Route must be provided a `requestParser` function, which will be responsible for checking and casting the route parameters.
+
+**Good:**
+
+```ts
+<Route path="/path/:id/*" requestParser={parseParamId} let:request>
+  {#if request}
+    <ChildView id={request.id} />
+  {/if}
+</Route>
+```
+
+```ts
+function parseParamId(request: { params?: Record<string, string> }): { id: string } | undefined {
+  if (!request.params) {
+    return undefined;
+  }
+  return { id: request.params.id };
+}
+```
+
+**Deprecated:**
+
+```ts
+<Route path="/path/:id/*" let:meta>
+  <ChildView id={meta.params.id} />
+</Route>
+```
+
 ## Unit tests code
 
 ### Use `vi.mocked`, not a generic `myFunctionMock`
