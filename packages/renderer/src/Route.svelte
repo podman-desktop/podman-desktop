@@ -20,7 +20,7 @@ export let requestParser:
 let showContent = false;
 let params: Record<string, string> = {};
 let meta: TinroRouteMeta = {} as TinroRouteMeta;
-let request: T = {} as T;
+let request: T | undefined = undefined;
 
 const route = createRouteObject({
   fallback,
@@ -78,7 +78,7 @@ $: route.update({
   breadcrumb,
 });
 
-$: request = requestParser && meta ? requestParser(meta) : ({} as T);
+$: request = requestParser && meta ? requestParser(meta) : undefined;
 
 onDestroy(() => {
   TelemetryService.getService().handlePageClose();
