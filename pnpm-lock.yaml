@@ -10,7 +10,6 @@ overrides:
   serve-handler>path-to-regexp: ^3.3.0
   express>cookie: ^0.7.0
   webpack-dev-server>http-proxy-middleware: ^2.0.9
-  '@kubernetes/client-node>jsonpath-plus': ^10.3.0
   esbuild-register>esbuild: ^0.25.0
   tsx>esbuild: ^0.25.0
   vite>esbuild: ^0.25.0
