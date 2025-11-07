@@ -26,6 +26,7 @@ import {
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
 import type { ApiSenderType } from './api.js';
+import { LockConfiguration } from './lock-configuration.js';
 
 /**
  * Local view of the configuration values for a given scope
@@ -34,6 +35,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
   [key: string]: unknown;
 
   private scope: containerDesktopAPI.ConfigurationScope;
+  private lockConfiguration: LockConfiguration;
 
   constructor(
     private apiSender: ApiSenderType,
@@ -50,16 +52,32 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
     } else {
       this.scope = paramScope;
     }
+    this.lockConfiguration = new LockConfiguration(configurationValues);
   }
 
   get<T>(section: string, defaultValue?: unknown): T | undefined {
     const localKey = this.getLocalKey(section);
 
-    // now look if we have this value
+    // Check if this config key is "locked" by a "managed-by" policy, and if so, return the "managed-by" value
+    // vs the user value.
+    // This happens in the configuration default scope only (dont need to worry about onboarding scope, etc.)
+    if (this.scope === CONFIGURATION_DEFAULT_SCOPE) {
+      // Pass in the key we are wanting to get and check locked config for the key
+      const managedValue = this.lockConfiguration.get<T>(localKey);
+
+      // Return the managedValue vs the user value if we got one
+      if (managedValue !== undefined) {
+        return managedValue;
+      }
+    }
+
+    // If the above isn't applicable (no locked keys + managed by scope), we return the key as normal.
     const localView = this.getLocalView();
     if (localView[localKey] !== undefined) {
       return localView[localKey] as T;
     }
+
+    // Last resort: Return the fallback default value
     return defaultValue as T;
   }
 

@@ -26,6 +26,7 @@ import { inject, injectable } from 'inversify';
 
 import {
   CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
@@ -159,6 +160,10 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   doRegisterConfigurations(configurations: IConfigurationNode[], notify?: boolean): string[] {
     const properties: string[] = [];
+
+    // Get all the locked keys at the start to avoid multiple lookups
+    const lockedSet = this.getAllLockedKeys();
+
     // biome-ignore lint/complexity/noForEach: <explanation>
     configurations.forEach(configuration => {
       for (const key in configuration.properties) {
@@ -168,6 +173,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
           title: configuration.title,
           id: key,
           parentId: configuration.id,
+          locked: lockedSet.has(key),
         };
         if (configuration.extension) {
           configProperty.extension = { id: configuration.extension?.id };
@@ -193,6 +199,19 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       this._onDidUpdateConfiguration.fire({ properties });
     }
     return properties;
+  }
+
+  // Simple helper to just get all the locked keys as a Set for easy lookup
+  private getAllLockedKeys(): Set<string> {
+    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
+
+    // Check the casting + existence and return early (empty) if not found.
+    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
+      return new Set();
+    }
+
+    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
+    return new Set(lockedKeys);
   }
 
   private isDefaultScope(scope?: ConfigurationScope | ConfigurationScope[]): boolean {
