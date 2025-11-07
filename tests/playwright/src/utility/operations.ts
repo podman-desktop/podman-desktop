@@ -245,7 +245,9 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
       await playExpect(podmanResourceCard.resourceElementConnectionActions).toBeVisible();
       await playExpect(podmanResourceCard.resourceElementConnectionStatus).toBeVisible();
       if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Starting) {
-        console.log('[deletePodmanMachine] Podman machine is in STARTING state, will send stop command via CLI');
+        console.log(
+          `[deletePodmanMachine] Podman machine is in STARTING state, stop it via CLI with 'podman machine stop ${machineVisibleName}'`,
+        );
         try {
           // eslint-disable-next-line sonarjs/os-command
           const output = execSync(`podman machine stop ${machineVisibleName}`, { encoding: 'utf-8' });
@@ -267,7 +269,9 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
             { timeout: 30_000, sendError: true },
           );
         } catch (error) {
-          console.log('[deletePodmanMachine] UI stop failed, will try to stop it via CLI');
+          console.log(
+            `[deletePodmanMachine] UI stop failed, will try to stop it via CLI with 'podman machine stop ${machineVisibleName}'`,
+          );
           try {
             // eslint-disable-next-line sonarjs/os-command
             const output = execSync(`podman machine stop ${machineVisibleName}`, { encoding: 'utf-8' });
@@ -352,7 +356,9 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
     const userModeNetworking = process.env.PODMAN_NETWORKING === '1' ? '--user-networking' : '';
 
     try {
-      console.log('[createPodmanMachineFromCLI] Executing: podman machine init');
+      console.log(
+        `[createPodmanMachineFromCLI] Executing: podman machine init ${podmanMachineMode} ${userModeNetworking}`,
+      );
       // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command
       const output = execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`, { encoding: 'utf-8' });
       console.log('[createPodmanMachineFromCLI] Init output:', output.toString().trim());
