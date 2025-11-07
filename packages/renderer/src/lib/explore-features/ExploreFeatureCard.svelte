@@ -25,7 +25,7 @@ async function closeCard(): Promise<void> {
   closeFeature(feature.id);
   await window.closeFeatureCard(feature.id);
   await window.telemetryTrack('dashboard.exploreFeatureDismissed', {
-    feature: feature.title,
+    feature: feature.id,
   });
 }
 

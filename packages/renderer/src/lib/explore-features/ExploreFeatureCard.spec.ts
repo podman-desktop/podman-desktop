@@ -88,7 +88,7 @@ test('Click on close card', async () => {
   expect(closeFeature).toHaveBeenCalledWith('feature1');
   expect(window.closeFeatureCard).toHaveBeenCalledWith('feature1');
   expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith('dashboard.exploreFeatureDismissed', {
-    feature: 'Feature 1',
+    feature: 'feature1',
   });
 });
 
