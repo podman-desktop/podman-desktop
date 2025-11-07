@@ -2,7 +2,7 @@
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
-import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
@@ -42,7 +42,7 @@ $effect(() => {
 {#if network}
   <DetailsPage title={network.name} subtitle={network.shortId} bind:this={detailsPage}>
     {#snippet iconSnippet()}
-      <StatusIcon icon={VolumeIcon} size={24} status={network?.status} />
+      <StatusIcon icon={NetworkIcon} size={24} status={network?.status} />
     {/snippet}
     {#snippet actionsSnippet()}
       <NetworkActions object={network} detailed={true} />

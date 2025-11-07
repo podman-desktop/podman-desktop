@@ -16,8 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-
+import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import { networksListInfo } from '/@/stores/networks';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
@@ -30,7 +29,7 @@ export function createNavigationNetworkEntry(): NavigationRegistryEntry {
   });
   const registry: NavigationRegistryEntry = {
     name: 'Networks',
-    icon: { iconComponent: ContainerIcon },
+    icon: { iconComponent: NetworkIcon },
     link: '/networks',
     tooltip: 'Networks',
     type: 'entry',
