@@ -5,6 +5,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
@@ -395,8 +396,12 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/troubleshooting/*" breadcrumb="Troubleshooting">
           <TroubleshootingPage />
         </Route>
-        <Route path="/extensions" breadcrumb="Extensions" navigationHint="root">
-          <ExtensionList />
+        <Route path="/extensions" breadcrumb="Extensions" navigationHint="root" let:meta>
+          {@const request = parseExtensionListRequest(meta)}
+          <ExtensionList
+            searchTerm={request.searchTerm}
+            screen={request.screen}
+          />
         </Route>
         <Route path="/extensions/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
           <ExtensionDetails extensionId={meta.params.id} />

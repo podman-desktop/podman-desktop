@@ -293,3 +293,14 @@ test('check navigateToCreateProviderConnection', async () => {
     },
   });
 });
+
+test('check navigateToExtensionsCatalog', async () => {
+  await navigationManager.navigateToExtensionsCatalog({ searchTerm: 'not:installed category:foo keyword:bar' });
+
+  expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+    page: NavigationPage.EXTENSIONS_CATALOG,
+    parameters: {
+      searchTerm: 'not:installed category:foo keyword:bar',
+    },
+  });
+});

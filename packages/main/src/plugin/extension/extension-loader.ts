@@ -1546,6 +1546,11 @@ export class ExtensionLoader implements IAsyncDisposable {
         onboardingExtensionId ??= extensionInfo.id;
         await this.navigationManager.navigateToOnboarding(onboardingExtensionId);
       },
+      navigateToExtensionsCatalog: async (
+        options: containerDesktopAPI.NavigateToExtensionsCatalogOptions,
+      ): Promise<void> => {
+        await this.navigationManager.navigateToExtensionsCatalog(options);
+      },
       navigate: async (routeId: string, ...args: unknown[]): Promise<void> => {
         return this.navigationManager.navigateToRoute(`${extensionInfo.id}.${routeId}`, args);
       },

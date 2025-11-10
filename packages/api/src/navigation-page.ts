@@ -51,4 +51,5 @@ export enum NavigationPage {
   EXPERIMENTAL_FEATURES = 'experimental',
   CREATE_PROVIDER_CONNECTION = 'create-provider-connection',
   NETWORK = 'network',
+  EXTENSIONS_CATALOG = 'extensions-catalog',
 }

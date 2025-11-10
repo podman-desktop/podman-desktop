@@ -2,6 +2,7 @@
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
 
+import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
@@ -16,9 +17,10 @@ import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelt
 
 interface Props {
   searchTerm?: string;
+  screen?: ExtensionListScreen;
 }
 
-let { searchTerm = '' }: Props = $props();
+let { searchTerm = '', screen = 'installed' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
@@ -48,7 +50,6 @@ function closeModal(): void {
   installManualImageModal = false;
 }
 
-let screen: 'installed' | 'catalog' | 'development' = $state('installed');
 let installManualImageModal: boolean = $state(false);
 
 function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void {

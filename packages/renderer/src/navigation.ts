@@ -144,5 +144,9 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       break;
     case NavigationPage.NETWORK:
       router.goto(`/networks/${request.parameters.name}/${request.parameters.engineId}/summary`);
+      break;
+    case NavigationPage.EXTENSIONS_CATALOG:
+      router.goto(`/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`);
+      break;
   }
 };
