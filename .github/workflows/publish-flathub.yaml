@@ -83,9 +83,27 @@ jobs:
           export PODMAN_DESKTOP_PNPM_AMD64_SHASUM=$(shasum -a 256 podman-desktop-pnpm-amd64.tgz | awk '{print $1}')
           echo "podman Desktop pnpm amd64 .tgz file sha256 is ${PODMAN_DESKTOP_PNPM_AMD64_SHASUM}"
 
-          # find the version of electron being used by podman desktop
+          # grab the package.json of the current tagged version
           wget "https://raw.githubusercontent.com/podman-desktop/podman-desktop/refs/tags/v${{ steps.VERSION.outputs.desktopVersion }}/package.json" -qO podman-desktop-package.json
-          # set the version of electron
+
+          # set the version of pnpm from this package.json file stored inside "packageManager": "pnpm@10.15.0+sha512.
+          PODMAN_DESKTOP_PNPM_VERSION=$(jq -r '.packageManager' podman-desktop-package.json | cut -d '@' -f 2 | cut -d '+' -f 1)
+          echo "Found pnpm version ${PODMAN_DESKTOP_PNPM_VERSION}"
+          export PNPM_AMD64_URL=https://github.com/pnpm/pnpm/releases/download/v${PODMAN_DESKTOP_PNPM_VERSION}/pnpm-linux-x64
+          export PNPM_ARM64_URL=https://github.com/pnpm/pnpm/releases/download/v${PODMAN_DESKTOP_PNPM_VERSION}/pnpm-linux-arm64
+          # download pnpm binary (arm64)
+          wget ${PNPM_ARM64_URL} -qO pnpm-arm64.zip
+          # compute shasum
+          export PNPM_ARM64_SHASUM=$(shasum -a 256 pnpm-arm64.zip | awk '{print $1}')
+          echo "pnpm arm64 zip sha256 is ${PNPM_ARM64_SHASUM}"
+          # download pnpm binary (amd64)
+          wget ${PNPM_AMD64_URL} -qO pnpm-amd64.zip
+          # compute shasum
+          export PNPM_AMD64_SHASUM=$(shasum -a 256 pnpm-amd64.zip | awk '{print $1}')
+          echo "pnpm amd64 zip sha256 is ${PNPM_AMD64_SHASUM}"
+
+
+          # set the version of electron from this package.json file
           ELECTRON_VERSION=$(jq -r '.devDependencies.electron' podman-desktop-package.json)
           echo "Found electron ${ELECTRON_VERSION}"
 
@@ -115,6 +133,11 @@ jobs:
           # update the url and sha256 for the electron binaries for amd64 and arm64
           yq -i '(.modules[].sources[] | select(.url == "*electron*x64*")) += {"url":strenv(ELECTRON_AMD64_URL), "dest":strenv(ELECTRON_CACHE_DIRECTORY_SLASH), "sha256":strenv(ELECTRON_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
           yq -i '(.modules[].sources[] | select(.url == "*electron*arm64*")) += {"url":strenv(ELECTRON_ARM64_URL), "dest":strenv(ELECTRON_CACHE_DIRECTORY_SLASH), "sha256":strenv(ELECTRON_ARM64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
+
+          # update the pnpm download url/sha256 for pnpm
+          yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-x64*")) += {"url":strenv(PNPM_AMD64_URL), "sha256":strenv(PNPM_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
+          yq -i '(.modules[].sources[] | select(.url == "*pnpm*linux-arm64*")) += {"url":strenv(PNPM_ARM64_URL),"sha256":strenv(PNPM_ARM64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
+
 
           # update the pnpm store url/sha256
           yq -i '(.modules[].sources[] | select(.url == "*store-cache-pnpm*amd64*")) += {"url":strenv(PNPM_STORE_CACHE_AMD64_URL), "sha256":strenv(PODMAN_DESKTOP_PNPM_AMD64_SHASUM)}' io.podman_desktop.PodmanDesktop.yml
