@@ -57,12 +57,21 @@ export class NavigationItemsMenuBuilder {
     return label.replace('&', '&&');
   }
 
+  protected computeItemName(rawItemName: string): string {
+    // need to filter any counter from the item name
+    // it's at the end with parenthesis like itemName (2)
+    const itemName = rawItemName.replace(/\s\(\d+\)$/, '');
+
+    const index = itemName.indexOf('\n');
+    return index !== -1 ? itemName.substring(0, index) : itemName;
+  }
+
   protected buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
     const rawItemName = linkText;
 
     // need to filter any counter from the item name
     // it's at the end with parenthesis like itemName (2)
-    const itemName = rawItemName.replace(/\s\(\d+\)$/, '');
+    const itemName = this.computeItemName(rawItemName);
 
     if (EXCLUDED_ITEMS.includes(itemName)) {
       return undefined;
