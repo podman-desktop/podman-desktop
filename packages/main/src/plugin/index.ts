@@ -852,7 +852,7 @@ export class PluginSystem {
         options: NetworkCreateOptions,
       ): Promise<NetworkCreateResult> => {
         return containerProviderRegistry.createNetwork(providerContainerConnectionInfo, options);
-      }
+      },
     );
     this.ipcHandle(
       'container-provider-registry:inspectNetwork',

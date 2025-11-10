@@ -326,7 +326,7 @@ export function initExposure(): void {
       return ipcInvoke('container-provider-registry:createNetwork', providerContainerConnectionInfo, options);
     },
   );
-  
+
   contextBridge.exposeInMainWorld(
     'inspectNetwork',
     async (engine: string, networkId: string): Promise<NetworkInspectInfo> => {
