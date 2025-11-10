@@ -237,6 +237,12 @@ beforeEach(async () => {
   };
   vi.resetAllMocks();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
+
+  // Mock withProgress to execute the task immediately
+  vi.mocked(extensionApi.window.withProgress).mockImplementation((_options, task) => {
+    return task({ report: vi.fn() }, {} as extensionApi.CancellationToken);
+  });
+
   extension.initTelemetryLogger();
   extension.initExtensionNotification();
   extension.resetShouldNotifySetup();
@@ -299,6 +305,7 @@ vi.mock('@podman-desktop/api', async () => {
       showInformationMessage: vi.fn(),
       showWarningMessage: vi.fn(),
       showNotification: vi.fn(),
+      withProgress: vi.fn(),
       createStatusBarItem: () => ({
         show: vi.fn(),
         dispose: vi.fn(),
@@ -322,6 +329,11 @@ vi.mock('@podman-desktop/api', async () => {
     Disposable: {
       from: vi.fn(),
       create: vi.fn(),
+    },
+    CancellationToken: {},
+    ProgressLocation: {
+      TASK_WIDGET: 'TASK_WIDGET',
+      APP_ICON: 'APP_ICON',
     },
     fs: {
       createFileSystemWatcher: vi.fn(),
@@ -1681,6 +1693,54 @@ test('should register update when there are multiple Podman installations but cu
 
   expect(findPodmanInstallationsMock).not.toHaveBeenCalled();
   expect(registerUpdateMock).toHaveBeenCalled();
+});
+
+test('update should be wrapped with withProgress to create a visible task', async () => {
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+
+  const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    undefined,
+  );
+
+  vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue(['/usr/local/bin/podman']);
+
+  vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
+    hasUpdate: true,
+    bundledVersion: 'v5.0.0',
+    installedVersion: 'v4.9.0',
+  });
+
+  vi.spyOn(podmanInstall, 'performUpdate').mockResolvedValue();
+
+  const withProgressSpy = vi.spyOn(extensionApi.window, 'withProgress');
+
+  const installedPodman = { version: '4.9.0' } as InstalledPodman;
+
+  let updater: extensionApi.ProviderUpdate | undefined;
+  registerUpdateMock.mockImplementation((update: extensionApi.ProviderUpdate) => {
+    updater = update;
+  });
+
+  await extension.registerUpdatesIfAny(provider, installedPodman, podmanInstall);
+
+  expect(registerUpdateMock).toHaveBeenCalled();
+  expect(updater).toBeDefined();
+
+  // Call the update function
+  await updater?.update({} as extensionApi.Logger);
+
+  // Verify withProgress was called with correct parameters
+  expect(withProgressSpy).toHaveBeenCalledWith(
+    { location: extensionApi.ProgressLocation.TASK_WIDGET, title: 'Updating Podman' },
+    expect.any(Function),
+  );
+
+  // Verify performUpdate was called
+  expect(podmanInstall.performUpdate).toHaveBeenCalledWith(provider, installedPodman);
 });
 
 test('provider is registered with edit capabilities on MacOS', async () => {

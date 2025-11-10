@@ -993,9 +993,16 @@ export async function registerUpdatesIfAny(
       update: () => {
         // disable notification before the update to prevent the notification to be shown and re-enabled when update is done
         extensionNotifications.shouldNotifySetup = false;
-        return podmanInstall
-          .performUpdate(provider, installedPodman)
-          .finally(() => (extensionNotifications.shouldNotifySetup = true));
+        return extensionApi.window.withProgress(
+          { location: extensionApi.ProgressLocation.TASK_WIDGET, title: 'Updating Podman' },
+          async () => {
+            try {
+              return await podmanInstall.performUpdate(provider, installedPodman);
+            } finally {
+              extensionNotifications.shouldNotifySetup = true;
+            }
+          },
+        );
       },
       preflightChecks: () => podmanInstall.getUpdatePreflightChecks() ?? [],
     });
