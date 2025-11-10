@@ -47,13 +47,40 @@ function logCommandError(message: string, err: unknown): void {
   if (err instanceof Error) {
     const execError = err as unknown as { status: number; stdout: Buffer; stderr: Buffer; signal: string | null };
 
-    console.log(message);
-    console.log(`Command failed with status: ${execError.status}`);
-    console.log(`Captured stdout: ${execError.stdout.toString().trim()}`);
-    console.log(`Captured stderr: ${execError.stderr.toString().trim()}`);
-    console.log(`Signal: ${execError.signal}`);
+    const errorDetails = [
+      message,
+      `Command failed with status: ${execError.status}`,
+      `Captured stdout: ${execError.stdout.toString().trim()}`,
+      `Captured stderr: ${execError.stderr.toString().trim()}`,
+      `Signal: ${execError.signal}`,
+    ].join('\n');
+
+    // Log to console (this ensures output even if attach fails)
+    console.log(errorDetails);
+
+    // Also attach to test info for better visibility in CI
+    // Catch any errors from attach to satisfy linter
+    test
+      .info()
+      .attach('command-error', {
+        body: errorDetails,
+        contentType: 'text/plain',
+      })
+      .catch(() => {
+        // Ignore attach errors - we've already logged to console
+      });
   } else {
-    console.error('An unexpected, non-Error value was thrown:', err);
+    const errorMsg = `An unexpected, non-Error value was thrown: ${String(err)}`;
+    console.error(errorMsg);
+    test
+      .info()
+      .attach('unexpected-error', {
+        body: errorMsg,
+        contentType: 'text/plain',
+      })
+      .catch(() => {
+        // Ignore attach errors - we've already logged to console
+      });
   }
 }
 
