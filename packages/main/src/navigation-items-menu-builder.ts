@@ -72,7 +72,7 @@ export class NavigationItemsMenuBuilder {
     const itemDisplayName = this.escapeLabel(itemName);
 
     const item: MenuItemConstructorOptions = {
-      label: `Hide '${itemDisplayName}'`,
+      label: `Hide ${itemDisplayName}`,
       visible: true,
       click: (): void => {
         // flag the item as being disabled
