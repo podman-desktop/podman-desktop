@@ -122,13 +122,14 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
 });
 
 // eslint-disable-next-line no-empty-pattern
-test.afterEach(async ({}, testInfo) => {
+test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status !== testInfo.expectedStatus) {
     console.log(`Test "${testInfo.title}" has status ${testInfo.status}... Performing podman machine cleanup`);
 
     try {
       await resetPodmanMachinesFromCLI();
       await createPodmanMachineFromCLI();
+      await waitForPodmanMachineStartup(page);
     } catch (error) {
       console.log('Error occurred while resetting podman machines', error);
     }
