@@ -22,7 +22,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import DevelopersFeedback from './DevelopersFeedback.svelte';
+import DirectFeedback from './DirectFeedback.svelte';
 
 beforeAll(() => {
   Object.defineProperty(window, 'openExternal', {
@@ -41,14 +41,14 @@ beforeEach(() => {
 });
 
 test('Expect that the button is disabled when loading the page', () => {
-  render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
   const button = screen.getByRole('button', { name: 'Send feedback' });
   expect(button).toBeInTheDocument();
   expect(button).toBeDisabled();
 });
 
 test('Expect that the button is enabled after clicking on a smiley', async () => {
-  render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
   const button = screen.getByRole('button', { name: 'Send feedback' });
 
   // expect to have indication why the button is disabled
@@ -66,7 +66,7 @@ test('Expect that the button is enabled after clicking on a smiley', async () =>
 });
 
 test('Expect very sad smiley errors without feedback', async () => {
-  render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
   const button = screen.getByRole('button', { name: 'Send feedback' });
   expect(button).toBeDisabled();
 
@@ -94,7 +94,7 @@ test('Expect very sad smiley errors without feedback', async () => {
 });
 
 test('Expect sad smiley warns without feedback', async () => {
-  render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
   const button = screen.getByRole('button', { name: 'Send feedback' });
   expect(button).toBeDisabled();
 
@@ -121,7 +121,7 @@ test('Expect sad smiley warns without feedback', async () => {
 });
 
 test('Expect message for very-happy-smiley to use love', async () => {
-  const { getByRole, getByLabelText } = render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  const { getByRole, getByLabelText } = render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
 
   // click on a smiley
   const smiley = getByRole('button', { name: 'very-happy-smiley' });
@@ -133,7 +133,7 @@ test('Expect message for very-happy-smiley to use love', async () => {
 });
 
 test('Expect message for happy-smiley to use like', async () => {
-  const { getByRole, getByLabelText } = render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  const { getByRole, getByLabelText } = render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
 
   // click on a smiley
   const smiley = getByRole('button', { name: 'happy-smiley' });
@@ -145,7 +145,7 @@ test('Expect message for happy-smiley to use like', async () => {
 });
 
 test('Expect GitHub dialog visible when very-happy-smiley selected', async () => {
-  render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: vi.fn() });
 
   // click on a smiley
   const smiley = screen.getByRole('button', { name: 'very-happy-smiley' });
@@ -165,7 +165,7 @@ test('Expect GitHub dialog visible when very-happy-smiley selected', async () =>
 
 test('Expect category to be sent', async () => {
   const closeMock = vi.fn();
-  render(DevelopersFeedback, { contentChange: vi.fn(), onCloseForm: closeMock });
+  render(DirectFeedback, { contentChange: vi.fn(), onCloseForm: closeMock });
 
   // click on a smiley
   const smiley = screen.getByRole('button', { name: 'very-happy-smiley' });

@@ -3,7 +3,7 @@ import { CloseButton, Dropdown, Modal } from '@podman-desktop/ui-svelte';
 
 import type { FeedbackCategory } from '/@api/feedback';
 
-import DevelopersFeedback from './feedbackForms/DevelopersFeedback.svelte';
+import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
 
 let displayModal = false;
@@ -70,7 +70,7 @@ function handleUpdate(e: boolean): void {
     </div>
 
     {#if category === 'developers'}
-      <DevelopersFeedback onCloseForm={hideModal} contentChange={handleUpdate}/>
+      <DirectFeedback onCloseForm={hideModal} contentChange={handleUpdate}/>
     {:else if category === 'bug'}
       <GitHubIssueFeedback onCloseForm={hideModal} category="bug" contentChange={handleUpdate}/>
     {:else if category === 'feature'}

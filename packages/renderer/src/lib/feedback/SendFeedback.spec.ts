@@ -22,7 +22,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import DevelopersFeedback from './feedbackForms/DevelopersFeedback.svelte';
+import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
 import SendFeedback from './SendFeedback.svelte';
 
@@ -30,7 +30,7 @@ vi.mock('./feedbackForms/GitHubIssueFeedback.svelte', () => ({
   default: vi.fn(),
 }));
 
-vi.mock('./feedbackForms/DevelopersFeedback.svelte', () => ({
+vi.mock('./feedbackForms/DirectFeedback.svelte', () => ({
   default: vi.fn(),
 }));
 
@@ -49,19 +49,19 @@ beforeEach(() => {
 test('Expect developers feedback form to be rendered by default', () => {
   render(SendFeedback);
 
-  expect(DevelopersFeedback).toHaveBeenCalledOnce();
+  expect(DirectFeedback).toHaveBeenCalledOnce();
   expect(GitHubIssueFeedback).not.toHaveBeenCalled();
 });
 
 test('Expect confirmation dialog to be displayed if content changed', async () => {
   render(SendFeedback, {});
 
-  expect(DevelopersFeedback).toHaveBeenCalledWith(expect.anything(), {
+  expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
     onCloseForm: expect.any(Function),
     contentChange: expect.any(Function),
   });
 
-  const { onCloseForm, contentChange } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
+  const { onCloseForm, contentChange } = vi.mocked(DirectFeedback).mock.calls[0][1];
 
   // 1. simulate content change
   contentChange(true);
@@ -81,12 +81,12 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
 test('Expect no confirmation dialog to be displayed if content has not changed', async () => {
   render(SendFeedback, {});
 
-  expect(DevelopersFeedback).toHaveBeenCalledWith(expect.anything(), {
+  expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
     onCloseForm: expect.any(Function),
     contentChange: expect.any(Function),
   });
 
-  const { onCloseForm } = vi.mocked(DevelopersFeedback).mock.calls[0][1];
+  const { onCloseForm } = vi.mocked(DirectFeedback).mock.calls[0][1];
 
   // 2. close
   onCloseForm(true);
