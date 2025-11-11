@@ -86,7 +86,10 @@ export class MachineCreationForm extends BasePage {
         timeout: 10_000,
       });
       await this.podmanMachineName.clear();
+      await playExpect(this.podmanMachineName).toHaveValue('');
+
       await this.podmanMachineName.fill(machineName);
+      await playExpect(this.podmanMachineName).toHaveValue(machineName);
 
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
       if (isWindows) {
@@ -106,20 +109,12 @@ export class MachineCreationForm extends BasePage {
     return test.step(`Ensure checkbox is ${desiredState ? 'checked' : 'unchecked'}`, async () => {
       if (desiredState !== (await checkbox.isChecked())) {
         await checkbox.locator('..').click();
-        playExpect(await checkbox.isChecked()).toBe(desiredState);
       }
+
+      await playExpect.poll(async () => await checkbox.isChecked()).toBe(desiredState);
     });
   }
 
-  /**
-   * Specifies the virtualization provider for a Podman machine during the creation process.
-   * This method selects the specified virtualization provider from the dropdown if it differs from the default.
-   * If no provider is specified or it matches the default, no action is taken.
-   *
-   * @param virtualizationProvider - The virtualization provider to select (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.HyperV, etc.), or undefined to use default
-   * @returns A Promise that resolves when the provider selection is complete
-   * @throws Will throw an error if the provider dropdown is not accessible or the specified provider is not available
-   */
   async specifyVirtualizationProvider(
     virtualizationProvider: PodmanVirtualizationProviders | undefined,
   ): Promise<void> {

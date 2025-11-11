@@ -135,7 +135,7 @@ export async function deleteRegistry(page: Page, name: string, failIfNotExist = 
   });
 }
 
-export async function deletePod(page: Page, name: string, timeout: number = 50_000): Promise<void> {
+export async function deletePod(page: Page, name: string, timeout = 50_000): Promise<void> {
   return test.step(`Delete pod ${name}`, async () => {
     const navigationBar = new NavigationBar(page);
     const pods = await navigationBar.openPods();
@@ -242,7 +242,7 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
               (await podmanResourceCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
             { timeout: 30_000, sendError: true },
           );
-        } catch (error) {
+        } catch (_error) {
           console.log('Podman machine stop failed, will try to stop it via CLI');
           // eslint-disable-next-line sonarjs/os-command
           execSync(`podman machine stop ${machineVisibleName}`);
@@ -291,9 +291,8 @@ export async function getVolumeNameForContainer(page: Page, containerName: strin
         (error.message === 'Page is empty, there is no content' || error.message.includes('does not exist'))
       ) {
         return '';
-      } else {
-        throw error;
       }
+      throw error;
     }
   });
 }
@@ -327,7 +326,7 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
       execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM already exists')) {
-        console.log(`Podman machine already exists, skipping creation.`);
+        console.log('Podman machine already exists, skipping creation.');
       }
     }
 
@@ -358,7 +357,8 @@ export async function deletePodmanMachineFromCLI(podmanMachineName: string): Pro
 
 export async function resetPodmanMachinesFromCLI(): Promise<void> {
   return test.step('Reset Podman machine from CLI', () => {
-    execSync(`podman machine reset -f`);
+    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    execSync('podman machine reset -f');
   });
 }
 
@@ -381,7 +381,7 @@ export async function runComposeUpFromCLI(composeFilePath: string): Promise<void
   });
 }
 
-export async function untagImagesFromPodman(name: string, tag: string = ''): Promise<void> {
+export async function untagImagesFromPodman(name: string, tag = ''): Promise<void> {
   return test.step('Untag images from Podman', async () => {
     try {
       if (tag) {
@@ -458,9 +458,11 @@ function isRootlessPodman(): boolean {
     let output: string;
 
     if (isMac || isWindows) {
-      output = execSync(`podman machine ssh podman info --format json`).toString();
+      // eslint-disable-next-line sonarjs/no-os-command-from-path
+      output = execSync('podman machine ssh podman info --format json').toString();
     } else if (isLinux) {
-      output = execSync(`podman info --format json`).toString();
+      // eslint-disable-next-line sonarjs/no-os-command-from-path
+      output = execSync('podman info --format json').toString();
     } else {
       throw new Error('Unsupported platform');
     }
@@ -476,7 +478,7 @@ function getPodmanVolumePath(volumeName: string, fileName: string): string {
   const isRootless = isRootlessPodman();
 
   if (isMac || isWindows) {
-    const base = isRootless ? `.local/share/containers/storage/volumes` : '/var/lib/containers/storage/volumes';
+    const base = isRootless ? '.local/share/containers/storage/volumes' : '/var/lib/containers/storage/volumes';
     return `${base}/${relativePath}`;
   }
 

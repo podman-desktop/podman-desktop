@@ -43,31 +43,38 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   }
 });
 
-test.afterAll(async ({ runner }) => {
+test.afterAll(async ({ runner, page }) => {
   test.setTimeout(120_000);
 
-  if (test.info().status === 'failed') {
-    await resetPodmanMachinesFromCLI();
-    await createPodmanMachineFromCLI();
+  try {
+    if (test.info().status === 'failed') {
+      await resetPodmanMachinesFromCLI();
+      await createPodmanMachineFromCLI();
+      await waitForPodmanMachineStartup(page);
+    }
+  } catch (error) {
+    console.log('Error during cleanup:', error);
   }
 
   await runner.close();
 });
 
-test.describe
-  .serial(`Podman machine onboarding from Dashboard`, () => {
-    test('Create Podman machine from Dashboard', async ({ navigationBar }) => {
-      test.setTimeout(320000);
+test.describe.serial('Podman machine onboarding from Dashboard', { tag: '@pdmachine' }, () => {
+  test('Create Podman machine from Dashboard', async ({ navigationBar }) => {
+    test.setTimeout(320_000);
 
-      console.log('Starting PD dashboard test');
+    await test.step('Open dashboard and initialize Podman machine', async () => {
       const dashboardPage = await navigationBar.openDashboard();
       await playExpect(dashboardPage.podmanInitilizeAndStartButton).toBeEnabled({ timeout: 60_000 });
       await dashboardPage.podmanInitilizeAndStartButton.click();
-      await playExpect(dashboardPage.podmanStatusLabel).toHaveText(ResourceElementState.Running, { timeout: 300_000 });
-    });
-
-    test('Clean Up Podman Machine', async ({ page }) => {
-      test.skip(process.env.MACHINE_CLEANUP !== 'true', 'Machine cleanup is disabled');
-      await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
+      await playExpect(dashboardPage.podmanStatusLabel).toHaveText(ResourceElementState.Running, {
+        timeout: 300_000,
+      });
     });
   });
+
+  test('Clean Up Podman Machine', async ({ page }) => {
+    test.skip(process.env.MACHINE_CLEANUP !== 'true', 'Machine cleanup is disabled');
+    await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
+  });
+});

@@ -54,6 +54,8 @@
     "test:e2e:k8s-sanity:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/ -g @k8s_sanity",
     "test:e2e:windows-sanity": "pnpm run test:e2e:build && pnpm run test:e2e:windows-sanity:run",
     "test:e2e:windows-sanity:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/ -g @windows_sanity",
+    "test:e2e:pdmachine": "pnpm run test:e2e:build && pnpm run test:e2e:pdmachine:run",
+    "test:e2e:pdmachine:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/ -g @pdmachine",
     "test:e2e:extension": "pnpm run test:e2e:build && pnpm run test:e2e:extension:run",
     "test:e2e:extension:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/extension-installation.spec.ts",
     "test:e2e:remote": "pnpm run test:e2e:build && pnpm run test:e2e:remote:run",
