@@ -61,7 +61,7 @@ async function doExecuteAction(task: TaskInfo): Promise<void> {
 </script>
 
 <!-- Display a task item-->
-<div class="flex flew-row w-full py-2">
+<div class="flex flew-row w-full py-2" title="Task Item">
   <!-- first column is the icon-->
   <div class="flex w-3 flex-col {iconColor}">
     <div class="align-top" role="img" aria-label="{task.status} icon of task {task.name}">
@@ -78,7 +78,7 @@ async function doExecuteAction(task: TaskInfo): Promise<void> {
     {/if}
   </div>
   <!-- second column is about the task-->
-  <div class="flex flex-col w-full pl-2">
+  <div class="flex flex-col w-full pl-2" title="Task Content">
     <div class="flex flex-row w-full">
       <div title={task.name} class="w-60 pb-1 cursor-default truncate text-[var(--pd-modal-text)]">
         {task.name}
@@ -100,7 +100,10 @@ async function doExecuteAction(task: TaskInfo): Promise<void> {
         </div>
       {/if}
     {:else if task.error}
-      <div class:hidden={!showError} class="text-xs my-2 break-words text-[var(--pd-modal-text)]">
+      <div
+        class:hidden={!showError}
+        class="text-xs my-2 break-words text-[var(--pd-modal-text)]"
+        role="status">
         {task.error}
       </div>
     {/if}
@@ -132,7 +135,10 @@ async function doExecuteAction(task: TaskInfo): Promise<void> {
     <!-- if failed task, display the error-->
     {#if task.status === 'failure'}
       <div class="flex flex-col w-full items-end">
-        <button on:click={(): boolean => (showError = !showError)} class="text-[var(--pd-button-secondary)] text-xs">
+        <button
+          class="text-[var(--pd-button-secondary)] text-xs"
+          on:click={(): boolean => (showError = !showError)}
+          aria-expanded={showError}>
           View Error
           {#if showError}
             <i class="fas fa-chevron-up"></i>
