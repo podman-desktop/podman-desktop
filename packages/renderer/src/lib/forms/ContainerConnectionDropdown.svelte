@@ -53,8 +53,14 @@ function handleChange(nValue: unknown): void {
   disabled={disabled}
   value={selected}
   onChange={handleChange}
-  options={Array.from(items.entries()).map(([key, connection]) => ({
-            label: connection.name,
-            value: key,
-          }))}>
+  options={[{
+            label: 'Connection 1',
+            value: '1',
+          }, {
+            label: 'Connection 2',
+            value: '2',
+          }, {
+            label: 'Connection 3',
+            value: '3',
+          }]}>
 </Dropdown>
