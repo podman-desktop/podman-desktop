@@ -33,7 +33,7 @@ import {
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '../utility/operations';
-import { isLinux, isWindows } from '../utility/platform';
+import { isLinux } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
@@ -73,11 +73,6 @@ const machineTypes = [
 test.skip(
   isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
   'Tests suite should not run on Linux platform or if TEST_PODMAN_MACHINE is not true',
-);
-
-test.skip(
-  !!isWindows,
-  'Tests suite should not run on Windows platform in CI, there seems to be some problem running this test suite in azure cicd, this skip should also include isCI parameter but currently this seems to be missing from cicd pipelines, it will be added when the issue is resolved',
 );
 
 test.skip(
@@ -160,8 +155,8 @@ test.afterEach(async ({ page }, testInfo) => {
 for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of machineTypes) {
   test.describe.serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, { tag: '@pdmachine' }, () => {
     test.skip(
-      PODMAN_MACHINE_NAME === 'podman-machine-usermode' && !isWindows,
-      'Testing user networking machine only on Windows',
+      PODMAN_MACHINE_NAME === 'podman-machine-usermode',
+      'Testing user networking machine only on Windows but currently it does not work in cicd on Windows either',
     );
 
     test('Create machine through Resources page', async ({ page, navigationBar }) => {
