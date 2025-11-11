@@ -33,7 +33,7 @@ import {
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '../utility/operations';
-import { isLinux, isWindows } from '../utility/platform';
+import { isCI, isLinux, isWindows } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
@@ -73,6 +73,11 @@ const machineTypes = [
 test.skip(
   isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
   'Tests suite should not run on Linux platform or if TEST_PODMAN_MACHINE is not true',
+);
+
+test.skip(
+  !!isWindows && !!isCI,
+  'Tests suite should not run on Windows platform in CI, there seems to be some problem running this test suite in azure cicd',
 );
 
 test.skip(
