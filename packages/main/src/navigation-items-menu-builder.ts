@@ -62,8 +62,8 @@ export class NavigationItemsMenuBuilder {
     // it's at the end with parenthesis like itemName (2)
     const itemName = rawItemName.replace(/\s\(\d+\)$/, '');
 
-    const index = itemName.indexOf('\n');
-    return index !== -1 ? itemName.substring(0, index) : itemName;
+    // Electron sends the whole element text including sub elements, each level separated by '\n'
+    return itemName.split('\n')[0] ?? itemName;
   }
 
   protected buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
