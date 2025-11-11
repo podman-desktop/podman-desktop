@@ -1273,11 +1273,8 @@ export class ContainerProviderRegistry {
       if (!imageInfo.RepoTags || imageInfo.RepoTags.length === 0) {
         throw new Error('Image has no registry tags and cannot be updated');
       }
-      // get the first repo tag
-      const repoTag = imageInfo.RepoTags[0];
-      if (!repoTag) {
-        throw new Error('Image has no valid repository tag and cannot be updated');
-      }
+      // get the first repo tag (we know it exists because length > 0)
+      const repoTag = imageInfo.RepoTags[0]!;
 
       // check if this is a localhost image
       if (repoTag.startsWith('localhost/') || repoTag.startsWith('127.0.0.1')) {
@@ -1312,7 +1309,7 @@ export class ContainerProviderRegistry {
       }
 
       // Only delete the old image if it had a single tag
-      if (updatedImageInfo.RepoTags && updatedImageInfo.RepoTags.length === 1) {
+      if (updatedImageInfo.RepoTags?.length === 1) {
         try {
           await this.deleteImage(engineId, oldImageId);
         } catch (error) {

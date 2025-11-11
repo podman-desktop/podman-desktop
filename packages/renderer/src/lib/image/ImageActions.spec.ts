@@ -259,3 +259,43 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
     expect(withConfirmation).toHaveBeenNthCalledWith(1, expect.anything(), 'delete image image-name:1.0');
   });
 });
+
+test('Expect Update Image button to be disabled for unnamed images', async () => {
+  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+
+  const image: ImageInfoUI = {
+    name: '<none>',
+    status: 'UNUSED',
+    tag: '',
+  } as ImageInfoUI;
+
+  render(ImageActions, {
+    onPushImage: vi.fn(),
+    onRenameImage: vi.fn(),
+    image,
+  });
+
+  const button = screen.getByTitle('Update Image');
+  expect(button).toBeDefined();
+  expect(button).toBeDisabled();
+});
+
+test('Expect Update Image button to be enabled for named images', async () => {
+  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+
+  const image: ImageInfoUI = {
+    name: 'image-name',
+    status: 'UNUSED',
+    tag: '1.0',
+  } as ImageInfoUI;
+
+  render(ImageActions, {
+    onPushImage: vi.fn(),
+    onRenameImage: vi.fn(),
+    image,
+  });
+
+  const button = screen.getByTitle('Update Image');
+  expect(button).toBeDefined();
+  expect(button).toBeEnabled();
+});

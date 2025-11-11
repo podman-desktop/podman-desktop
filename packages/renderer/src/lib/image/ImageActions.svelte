@@ -165,7 +165,8 @@ async function updateImage(): Promise<void> {
     onClick={(): void => withConfirmation(updateImage, `update image ${image.name}:${image.tag} to latest build`)}
     menu={dropdownMenu}
     detailed={detailed}
-    icon={faArrowCircleUp} />
+    icon={faArrowCircleUp}
+    enabled={image.name !== '<none>'} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions

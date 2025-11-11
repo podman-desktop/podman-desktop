@@ -241,7 +241,12 @@ async function updateSelectedImages(): Promise<void> {
   await selectedImages.reduce((prev: Promise<void>, image) => {
     return prev
       .then(() => imageUtils.updateImage(image))
-      .catch((e: unknown) => console.error('error while updating image', e));
+      .catch((e: unknown) => {
+        console.error('error while updating image', e);
+        // Reset status on error to prevent getting stuck in UPDATING state
+        image.status = 'UNUSED';
+        images = images;
+      });
   }, Promise.resolve());
   bulkUpdateInProgress = false;
 }

@@ -6161,9 +6161,11 @@ describe('updateImage', () => {
       },
     };
     vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    const deleteSpy = vi.spyOn(containerRegistry, 'deleteImage');
 
     await expect(containerRegistry.updateImage('engine1', 'imageId')).rejects.toThrowError(
       'Image is already the latest version',
     );
+    expect(deleteSpy).not.toHaveBeenCalled();
   });
 });
