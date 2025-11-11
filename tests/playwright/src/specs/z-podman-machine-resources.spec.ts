@@ -33,7 +33,7 @@ import {
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '../utility/operations';
-import { isCI, isLinux, isWindows } from '../utility/platform';
+import { isLinux, isWindows } from '../utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
 
@@ -76,8 +76,8 @@ test.skip(
 );
 
 test.skip(
-  !!isWindows && !!isCI,
-  'Tests suite should not run on Windows platform in CI, there seems to be some problem running this test suite in azure cicd',
+  !!isWindows,
+  'Tests suite should not run on Windows platform in CI, there seems to be some problem running this test suite in azure cicd, this skip should also include isCI parameter but currently this seems to be missing from cicd pipelines, it will be added when the issue is resolved',
 );
 
 test.skip(
