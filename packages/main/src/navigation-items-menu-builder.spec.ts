@@ -73,7 +73,7 @@ describe('buildHideMenuItem', async () => {
     getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
 
     const menu = navigationItemsMenuBuilder.buildHideMenuItem('Hello\nHallo');
-    expect(menu?.label).toBe(`Hide Hello`);
+    expect(menu?.label).toBe('Hide Hello');
     expect(menu?.click).toBeDefined();
     expect(menu?.visible).toBe(true);
 
