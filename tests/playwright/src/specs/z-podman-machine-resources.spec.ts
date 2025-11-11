@@ -155,7 +155,7 @@ test.afterEach(async ({ page }, testInfo) => {
 for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of machineTypes) {
   test.describe.serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, { tag: '@pdmachine' }, () => {
     test.skip(
-      PODMAN_MACHINE_NAME === 'podman-machine-user-networking' && !isWindows,
+      PODMAN_MACHINE_NAME === 'podman-machine-usermode' && !isWindows,
       'Testing user networking machine only on Windows',
     );
 
