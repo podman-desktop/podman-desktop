@@ -3,7 +3,7 @@ import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { Context, KubernetesObject } from '@kubernetes/client-node';
 import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onMount, type Snippet } from 'svelte';
 import Fa from 'svelte-fa';
 
 import { handleNavigation } from '/@/navigation';
@@ -135,6 +135,9 @@ onMount(async () => {
   selectedContextName = await window.kubernetesGetCurrentContextName();
 });
 </script>
+
+
+
   <EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
     {#snippet icon()}
       <KubePlayIcon size="30px" />
@@ -163,54 +166,49 @@ onMount(async () => {
         </div>
 
         <div class="flex flex-col">
-          <button
-            class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-            aria-label=".yaml file to play"
-            aria-pressed={userChoice === 'file' ? 'true' : 'false'}
-            class:border-[var(--pd-content-card-border-selected)]={userChoice === 'file'}
-            class:border-[var(--pd-content-card-border)]={userChoice !== 'file'}
-            onclick={toggle.bind(undefined, 'file')}>
-            <div class="flex flex-row align-middle items-center">
-              <div
-                class="text-2xl pr-2"
-                class:text-[var(--pd-content-card-border-selected)]={userChoice === 'file'}
-                class:text-[var(--pd-content-card-border)]={userChoice !== 'file'}>
-                <Fa icon={faCircleCheck} />
-              </div>
-              <FileInput
-                name="containerFilePath"
-                id="containerFilePath"
-                readonly
-                required
-                bind:value={kubernetesYamlFilePath}
-                placeholder="Select a .yaml file to play"
-                options={kubeFileDialogOptions}
-                class="w-full p-2" />
-            </div>
-          </button>
+          {#snippet file()}
+            <FileInput
+              name="containerFilePath"
+              id="containerFilePath"
+              readonly
+              required
+              bind:value={kubernetesYamlFilePath}
+              placeholder="Select a .yaml file to play"
+              options={kubeFileDialogOptions}
+              class="w-full p-2" />
+          {/snippet}
 
-          <button
-            class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-            aria-label="Create file from scratch"
-            aria-pressed={userChoice === 'custom' ? 'true' : 'false'}
-            class:border-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
-            class:border-[var(--pd-content-card-border)]={userChoice !== 'custom'}
-            onclick={toggle.bind(undefined, 'custom')}>
-            <div class="flex flex-row align-middle items-center">
-              <div
-                class="text-2xl"
-                class:text-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
-                class:text-[var(--pd-content-card-border)]={userChoice !== 'custom'}>
-                <Fa icon={faCircleCheck} />
-              </div>
-              <div
-                class="pl-2"
-                class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
-                class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
-                Create file from scratch
-              </div>
+          {#snippet custom()}
+            <div
+              class="pl-2"
+              class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
+              class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
+              Create file from scratch
             </div>
-          </button>
+          {/snippet}
+
+          {#snippet optionSnippet(option: 'file' | 'custom', content: Snippet)}
+            <button
+              class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
+              aria-label=".yaml file to play"
+              aria-pressed={userChoice === option ? 'true' : 'false'}
+              class:border-[var(--pd-content-card-border-selected)]={userChoice === option}
+              class:border-[var(--pd-content-card-border)]={userChoice !== option}
+              onclick={toggle.bind(undefined, option)}>
+              <div class="flex flex-row align-middle items-center">
+                <div
+                  class="text-2xl pr-2"
+                  class:text-[var(--pd-content-card-border-selected)]={userChoice === option}
+                  class:text-[var(--pd-content-card-border)]={userChoice !== option}>
+                  <Fa icon={faCircleCheck} />
+                </div>
+                {@render content()}
+              </div>
+            </button>
+          {/snippet}
+
+          {@render optionSnippet('file', file)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
+          {@render optionSnippet('custom', custom)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
         </div>
 
         <!-- Monaco Editor for custom YAML content -->
