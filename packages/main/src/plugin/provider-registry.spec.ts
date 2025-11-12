@@ -456,7 +456,7 @@ test('expect isProviderContainerConnection returns true with a ProviderContainer
     },
     lifecycleMethods: undefined,
     status: 'started',
-    connectionType: 'container'
+    connectionType: 'container',
   };
   const res = providerRegistry.isProviderContainerConnection(connection);
   expect(res).toBe(true);
@@ -470,10 +470,162 @@ test('expect isProviderContainerConnection returns false with a ProviderKubernet
     },
     lifecycleMethods: undefined,
     status: 'started',
-    connectionType: 'kubernetes'
+    connectionType: 'kubernetes',
   };
   const res = providerRegistry.isProviderContainerConnection(connection);
   expect(res).toBe(false);
+});
+
+test('expect isProviderVmConnectionInfo returns true with a ProviderVmConnectionInfo', async () => {
+  const connection: ProviderVmConnectionInfo = {
+    name: 'vm-connection',
+    lifecycleMethods: undefined,
+    status: 'started',
+    connectionType: 'vm',
+  };
+  const res = providerRegistry.isProviderVmConnectionInfo(connection);
+  expect(res).toBe(true);
+});
+
+test('expect isProviderVmConnectionInfo returns false with a ProviderContainerConnectionInfo', async () => {
+  const connection: ProviderContainerConnectionInfo = {
+    name: 'connection',
+    displayName: 'connection',
+    type: 'docker',
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    lifecycleMethods: undefined,
+    status: 'started',
+    connectionType: 'container',
+  };
+  const res = providerRegistry.isProviderVmConnectionInfo(connection);
+  expect(res).toBe(false);
+});
+
+describe('getMatchingConnectionFromProvider', () => {
+  let provider: Provider;
+
+  beforeEach(() => {
+    provider = providerRegistry.createProvider('provider-id', 'Provider Name', {
+      id: 'internal-id',
+      name: 'internal',
+      status: 'installed',
+    });
+  });
+
+  test('should return container connection when connectionType is container', () => {
+    const containerConnection = {
+      name: 'test-container',
+      displayName: 'Test Container',
+      type: 'docker' as const,
+      endpoint: {
+        socketPath: '/var/run/docker.sock',
+      },
+      status: () => 'started' as const,
+    };
+
+    provider.registerContainerProviderConnection(containerConnection);
+
+    const connectionInfo: ProviderContainerConnectionInfo = {
+      name: 'test-container',
+      displayName: 'Test Container',
+      type: 'docker',
+      endpoint: {
+        socketPath: '/var/run/docker.sock',
+      },
+      status: 'started',
+      connectionType: 'container',
+    };
+
+    const result = providerRegistry.getMatchingConnectionFromProvider('0', connectionInfo);
+    expect(result).toBeDefined();
+    expect(result?.name).toBe('test-container');
+  });
+
+  test('should return kubernetes connection when connectionType is kubernetes', () => {
+    const kubernetesConnection = {
+      name: 'test-k8s',
+      endpoint: {
+        apiURL: 'https://kubernetes.default.svc',
+      },
+      status: () => 'started' as const,
+    };
+
+    provider.registerKubernetesProviderConnection(kubernetesConnection);
+
+    const connectionInfo: ProviderKubernetesConnectionInfo = {
+      name: 'test-k8s',
+      endpoint: {
+        apiURL: 'https://kubernetes.default.svc',
+      },
+      status: 'started',
+      connectionType: 'kubernetes',
+    };
+
+    const result = providerRegistry.getMatchingConnectionFromProvider('0', connectionInfo);
+    expect(result).toBeDefined();
+    expect(result?.name).toBe('test-k8s');
+  });
+
+  test('should return vm connection when connectionType is vm', () => {
+    const vmConnection = {
+      name: 'test-vm',
+      status: () => 'started' as const,
+    };
+
+    provider.registerVmProviderConnection(vmConnection);
+
+    const connectionInfo: ProviderVmConnectionInfo = {
+      name: 'test-vm',
+      status: 'started',
+      connectionType: 'vm',
+    };
+
+    const result = providerRegistry.getMatchingConnectionFromProvider('0', connectionInfo);
+    expect(result).toBeDefined();
+    expect(result?.name).toBe('test-vm');
+  });
+
+  test('should throw error when connectionType is missing', () => {
+    const connectionInfoWithoutType = {
+      name: 'test-connection',
+      status: 'started',
+    } as unknown as ProviderConnectionInfo;
+
+    expect(() => {
+      providerRegistry.getMatchingConnectionFromProvider('0', connectionInfoWithoutType);
+    }).toThrowError('Missing connectionType property in provider connection info');
+  });
+
+  test('should throw error for unknown connectionType', () => {
+    const connectionInfoWithInvalidType = {
+      name: 'test-connection',
+      status: 'started',
+      connectionType: 'unknown-type',
+    } as unknown as ProviderConnectionInfo;
+
+    expect(() => {
+      providerRegistry.getMatchingConnectionFromProvider('0', connectionInfoWithInvalidType);
+    }).toThrowError('Unknown provider connection type');
+  });
+
+  test('should throw error when connection not found', () => {
+    const connectionInfo: ProviderContainerConnectionInfo = {
+      name: 'non-existent-connection',
+      displayName: 'Non-existent',
+      type: 'docker',
+      endpoint: {
+        socketPath: '/var/run/docker.sock',
+      },
+      status: 'started',
+      connectionType: 'container',
+    };
+
+    expect(() => {
+      providerRegistry.getMatchingConnectionFromProvider('0', connectionInfo);
+    }).toThrowError('no container connection matching provider id');
+  });
 });
 
 describe('a Kubernetes provider is registered', async () => {
@@ -852,6 +1004,7 @@ describe('should send events when starting a container connection', async () => 
         id: 'libkrun',
         name: 'libkrun',
       },
+      connectionType: 'container',
     };
 
     provider.registerContainerProviderConnection({
@@ -966,7 +1119,7 @@ test('should send events when starting a Kubernetes connection', async () => {
     name: 'connection',
     endpoint: { apiURL: 'endpoint' },
     status: 'started',
-    connectionType: 'kubernetes'
+    connectionType: 'kubernetes',
   };
 
   provider.registerKubernetesProviderConnection({
@@ -1016,7 +1169,7 @@ test('should send events when starting a VM connection', async () => {
   const connection: ProviderVmConnectionInfo = {
     name: 'connection',
     status: 'started',
-    connectionType: 'vm'
+    connectionType: 'vm',
   };
 
   (provider as ProviderImpl).registerVmProviderConnection({
@@ -1089,6 +1242,7 @@ describe('when auto-starting a container connection', async () => {
         id: 'libkrun',
         name: 'libkrun',
       },
+      connectionType: 'container',
     };
 
     providerRegistry.registerAutostartEngine(autostartEngine);
@@ -1266,7 +1420,7 @@ test('should send events when stopping a container connection', async () => {
       id: 'libkrun',
       name: 'libkrun',
     },
-    connectionType: 'container'
+    connectionType: 'container',
   };
 
   const startMock = vi.fn();
@@ -1337,7 +1491,7 @@ test('should send events when container connection status change', async () => {
       id: 'libkrun',
       name: 'libkrun',
     },
-    connectionType: 'container'
+    connectionType: 'container',
   };
 
   const startMock = vi.fn();
@@ -1412,7 +1566,7 @@ test('should send events when stopping a Kubernetes connection', async () => {
       apiURL: 'endpoint1',
     },
     status: 'stopped',
-    connectionType: 'kubernetes'
+    connectionType: 'kubernetes',
   };
 
   const startMock = vi.fn();
@@ -1462,7 +1616,7 @@ test('should send events when stopping a VM connection', async () => {
   const connection: ProviderVmConnectionInfo = {
     name: 'connection',
     status: 'stopped',
-    connectionType: 'vm'
+    connectionType: 'vm',
   };
 
   const startMock = vi.fn();
@@ -2433,7 +2587,7 @@ describe('shellInProviderConnection', () => {
     const connection: ProviderVmConnectionInfo = {
       name: 'connection',
       status: 'started',
-      connectionType: 'vm'
+      connectionType: 'vm',
     };
 
     const closeMock = vi.fn();

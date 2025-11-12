@@ -696,60 +696,58 @@ export class ProviderRegistry {
     return this.getProviderConnectionInfo(connection) as ProviderVmConnectionInfo;
   }
 
-private getProviderConnectionInfo(connection: ProviderConnection): ProviderConnectionInfo {
-  if (this.isContainerConnection(connection)) {
-    const { name, displayName, status, type, endpoint, shellAccess, vmType } = connection;
-    return {
-      name,
-      displayName: displayName ?? name,
-      status: status(),
-      type: type ?? 'docker',
-      endpoint: { socketPath: endpoint.socketPath },
-      shellAccess: !!shellAccess,
-      vmType: vmType ? { id: vmType.id, name: vmType.name } : undefined,
-      connectionType: 'container',
-      lifecycleMethods: this.getLifecycleMethods(connection),
-    };
+  private getProviderConnectionInfo(connection: ProviderConnection): ProviderConnectionInfo {
+    if (this.isContainerConnection(connection)) {
+      const { name, displayName, status, type, endpoint, shellAccess, vmType, vmTypeDisplayName } = connection;
+      return {
+        name,
+        displayName: displayName ?? name,
+        status: status(),
+        type: type ?? 'docker',
+        endpoint: { socketPath: endpoint.socketPath },
+        shellAccess: !!shellAccess,
+        vmType: vmType ? { id: vmType, name: vmTypeDisplayName ?? vmType } : undefined,
+        connectionType: 'container',
+        lifecycleMethods: this.getLifecycleMethods(connection),
+      };
+    }
+    if (this.isKubernetesConnection(connection)) {
+      const { name, status, endpoint } = connection;
+      return {
+        name,
+        status: status(),
+        endpoint: { apiURL: endpoint.apiURL },
+        connectionType: 'kubernetes',
+        lifecycleMethods: this.getLifecycleMethods(connection),
+      };
+    }
+
+    if (this.isVmConnection(connection)) {
+      const { name, status } = connection;
+      return {
+        name,
+        status: status(),
+        connectionType: 'vm',
+        lifecycleMethods: this.getLifecycleMethods(connection),
+      };
+    }
+
+    throw new Error(`Unknown provider connection type for connection: ${JSON.stringify(connection)}`);
   }
 
-  if (this.isKubernetesConnection(connection)) {
-    const { name, status, endpoint } = connection;
-    return {
-      name,
-      status: status(),
-      endpoint: { apiURL: endpoint.apiURL },
-      connectionType: 'kubernetes',
-      lifecycleMethods: this.getLifecycleMethods(connection),
-    };
+  private isVmConnection(connection: ProviderConnection): connection is VmProviderConnection {
+    // A VM connection is one that doesn't have container or kubernetes characteristics
+    return !this.isContainerConnection(connection) && !this.isKubernetesConnection(connection);
   }
 
-  if (this.isVmConnection(connection)) {
-    const { name, status } = connection;
-    return {
-      name,
-      status: status(),
-      connectionType: 'vm',
-      lifecycleMethods: this.getLifecycleMethods(connection),
-    };
+  private getLifecycleMethods(connection: ProviderConnection): LifecycleMethod[] {
+    const methods: LifecycleMethod[] = [];
+    if (connection.lifecycle?.start) methods.push('start');
+    if (connection.lifecycle?.stop) methods.push('stop');
+    if (connection.lifecycle?.delete) methods.push('delete');
+    if (connection.lifecycle?.edit) methods.push('edit');
+    return methods;
   }
-
-  throw new Error(
-    `Unknown provider connection type for connection: ${JSON.stringify(connection)}`
-  );
-}
-
-private isVmConnection(connection: ProviderConnection): connection is VmProviderConnection {
-  return (connection as any).connectionType === 'vm' || connection.hasOwnProperty('vmType');
-}
-
-private getLifecycleMethods(connection: ProviderConnection): LifecycleMethod[] {
-  const methods: LifecycleMethod[] = [];
-  if (connection.lifecycle?.start) methods.push('start');
-  if (connection.lifecycle?.stop) methods.push('stop');
-  if (connection.lifecycle?.delete) methods.push('delete');
-  if (connection.lifecycle?.edit) methods.push('edit');
-  return methods;
-}
 
   protected toProviderInfo(provider: ProviderImpl): ProviderInfo {
     const containerConnections: ProviderContainerConnectionInfo[] = provider.containerConnections.map(connection => {
@@ -908,7 +906,20 @@ private getLifecycleMethods(connection: ProviderConnection): LifecycleMethod[] {
     internalId: string,
     providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
   ): LifecycleContextImpl {
-    const connection = this.getMatchingConnectionFromProvider(internalId, providerContainerConnectionInfo);
+    // If it's not a ProviderConnectionInfo (doesn't have connectionType), convert it first
+    let connectionInfo: ProviderConnectionInfo;
+    if ('connectionType' in providerContainerConnectionInfo) {
+      connectionInfo = providerContainerConnectionInfo;
+    } else {
+      // It's a ProviderConnection type, convert it to ProviderConnectionInfo
+      connectionInfo = this.getProviderConnectionInfo(providerContainerConnectionInfo as ProviderConnection);
+    }
+
+    const connection = this.getMatchingConnectionFromProvider(internalId, connectionInfo);
+
+    if (!connection) {
+      throw new Error('No matching connection found');
+    }
 
     const context = this.connectionLifecycleContexts.get(connection);
     if (!context) {
@@ -1050,65 +1061,90 @@ private getLifecycleMethods(connection: ProviderConnection): LifecycleMethod[] {
   }
 
   protected getMatchingVmConnectionFromProvider(
-  internalProviderId: string,
-  providerVmConnectionInfo: ProviderVmConnectionInfo,
-): VmProviderConnection {
-  // grab the correct provider
-  const provider = this.getMatchingProvider(internalProviderId);
+    internalProviderId: string,
+    providerVmConnectionInfo: ProviderVmConnectionInfo,
+  ): VmProviderConnection {
+    // grab the correct provider
+    const provider = this.getMatchingProvider(internalProviderId);
 
-  if (!provider.vmConnections || !Array.isArray(provider.vmConnections)) {
-    throw new Error(`Provider ${internalProviderId} has no VM connections`);
+    if (!provider.vmConnections || !Array.isArray(provider.vmConnections)) {
+      throw new Error(`Provider ${internalProviderId} has no VM connections`);
+    }
+
+    // grab the correct VM connection
+    const vmConnection = provider.vmConnections.find(connection => connection.name === providerVmConnectionInfo.name);
+
+    if (!vmConnection) {
+      throw new Error(
+        `No VM connection matching name '${providerVmConnectionInfo.name}' for provider id '${internalProviderId}'`,
+      );
+    }
+    return vmConnection;
   }
 
-  // grab the correct VM connection
-  const vmConnection = provider.vmConnections.find(
-    connection => connection.name === providerVmConnectionInfo.name,
-  );
+  getMatchingConnectionFromProvider(
+    internalProviderId: string,
+    providerConnectionInfo: ProviderConnectionInfo,
+  ): ProviderConnection | undefined {
+    if (!providerConnectionInfo.connectionType) {
+      throw new Error(
+        `Missing connectionType property in provider connection info: ${JSON.stringify(providerConnectionInfo)}`,
+      );
+    }
 
-  if (!vmConnection) {
-    throw new Error(
-      `No VM connection matching name '${providerVmConnectionInfo.name}' for provider id '${internalProviderId}'`
-    );
+    switch (providerConnectionInfo.connectionType) {
+      case 'container':
+        return this.getMatchingContainerConnectionFromProvider(
+          internalProviderId,
+          providerConnectionInfo as ProviderContainerConnectionInfo,
+        );
+      case 'kubernetes':
+        return this.getMatchingKubernetesConnectionFromProvider(
+          internalProviderId,
+          providerConnectionInfo as ProviderKubernetesConnectionInfo,
+        );
+      case 'vm':
+        return this.getMatchingVmConnectionFromProvider(
+          internalProviderId,
+          providerConnectionInfo as ProviderVmConnectionInfo,
+        );
+      default: {
+        // TypeScript exhaustiveness check - this should never happen
+        const exhaustiveCheck: never = providerConnectionInfo;
+        throw new Error(
+          `Unknown provider connection type: ${(exhaustiveCheck as ProviderConnectionInfo).connectionType}. Connection: ${JSON.stringify(exhaustiveCheck)}`,
+        );
+      }
+    }
   }
-  return vmConnection;
-}
-
-getMatchingConnectionFromProvider(
-  internalProviderId: string,
-  providerConnectionInfo: ProviderConnectionInfo,
-): ProviderConnection | undefined {
-  const type = providerConnectionInfo.connectionType
-    ?? (providerConnectionInfo.endpoint?.socketPath
-        ? 'container'
-        : providerConnectionInfo.endpoint?.apiURL
-        ? 'kubernetes'
-        : 'vm');
-
-  switch (type) {
-    case 'container':
-      return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerConnectionInfo);
-    case 'kubernetes':
-      return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, providerConnectionInfo);
-    case 'vm':
-      return this.getMatchingVmConnectionFromProvider(internalProviderId, providerConnectionInfo);
-    default:
-      throw new Error(`Unknown provider connection type: ${JSON.stringify(providerConnectionInfo)}`);
-  }
-}
 
   isProviderContainerConnection(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderContainerConnectionInfo | ContainerProviderConnection {
-    return (connection as ProviderContainerConnectionInfo).endpoint?.socketPath !== undefined;
+    // Check if it's a ProviderConnectionInfo with connectionType
+    if ('connectionType' in connection) {
+      return connection.connectionType === 'container';
+    }
+    // Fallback for internal ContainerProviderConnection (doesn't have connectionType)
+    return (connection as ContainerProviderConnection).endpoint?.socketPath !== undefined;
   }
 
   isProviderKubernetesConnectionInfo(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderKubernetesConnectionInfo {
+    // Check if it's a ProviderConnectionInfo with connectionType
+    if ('connectionType' in connection) {
+      return connection.connectionType === 'kubernetes';
+    }
+    // Fallback for internal KubernetesProviderConnection
     return (
       !this.isProviderContainerConnection(connection) &&
-      (connection as ProviderKubernetesConnectionInfo).endpoint !== undefined
+      (connection as KubernetesProviderConnection).endpoint !== undefined
     );
+  }
+
+  isProviderVmConnectionInfo(connection: ProviderConnectionInfo): connection is ProviderVmConnectionInfo {
+    return 'connectionType' in connection && connection.connectionType === 'vm';
   }
 
   isContainerConnection(connection: ProviderConnection): connection is ContainerProviderConnection {
@@ -1128,6 +1164,10 @@ getMatchingConnectionFromProvider(
   ): Promise<void> {
     // grab the correct provider
     const connection = this.getMatchingConnectionFromProvider(internalProviderId, providerConnectionInfo);
+
+    if (!connection) {
+      throw new Error('No matching connection found');
+    }
 
     const lifecycle = connection.lifecycle;
     if (!lifecycle?.start) {
@@ -1200,6 +1240,10 @@ getMatchingConnectionFromProvider(
     // grab the correct provider
     const connection = this.getMatchingConnectionFromProvider(internalProviderId, providerConnectionInfo);
 
+    if (!connection) {
+      throw new Error('No matching connection found');
+    }
+
     const lifecycle = connection.lifecycle;
     if (!lifecycle?.edit) {
       throw new Error('The container connection does not support edit lifecycle');
@@ -1230,6 +1274,10 @@ getMatchingConnectionFromProvider(
   ): Promise<void> {
     // grab the correct provider
     const connection = this.getMatchingConnectionFromProvider(internalProviderId, providerConnectionInfo);
+
+    if (!connection) {
+      throw new Error('No matching connection found');
+    }
 
     const lifecycle = connection.lifecycle;
     if (!lifecycle?.stop) {
@@ -1301,6 +1349,10 @@ getMatchingConnectionFromProvider(
   ): Promise<void> {
     // grab the correct provider
     const connection = this.getMatchingConnectionFromProvider(internalProviderId, providerConnectionInfo);
+
+    if (!connection) {
+      throw new Error('No matching connection found');
+    }
 
     const lifecycle = connection.lifecycle;
     if (!lifecycle?.delete) {
@@ -1547,6 +1599,11 @@ getMatchingConnectionFromProvider(
   }> {
     try {
       const containerConnection = this.getMatchingConnectionFromProvider(internalProviderId, providerConnectionInfo);
+
+      if (!containerConnection) {
+        throw new Error('No matching connection found');
+      }
+
       let shellAccess: ProviderConnectionShellAccess | undefined;
       let connection: ProviderConnectionShellAccessSession | undefined;
       const disposables: Disposable[] = [];
