@@ -45,6 +45,7 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 import type {
   CheckStatus,
   PreflightChecksCallback,
+  ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
