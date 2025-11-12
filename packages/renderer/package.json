@@ -24,7 +24,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@tsconfig/svelte": "^5.0.5",
     "@types/js-yaml": "^4.0.9",
-    "@types/validator": "^13.15.4",
+    "@types/validator": "^13.15.6",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@xterm/addon-serialize": "^0.13.0",
     "eslint-plugin-svelte": "^3.13.0",

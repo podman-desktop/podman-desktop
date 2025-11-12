@@ -196,8 +196,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       '@types/validator':
-        specifier: ^13.15.4
-        version: 13.15.4
+        specifier: ^13.15.6
+        version: 13.15.6
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.46.4
         version: 8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
@@ -670,8 +670,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       '@types/validator':
-        specifier: ^13.15.4
-        version: 13.15.4
+        specifier: ^13.15.6
+        version: 13.15.6
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.46.4
         version: 8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
@@ -4424,8 +4424,8 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
-  '@types/validator@13.15.4':
-    resolution: {integrity: sha512-LSFfpSnJJY9wbC0LQxgvfb+ynbHftFo0tMsFOl/J4wexLnYMmDSPaj2ZyDv3TkfL1UePxPrxOWJfbiRS8mQv7A==}
+  '@types/validator@13.15.6':
+    resolution: {integrity: sha512-jc8VD+GfyVLfjVXG9qGq7MPR4UTz6e2fNHI6xmZhZ37f3iZLn0KecpxUnTsHLOPGgf1PfHUZmteBIJVsnYTDkQ==}
 
   '@types/verror@1.10.11':
     resolution: {integrity: sha512-RlDm9K7+o5stv0Co8i8ZRGxDbrTxhJtgjqjFyVh/tXQyl/rYtTKlnTvZ88oSTeYREWurwx20Js4kTuKCsFkUtg==}
@@ -8069,8 +8069,8 @@ packages:
     resolution: {integrity: sha512-YKBKVkKhty7s8rxddb40oOkuP0NbaeXrQvLin6QMHL7Ypiy2RW9LwOVrVgZRyOrhQlayMd9t+D8yDy8MKFTSDQ==}
     engines: {node: '>= 18.0.0'}
 
-  isbinaryfile@5.0.6:
-    resolution: {integrity: sha512-I+NmIfBHUl+r2wcDd6JwE9yWje/PIVY/R5/CmV8dXLZd5K+L9X2klAOwfAHNnondLXkbHyTAleQAWonpTJBTtw==}
+  isbinaryfile@5.0.7:
+    resolution: {integrity: sha512-gnWD14Jh3FzS3CPhF0AxNOJ8CxqeblPTADzI38r0wt8ZyQl5edpy75myt08EG2oKvpyiqSqsx+Wkz9vtkbTqYQ==}
     engines: {node: '>= 18.0.0'}
 
   isexe@2.0.0:
@@ -16401,7 +16401,7 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
-  '@types/validator@13.15.4': {}
+  '@types/validator@13.15.6': {}
 
   '@types/verror@1.10.11':
     optional: true
@@ -17117,7 +17117,7 @@ snapshots:
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
-      isbinaryfile: 5.0.6
+      isbinaryfile: 5.0.7
       js-yaml: 4.1.0
       json5: 2.2.3
       lazy-val: 1.0.5
@@ -20785,7 +20785,7 @@ snapshots:
 
   isbinaryfile@5.0.4: {}
 
-  isbinaryfile@5.0.6: {}
+  isbinaryfile@5.0.7: {}
 
   isexe@2.0.0: {}
 
