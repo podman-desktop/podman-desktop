@@ -147,7 +147,7 @@ test.describe.serial('Podman machine switching validation ', { tag: '@pdmachine'
     await test.step('Create podman machine', async () => {
       await podmanMachineCreatePage.machineCreationForm.setupAndCreateMachine(ROOTLESS_PODMAN_MACHINE_VISIBLE, {
         isRootful: false,
-        enableUserNet: false,
+        enableUserNet: true,
         startNow: false,
         virtualizationProvider: getVirtualizationProvider(),
       });
