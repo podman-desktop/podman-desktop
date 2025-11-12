@@ -50,8 +50,9 @@ body:
       label: Version
       description: What version of the software are you running?
       options:
-        - "1.22.0"
+        - "1.23.0"
         - "next (development version)"
+        - "1.22.0"
         - "1.21.x"
         - "1.20.x"
         - "1.19.x"
