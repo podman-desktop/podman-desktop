@@ -193,6 +193,7 @@ export default [
 
       // unicorn custom rules
       'unicorn/prefer-node-protocol': 'error',
+      'unicorn/numeric-separators-style': ["error", {"number": {"minimumDigits": 0, "groupLength": 3}}],
 
       // sonarjs custom rules
       'sonarjs/cognitive-complexity': 'off',
@@ -270,6 +271,7 @@ export default [
       'sonarjs/no-nested-assignment': 'off',
       'sonarjs/no-alphabetical-sort': 'off',
       'svelte/no-reactive-literals': 'error',
+      'unicorn/numeric-separators-style': ["error", {"number": {"minimumDigits": 0, "groupLength": 3}}],
     },
   },
 
