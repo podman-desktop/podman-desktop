@@ -514,13 +514,13 @@ describe('a Kubernetes provider is registered', async () => {
 
   test('should send provider-change when status of vm changes', async () => {
     // status unchanged, do not send event
-    vi.advanceTimersByTime(2005);
+    vi.advanceTimersByTime(2_005);
     expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
 
     connection.status = (): ProviderConnectionStatus => 'stopped';
 
     // status changed, send event
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2_000);
     expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
   });
 
@@ -675,13 +675,13 @@ describe('a vm provider is registered', async () => {
 
   test('should send provider-change when status of vm changes', async () => {
     // status unchanged, do not send event
-    vi.advanceTimersByTime(2005);
+    vi.advanceTimersByTime(2_005);
     expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', expect.anything());
 
     connection.status = (): ProviderConnectionStatus => 'stopped';
 
     // status changed, send event
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2_000);
     expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
   });
 

@@ -35,7 +35,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   listContainersMock.mockResolvedValue([
-    { Id: 'pod', Ports: [{ PublicPort: 8080 } as Port] as Port[] } as ContainerInfo,
+    { Id: 'pod', Ports: [{ PublicPort: 8_080 } as Port] as Port[] } as ContainerInfo,
   ]);
 
   getContributedMenusMock.mockImplementation(() => Promise.resolve([]));

@@ -163,7 +163,7 @@ test('cancellable task should display cancel button', async () => {
     id: 'dummy-task',
     progress: undefined, // indeterminate
     cancellable: true,
-    cancellationTokenSourceId: 1234,
+    cancellationTokenSourceId: 1_234,
   };
 
   tasksInfo.set([cancellableTask]);
@@ -210,7 +210,7 @@ test('if multiple tasks in progress, no cancel button is displayed', async () =>
     id: 'dummy-task1',
     progress: undefined,
     cancellable: true,
-    cancellationTokenSourceId: 1234,
+    cancellationTokenSourceId: 1_234,
   };
 
   const cancellableTask2: TaskInfoUI = {
@@ -221,7 +221,7 @@ test('if multiple tasks in progress, no cancel button is displayed', async () =>
     id: 'dummy-task2',
     progress: undefined,
     cancellable: true,
-    cancellationTokenSourceId: 2345,
+    cancellationTokenSourceId: 2_345,
   };
 
   tasksInfo.set([cancellableTask1, cancellableTask2]);

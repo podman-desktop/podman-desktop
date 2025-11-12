@@ -88,7 +88,7 @@ test('should update object into store-manager', async () => {
   // create a new object with different size
   const updatedEventStoreInfo: EventStoreInfo = {
     name: 'test-udpdate',
-    size: 1234,
+    size: 1_234,
   } as unknown as EventStoreInfo;
   updateStore(updatedEventStoreInfo);
 
@@ -99,5 +99,5 @@ test('should update object into store-manager', async () => {
   const afterUpdateInfo = allEventsAfterUpdate[0];
   // check the name
   expect(afterUpdateInfo.name).toBe('test-udpdate');
-  expect(afterUpdateInfo.size).toBe(1234);
+  expect(afterUpdateInfo.size).toBe(1_234);
 });

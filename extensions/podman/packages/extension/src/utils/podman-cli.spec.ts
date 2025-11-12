@@ -64,17 +64,17 @@ describe('findPodmanInstallations', () => {
     vi.mocked(env).isLinux = false;
 
     const fileMap: Record<string, { ino: number; isFile: boolean; targetLocation?: string }> = {
-      '/hardlink/podman': { ino: 12345, isFile: true },
-      '/opt/podman/bin/podman': { ino: 12345, isFile: true },
-      '/usr/bin/podman-dir': { ino: 10000, isFile: false },
-      '/inaccessible/path/podman': { ino: 10001, isFile: false },
-      '/usr/local/bin/podman': { ino: 10002, isFile: true },
-      '/opt/homebrew/bin/podman': { ino: 10003, isFile: true },
-      '/symlink/podman': { ino: 10004, isFile: true, targetLocation: '/opt/podman/bin/podman' },
-      '/usr/bin/podman': { ino: 10005, isFile: true },
-      '/opt/local/bin/podman': { ino: 10006, isFile: true },
-      '/homebrew/bin/podman': { ino: 10007, isFile: true },
-      '/usr/podman/bin/podman': { ino: 10008, isFile: true },
+      '/hardlink/podman': { ino: 12_345, isFile: true },
+      '/opt/podman/bin/podman': { ino: 12_345, isFile: true },
+      '/usr/bin/podman-dir': { ino: 10_000, isFile: false },
+      '/inaccessible/path/podman': { ino: 10_001, isFile: false },
+      '/usr/local/bin/podman': { ino: 10_002, isFile: true },
+      '/opt/homebrew/bin/podman': { ino: 10_003, isFile: true },
+      '/symlink/podman': { ino: 10_004, isFile: true, targetLocation: '/opt/podman/bin/podman' },
+      '/usr/bin/podman': { ino: 10_005, isFile: true },
+      '/opt/local/bin/podman': { ino: 10_006, isFile: true },
+      '/homebrew/bin/podman': { ino: 10_007, isFile: true },
+      '/usr/podman/bin/podman': { ino: 10_008, isFile: true },
     };
 
     vi.mocked(fs.realpathSync).mockImplementation(path => {

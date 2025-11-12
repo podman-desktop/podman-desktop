@@ -47,7 +47,7 @@ const fakeContainer1: ContainerInfoUI = {
     id: 'fakeContainerID1',
   },
   selected: false,
-  created: 1234,
+  created: 1_234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
 };
@@ -74,7 +74,7 @@ const fakeContainer2: ContainerInfoUI = {
     id: 'fakeContainerID2',
   },
   selected: false,
-  created: 1234,
+  created: 1_234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
 };

@@ -337,7 +337,7 @@ describe('locked configuration handling', () => {
       'proxy.http': 'https://127.0.0.1:8081',
       'telemetry.check': true, // User wants telemetry check enabled
       'statusbarProviders.showProviders': {
-        remindAt: 1758312136049,
+        remindAt: 1_758_312_136_049,
         disabled: false,
       },
       'releaseNotesBanner.show': '1.21.0',
@@ -347,7 +347,7 @@ describe('locked configuration handling', () => {
       'window.bounds': {
         x: 446,
         y: 304,
-        width: 1263,
+        width: 1_263,
         height: 906,
       },
       'learningCenter.expanded': false,
@@ -403,7 +403,7 @@ describe('locked configuration handling', () => {
     expect(windowConfig.get<{ x: number; y: number; width: number; height: number }>('bounds')).toEqual({
       x: 446,
       y: 304,
-      width: 1263,
+      width: 1_263,
       height: 906,
     });
   });
@@ -474,7 +474,7 @@ describe('locked configuration handling', () => {
     const userConfig = {
       'docker.settings': {
         cpus: 4,
-        memory: 8192,
+        memory: 8_192,
         disk: 100,
       },
     };
@@ -482,7 +482,7 @@ describe('locked configuration handling', () => {
     const managedDefaults = {
       'docker.settings': {
         cpus: 2,
-        memory: 4096,
+        memory: 4_096,
         disk: 50,
       },
     };
@@ -508,7 +508,7 @@ describe('locked configuration handling', () => {
     const settings = dockerConfig.get<{ cpus: number; memory: number; disk: number }>('settings');
     expect(settings).toEqual({
       cpus: 2,
-      memory: 4096,
+      memory: 4_096,
       disk: 50,
     });
   });

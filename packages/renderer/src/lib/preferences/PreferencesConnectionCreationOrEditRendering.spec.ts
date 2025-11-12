@@ -312,7 +312,7 @@ describe.each([
       name: providerInfo.name,
     });
     // expect it is sucessful
-    await vi.waitFor(() => expect(cancelTokenMock).toBeCalled(), { timeout: 3000 });
+    await vi.waitFor(() => expect(cancelTokenMock).toBeCalled(), { timeout: 3_000 });
   });
 
   test('Expect Close button and main image to not be visible if hidden using properties', async () => {
@@ -537,7 +537,7 @@ test(`cpu value is updated`, async () => {
     {
       default: 4,
       minimum: 1,
-      maximum: 1000,
+      maximum: 1_000,
       title: 'CPUs',
       parentId: '',
       scope: 'ContainerProviderConnectionFactory',

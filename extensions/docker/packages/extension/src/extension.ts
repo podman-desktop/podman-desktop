@@ -102,7 +102,7 @@ async function monitorDaemon(extensionContext: extensionApi.ExtensionContext): P
     } catch (error) {
       // ignore the update of machines
     }
-    await timeout(5000);
+    await timeout(5_000);
     monitorDaemon(extensionContext).catch((err: unknown) => {
       console.error('Error while monitoring docker daemon', err);
       if (err instanceof Error) {

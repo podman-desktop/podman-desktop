@@ -511,7 +511,7 @@ describe('expect update command to depends on context', async () => {
       },
       {
         interval: 500,
-        timeout: 2000,
+        timeout: 2_000,
       },
     );
 

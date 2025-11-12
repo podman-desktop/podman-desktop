@@ -300,14 +300,14 @@ export class Runner {
     const recordVideo = {
       dir: directory,
       size: {
-        width: 1050,
+        width: 1_050,
         height: 700,
       },
     };
     const args = pdArgs ? [pdArgs] : ['.'];
     // executablePath defaults to this package's installation location: node_modules/.bin/electron
     const executablePath = pdArgs ? join(pdArgs, 'node_modules', '.bin', 'electron') : (pdBinary ?? undefined);
-    const timeout = 45000;
+    const timeout = 45_000;
     return {
       args,
       executablePath,

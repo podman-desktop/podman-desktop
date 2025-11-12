@@ -110,7 +110,7 @@ test('Loader should send the event if extensions take time to start', async () =
   expect(dispatchEventMock.mock.calls.length).toBe(0);
 
   // wait one second (to simulate a long initialization of extensions)
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1_000));
 
   // now, flag remote extensions being ready
   extensionSystemIsExtensionsStartedMock.mockResolvedValue(true);

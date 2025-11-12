@@ -121,7 +121,7 @@ export class PodmanRemoteConnections {
         this.monitorRemoteConnections().catch((error: unknown) => {
           console.error('Error monitoring remote podman system connections', error);
         });
-      }, 5000);
+      }, 5_000);
     }
   }
 
@@ -172,7 +172,7 @@ export class PodmanRemoteConnections {
       sshTunnel.connect();
 
       //delay before registering the socket
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1_000));
 
       // register the socket
       const connectionDisposable = this.#provider.registerContainerProviderConnection({

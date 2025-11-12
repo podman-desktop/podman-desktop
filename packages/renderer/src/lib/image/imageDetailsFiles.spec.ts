@@ -68,7 +68,7 @@ describe('ImageDetailsFiles component', () => {
         calledExpected: false,
       },
     ])('$name', async ({ providers, calledExpected }) => {
-      getCancellableTokenSourceMock.mockResolvedValue(101010);
+      getCancellableTokenSourceMock.mockResolvedValue(101_010);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
       const imageInfo = {
         engineId: 'podman.Podman',
@@ -76,9 +76,9 @@ describe('ImageDetailsFiles component', () => {
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
-        Created: 1701338214,
-        Size: 34134140,
-        VirtualSize: 34134140,
+        Created: 1_701_338_214,
+        Size: 34_134_140,
+        VirtualSize: 34_134_140,
         SharedSize: 0,
         Labels: {},
         Containers: 0,
@@ -98,7 +98,7 @@ describe('ImageDetailsFiles component', () => {
     });
 
     test('token is canceled when component is unmounted', async () => {
-      const TOKEN_ID = 101010;
+      const TOKEN_ID = 101_010;
       getCancellableTokenSourceMock.mockResolvedValue(TOKEN_ID);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
       const imageInfo = {
@@ -107,9 +107,9 @@ describe('ImageDetailsFiles component', () => {
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
-        Created: 1701338214,
-        Size: 34134140,
-        VirtualSize: 34134140,
+        Created: 1_701_338_214,
+        Size: 34_134_140,
+        VirtualSize: 34_134_140,
         SharedSize: 0,
         Labels: {},
         Containers: 0,
@@ -127,7 +127,7 @@ describe('ImageDetailsFiles component', () => {
     });
 
     test('error during imageGetFilesystemLayers', async () => {
-      getCancellableTokenSourceMock.mockResolvedValue(101010);
+      getCancellableTokenSourceMock.mockResolvedValue(101_010);
       imageGetFilesystemLayersMock.mockRejectedValue(new Error('an error'));
       const imageInfo = {
         engineId: 'podman.Podman',
@@ -135,9 +135,9 @@ describe('ImageDetailsFiles component', () => {
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
-        Created: 1701338214,
-        Size: 34134140,
-        VirtualSize: 34134140,
+        Created: 1_701_338_214,
+        Size: 34_134_140,
+        VirtualSize: 34_134_140,
         SharedSize: 0,
         Labels: {},
         Containers: 0,
@@ -176,7 +176,7 @@ describe('ImageDetailsFiles component', () => {
         displayedExpected: false,
       },
     ])('$name', async ({ providers, displayedExpected }) => {
-      getCancellableTokenSourceMock.mockResolvedValue(101010);
+      getCancellableTokenSourceMock.mockResolvedValue(101_010);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
       const imageInfo = {
         engineId: 'podman.Podman',
@@ -184,9 +184,9 @@ describe('ImageDetailsFiles component', () => {
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
-        Created: 1701338214,
-        Size: 34134140,
-        VirtualSize: 34134140,
+        Created: 1_701_338_214,
+        Size: 34_134_140,
+        VirtualSize: 34_134_140,
         SharedSize: 0,
         Labels: {},
         Containers: 0,
@@ -207,7 +207,7 @@ describe('ImageDetailsFiles component', () => {
     });
 
     test('imageGetFilesystemLayers is called when the fetch button is clicked and button is hidden', async () => {
-      getCancellableTokenSourceMock.mockResolvedValue(101010);
+      getCancellableTokenSourceMock.mockResolvedValue(101_010);
       imageGetFilesystemLayersMock.mockResolvedValue({ layers: [] });
       const imageInfo = {
         engineId: 'podman.Podman',
@@ -215,9 +215,9 @@ describe('ImageDetailsFiles component', () => {
         Id: 'sha256:3696f18be9a51a60395a7c2667e2fcebd2d913af0ad6da287e03810fda566833',
         ParentId: '7f8297e79d497136a7d75d506781b545b20ea599041f02ab14aa092e24f110b7',
         RepoTags: ['quay.io/user/image-name:v0.0.1'],
-        Created: 1701338214,
-        Size: 34134140,
-        VirtualSize: 34134140,
+        Created: 1_701_338_214,
+        Size: 34_134_140,
+        VirtualSize: 34_134_140,
         SharedSize: 0,
         Labels: {},
         Containers: 0,

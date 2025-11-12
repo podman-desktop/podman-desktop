@@ -84,7 +84,7 @@ const containerInfoMock: ContainerInfo = {
   Image: 'image1',
   ImageID: 'image1',
   Command: 'command1',
-  Created: 1234567890,
+  Created: 1_234_567_890,
   State: 'running',
   Status: 'running',
   engineId: 'engine1',

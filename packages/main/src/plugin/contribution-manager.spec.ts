@@ -42,7 +42,7 @@ let composeFileExample: ComposeObject;
 
 const ociImage = 'quay.io/my-image';
 const extensionName = 'my-extension';
-const portNumber = 10000;
+const portNumber = 10_000;
 
 const eventEmitter = new EventEmitter();
 
@@ -605,7 +605,7 @@ describe('waitForRunningState', () => {
     // resolve always false
     vi.spyOn(contributionManager, 'isPodmanDesktopServiceAlive').mockResolvedValue(false);
 
-    await expect(contributionManager.waitForRunningState('/fake/directory', 'my-project', 2500)).rejects.toThrow(
+    await expect(contributionManager.waitForRunningState('/fake/directory', 'my-project', 2_500)).rejects.toThrow(
       'The podman-desktop-socket service is not running after',
     );
   });

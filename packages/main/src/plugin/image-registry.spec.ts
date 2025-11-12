@@ -792,7 +792,7 @@ test('getManifestFromUrl returns the expected manifest with mediaType', async ()
   // mock findBestManifest
   const spyFindBestManifest = vi.spyOn(imageRegistry, 'findBestManifest');
   spyFindBestManifest.mockReturnValue({
-    digest: 1234,
+    digest: 1_234,
   });
 
   const manifest = await imageRegistry.getManifest(
@@ -838,7 +838,7 @@ test('getManifestFromUrl returns the expected manifest without mediaType but wit
   // mock findBestManifest
   const spyFindBestManifest = vi.spyOn(imageRegistry, 'findBestManifest');
   spyFindBestManifest.mockReturnValue({
-    digest: 1234,
+    digest: 1_234,
   });
 
   const manifest = await imageRegistry.getManifest(
@@ -890,7 +890,7 @@ test('getManifestFromUrl returns the expected manifest with docker manifest v2',
   // mock findBestManifest
   const spyFindBestManifest = vi.spyOn(imageRegistry, 'findBestManifest');
   spyFindBestManifest.mockReturnValue({
-    digest: 1234,
+    digest: 1_234,
   });
 
   const manifest = await imageRegistry.getManifest(

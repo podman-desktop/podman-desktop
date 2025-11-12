@@ -74,7 +74,7 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     await playExpect(
       setupButton,
       'Compose Setup button is not present, perhaps compose is already installed',
-    ).toBeVisible({ timeout: 10000 });
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test('Can enter Compose onboarding', async ({ page, navigationBar }) => {
@@ -103,7 +103,7 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
 
     const onboardigLocalPage = new ComposeLocalInstallPage(page);
     await playExpect(onboardigLocalPage.onboardingStatusMessage).toHaveText('Compose successfully Downloaded', {
-      timeout: 50000,
+      timeout: 50_000,
     });
 
     await onboardingPage.cancelSetupButtion.click();
@@ -133,7 +133,7 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     await onboardingPage.nextStepButton.click();
 
     const onboardingWidePage = new ComposeWideInstallPage(page);
-    await playExpect(onboardingWidePage.onboardingStatusMessage).toHaveText('Compose installed', { timeout: 50000 });
+    await playExpect(onboardingWidePage.onboardingStatusMessage).toHaveText('Compose installed', { timeout: 50_000 });
     await playExpect(onboardingWidePage.mainPage.getByRole('heading', { name: 'How To Use Compose' })).toBeVisible();
     await playExpect(onboardingWidePage.composeCommandMessage).toBeVisible();
     await playExpect(onboardingWidePage.nextStepButton).toBeEnabled();
@@ -173,7 +173,7 @@ async function openComposeOnboarding(page: Page, navigationBar: NavigationBar): 
   await playExpect(
     setupButton,
     'Compose Setup button is not present, perhaps compose is already installed',
-  ).toBeVisible({ timeout: 10000 });
+  ).toBeVisible({ timeout: 10_000 });
   await setupButton.click();
   return new ComposeOnboardingPage(page);
 }

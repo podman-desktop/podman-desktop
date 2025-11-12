@@ -37,7 +37,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
-      return 1000;
+      return 1_000;
     }
     return undefined;
   });
@@ -60,7 +60,7 @@ test('expect being able to reconnect ', async () => {
 
   let onDataCallback: (data: Buffer) => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   shellInContainerMock.mockImplementation(
     (
       _engineId: string,
@@ -85,7 +85,7 @@ test('expect being able to reconnect ', async () => {
   onDataCallback(Buffer.from('hello\nworld'));
 
   // wait 1s
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1_000));
 
   // search a div having aria-live="assertive" attribute
   const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
@@ -129,7 +129,7 @@ test('terminal active/ restarts connection after stopping and starting a contain
 
   let onDataCallback: (data: Buffer) => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   shellInContainerMock.mockImplementation(
     async (
       _engineId: string,
@@ -180,7 +180,7 @@ test('terminal active/ restarts connection after stopping and starting a contain
 
   await renderObject.rerender({ container: container, screenReaderMode: true });
 
-  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(10), { timeout: 2000 });
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(10), { timeout: 2_000 });
 });
 
 test('terminal active/ restarts connection after restarting a container', async () => {
@@ -193,7 +193,7 @@ test('terminal active/ restarts connection after restarting a container', async 
   let onDataCallback: (data: Buffer) => void = () => {};
   let onEndCallback: () => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   shellInContainerMock.mockImplementation(
     async (
       _engineId: string,
@@ -250,7 +250,7 @@ test('prompt is not duplicated after restoring terminal from containerTerminals 
 
   let onDataCallback: (data: Buffer) => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   shellInContainerMock.mockImplementation(
     (
       _engineId: string,

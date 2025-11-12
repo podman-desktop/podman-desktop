@@ -40,7 +40,7 @@ export class MacCPUCheck extends BaseCheck {
 
 export class MacMemoryCheck extends BaseCheck {
   title = 'RAM';
-  private readonly REQUIRED_MEM = 4 * 1024 * 1024 * 1024; // 4Gb
+  private readonly REQUIRED_MEM = 4 * 1_024 * 1_024 * 1_024; // 4Gb
 
   async execute(): Promise<extensionApi.CheckResult> {
     const totalMem = os.totalmem();

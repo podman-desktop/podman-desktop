@@ -127,7 +127,7 @@ export class ExtensionLoader implements IAsyncDisposable {
   protected extensionState = new Map<string, string>();
   protected extensionStateErrors = new Map<string, unknown>();
 
-  protected watchTimeout = 1000;
+  protected watchTimeout = 1_000;
 
   private readonly _onDidChange = new Emitter<void>();
   readonly onDidChange: Event<void> = this._onDidChange.event;
@@ -1706,7 +1706,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         const delayInSeconds: number = this.configurationRegistry
           .getConfiguration(ExtensionLoaderSettings.SectionName)
           .get(ExtensionLoaderSettings.MaxActivationTime, DEFAULT_TIMEOUT);
-        const delayInMilliseconds = delayInSeconds * 1000;
+        const delayInMilliseconds = delayInSeconds * 1_000;
 
         // reject a promise after this delay
         const timeoutPromise = new Promise((_, reject) =>

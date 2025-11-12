@@ -46,7 +46,7 @@ test('empty kubernetesCurrentContextPortForwards store should display empty scre
 test('One port forwarded should display correct table content', async () => {
   const forwardConfig: ForwardConfig = {
     forward: {
-      localPort: 5000,
+      localPort: 5_000,
       remotePort: 80,
     },
     id: '1',
@@ -85,8 +85,8 @@ test('Multiple (10) port forwards should render all rows', async () => {
   // Setup: Create an array of 10 port forward configs
   const forwardConfigs: ForwardConfig[] = Array.from({ length: 10 }, (_, i) => ({
     forward: {
-      localPort: 6000 + i,
-      remotePort: 8000 + i,
+      localPort: 6_000 + i,
+      remotePort: 8_000 + i,
     },
     id: String(i),
     kind: i % 2 === 0 ? WorkloadKind.SERVICE : WorkloadKind.DEPLOYMENT,
@@ -123,21 +123,21 @@ test('Column sorting should reorder the table data', async () => {
       id: 'a',
       name: 'zebra-pod',
       kind: WorkloadKind.POD,
-      forward: { localPort: 9000, remotePort: 300 },
+      forward: { localPort: 9_000, remotePort: 300 },
       namespace: '',
     },
     {
       id: 'b',
       name: 'alpha-svc',
       kind: WorkloadKind.SERVICE,
-      forward: { localPort: 5000, remotePort: 100 },
+      forward: { localPort: 5_000, remotePort: 100 },
       namespace: '',
     },
     {
       id: 'c',
       name: 'middle-dep',
       kind: WorkloadKind.DEPLOYMENT,
-      forward: { localPort: 7000, remotePort: 200 },
+      forward: { localPort: 7_000, remotePort: 200 },
       namespace: '',
     },
   ];

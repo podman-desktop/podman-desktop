@@ -104,7 +104,7 @@ test('expect getLatestVersionAsset to return the latest release from a list of r
   const kubectlDownload = new KubectlDownload(extensionContext, kubectlGitHubReleasesMock, os);
   const result = await kubectlDownload.getLatestVersionAsset();
   expect(result).toBeDefined();
-  expect(result.id).toEqual(131738959);
+  expect(result.id).toEqual(131_738_959);
   expect(result.label).toEqual('Kubernetes v1.29.0-rc.1');
   expect(result.tag).toEqual('v1.29.0-rc.1');
 });
@@ -116,7 +116,7 @@ test('pick the 6th option option in the quickpickmenu and expect it to return th
   const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick');
 
   showQuickPickMock.mockResolvedValue({
-    id: 129616500,
+    id: 129_616_500,
     label: 'Kubernetes v1.27.8',
     tag: 'v1.27.8',
   } as KubectlGithubReleaseArtifactMetadata);

@@ -163,7 +163,7 @@ test('Should create a cancellable task with a source id if cancellable option pr
   const dummyTask = new TestTaskImpl('test-task-id', 'test-title', 'running', 'in-progress');
   vi.mocked(taskManager.createTask).mockReturnValue(dummyTask);
 
-  const tokenSourceId = 1234;
+  const tokenSourceId = 1_234;
   // get id for the token source
   vi.mocked(cancellationTokenRegistry.createCancellationTokenSource).mockReturnValue(tokenSourceId);
 
@@ -218,7 +218,7 @@ test('Should flag the request being canceled at the end if interrupted', async (
   const dummyTask = new TestTaskImpl('test-task-id', 'test-title', 'running', 'in-progress');
   vi.mocked(taskManager.createTask).mockReturnValue(dummyTask);
 
-  const tokenSourceId = 1234;
+  const tokenSourceId = 1_234;
   // get id for the token source
   vi.mocked(cancellationTokenRegistry.createCancellationTokenSource).mockReturnValue(tokenSourceId);
 
@@ -233,7 +233,7 @@ test('Should flag the request being canceled at the end if interrupted', async (
       cancellationTokenSource.cancel();
       progress.report({ increment: 50 });
       // wait 1s
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1_000));
     },
   );
 

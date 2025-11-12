@@ -47,7 +47,7 @@ export class CreateVolumePage extends BasePage {
       await this.volumeNameBox.fill(name);
       await playExpect(this.createVolumeButton).toBeEnabled();
       await this.createVolumeButton.click();
-      await playExpect(this.doneButton).toBeEnabled({ timeout: 30000 });
+      await playExpect(this.doneButton).toBeEnabled({ timeout: 30_000 });
       await this.doneButton.click();
       return new VolumesPage(this.page);
     });

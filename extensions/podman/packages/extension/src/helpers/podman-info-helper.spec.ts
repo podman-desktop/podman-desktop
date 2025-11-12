@@ -63,12 +63,12 @@ test('should grab podman from the installer', async () => {
         version: '38',
       },
       eventLogger: 'journald',
-      freeLocks: 2048,
+      freeLocks: 2_048,
       hostname: 'localhost.localdomain',
       kernel: '6.4.15-200.fc38.aarch64',
       logDriver: 'journald',
-      memFree: 3384516608,
-      memTotal: 3796164608,
+      memFree: 3_384_516_608,
+      memTotal: 3_796_164_608,
       networkBackend: 'netavark',
       networkBackendInfo: {
         backend: 'netavark',
@@ -96,7 +96,7 @@ test('should grab podman from the installer', async () => {
       GoVersion: 'go1.20.7',
       GitCommit: '',
       BuiltTime: 'Tue Sep 12 22:07:26 2023',
-      Built: 1694549246,
+      Built: 1_694_549_246,
       OsArch: 'linux/arm64',
       Os: 'linux',
     },
@@ -119,8 +119,8 @@ test('should grab podman from the installer', async () => {
     version: '38',
   });
   expect(records.podmanMachineKernel).toBe('6.4.15-200.fc38.aarch64');
-  expect(records.podmanMachineMemFree).toBe(3384516608);
-  expect(records.podmanMachineMemTotal).toBe(3796164608);
+  expect(records.podmanMachineMemFree).toBe(3_384_516_608);
+  expect(records.podmanMachineMemTotal).toBe(3_796_164_608);
   expect(records.podmanMachineNetworkBackend).toBe('netavark');
   expect(records.podmanMachineNetworkBackendVersion).toBe('netavark 1.7.0');
   expect(records.podmanMachineNetworkOciRuntime).toBeDefined();

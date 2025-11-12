@@ -41,7 +41,7 @@ export class ExtensionsCatalog {
 
   private lastFetchTime = 0;
   private cachedCatalog: InternalCatalogJSON | undefined;
-  static readonly CACHE_TIMEOUT = 1000 * 60 * 60 * 4; // 4 hours
+  static readonly CACHE_TIMEOUT = 1_000 * 60 * 60 * 4; // 4 hours
 
   constructor(
     @inject(Certificates)
@@ -182,12 +182,12 @@ export class ExtensionsCatalog {
       retry: { limit: 0 },
       // specify short timeout
       timeout: {
-        lookup: 2000,
-        connect: 2000,
-        secureConnect: 2000,
-        socket: 2000,
-        send: 10000,
-        response: 1000,
+        lookup: 2_000,
+        connect: 2_000,
+        secureConnect: 2_000,
+        socket: 2_000,
+        send: 10_000,
+        response: 1_000,
       },
     };
 
@@ -206,7 +206,7 @@ export class ExtensionsCatalog {
         try {
           options.agent.http = new HttpProxyAgent({
             keepAlive: true,
-            keepAliveMsecs: 1000,
+            keepAliveMsecs: 1_000,
             maxSockets: 256,
             maxFreeSockets: 256,
             scheduling: 'lifo',
@@ -221,7 +221,7 @@ export class ExtensionsCatalog {
         try {
           options.agent.https = new HttpsProxyAgent({
             keepAlive: true,
-            keepAliveMsecs: 1000,
+            keepAliveMsecs: 1_000,
             maxSockets: 256,
             maxFreeSockets: 256,
             scheduling: 'lifo',

@@ -334,7 +334,7 @@ suite('ContextKeyExpr', () => {
 
     checkEvaluate('a > b', { a: 'b' }, false);
     checkEvaluate('a > b', { a: 'c' }, false);
-    checkEvaluate('a > b', { a: 1000 }, false);
+    checkEvaluate('a > b', { a: 1_000 }, false);
 
     checkEvaluate('a >= 2', { a: '1' }, false);
     checkEvaluate('a >= 2', { a: '2' }, true);

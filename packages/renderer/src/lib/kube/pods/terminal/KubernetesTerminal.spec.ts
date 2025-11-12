@@ -35,7 +35,7 @@ const kubernetesExecResizeMock = vi.fn();
 beforeAll(() => {
   getConfigurationValueMock.mockImplementation((key: string) => {
     if (key === 'terminal.integrated.scrollback') {
-      return 1000;
+      return 1_000;
     }
     return undefined;
   });

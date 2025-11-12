@@ -34,7 +34,7 @@ describe('guessIsManifest function', () => {
       RepoDigests: ['manifestDigest'],
       Created: 0,
       Size: 0,
-      VirtualSize: 40 * 1024, // 40KB (less than 50KB threshold)
+      VirtualSize: 40 * 1_024, // 40KB (less than 50KB threshold)
       SharedSize: 0,
       Containers: 0,
       Digest: 'sha256:manifestImage',
@@ -54,7 +54,7 @@ describe('guessIsManifest function', () => {
       RepoDigests: ['largeImageDigest'],
       Created: 0,
       Size: 0,
-      VirtualSize: 2000000, // 2MB
+      VirtualSize: 2_000_000, // 2MB
       SharedSize: 0,
       Containers: 0,
       Digest: 'sha256:largeImage',
@@ -74,7 +74,7 @@ describe('guessIsManifest function', () => {
       RepoDigests: ['labeledImageDigest'],
       Created: 0,
       Size: 0,
-      VirtualSize: 500000, // 500KB
+      VirtualSize: 500_000, // 500KB
       SharedSize: 0,
       Containers: 0,
       Digest: 'sha256:labeledImage',
@@ -94,7 +94,7 @@ describe('guessIsManifest function', () => {
       RepoDigests: ['noTagImageDigest'],
       Created: 0,
       Size: 0,
-      VirtualSize: 500000, // 500KB
+      VirtualSize: 500_000, // 500KB
       SharedSize: 0,
       Containers: 0,
       Digest: 'sha256:noTagImage',
@@ -114,7 +114,7 @@ describe('guessIsManifest function', () => {
       RepoDigests: [],
       Created: 0,
       Size: 0,
-      VirtualSize: 500000, // 500KB
+      VirtualSize: 500_000, // 500KB
       SharedSize: 0,
       Containers: 0,
       Digest: 'sha256:noDigestImage',
@@ -135,9 +135,9 @@ describe('guessIsManifest function', () => {
         'testdomain.io/library/hello@sha256:2d4e459f4ecb5329407ae3e47cbc107a2fbace221354ca75960af4c047b3cb13',
         'testdomain.io/library/hello@sha256:53641cd209a4fecfc68e21a99871ce8c6920b2e7502df0a20671c6fccc73a7c6',
       ],
-      Created: 1683046167,
-      Size: 23301,
-      VirtualSize: 23301, // Directly matches Size in this case
+      Created: 1_683_046_167,
+      Size: 23_301,
+      VirtualSize: 23_301, // Directly matches Size in this case
       SharedSize: 0,
       Containers: 0,
       History: ['testdomain.io/library/hello:latest'],
@@ -161,10 +161,10 @@ describe('guessIsManifest function', () => {
         'localhost/testm123@sha256:1675dad79a8d4c09974d4818d51073653ff47828e27e17bfe62a0d08e2776021',
         'localhost/testm123@sha256:20b959ad5960230b65a77b746bdbf5d991ade4d7a129c2554e167acdcc990531',
       ],
-      Created: 1713187011,
-      Size: 1115,
+      Created: 1_713_187_011,
+      Size: 1_115,
       SharedSize: 0,
-      VirtualSize: 1115,
+      VirtualSize: 1_115,
       Labels: {},
       Containers: 0,
       History: ['localhost/testm123:latest', 'localhost/foobar123:latest'],
@@ -189,7 +189,7 @@ test('expect to fail even if engine name does not equal podman', () => {
     RepoDigests: ['manifestDigest'],
     Created: 0,
     Size: 0,
-    VirtualSize: 40 * 1024, // 40KB (less than 50KB threshold)
+    VirtualSize: 40 * 1_024, // 40KB (less than 50KB threshold)
     SharedSize: 0,
     Containers: 0,
     Digest: 'sha256:manifestImage',

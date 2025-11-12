@@ -515,7 +515,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
     dispose: vi.fn(),
   };
   configurationRegistryGetConfigurationMock.mockReturnValue({
-    get: vi.fn().mockReturnValue(5000),
+    get: vi.fn().mockReturnValue(5_000),
   });
   await extensionLoader.activateExtension(
     {
@@ -569,7 +569,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
     {
       activate: () => {
         // wait for 20 seconds
-        return new Promise(resolve => setTimeout(resolve, 20000));
+        return new Promise(resolve => setTimeout(resolve, 20_000));
       },
     },
   );
@@ -2339,11 +2339,11 @@ test('load extensions sequentially', async () => {
   loadExtensionMock.mockImplementation(extension => {
     if (extension.id === extensionId1) {
       // extension 1 takes 1s to load
-      return new Promise(resolve => setTimeout(resolve, 1000));
+      return new Promise(resolve => setTimeout(resolve, 1_000));
     } else if (extension.id === extensionId2) {
       return new Promise(resolve => setTimeout(resolve, 100));
     } else if (extension.id === extensionId3) {
-      return new Promise(resolve => setTimeout(resolve, 1000));
+      return new Promise(resolve => setTimeout(resolve, 1_000));
     }
     return Promise.resolve();
   });
@@ -2354,7 +2354,7 @@ test('load extensions sequentially', async () => {
 
   const delta = end - start;
   // delta should be greater than 2s as it's sequential (so 1s + 1s + 100ms) > 2s
-  expect(delta).toBeGreaterThan(2000);
+  expect(delta).toBeGreaterThan(2_000);
 
   // check if loadExtension is called in order
   expect(loadExtensionMock).toBeCalledTimes(3);

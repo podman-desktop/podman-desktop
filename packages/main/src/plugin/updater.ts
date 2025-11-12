@@ -480,7 +480,7 @@ export class Updater {
     }
 
     // Create an interval to check for updates every 12 hours
-    const intervalId = setInterval(this.checkForUpdates.bind(this), 1000 * 60 * 60 * 12);
+    const intervalId = setInterval(this.checkForUpdates.bind(this), 1_000 * 60 * 60 * 12);
 
     return Disposable.create(() => {
       clearInterval(intervalId);

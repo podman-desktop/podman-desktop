@@ -88,7 +88,7 @@ test('images should be updated in case of a image is loaded from an archive', as
   await imageLoadFromArchiveCallback();
 
   // wait debounce
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise(resolve => setTimeout(resolve, 2_000));
 
   // check if the images have been updated
   const images2 = get(imagesInfos);

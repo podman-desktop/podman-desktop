@@ -210,7 +210,7 @@ export class ProviderRegistry {
           this.providerWarnings.set(providerKey, provider.warnings);
         }
       }
-    }, 2000);
+    }, 2_000);
   }
 
   createProvider(extensionId: string, extensionDisplayName: string, providerOptions: ProviderOptions): Provider {
@@ -1477,7 +1477,7 @@ export class ProviderRegistry {
         this.apiSender.send('provider-change', {});
         previousStatus = newStatus;
       }
-    }, 2000);
+    }, 2_000);
 
     // listen to events
     return Disposable.create(() => {
@@ -1505,7 +1505,7 @@ export class ProviderRegistry {
         this.apiSender.send('provider-change', {});
         previousStatus = newStatus;
       }
-    }, 2000);
+    }, 2_000);
 
     return Disposable.create(() => {
       clearInterval(timer);

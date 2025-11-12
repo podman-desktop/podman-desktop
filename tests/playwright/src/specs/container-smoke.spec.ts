@@ -58,7 +58,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 });
 
 test.afterAll(async ({ runner, page }) => {
-  test.setTimeout(90000);
+  test.setTimeout(90_000);
 
   try {
     await deleteContainer(page, containerToRun);

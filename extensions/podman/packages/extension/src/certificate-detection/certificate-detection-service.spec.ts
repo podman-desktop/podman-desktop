@@ -109,7 +109,7 @@ describe('CertificateDetectionService', () => {
 
     test('should merge provided config with defaults', () => {
       const customConfig: Partial<CertificateDetectionConfig> = {
-        scanTimeoutMs: 5000,
+        scanTimeoutMs: 5_000,
         validCertExtensions: ['.crt'],
       };
       const serviceWithConfig = new CertificateDetectionService(undefined, customConfig);
@@ -754,7 +754,7 @@ describe('CertificateDetectionService', () => {
     test('should update configuration', () => {
       const service = new CertificateDetectionService();
       const newConfig: Partial<CertificateDetectionConfig> = {
-        scanTimeoutMs: 15000,
+        scanTimeoutMs: 15_000,
         validCertExtensions: ['.crt', '.pem'],
       };
 

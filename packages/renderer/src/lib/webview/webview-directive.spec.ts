@@ -40,7 +40,7 @@ describe('webview-directive', () => {
     vi.clearAllMocks();
 
     mockWebviewElement = {
-      getWebContentsId: vi.fn().mockReturnValue(12345),
+      getWebContentsId: vi.fn().mockReturnValue(12_345),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     } as unknown as WebviewElement;

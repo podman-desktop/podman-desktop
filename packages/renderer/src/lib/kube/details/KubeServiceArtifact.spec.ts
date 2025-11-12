@@ -35,7 +35,7 @@ const fakeServiceSpec = {
   sessionAffinity: 'None',
   ports: [
     { name: 'http', port: 80, protocol: 'TCP' },
-    { name: 'http2', port: 80, nodePort: 12345, protocol: 'TCP' },
+    { name: 'http2', port: 80, nodePort: 12_345, protocol: 'TCP' },
     { port: 443, protocol: 'TCP' },
   ],
   selector: {

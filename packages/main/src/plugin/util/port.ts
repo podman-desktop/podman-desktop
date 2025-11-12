@@ -26,18 +26,18 @@ import { type NetworkInterfaceInfoIPv4, networkInterfaces } from 'node:os';
  * @throws Error if the port is invalid (NaN or > 65535) or if no free port is found within the valid range
  */
 export async function getFreePort(port = 0): Promise<number> {
-  if (isNaN(port) || port > 65535) {
+  if (isNaN(port) || port > 65_535) {
     throw new Error('Please enter a port number between 0 and 65535.');
   }
 
-  if (port < 1024) {
-    port = 9000;
+  if (port < 1_024) {
+    port = 9_000;
   }
 
   let isFree = false;
   while (!isFree) {
     // Check if we've exceeded the valid port range during iteration
-    if (port > 65535) {
+    if (port > 65_535) {
       throw new Error('Unable to find a free port: all ports in the valid range (1024-65535) are busy.');
     }
 
@@ -56,7 +56,7 @@ export async function getFreePort(port = 0): Promise<number> {
  * Find a free port range
  */
 export async function getFreePortRange(rangeSize: number): Promise<string> {
-  let port = 9000;
+  let port = 9_000;
   let startPort = port;
 
   do {
@@ -91,9 +91,9 @@ function isFreeAddressPort(address: string, port: number): Promise<boolean> {
 }
 
 export async function isFreePort(port: number): Promise<boolean> {
-  if (isNaN(port) || port > 65535) {
+  if (isNaN(port) || port > 65_535) {
     throw new Error('The port must have an integer value within the range from 1025 to 65535.');
-  } else if (port < 1024) {
+  } else if (port < 1_024) {
     throw new Error('The port must be greater than 1024.');
   }
 

@@ -97,7 +97,7 @@ test.each(hosts)(
 
 test('return first empty port, no port is used', async () => {
   // eslint-disable-next-line sonarjs/pseudo-random
-  const start = 21000 + Math.floor(Math.random() * 100);
+  const start = 21_000 + Math.floor(Math.random() * 100);
   const freePort = await port.getFreePort(start);
 
   expect(freePort).toBe(start);
@@ -107,8 +107,8 @@ test('return first empty port, no port is used', async () => {
 test.each(hosts)(
   'return first empty port, port is used so it returns the next one, when listening on %s',
   async host => {
-    const port20000 = 20000;
-    const port20001 = 20001;
+    const port20000 = 20_000;
+    const port20001 = 20_001;
 
     // create a server to make port 20000 busy
     const server = net.createServer();
@@ -128,9 +128,9 @@ test.each(hosts)(
 test.each(hosts)(
   'return first empty port, port and next one are used so it returns the second from the starting one, when listening on %s',
   async host => {
-    const port20000 = 20000;
-    const port20001 = 20001;
-    const port20002 = 20002;
+    const port20000 = 20_000;
+    const port20001 = 20_001;
+    const port20002 = 20_002;
 
     // create a server to make port 20000 busy
     const server = net.createServer();
@@ -155,7 +155,7 @@ test.each(hosts)(
 );
 
 test('fails with range error if value is over upper range', async () => {
-  await expect(port.isFreePort(200000)).rejects.toThrowError(
+  await expect(port.isFreePort(200_000)).rejects.toThrowError(
     /The port must have an integer value within the range from 1025 to 65535./,
   );
 });
@@ -169,7 +169,7 @@ test('should return message that user is trying to check unprivileged port', asy
 });
 
 test('should fail with range error if value is over upper range', async () => {
-  await expect(port.getFreePort(999999)).rejects.toThrowError(/Please enter a port number between 0 and 65535./);
+  await expect(port.getFreePort(999_999)).rejects.toThrowError(/Please enter a port number between 0 and 65535./);
 });
 
 test('should fail with range error if value is NaN', async () => {
@@ -177,13 +177,13 @@ test('should fail with range error if value is NaN', async () => {
 });
 
 test('should work with port at the upper boundary', async () => {
-  const freePort = await port.getFreePort(65535);
-  expect(freePort).toBe(65535);
+  const freePort = await port.getFreePort(65_535);
+  expect(freePort).toBe(65_535);
   expect(await port.isFreePort(freePort)).toBe(true);
 });
 
 test('should fail if all ports are exhausted starting near the upper limit', async () => {
-  const port65535 = 65535;
+  const port65535 = 65_535;
 
   const server = net.createServer();
   server.listen(port65535, '0.0.0.0');

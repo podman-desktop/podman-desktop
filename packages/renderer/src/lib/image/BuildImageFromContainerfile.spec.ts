@@ -48,7 +48,7 @@ vi.mock('@xterm/xterm', () => {
 // fake the window.events object
 beforeAll(() => {
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
-  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1_234);
 });
 
 beforeEach(() => {

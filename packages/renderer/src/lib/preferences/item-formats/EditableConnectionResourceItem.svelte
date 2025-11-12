@@ -81,11 +81,11 @@ function innerOnSave(_recordId: string, _value: number): void {
   if (displayConfigurationValue) {
     switch (displayConfigurationValue.format) {
       case 'GB': {
-        _value = _value * 1000 * 1000 * 1000;
+        _value = _value * 1_000 * 1_000 * 1_000;
         break;
       }
       case 'MB': {
-        _value = _value * 1000 * 1000;
+        _value = _value * 1_000 * 1_000;
         break;
       }
     }

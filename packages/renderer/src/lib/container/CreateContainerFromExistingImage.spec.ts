@@ -41,7 +41,7 @@ const localImageList = [
   {
     Id: 'sha256:1234567890123',
     RepoTags: ['fedora1:3'],
-    Created: 1644009612,
+    Created: 1_644_009_612,
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
@@ -49,7 +49,7 @@ const localImageList = [
   {
     Id: 'sha256:1234567890123',
     RepoTags: ['helloworld1:2'],
-    Created: 1644009612,
+    Created: 1_644_009_612,
     Size: 123,
     engineId: 'docker',
     engineName: 'docker',
@@ -57,7 +57,7 @@ const localImageList = [
   {
     Id: 'sha256:1234567890123',
     RepoTags: ['fedora2:3'],
-    Created: 1644009612,
+    Created: 1_644_009_612,
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
@@ -65,7 +65,7 @@ const localImageList = [
   {
     Id: 'sha256:2345678901234',
     RepoTags: ['image1:3'],
-    Created: 1644009612,
+    Created: 1_644_009_612,
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
@@ -73,7 +73,7 @@ const localImageList = [
   {
     Id: 'sha256:3456789012345',
     RepoTags: ['fedora:4'],
-    Created: 1644009612,
+    Created: 1_644_009_612,
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
@@ -123,7 +123,7 @@ beforeEach(() => {
   vi.mocked(window.searchImageInRegistry).mockResolvedValue(registryImageList);
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
-      return 1000;
+      return 1_000;
     }
     return undefined;
   });

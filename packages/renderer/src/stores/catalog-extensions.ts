@@ -52,5 +52,5 @@ setInterval(
       console.error('Unable to fetch catalog extensions', e);
     });
   },
-  4 * 60 * 60 * 1000,
+  4 * 60 * 60 * 1_000,
 );

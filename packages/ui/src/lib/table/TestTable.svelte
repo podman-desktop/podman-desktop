@@ -25,7 +25,7 @@ type Person = {
 export let people: Person[] = [
   { id: 1, name: 'John', age: 57, hobby: 'Skydiving' },
   { id: 2, name: 'Henry', age: 27, hobby: 'Cooking' },
-  { id: 3, name: 'Charlie', age: 43, hobby: 'Biking', duration: new Date().getTime() - 3600000 },
+  { id: 3, name: 'Charlie', age: 43, hobby: 'Biking', duration: new Date().getTime() - 3_600_000 },
 ];
 
 const idCol: Column<Person, string> = new Column('Id', {

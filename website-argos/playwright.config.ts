@@ -22,7 +22,7 @@ import { devices } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   webServer: {
     cwd: '../website',
-    port: 3000,
+    port: 3_000,
     command: 'pnpm serve',
   },
   projects: [

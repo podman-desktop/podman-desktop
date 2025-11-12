@@ -37,7 +37,7 @@ const fakeIngress: V1IngressSpec = {
               service: {
                 name: 'api-service',
                 port: {
-                  number: 8080,
+                  number: 8_080,
                 },
               },
             },

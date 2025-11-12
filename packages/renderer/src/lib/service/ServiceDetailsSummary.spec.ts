@@ -39,8 +39,8 @@ const service: V1Service = {
     ports: [
       {
         name: 'http',
-        port: 8080,
-        targetPort: 8080,
+        port: 8_080,
+        targetPort: 8_080,
       },
     ],
   },

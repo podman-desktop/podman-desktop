@@ -20,9 +20,9 @@ type Person = {
 };
 
 const people: Person[] = [
-  { name: 'John', duration: new Date().getTime() - 600000 },
+  { name: 'John', duration: new Date().getTime() - 600_000 },
   { name: 'Henry', duration: new Date().getTime() },
-  { name: 'Charlie', duration: new Date().getTime() - 3600000 },
+  { name: 'Charlie', duration: new Date().getTime() - 3_600_000 },
 ];
 
 type Group = {

@@ -1572,14 +1572,14 @@ export class KubernetesClient {
     coreApi: CoreV1Api,
     name: string,
     namespace: string,
-    timeout: number = 60000,
+    timeout: number = 60_000,
   ): Promise<boolean> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
       try {
         await coreApi.readNamespacedPodStatus({ name, namespace });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1_000));
       } catch (e) {
         const error = e ?? {};
         if (error instanceof ApiException && error.code === 404) {
@@ -1595,7 +1595,7 @@ export class KubernetesClient {
     namespace: string,
     controllerName: string,
     controllerType: ScalableControllerType,
-    timeout: number = 10000,
+    timeout: number = 10_000,
   ): Promise<void> {
     const appsApi = this.kubeConfig.makeApiClient(AppsV1Api);
 
@@ -1710,14 +1710,14 @@ export class KubernetesClient {
     batchApi: BatchV1Api,
     name: string,
     namespace: string,
-    timeout: number = 60000,
+    timeout: number = 60_000,
   ): Promise<boolean> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
       try {
         await batchApi.readNamespacedJobStatus({ name, namespace });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1_000));
       } catch (e) {
         const error = e ?? {};
         if (error instanceof ApiException && error.code === 404) {
@@ -1734,7 +1734,7 @@ export class KubernetesClient {
     coreApi: CoreV1Api,
     namespace: string,
     selector: string,
-    timeout: number = 60000,
+    timeout: number = 60_000,
   ): Promise<boolean> {
     const startTime = Date.now();
 
@@ -1744,7 +1744,7 @@ export class KubernetesClient {
         return true;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1_000));
     }
 
     return false;

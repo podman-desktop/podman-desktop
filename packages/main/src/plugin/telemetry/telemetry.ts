@@ -344,7 +344,7 @@ export class Telemetry {
             // it was there, so we check if it was more than 24h ago
             const now = Date.now();
             const diff = now - previousTime;
-            if (diff > 24 * 60 * 60 * 1000) {
+            if (diff > 24 * 60 * 60 * 1_000) {
               this.lastTimeEvents.set(eventName, now);
             } else {
               dropIt = true;

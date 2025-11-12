@@ -80,7 +80,7 @@ export class WinInstaller extends BaseInstaller {
           } catch (err) {
             //check if user cancelled installation see https://learn.microsoft.com/en-us/previous-versions//aa368542(v=vs.85)
             const runError = err as RunError;
-            if (runError && runError.exitCode !== 1602 && runError.exitCode !== 0) {
+            if (runError && runError.exitCode !== 1_602 && runError.exitCode !== 0) {
               throw new Error(runError.message);
             }
           }

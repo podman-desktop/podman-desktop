@@ -41,7 +41,7 @@ export class KindClusterWatcher implements Disposable {
     listFn: ListPromise<T>,
     isReady: (items: T[]) => boolean,
     onError?: (error: unknown, context: string) => void,
-    timeoutMs = 30000,
+    timeoutMs = 30_000,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const informer = makeInformer(this.kubeConfig, path, listFn);

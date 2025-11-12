@@ -51,7 +51,7 @@ const fakePodContainer: ContainerInfoUI = {
     created: '2024-06-18T17:39:46.000Z',
   },
   selected: false,
-  created: 1234,
+  created: 1_234,
   labels: { label1: 'label1' },
   imageBase64RepoTag: 'fakeRepoTag',
 };
@@ -78,7 +78,7 @@ const fakeStandaloneContainer: ContainerInfoUI = {
     id: 'fakeId2',
   },
   selected: false,
-  created: 1234,
+  created: 1_234,
   labels: {},
   imageBase64RepoTag: 'fakeRepoTag',
 };

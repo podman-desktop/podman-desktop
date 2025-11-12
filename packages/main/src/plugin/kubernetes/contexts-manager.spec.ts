@@ -167,11 +167,11 @@ beforeEach(() => {
   vi.useFakeTimers();
   // Needs to mock these values to make the backoff much longer than other timeouts, so connection are never retried during the tests
   connectTimeoutMock.mockReturnValue(1);
-  backoffInitialValueMock.mockReturnValue(10000);
+  backoffInitialValueMock.mockReturnValue(10_000);
   backoffMultiplierMock.mockReturnValue(2.0);
   backoffMultiplierCurrentContextMock.mockReturnValue(1.2);
-  backoffLimitMock.mockReturnValue(1000);
-  backoffLimitCurrentContextMock.mockReturnValue(1000);
+  backoffLimitMock.mockReturnValue(1_000);
+  backoffLimitCurrentContextMock.mockReturnValue(1_000);
   backoffJitterMock.mockReturnValue(0);
   dispatchTimeoutMock.mockReturnValue(1);
 });
@@ -1086,12 +1086,12 @@ describe('update', async () => {
     setStateAndDispatchMock.mockClear();
 
     // No other check before next backoff tick
-    vi.advanceTimersByTime(9000);
+    vi.advanceTimersByTime(9_000);
     expect(setStateAndDispatchMock).not.toHaveBeenCalled();
     setStateAndDispatchMock.mockClear();
 
     // Other check at next backoff tick
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2_000);
     expect(setStateAndDispatchMock).toHaveBeenCalled();
     setStateAndDispatchMock.mockClear();
 
@@ -2680,7 +2680,7 @@ describe('update', async () => {
     await client.update(kubeConfig);
     expect(vi.getTimerCount()).not.toBe(0);
     client.dispose();
-    vi.advanceTimersByTime(20000);
+    vi.advanceTimersByTime(20_000);
     expect(apiSenderSendMock).not.toHaveBeenCalledWith('kubernetes-contexts-general-state-update', expect.anything());
     expect(apiSenderSendMock).not.toHaveBeenCalledWith(
       'kubernetes-current-context-general-state-update',
@@ -3150,9 +3150,9 @@ describe('refreshContextState', () => {
     vi.advanceTimersToNextTimer();
     expect(apiSenderSendMock).toHaveBeenCalledWith('kubernetes-contexts-checking-state-update', expectedMap);
     apiSenderSendMock.mockClear();
-    vi.advanceTimersByTime(9000);
+    vi.advanceTimersByTime(9_000);
     expect(apiSenderSendMock).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1100);
+    vi.advanceTimersByTime(1_100);
     expect(apiSenderSendMock).toHaveBeenCalledWith('kubernetes-contexts-checking-state-update', expectedMap);
     apiSenderSendMock.mockClear();
     await client.refreshContextState('context1');

@@ -110,7 +110,7 @@ export class ProviderImpl implements Provider, IDisposable {
           this.containerProviderConnectionsStatuses.set(key, status);
         }
       }
-    }, 2000);
+    }, 2_000);
   }
 
   get kubernetesProviderConnectionFactory(): KubernetesProviderConnectionFactory | undefined {

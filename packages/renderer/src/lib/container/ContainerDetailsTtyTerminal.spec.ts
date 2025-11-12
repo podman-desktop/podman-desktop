@@ -30,7 +30,7 @@ const attachContainerMock = vi.fn();
 beforeAll(() => {
   getConfigurationValueMock.mockImplementation((key: string) => {
     if (key === 'terminal.integrated.scrollback') {
-      return 1000;
+      return 1_000;
     }
     return undefined;
   });
@@ -55,7 +55,7 @@ test('expect being able to attach terminal ', async () => {
 
   let onDataCallback: (data: Buffer) => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   attachContainerMock.mockImplementation(
     (
       _engineId: string,
@@ -76,7 +76,7 @@ test('expect being able to attach terminal ', async () => {
   // wait attachContainerMock is called
   await waitFor(() => expect(attachContainerMock).toHaveBeenCalled());
 
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1_000));
 
   // write some data on the terminal
   onDataCallback(Buffer.from('hello\nworld'));
@@ -86,7 +86,7 @@ test('expect being able to attach terminal ', async () => {
   const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
 
   // check the content
-  await vi.waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'), { timeout: 2500 });
+  await vi.waitFor(() => expect(terminalLinesLiveRegion).toHaveTextContent('hello world'), { timeout: 2_500 });
 
   // check we have called attachContainer
   expect(attachContainerMock).toHaveBeenCalledTimes(1);

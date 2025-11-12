@@ -83,7 +83,7 @@ test('Expect images being ordered by newest first', async () => {
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:old'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -93,7 +93,7 @@ test('Expect images being ordered by newest first', async () => {
       Id: 'sha256:456456456456456',
       RepoTags: ['veryold:image'],
       Created: 1,
-      Size: 1234,
+      Size: 1_234,
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
@@ -101,7 +101,7 @@ test('Expect images being ordered by newest first', async () => {
     {
       Id: 'sha256:7897891234567890123',
       RepoTags: ['fedora:recent'],
-      Created: 1644109612,
+      Created: 1_644_109_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -154,7 +154,7 @@ test('Expect filter empty screen', async () => {
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:old'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -199,7 +199,7 @@ test('Expect two images in list given image id and engine id', async () => {
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:old'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -208,7 +208,7 @@ test('Expect two images in list given image id and engine id', async () => {
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:1'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'docker',
@@ -217,7 +217,7 @@ test('Expect two images in list given image id and engine id', async () => {
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:2'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -226,7 +226,7 @@ test('Expect two images in list given image id and engine id', async () => {
     {
       Id: 'sha256:2345678901234',
       RepoTags: ['fedora:3'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -235,7 +235,7 @@ test('Expect two images in list given image id and engine id', async () => {
     {
       Id: 'sha256:3456789012345',
       RepoTags: ['fedora:4'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -295,7 +295,7 @@ describe('Contributions', () => {
         {
           Id: 'sha256:1234567890123',
           RepoTags: ['fedora:old'],
-          Created: 1644009612,
+          Created: 1_644_009_612,
           Size: 123,
           Status: 'Running',
           engineId: 'podman',
@@ -373,7 +373,7 @@ describe('Contributions', () => {
         {
           Id: 'sha256:1234567890123',
           RepoTags: ['fedora:old'],
-          Created: 1644009612,
+          Created: 1_644_009_612,
           Size: 123,
           Status: 'Running',
           engineId: 'podman',
@@ -462,7 +462,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['fedora:old'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -472,7 +472,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Id: 'sha256:456456456456456',
       RepoTags: ['veryold:image'],
       Created: 1,
-      Size: 1234,
+      Size: 1_234,
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
@@ -480,7 +480,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
     {
       Id: 'sha256:7897891234567890123',
       RepoTags: ['fedora:recent'],
-      Created: 1644109612,
+      Created: 1_644_109_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -543,7 +543,7 @@ test('Manifest images display without actions', async () => {
     {
       Id: 'sha256:1234567890123',
       RepoTags: ['normalimage:latest'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -552,7 +552,7 @@ test('Manifest images display without actions', async () => {
     {
       Id: 'sha256:7897891234567890123',
       RepoTags: ['manifestimage:latest'],
-      Created: 1644109612,
+      Created: 1_644_109_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -619,7 +619,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
     {
       Id: 'sha256:1234567890',
       RepoTags: ['mockimage:latest'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',
@@ -678,7 +678,7 @@ test('Expect to see empty page and no table when no container engine is running'
     {
       Id: 'sha256:1234567890',
       RepoTags: ['mockimage:latest'],
-      Created: 1644009612,
+      Created: 1_644_009_612,
       Size: 123,
       Status: 'Running',
       engineId: 'podman',

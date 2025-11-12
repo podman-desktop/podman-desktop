@@ -83,7 +83,7 @@ describe('port forwarding', () => {
       expect(window.getFreePort).toHaveBeenCalled();
       expect(window.createKubernetesPortForward).toHaveBeenCalledWith({
         forward: {
-          localPort: 55001,
+          localPort: 55_001,
           remotePort: 80,
         },
         kind: 'pod',

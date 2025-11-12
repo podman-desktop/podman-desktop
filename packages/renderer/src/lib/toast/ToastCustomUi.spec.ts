@@ -86,7 +86,7 @@ beforeEach(() => {
 test('Check with in-progress', async () => {
   // spy pop method on toast
   const toastPopSpy = vi.spyOn(toast, 'pop');
-  const toastId = 1234;
+  const toastId = 1_234;
 
   render(ToastCustomUi, {
     taskInfo: IN_PROGRESS_TASK,
@@ -115,7 +115,7 @@ test('Check with in-progress', async () => {
 test('Check with success', async () => {
   // spy pop method on toast
   const toastPopSpy = vi.spyOn(toast, 'pop');
-  const toastId = 1234;
+  const toastId = 1_234;
 
   render(ToastCustomUi, {
     taskInfo: SUCCESS_TASK,
@@ -143,7 +143,7 @@ test('Check with success', async () => {
 test('Check with failure', async () => {
   // spy pop method on toast
   const toastPopSpy = vi.spyOn(toast, 'pop');
-  const toastId = 1234;
+  const toastId = 1_234;
 
   render(ToastCustomUi, {
     taskInfo: FAILURE_TASK,
@@ -175,7 +175,7 @@ test('Check with failure', async () => {
 test('Check with cancel', async () => {
   // spy pop method on toast
   const toastPopSpy = vi.spyOn(toast, 'pop');
-  const toastId = 1234;
+  const toastId = 1_234;
 
   render(ToastCustomUi, {
     taskInfo: CANCELED_TASK,

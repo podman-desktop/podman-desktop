@@ -43,7 +43,7 @@ const myPod: V1Pod = {
     containers: [
       {
         name: 'test-container',
-        ports: [{ name: 'http', containerPort: 8080 }],
+        ports: [{ name: 'http', containerPort: 8_080 }],
       },
     ],
   },

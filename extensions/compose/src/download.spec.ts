@@ -103,7 +103,7 @@ test('pick the 4th option option in the quickpickmenu and expect it to return th
   const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick');
 
   showQuickPickMock.mockResolvedValue({
-    id: 129676495,
+    id: 129_676_495,
     label: 'v2.23.1',
     tag: 'v2.23.1',
   } as ComposeGithubReleaseArtifactMetadata);
@@ -131,7 +131,7 @@ test('test download of compose passes and that mkdir and executable mocks are ca
   mkdirMock.mockResolvedValue(undefined);
 
   // Mock the getting and downloading the release
-  getReleaseAssetIdMock.mockResolvedValue(123456789);
+  getReleaseAssetIdMock.mockResolvedValue(123_456_789);
   downloadReleaseAssetMock.mockResolvedValue(undefined);
 
   // Simply download the first release from the example json list

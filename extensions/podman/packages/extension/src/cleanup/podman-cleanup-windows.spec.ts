@@ -115,7 +115,7 @@ test('check folders to delete', async () => {
 });
 
 test('check terminateProcess', async () => {
-  await podmanCleanupWindows.terminateProcess(123456);
+  await podmanCleanupWindows.terminateProcess(123_456);
 
   expect(vi.mocked(process.exec)).toBeCalledWith('taskkill', ['/f', '/pid', '123456']);
 });

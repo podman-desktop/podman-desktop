@@ -46,7 +46,7 @@ function screenshotPathname(pathname: string): void {
     // for downloads page, wait for the version being fetched
     if (pathname.includes('/downloads')) {
       // wait for the version being fetched during 5seconds using async setTimeout
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 5_000));
     }
 
     await page.addStyleTag({ content: stylesheet });

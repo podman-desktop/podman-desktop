@@ -190,7 +190,7 @@ export class WebviewRegistry {
     this.initRouting();
 
     // grab a free port
-    this.#serverPort = await getFreePort(44000);
+    this.#serverPort = await getFreePort(44_000);
 
     // start the express server
     await this.#expressServer.start(this.#serverPort);

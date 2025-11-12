@@ -76,7 +76,7 @@ describe('KubernetesPortForwardService', () => {
     name: 'test-name',
     namespace: 'test-namespace',
     kind: WorkloadKind.POD,
-    forward: { localPort: 8080, remotePort: 80 },
+    forward: { localPort: 8_080, remotePort: 80 },
   };
 
   beforeEach(() => {

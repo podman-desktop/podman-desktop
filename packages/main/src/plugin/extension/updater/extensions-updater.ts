@@ -29,7 +29,7 @@ import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configura
 import type { ExtensionUpdateInfo } from '/@api/extension-info.js';
 
 export class ExtensionsUpdater {
-  static readonly CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 12; // 12 hours
+  static readonly CHECK_FOR_UPDATES_INTERVAL = 1_000 * 60 * 60 * 12; // 12 hours
 
   private intervalChecker: NodeJS.Timeout | undefined;
 

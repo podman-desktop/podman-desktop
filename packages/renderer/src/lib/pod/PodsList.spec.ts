@@ -272,7 +272,7 @@ test('Expect single podman pod being displayed', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5_000 });
 
   render(PodsList);
   const pod1Details = screen.getByRole('cell', { name: 'pod1 beab2512' });
@@ -291,7 +291,7 @@ test('Expect 2 podman pods being displayed', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 2, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 2, { timeout: 5_000 });
 
   render(PodsList);
   const pod1Details = screen.getByRole('cell', { name: 'pod1 beab2512' });
@@ -312,7 +312,7 @@ test('Expect filter empty screen', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5_000 });
 
   render(PodsList, { searchTerm: 'No match' });
   const filterButton = screen.getByRole('button', { name: 'Clear filter' });
@@ -325,14 +325,14 @@ test('Expect the route to a pod details page is correctly encoded with an engine
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1, { timeout: 5_000 });
 
   await vi.waitUntil(
     () => {
       const infos = get(podsInfos);
       return infos.length === 1 && infos[0].Name === ocppod.Name;
     },
-    { timeout: 5000 },
+    { timeout: 5_000 },
   );
   render(PodsList);
   const podDetails = screen.getByText('ocppod');
@@ -357,7 +357,7 @@ test('Expect the pod1 row to have 3 status dots with the correct colors and the 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 2, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 2, { timeout: 5_000 });
 
   await waitRender(PodsList);
 
@@ -387,7 +387,7 @@ test('Expect the manyPod row to show 9 dots representing every status', async ()
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5_000 });
 
   await waitRender(PodsList);
 
@@ -479,7 +479,7 @@ test('Expect All tab to show all pods running and stopped (not running)', async 
 
   render(PodsList);
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5_000 });
 
   expect(get(filtered)).toEqual(
     expect.arrayContaining([
@@ -497,13 +497,13 @@ test('Expect Running tab to show running pods only', async () => {
 
   render(PodsList);
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5_000 });
 
   const runningTab = screen.getByRole('button', { name: 'Running' });
 
   await userEvent.click(runningTab);
 
-  await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5_000 });
 
   expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ Status: 'Running' })]));
 });
@@ -516,13 +516,13 @@ test('Expect Stopped tab to show stopped (not running) pods only', async () => {
 
   render(PodsList);
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5_000 });
 
   const runningTab = screen.getByRole('button', { name: 'Stopped' });
 
   await userEvent.click(runningTab);
 
-  await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5_000 });
 
   expect(get(filtered)).toEqual(expect.arrayContaining([expect.objectContaining({ Status: 'Stopped' })]));
 });
@@ -550,7 +550,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5000 });
+  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 1, { timeout: 5_000 });
 
   render(PodsList);
 

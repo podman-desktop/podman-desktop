@@ -81,7 +81,7 @@ async function waitForNetworkInStore(networkId: string, networkName: string): Pr
     const timeout = setTimeout(() => {
       unsubscribe();
       resolve();
-    }, 10000); // 10 second timeout
+    }, 10_000); // 10 second timeout
 
     const unsubscribe = networksListInfo.subscribe(networks => {
       // Check both ID and name to handle cases where Docker and Podman might have overlapping IDs

@@ -127,13 +127,13 @@ test('Should not filter out a dailyPerInstance event if it is first time', async
 
 test('Should filter out a dailyPerInstance event if last event was < 24h', async () => {
   // last call was 23h ago
-  telemetry.getLastTimeEvents().set('listSecondTime', Date.now() - 1000 * 60 * 60 * 23);
+  telemetry.getLastTimeEvents().set('listSecondTime', Date.now() - 1_000 * 60 * 60 * 23);
   expect(telemetry.shouldDropEvent('listSecondTime')).toBeTruthy();
 });
 
 test('Should not filter out a dailyPerInstance event if last event was > 24h', async () => {
   // last call was 25h ago, so it should not be filtered out
-  telemetry.getLastTimeEvents().set('listVeryVeryOldime', Date.now() - 1000 * 60 * 60 * 25);
+  telemetry.getLastTimeEvents().set('listVeryVeryOldime', Date.now() - 1_000 * 60 * 60 * 25);
   expect(telemetry.shouldDropEvent('listVeryVeryOldime')).toBeFalsy();
 });
 
@@ -346,7 +346,7 @@ describe('aggregateTrack', () => {
 
   test('should respect custom delay', async () => {
     const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
-    telemetry.aggregateTrack('eventZ', { key: 'val' }, 5000);
+    telemetry.aggregateTrack('eventZ', { key: 'val' }, 5_000);
     vi.runAllTimers();
     await vi.waitFor(() => expect(setTimeoutSpy).toBeCalledWith(expect.any(Function), 5_000));
   });

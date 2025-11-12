@@ -23,7 +23,7 @@ import { ImageFilesImpl } from './image-files-impl.js';
 import type { ImageFilesRegistry } from './image-files-registry.js';
 
 suite('add to layer', () => {
-  const currentDate = new Date(2020, 3, 1);
+  const currentDate = new Date(2_020, 3, 1);
   let imageFilesProvider: ImageFilesImpl;
 
   beforeEach(() => {
@@ -70,21 +70,21 @@ suite('add to layer', () => {
       path: '/etc/hosts',
       mode: 0o644,
       size: 100,
-      uid: 1001,
-      gid: 1002,
-      mtime: new Date(2019, 3, 1),
-      ctime: new Date(2019, 3, 2),
-      atime: new Date(2019, 3, 3),
+      uid: 1_001,
+      gid: 1_002,
+      mtime: new Date(2_019, 3, 1),
+      ctime: new Date(2_019, 3, 2),
+      atime: new Date(2_019, 3, 3),
     };
     const file2Options = {
       path: '/etc/sudoers',
       mode: 0o440,
       size: 200,
-      uid: 1003,
-      gid: 1004,
-      mtime: new Date(2021, 3, 1),
-      ctime: new Date(2021, 3, 2),
-      atime: new Date(2021, 3, 3),
+      uid: 1_003,
+      gid: 1_004,
+      mtime: new Date(2_021, 3, 1),
+      ctime: new Date(2_021, 3, 2),
+      atime: new Date(2_021, 3, 3),
     };
     imageFilesProvider.addFile(layer, file1Options).addFile(layer, file2Options);
     expect(layer.files?.length).toBe(2);
@@ -136,21 +136,21 @@ suite('add to layer', () => {
     const dir1Options = {
       path: '/etc',
       mode: 0o755,
-      uid: 1001,
-      gid: 1002,
-      mtime: new Date(2019, 3, 1),
-      ctime: new Date(2019, 3, 2),
-      atime: new Date(2019, 3, 3),
+      uid: 1_001,
+      gid: 1_002,
+      mtime: new Date(2_019, 3, 1),
+      ctime: new Date(2_019, 3, 2),
+      atime: new Date(2_019, 3, 3),
     };
     const dir2Options = {
       path: '/root',
       mode: 0o700,
       size: 200,
-      uid: 1003,
-      gid: 1004,
-      mtime: new Date(2021, 3, 1),
-      ctime: new Date(2021, 3, 2),
-      atime: new Date(2021, 3, 3),
+      uid: 1_003,
+      gid: 1_004,
+      mtime: new Date(2_021, 3, 1),
+      ctime: new Date(2_021, 3, 2),
+      atime: new Date(2_021, 3, 3),
     };
     imageFilesProvider.addDirectory(layer, dir1Options).addDirectory(layer, dir2Options);
     expect(layer.files?.length).toBe(2);
@@ -207,22 +207,22 @@ suite('add to layer', () => {
       path: '/sbin',
       mode: 0o755,
       linkPath: '/bin',
-      uid: 1001,
-      gid: 1002,
-      mtime: new Date(2019, 3, 1),
-      ctime: new Date(2019, 3, 2),
-      atime: new Date(2019, 3, 3),
+      uid: 1_001,
+      gid: 1_002,
+      mtime: new Date(2_019, 3, 1),
+      ctime: new Date(2_019, 3, 2),
+      atime: new Date(2_019, 3, 3),
     };
     const dir2Options = {
       path: '/usr/sbin',
       mode: 0o700,
       linkPath: '/usr/bin',
       size: 200,
-      uid: 1003,
-      gid: 1004,
-      mtime: new Date(2021, 3, 1),
-      ctime: new Date(2021, 3, 2),
-      atime: new Date(2021, 3, 3),
+      uid: 1_003,
+      gid: 1_004,
+      mtime: new Date(2_021, 3, 1),
+      ctime: new Date(2_021, 3, 2),
+      atime: new Date(2_021, 3, 3),
     };
     imageFilesProvider.addSymlink(layer, symlink1Options).addSymlink(layer, dir2Options);
     expect(layer.files?.length).toBe(2);

@@ -57,7 +57,7 @@ export const kubernetesContextsCheckingStateDelayed = derived<
         checkingCount.set(context, prev - 1);
         setTimeout(() => {
           set(new Map(Array.from(checkingCount, ([key, value]) => [key, value > 0])));
-        }, 2000);
+        }, 2_000);
       }
       previousState.set(context, state.state);
     }

@@ -73,7 +73,7 @@ const extensionsCatalogMock = {
   getFetchableExtensions: vi.fn(),
 } as unknown as ExtensionsCatalog;
 
-const fakeNow = new Date(2020, 1, 1);
+const fakeNow = new Date(2_020, 1, 1);
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -249,7 +249,7 @@ describe('getExtensionBanners', () => {
   });
 
   test('publishDate value anterior', async () => {
-    vi.setSystemTime(new Date(2019, 1, 1));
+    vi.setSystemTime(new Date(2_019, 1, 1));
 
     getRecommendationIgnored.mockReturnValue(false);
     const featured: FeaturedExtension = {
@@ -285,7 +285,7 @@ describe('getExtensionBanners', () => {
       })),
     );
 
-    vi.setSystemTime(new Date(2050, 1, 1, 1));
+    vi.setSystemTime(new Date(2_050, 1, 1, 1));
     const base = await recommendationsRegistry.getExtensionBanners(5);
 
     for (let i = 0; i < 10; i++) {
@@ -308,11 +308,11 @@ describe('getExtensionBanners', () => {
       })),
     );
 
-    vi.setSystemTime(new Date(2050, 1, 1, 1));
+    vi.setSystemTime(new Date(2_050, 1, 1, 1));
     const resultA = await recommendationsRegistry.getExtensionBanners(5);
     expect(resultA.length).toBe(5);
 
-    vi.setSystemTime(new Date(2050, 1, 1, 2));
+    vi.setSystemTime(new Date(2_050, 1, 1, 2));
     const resultB = await recommendationsRegistry.getExtensionBanners(5);
     expect(resultB.length).toBe(5);
 
@@ -338,7 +338,7 @@ describe('getExtensionBanners', () => {
     const actualsIds: Set<string> = new Set();
 
     for (let h = 0; h < 24; h++) {
-      vi.setSystemTime(new Date(2050, 1, 1, h));
+      vi.setSystemTime(new Date(2_050, 1, 1, h));
 
       const banners = await recommendationsRegistry.getExtensionBanners(1);
       expect(banners.length).toBe(1);

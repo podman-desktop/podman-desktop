@@ -60,7 +60,7 @@ test('Expect to have network name and shortId and network actions in Details pag
     () => {
       expect(get(networksListInfo)).not.toHaveLength(0);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 
   const { getByRole, getByText } = render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });
@@ -85,7 +85,7 @@ test('Expect redirect to previous page if current network is deleted', async () 
     () => {
       expect(get(networksListInfo)).not.toHaveLength(0);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 
   vi.mocked(window.removeNetwork).mockImplementation(async () => {
@@ -133,7 +133,7 @@ test('Expect to have summary and inspect tabs', async () => {
     () => {
       expect(get(networksListInfo)).not.toHaveLength(0);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 
   const { getByRole } = render(NetworkDetails, { networkName: 'Network 1', engineId: 'podman1' });

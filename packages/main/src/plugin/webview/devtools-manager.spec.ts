@@ -53,13 +53,13 @@ describe('DevToolsManager', () => {
     test('should track DevTools mapping correctly', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
     });
@@ -67,12 +67,12 @@ describe('DevToolsManager', () => {
     test('should clear all tracking', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
 
@@ -85,7 +85,7 @@ describe('DevToolsManager', () => {
   describe('registerDevTools', () => {
     test('should register DevTools when webContents exists and has devToolsWebContents', async () => {
       const mockDevToolsWebContents = {
-        id: 67890,
+        id: 67_890,
         isDestroyed: vi.fn().mockReturnValue(false),
       };
       const mockGuest = {
@@ -93,9 +93,9 @@ describe('DevToolsManager', () => {
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
-      expect(mockWebContents.fromId).toHaveBeenCalledWith(12345);
+      expect(mockWebContents.fromId).toHaveBeenCalledWith(12_345);
       expect(mockDevToolsWebContents.isDestroyed).toHaveBeenCalled();
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
     });
@@ -103,7 +103,7 @@ describe('DevToolsManager', () => {
     test('should handle missing webContents gracefully', async () => {
       mockWebContents.fromId.mockReturnValue(undefined);
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
     });
@@ -112,14 +112,14 @@ describe('DevToolsManager', () => {
       const mockGuest = {};
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
     });
 
     test('should handle destroyed devToolsWebContents', async () => {
       const mockDevToolsWebContents = {
-        id: 67890,
+        id: 67_890,
         isDestroyed: vi.fn().mockReturnValue(true),
       };
       const mockGuest = {
@@ -127,7 +127,7 @@ describe('DevToolsManager', () => {
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
     });
@@ -137,7 +137,7 @@ describe('DevToolsManager', () => {
         throw new Error('WebContents access failed');
       });
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(console.error).toHaveBeenCalledWith('DevToolsManager: error in registerDevTools:', expect.any(Error));
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
@@ -148,12 +148,12 @@ describe('DevToolsManager', () => {
     beforeEach(async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
     });
 
     test('should cleanup when devToolsId exists and strategy succeeds', async () => {
@@ -164,14 +164,14 @@ describe('DevToolsManager', () => {
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.cleanupDevTools(12345);
+      await devToolsManager.cleanupDevTools(12_345);
 
       expect(mockGuest.closeDevTools).toHaveBeenCalled();
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
     });
 
     test('should handle missing devToolsId gracefully', async () => {
-      await devToolsManager.cleanupDevTools(99999); // Non-existent ID
+      await devToolsManager.cleanupDevTools(99_999); // Non-existent ID
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1); // Original should remain
     });
@@ -180,7 +180,7 @@ describe('DevToolsManager', () => {
       mockWebContents.fromId.mockReturnValue(undefined); // Strategy 1 & 2 fail
       mockBrowserWindow.getAllWindows.mockReturnValue([]); // Strategy 3 fails
 
-      await devToolsManager.cleanupDevTools(12345);
+      await devToolsManager.cleanupDevTools(12_345);
 
       expect(console.warn).toHaveBeenCalledWith(
         'DevToolsManager: failed to close DevTools using all available methods',
@@ -193,7 +193,7 @@ describe('DevToolsManager', () => {
         throw new Error('Strategy error');
       });
 
-      await devToolsManager.cleanupDevTools(12345);
+      await devToolsManager.cleanupDevTools(12_345);
 
       expect(console.error).toHaveBeenCalledWith('DevToolsManager: error closing DevTools window:', expect.any(Error));
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0); // Should still cleanup map
@@ -211,7 +211,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
-      ]!(12345);
+      ]!(12_345);
 
       expect(result).toBe(true);
       expect(mockGuest.closeDevTools).toHaveBeenCalled();
@@ -222,7 +222,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
-      ]!(12345);
+      ]!(12_345);
 
       expect(result).toBe(false);
     });
@@ -236,7 +236,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
-      ]!(12345);
+      ]!(12_345);
 
       expect(result).toBe(false);
       expect(mockGuest.closeDevTools).not.toHaveBeenCalled();
@@ -252,7 +252,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
-      ]!(12345);
+      ]!(12_345);
 
       expect(result).toBe(false);
       expect(mockGuest.closeDevTools).not.toHaveBeenCalled();
@@ -269,7 +269,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(true);
       expect(mockDevToolsWebContents.close).toHaveBeenCalled();
@@ -287,7 +287,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(true);
       expect(mockDevToolsWebContents.close).toHaveBeenCalled();
@@ -299,7 +299,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(false);
     });
@@ -312,7 +312,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(false);
     });
@@ -332,7 +332,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(false);
     });
@@ -342,14 +342,14 @@ describe('DevToolsManager', () => {
     test('should find and close matching window', async () => {
       const mockWindow = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 67890 },
+        webContents: { id: 67_890 },
         close: vi.fn(),
       };
       mockBrowserWindow.getAllWindows.mockReturnValue([mockWindow as unknown as BrowserWindow]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(true);
       expect(mockWindow.close).toHaveBeenCalled();
@@ -364,7 +364,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(false);
       expect(destroyedWindow.close).not.toHaveBeenCalled();
@@ -373,14 +373,14 @@ describe('DevToolsManager', () => {
     test('should return false when no matching window found', async () => {
       const nonMatchingWindow = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 99999 },
+        webContents: { id: 99_999 },
         close: vi.fn(),
       };
       mockBrowserWindow.getAllWindows.mockReturnValue([nonMatchingWindow as unknown as BrowserWindow]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(false);
     });
@@ -390,7 +390,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(false);
     });
@@ -398,17 +398,17 @@ describe('DevToolsManager', () => {
     test('should handle multiple windows and find correct one', async () => {
       const window1 = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 11111 },
+        webContents: { id: 11_111 },
         close: vi.fn(),
       };
       const window2 = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 67890 }, // Matching
+        webContents: { id: 67_890 }, // Matching
         close: vi.fn(),
       };
       const window3 = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 33333 },
+        webContents: { id: 33_333 },
         close: vi.fn(),
       };
 
@@ -416,7 +416,7 @@ describe('DevToolsManager', () => {
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
-      ]!(67890);
+      ]!(67_890);
 
       expect(result).toBe(true);
       expect(window2.close).toHaveBeenCalled();
@@ -431,48 +431,48 @@ describe('DevToolsManager', () => {
         throw new Error('Test error');
       });
 
-      await expect(devToolsManager.registerDevTools(12345)).resolves.not.toThrow();
+      await expect(devToolsManager.registerDevTools(12_345)).resolves.not.toThrow();
       expect(console.error).toHaveBeenCalledWith('DevToolsManager: error in registerDevTools:', expect.any(Error));
     });
 
     test('should log errors without throwing in cleanupDevTools', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       mockWebContents.fromId.mockImplementation(() => {
         throw new Error('Cleanup error');
       });
 
-      await expect(devToolsManager.cleanupDevTools(12345)).resolves.not.toThrow();
+      await expect(devToolsManager.cleanupDevTools(12_345)).resolves.not.toThrow();
       expect(console.error).toHaveBeenCalledWith('DevToolsManager: error closing DevTools window:', expect.any(Error));
     });
 
     test('should continue execution after individual strategy failures', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       mockWebContents.fromId.mockReturnValue(undefined); // Strategy 1 & 2 fail
 
       const mockWindow = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 67890 },
+        webContents: { id: 67_890 },
         close: vi.fn(),
       };
       mockBrowserWindow.getAllWindows.mockReturnValue([mockWindow as unknown as BrowserWindow]);
 
-      await devToolsManager.cleanupDevTools(12345);
+      await devToolsManager.cleanupDevTools(12_345);
 
       expect(mockWindow.close).toHaveBeenCalled();
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
@@ -559,12 +559,12 @@ describe('DevToolsManager', () => {
     test('should handle complete workflow: register -> cleanup', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
 
@@ -575,7 +575,7 @@ describe('DevToolsManager', () => {
       };
       mockWebContents.fromId.mockReturnValue(mockGuestForCleanup as unknown as WebContents);
 
-      await devToolsManager.cleanupDevTools(12345);
+      await devToolsManager.cleanupDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
       expect(mockGuestForCleanup.closeDevTools).toHaveBeenCalled();
@@ -584,13 +584,13 @@ describe('DevToolsManager', () => {
     test('should handle multiple concurrent registrations', async () => {
       const mockGuest1 = {
         devToolsWebContents: {
-          id: 55555,
+          id: 55_555,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       const mockGuest2 = {
         devToolsWebContents: {
-          id: 66666,
+          id: 66_666,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
@@ -599,7 +599,7 @@ describe('DevToolsManager', () => {
         .mockReturnValueOnce(mockGuest1 as unknown as WebContents)
         .mockReturnValueOnce(mockGuest2 as unknown as WebContents);
 
-      await Promise.all([devToolsManager.registerDevTools(11111), devToolsManager.registerDevTools(22222)]);
+      await Promise.all([devToolsManager.registerDevTools(11_111), devToolsManager.registerDevTools(22_222)]);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(2);
     });
@@ -608,12 +608,12 @@ describe('DevToolsManager', () => {
       for (let i = 0; i < 5; i++) {
         const mockGuest = {
           devToolsWebContents: {
-            id: 67890 + i,
+            id: 67_890 + i,
             isDestroyed: vi.fn().mockReturnValue(false),
           },
         };
         mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
-        await devToolsManager.registerDevTools(12345 + i);
+        await devToolsManager.registerDevTools(12_345 + i);
 
         const mockGuestForCleanup = {
           isDestroyed: vi.fn().mockReturnValue(false),
@@ -621,7 +621,7 @@ describe('DevToolsManager', () => {
           closeDevTools: vi.fn(),
         };
         mockWebContents.fromId.mockReturnValue(mockGuestForCleanup as unknown as WebContents);
-        await devToolsManager.cleanupDevTools(12345 + i);
+        await devToolsManager.cleanupDevTools(12_345 + i);
       }
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
@@ -630,7 +630,7 @@ describe('DevToolsManager', () => {
     test('should handle mixed success/failure scenarios', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
@@ -639,9 +639,9 @@ describe('DevToolsManager', () => {
         .mockReturnValueOnce(undefined) // Fail
         .mockReturnValueOnce(mockGuest as unknown as WebContents); // Success
 
-      await devToolsManager.registerDevTools(11111);
-      await devToolsManager.registerDevTools(22222);
-      await devToolsManager.registerDevTools(33333);
+      await devToolsManager.registerDevTools(11_111);
+      await devToolsManager.registerDevTools(22_222);
+      await devToolsManager.registerDevTools(33_333);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(2);
 
@@ -652,7 +652,7 @@ describe('DevToolsManager', () => {
       };
       const mockWindow = {
         isDestroyed: vi.fn().mockReturnValue(false),
-        webContents: { id: 67890 },
+        webContents: { id: 67_890 },
         close: vi.fn(),
       };
 
@@ -662,8 +662,8 @@ describe('DevToolsManager', () => {
 
       mockBrowserWindow.getAllWindows.mockReturnValue([mockWindow as unknown as BrowserWindow]); // Strategy 3 succeeds
 
-      await devToolsManager.cleanupDevTools(11111);
-      await devToolsManager.cleanupDevTools(33333);
+      await devToolsManager.cleanupDevTools(11_111);
+      await devToolsManager.cleanupDevTools(33_333);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
     });
@@ -679,7 +679,7 @@ describe('DevToolsManager', () => {
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
     });
@@ -694,9 +694,9 @@ describe('DevToolsManager', () => {
     });
 
     test('should handle cleanup of non-existent entries multiple times', async () => {
-      await devToolsManager.cleanupDevTools(99999);
-      await devToolsManager.cleanupDevTools(99999);
-      await devToolsManager.cleanupDevTools(99999);
+      await devToolsManager.cleanupDevTools(99_999);
+      await devToolsManager.cleanupDevTools(99_999);
+      await devToolsManager.cleanupDevTools(99_999);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(0);
     });
@@ -704,15 +704,15 @@ describe('DevToolsManager', () => {
     test('should handle registration with duplicate IDs', async () => {
       const mockGuest = {
         devToolsWebContents: {
-          id: 67890,
+          id: 67_890,
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
       mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
 
-      await devToolsManager.registerDevTools(12345);
-      await devToolsManager.registerDevTools(12345);
-      await devToolsManager.registerDevTools(12345);
+      await devToolsManager.registerDevTools(12_345);
+      await devToolsManager.registerDevTools(12_345);
+      await devToolsManager.registerDevTools(12_345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
     });

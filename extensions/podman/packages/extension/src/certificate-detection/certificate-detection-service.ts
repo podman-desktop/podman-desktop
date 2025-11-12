@@ -46,7 +46,7 @@ export interface CertificateDetectionConfig {
 
 export const DEFAULT_CONFIG: CertificateDetectionConfig = {
   enableTelemetry: true,
-  scanTimeoutMs: 10000,
+  scanTimeoutMs: 10_000,
   excludedExtensions: ['.pem', '.cer'],
   validCertExtensions: ['.crt', '.cert', '.key'],
   certDirectories: {

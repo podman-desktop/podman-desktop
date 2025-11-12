@@ -58,7 +58,7 @@ function handleTasks(tasks: TaskInfo[]): void {
       // The task is completed, was running for at least 60s and is not in already showed tasks
       if (
         taskInfo.state === 'completed' &&
-        time >= taskInfo.started + 60000 &&
+        time >= taskInfo.started + 60_000 &&
         !showedAgainTasks.find(currentTask => currentTask.id === taskInfo.id)
       ) {
         displayNewToast(taskInfo);

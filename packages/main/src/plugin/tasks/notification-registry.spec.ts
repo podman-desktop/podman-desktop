@@ -82,7 +82,7 @@ test('expect notification is disposed correctly', async () => {
   const notificationTask = {
     id: `main-1`,
     name: 'title',
-    started: 1721656320682,
+    started: 1_721_656_320_682,
     description: 'description',
     dispose: notificationDisposeMock,
   };

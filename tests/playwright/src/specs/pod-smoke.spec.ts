@@ -153,7 +153,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
   });
 
   test('Podify containers', async ({ navigationBar }) => {
-    test.setTimeout(90000);
+    test.setTimeout(90_000);
 
     const containers = await navigationBar.openContainers();
     const createPodPage = await containers.openCreatePodPage(Array.of(backendContainer, frontendContainer));
@@ -253,7 +253,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
   });
 
   test('Checking deployed application', async () => {
-    test.setTimeout(75000);
+    test.setTimeout(75_000);
 
     // fetch the application page
     // this might not work on macos
@@ -334,7 +334,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     test('Pruning pods', async ({ page, navigationBar }) => {
       test.setTimeout(90_000);
 
-      const portsList = [5001, 5002, 5003];
+      const portsList = [5_001, 5_002, 5_003];
 
       for (let i = 0; i < 3; i++) {
         const imagesPage = await navigationBar.openImages();

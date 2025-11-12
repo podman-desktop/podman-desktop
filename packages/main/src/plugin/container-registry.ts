@@ -116,7 +116,7 @@ export class ContainerProviderRegistry {
   readonly onApiAttached: Event<string> = this._onApiAttached.event;
 
   // delay in ms before retrying to connect to the provider when /events connection fails
-  protected retryDelayEvents: number = 5000;
+  protected retryDelayEvents: number = 5_000;
 
   private envfileParser = new EnvfileParser();
 
@@ -375,7 +375,7 @@ export class ContainerProviderRegistry {
         this.apiSender.send('provider-change', {});
       }
       previousStatus = newStatus;
-    }, 2000);
+    }, 2_000);
 
     this.internalProviders.set(id, internalProvider);
     this.apiSender.send('provider-change', {});
@@ -1833,7 +1833,7 @@ export class ContainerProviderRegistry {
         check().catch((err: unknown) => {
           console.log('error in check', err);
         });
-      }, 1000);
+      }, 1_000);
 
       execStream.on('end', () => {
         clearInterval(timer);

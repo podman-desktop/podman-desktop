@@ -43,7 +43,7 @@ import type { Proxy } from './proxy.js';
 function createProxyAgent(secure: boolean, proxyUrl: string, certificates: Certificates): http.Agent | https.Agent {
   const options = {
     keepAlive: true,
-    keepAliveMsecs: 1000,
+    keepAliveMsecs: 1_000,
     maxSockets: 256,
     maxFreeSockets: 256,
     scheduling: 'lifo',

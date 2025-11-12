@@ -116,15 +116,15 @@ const providerWithStoppedStatus = {
 
 const machineInfo: MachineInfo = {
   cpus: 1,
-  diskSize: 1000000,
-  memory: 10000000,
+  diskSize: 1_000_000,
+  memory: 10_000_000,
   name: 'name',
   userModeNetworking: false,
   cpuUsage: 0,
   diskUsage: 0,
   memoryUsage: 0,
   vmType: VMTYPE.LIBKRUN,
-  port: 1234,
+  port: 1_234,
   remoteUsername: 'user',
   identityPath: '/path/to/key',
 };
@@ -1485,10 +1485,10 @@ test('ensure started machine reports configuration', async () => {
   (extensionApi.containerEngine.info as Mock).mockResolvedValue({
     cpus: 2,
     cpuIdle: 99,
-    memory: 1048000000,
-    memoryUsed: 524000000,
-    diskSize: 250000000000,
-    diskUsed: 50000000000,
+    memory: 1_048_000_000,
+    memoryUsed: 524_000_000,
+    diskSize: 250_000_000_000,
+    diskUsed: 50_000_000_000,
   } as ContainerEngineInfo);
   await extension.updateMachines(provider, podmanConfiguration);
   expect(config.update).toBeCalledWith('machine.cpus', fakeMachineJSON[0].CPUs);
@@ -2483,7 +2483,7 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
     expect(fs.promises.rm).toBeCalledWith(expect.stringContaining('qemu'), {
       recursive: true,
       maxRetries: 3,
-      retryDelay: 1000,
+      retryDelay: 1_000,
     });
 
     // check called with true as there are qemu folders
@@ -2541,7 +2541,7 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
     expect(fs.promises.rm).toBeCalledWith(expect.stringContaining('foo.json'), {
       recursive: true,
       maxRetries: 3,
-      retryDelay: 1000,
+      retryDelay: 1_000,
     });
 
     // check called with true as there are qemu folders
@@ -3387,7 +3387,7 @@ test('activate and autostart should not duplicate machines ', async () => {
   expect(podmanMachineListCalls).toBeLessThan(5);
   expect(promiseAutoStart).toBeDefined();
 
-  await vi.advanceTimersByTimeAsync(5000);
+  await vi.advanceTimersByTimeAsync(5_000);
 
   await Promise.allSettled(promises);
 });
@@ -3589,11 +3589,11 @@ describe('monitorProvider', () => {
 
     expect(mockDoMonitorProvider).toHaveBeenCalledTimes(1);
 
-    await vi.advanceTimersByTimeAsync(8000);
+    await vi.advanceTimersByTimeAsync(8_000);
 
     expect(mockDoMonitorProvider).toHaveBeenCalledTimes(2);
 
-    await vi.advanceTimersByTimeAsync(8000);
+    await vi.advanceTimersByTimeAsync(8_000);
     expect(mockDoMonitorProvider).toHaveBeenCalledTimes(3);
 
     await extension.deactivate();

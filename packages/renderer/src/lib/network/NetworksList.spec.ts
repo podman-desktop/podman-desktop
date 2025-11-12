@@ -90,7 +90,7 @@ async function init(searchTerm?: string): Promise<void> {
       expect(get(providerInfos)).not.toHaveLength(0);
       expect(get(networksListInfo)).not.toHaveLength(0);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 
   render(NetworksList, { searchTerm: searchTerm });
@@ -117,7 +117,7 @@ test('Expect no container engines being displayed', async () => {
     () => {
       expect(get(networksListInfo)).not.toHaveLength(0);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 
   render(NetworksList);
@@ -147,7 +147,7 @@ test('Expect empty page when there are no networks', async () => {
     () => {
       expect(get(providerInfos)).not.toHaveLength(0);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 
   render(NetworksList);

@@ -89,7 +89,7 @@ test('if a nodeport is also set, expect it to appear as <port>:<nodePort>/protoc
       ports: [
         {
           port: 80,
-          nodePort: 30080,
+          nodePort: 30_080,
           protocol: 'TCP',
         },
       ],

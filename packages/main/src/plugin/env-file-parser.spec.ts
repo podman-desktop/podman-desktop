@@ -206,7 +206,7 @@ test('check parseEnvFile with comments', async () => {
 test('check parseEnvFile and expect error with a file too big', async () => {
   // big file
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 2048 * 1024 } as Stats);
+  statsFileMock.mockResolvedValue({ size: 2_048 * 1_024 } as Stats);
 
   await expect(envfileParser.parseEnvFile('foo')).rejects.toThrowError(
     'Environment file foo is too big. Maximum size is 1MB.',
@@ -216,7 +216,7 @@ test('check parseEnvFile and expect error with a file too big', async () => {
 test('check parseEnvFile and expect error with invalid entries', async () => {
   // big file
   const statsFileMock = vi.spyOn(promises, 'stat');
-  statsFileMock.mockResolvedValue({ size: 1024 } as Stats);
+  statsFileMock.mockResolvedValue({ size: 1_024 } as Stats);
 
   const content = 'hello world';
   const readFileMock = vi.spyOn(promises, 'readFile');

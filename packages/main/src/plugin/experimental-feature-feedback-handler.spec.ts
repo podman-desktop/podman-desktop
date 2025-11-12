@@ -166,7 +166,7 @@ describe('init', () => {
   });
 
   test('should load existing configurations and show dialog', async () => {
-    const conf = { remindAt: 123456, disabled: false };
+    const conf = { remindAt: 123_456, disabled: false };
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
@@ -206,7 +206,7 @@ describe('save', () => {
   });
 
   test('should call update with valid data for enabled experimental config', async () => {
-    const conf = { remindAt: 123456, disabled: false };
+    const conf = { remindAt: 123_456, disabled: false };
     vi.spyOn(feedbackForm.experimentalFeatures, 'get').mockReturnValue(conf);
 
     await feedbackForm.save('feat.feature1');

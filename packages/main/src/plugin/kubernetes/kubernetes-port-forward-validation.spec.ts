@@ -27,7 +27,7 @@ describe('ForwardConfigRequirements', () => {
     name: 'validName',
     namespace: 'validNamespace',
     kind: WorkloadKind.POD,
-    forward: { localPort: 8080, remotePort: 80 },
+    forward: { localPort: 8_080, remotePort: 80 },
   };
 
   test('should pass all requirements', async () => {
@@ -35,7 +35,7 @@ describe('ForwardConfigRequirements', () => {
     const requirements = new ForwardConfigRequirements(portChecker);
 
     await expect(requirements.checkRuntimeRequirements(validConfig)).resolves.toBeUndefined();
-    expect(portChecker).toHaveBeenCalledWith(8080);
+    expect(portChecker).toHaveBeenCalledWith(8_080);
   });
 
   test('should fail with empty resource name', async () => {
@@ -68,7 +68,7 @@ describe('ForwardConfigRequirements', () => {
     const requirements = new ForwardConfigRequirements(portChecker);
     const multiPortConfig = {
       ...validConfig,
-      forward: { localPort: 8080, remotePort: 80 },
+      forward: { localPort: 8_080, remotePort: 80 },
     };
 
     await expect(requirements.checkRuntimeRequirements(multiPortConfig)).rejects.toThrow('Port 8081 is not available');
