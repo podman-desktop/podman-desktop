@@ -230,12 +230,12 @@ describe('windows platform', () => {
 
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining('v5.6'),
+      expect.stringContaining(`v${podman5JSON.version}`),
       expect.stringContaining('podman-installer-windows-amd64.exe'),
       'podman-installer-windows-amd64.exe',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining('v5.6'),
+      expect.stringContaining(`v${podman5JSON.version}`),
       expect.stringContaining('podman-installer-windows-arm64.exe'),
       'podman-installer-windows-arm64.exe',
     );
