@@ -409,7 +409,6 @@ export class Podman5DownloadMachineOS {
     // download the podman 5 machines OS
     if (platform === 'win32') {
       // Here add downloading of HyperV
-      this.#ociRegistryProjectLink = 'https://quay.io/v2/podman/machine-os-wsl';
       await this.download(DiskType.WSL);
     } else {
       await this.download(DiskType.Applehv);
