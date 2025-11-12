@@ -1090,8 +1090,8 @@ export class ColorRegistry {
     const tooltip = 'tooltip-';
 
     this.registerColor(`${tooltip}bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[50],
+      dark: 'rgba(32, 32, 32, 0.8)',
+      light: 'rgba(248, 248, 248, 0.9)',
     });
     this.registerColor(`${tooltip}text`, {
       dark: colorPalette.white,
