@@ -268,7 +268,7 @@ describe('Tooltip', () => {
     expect(element).toBeInTheDocument();
     expect(element).toHaveClass('bg-[var(--pd-tooltip-bg)]');
     expect(element).toHaveClass('text-[var(--pd-tooltip-text)]');
-    expect(element).toHaveClass('border-[var(--pd-tooltip-border)]');
+    expect(element).toHaveClass('border-[var(--pd-tooltip-inner-border)]');
     expect(element).toHaveClass('border-[1px]');
   }
 
