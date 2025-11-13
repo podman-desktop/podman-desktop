@@ -41,6 +41,7 @@ const {
   green,
   neutral,
   purple,
+  violet,
   red,
   sky,
   stone,
@@ -1005,9 +1006,67 @@ export class ColorRegistry {
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
-      dark: purple[600],
-      light: purple[600],
+      dark: violet[600],
+      light: violet[700],
     });
+    this.registerColor(`${button}primary-hover`, {
+      dark: violet[500],
+      light: violet[600],
+    });
+    this.registerColor(`${button}primary-border`, {
+      dark: violet[700],
+      light: violet[700],
+    });
+    this.registerColor(`${button}primary-label`, {
+      dark: white,
+      light: white,
+    });
+    this.registerColor(`${button}secondary-bg`, {
+      dark: stone[800],
+      light: violet[200],
+    });
+    this.registerColor(`${button}secondary-hover`, {
+      dark: stone[700],
+      light: violet[100],
+    });
+    this.registerColor(`${button}secondary-border`, {
+      dark: stone[300],
+      light: violet[700],
+    });
+    this.registerColor(`${button}secondary-label`, {
+      dark: stone[100],
+      light: violet[700],
+    });
+    this.registerColor(`${button}danger-bg`, {
+      dark: red[600],
+      light: red[200],
+    });
+    this.registerColor(`${button}danger-hover`, {
+      dark: red[500],
+      light: red[100],
+    });
+    this.registerColor(`${button}danger-border`, {
+      dark: red[300],
+      light: red[700],
+    });
+    this.registerColor(`${button}danger-label`, {
+      dark: white,
+      light: red[700],
+    });
+    this.registerColor(`${button}disabled-bg`, {
+      dark: stone[700],
+      light: stone[300],
+    });
+    this.registerColor(`${button}disabled-label`, {
+      dark: stone[300],
+      light: stone[600],
+    });
+    this.registerColor(`${button}hc-stroke`, {
+      dark: transparent,
+      light: transparent,
+    });
+
+    // Should be removed later
     this.registerColor(`${button}primary-hover-bg`, {
       dark: purple[500],
       light: purple[500],
@@ -1016,33 +1075,21 @@ export class ColorRegistry {
       dark: gray[200],
       light: purple[600],
     });
-    this.registerColor(`${button}secondary-hover`, {
-      dark: purple[500],
-      light: purple[500],
+    this.registerColor(`${button}disabled`, {
+      dark: charcoal[300],
+      light: gray[600],
     });
     this.registerColor(`${button}text`, {
       dark: white,
       light: white,
     });
-    this.registerColor(`${button}disabled`, {
-      dark: charcoal[300],
-      light: gray[600],
-    });
     this.registerColor(`${button}disabled-text`, {
       dark: charcoal[50],
       light: gray[900],
     });
-    this.registerColor(`${button}danger-border`, {
-      dark: red[500],
-      light: red[700],
-    });
-    this.registerColor(`${button}danger-bg`, {
-      dark: transparent,
-      light: transparent,
-    });
     this.registerColor(`${button}danger-text`, {
       dark: red[500],
-      light: red[700],
+      light: red[100],
     });
     this.registerColor(`${button}danger-hover-text`, {
       dark: white,
@@ -1064,6 +1111,8 @@ export class ColorRegistry {
       dark: transparent,
       light: transparent,
     });
+    // ^^ should be removed later
+
     this.registerColor(`${button}tab-border`, {
       dark: transparent,
       light: transparent,
