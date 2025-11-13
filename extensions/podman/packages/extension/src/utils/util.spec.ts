@@ -26,9 +26,11 @@ import {
   getMultiplePodmanInstallationsWarnings,
   getProviderByLabel,
   getProviderLabel,
+  HYPERV_LABEL,
   LIBKRUN_LABEL,
   normalizeWSLOutput,
   VMTYPE,
+  WSL_LABEL,
 } from './util';
 
 const config: extensionApi.Configuration = {
@@ -134,9 +136,19 @@ test('expect applehv label with applehv provider', async () => {
   expect(label).equals(APPLEHV_LABEL);
 });
 
-test('expect provider name with provider different from libkrun and applehv', async () => {
+test('expect wsl label with wsl provider', async () => {
   const label = getProviderLabel(VMTYPE.WSL);
-  expect(label).equals(VMTYPE.WSL);
+  expect(label).equals(WSL_LABEL);
+});
+
+test('expect hyperv label with hyperv provider', async () => {
+  const label = getProviderLabel(VMTYPE.HYPERV);
+  expect(label).equals(HYPERV_LABEL);
+});
+
+test('expect provider name with provider different from libkrun and applehv', async () => {
+  const label = getProviderLabel('unknown');
+  expect(label).equals('unknown');
 });
 
 test('expect libkrun provider with libkrun label', async () => {
@@ -149,9 +161,14 @@ test('expect applehv provider with applehv label', async () => {
   expect(provider).equals(VMTYPE.APPLEHV);
 });
 
-test('expect wsl name with provider wsl label', async () => {
-  const provider = getProviderByLabel(VMTYPE.WSL);
+test('expect wsl label with wsl provider wsl label', async () => {
+  const provider = getProviderByLabel(WSL_LABEL);
   expect(provider).equals(VMTYPE.WSL);
+});
+
+test('expect hyperv label with hyperv provider wsl label', async () => {
+  const provider = getProviderByLabel(HYPERV_LABEL);
+  expect(provider).equals(VMTYPE.HYPERV);
 });
 
 describe('Check multiple Podman installations', () => {
