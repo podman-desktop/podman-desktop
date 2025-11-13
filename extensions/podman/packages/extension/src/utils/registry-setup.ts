@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2023 Red Hat, Inc.
+ * Copyright (C) 2022-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,15 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
+import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
+import * as toml from 'smol-toml';
+
+import type { RegistryConfigurationEntry, RegistryConfigurationFile } from '../configuration/registry-configuration';
 
 export type ContainerAuthConfigEntry = {
   [key: string]: {
@@ -50,11 +55,65 @@ export class RegistrySetup {
     return path.resolve(podmanConfigContainersPath, 'auth.json');
   }
 
+  protected getRegistriesConfFileLocation(): string {
+    // $HOME/.config/containers/registries.conf
+    return path.resolve(os.homedir(), '.config/containers/registries.conf');
+  }
+
+  protected getSystemRegistriesConfFileLocation(): string {
+    // System-level config path based on platform
+    if (extensionApi.env.isLinux) {
+      return '/etc/containers/registries.conf';
+    } else if (extensionApi.env.isMac) {
+      return '/opt/podman/etc/containers/registries.conf';
+    } else if (extensionApi.env.isWindows) {
+      const programFiles = process.env.PROGRAMFILES ?? 'C:\\Program Files';
+      return path.join(programFiles, 'RedHat', 'Podman', 'etc', 'containers', 'registries.conf');
+    }
+    // Fallback
+    return '/etc/containers/registries.conf';
+  }
+
+  protected async loadInsecureSettingsFromConfFile(): Promise<Map<string, boolean>> {
+    const insecureMap = new Map<string, boolean>();
+    const location = this.getSystemRegistriesConfFileLocation();
+
+    try {
+      if (!existsSync(location)) {
+        return insecureMap;
+      }
+
+      const content = await readFile(location, 'utf-8');
+      const tomlConfigFile = toml.parse(content);
+
+      if (tomlConfigFile?.registry && Array.isArray(tomlConfigFile.registry)) {
+        const registries = tomlConfigFile.registry as RegistryConfigurationEntry[];
+
+        for (const registryEntry of registries) {
+          if (registryEntry.location && registryEntry.insecure !== undefined) {
+            console.log(`Loading insecure setting for ${registryEntry.location}: ${registryEntry.insecure}`);
+            insecureMap.set(registryEntry.location, registryEntry.insecure);
+          } else {
+            console.log(`No insecure setting for ${registryEntry.location}`);
+          }
+        }
+      }
+    } catch (error: unknown) {
+      console.error(`Could not read ${location}: ${error}`);
+    }
+
+    return insecureMap;
+  }
+
   protected async updateRegistries(): Promise<void> {
     // read the file
     const authFile = await this.readAuthFile();
     const inFileRegistries: extensionApi.Registry[] = [];
     const source = 'podman';
+
+    // Load insecure settings from system registries.conf
+    const insecureSettings = await this.loadInsecureSettingsFromConfFile();
+
     if (authFile.auths) {
       // loop over the auth entries
       for (const [key, value] of Object.entries(authFile.auths)) {
@@ -74,6 +133,8 @@ export class RegistrySetup {
           username,
           secret,
           alias: value['podmanDesktopAlias'],
+          // Add insecure flag from system registries.conf if present
+          insecure: insecureSettings.get(serverUrl),
         };
         inFileRegistries.push(registry);
       }
@@ -138,6 +199,11 @@ export class RegistrySetup {
 
           await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
         }
+
+        // Also update registries.conf if the registry has insecure setting
+        if (registry.insecure !== undefined) {
+          await this.updateRegistryInConfFile(registry);
+        }
       }
     });
 
@@ -152,6 +218,9 @@ export class RegistrySetup {
           delete authFile.auths[registry.serverUrl];
         }
         await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
+
+        // Also remove from registries.conf
+        await this.removeRegistryFromConfFile(registry.serverUrl);
       }
     });
 
@@ -169,6 +238,11 @@ export class RegistrySetup {
         };
 
         await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
+
+        // Also update registries.conf if the registry has insecure setting
+        if (registry.insecure !== undefined) {
+          await this.updateRegistryInConfFile(registry);
+        }
       }
     });
 
@@ -225,5 +299,62 @@ export class RegistrySetup {
         }
       });
     });
+  }
+
+  protected async readRegistriesConfFile(): Promise<RegistryConfigurationFile> {
+    const EMPTY_CONFIG_FILE = { registry: [] };
+    const registryConfFilePath = this.getRegistriesConfFileLocation();
+    if (!existsSync(registryConfFilePath)) {
+      return EMPTY_CONFIG_FILE;
+    }
+
+    try {
+      const content = await readFile(registryConfFilePath, 'utf-8');
+      const tomlConfigFile = toml.parse(content);
+
+      if (!tomlConfigFile?.registry || !Array.isArray(tomlConfigFile?.registry)) {
+        return EMPTY_CONFIG_FILE;
+      }
+
+      const registries: RegistryConfigurationEntry[] = tomlConfigFile.registry as RegistryConfigurationEntry[];
+      return { registry: registries };
+    } catch (error: unknown) {
+      console.error(`Error reading registries.conf file: ${error}`);
+      return EMPTY_CONFIG_FILE;
+    }
+  }
+
+  protected async writeRegistriesConfFile(content: RegistryConfigurationFile): Promise<void> {
+    const tomlContent = toml.stringify(content);
+    await writeFile(this.getRegistriesConfFileLocation(), tomlContent, 'utf-8');
+  }
+
+  protected async updateRegistryInConfFile(registry: extensionApi.Registry): Promise<void> {
+    const configFile = await this.readRegistriesConfFile();
+
+    // Find existing registry entry
+    const existingIndex = configFile.registry.findIndex(entry => entry.location === registry.serverUrl);
+
+    if (existingIndex >= 0) {
+      // Update existing entry
+      configFile.registry[existingIndex] = {
+        ...configFile.registry[existingIndex],
+        insecure: registry.insecure,
+      };
+    } else {
+      // Add new entry
+      configFile.registry.push({
+        location: registry.serverUrl,
+        insecure: registry.insecure,
+      });
+    }
+
+    await this.writeRegistriesConfFile(configFile);
+  }
+
+  protected async removeRegistryFromConfFile(serverUrl: string): Promise<void> {
+    const configFile = await this.readRegistriesConfFile();
+    configFile.registry = configFile.registry.filter(entry => entry.location !== serverUrl);
+    await this.writeRegistriesConfFile(configFile);
   }
 }
