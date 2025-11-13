@@ -38,6 +38,7 @@ const providerInfo: ProviderInfo = {
   detectionChecks: [],
   containerConnections: [
     {
+      connectionType: 'container',
       name: 'machine',
       displayName: 'podman',
       status: 'started',

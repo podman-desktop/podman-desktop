@@ -44,6 +44,7 @@ beforeEach(() => {
 function setup(): void {
   const pStatus: ProviderStatus = 'started';
   const pInfo: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'test',
     displayName: 'test',
     status: 'started',

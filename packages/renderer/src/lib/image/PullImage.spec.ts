@@ -50,6 +50,7 @@ beforeAll(() => {
 });
 
 const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'test',
   displayName: 'test',
   status: 'started',

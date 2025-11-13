@@ -30,6 +30,7 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 vi.mock('@podman-desktop/ui-svelte');
 
 const CONTAINER_CONNECTION_INFO: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   endpoint: {
     socketPath: 'dummy-socket',
   },

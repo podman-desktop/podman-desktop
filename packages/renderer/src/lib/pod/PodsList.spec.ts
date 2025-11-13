@@ -45,6 +45,7 @@ const kubernetesGetCurrentNamespaceMock = vi.fn();
 const provider: ProviderInfo = {
   containerConnections: [
     {
+      connectionType: 'container',
       name: 'MyConnection',
       displayName: 'MyConnection',
       status: 'started',
