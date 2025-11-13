@@ -47,10 +47,18 @@ const { Story } = defineMeta({
   }} />
 
 <Story
+  name="Link"
+  args={{
+    type: 'link',
+    content: 'link',
+  }} />
+
+<Story
   name="With icon"
   args={{
     type: 'primary',
     content: 'with icon',
+    'aria-label': 'Button with icon',
     icon: faBell,
   }} />
 
