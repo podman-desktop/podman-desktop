@@ -32,6 +32,7 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import PreferencesConnectionDetailsLogs from './PreferencesConnectionDetailsLogs.svelte';
 
 const containerConnection: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'connection',
   displayName: 'connection',
   endpoint: {

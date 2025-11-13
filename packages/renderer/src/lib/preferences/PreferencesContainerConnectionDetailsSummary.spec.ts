@@ -30,6 +30,7 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import PreferencesContainerConnectionDetailsSummary from './PreferencesContainerConnectionDetailsSummary.svelte';
 
 const podmanContainerConnection: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'connection',
   displayName: 'connection',
   endpoint: {
@@ -40,6 +41,7 @@ const podmanContainerConnection: ProviderContainerConnectionInfo = {
 };
 
 const dockerContainerConnection: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'connection',
   displayName: 'connection',
   endpoint: {

@@ -40,6 +40,7 @@ const providerInfo: ProviderInfo = {
   detectionChecks: [],
   containerConnections: [
     {
+      connectionType: 'container',
       name: 'machine',
       displayName: 'machine',
       status: 'started',

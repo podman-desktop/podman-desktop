@@ -52,15 +52,18 @@ test('Expect that removing the connection is going back to the previous page', a
     internalId: '0',
     vmConnections: [
       {
+        connectionType: 'vm',
         name: vm1,
         status: 'started',
       },
       {
+        connectionType: 'vm',
         name: vm2,
         status: 'stopped',
         lifecycleMethods: ['delete'],
       },
       {
+        connectionType: 'vm',
         name: vm3,
         status: 'started',
       },
@@ -134,6 +137,7 @@ test('Expect to see error message if action fails', async () => {
     internalId: '0',
     vmConnections: [
       {
+        connectionType: 'vm',
         name: vm1,
         status: 'stopped',
         lifecycleMethods: ['delete'],
@@ -198,6 +202,7 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
     internalId: '0',
     vmConnections: [
       {
+        connectionType: 'vm',
         name: 'vm 1',
         status: 'stopped',
         lifecycleMethods: ['delete'],
