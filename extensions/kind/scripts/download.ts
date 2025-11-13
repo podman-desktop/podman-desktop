@@ -17,15 +17,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+// run download script on demand using `pnpm --cwd extensions/kind/ run install:contour` from the root of the repo
+// override the version with CONTOUR_VERSION environment variable or by passing as an additional parameter
+// if needed (e.g. v1.30.2) for testing
+
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { Octokit, RestEndpointMethodTypes } from '@octokit/rest';
-import type { OctokitResponse } from '@octokit/types';
-import type { OctokitOptions } from '@octokit/core/dist-types/types';
-type ReposGetContentResponseData = RestEndpointMethodTypes['repos']['getContent']['response']['data'] & {
-  encoding?: string;
-  content?: string;
-}; // these are not mentioned in the openapi-schema but in its example
+import { Octokit } from '@octokit/rest';
+import type { OctokitOptions } from '@octokit/core/dist-types/types'; // these are not mentioned in the openapi-schema but in its example
 
 const CONTOUR_ORG = 'projectcontour';
 const CONTOUR_REPO = 'contour';
@@ -42,42 +41,28 @@ const octokit = new Octokit(octokitOptions);
 // to make this file a module
 export {};
 
-async function download(tagVersion: string, repoPath: string, fileName: string): Promise<void> {
+async function download(tagVersion: string, repoPath: string, fileName: string) {
   const destDir = path.resolve(__dirname, '..', 'src', 'resources');
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
-  }
-  const destFile = path.resolve(destDir, fileName);
-  console.log(
-    `Downloading Contour manifests from https://github.com/${CONTOUR_ORG}/${CONTOUR_REPO}/${CONTOUR_DEPLOY_PATH}/${CONTOUR_DEPLOY_FILE} version ${tagVersion}`,
-  );
-  const manifests: OctokitResponse<ReposGetContentResponseData> = await octokit.rest.repos.getContent({
+  fs.mkdirSync(destDir, { recursive: true });
+  const destFile = path.join(destDir, fileName);
+  // single-phase raw fetch
+  const { data: rawData } = await octokit.request<string>('GET /repos/{owner}/{repo}/contents/{path}', {
     owner: CONTOUR_ORG,
     repo: CONTOUR_REPO,
-    path: repoPath + '/' + fileName,
+    path: `${repoPath}/${fileName}`,
     ref: tagVersion,
-    headers: {
-      accept: 'application/json',
-    },
+    mediaType: { format: 'raw' },
+    responseType: 'arraybuffer',
   });
-  let buffer;
-
-  if (!manifests.data.content) {
-    throw new Error('No content in manifests data');
-  }
-
-  if (manifests.data.encoding && manifests.data.encoding === 'base64') {
-    buffer = Buffer.from(manifests.data.content, 'base64');
-  } else {
-    buffer = Buffer.from(manifests.data.content);
-  }
-
-  fs.writeFileSync(destFile, buffer);
-  console.log(`Contour.yaml available at ${destFile}`);
+  fs.writeFileSync(destFile, Buffer.from(rawData));
+  console.log(`${fileName} available at ${destFile}`);
 }
 
 // grab the manifests from the given URL
 // download the file from the given URL and store the content in destFile
 // particular contour file should be manually added to the repo once downloaded
-// run download script on demand using `pnpm --cwd extensions/kind/ run install:contour`
-download(CONTOUR_VERSION, CONTOUR_DEPLOY_PATH, CONTOUR_DEPLOY_FILE);
+const version = process.argv[2] || process.env.CONTOUR_VERSION || CONTOUR_VERSION;
+void download(version, CONTOUR_DEPLOY_PATH, CONTOUR_DEPLOY_FILE).catch(err => {
+  console.error(`Failed to download ${CONTOUR_DEPLOY_FILE} for ${version}:`, err?.message ?? err);
+  process.exit(1);
+});
