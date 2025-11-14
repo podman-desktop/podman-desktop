@@ -49,7 +49,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   getConfigurationValueMock.mockImplementation((key: string) => {
     if (key === 'terminal.integrated.scrollback') {
-      return 1000; // A standard default value for scrollback
+      return 1_000; // A standard default value for scrollback
     }
     return undefined;
   });
@@ -95,7 +95,7 @@ test('expect being able to reconnect ', async () => {
 
   let onDataCallback: (data: string) => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   shellInProviderConnectionMock.mockImplementation(
     (
       _providerId: string,
@@ -169,7 +169,7 @@ test('terminal active/ restarts connection after stopping and starting a provide
   let onDataCallback: (data: string) => void = () => {};
   let onEndCallback: () => void = () => {};
 
-  const sendCallbackId = 12345;
+  const sendCallbackId = 12_345;
   shellInProviderConnectionMock.mockImplementation(
     (
       _providerId: string,
@@ -239,6 +239,6 @@ test('terminal active/ restarts connection after stopping and starting a provide
       expect(shellInProviderConnectionCloseMock).toHaveBeenCalledTimes(2);
       expect(shellInProviderConnectionResizeMock).toHaveBeenCalledTimes(3);
     },
-    { timeout: 2000 },
+    { timeout: 2_000 },
   );
 });

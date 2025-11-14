@@ -27,8 +27,8 @@ import { signedHumanSize } from './ImageDetailsFilesLayers';
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';
 
 test('signedHumanSize', () => {
-  expect(signedHumanSize(1000)).toEqual('+1 kB');
-  expect(signedHumanSize(-1000)).toEqual('-1 kB');
+  expect(signedHumanSize(1_000)).toEqual('+1 kB');
+  expect(signedHumanSize(-1_000)).toEqual('-1 kB');
 });
 
 test('render', async () => {
@@ -36,9 +36,9 @@ test('render', async () => {
     {
       id: 'layer1',
       createdBy: 'creator',
-      sizeInArchive: 1000,
+      sizeInArchive: 1_000,
       addedCount: 5,
-      addedSize: 1000,
+      addedSize: 1_000,
     } as unknown as ImageFilesystemLayerUI,
     {
       id: 'layer2',

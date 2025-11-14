@@ -46,12 +46,12 @@ describe('constructor', () => {
   test('should initialize with provided values', () => {
     const initialValues = {
       podmanVersion: '4.0.0',
-      lastUpdateCheck: 123456789,
+      lastUpdateCheck: 123_456_789,
       ignoreVersionUpdate: '4.1.0',
     };
     podmanInfo = new PodmanInfoImpl(initialValues, STORAGE_PATH_MOCK);
     expect(podmanInfo.podmanVersion).toBe('4.0.0');
-    expect(podmanInfo.lastUpdateCheck).toBe(123456789);
+    expect(podmanInfo.lastUpdateCheck).toBe(123_456_789);
     expect(podmanInfo.ignoreVersionUpdate).toBe('4.1.0');
   });
 });
@@ -77,19 +77,19 @@ describe('podmanVersion', () => {
 
 describe('lastUpdateCheck', () => {
   test('should update lastUpdateCheck and write to file when changed', async () => {
-    podmanInfo.lastUpdateCheck = 123456789;
+    podmanInfo.lastUpdateCheck = 123_456_789;
 
     expect(writeFile).toHaveBeenCalledWith(
       path.resolve(STORAGE_PATH_MOCK, 'podman-ext.json'),
-      JSON.stringify({ lastUpdateCheck: 123456789 }),
+      JSON.stringify({ lastUpdateCheck: 123_456_789 }),
     );
   });
 
   test('should not write to file when setting same lastUpdateCheck', () => {
-    podmanInfo.lastUpdateCheck = 123456789;
+    podmanInfo.lastUpdateCheck = 123_456_789;
     vi.mocked(writeFile).mockClear();
 
-    podmanInfo.lastUpdateCheck = 123456789;
+    podmanInfo.lastUpdateCheck = 123_456_789;
     expect(writeFile).not.toHaveBeenCalled();
   });
 });

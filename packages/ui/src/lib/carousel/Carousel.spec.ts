@@ -71,7 +71,7 @@ test('carousel cards get visible when size permits', async () => {
   });
 
   // With even wider width, all cards should be visible
-  callback([{ contentRect: { width: 1080 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
+  callback([{ contentRect: { width: 1_080 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
 
   await waitFor(() => {
     const card3 = screen.getByText('card 3');
@@ -137,7 +137,7 @@ test('carousel left and right buttons visibility based on scroll state', async (
   });
 
   // Make container wide enough to fit all cards
-  callback([{ contentRect: { width: 1080 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
+  callback([{ contentRect: { width: 1_080 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
 
   await waitFor(() => {
     const card1 = screen.getByText('card 1');

@@ -67,7 +67,7 @@ const fakeContainerWithComposeProject: Dockerode.ContainerInfo = {
   Image: 'image1',
   ImageID: 'image1',
   Command: 'command1',
-  Created: 1234567890,
+  Created: 1_234_567_890,
   State: 'running',
   Status: 'running',
   Ports: [],
@@ -103,7 +103,7 @@ const fakeContainer: Dockerode.ContainerInfo = {
   Image: 'image2',
   ImageID: 'image2',
   Command: 'command2',
-  Created: 1234567890,
+  Created: 1_234_567_890,
   State: 'running',
   Status: 'running',
   Ports: [],
@@ -141,7 +141,7 @@ const fakeContainerInspectInfo: Dockerode.ContainerInspectInfo = {
     Restarting: false,
     OOMKilled: false,
     Dead: false,
-    Pid: 26852,
+    Pid: 26_852,
     ExitCode: 0,
     Error: '',
     StartedAt: '2024-01-22T17:42:34.56349523+01:00',
@@ -235,7 +235,7 @@ const fakeContainerInspectInfoWithVolume = {
     Restarting: false,
     OOMKilled: false,
     Dead: false,
-    Pid: 26852,
+    Pid: 26_852,
     ExitCode: 0,
     Error: '',
     StartedAt: '2024-01-22T17:42:34.56349523+01:00',
@@ -902,7 +902,7 @@ describe('listContainers', () => {
         Created: '2023-08-10T15:37:44.555961563+02:00',
         CreatedAt: '',
         Exited: true,
-        ExitedAt: 1691674673,
+        ExitedAt: 1_691_674_673,
         ExitCode: 0,
         Id: '31a4b282691420be2611817f203765402d8da7e13cd530f80a6ddd1bb4aa63b4',
         Image: 'docker.io/library/httpd:latest',
@@ -922,15 +922,15 @@ describe('listContainers', () => {
         Ports: [
           {
             host_ip: '',
-            container_port: 8080,
-            host_port: 8080,
+            container_port: 8_080,
+            host_port: 8_080,
             range: 1,
             protocol: 'tcp',
           },
         ],
         Restarts: 0,
         Size: null,
-        StartedAt: 1691674664,
+        StartedAt: 1_691_674_664,
         State: 'running',
         Status: '',
       },
@@ -976,13 +976,13 @@ describe('listContainers', () => {
     expect(container?.Names).toStrictEqual(['/admiring_wing']);
     expect(container?.Image).toBe('docker.io/library/httpd:latest');
     expect(container?.ImageID).toBe('sha256:911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a');
-    expect(container?.Created).toBe(1691674664);
+    expect(container?.Created).toBe(1_691_674_664);
     expect(container?.ImageBase64RepoTag).toBe('ZG9ja2VyLmlvL2xpYnJhcnkvaHR0cGQ6bGF0ZXN0');
     expect(container?.Ports).toStrictEqual([
       {
         IP: '',
-        PrivatePort: 8080,
-        PublicPort: 8080,
+        PrivatePort: 8_080,
+        PublicPort: 8_080,
         Type: 'tcp',
       },
     ]);
@@ -1001,11 +1001,11 @@ describe('listContainers', () => {
         Image: 'docker.io/library/httpd:latest',
         ImageID: 'sha256:911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a',
         Command: 'httpd-foreground',
-        Created: 1691674664,
+        Created: 1_691_674_664,
         Ports: [
           {
-            PrivatePort: 8080,
-            PublicPort: 8080,
+            PrivatePort: 8_080,
+            PublicPort: 8_080,
             Type: 'tcp',
           },
         ],
@@ -1089,11 +1089,11 @@ describe('listContainers', () => {
     expect(container?.Names).toStrictEqual(['/admiring_wing']);
     expect(container?.Image).toBe('docker.io/library/httpd:latest');
     expect(container?.ImageID).toBe('sha256:911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a');
-    expect(container?.Created).toBe(1691674664);
+    expect(container?.Created).toBe(1_691_674_664);
     expect(container?.Ports).toStrictEqual([
       {
-        PrivatePort: 8080,
-        PublicPort: 8080,
+        PrivatePort: 8_080,
+        PublicPort: 8_080,
         Type: 'tcp',
       },
     ]);
@@ -1112,7 +1112,7 @@ describe('listContainers', () => {
         Created: '2023-08-10T15:37:44.555961563+02:00',
         CreatedAt: '',
         Exited: true,
-        ExitedAt: 1691674673,
+        ExitedAt: 1_691_674_673,
         ExitCode: 0,
         Id: '31a4b282691420be2611817f203765402d8da7e13cd530f80a6ddd1bb4aa63b4',
         Image: 'docker.io/library/httpd:latest',
@@ -1132,15 +1132,15 @@ describe('listContainers', () => {
         Ports: [
           {
             host_ip: '',
-            container_port: 8080,
-            host_port: 8080,
+            container_port: 8_080,
+            host_port: 8_080,
             range: 1,
             protocol: 'tcp',
           },
         ],
         Restarts: 0,
         Size: null,
-        StartedAt: 1691674664,
+        StartedAt: 1_691_674_664,
         State: 'running',
         Status: '',
       },
@@ -1186,12 +1186,12 @@ describe('listContainers', () => {
     expect(container?.Names).toStrictEqual(['/admiring_wing']);
     expect(container?.Image).toBe('docker.io/library/httpd:latest');
     expect(container?.ImageID).toBe('sha256:911d72fc5020723f0c003a134a8d2f062b4aea884474a11d1db7dcd28ce61d6a');
-    expect(container?.Created).toBe(1691674664);
+    expect(container?.Created).toBe(1_691_674_664);
     expect(container?.Ports).toStrictEqual([
       {
         IP: '',
-        PrivatePort: 8080,
-        PublicPort: 8080,
+        PrivatePort: 8_080,
+        PublicPort: 8_080,
         Type: 'tcp',
       },
     ]);
@@ -1987,10 +1987,10 @@ describe('listVolumes', () => {
           Image: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           ImageID: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           Command: '/entrypoint.sh',
-          Created: 1692607778,
+          Created: 1_692_607_778,
           Ports: null,
-          SizeRw: 1921681,
-          SizeRootFs: 647340350,
+          SizeRw: 1_921_681,
+          SizeRootFs: 647_340_350,
           Labels: {},
           State: 'running',
           Status: 'running',
@@ -2004,10 +2004,10 @@ describe('listVolumes', () => {
           Image: 'ab73c7fd672341e41ec600081253d0b99ea31d0c1acdfb46a1485004472da7ac',
           ImageID: 'ab73c7fd672341e41ec600081253d0b99ea31d0c1acdfb46a1485004472da7ac',
           Command: 'nginx -g daemon off;',
-          Created: 1692624321,
+          Created: 1_692_624_321,
           Ports: null,
-          SizeRw: 12595,
-          SizeRootFs: 196209217,
+          SizeRw: 12_595,
+          SizeRootFs: 196_209_217,
           Labels: {},
           State: 'running',
           Status: 'running',
@@ -2021,10 +2021,10 @@ describe('listVolumes', () => {
           Image: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           ImageID: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           Command: '/entrypoint.sh',
-          Created: 1692607777,
+          Created: 1_692_607_777,
           Ports: null,
-          SizeRw: 1921687,
-          SizeRootFs: 647340356,
+          SizeRw: 1_921_687,
+          SizeRootFs: 647_340_356,
           Labels: {},
           State: 'running',
           Status: 'running',
@@ -2038,10 +2038,10 @@ describe('listVolumes', () => {
           Image: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           ImageID: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           Command: '/entrypoint.sh',
-          Created: 1692634818,
+          Created: 1_692_634_818,
           Ports: null,
-          SizeRw: 1920353,
-          SizeRootFs: 647339022,
+          SizeRw: 1_920_353,
+          SizeRootFs: 647_339_022,
           Labels: {},
           State: 'running',
           Status: 'running',
@@ -2055,10 +2055,10 @@ describe('listVolumes', () => {
           Image: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           ImageID: 'ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
           Command: '/entrypoint.sh',
-          Created: 1692607778,
+          Created: 1_692_607_778,
           Ports: null,
-          SizeRw: 1922070,
-          SizeRootFs: 647340739,
+          SizeRw: 1_922_070,
+          SizeRootFs: 647_340_739,
           Labels: {},
           State: 'running',
           Status: 'running',
@@ -2093,7 +2093,7 @@ describe('listVolumes', () => {
           Name: 'myFirstVolume',
           Options: null,
           Scope: 'local',
-          UsageData: { RefCount: 1, Size: 83990640 },
+          UsageData: { RefCount: 1, Size: 83_990_640 },
         },
       ],
       BuildCache: [],
@@ -2105,7 +2105,7 @@ describe('listVolumes', () => {
         Names: ['/kind_antonelli'],
         Image: 'foo-image',
         ImageID: 'sha256:ab73c7fd672341e41ec600081253d0b99ea31d0c1acdfb46a1485004472da7ac',
-        Created: 1692624321,
+        Created: 1_692_624_321,
         Mounts: [
           {
             Type: 'volume',
@@ -2125,7 +2125,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692607777,
+        Created: 1_692_607_777,
         Mounts: [],
       },
       {
@@ -2134,7 +2134,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692634818,
+        Created: 1_692_634_818,
         Mounts: [],
       },
       {
@@ -2143,7 +2143,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692607778,
+        Created: 1_692_607_778,
         Ports: [],
         Mounts: [],
       },
@@ -2190,7 +2190,7 @@ describe('listVolumes', () => {
     // refcount is 1 as one container is using it
     expect(volumeData?.UsageData).toStrictEqual({
       RefCount: 1,
-      Size: 83990640,
+      Size: 83_990_640,
     });
   });
 
@@ -2234,7 +2234,7 @@ describe('listVolumes', () => {
         Names: ['/kind_antonelli'],
         Image: 'foo-image',
         ImageID: 'sha256:ab73c7fd672341e41ec600081253d0b99ea31d0c1acdfb46a1485004472da7ac',
-        Created: 1692624321,
+        Created: 1_692_624_321,
         Mounts: [
           {
             Type: 'volume',
@@ -2254,7 +2254,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692607777,
+        Created: 1_692_607_777,
         Mounts: [],
       },
       {
@@ -2263,7 +2263,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692634818,
+        Created: 1_692_634_818,
         Mounts: [],
       },
       {
@@ -2272,7 +2272,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692607778,
+        Created: 1_692_607_778,
         Ports: [],
         Mounts: [],
       },
@@ -2342,7 +2342,7 @@ describe('listVolumes', () => {
         Names: ['/kind_antonelli'],
         Image: 'foo-image',
         ImageID: 'sha256:ab73c7fd672341e41ec600081253d0b99ea31d0c1acdfb46a1485004472da7ac',
-        Created: 1692624321,
+        Created: 1_692_624_321,
         Mounts: null,
       },
       {
@@ -2351,7 +2351,7 @@ describe('listVolumes', () => {
         Image: 'foo-image',
         ImageID: 'sha256:ee9bfd27b1dbb584a40687ec1f9db5f5c16c53c2f3041cf702e9495ceda22195',
         Command: '/entrypoint.sh',
-        Created: 1692607777,
+        Created: 1_692_607_777,
         Mounts: null,
       },
     ];
@@ -3534,7 +3534,7 @@ test('setupConnectionAPI with errors', async () => {
     }),
   );
   // check apiSender if we have a message 'container-started-event' with the right id
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1_000));
   expect(internalContainerProvider.api).toBeDefined();
 
   // last call should be with the 'container-started-event' message
@@ -3630,7 +3630,7 @@ test('check handleEvents with loadArchive', async () => {
   passThrough.emit('data', JSON.stringify(content));
 
   // wait 1s
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 3_000));
 
   // check callback is defined
   expect(eventsMockCallback).toBeDefined();
@@ -4246,8 +4246,8 @@ describe('createContainerLibPod', () => {
       selinux_opts: ['disable'],
       portmappings: [
         {
-          container_port: 8080,
-          host_port: 8080,
+          container_port: 8_080,
+          host_port: 8_080,
         },
       ],
       user: options.User,
@@ -5272,7 +5272,7 @@ test('manifest is listed as true with podmanListImages correctly', async () => {
     RepoDigests: ['manifestDigest'],
     Created: 0,
     Size: 0,
-    VirtualSize: 40 * 1024, // 40KB (less than 50KB threshold)
+    VirtualSize: 40 * 1_024, // 40KB (less than 50KB threshold)
     SharedSize: 0,
     Containers: 0,
   };
@@ -5298,9 +5298,9 @@ test('manifest is listed as true with podmanListImages correctly', async () => {
       'testdomain.io/library/hello@sha256:2d4e459f4ecb5329407ae3e47cbc107a2fbace221354ca75960af4c047b3cb13',
       'testdomain.io/library/hello@sha256:53641cd209a4fecfc68e21a99871ce8c6920b2e7502df0a20671c6fccc73a7c6',
     ],
-    Created: 1683046167,
-    Size: 23301,
-    VirtualSize: 23301, // Directly matches Size in this case
+    Created: 1_683_046_167,
+    Size: 23_301,
+    VirtualSize: 23_301, // Directly matches Size in this case
     SharedSize: 0,
     Containers: 0,
     History: ['testdomain.io/library/hello:latest'],
@@ -5604,7 +5604,7 @@ describe('using fake timers', () => {
       return new Promise(resolve => {
         setTimeout(() => {
           resolve(undefined);
-        }, 1000);
+        }, 1_000);
       });
     });
     const stream: Dockerode.Image = {
@@ -5629,7 +5629,7 @@ describe('using fake timers', () => {
     }, 500);
 
     const savePromise = containerRegistry.saveImage('podman1', 'an-image', '/path/to/file', token);
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2_000);
 
     await expect(savePromise).rejects.toThrowError('saveImage operation canceled');
   });
@@ -5807,7 +5807,7 @@ describe('provider update', () => {
     // mock the new status to started
     statusMock.mockReturnValue('started');
 
-    vi.advanceTimersByTime(2000);
+    vi.advanceTimersByTime(2_000);
 
     // wait for SetInterval to proceed the update
     await vi.waitFor(() => {

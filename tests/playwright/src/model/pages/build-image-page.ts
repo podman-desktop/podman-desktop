@@ -70,7 +70,7 @@ export class BuildImagePage extends BasePage {
     containerFilePath: string,
     contextDirectory: string,
     archType: string[] = [ArchitectureType.Default],
-    timeout = 120000,
+    timeout = 120_000,
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType);

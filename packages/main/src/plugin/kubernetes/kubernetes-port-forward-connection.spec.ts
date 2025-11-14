@@ -198,7 +198,7 @@ describe('PortForwardConnectionService', () => {
     const forwardSetup = {
       name: 'test-pod',
       namespace: 'default',
-      forward: { localPort: 3000, remotePort: 80 },
+      forward: { localPort: 3_000, remotePort: 80 },
     };
 
     const server = {
@@ -217,7 +217,7 @@ describe('PortForwardConnectionService', () => {
     const disposable = await service.performForward(forwardSetup);
 
     expect(net.createServer).toHaveBeenCalled();
-    expect(server.listen).toHaveBeenCalledWith(3000, 'localhost');
+    expect(server.listen).toHaveBeenCalledWith(3_000, 'localhost');
     expect(disposable.dispose).toBeInstanceOf(Function);
   });
 
@@ -225,7 +225,7 @@ describe('PortForwardConnectionService', () => {
     const forwardSetup = {
       name: 'test-pod',
       namespace: 'default',
-      forward: { localPort: 3000, remotePort: 80 },
+      forward: { localPort: 3_000, remotePort: 80 },
     };
 
     const socket = {
@@ -309,7 +309,7 @@ describe('PortForwardConnectionService', () => {
 
   test('should get forwarding setup from pod', () => {
     const pod = { metadata: { name: 'test-pod', namespace: 'default' } };
-    const forward = { localPort: 3000, remotePort: 80 };
+    const forward = { localPort: 3_000, remotePort: 80 };
 
     const forwardSetup = service.getForwardSetupFromPod(pod, forward);
     expect(forwardSetup.name).toBe('test-pod');
@@ -350,7 +350,7 @@ describe('PortForwardConnectionService', () => {
         },
       },
     };
-    const forward = { localPort: 3000, remotePort: 80 };
+    const forward = { localPort: 3_000, remotePort: 80 };
 
     const forwardSetup = await service.getForwardSetupFromDeployment(deployment, forward);
     expect(forwardSetup.name).toBe('test-pod');
@@ -385,12 +385,12 @@ describe('PortForwardConnectionService', () => {
         ],
       },
     };
-    const forward = { localPort: 3000, remotePort: 80 };
+    const forward = { localPort: 3_000, remotePort: 80 };
 
     const forwardSetup = await service.getForwardSetupFromService(_service, forward);
     expect(forwardSetup.name).toBe('test-pod');
     expect(forwardSetup.namespace).toBe('default');
-    expect(forwardSetup.forward.localPort).toBe(3000);
+    expect(forwardSetup.forward.localPort).toBe(3_000);
     expect(forwardSetup.forward.remotePort).toBe(80);
   });
 
@@ -398,7 +398,7 @@ describe('PortForwardConnectionService', () => {
     const forwardSetup = {
       name: 'test-pod',
       namespace: 'default',
-      forward: { localPort: 3000, remotePort: 80 },
+      forward: { localPort: 3_000, remotePort: 80 },
     };
 
     const errorEADDRINUSE = { code: 'EADDRINUSE' } as NodeJS.ErrnoException;
@@ -428,7 +428,7 @@ describe('PortForwardConnectionService', () => {
         ports: [
           {
             port: 80,
-            targetPort: 8080,
+            targetPort: 8_080,
           },
         ],
       },
@@ -442,13 +442,13 @@ describe('PortForwardConnectionService', () => {
         containers: [
           {
             name: 'test-container',
-            ports: [{ name: 'http', containerPort: 8080 }],
+            ports: [{ name: 'http', containerPort: 8_080 }],
           },
         ],
       },
     };
 
-    const forward = { localPort: 3000, remotePort: 80 };
+    const forward = { localPort: 3_000, remotePort: 80 };
 
     mockCoreV1Api.listNamespacedPod.mockResolvedValueOnce({
       items: [pod],
@@ -456,7 +456,7 @@ describe('PortForwardConnectionService', () => {
 
     const targetPort = service.getTargetPort(serviceResource, pod, forward.remotePort);
 
-    expect(targetPort).toBe(8080);
+    expect(targetPort).toBe(8_080);
   });
 
   describe('isPodResource', () => {
@@ -536,7 +536,7 @@ describe('PortForwardConnectionService', () => {
   describe('getForwardingSetup', () => {
     test('should get forwarding setup for Pod resource', async () => {
       const pod = { kind: 'Pod', metadata: { name: 'test-pod', namespace: 'default' } };
-      const forward = { localPort: 3000, remotePort: 80 };
+      const forward = { localPort: 3_000, remotePort: 80 };
 
       const forwardSetup = await service.getForwardingSetup(pod as never, forward);
       expect(forwardSetup.name).toBe('test-pod');
@@ -578,7 +578,7 @@ describe('PortForwardConnectionService', () => {
       const podList = { items: [{ metadata: { name: 'test-pod' } }] };
       mockCoreV1Api.listNamespacedPod.mockResolvedValue(podList);
 
-      const forward = { localPort: 3000, remotePort: 80 };
+      const forward = { localPort: 3_000, remotePort: 80 };
 
       const forwardSetup = await service.getForwardingSetup(deployment, forward);
       expect(forwardSetup.name).toBe('test-pod');
@@ -614,18 +614,18 @@ describe('PortForwardConnectionService', () => {
       };
       mockCoreV1Api.listNamespacedPod.mockResolvedValue(podList);
 
-      const forward = { localPort: 3000, remotePort: 80 };
+      const forward = { localPort: 3_000, remotePort: 80 };
 
       const forwardSetup = await service.getForwardingSetup(_service, forward);
       expect(forwardSetup.name).toBe('test-pod');
       expect(forwardSetup.namespace).toBe('default');
-      expect(forwardSetup.forward.localPort).toBe(3000);
+      expect(forwardSetup.forward.localPort).toBe(3_000);
       expect(forwardSetup.forward.remotePort).toBe(80);
     });
 
     test('should throw an error for invalid resource type', async () => {
       const invalidResource = { kind: 'InvalidKind' };
-      const forward = { localPort: 3000, remotePort: 80 };
+      const forward = { localPort: 3_000, remotePort: 80 };
 
       await expect(service.getForwardingSetup(invalidResource as never, forward)).rejects.toThrow(
         'Found invalid resource type.',
@@ -644,7 +644,7 @@ describe('PortForwardConnectionService', () => {
         kind: WorkloadKind.POD,
         name: 'test-pod',
         namespace: 'default',
-        forward: { localPort: 3000, remotePort: 80 },
+        forward: { localPort: 3_000, remotePort: 80 },
       };
 
       const pod: V1Pod = {
@@ -670,7 +670,7 @@ describe('PortForwardConnectionService', () => {
     });
 
     test('should start port forwarding on specified mapping', async () => {
-      const mapping: PortMapping = { localPort: 3001, remotePort: 8080 };
+      const mapping: PortMapping = { localPort: 3_001, remotePort: 8_080 };
       const forwardConfig: ForwardConfig = {
         id: 'fake-id',
         kind: WorkloadKind.POD,
@@ -703,7 +703,7 @@ describe('PortForwardConnectionService', () => {
         kind: WorkloadKind.POD,
         name: 'test-pod',
         namespace: 'default',
-        forward: { localPort: 3000, remotePort: 80 },
+        forward: { localPort: 3_000, remotePort: 80 },
       };
 
       const pod: V1Pod = {

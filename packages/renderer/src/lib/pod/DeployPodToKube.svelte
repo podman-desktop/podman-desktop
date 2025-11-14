@@ -365,7 +365,7 @@ async function deployToKube(): Promise<void> {
       // update status
       updatePodInterval = setInterval(() => {
         updatePod().catch((err: unknown) => console.error(`Error updating pod ${createdPod?.metadata?.name}`, err));
-      }, 2000);
+      }, 2_000);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Revert back to the previous bodyPod so the user can hit deploy again

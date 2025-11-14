@@ -36,10 +36,10 @@ test('Expect onSave is called with normalized value if record uses GB and input 
     description: 'record-description',
     type: 'number',
     format: 'memory',
-    minimum: 1000000000,
-    maximum: 34000000000,
+    minimum: 1_000_000_000,
+    maximum: 34_000_000_000,
   };
-  const value = 2000000000;
+  const value = 2_000_000_000;
   render(EditableConnectionResourceItem, { record, value, onSave });
 
   const buttonEdit = screen.getByRole('button', { name: 'Edit' });
@@ -54,7 +54,7 @@ test('Expect onSave is called with normalized value if record uses GB and input 
   await userEvent.clear(input);
   await userEvent.keyboard('20');
 
-  expect(onSave).toBeCalledWith('record', 20000000000);
+  expect(onSave).toBeCalledWith('record', 20_000_000_000);
 });
 
 test('Expect onSave NOT to be called when an invalid input is typed', async () => {
@@ -65,10 +65,10 @@ test('Expect onSave NOT to be called when an invalid input is typed', async () =
     description: 'record-description',
     type: 'number',
     format: 'memory',
-    minimum: 1000000000,
-    maximum: 34000000000,
+    minimum: 1_000_000_000,
+    maximum: 34_000_000_000,
   };
-  const value = 2000000000;
+  const value = 2_000_000_000;
   render(EditableConnectionResourceItem, { record, value, onSave });
 
   const buttonEdit = screen.getByRole('button', { name: 'Edit' });
@@ -83,7 +83,7 @@ test('Expect onSave NOT to be called when an invalid input is typed', async () =
   await userEvent.clear(input);
   await userEvent.keyboard('35');
 
-  expect(onSave).not.toBeCalledWith('record', 35000000000);
+  expect(onSave).not.toBeCalledWith('record', 35_000_000_000);
 });
 
 test('Expect onSave to be called with initial value if input is cancelled', async () => {
@@ -94,10 +94,10 @@ test('Expect onSave to be called with initial value if input is cancelled', asyn
     description: 'record-description',
     type: 'number',
     format: 'memory',
-    minimum: 1000000000,
-    maximum: 34000000000,
+    minimum: 1_000_000_000,
+    maximum: 34_000_000_000,
   };
-  const value = 2000000000;
+  const value = 2_000_000_000;
   render(EditableConnectionResourceItem, { record, value, onSave });
 
   const buttonEdit = screen.getByRole('button', { name: 'Edit' });
@@ -112,12 +112,12 @@ test('Expect onSave to be called with initial value if input is cancelled', asyn
   await userEvent.clear(input);
   await userEvent.keyboard('10');
 
-  expect(onSave).toBeCalledWith('record', 10000000000);
+  expect(onSave).toBeCalledWith('record', 10_000_000_000);
 
   const buttonCancel = await screen.findByRole('button', { name: 'Cancel' });
   expect(buttonCancel).toBeInTheDocument();
 
   await userEvent.click(buttonCancel);
 
-  expect(onSave).toBeCalledWith('record', 20000000000);
+  expect(onSave).toBeCalledWith('record', 20_000_000_000);
 });

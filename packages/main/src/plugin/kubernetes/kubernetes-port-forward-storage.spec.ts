@@ -139,7 +139,7 @@ describe('FileBasedConfigStorage', () => {
     name: 'test-name',
     namespace: 'test-namespace',
     kind: WorkloadKind.POD,
-    forward: { localPort: 8080, remotePort: 80 },
+    forward: { localPort: 8_080, remotePort: 80 },
   };
 
   beforeEach(() => {
@@ -259,7 +259,7 @@ describe('MemoryBasedConfigStorage', () => {
     name: 'test-name',
     namespace: 'test-namespace',
     kind: WorkloadKind.POD,
-    forward: { localPort: 8080, remotePort: 80 },
+    forward: { localPort: 8_080, remotePort: 80 },
   };
 
   beforeEach(() => {
@@ -336,7 +336,7 @@ describe('ConfigManagementService', () => {
     name: 'test-name',
     namespace: 'test-namespace',
     kind: WorkloadKind.POD,
-    forward: { localPort: 8080, remotePort: 80 },
+    forward: { localPort: 8_080, remotePort: 80 },
   };
 
   test('should create forward configuration', async () => {
@@ -372,7 +372,7 @@ describe('ConfigManagementService', () => {
     const service = new ConfigManagementService(mockConfigStorage);
 
     const old: ForwardConfig = {
-      forward: { localPort: 8080, remotePort: 80 },
+      forward: { localPort: 8_080, remotePort: 80 },
       namespace: 'default',
       kind: WorkloadKind.POD,
       name: 'hihi',

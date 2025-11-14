@@ -27,7 +27,7 @@ import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 export class WinVersionCheck extends MemoizedBaseCheck {
   title = 'Windows Version';
 
-  private MIN_BUILD = 19043; //it represents version 21H1 windows 10
+  private MIN_BUILD = 19_043; //it represents version 21H1 windows 10
   async executeImpl(): Promise<CheckResult> {
     const winRelease = os.release();
     if (winRelease.startsWith('10.0.')) {

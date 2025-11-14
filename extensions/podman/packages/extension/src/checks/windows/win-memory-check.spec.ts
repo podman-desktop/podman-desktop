@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 test('expect winMemory preflight check return successful result if the machine has more than 5GB of memory', async () => {
-  const SYSTEM_MEM = 7 * 1024 * 1024 * 1024;
+  const SYSTEM_MEM = 7 * 1_024 * 1_024 * 1_024;
   vi.spyOn(os, 'totalmem').mockReturnValue(SYSTEM_MEM);
 
   const winMemoryCheck = new WinMemoryCheck();
@@ -36,7 +36,7 @@ test('expect winMemory preflight check return successful result if the machine h
 });
 
 test('expect winMemory preflight check return failure result if the machine has less than 5GB of memory', async () => {
-  const SYSTEM_MEM = 4 * 1024 * 1024 * 1024;
+  const SYSTEM_MEM = 4 * 1_024 * 1_024 * 1_024;
   vi.spyOn(os, 'totalmem').mockReturnValue(SYSTEM_MEM);
 
   const winMemoryCheck = new WinMemoryCheck();
@@ -48,7 +48,7 @@ test('expect winMemory preflight check return failure result if the machine has 
 });
 
 test('expect winMemory preflight check to be memoized', async () => {
-  const SYSTEM_MEM = 4 * 1024 * 1024 * 1024;
+  const SYSTEM_MEM = 4 * 1_024 * 1_024 * 1_024;
   vi.spyOn(os, 'totalmem').mockReturnValue(SYSTEM_MEM);
 
   const winMemoryCheck = new WinMemoryCheck();

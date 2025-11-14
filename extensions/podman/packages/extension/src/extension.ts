@@ -610,7 +610,7 @@ async function monitorPodmanSocket(socketPath: string, machineName?: string): Pr
     } catch (error) {
       // ignore the update of machines
     }
-    await timeout(5000);
+    await timeout(5_000);
     monitorPodmanSocket(socketPath, machineName).catch((error: unknown) => {
       console.error('Error monitoring podman socket', error);
     });
@@ -650,7 +650,7 @@ export async function monitorMachines(
       // ignore the update of machines
     }
 
-    await timeout(5000);
+    await timeout(5_000);
     monitorMachines(provider, podmanConfiguration).catch((error: unknown) => {
       console.error('Error monitoring podman machines', error);
     });
@@ -678,7 +678,7 @@ export async function monitorProvider(
   // call us again
   if (!stopLoop) {
     await monitorAction(provider);
-    await timeout(8000);
+    await timeout(8_000);
     monitorProvider(provider, monitorAction).catch((error: unknown) => {
       console.error('Error monitoring podman provider', error);
     });
@@ -780,10 +780,10 @@ export async function registerProviderFor(
           args.push('--cpus', params[key]);
           effective = true;
         } else if (isEditMemorySupported && key === 'podman.machine.memory') {
-          args.push('--memory', Math.floor(params[key] / (1024 * 1024)).toString());
+          args.push('--memory', Math.floor(params[key] / (1_024 * 1_024)).toString());
           effective = true;
         } else if (isEditDiskSizeSupported && key === 'podman.machine.diskSize') {
-          args.push('--disk-size', Math.floor(params[key] / (1024 * 1024 * 1024)).toString());
+          args.push('--disk-size', Math.floor(params[key] / (1_024 * 1_024 * 1_024)).toString());
           effective = true;
         } else if (isEditRootfulSupported && key === 'podman.machine.rootful') {
           args.push(`--rootful=${params[key]}`);
@@ -1226,7 +1226,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
     if (fileAndFoldersToRemove.length > 0) {
       for (const folder of fileAndFoldersToRemove) {
         try {
-          await fs.promises.rm(folder, { recursive: true, retryDelay: 1000, maxRetries: 3 });
+          await fs.promises.rm(folder, { recursive: true, retryDelay: 1_000, maxRetries: 3 });
         } catch (error) {
           console.error('Error removing folder', folder, error);
           errors.push(`Unable to remove the folder ${folder}: ${String(error)}`);
@@ -2092,7 +2092,7 @@ export async function createMachine(
   // memory
   if (params['podman.factory.machine.memory']) {
     parameters.push('--memory');
-    const memoryAsMiB = +params['podman.factory.machine.memory'] / (1024 * 1024);
+    const memoryAsMiB = +params['podman.factory.machine.memory'] / (1_024 * 1_024);
     // Hyper-V requires VMs to have memory in 2 MB increments. So we round it
     const roundedMemoryMiB = Math.floor((memoryAsMiB + 1) / 2) * 2;
     parameters.push(roundedMemoryMiB.toString());
@@ -2102,7 +2102,7 @@ export async function createMachine(
   // disk size
   if (params['podman.factory.machine.diskSize']) {
     parameters.push('--disk-size');
-    const diskAsGiB = +params['podman.factory.machine.diskSize'] / (1024 * 1024 * 1024);
+    const diskAsGiB = +params['podman.factory.machine.diskSize'] / (1_024 * 1_024 * 1_024);
     parameters.push(Math.floor(diskAsGiB).toString());
     telemetryRecords.diskSize = params['podman.factory.machine.diskSize'];
   }
@@ -2270,7 +2270,7 @@ async function initializeCertificateDetection(telemetryLogger: extensionApi.Tele
         _doDetectCustomCertificates(certificateDetectionService);
       }
     },
-    24 * 60 * 60 * 1000,
+    24 * 60 * 60 * 1_000,
   );
 }
 

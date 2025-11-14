@@ -336,8 +336,8 @@ test('expect cluster to be created with ports as strings', async () => {
     1,
     'createCluster',
     expect.objectContaining({
-      httpHostPort: 9091,
-      httpsHostPort: 9444,
+      httpHostPort: 9_091,
+      httpsHostPort: 9_444,
     }),
   );
   expect(fs.promises.writeFile).toHaveBeenCalledWith(
@@ -362,8 +362,8 @@ test('expect cluster to be created with ports as numbers', async () => {
   };
   await createCluster(
     {
-      'kind.cluster.creation.http.port': 9091,
-      'kind.cluster.creation.https.port': 9444,
+      'kind.cluster.creation.http.port': 9_091,
+      'kind.cluster.creation.https.port': 9_444,
     },
     '',
     telemetryLoggerMock,
@@ -373,8 +373,8 @@ test('expect cluster to be created with ports as numbers', async () => {
     1,
     'createCluster',
     expect.objectContaining({
-      httpHostPort: 9091,
-      httpsHostPort: 9444,
+      httpHostPort: 9_091,
+      httpsHostPort: 9_444,
     }),
   );
   expect(fs.promises.writeFile).toHaveBeenCalledWith(
@@ -429,11 +429,11 @@ test('check cluster configuration null string image', async () => {
 });
 
 test('check that consilience check returns warning message', async () => {
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
-  (getMemTotalInfo as Mock).mockReturnValue(3000000000);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_090).mockResolvedValueOnce(9_443);
+  (getMemTotalInfo as Mock).mockReturnValue(3_000_000_000);
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -446,11 +446,11 @@ test('check that consilience check returns warning message', async () => {
 });
 
 test('check that consilience check returns no warning messages', async () => {
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
-  (getMemTotalInfo as Mock).mockReturnValue(6000000001);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_090).mockResolvedValueOnce(9_443);
+  (getMemTotalInfo as Mock).mockReturnValue(6_000_000_001);
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -459,11 +459,11 @@ test('check that consilience check returns no warning messages', async () => {
 });
 
 test('check that consilience check returns warning message when image has no sha256 digest', async () => {
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9443);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_090).mockResolvedValueOnce(9_443);
   const checks = await connectionAuditor('docker', {
     'kind.cluster.creation.controlPlaneImage': 'image:tag',
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -477,8 +477,8 @@ test('check that consilience check returns warning message when config file is s
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
   const checks = await connectionAuditor('docker', {
     'kind.cluster.creation.configFile': '/path',
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -489,10 +489,10 @@ test('check that consilience check returns warning message when config file is s
 });
 
 test('check that auditItems returns error message when HTTP port is not available', async () => {
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9091).mockResolvedValueOnce(9443);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_091).mockResolvedValueOnce(9_443);
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -503,10 +503,10 @@ test('check that auditItems returns error message when HTTP port is not availabl
 });
 
 test('check that auditItems returns error message when HTTPS port is not available', async () => {
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9090).mockResolvedValueOnce(9444);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_090).mockResolvedValueOnce(9_444);
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -532,8 +532,8 @@ test('check that auditItems returns error message when no provider connections a
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
 
   const checks = await connectionAuditor('podman', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -547,8 +547,8 @@ test('check that auditItems returns error message when no provider connections a
 test('check that auditItems returns error message when HTTP and HTTPS ports are the same', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9090,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_090,
   });
 
   expect(checks).toBeDefined();
@@ -563,11 +563,11 @@ test('check that auditItems returns error message when port is invalid (> 65535)
   vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(
     new Error('Please enter a port number between 0 and 65535.'),
   );
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9443);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_443);
 
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 999999,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 999_999,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -581,11 +581,11 @@ test('check that auditItems returns error message when port is invalid (> 65535)
 
 test('check that auditItems returns error message when port is invalid (< 1024)', async () => {
   vi.spyOn(extensionApi.net, 'getFreePort').mockRejectedValueOnce(new Error('The port must be greater than 1024.'));
-  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9443);
+  vi.spyOn(extensionApi.net, 'getFreePort').mockResolvedValueOnce(9_443);
 
   const checks = await connectionAuditor('docker', {
     'kind.cluster.creation.http.port': 500,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -606,8 +606,8 @@ test('check that auditItems returns multiple error messages when both ports are 
   );
 
   const checks = await connectionAuditor('docker', {
-    'kind.cluster.creation.http.port': 999999,
-    'kind.cluster.creation.https.port': 888888,
+    'kind.cluster.creation.http.port': 999_999,
+    'kind.cluster.creation.https.port': 888_888,
   });
 
   expect(checks).toBeDefined();
@@ -650,8 +650,8 @@ test('check that auditItems returns error message when multiple VMs exist but al
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
 
   const checks = await connectionAuditor('podman', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();
@@ -685,11 +685,11 @@ test('check that auditItems does not return error when multiple VMs exist and on
     },
   ]);
   vi.spyOn(extensionApi.net, 'getFreePort').mockImplementation((port: number) => Promise.resolve(port));
-  vi.mocked(getMemTotalInfo).mockResolvedValue(8000000000); // 8GB
+  vi.mocked(getMemTotalInfo).mockResolvedValue(8_000_000_000); // 8GB
 
   const checks = await connectionAuditor('podman', {
-    'kind.cluster.creation.http.port': 9090,
-    'kind.cluster.creation.https.port': 9443,
+    'kind.cluster.creation.http.port': 9_090,
+    'kind.cluster.creation.https.port': 9_443,
   });
 
   expect(checks).toBeDefined();

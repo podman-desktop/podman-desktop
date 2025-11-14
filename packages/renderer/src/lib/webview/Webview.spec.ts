@@ -77,7 +77,7 @@ beforeEach(() => {
   getWebviewPreloadPathMock.mockResolvedValue('/path/to/preload');
 
   // provide registry port
-  getWebviewRegistryHttpPortMock.mockResolvedValue(5678);
+  getWebviewRegistryHttpPortMock.mockResolvedValue(5_678);
 
   webviews.set(webviewTestList);
 });

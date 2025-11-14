@@ -356,7 +356,7 @@ test('Check handlePluginInstall', async () => {
     },
   });
 
-  const logCallbackId = 2503;
+  const logCallbackId = 2_503;
 
   await dockerDesktopInstallation.handlePluginInstall(ipcMainEvent, imageNameToInstall, logCallbackId);
 

@@ -115,7 +115,7 @@ async function openGitHub(): Promise<void> {
     </div>
 
     <label for="tellUsWhyFeedback" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
-      >Tell us why, or share any suggestion or issue to improve your experience: ({1000 - tellUsWhyFeedback.length} characters
+      >Tell us why, or share any suggestion or issue to improve your experience: ({1_000 - tellUsWhyFeedback.length} characters
       left)</label>
     <textarea
       rows="3"

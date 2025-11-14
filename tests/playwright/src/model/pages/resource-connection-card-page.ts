@@ -50,7 +50,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
     return (await this.resourceElement.count()) > 0;
   }
 
-  public async performConnectionAction(operation: ResourceElementActions, timeout: number = 25000): Promise<void> {
+  public async performConnectionAction(operation: ResourceElementActions, timeout: number = 25_000): Promise<void> {
     return test.step(`Perform connection action '${operation}' on resource element '${this.resourceElement}'`, async () => {
       const button = this.resourceElementConnectionActions.getByRole('button', {
         name: operation,

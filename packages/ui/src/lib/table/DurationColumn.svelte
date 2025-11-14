@@ -15,7 +15,7 @@ let duration: string = $state('');
 let refreshTimeouts: ReturnType<typeof setTimeout>[] = $state([]);
 
 export function computeInterval(uptimeInMs: number): number {
-  const SECOND = 1000;
+  const SECOND = 1_000;
   const MINUTE = SECOND * 60;
   const HOUR = MINUTE * 60;
   const DAY = HOUR * 24;

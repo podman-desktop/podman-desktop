@@ -41,7 +41,7 @@ const KIND_CLI_NAME = 'kind';
 const KIND_DISPLAY_NAME = 'Kind';
 const KIND_MARKDOWN = `Podman Desktop can help you run Kind-powered local Kubernetes clusters on a container engine, such as Podman.\n\nMore information: [Podman Desktop Documentation](https://podman-desktop.io/docs/kind)`;
 
-const API_KIND_INTERNAL_API_PORT = 6443;
+const API_KIND_INTERNAL_API_PORT = 6_443;
 
 const KIND_MOVE_IMAGE_COMMAND = 'kind.image.move';
 let imagesPushInProgressToKind: string[] = [];

@@ -53,7 +53,7 @@ const POD_NAME: string = CONTAINER_NAME;
 
 const INGRESS_CONTROLLER_COMMAND: string = 'kubectl get pods -n projectcontour';
 const REMOTE_PORT: number = 80;
-const LOCAL_PORT: number = 50000;
+const LOCAL_PORT: number = 50_000;
 const PORT_FORWARDING_ADDRESS: string = `http://localhost:${LOCAL_PORT}/`;
 const SERVICE_ADDRESS: string = `http://localhost:9090/`;
 const RESPONSE_MESSAGE: string = 'Welcome to nginx!';

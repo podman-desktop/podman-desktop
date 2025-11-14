@@ -35,8 +35,8 @@ const fakeContainer: V1Container = {
   image: 'fakeImageName',
   imagePullPolicy: 'IfNotPresent',
   ports: [
-    { containerPort: 8080, protocol: 'TCP' },
-    { containerPort: 8443, protocol: 'TCP' },
+    { containerPort: 8_080, protocol: 'TCP' },
+    { containerPort: 8_443, protocol: 'TCP' },
   ],
   env: [
     { name: 'ENV_VAR_1', value: 'value1' },

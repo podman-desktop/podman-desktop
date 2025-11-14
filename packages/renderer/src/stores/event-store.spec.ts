@@ -372,7 +372,7 @@ test('Check debounce', async () => {
   }
 
   // wait debounce being called for 2 seconds
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise(resolve => setTimeout(resolve, 2_000));
 
   // We did a lot of calls but with debounce, it should only be called once
   expect(updater).toHaveBeenCalledOnce();
@@ -408,7 +408,7 @@ test('Check debounce+delay', async () => {
   expect(callbacks.size).toBe(0);
 
   // now call the setup with a debounce value of 200ms and a throttle of 1s
-  const eventStoreInfo = eventStore.setupWithDebounce(200, 1000);
+  const eventStoreInfo = eventStore.setupWithDebounce(200, 1_000);
 
   // check we have callbacks
   expect(callbacks.size).toBe(1);
@@ -429,7 +429,7 @@ test('Check debounce+delay', async () => {
   }
 
   // wait debounce being called for 3 seconds
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 3_000));
 
   // We did a lot of calls but with debounce and throttle it should be only like 2 calls
   // get number of calls

@@ -44,7 +44,7 @@ const containerConnection: ProviderContainerConnectionInfo = {
 beforeAll(async () => {
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
     if (key === 'terminal.integrated.scrollback') {
-      return 1000;
+      return 1_000;
     }
     return undefined;
   });

@@ -208,7 +208,7 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     // Only check memory if provider is running
     const memTotal = await getMemTotalInfo(runningConnection.connection.endpoint.socketPath);
     // check if configured memory is less than 6GB
-    if (memTotal < 6000000000) {
+    if (memTotal < 6_000_000_000) {
       records.push({
         type: 'info',
         record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
@@ -249,7 +249,7 @@ export async function createCluster(
   }
 
   // grab http host port
-  let httpHostPort = 9090;
+  let httpHostPort = 9_090;
   if (
     params['kind.cluster.creation.http.port'] &&
     ['string', 'number'].includes(typeof params['kind.cluster.creation.http.port'])
@@ -258,7 +258,7 @@ export async function createCluster(
   }
 
   // grab https host port
-  let httpsHostPort = 9443;
+  let httpsHostPort = 9_443;
   if (
     params['kind.cluster.creation.https.port'] &&
     ['string', 'number'].includes(typeof params['kind.cluster.creation.https.port'])

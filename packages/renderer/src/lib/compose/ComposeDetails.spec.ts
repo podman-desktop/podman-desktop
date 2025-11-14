@@ -120,7 +120,7 @@ const containerInspectInfo: ContainerInspectInfo = {
   AppArmorProfile: '',
   HostConfig: {
     PortBindings: {
-      9090: [
+      9_090: [
         {
           HostPort: '8383',
           HostIp: '',

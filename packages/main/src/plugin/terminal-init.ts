@@ -52,9 +52,9 @@ export class TerminalInit {
         [TerminalSettings.SectionName + '.' + TerminalSettings.Scrollback]: {
           description: 'The number of lines to keep in the terminal buffer.',
           type: 'number',
-          default: 1000,
+          default: 1_000,
           minimum: 100,
-          maximum: 100000,
+          maximum: 100_000,
         },
       },
     };

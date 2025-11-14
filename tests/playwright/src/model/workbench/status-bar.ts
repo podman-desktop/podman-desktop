@@ -87,11 +87,11 @@ export class StatusBar extends BasePage {
     }
 
     const pinMenuProviderButton = this.pinMenu.getByRole('button', { name: providerName });
-    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5000 });
+    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5_000 });
 
     await playExpect(this.pinProvidersButton).toBeVisible();
     await this.pinProvidersButton.click();
-    await playExpect(this.pinMenu).toBeVisible({ timeout: 5000 });
+    await playExpect(this.pinMenu).toBeVisible({ timeout: 5_000 });
     await playExpect(pinMenuProviderButton).toBeVisible();
 
     await pinMenuProviderButton.click();
@@ -99,7 +99,7 @@ export class StatusBar extends BasePage {
 
     //close the menu
     await this.pinProvidersButton.click();
-    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5000 });
+    await playExpect(this.pinMenu).not.toBeVisible({ timeout: 5_000 });
   }
 
   public async isProviderResourceRunning(providerName: string, resourceName: string): Promise<boolean> {

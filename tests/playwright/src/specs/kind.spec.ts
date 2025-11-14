@@ -107,7 +107,7 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         const extensionsPage = await navigationBar.openExtensions();
         const kindExtension = await extensionsPage.getInstalledExtension('Kind extension', EXTENSION_LABEL);
         await playExpect
-          .poll(async () => await extensionsPage.extensionIsInstalled(EXTENSION_LABEL), { timeout: 10000 })
+          .poll(async () => await extensionsPage.extensionIsInstalled(EXTENSION_LABEL), { timeout: 10_000 })
           .toBeTruthy();
         await playExpect(kindExtension.status).toHaveText(ExtensionState.Active);
         await kindExtension.disableExtension();

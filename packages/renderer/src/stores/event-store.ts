@@ -24,7 +24,7 @@ import DesktopIcon from '../lib/images/DesktopIcon.svelte';
 import { addStore, updateStore } from './event-store-manager';
 
 // 1.5 SECOND for DEBOUNCE and 5s for THROTTLE
-const SECOND = 1000;
+const SECOND = 1_000;
 const DEFAULT_DEBOUNCE_TIMEOUT = 1.5 * SECOND;
 const DEFAULT_THROTTLE_TIMEOUT = 5 * SECOND;
 const EVENT_SEPARATOR = '>';

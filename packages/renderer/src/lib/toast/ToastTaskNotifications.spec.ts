@@ -101,7 +101,7 @@ test('Check a toast is being updated after a task is updated', async () => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
   // return a toast id when we create one
-  const dummyToastId = 1256;
+  const dummyToastId = 1_256;
   vi.mocked(toast.push).mockReturnValue(dummyToastId);
 
   tasksInfo.set([IN_PROGRESS_TASK]);
@@ -153,7 +153,7 @@ describe('Toast disappearing and notifying again', () => {
     vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
     // return a toast id when we create one
-    const dummyToastId = 1256;
+    const dummyToastId = 1_256;
     vi.mocked(toast.push).mockReturnValue(dummyToastId);
 
     tasksInfo.set([IN_PROGRESS_TASK]);
@@ -164,7 +164,7 @@ describe('Toast disappearing and notifying again', () => {
     await waitFor(() => expect(toast.push).toHaveBeenCalled());
 
     // Simulate that the task is now doing its stuff for 1 min
-    vi.advanceTimersByTime(60000);
+    vi.advanceTimersByTime(60_000);
 
     // ok, now update the task to go from in-progress to success
     const updatedTask: TaskInfo = {
@@ -203,7 +203,7 @@ describe('Toast disappearing and notifying again', () => {
     vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
     // return a toast id when we create one
-    const dummyToastId = 1256;
+    const dummyToastId = 1_256;
     vi.mocked(toast.push).mockReturnValue(dummyToastId);
 
     tasksInfo.set([IN_PROGRESS_TASK]);
@@ -214,7 +214,7 @@ describe('Toast disappearing and notifying again', () => {
     await waitFor(() => expect(toast.push).toHaveBeenCalled());
 
     // Simulate that the task is now doing its stuff for 30sec
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(30_000);
 
     // ok, now update the task to go from in-progress to success
     const updatedTask: TaskInfo = {

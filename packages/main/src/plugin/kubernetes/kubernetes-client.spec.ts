@@ -171,7 +171,7 @@ class TestKubernetesClient extends KubernetesClient {
     namespace: string,
     controllerName: string,
     controllerType: ScalableControllerType,
-    timeout: number = 10000,
+    timeout: number = 10_000,
   ): Promise<void> {
     return this.scaleControllerToRestartPods(namespace, controllerName, controllerType, timeout);
   }
@@ -180,7 +180,7 @@ class TestKubernetesClient extends KubernetesClient {
     coreApi: CoreV1Api,
     name: string,
     namespace: string,
-    timeout: number = 60000,
+    timeout: number = 60_000,
   ): Promise<boolean> {
     return this.waitForPodDeletion(coreApi, name, namespace, timeout);
   }
@@ -194,7 +194,7 @@ class TestKubernetesClient extends KubernetesClient {
     coreApi: CoreV1Api,
     name: string,
     namespace: string,
-    timeout: number = 60000,
+    timeout: number = 60_000,
   ): Promise<boolean> {
     return super.waitForPodDeletion(coreApi, name, namespace, timeout);
   }
@@ -214,7 +214,7 @@ class TestKubernetesClient extends KubernetesClient {
     batchApi: BatchV1Api,
     name: string,
     namespace: string,
-    timeout: number = 60000,
+    timeout: number = 60_000,
   ): Promise<boolean> {
     return super.waitForJobDeletion(batchApi, name, namespace, timeout);
   }
@@ -245,7 +245,7 @@ class TestKubernetesClient extends KubernetesClient {
     namespace: string,
     controllerName: string,
     controllerType: ScalableControllerType,
-    timeout: number = 10000,
+    timeout: number = 10_000,
   ): Promise<void> {
     return super.scaleControllerToRestartPods(namespace, controllerName, controllerType, timeout);
   }
@@ -1660,7 +1660,7 @@ test('Should return false if the timeout is reached but pods still exist', async
   const client = createTestClient('default');
   const namespace = 'test-namespace';
   const selector = 'app=test-app';
-  const timeout = 1000;
+  const timeout = 1_000;
 
   coreApiMock.listNamespacedPod = vi.fn().mockResolvedValue({ items: [existingPodMock] });
 
@@ -1702,7 +1702,7 @@ test('Should return false if the timeout is reached but the job still exists', a
   const client = createTestClient('default');
   const namespace = 'test-namespace';
   const jobName = 'test-job';
-  const timeout = 1000;
+  const timeout = 1_000;
 
   batchApiMock.readNamespacedJobStatus = vi.fn().mockResolvedValueOnce({ body: existingJobMock });
 
@@ -1967,7 +1967,7 @@ async function callScaleControllerAndCheckExpectValues(
   controllerName: string,
   controllerType: 'Deployment' | 'ReplicaSet' | 'StatefulSet',
   initialReplicas: number,
-  timeout: number = 10000,
+  timeout: number = 10_000,
 ): Promise<void> {
   await client.testScaleControllerToRestartPods(namespace, controllerName, controllerType, timeout);
 
@@ -1996,7 +1996,7 @@ test('Should correctly scale a Deployment to restart pods', async () => {
   const controllerName = 'my-deployment';
   const controllerType = 'Deployment';
   const initialReplicas = 3;
-  const scaleTimeout = 1000;
+  const scaleTimeout = 1_000;
 
   (appsApiMock.readNamespacedDeployment as Mock).mockResolvedValue({ spec: { replicas: initialReplicas } });
 
@@ -2016,7 +2016,7 @@ test('Should correctly scale a ReplicaSet to restart pods', async () => {
   const controllerName = 'my-replicaset';
   const controllerType = 'ReplicaSet';
   const initialReplicas = 5;
-  const scaleTimeout = 1000;
+  const scaleTimeout = 1_000;
 
   (appsApiMock.readNamespacedReplicaSet as Mock).mockResolvedValue({ spec: { replicas: initialReplicas } });
 
@@ -2036,7 +2036,7 @@ test('Should correctly scale a StatefulSet to restart pods', async () => {
   const controllerName = 'my-statefulset';
   const controllerType = 'StatefulSet';
   const initialReplicas = 2;
-  const scaleTimeout = 1000;
+  const scaleTimeout = 1_000;
 
   (appsApiMock.readNamespacedStatefulSet as Mock).mockResolvedValue({ spec: { replicas: initialReplicas } });
 
@@ -2083,7 +2083,7 @@ test('Should return false if the timeout is exceeded', async () => {
   const client = createTestClient('default');
   const namespace = 'default';
   const podName = 'test-pod';
-  const timeout = 1000;
+  const timeout = 1_000;
 
   (coreApiMock.readNamespacedPodStatus as Mock).mockResolvedValueOnce({ body: terminatingPodMock });
 

@@ -161,7 +161,7 @@ export async function handleCookies(
 }
 
 // function is dedicated to verify if some locator exists, depending on external circumstances
-export async function checkLocatorExistence(locator: Locator, timeout = 5000): Promise<boolean> {
+export async function checkLocatorExistence(locator: Locator, timeout = 5_000): Promise<boolean> {
   try {
     await playExpect(locator).toBeVisible({ timeout: timeout });
   } catch (error: unknown) {

@@ -33,7 +33,7 @@ beforeEach(() => {
 });
 
 test('should expect valid size', async () => {
-  const size = imageUtils.getHumanSize(1000);
+  const size = imageUtils.getHumanSize(1_000);
   expect(size).toBe('1 kB');
 });
 
@@ -206,15 +206,15 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
         { digest: 'digest2' },
       ],
       RepoTags: ['my.registry:1234/manifest:latest'],
-      Created: 1599888000,
-      Size: 2048,
+      Created: 1_599_888_000,
+      Size: 2_048,
     } as unknown as ImageInfo;
 
     // Example manifests (should pickup the first two images from the manifest)
     imageList = [
-      { Id: 'image1', Digest: 'digest1', Created: 1599888000, Size: 1024 },
-      { Id: 'image2', Digest: 'digest2', Created: 1599888000, Size: 1024 },
-      { Id: 'image3', Digest: 'digest3', Created: 1599888000, Size: 1024 },
+      { Id: 'image1', Digest: 'digest1', Created: 1_599_888_000, Size: 1_024 },
+      { Id: 'image2', Digest: 'digest2', Created: 1_599_888_000, Size: 1_024 },
+      { Id: 'image3', Digest: 'digest3', Created: 1_599_888_000, Size: 1_024 },
     ] as unknown as ImageInfo[];
 
     containerInfoList = [
