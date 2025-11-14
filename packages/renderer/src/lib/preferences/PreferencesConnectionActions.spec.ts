@@ -56,6 +56,7 @@ const containerProviderInfo: ProviderInfo = {
 };
 
 const containerConnection: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'machine',
   displayName: 'machine',
   status: 'started',
@@ -67,6 +68,7 @@ const containerConnection: ProviderContainerConnectionInfo = {
 };
 
 const kubernetesConnection: ProviderKubernetesConnectionInfo = {
+  connectionType: 'kubernetes',
   name: 'machine',
   status: 'started',
   endpoint: {

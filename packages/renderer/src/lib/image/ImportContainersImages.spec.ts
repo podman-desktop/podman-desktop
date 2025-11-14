@@ -31,6 +31,7 @@ import ImportContainersImages from './ImportContainersImages.svelte';
 
 const pStatus: ProviderStatus = 'started';
 const pInfo: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'test',
   displayName: 'test',
   status: 'started',

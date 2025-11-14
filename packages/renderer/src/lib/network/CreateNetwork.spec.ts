@@ -52,6 +52,7 @@ function createProviderConnection(
   overrides?: Partial<ProviderContainerConnectionInfo>,
 ): ProviderContainerConnectionInfo {
   return {
+    connectionType: 'container',
     name: 'test',
     displayName: 'test',
     status: 'started',

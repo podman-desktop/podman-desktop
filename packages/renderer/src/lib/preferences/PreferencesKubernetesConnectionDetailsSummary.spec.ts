@@ -30,6 +30,7 @@ import type { ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 import PreferencesKubernetesConnectionDetailsSummary from './PreferencesKubernetesConnectionDetailsSummary.svelte';
 
 const kubernetesConnection: ProviderKubernetesConnectionInfo = {
+  connectionType: 'kubernetes',
   name: 'connection',
   endpoint: {
     apiURL: 'url',

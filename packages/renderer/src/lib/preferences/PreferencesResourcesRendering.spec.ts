@@ -56,6 +56,7 @@ const providerInfo: ProviderInfo = {
   detectionChecks: [],
   containerConnections: [
     {
+      connectionType: 'container',
       name: defaultContainerConnectionName,
       displayName: defaultContainerConnectionName,
       status: 'started',
@@ -70,6 +71,7 @@ const providerInfo: ProviderInfo = {
       },
     },
     {
+      connectionType: 'container',
       name: secondaryContainerConnectionName,
       displayName: 'Dummy Secondary Connection',
       status: 'stopped',
@@ -160,6 +162,7 @@ describe.each<{
       detectionChecks: [],
       containerConnections: [
         {
+          connectionType: 'container',
           name: defaultContainerConnectionName,
           displayName: defaultContainerConnectionName,
           status: 'started',
@@ -174,6 +177,7 @@ describe.each<{
           },
         },
         {
+          connectionType: 'container',
           name: secondaryContainerConnectionName,
           displayName: 'Dummy Secondary Connection',
           status: 'stopped',
@@ -228,6 +232,7 @@ describe.each<{
       detectionChecks: [],
       kubernetesConnections: [
         {
+          connectionType: 'kubernetes',
           name: defaultKubernetesConnectionName,
           status: 'started',
           endpoint: {
@@ -236,6 +241,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
         },
         {
+          connectionType: 'kubernetes',
           name: secondaryKubernetesConnectionName,
           status: 'stopped',
           endpoint: {
@@ -284,11 +290,13 @@ describe.each<{
       detectionChecks: [],
       vmConnections: [
         {
+          connectionType: 'vm',
           name: defaultVmConnectionName,
           status: 'started',
           lifecycleMethods: ['start', 'stop', 'delete'],
         },
         {
+          connectionType: 'vm',
           name: secondaryVmConnectionName,
           status: 'stopped',
           lifecycleMethods: ['start', 'stop', 'delete'],
