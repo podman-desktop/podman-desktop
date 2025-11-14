@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, type RenderResult, screen } from '@testing-library/svelte';
+import { fireEvent, render, type RenderResult, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { type Component, type ComponentProps, tick } from 'svelte';
@@ -95,9 +95,7 @@ test('Expect no containers being displayed', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
   await waitRender({});
 
   const noContainers = screen.getByRole('heading', { name: 'No containers' });
@@ -135,9 +133,7 @@ test('Expect is:running / is:stopped is added to the filter field', async () => 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
   await waitRender({});
 
   const searchField = screen.getByPlaceholderText('Search containers...');
@@ -177,9 +173,7 @@ test('Expect filter is preserved between tabs', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
   await waitRender({});
 
   const searchField = screen.getByPlaceholderText('Search containers...');
@@ -265,13 +259,9 @@ test('Try to delete a pod that has containers', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait store are populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
   await waitRender({});
 
   // select the checkbox
@@ -305,9 +295,7 @@ test('Try to delete a container without deleting pods', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait for the store to be cleared
-  while (get(containersInfos).length !== 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).toHaveLength(0));
 
   const podId = 'pod-id2';
 
@@ -347,9 +335,7 @@ test('Try to delete a container without deleting pods', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait until the store is populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
   await waitRender({});
 
@@ -384,10 +370,7 @@ test('Try to delete a pod without deleting container', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait for the store to be cleared
-  while (get(containersInfos).length !== 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
-
+  await waitFor(() => expect(get(containersInfos)).toHaveLength(0));
   const podId = 'pod-id3';
 
   const singleContainer = {
@@ -426,9 +409,7 @@ test('Try to delete a pod without deleting container', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait until the store is populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
   await waitRender({});
 
@@ -490,13 +471,9 @@ test('Expect filter empty screen', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait store are populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
   await waitRender({ searchTerm: 'No match' });
 
   const filterButton = screen.getByRole('button', { name: 'Clear filter' });
@@ -538,13 +515,9 @@ test('Expect clear filter in empty screen to clear serach term, except is:...', 
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait store are populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
   await waitRender({});
 
   const searchField = screen.getByPlaceholderText('Search containers...');
@@ -767,9 +740,7 @@ test('Sort containers based on selected parameter', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait for the store to be cleared
-  while (get(containersInfos).length !== 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).toHaveLength(0));
 
   const mockedContainers = [
     {
@@ -803,9 +774,7 @@ test('Sort containers based on selected parameter', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait until the store is populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
   await waitRender({});
 
@@ -890,9 +859,7 @@ test('Try to run pods in bulk', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait for the store to be cleared
-  while (get(containersInfos).length !== 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).toHaveLength(0));
 
   const podId = 'pod-id3';
   const containerId = 'sha256:56789012345';
@@ -933,9 +900,7 @@ test('Try to run pods in bulk', async () => {
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait until the store is populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
+  await waitFor(() => expect(get(containersInfos)).not.toHaveLength(0));
 
   await waitRender({});
 
@@ -1012,7 +977,7 @@ test('pods with same name on different engines should have separate group', asyn
     async () => {
       return get(containersInfos).length === 0;
     },
-    { interval: 250, timeout: 5000 },
+    { interval: 5, timeout: 5000 },
   );
 
   const CONTAINERS_MOCK: Array<ContainerInfo> = Array.from({ length: 3 }).map((_, index) => ({
@@ -1050,7 +1015,7 @@ test('pods with same name on different engines should have separate group', asyn
     async () => {
       return get(containersInfos).length > 0;
     },
-    { interval: 250, timeout: 5000 },
+    { interval: 5, timeout: 5000 },
   );
 
   const { getAllByRole } = await waitRender({});

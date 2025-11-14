@@ -20,7 +20,7 @@ import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import 'vitest-canvas-mock';
 import typescript from 'typescript';
-import { expect } from 'vitest';
+import { EventStore } from './src/stores/event-store';
 
 global.window.matchMedia = () => {};
 
@@ -84,3 +84,9 @@ class ResizeObserverMock {
 
 global.ResizeObserver = ResizeObserverMock;
 global.window.ResizeObserver = ResizeObserverMock;
+
+// Override the prototype of setupWithDebounce to ensure default values are 10ms
+const originalSetupWithDebounce = EventStore.prototype.setupWithDebounce;
+EventStore.prototype.setupWithDebounce = function (debounceTimeoutDelay = 10, debounceThrottleTimeoutDelay = 10) {
+  return originalSetupWithDebounce.call(this, debounceTimeoutDelay, debounceThrottleTimeoutDelay);
+};
