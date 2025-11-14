@@ -19,6 +19,43 @@ import { WinPlatform } from './win-platform';
 import type { WSL2Check } from '../checks/windows/wsl2-check';
 ```
 
+### Parsing route parameters
+
+The `Route` component provides to its children a `meta` property, containing the route parameters as `string` values.
+
+When a `requestParser` function is provided, the `Route` component also provides to its children a `request` property getting its value and type from the result of the `requestParser` function.
+
+**Use meta:**
+
+```ts
+<Route path="/path/:optionalId" let:meta>
+  <ChildView id={meta.params.optionalId} />
+</Route>
+```
+
+**Use request:**
+
+```ts
+<Route path="/path/:id/*" requestParser={parseParamId} let:request>
+  {#if request}
+    <ChildView id={request.id} />
+  {/if}
+</Route>
+```
+
+```ts
+function parseParamId(request: { params?: Record<string, string> }): { id: number } | undefined {
+  if (!request.params?.id) {
+    return undefined;
+  }
+  const id = parseInt(request.params.id);
+  if (Number.isNaN(id)) {
+    return undefined;
+  }
+  return { id };
+}
+```
+
 ## Unit tests code
 
 ### Use `vi.mocked`, not a generic `myFunctionMock`
