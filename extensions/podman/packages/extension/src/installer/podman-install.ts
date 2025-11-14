@@ -31,6 +31,7 @@ import {
 } from '/@/constants';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { MachineJSON } from '/@/types';
+import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
 
 import { getDetectionChecks } from '../checks/detection-checks';
 import {
@@ -43,8 +44,7 @@ import {
 } from '../extension';
 import * as podman5JSON from '../podman5.json';
 import { getBundledPodmanVersion } from '../utils/podman-bundled';
-import type { InstalledPodman } from '../utils/podman-cli';
-import { getPodmanCli, getPodmanInstallation } from '../utils/podman-cli';
+import { getPodmanCli } from '../utils/podman-cli';
 import type { PodmanInfo } from '../utils/podman-info';
 import { PodmanInfoImpl } from '../utils/podman-info';
 import { Installer } from './installer';
@@ -72,6 +72,8 @@ export class PodmanInstall {
     @inject(ProviderCleanupSymbol)
     @optional()
     readonly providerCleanup: extensionApi.ProviderCleanup | undefined,
+    @inject(PodmanBinary)
+    readonly podmanBinary: PodmanBinary,
   ) {
     this.storagePath = extensionContext.storagePath;
   }
@@ -88,7 +90,7 @@ export class PodmanInstall {
     );
     if (dialogResult === 'Yes') {
       await this.installBundledPodman();
-      const newInstalledPodman = await getPodmanInstallation();
+      const newInstalledPodman = await this.podmanBinary.getBinaryInfo();
       // write podman version
       if (newInstalledPodman) {
         this.podmanInfo.podmanVersion = newInstalledPodman.version;

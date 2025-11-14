@@ -105,19 +105,3 @@ export function getPodmanCli(): string {
 export function getCustomBinaryPath(): string | undefined {
   return extensionApi.configuration.getConfiguration('podman').get('binary.path');
 }
-
-export interface InstalledPodman {
-  version: string;
-}
-
-export async function getPodmanInstallation(): Promise<InstalledPodman | undefined> {
-  try {
-    const { stdout: versionOut } = await extensionApi.process.exec(getPodmanCli(), ['--version']);
-    const versionArr = versionOut.split(' ');
-    const version = versionArr[versionArr.length - 1];
-    return { version };
-  } catch (err) {
-    // no podman binary
-    return undefined;
-  }
-}
