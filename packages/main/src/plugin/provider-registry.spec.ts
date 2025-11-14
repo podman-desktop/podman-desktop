@@ -86,7 +86,7 @@ const telemetry: Telemetry = {
 
 beforeEach(() => {
   vi.useRealTimers();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.restoreAllMocks();
   const apiSender = {
     send: apiSenderSendMock,
