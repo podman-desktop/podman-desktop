@@ -166,7 +166,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/svelte": "^5.2.8",
     "@testing-library/user-event": "^14.6.1",
-    "@tsconfig/svelte": "^5.0.5",
+    "@tsconfig/svelte": "^5.0.6",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "eslint-plugin-svelte": "^3.13.0",
     "jsdom": "^27.2.0",
