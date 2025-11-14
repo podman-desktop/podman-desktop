@@ -1,0 +1,113 @@
+---
+title: Leverage your productivity using the Search Bar
+description: Boost your performance with Search Bar component
+authors: [gastoner]
+tags: [podman-desktop, features]
+hide_table_of_contents: false
+---
+
+import ReactPlayer from 'react-player'
+import ThemedImage from '@theme/ThemedImage';
+
+We rolled out a brand-new Search Bar in Podman Desktop 1.22, giving users a faster way to navigate and discover content. With the 1.23 update, we’ve made it even better, adding smart improvements and handy features!
+
+## Search Bar
+
+The Search Bar (previously known as the Command Palette) is a powerful, keyboard-first feature that brings everything in Podman Desktop just a few keystrokes away. Located directly in the title bar, it provides unified access to commands, documentation, and navigation across your entire workspace.
+
+<ReactPlayer src='https://youtu.be/n-pwWolzxJ0?si=qMu-DX3EMl0pFoL-' controls={true} width="100%" height="500px"  />
+
+## Enabling the Feature
+
+To enable the Search Bar:
+
+1. Navigate to **Settings** > **Preferences** > **Appearance**.
+2. Find **Search Bar** in the experimental features section.
+3. Enable it to see the search button appear in your title bar.
+
+<ThemedImage
+alt="Search Bar Enablement"
+sources={{
+    light: require('./img/boost-your-performance-with-search-bar/search-bar-settings-light.png').default,
+    dark: require('./img/boost-your-performance-with-search-bar/search-bar-settings-dark.png').default,
+  }}
+/>
+
+<br/>
+<br/>
+
+Once enabled, the traditional title text is replaced with a compact search button, maximizing your workspace while keeping powerful functionality at your fingertips.
+
+## Four Search Modes
+
+The Search Bar offers four distinct modes, each optimized for different tasks:
+
+#### 1. **All** (`Cmd/Ctrl + Shift + P`)
+
+The default mode searches across everything - commands, documentation, containers, images, pods, and navigation pages. Perfect when you know what you want but aren't sure where to find it.
+
+#### 2. **Commands** (`F1` or type `>`)
+
+Execute any available command directly. Simply type to filter through available commands and press Enter to execute. This mode supports command enablement and context, showing only currently available commands.
+
+<ThemedImage
+alt="Commands Mode"
+sources={{
+    light: require('./img/boost-your-performance-with-search-bar/search-bar-command-light.png').default,
+    dark: require('./img/boost-your-performance-with-search-bar/search-bar-command-dark.png').default,
+  }}
+/>
+
+<br/>
+<br/>
+
+:::note
+
+You can add custom commands to this list by creating a [custom extension](https://podman-desktop.io/tutorial/creating-an-extension).
+
+:::
+
+#### 3. **Documentation** (`Cmd/Ctrl + K`)
+
+Quickly search through Podman Desktop's documentation. Find help articles, guides, and references without leaving the application. Each result shows the category and description to help you find exactly what you need.
+
+#### 4. **Go To** (`Cmd/Ctrl + F`)
+
+Navigate instantly to any resource in your environment:
+
+- **Containers** - Jump directly to any running or stopped container
+- **Images** - Access image details in one keystroke
+- **Pods** - Navigate to pod management pages
+- **Volumes** - View and manage volumes quickly
+- **Pages** - Access any application page (Dashboard, Settings, Extensions, etc.)
+
+<ThemedImage
+alt="Go To Mode"
+sources={{
+    light: require('./img/boost-your-performance-with-search-bar/search-bar-go-to-light.png').default,
+    dark: require('./img/boost-your-performance-with-search-bar/search-bar-go-to-dark.png').default,
+  }}
+/>
+
+### Keyboard Navigation
+
+The Search Bar is designed for maximum efficiency:
+
+- **Tab** - Switch between search modes
+- **↑/↓ Arrow Keys** - Navigate through results
+- **Enter** - Select and execute the highlighted item
+- **Escape** - Close the search palette
+
+All interactions are keyboard-driven, meaning you can accomplish complex tasks without ever touching your mouse.
+
+### Why Use the Search Bar?
+
+- **Speed** - Access any feature or resource in seconds
+- **Discovery** - Find commands and features you didn't know existed
+- **Context-Aware** - Only shows relevant commands based on your current context
+
+## Try It Today
+
+Enable the Search Bar in your Podman Desktop settings and experience a faster, more efficient workflow. We'd love to hear your feedback in our [GitHub Discussion](https://github.com/podman-desktop/podman-desktop/discussions/13674).
+
+Happy containerizing! 🚀
