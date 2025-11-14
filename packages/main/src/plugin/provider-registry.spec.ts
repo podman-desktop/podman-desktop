@@ -40,7 +40,7 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@podman-desktop/api';
-import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   CheckStatus,
@@ -2625,5 +2625,249 @@ test('getConnectionFactories should return the connection factories', async () =
     creationButtonTitle: 'a creation Button Title',
     emptyConnectionMarkdownDescription: 'an empty connection markdown description for provider 2',
     images: provider2Images,
+  });
+});
+
+describe('Kubernetes provider availability checking', () => {
+  let testProviderRegistry: TestProviderRegistry;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    const apiSender = {
+      send: apiSenderSendMock,
+    } as unknown as ApiSenderType;
+    const testContainerRegistry = {
+      registerContainerConnection: vi.fn(),
+      isApiAttached: vi.fn(),
+      onApiAttached: vi.fn(),
+    } as unknown as ContainerProviderRegistry;
+    testProviderRegistry = new TestProviderRegistry(apiSender, testContainerRegistry, telemetry);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function setupProviderWithKubernetesFactory(canCreateMock: ReturnType<typeof vi.fn>): ProviderImpl {
+    const provider = testProviderRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    (provider as ProviderImpl).setKubernetesProviderConnectionFactory({
+      canCreate: canCreateMock,
+      create: vi.fn(),
+    });
+
+    return provider as ProviderImpl;
+  }
+
+  async function setupAndWaitForInitialAvailabilityCheck(canCreateMock: ReturnType<typeof vi.fn>): Promise<void> {
+    setupProviderWithKubernetesFactory(canCreateMock);
+    apiSenderSendMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  }
+
+  async function setupProviderAndCheckAvailability(canCreateMock: ReturnType<typeof vi.fn>): Promise<ProviderImpl> {
+    const provider = testProviderRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    (provider as ProviderImpl).setKubernetesProviderConnectionFactory({
+      canCreate: canCreateMock,
+      create: vi.fn(),
+      creationDisplayName: 'Create K8s',
+      creationButtonTitle: 'Create',
+    });
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalled();
+    });
+
+    return provider as ProviderImpl;
+  }
+
+  test('should check canCreate and cache availability when provider has kubernetesProviderConnectionFactory', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: true });
+    setupProviderWithKubernetesFactory(canCreateMock);
+    apiSenderSendMock.mockClear();
+    await vi.advanceTimersByTimeAsync(2000);
+
+    expect(canCreateMock).toHaveBeenCalled();
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should use cached availability and skip check if cache is still valid (within TTL)', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: true });
+    setupProviderWithKubernetesFactory(canCreateMock);
+    apiSenderSendMock.mockClear();
+    canCreateMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(1);
+    });
+
+    canCreateMock.mockClear();
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(canCreateMock).not.toHaveBeenCalled();
+  });
+
+  test('should re-check availability after cache TTL expires (5 seconds)', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: true });
+    setupProviderWithKubernetesFactory(canCreateMock);
+    canCreateMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(1);
+    });
+
+    canCreateMock.mockClear();
+    await vi.advanceTimersByTimeAsync(6000);
+
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  test('should send provider-change event when availability changes from true to false', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: true });
+    await setupAndWaitForInitialAvailabilityCheck(canCreateMock);
+    canCreateMock.mockResolvedValue({ canCreate: false, reason: 'No container engine available' });
+    apiSenderSendMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(6000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should send provider-change event when reason changes even if canCreate stays the same', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: false, reason: 'Reason 1' });
+    setupProviderWithKubernetesFactory(canCreateMock);
+    apiSenderSendMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+    canCreateMock.mockResolvedValue({ canCreate: false, reason: 'Reason 2' });
+    apiSenderSendMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(6000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should not send provider-change event when availability stays the same', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: true });
+    await setupAndWaitForInitialAvailabilityCheck(canCreateMock);
+    apiSenderSendMock.mockClear();
+
+    await vi.advanceTimersByTimeAsync(6000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should handle canCreate errors gracefully without crashing', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockRejectedValue(new Error('Failed to check availability'));
+
+    const provider = testProviderRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    (provider as ProviderImpl).setKubernetesProviderConnectionFactory({
+      canCreate: canCreateMock,
+      create: vi.fn(),
+    });
+
+    await vi.advanceTimersByTimeAsync(2000);
+    await vi.waitFor(() => {
+      expect(canCreateMock).toHaveBeenCalled();
+    });
+  });
+
+  test('should expose cached availability through getProviderInfo when canCreate is true', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: true });
+
+    const provider = await setupProviderAndCheckAvailability(canCreateMock);
+    const providerInfo = testProviderRegistry.getProviderInfo(provider.internalId);
+
+    expect(providerInfo?.kubernetesProviderConnectionCreationDisabled).toBeFalsy();
+    expect(providerInfo?.kubernetesProviderConnectionCreationDisabledReason).toBeUndefined();
+  });
+
+  test('should expose cached availability through getProviderInfo when canCreate is false with reason', async () => {
+    const canCreateMock = vi.fn();
+    canCreateMock.mockResolvedValue({ canCreate: false, reason: 'No container engine running' });
+
+    const provider = await setupProviderAndCheckAvailability(canCreateMock);
+    const providerInfo = testProviderRegistry.getProviderInfo(provider.internalId);
+
+    expect(providerInfo?.kubernetesProviderConnectionCreationDisabled).toBe(true);
+    expect(providerInfo?.kubernetesProviderConnectionCreationDisabledReason).toBe('No container engine running');
+  });
+
+  test('should not check availability if provider has no kubernetesProviderConnectionFactory', async () => {
+    providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    apiSenderSendMock.mockClear();
+    vi.advanceTimersByTime(2000);
+
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+  });
+
+  test('should not check availability if kubernetesProviderConnectionFactory has no canCreate method', async () => {
+    const provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+
+    (provider as ProviderImpl).setKubernetesProviderConnectionFactory({
+      create: vi.fn(),
+      creationDisplayName: 'Create K8s',
+    });
+
+    apiSenderSendMock.mockClear();
+    vi.advanceTimersByTime(2000);
+
+    expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
   });
 });

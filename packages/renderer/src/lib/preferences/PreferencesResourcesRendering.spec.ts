@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
-import { render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -124,6 +124,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   onboardingList.set([]);
+  vi.clearAllMocks();
 });
 
 describe.each<{
@@ -825,4 +826,157 @@ test('Expect update button to show up when an update is available to a new versi
   await userEvent.click(updateButton);
   expect(window.runUpdatePreflightChecks).toHaveBeenCalled();
   expect(window.updateProvider).toHaveBeenCalled();
+});
+
+describe('Provider creation button disabled state', () => {
+  function createKubernetesProvider(overrides: Partial<ProviderInfo> = {}): ProviderInfo {
+    return {
+      id: 'kind',
+      name: 'kind',
+      extensionId: 'kind-extension',
+      images: { icon: 'img' },
+      status: 'started',
+      warnings: [],
+      containerProviderConnectionCreation: false,
+      detectionChecks: [],
+      containerConnections: [],
+      installationSupport: false,
+      internalId: '1',
+      kubernetesConnections: [],
+      kubernetesProviderConnectionCreation: true,
+      vmConnections: [],
+      vmProviderConnectionCreation: false,
+      vmProviderConnectionInitialization: false,
+      links: [],
+      containerProviderConnectionInitialization: false,
+      kubernetesProviderConnectionInitialization: false,
+      cleanupSupport: false,
+      ...overrides,
+    };
+  }
+
+  test('Expect Kubernetes provider creation button to be disabled when kubernetesProviderConnectionCreationDisabled is true', async () => {
+    const kubernetesProvider = createKubernetesProvider({
+      kubernetesProviderConnectionCreationDisabled: true,
+      kubernetesProviderConnectionCreationDisabledReason: 'Provider is temporarily unavailable',
+    });
+    providerInfos.set([kubernetesProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new kind' });
+    expect(button).toBeInTheDocument();
+    expect(button).toBeDisabled();
+  });
+
+  test('Expect Kubernetes provider creation button to be enabled when kubernetesProviderConnectionCreationDisabled is false', async () => {
+    const kubernetesProvider = createKubernetesProvider({
+      kubernetesProviderConnectionCreationDisabled: false,
+    });
+    providerInfos.set([kubernetesProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new kind' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect Kubernetes provider creation button to be enabled when kubernetesProviderConnectionCreationDisabled is undefined', async () => {
+    const kubernetesProvider = createKubernetesProvider();
+    providerInfos.set([kubernetesProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new kind' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect container provider creation button to be enabled regardless of kubernetes disabled flag', async () => {
+    const customProviderInfo: ProviderInfo = {
+      ...providerInfo,
+      kubernetesProviderConnectionCreation: false,
+    };
+    providerInfos.set([customProviderInfo]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Podman machine' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect VM provider creation button to be enabled regardless of kubernetes disabled flag', async () => {
+    const vmProvider = createKubernetesProvider({
+      id: 'vm',
+      name: 'vm-provider',
+      extensionId: 'vm-extension',
+      internalId: '2',
+      kubernetesProviderConnectionCreation: false,
+      vmProviderConnectionCreation: true,
+      vmProviderConnectionCreationDisplayName: 'VM Connection',
+    });
+    providerInfos.set([vmProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new VM Connection' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect disabled button to show custom tooltip message when kubernetesProviderConnectionCreationDisabledReason is provided', async () => {
+    const customReason = 'Cannot create connection: service is down';
+    const kubernetesProvider = createKubernetesProvider({
+      kubernetesProviderConnectionCreationDisabled: true,
+      kubernetesProviderConnectionCreationDisabledReason: customReason,
+    });
+    providerInfos.set([kubernetesProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new kind' });
+    expect(button).toBeDisabled();
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+
+    await waitFor(() => {
+      expect(screen.getByText(customReason)).toBeInTheDocument();
+    });
+  });
+
+  test('Expect enabled button to show default tooltip message when kubernetesProviderConnectionCreationDisabled is false', async () => {
+    const kubernetesProvider = createKubernetesProvider({
+      kubernetesProviderConnectionCreationDisplayName: 'Kind Cluster',
+      kubernetesProviderConnectionCreationDisabled: false,
+    });
+    providerInfos.set([kubernetesProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Kind Cluster' });
+    expect(button).not.toBeDisabled();
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+
+    await waitFor(() => {
+      expect(screen.getByText('Create new Kind Cluster')).toBeInTheDocument();
+    });
+  });
+
+  test('Expect button click to be prevented when kubernetesProviderConnectionCreationDisabled is true', async () => {
+    const kubernetesProvider = createKubernetesProvider({
+      kubernetesProviderConnectionCreationDisabled: true,
+      kubernetesProviderConnectionCreationDisabledReason: 'Provider is temporarily unavailable',
+    });
+    providerInfos.set([kubernetesProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new kind' });
+    expect(button).toBeDisabled();
+
+    await userEvent.click(button);
+
+    expect(window.telemetryTrack).not.toHaveBeenCalledWith(
+      'createNewProviderConnectionPageRequested',
+      expect.anything(),
+    );
+    expect(router.goto).not.toHaveBeenCalled();
+  });
 });
