@@ -180,6 +180,12 @@ vi.mock('./compatibility-mode', async () => {
   };
 });
 
+vi.mock('./configuration/registry-configuration', async () => {
+  const RegistryConfigurationImpl = vi.fn();
+  RegistryConfigurationImpl.prototype.init = vi.fn(() => []);
+  return { RegistryConfigurationImpl };
+});
+
 const PODMAN_INSTALL_MOCK: PodmanInstall = {
   getUpdatePreflightChecks: vi.fn(),
   isAbleToInstall: vi.fn(),
@@ -191,7 +197,7 @@ const WIN_PLATFORM_MOCK: WinPlatform = {
   isHyperVEnabled: vi.fn(),
 } as unknown as WinPlatform;
 
-beforeEach(async () => {
+beforeEach(() => {
   fakeMachineJSON = [
     {
       Name: machineDefaultName,
