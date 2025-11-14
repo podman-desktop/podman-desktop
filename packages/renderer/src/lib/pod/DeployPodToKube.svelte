@@ -40,6 +40,12 @@ let bodyPod: V1Pod;
 let createIngress = false;
 let ingressPort: number;
 let containerPortArray: string[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let servicesToCreate: any[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let routesToCreate: any[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let ingressesToCreate: any[] = [];
 
 let createdRoutes: V1Route[] = [];
 
@@ -166,12 +172,6 @@ async function deployToKube(): Promise<void> {
   clearInterval(updatePodInterval);
 
   createdRoutes = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let servicesToCreate: any[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let routesToCreate: any[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let ingressesToCreate: any[] = [];
 
   if (bodyPod.metadata?.name) {
     // if we deploy using services, we need to get rid of .hostPort and generate kubernetes services object
@@ -392,6 +392,13 @@ $: bodyPod && updateKubeResult();
 
 function updateKubeResult(): void {
   kubeDetails = jsYaml.dump(bodyPod, { noArrayIndent: true, quotingType: '"', lineWidth: -1 });
+  const resourcesToDump = [...servicesToCreate, ...routesToCreate, ...ingressesToCreate];
+  for (const resource of resourcesToDump) {
+    kubeDetails = kubeDetails.concat(
+      '---\n',
+      jsYaml.dump(resource, { noArrayIndent: true, quotingType: '"', lineWidth: -1 }),
+    );
+  }
 }
 </script>
 
