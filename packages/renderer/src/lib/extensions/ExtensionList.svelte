@@ -59,9 +59,17 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
   screen = newScreen;
   searchTerm = extensionsUtils.filterTerms(searchTerm).join(' ');
 }
+
+const searchPlaceholder = $derived(
+  screen === 'installed'
+    ? 'Search installed extensions...'
+    : screen === 'catalog'
+      ? 'Search catalog extensions...'
+      : 'Search local extensions...',
+);
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} title="extensions" searchPlaceholder="Search extensions by name, publisher, or keyword...">
   {#snippet additionalActions()}
     <Button
       on:click={(): void => {
