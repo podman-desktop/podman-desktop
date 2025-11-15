@@ -28,10 +28,7 @@ function getExtensionLabel(): string {
   return resolveLabel(extension.displayName, extension.name, extension.id);
 }
 
-function getDetailsLabel(): string {
-  const label = getExtensionLabel();
-  return label ? `View details for ${label}` : 'View extension details';
-}
+const detailsLabel = $derived(getExtensionLabel() ? `View details for ${getExtensionLabel()}` : 'View extension details');
 </script>
 
 <Tooltip top tip={getDetailsLabel()}>
