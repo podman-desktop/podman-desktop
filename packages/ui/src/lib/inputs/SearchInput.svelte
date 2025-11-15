@@ -22,7 +22,7 @@ let {
 }: Props = $props();
 
 const appliedPlaceholder = $derived(placeholder ?? `Search ${title}...`);
-const appliedAriaLabel = $derived(placeholder ? `Search: ${placeholder}` : `Search ${title}`);
+const appliedAriaLabel = $derived(placeholder ? `Search: ${placeholder}` : `search ${title}`);
 </script>
 
 <Input
