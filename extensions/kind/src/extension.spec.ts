@@ -29,21 +29,10 @@ import { KindInstaller } from './kind-installer';
 import * as util from './util';
 
 vi.mock('node:fs');
-vi.mock('./util');
-vi.mock('./image-handler', () => {
-  return {
-    ImageHandler: vi.fn().mockImplementation(() => {
-      return {
-        moveImage: vi.fn(),
-      };
-    }),
-  };
-});
-vi.mock('./create-cluster', () => ({
-  createCluster: vi.fn(),
-}));
-
-vi.mock('./kind-installer');
+vi.mock(import('./util'));
+vi.mock(import('./image-handler'));
+vi.mock(import('./create-cluster'));
+vi.mock(import('./kind-installer'));
 
 vi.mock('@podman-desktop/api', () => ({
   window: {
