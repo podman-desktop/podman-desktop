@@ -41,6 +41,10 @@ import {
   PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
+import { KrunkitHelper } from '/@/helpers/krunkit-helper';
+import { PodmanBinaryLocationHelper } from '/@/helpers/podman-binary-location-helper';
+import { PodmanInfoHelper } from '/@/helpers/podman-info-helper';
+import { QemuHelper } from '/@/helpers/qemu-helper';
 import type { Installer } from '/@/installer/installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
@@ -152,12 +156,6 @@ const telemetryLogger: extensionApi.TelemetryLogger = {
 async function waitTelemetryLoggerUsage() {
   await vi.waitFor(() => expect((telemetryLogger.logUsage as Mock).mock.calls).not.toHaveLength(0));
 }
-
-const mocks = vi.hoisted(() => ({
-  getPodmanLocationMacMock: vi.fn(),
-  getKrunkitVersionMock: vi.fn(),
-  getQemuVersionMock: vi.fn(),
-}));
 
 vi.mock('node:fs');
 // mock fs.promises.readdir and use string[] as return type
@@ -371,41 +369,10 @@ vi.mock('node:os', async () => {
   };
 });
 
-vi.mock('./helpers/qemu-helper', () => ({
-  QemuHelper: vi.fn().mockReturnValue({
-    getQemuVersion: mocks.getQemuVersionMock,
-  }),
-}));
-
-vi.mock('./helpers/krunkit-helper', async () => {
-  return {
-    KrunkitHelper: vi.fn().mockImplementation(() => {
-      return {
-        getKrunkitVersion: mocks.getKrunkitVersionMock,
-      };
-    }),
-  };
-});
-vi.mock('./helpers/podman-binary-location-helper', async () => {
-  return {
-    PodmanBinaryLocationHelper: vi.fn().mockImplementation(() => {
-      return {
-        getPodmanLocationMac: mocks.getPodmanLocationMacMock,
-      };
-    }),
-  };
-});
-vi.mock('./helpers/podman-info-helper', async () => {
-  return {
-    PodmanInfoHelper: vi.fn().mockImplementation(() => {
-      return {
-        updateWithPodmanInfoRecords: vi.fn().mockImplementation(() => {
-          return Promise.resolve();
-        }),
-      };
-    }),
-  };
-});
+vi.mock(import('./helpers/qemu-helper'));
+vi.mock(import('./helpers/krunkit-helper'));
+vi.mock(import('./helpers/podman-binary-location-helper'));
+vi.mock(import('./helpers/podman-info-helper'));
 
 vi.mock(import('./utils/util'), async importOriginal => {
   const original = await importOriginal();
@@ -433,6 +400,10 @@ beforeEach(() => {
     tooltipText: (): string => {
       return '';
     },
+  });
+
+  vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockImplementation(() => {
+    return Promise.resolve();
   });
 });
 
@@ -2728,8 +2699,11 @@ describe('sendTelemetryRecords', () => {
     vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
       version: '5.1.2',
     });
-    mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-    mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
+    vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+      foundPath: '/opt/podman/bin/podman',
+      source: 'installer',
+    });
+    vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockResolvedValue('1.2.3');
 
     extension.sendTelemetryRecords(
       'evt',
@@ -2758,8 +2732,11 @@ describe('sendTelemetryRecords', () => {
     vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
       version: '5.1.2',
     });
-    mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-    mocks.getKrunkitVersionMock.mockRejectedValue('command not found');
+    vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+      foundPath: '/opt/podman/bin/podman',
+      source: 'installer',
+    });
+    vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockRejectedValue('command not found');
 
     extension.sendTelemetryRecords(
       'evt',
@@ -2796,7 +2773,7 @@ describe('sendTelemetryRecords', () => {
     (extensionApi.env.isMac as boolean) = false;
     vi.mocked(extensionApi.env).isWindows = false;
 
-    mocks.getQemuVersionMock.mockResolvedValue('5.5.5');
+    vi.mocked(QemuHelper.prototype.getQemuVersion).mockResolvedValue('5.5.5');
 
     await vi.waitFor(() => {
       expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
@@ -2824,7 +2801,7 @@ describe('sendTelemetryRecords', () => {
     (extensionApi.env.isMac as boolean) = false;
     vi.mocked(extensionApi.env).isWindows = false;
 
-    mocks.getQemuVersionMock.mockRejectedValue('command not found');
+    vi.mocked(QemuHelper.prototype.getQemuVersion).mockRejectedValue('command not found');
 
     await vi.waitFor(() => {
       expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
@@ -2847,8 +2824,11 @@ test('if a machine stopped is successfully reporting telemetry', async () => {
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
     version: '5.1.2',
   });
-  mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-  mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
+  vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+    foundPath: '/opt/podman/bin/podman',
+    source: 'installer',
+  });
+  vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockResolvedValue('1.2.3');
   await extension.stopMachine(provider, machineInfo);
 
   await waitTelemetryLoggerUsage();
@@ -2877,8 +2857,11 @@ test('if a machine stopped is successfully reporting an error in telemetry', asy
   vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
     version: '5.1.2',
   });
-  mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-  mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
+  vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+    foundPath: '/opt/podman/bin/podman',
+    source: 'installer',
+  });
+  vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockResolvedValue('1.2.3');
   await expect(extension.stopMachine(provider, machineInfo)).rejects.toThrow(customError.message);
 
   await waitTelemetryLoggerUsage();
