@@ -26,6 +26,7 @@ interface Props {
   resetToDefault?: boolean;
   enableAutoSave?: boolean;
   enableSlider?: boolean;
+  disabled?: boolean;
 }
 
 let {
@@ -39,6 +40,7 @@ let {
   resetToDefault = false,
   enableAutoSave = false,
   enableSlider = false,
+  disabled = false,
 }: Props = $props();
 
 let currentRecord: IConfigurationPropertyRecordedSchema;
@@ -201,43 +203,54 @@ function numberItemValue(): number {
     <BooleanItem
       record={record}
       checked={typeof givenValue === 'boolean' ? givenValue : !!recordValue}
-      onChange={onChange} />
+      onChange={onChange}
+      disabled={disabled} />
   {:else if record.type === 'object'}
     <BooleanItem
       record={record}
       checked={!!recordValue}
-      onChange={onChange} />
+      onChange={onChange}
+      disabled={disabled} />
   {:else if record.type === 'number' || record.type === 'integer'}
     {#if enableSlider && typeof record.maximum === 'number'}
       <SliderItem
         record={record}
         value={typeof givenValue === 'number' ? givenValue : getNormalizedDefaultNumberValue(record)}
-        onChange={onChange} />
+        onChange={onChange}
+        disabled={disabled} />
     {:else}
       <NumberItem
         record={record}
         value={numberItemValue()}
         onChange={onChange}
-        invalidRecord={invalidRecord} />
+        invalidRecord={invalidRecord}
+        disabled={disabled} />
     {/if}
   {:else if record.type === 'string' && (typeof recordValue === 'string' || recordValue === undefined)}
     {#if record.format === 'file' || record.format === 'folder'}
       <FileItem
         record={record}
         value={typeof givenValue === 'string' ? givenValue : (recordValue ?? '')}
-        onChange={onChange} />
+        onChange={onChange}
+        disabled={disabled} />
     {:else if record.enum && record.enum.length > 0}
-      <EnumItem record={record} value={typeof givenValue === 'string' ? givenValue : recordValue} onChange={onChange} />
+      <EnumItem
+        record={record}
+        value={typeof givenValue === 'string' ? givenValue : recordValue}
+        onChange={onChange}
+        disabled={disabled} />
     {:else if record.format === 'password'}
       <PasswordStringItem
         record={record}
         value={typeof givenValue === 'string' ? givenValue : recordValue}
-        onChange={onChange} />
+        onChange={onChange}
+        disabled={disabled} />
     {:else}
       <StringItem
         record={record}
         value={typeof givenValue === 'string' ? givenValue : recordValue}
-        onChange={onChange} />
+        onChange={onChange}
+        disabled={disabled} />
     {/if}
   {:else if record.type === 'markdown'}
     <div class="text-sm">
