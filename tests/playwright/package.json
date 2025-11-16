@@ -26,6 +26,6 @@
     "@types/node": "^22",
     "electron": "39.2.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.8"
+    "vitest": "https://pkg.pr.new/vitest@617260f"
   }
 }

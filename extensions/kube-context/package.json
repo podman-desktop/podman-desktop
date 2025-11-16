@@ -46,6 +46,6 @@
     "@types/js-yaml": "^4.0.9",
     "mkdirp": "^3.0.1",
     "vite": "^7.2.2",
-    "vitest": "^4.0.8"
+    "vitest": "https://pkg.pr.new/vitest@617260f"
   }
 }
