@@ -195,7 +195,6 @@ async function getCliToolUpdate(updatable: boolean): Promise<extensionApi.CliToo
 describe('registerCLITool', () => {
   test('createCliTool already installed system wide', async () => {
     vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
-    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
     vi.mocked(Detect.prototype.getDockerComposeBinaryInfo).mockResolvedValue({
       version: 'v0.0.0',
       path: 'system-wide-path',
