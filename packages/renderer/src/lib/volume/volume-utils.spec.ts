@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 test('should expect valid size', async () => {
-  const volumeInfo = { UsageData: { Size: 1000, RefCount: 1 } } as VolumeInfo;
+  const volumeInfo = { UsageData: { Size: 1_000, RefCount: 1 } } as VolumeInfo;
   const size = volumeUtils.getSize(volumeInfo);
   expect(size).toBe('1 kB');
 });

@@ -127,7 +127,7 @@ function autoSave(): Promise<void> {
     return new Promise((_, reject) => {
       recordUpdateTimeout = setTimeout(() => {
         update(record).catch((err: unknown) => reject(err));
-      }, 1000);
+      }, 1_000);
     });
   }
   return Promise.resolve();

@@ -339,7 +339,7 @@ export class ContributionManager {
   async waitForRunningState(composeDirectory: string, projectName: string, maxWait?: number): Promise<void> {
     // compute current date
     const startDate = new Date();
-    maxWait ??= 30 * 1000; // 30s
+    maxWait ??= 30 * 1_000; // 30s
 
     const endDate = new Date(startDate.getTime() + maxWait).getTime();
 
@@ -359,7 +359,7 @@ export class ContributionManager {
       }
 
       // wait 1second
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1_000));
     }
 
     if (!alive) {
@@ -513,7 +513,7 @@ export class ContributionManager {
       // read port number from the global port file
       const globalPortsFile = path.join(rootDirectory, '..', ContributionManager.GLOBAL_PORTS_FILE);
 
-      let initPortRange = 10000;
+      let initPortRange = 10_000;
       // if does not exist, create it with 10000
       if (fs.existsSync(globalPortsFile)) {
         const portNumberString = await fs.promises.readFile(globalPortsFile, 'utf-8');
@@ -559,7 +559,7 @@ export class ContributionManager {
         await fs.promises.writeFile(portFile, extensionPortNumber.toString());
       }
 
-      await fs.promises.writeFile(composeFilePath, jsYaml.dump(afterTransformationCompose, { lineWidth: 1000 }));
+      await fs.promises.writeFile(composeFilePath, jsYaml.dump(afterTransformationCompose, { lineWidth: 1_000 }));
       return composeFilePath;
     }
     return undefined;

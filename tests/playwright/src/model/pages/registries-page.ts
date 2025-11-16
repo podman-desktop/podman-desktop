@@ -127,7 +127,7 @@ export class RegistriesPage extends SettingsPage {
           },
           { message: 'Login Button not enabled in time' },
         );
-        await loginButton.click({ timeout: 3000 });
+        await loginButton.click({ timeout: 3_000 });
       } catch (err) {
         throw Error(`An error occured when trying to log into registry: ${(err as Error).message}`);
       }

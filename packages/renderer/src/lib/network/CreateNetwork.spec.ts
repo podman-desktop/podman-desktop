@@ -226,6 +226,6 @@ test('Expect automatic routing after successful network creation when network ap
     () => {
       expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
     },
-    { timeout: 3000 },
+    { timeout: 3_000 },
   );
 });

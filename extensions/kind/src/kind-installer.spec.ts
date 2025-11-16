@@ -179,41 +179,41 @@ describe('getReleaseAssetId', () => {
   });
 
   test('macOS x86_64', async () => {
-    const result = await installer.getReleaseAssetId(170076920, 'darwin', 'x64');
+    const result = await installer.getReleaseAssetId(170_076_920, 'darwin', 'x64');
     expect(result).toBeDefined();
-    expect(result).toBe(186178216);
+    expect(result).toBe(186_178_216);
   });
 
   test('macOS arm64', async () => {
-    const result = await installer.getReleaseAssetId(170076920, 'darwin', 'arm64');
+    const result = await installer.getReleaseAssetId(170_076_920, 'darwin', 'arm64');
     expect(result).toBeDefined();
-    expect(result).toBe(186178219);
+    expect(result).toBe(186_178_219);
   });
 
   test('windows x86_64', async () => {
-    const result = await installer.getReleaseAssetId(170076920, 'win32', 'x64');
+    const result = await installer.getReleaseAssetId(170_076_920, 'win32', 'x64');
     expect(result).toBeDefined();
-    expect(result).toBe(186178238);
+    expect(result).toBe(186_178_238);
   });
 
   test('windows arm64', async () => {
-    await expect(installer.getReleaseAssetId(170076920, 'win32', 'arm64')).rejects.toThrow();
+    await expect(installer.getReleaseAssetId(170_076_920, 'win32', 'arm64')).rejects.toThrow();
   });
 
   test('linux x86_64', async () => {
-    const result = await installer.getReleaseAssetId(170076920, 'linux', 'x64');
+    const result = await installer.getReleaseAssetId(170_076_920, 'linux', 'x64');
     expect(result).toBeDefined();
-    expect(result).toBe(186178226);
+    expect(result).toBe(186_178_226);
   });
 
   test('linux arm64', async () => {
-    const result = await installer.getReleaseAssetId(170076920, 'linux', 'arm64');
+    const result = await installer.getReleaseAssetId(170_076_920, 'linux', 'arm64');
     expect(result).toBeDefined();
-    expect(result).toBe(186178234);
+    expect(result).toBe(186_178_234);
   });
 
   test('invalid', async () => {
-    await expect(installer.getReleaseAssetId(170076920, 'invalid', 'invalid')).rejects.toThrow();
+    await expect(installer.getReleaseAssetId(170_076_920, 'invalid', 'invalid')).rejects.toThrow();
   });
 });
 
@@ -270,7 +270,7 @@ describe('install', () => {
       .mockImplementation(() => Promise.resolve());
     const output = await installer.download(resultREST[0]);
     expect(output).toStrictEqual(path.join(installer.getKindCliStoragePath()));
-    expect(downloadReleaseAssetMock).toBeCalledWith(186178238, expect.any(String));
+    expect(downloadReleaseAssetMock).toBeCalledWith(186_178_238, expect.any(String));
     expect(chmodMock).not.toBeCalled();
   });
   test('should download and set permissions on file on non-win system', async () => {
@@ -294,7 +294,7 @@ describe('install', () => {
       .spyOn(installer, 'downloadReleaseAsset')
       .mockImplementation(() => Promise.resolve());
     await installer.download(resultREST[0]);
-    expect(downloadReleaseAssetMock).toBeCalledWith(186178216, expect.any(String));
+    expect(downloadReleaseAssetMock).toBeCalledWith(186_178_216, expect.any(String));
     expect(chmodMock).toBeCalledWith(expect.any(String), 0o755);
   });
 });

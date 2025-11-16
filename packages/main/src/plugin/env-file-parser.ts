@@ -32,7 +32,7 @@ export class EnvfileParser {
   protected async parseEnvFile(envFile: string): Promise<string[]> {
     // check size of the file
     const stats = await promises.stat(envFile);
-    if (stats.size > 1024 * 1024) {
+    if (stats.size > 1_024 * 1_024) {
       throw new Error(`Environment file ${envFile} is too big. Maximum size is 1MB.`);
     }
 

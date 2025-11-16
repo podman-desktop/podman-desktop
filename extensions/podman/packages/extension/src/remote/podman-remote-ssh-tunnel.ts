@@ -159,7 +159,7 @@ export class PodmanRemoteSshTunnel {
       this.#reconnectTimeout = setTimeout(() => {
         this.#reconnectTimeout = undefined;
         this.connect();
-      }, 30000);
+      }, 30_000);
     }
   }
 

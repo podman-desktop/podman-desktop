@@ -26,7 +26,7 @@ import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 @injectable()
 export class WinMemoryCheck extends MemoizedBaseCheck {
   title = 'RAM';
-  private REQUIRED_MEM = 5 * 1024 * 1024 * 1024; // 5Gb
+  private REQUIRED_MEM = 5 * 1_024 * 1_024 * 1_024; // 5Gb
 
   async executeImpl(): Promise<CheckResult> {
     const totalMem = os.totalmem();

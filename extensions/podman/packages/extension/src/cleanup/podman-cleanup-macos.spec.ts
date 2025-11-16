@@ -89,7 +89,7 @@ test('check stopPodmanProcesses with error', async () => {
 });
 
 test('check terminateProcess', async () => {
-  await podmanCleanupMacOS.terminateProcess(123456);
+  await podmanCleanupMacOS.terminateProcess(123_456);
 
   expect(vi.mocked(process.exec)).toBeCalledWith('/bin/kill', ['-SIGTERM', '123456']);
 });

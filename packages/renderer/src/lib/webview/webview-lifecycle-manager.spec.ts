@@ -36,7 +36,7 @@ describe('WebviewLifecycleManager', () => {
     };
 
     mockWebview = {
-      getWebContentsId: vi.fn().mockReturnValue(12345),
+      getWebContentsId: vi.fn().mockReturnValue(12_345),
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     } as unknown as WebviewElement;
@@ -82,7 +82,7 @@ describe('WebviewLifecycleManager', () => {
       manager.handleDomReady(mockWebview);
 
       expect(mockWebview.getWebContentsId).toHaveBeenCalled();
-      expect(manager.getWebContentsId()).toBe(12345);
+      expect(manager.getWebContentsId()).toBe(12_345);
     });
 
     test('should handle error when getting webContentsId fails', () => {
@@ -104,7 +104,7 @@ describe('WebviewLifecycleManager', () => {
 
       manager.handleDevToolsOpened();
 
-      expect(mockIpcApi.registerWebviewDevTools).toHaveBeenCalledWith(12345);
+      expect(mockIpcApi.registerWebviewDevTools).toHaveBeenCalledWith(12_345);
     });
 
     test('should not call registerWebviewDevTools when webContentsId is not available', () => {
@@ -129,7 +129,7 @@ describe('WebviewLifecycleManager', () => {
 
       manager.cleanup();
 
-      expect(mockIpcApi.cleanupWebviewDevTools).toHaveBeenCalledWith(12345);
+      expect(mockIpcApi.cleanupWebviewDevTools).toHaveBeenCalledWith(12_345);
     });
 
     test('should not call cleanupWebviewDevTools when webContentsId is not available', () => {
@@ -164,7 +164,7 @@ describe('WebviewLifecycleManager', () => {
 
     test('should return webContentsId after handleDomReady', () => {
       manager.handleDomReady(mockWebview);
-      expect(manager.getWebContentsId()).toBe(12345);
+      expect(manager.getWebContentsId()).toBe(12_345);
     });
   });
 

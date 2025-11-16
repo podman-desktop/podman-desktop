@@ -48,7 +48,7 @@ vi.mock('express', () => ({
 
 // provide a custom free port number
 vi.mock('../util/port.js', () => ({
-  getFreePort: (): Promise<number> => Promise.resolve(45678),
+  getFreePort: (): Promise<number> => Promise.resolve(45_678),
 }));
 
 class TestWebviewRegistry extends WebviewRegistry {
@@ -102,9 +102,9 @@ test('check start', async () => {
   expect(spyRouter).toHaveBeenCalled();
 
   // expect trace of the start in the log
-  expect(console.log).toHaveBeenCalledWith('Starting http server to handle webviews on port', 45678);
+  expect(console.log).toHaveBeenCalledWith('Starting http server to handle webviews on port', 45_678);
 
-  expect(webviewRegistry.getRegistryHttpPort()).toBe(45678);
+  expect(webviewRegistry.getRegistryHttpPort()).toBe(45_678);
 });
 
 function getRouterFunction(path: string): (req: unknown, res: unknown) => void {

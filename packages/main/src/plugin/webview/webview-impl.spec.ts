@@ -37,7 +37,7 @@ beforeEach(() => {
     'internalId0',
     apiSender,
     { id: 'extensionId', extensionPath: '/extensionPath' },
-    1234,
+    1_234,
     {},
   );
 });

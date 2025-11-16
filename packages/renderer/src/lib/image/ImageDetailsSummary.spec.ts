@@ -54,7 +54,7 @@ const inspectManifest: ManifestInspectInfo = {
     {
       digest: 'sha256:123456',
       mediaType: 'application/vnd.docker.distribution.manifest.v2+json',
-      size: 1234,
+      size: 1_234,
       platform: {
         architecture: 'amd64',
         os: 'linux',
@@ -63,7 +63,7 @@ const inspectManifest: ManifestInspectInfo = {
     {
       digest: 'sha256:654321',
       mediaType: 'application/vnd.docker.distribution.manifest.v2+json',
-      size: 4321,
+      size: 4_321,
       platform: {
         architecture: 'arm64',
         os: 'linux',

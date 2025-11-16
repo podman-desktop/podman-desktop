@@ -99,7 +99,7 @@ beforeEach(() => {
       {
         label: 'Kubernetes v1.30.3',
         tag: 'v1.30.3',
-        id: 165829199,
+        id: 165_829_199,
       },
     ]),
     getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),

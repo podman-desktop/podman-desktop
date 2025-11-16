@@ -65,7 +65,7 @@ test('error: expect installBinaryToSystem to fail with a non existing binary', a
         const error: extensionApi.RunError = {
           name: '',
           message: 'Command failed',
-          exitCode: 1603,
+          exitCode: 1_603,
           command: 'command',
           stdout: 'stdout',
           stderr: 'stderr',

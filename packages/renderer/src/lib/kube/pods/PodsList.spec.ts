@@ -106,7 +106,7 @@ describe.each<{
         containers: [
           {
             name: 'test-container',
-            ports: [{ name: 'http', containerPort: 8080 }],
+            ports: [{ name: 'http', containerPort: 8_080 }],
           },
         ],
       },
@@ -129,7 +129,7 @@ describe.each<{
         containers: [
           {
             name: 'test-container',
-            ports: [{ name: 'http', containerPort: 8080 }],
+            ports: [{ name: 'http', containerPort: 8_080 }],
           },
         ],
       },
@@ -173,7 +173,7 @@ describe.each<{
         containers: [
           {
             name: 'test-container',
-            ports: [{ name: 'http', containerPort: 8080 }],
+            ports: [{ name: 'http', containerPort: 8_080 }],
           },
         ],
       },
@@ -211,7 +211,7 @@ describe.each<{
         containers: [
           {
             name: 'test-container',
-            ports: [{ name: 'http', containerPort: 8080 }],
+            ports: [{ name: 'http', containerPort: 8_080 }],
           },
         ],
       },
@@ -224,7 +224,7 @@ describe.each<{
         containers: [
           {
             name: 'test-container',
-            ports: [{ name: 'http', containerPort: 8080 }],
+            ports: [{ name: 'http', containerPort: 8_080 }],
           },
         ],
       },

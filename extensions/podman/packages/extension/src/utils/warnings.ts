@@ -19,7 +19,7 @@
 import http from 'node:http';
 import * as os from 'node:os';
 
-const DEFAULT_TIMEOUT = 5000;
+const DEFAULT_TIMEOUT = 5_000;
 
 // Default socket paths
 const windowsSocketPath = '//./pipe/docker_engine';

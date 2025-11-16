@@ -33,7 +33,7 @@ beforeEach(() => {
 });
 
 test('should expect valid memory usage', async () => {
-  const size = containerUtils.getMemoryPercentageUsageTitle(4, 1000000);
+  const size = containerUtils.getMemoryPercentageUsageTitle(4, 1_000_000);
   expect(size).toBe('4.00% (1 MB)');
 });
 
@@ -82,7 +82,7 @@ test('should expect ports as string when there are multiple public ports', async
         PublicPort: 80,
       },
       {
-        PublicPort: 8022,
+        PublicPort: 8_022,
       },
     ],
   } as unknown as ContainerInfo;
@@ -288,7 +288,7 @@ test('should expect icon to be undefined if no context/view is passed', async ()
         PublicPort: 80,
       },
       {
-        PublicPort: 8022,
+        PublicPort: 8_022,
       },
     ],
   } as unknown as ContainerInfo;

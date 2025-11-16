@@ -120,7 +120,7 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 });
 
 test.afterAll(async ({ runner, page }) => {
-  test.setTimeout(90000);
+  test.setTimeout(90_000);
   try {
     await deleteCluster(page, RESOURCE_NAME, KIND_NODE, CLUSTER_NAME);
   } finally {

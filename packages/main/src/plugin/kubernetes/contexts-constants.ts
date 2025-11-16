@@ -18,9 +18,9 @@
 
 // set this value as the (reasonably) maximum time a connection can get to be established
 // or the reachable status of an unreachable context will flash as reachable during the connection attempt
-export const connectTimeout = 1000;
+export const connectTimeout = 1_000;
 // initial delay between two connection attempts
-export const backoffInitialValue = 1000;
+export const backoffInitialValue = 1_000;
 // the backoff will be multiplied by this number every time
 export const backoffMultiplier = 2.0;
 // the backoff will be multiplied by this number every time for current context

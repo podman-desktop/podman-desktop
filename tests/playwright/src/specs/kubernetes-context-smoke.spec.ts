@@ -75,7 +75,7 @@ test.describe.serial('Verification of kube context management', { tag: '@smoke' 
         // check if the context is default
         await playExpect
           .poll(async () => await kubePage.isContextDefault(context), {
-            timeout: 10000,
+            timeout: 10_000,
           })
           .toBeTruthy();
         await playExpect(await kubePage.getSetCurrentContextButton(context)).not.toBeVisible();

@@ -54,7 +54,7 @@ describe('GitHubService', () => {
 
   test('should fetch and correctly map the latest release metadata on success', async () => {
     const expectedMetadata: GitHubMetadata = {
-      stargazersCount: 6140,
+      stargazersCount: 6_140,
       latestRelease: {
         linux: {
           amd64:

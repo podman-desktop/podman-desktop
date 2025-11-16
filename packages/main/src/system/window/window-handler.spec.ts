@@ -61,7 +61,7 @@ beforeEach(() => {
 });
 
 describe('restore window', () => {
-  const initialBounds = { height: 768, width: 1024, x: 100, y: 200 };
+  const initialBounds = { height: 768, width: 1_024, x: 100, y: 200 };
 
   test('perform restore should be skipped if configuration is disabled', async () => {
     vi.mocked(configurationMock.get).mockReturnValueOnce(false);
@@ -82,9 +82,9 @@ describe('restore window', () => {
   });
 
   test('perform restore if configuration is enabled', async () => {
-    const savedBounds: Rectangle = { height: 500, width: 1000, x: 50, y: 250 };
+    const savedBounds: Rectangle = { height: 500, width: 1_000, x: 50, y: 250 };
     vi.mocked(screen.getDisplayMatching).mockReturnValue({
-      workArea: { x: 0, y: 0, width: 1920, height: 1080 },
+      workArea: { x: 0, y: 0, width: 1_920, height: 1_080 },
     } as Display);
     vi.mocked(configurationMock.get).mockReturnValueOnce(true);
     vi.mocked(configurationMock.get).mockReturnValueOnce(savedBounds);
@@ -105,9 +105,9 @@ describe('restore window', () => {
   });
 
   test('perform restore if configuration is enabled but screen is different with saved width/height', async () => {
-    const savedBounds: Rectangle = { height: 500, width: 1000, x: 2000, y: 2000 };
+    const savedBounds: Rectangle = { height: 500, width: 1_000, x: 2_000, y: 2_000 };
     const display = {
-      workArea: { x: 0, y: 0, width: 1920, height: 1080 },
+      workArea: { x: 0, y: 0, width: 1_920, height: 1_080 },
     } as Display;
     vi.mocked(screen.getDisplayMatching).mockReturnValue(display);
     vi.mocked(configurationMock.get).mockReturnValueOnce(true);
@@ -136,10 +136,10 @@ describe('restore window', () => {
   });
 
   test('perform restore if configuration is enabled but screen is different with initial width/height', async () => {
-    const savedBounds: Rectangle = { height: 800, width: 1000, x: 2000, y: 2000 };
+    const savedBounds: Rectangle = { height: 800, width: 1_000, x: 2_000, y: 2_000 };
     // display is too small to fit the saved window
     const display = {
-      workArea: { x: 0, y: 0, width: 780, height: 1080 },
+      workArea: { x: 0, y: 0, width: 780, height: 1_080 },
     } as Display;
     vi.mocked(screen.getDisplayMatching).mockReturnValue(display);
     vi.mocked(configurationMock.get).mockReturnValueOnce(true);
@@ -158,16 +158,16 @@ describe('restore window', () => {
 
     // expect we got the initial bounds as it is not fitting
 
-    expect(vi.mocked(browserWindowMock).setSize).toBeCalledWith(1024, 768);
+    expect(vi.mocked(browserWindowMock).setSize).toBeCalledWith(1_024, 768);
     expect(vi.mocked(browserWindowMock).setPosition).toBeCalledWith(100, 200);
   });
 });
 
 describe('save window', () => {
   test('perform save', async () => {
-    const bounds = { height: 768, width: 1024, x: 100, y: 200 };
+    const bounds = { height: 768, width: 1_024, x: 100, y: 200 };
     vi.mocked(screen.getDisplayMatching).mockReturnValue({
-      workArea: { x: 0, y: 0, width: 1920, height: 1080 },
+      workArea: { x: 0, y: 0, width: 1_920, height: 1_080 },
     } as Display);
     vi.mocked(browserWindowMock.getBounds).mockReturnValue(bounds);
     vi.mocked(configurationMock.get).mockReturnValueOnce(false);

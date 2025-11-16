@@ -85,7 +85,7 @@ test('expect update on windows to show notification in case of 0 exit code', asy
 });
 
 test('expect update on windows not to show notification in case of 1602 exit code', async () => {
-  const customError = { exitCode: 1602 } as extensionApi.RunError;
+  const customError = { exitCode: 1_602 } as extensionApi.RunError;
   vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
     throw customError;
   });

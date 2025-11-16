@@ -133,9 +133,9 @@ beforeEach(() => {
           ],
           ports: [
             {
-              hostPort: 8080,
+              hostPort: 8_080,
               protocol: 'TCP',
-              containerPort: 8080,
+              containerPort: 8_080,
             },
           ],
         },
@@ -241,7 +241,7 @@ test('Expect to create routes with OpenShift and open Link', async () => {
     },
     spec: {
       port: {
-        targetPort: 8080,
+        targetPort: 8_080,
       },
       tls: {
         termination: 'edge',
@@ -351,7 +351,7 @@ test('When deploying a pod, volumes should not be added (they are deleted by pod
             imagePullPolicy: 'IfNotPresent',
             ports: [
               {
-                containerPort: 8080,
+                containerPort: 8_080,
                 protocol: 'TCP',
               },
             ],
@@ -389,7 +389,7 @@ test('Test deploying a group of compose containers with type compose still funct
             imagePullPolicy: 'IfNotPresent',
             ports: [
               {
-                containerPort: 8080,
+                containerPort: 8_080,
                 protocol: 'TCP',
               },
             ],
@@ -432,7 +432,7 @@ test('When modifying the pod name, metadata.apps.label should also have been cha
             imagePullPolicy: 'IfNotPresent',
             ports: [
               {
-                containerPort: 8080,
+                containerPort: 8_080,
                 protocol: 'TCP',
               },
             ],
@@ -473,7 +473,7 @@ test('When deploying a pod, restricted security context is added', async () => {
             imagePullPolicy: 'IfNotPresent',
             ports: [
               {
-                containerPort: 8080,
+                containerPort: 8_080,
                 protocol: 'TCP',
               },
             ],

@@ -37,7 +37,7 @@ let providerConnectionShellAccess: TestProviderConnectionShellAccessImpl;
 beforeEach(() => {
   vi.clearAllMocks();
   const machineInfo: MachineInfo = {
-    port: 12345,
+    port: 12_345,
     remoteUsername: 'user',
     identityPath: 'path/to/privateKey',
   } as unknown as MachineInfo;

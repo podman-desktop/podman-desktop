@@ -38,7 +38,7 @@ let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
 let isExtensionsDevelopmentModeEnabled = false;
 
 async function createWindow(): Promise<BrowserWindow> {
-  const INITIAL_APP_WIDTH = 1050;
+  const INITIAL_APP_WIDTH = 1_050;
   const INITIAL_APP_MIN_WIDTH = 640;
   const INITIAL_APP_HEIGHT = 700;
   const INITIAL_APP_MIN_HEIGHT = 600;

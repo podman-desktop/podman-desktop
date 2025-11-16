@@ -348,7 +348,7 @@ export class ImageRegistry {
         try {
           options.agent.http = new HttpProxyAgent({
             keepAlive: true,
-            keepAliveMsecs: 1000,
+            keepAliveMsecs: 1_000,
             maxSockets: 256,
             maxFreeSockets: 256,
             scheduling: 'lifo',
@@ -363,7 +363,7 @@ export class ImageRegistry {
         try {
           options.agent.https = new HttpsProxyAgent({
             keepAlive: true,
-            keepAliveMsecs: 1000,
+            keepAliveMsecs: 1_000,
             maxSockets: 256,
             maxFreeSockets: 256,
             scheduling: 'lifo',

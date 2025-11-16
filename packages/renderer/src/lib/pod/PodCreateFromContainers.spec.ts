@@ -73,13 +73,13 @@ const podCreation: PodCreation = {
       name: 'cont_1',
       ports: [
         {
-          PublicPort: 9090,
+          PublicPort: 9_090,
           IP: 'ip',
           PrivatePort: 80,
           Type: 'type',
         },
         {
-          PublicPort: 8080,
+          PublicPort: 8_080,
           IP: 'ip',
           PrivatePort: 81,
           Type: 'type',
@@ -98,13 +98,13 @@ const podCreationSamePortContainers: PodCreation = {
       name: 'cont_1',
       ports: [
         {
-          PublicPort: 9090,
+          PublicPort: 9_090,
           IP: 'ip',
           PrivatePort: 80,
           Type: 'type',
         },
         {
-          PublicPort: 8080,
+          PublicPort: 8_080,
           IP: 'ip',
           PrivatePort: 80,
           Type: 'type',
@@ -154,7 +154,7 @@ const containerInspectInfo: ContainerInspectInfo = {
   AppArmorProfile: '',
   HostConfig: {
     PortBindings: {
-      9090: [
+      9_090: [
         {
           HostPort: '8383',
           HostIp: '',

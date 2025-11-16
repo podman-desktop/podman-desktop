@@ -1012,7 +1012,7 @@ test('pods with same name on different engines should have separate group', asyn
     async () => {
       return get(containersInfos).length === 0;
     },
-    { interval: 250, timeout: 5000 },
+    { interval: 250, timeout: 5_000 },
   );
 
   const CONTAINERS_MOCK: Array<ContainerInfo> = Array.from({ length: 3 }).map((_, index) => ({
@@ -1050,7 +1050,7 @@ test('pods with same name on different engines should have separate group', asyn
     async () => {
       return get(containersInfos).length > 0;
     },
-    { interval: 250, timeout: 5000 },
+    { interval: 250, timeout: 5_000 },
   );
 
   const { getAllByRole } = await waitRender({});

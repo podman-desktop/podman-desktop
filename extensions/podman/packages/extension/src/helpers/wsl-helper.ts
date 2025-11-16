@@ -91,7 +91,7 @@ function getVersionFromWSLOutput(line: string, value: string): string | undefine
 function indexOfColons(value: string): number {
   for (let i = 0; i < value.length; i++) {
     const codeChar = value.charCodeAt(i);
-    if (codeChar === 58 || codeChar === 65306 || codeChar === 65109) {
+    if (codeChar === 58 || codeChar === 65_306 || codeChar === 65_109) {
       return i;
     }
   }
