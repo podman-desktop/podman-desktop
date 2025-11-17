@@ -35,19 +35,7 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 
 import PreferencesConnectionCreationOrEditRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi.fn(() => {
-      return {
-        loadAddon: vi.fn(),
-        open: vi.fn(),
-        write: vi.fn(),
-        clear: vi.fn(),
-        dispose: vi.fn(),
-      };
-    }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 vi.mock(import('/@/lib/preferences/preferences-connection-rendering-task'), async importOriginal => {
   const original = await importOriginal();
@@ -102,7 +90,17 @@ beforeAll(() => {
 
 function mockCallback(
   callback: (keyLogger: (key: symbol, eventName: LoggerEventName, args: string[]) => void) => Promise<void>,
-): Mock<any> {
+): Mock<
+  (
+    param: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
+    handlerKey: symbol,
+    collect: (key: symbol, eventName: 'log' | 'warn' | 'error' | 'finish', args: string[]) => void,
+    tokenId: number | undefined,
+    taskId: number | undefined,
+  ) => Promise<void>
+> {
   return vi.fn().mockImplementation(async function (
     _id: string,
     _params: unknown,

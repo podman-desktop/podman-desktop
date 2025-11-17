@@ -32,10 +32,8 @@ import PodDetails from './PodDetails.svelte';
 const mocks = vi.hoisted(() => ({
   TerminalMock: vi.fn(),
 }));
-vi.mock('@xterm/xterm', () => ({
-  Terminal: mocks.TerminalMock,
-}));
-vi.mock('@xterm/addon-search');
+vi.mock(import('@xterm/xterm'));
+vi.mock(import('@xterm/addon-search'));
 
 const listPodsMock = vi.fn();
 const listContainersMock = vi.fn();

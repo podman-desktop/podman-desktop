@@ -48,10 +48,6 @@ beforeAll(async () => {
     }
     return undefined;
   });
-  global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-  }));
 
   Terminal.prototype.open = vi.fn();
   Terminal.prototype.write = vi.fn();

@@ -23,20 +23,13 @@ import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import PinMenu from '/@/lib/statusbar/PinMenu.svelte';
 
-const RESIZE_OBSERVER_MOCK: ResizeObserver = {
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-} as unknown as ResizeObserver;
-
 beforeAll(() => {
-  Object.defineProperty(window, 'ResizeObserver', { value: vi.fn() });
   Object.defineProperty(window, 'addEventListener', { value: vi.fn() });
   Object.defineProperty(window, 'removeEventListener', { value: vi.fn() });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.ResizeObserver).mockReturnValue(RESIZE_OBSERVER_MOCK);
 });
 
 test('component on mount should resize listener', () => {

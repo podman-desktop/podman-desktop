@@ -28,11 +28,7 @@ import type { ProviderInfo } from '/@api/provider-info';
 
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi.fn().mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), clear: vi.fn() }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 class InitializationContextImpl {
   #promise: unknown;
@@ -59,13 +55,6 @@ class InitializationContextImpl {
 
 // fake the window.events object
 beforeAll(() => {
-  // Cannot mock with vi.mocked(window.ResizeObserver)
-  // we use "global" similar to PodDetails.spec.ts implementation
-  global.ResizeObserver = vi.fn().mockReturnValue({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  });
   vi.mocked(window.initializeProvider).mockResolvedValue([]);
   (window.events as unknown) = {
     receive: (_channel: string, func: unknown): void => {

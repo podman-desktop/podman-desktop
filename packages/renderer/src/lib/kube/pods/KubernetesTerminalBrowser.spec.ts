@@ -20,21 +20,29 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import type { Terminal } from '@xterm/xterm';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import KubernetesTerminalBrowser from './KubernetesTerminalBrowser.svelte';
 import type { PodUI } from './PodUI';
 import { terminalService } from './terminal/KubernetesTerminalService';
 
-vi.mock('@xterm/xterm', () => {
+/**
+ * Here we cannot rely on `vi.mock(import('@xterm/xterm'))` alone as our test is using {@link import('@xterm/xterm').Terminal#onData}
+ * The vitest framework spy on functions, but omit class properties, therefore onData would be undefined otherwise
+ */
+vi.mock(import('@xterm/xterm'), () => {
   return {
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), dispose: vi.fn(), onData: vi.fn() }),
+    Terminal: class {
+      loadAddon = vi.fn();
+      open = vi.fn();
+      write = vi.fn();
+      dispose = vi.fn();
+      onData = vi.fn();
+    } as unknown as typeof Terminal,
   };
 });
-
-vi.mock('@xterm/addon-serialize');
+vi.mock(import('@xterm/addon-serialize'));
 
 // dummy event emitter
 const eventEmitter = {
@@ -60,9 +68,6 @@ beforeAll(() => {
       removeEventListener: vi.fn(),
     },
   });
-  vi.mocked(window.getComputedStyle).mockReturnValue({
-    getPropertyValue: vi.fn().mockReturnValue(''),
-  } as unknown as CSSStyleDeclaration);
 });
 
 const podName = 'My Pod';
@@ -84,6 +89,15 @@ const pod: PodUI = {
     },
   ],
 } as unknown as PodUI;
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.resetModules();
+
+  vi.mocked(window.getComputedStyle).mockReturnValue({
+    getPropertyValue: vi.fn().mockReturnValue(''),
+  } as unknown as CSSStyleDeclaration);
+});
 
 test('Expect switch of terminal clicking on the item', async () => {
   render(KubernetesTerminalBrowser, { pod: pod });

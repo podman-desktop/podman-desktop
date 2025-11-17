@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 
 import type { ProviderInfo } from '/@api/provider-info';
 
@@ -224,6 +224,7 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
   // simulate PreferencesConnectionActions is calling addConnectionToRestartingQueue
   expect(preferencesConnectionActions.default).toHaveBeenCalledOnce();
   const params = vi.mocked(preferencesConnectionActions.default).mock.calls[0][1];
+  assert(params);
   const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
 
   addConnectionToRestartingQueue({

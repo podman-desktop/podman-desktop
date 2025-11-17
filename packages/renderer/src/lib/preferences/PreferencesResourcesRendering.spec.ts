@@ -117,9 +117,6 @@ beforeAll(() => {
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'telemetryPage', { value: vi.fn().mockResolvedValue(undefined) });
   Object.defineProperty(window, 'getOsPlatform', { value: getOsPlatformMock });
-  Object.defineProperty(window, 'ResizeObserver', {
-    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
-  });
 });
 
 beforeEach(() => {
