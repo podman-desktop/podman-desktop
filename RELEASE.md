@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-- Create Enhancement Issue `Release vX.X.X` for current sprint (if such an issue does not already exist), then update the label to `kind/release` and assign it to yourself.
+- Create Task issue `Release vX.X.X` for the current sprint (if such an issue does not already exist), then update the type to Release and assign it to yourself.
 - Confirm with Podman Desktop maintainers that pending / need-to-go-in PR's have been merged.
 - Notify main contributors on Discord / Slack.
 - Release notes for the blog: Communicate with the person who has been tasked with creating the documentation. If you are assigned, see the below ["Documentation"](#documentation) section.
