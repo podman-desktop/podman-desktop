@@ -802,6 +802,9 @@ test('Sort containers based on selected parameter', async () => {
 
 test('Expect user confirmation to pop up when preferences require', async () => {
   vi.mocked(window.listContainers).mockResolvedValue([]);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
@@ -837,10 +840,6 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   // select the standalone container checkbox
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle container' });
   await fireEvent.click(checkboxes[0]);
-
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const deleteButton = screen.getByRole('button', { name: 'Delete selected containers and pods' });
   await fireEvent.click(deleteButton);
