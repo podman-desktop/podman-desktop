@@ -1,5 +1,13 @@
 <script lang="ts">
-import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowCircleUp,
+  faArrowUp,
+  faDownload,
+  faEdit,
+  faLayerGroup,
+  faPlay,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -98,6 +106,12 @@ function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
+
+async function updateImage(): Promise<void> {
+  await imageUtils.updateImage(image);
+  image.selected = false;
+  dispatch('update', image);
+}
 </script>
 
 <ListItemButtonIcon title="Run Image" onClick={(): Promise<void> => runImage(image)} detailed={detailed} icon={faPlay} />
@@ -144,6 +158,15 @@ function saveImage(): void {
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />
+
+  <ListItemButtonIcon
+    title="Update Image"
+    tooltip="Update image to the latest build"
+    onClick={(): void => withConfirmation(updateImage, `update image ${image.name}:${image.tag} to latest build`)}
+    menu={dropdownMenu}
+    detailed={detailed}
+    icon={faArrowCircleUp}
+    enabled={image.name !== '<none>'} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions
