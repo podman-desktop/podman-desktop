@@ -84,7 +84,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
 
   async loadDefaultUserRegistries(): Promise<void> {
     if (env.isMac || env.isWindows) {
-      const checked = await this.checkRegistryConfFileExistsInVm();
+      const checked = await this.checkRegistryConfFileExistsInVm(false);
       if (!checked) {
         return;
       }
@@ -159,7 +159,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     return existingRegistries;
   }
 
-  async checkRegistryConfFileExistsInVm(): Promise<boolean> {
+  async checkRegistryConfFileExistsInVm(showError = true): Promise<boolean> {
     // check if the podman machine has the file being mounted inside the VM or then says it can't continue
     const machineList = await getJSONMachineList();
 
@@ -188,10 +188,13 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       // check if the file is mounted
       const result = await execPodman(commandLineArgs, machine.VMType);
       if (!result.stdout) {
-        // display an error message if the link is not found
-        await window.showErrorMessage(
-          `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`,
-        );
+        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`;
+        if (showError) {
+          // display an error message if the link is not found
+          await window.showErrorMessage(warningMessage);
+        } else {
+          console.warn(warningMessage);
+        }
         return false;
       }
     }
