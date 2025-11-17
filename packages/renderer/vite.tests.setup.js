@@ -22,7 +22,7 @@ import 'vitest-canvas-mock';
 import typescript from 'typescript';
 import { EventStore } from './src/stores/event-store';
 
-global.window.matchMedia = () => {};
+global.window.matchMedia = vi.fn();
 
 // read the given path and extract the method names from the Window interface
 function extractWindowMethods(filePath) {

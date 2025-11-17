@@ -22,7 +22,7 @@ import type { ProviderStatus } from '@podman-desktop/api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -78,31 +78,25 @@ vi.mock('tinro', () => {
   };
 });
 
-const playKubeMock = vi.fn();
-
-// fake the window.events object
-const createTempKubeFileMock = vi.fn();
-const removeTempFileMock = vi.fn();
-
 beforeAll(() => {
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
-  Object.defineProperty(window, 'openDialog', { value: vi.fn().mockResolvedValue(['Containerfile']) });
-  Object.defineProperty(window, 'telemetryPage', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'playKube', { value: playKubeMock });
-  Object.defineProperty(window, 'createTempKubeFile', { value: createTempKubeFileMock });
-  Object.defineProperty(window, 'removeTempFile', { value: removeTempFileMock });
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(window.matchMedia).mockReturnValue({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  } as unknown as MediaQueryList);
+  vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
+  vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 });
 
 function setup(): void {
@@ -137,7 +131,7 @@ function setup(): void {
 }
 
 test('error: When pressing the Play button, expect us to show the errors to the user', async () => {
-  playKubeMock.mockResolvedValue(mockedErroredPlayKubeInfo);
+  vi.mocked(window.playKube).mockResolvedValue(mockedErroredPlayKubeInfo);
 
   // Render the component
   setup();
@@ -163,8 +157,12 @@ test('error: When pressing the Play button, expect us to show the errors to the 
 });
 
 test('expect done button is there at the end and redirects to pods', async () => {
-  playKubeMock.mockResolvedValue({
+  vi.mocked(window.playKube).mockResolvedValue({
     Pods: [],
+    RmReport: [],
+    Secrets: [],
+    StopReport: [],
+    Volumes: [],
   });
 
   // Render the component
@@ -198,8 +196,12 @@ test('expect done button is there at the end and redirects to pods', async () =>
 });
 
 test('expect workflow selection boxes have the correct selection borders', async () => {
-  playKubeMock.mockResolvedValue({
+  vi.mocked(window.playKube).mockResolvedValue({
     Pods: [],
+    RmReport: [],
+    Secrets: [],
+    StopReport: [],
+    Volumes: [],
   });
 
   setup();
@@ -314,7 +316,13 @@ describe('Custom YAML mode', () => {
 });
 
 test('file mode: does not attempt temp file cleanup', async () => {
-  playKubeMock.mockResolvedValue({ Pods: [] });
+  vi.mocked(window.playKube).mockResolvedValue({
+    Pods: [],
+    RmReport: [],
+    Secrets: [],
+    StopReport: [],
+    Volumes: [],
+  });
 
   setup();
   render(KubePlayYAML, {});
@@ -328,11 +336,10 @@ test('file mode: does not attempt temp file cleanup', async () => {
   await userEvent.click(playButton);
 
   // Verify playKube was called with the selected file
-  expect(playKubeMock).toHaveBeenCalledWith('Containerfile', expect.anything(), expect.anything());
+  expect(window.playKube).toHaveBeenCalledWith('Containerfile', expect.anything(), expect.anything());
 
   // Verify no temp file operations occurred
-  expect(createTempKubeFileMock).not.toHaveBeenCalled();
-  expect(removeTempFileMock).not.toHaveBeenCalled();
+  expect(window.removeTempFile).not.toHaveBeenCalled();
 });
 
 test('custom YAML mode: button text changes to "Play Custom YAML"', async () => {
