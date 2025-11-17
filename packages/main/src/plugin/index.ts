@@ -1231,6 +1231,23 @@ export class PluginSystem {
         );
       },
     );
+
+    this.ipcHandle(
+      'container-provider-registry:updateImage',
+      async (_listener, engineId: string, imageId: string): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Updating image '${imageId}'`,
+        });
+        try {
+          await containerProviderRegistry.updateImage(engineId, imageId);
+          task.status = 'success';
+        } catch (error: unknown) {
+          task.error = String(error);
+          throw error;
+        }
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:pushImage',
       async (_listener, engine: string, imageId: string, callbackId: number): Promise<void> => {
