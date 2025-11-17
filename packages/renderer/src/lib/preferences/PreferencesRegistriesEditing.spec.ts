@@ -27,13 +27,12 @@ import { describe, expect, test, vi } from 'vitest';
 import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
 
-
 const suggestedRegistry: RegistrySuggestedProvider = {
   name: 'registry 1',
   url: 'registry1/foo',
 };
 
-const blockeduggestedRegistry: RegistrySuggestedProvider = {
+const blockedSuggestedRegistry: RegistrySuggestedProvider = {
   name: 'registry 2',
   url: '/registry2/foo',
   blocked: true,
@@ -121,20 +120,20 @@ describe('PreferencesRegistriesEditing', () => {
   });
 
   test('Expect blocked suggested registries to have the configure button disabled', async () => {
-    registriesSuggestedInfos.set([suggestedRegistry, blockeduggestedRegistry]);
+    registriesSuggestedInfos.set([suggestedRegistry, blockedSuggestedRegistry]);
 
     render(PreferencesRegistriesEditing, {});
 
     const suggestedRegistryRow = screen.getByRole('row', { name: suggestedRegistry.name });
-    const blockeduggestedRegistryRow = screen.getByRole('row', { name: blockeduggestedRegistry.name });
+    const blockedSuggestedRegistryRow = screen.getByRole('row', { name: blockedSuggestedRegistry.name });
 
     expect(suggestedRegistryRow).toBeInTheDocument();
-    expect(blockeduggestedRegistryRow).toBeInTheDocument();
+    expect(blockedSuggestedRegistryRow).toBeInTheDocument();
 
     const configureButton = within(suggestedRegistryRow).getByRole('button', { name: 'Configure' });
     expect(configureButton).toBeEnabled();
 
-    const disabledConfigureButton = within(blockeduggestedRegistryRow).getByRole('button', { name: 'Configure' });
+    const disabledConfigureButton = within(blockedSuggestedRegistryRow).getByRole('button', { name: 'Configure' });
     expect(disabledConfigureButton).toBeDisabled();
   });
 });

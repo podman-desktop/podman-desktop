@@ -215,10 +215,11 @@ export class ImageRegistry {
       if (isUserDefaultRegistry && matchingRegistry.blocked !== registry.blocked) {
         // user default registry blocked status overrides other blocked values for the same location
         matchingRegistry.blocked = registry.blocked;
-        console.log(`User default registry already registered and blocked status adjusted: ${registry.url}`);
+        this.apiSender.send('registry-update', matchingRegistry);
+        console.warn(`User default registry is already registered and the blocked status adjusted to: ${registry.url}`);
       } else {
         // Ignore and don't register
-        console.log(`Registry already registered: ${registry.url}`);
+        console.log(`Registry is already registered: ${registry.url}`);
       }
       return Disposable.noop();
     }

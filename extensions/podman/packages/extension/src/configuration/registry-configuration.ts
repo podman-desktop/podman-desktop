@@ -65,6 +65,8 @@ export interface RegistryConfiguration {
   getPlaybookScriptPath(): Promise<string>;
 }
 
+export const REGISTRY_MIRROR = 'registry.mirror';
+
 /**
  * Manages the registry configuration file (inside the Podman VM for macOS/Windows)
  */
@@ -102,7 +104,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       } else if (defaultRegistries.length > 0) {
         // mirror registries come after the registry to which they belong
         defaultRegistries[defaultRegistries.length - 1].mirror ??= [];
-        defaultRegistries[defaultRegistries.length - 1].mirror?.push({ ...registry['registry.mirror'] });
+        defaultRegistries[defaultRegistries.length - 1].mirror?.push({ ...registry[REGISTRY_MIRROR] });
       }
     });
 
@@ -120,14 +122,27 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       const duplicateRegistry = existingRegistries.find(
         existingRegistry => existingRegistry.prefix === defaultRegistry.prefix,
       );
-      if (duplicateRegistry) {
+      if (defaultRegistry.prefix && duplicateRegistry) {
         if (
           duplicateRegistry.blocked !== defaultRegistry.blocked ||
           duplicateRegistry.insecure !== defaultRegistry.insecure ||
           duplicateRegistry.location !== defaultRegistry.location
         ) {
+          const diff = [];
+          if (duplicateRegistry.blocked !== defaultRegistry.blocked) {
+            diff.push('blocked');
+          }
+
+          if (duplicateRegistry.insecure !== defaultRegistry.insecure) {
+            diff.push('insecure');
+          }
+
+          if (duplicateRegistry.location !== defaultRegistry.location) {
+            diff.push('location');
+          }
+
           console.warn(
-            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match. Please update this registry`,
+            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match: ${diff.join(', ')}. Please update this registry`,
           );
         } else {
           defaultRegistry.mirror?.forEach(mirror => {

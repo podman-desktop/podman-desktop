@@ -26,7 +26,7 @@ import { commands, configuration, env, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { RegistryConfigurationEntry, RegistryConfigurationFile } from './registry-configuration';
-import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
+import { ActionEnum, REGISTRY_MIRROR, RegistryConfigurationImpl } from './registry-configuration';
 
 let registryConfiguration: RegistryConfigurationImpl;
 vi.mock('node:fs');
@@ -276,7 +276,7 @@ test('loadDefaultUserRegistries', async () => {
   };
 
   const userRegistryMirror1: DefaultRegistryMirror = {
-    'registry.mirror': {
+    [REGISTRY_MIRROR]: {
       location: 'mirror1/foo',
     },
   };
@@ -297,7 +297,7 @@ test('loadDefaultUserRegistries', async () => {
   };
 
   const userRegistryMirror3: DefaultRegistryMirror = {
-    'registry.mirror': {
+    [REGISTRY_MIRROR]: {
       location: 'mirror3/bar',
       insecure: true,
     },
@@ -355,6 +355,7 @@ test('resolveDefaultRegistryConflicts', () => {
     prefix: 'registry1',
     location: '/registry1/foo',
     blocked: true,
+    insecure: true,
   };
 
   const userRegistry1dup: RegistryConfigurationEntry = {
@@ -412,13 +413,14 @@ test('resolveDefaultRegistryConflicts', () => {
     [userRegistry1, userRegistry2, userRegistry3],
   );
   expect(console.warn).toBeCalledWith(
-    'Default user registry registry1 already exists in the registries.conf.d file, but some of its properties do not match. Please update this registry',
+    'Default user registry registry1 already exists in the registries.conf.d file, but some of its properties do not match: blocked, insecure. Please update this registry',
   );
   expect(resolvedRegistries).toStrictEqual([
     {
       prefix: 'registry1',
       location: '/registry1/foo',
       blocked: true,
+      insecure: true,
     },
     {
       prefix: 'registry2',

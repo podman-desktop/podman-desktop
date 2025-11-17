@@ -1200,6 +1200,10 @@ test('Handle conflicts with existing suggested registries and user default regis
   const consoleLogMock = vi.fn();
   console.log = consoleLogMock;
 
+  const originalConsoleWarn = console.warn;
+  const consoleWarnMock = vi.fn();
+  console.warn = consoleWarnMock;
+
   const getMock = vi
     .fn()
     .mockReturnValue([userRegistry1, userRegistryMirror1, userRegistry2, userRegistryMirror2, userRegistry3]);
@@ -1235,10 +1239,10 @@ test('Handle conflicts with existing suggested registries and user default regis
   expect(configurationRegistry.getConfiguration).toHaveBeenCalledWith('registries');
   expect(getMock).toHaveBeenCalledWith('defaults', []);
 
-  expect(consoleLogMock).toHaveBeenCalledWith(
-    'User default registry already registered and blocked status adjusted: /registry1/foo',
+  expect(consoleWarnMock).toHaveBeenCalledWith(
+    'User default registry is already registered and the blocked status adjusted to: /registry1/foo',
   );
-  expect(consoleLogMock).toHaveBeenCalledWith('Registry already registered: /registry2/foo');
+  expect(consoleLogMock).toHaveBeenCalledWith('Registry is already registered: /registry2/foo');
 
   const suggestedRegistries = imageRegistry.getSuggestedRegistries();
   expect(suggestedRegistries).toStrictEqual([
@@ -1249,4 +1253,5 @@ test('Handle conflicts with existing suggested registries and user default regis
   ]);
 
   console.log = originalConsoleLog;
+  console.warn = originalConsoleWarn;
 });
