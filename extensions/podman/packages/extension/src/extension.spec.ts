@@ -195,7 +195,7 @@ const WIN_PLATFORM_MOCK: WinPlatform = {
   isHyperVEnabled: vi.fn(),
 } as unknown as WinPlatform;
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeMachineJSON = [
     {
       Name: machineDefaultName,
