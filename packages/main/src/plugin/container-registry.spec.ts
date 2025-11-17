@@ -6121,3 +6121,74 @@ describe('kube play', () => {
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
   });
 });
+
+describe('updateImage', () => {
+  test('should reject if no provider', async () => {
+    await expect(containerRegistry.updateImage('dummy', 'image:latest')).rejects.toThrowError(
+      'no engine matching this engine',
+    );
+  });
+
+  test('should reject images with no registry tags', async () => {
+    const mockImage = {
+      inspect: vi.fn().mockResolvedValue({ RepoTags: [] }),
+    };
+    const engine = {
+      getImage: vi.fn().mockReturnValue(mockImage),
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId')).rejects.toThrowError(
+      'Image has no registry tags and cannot be updated',
+    );
+  });
+
+  test('should pull new image and delete old image successfully when new version available', async () => {
+    const oldImageId = 'sha256:old123';
+    const newImageId = 'sha256:new456';
+    const mockOldImage = {
+      inspect: vi.fn().mockResolvedValue({ Id: oldImageId, RepoTags: ['nginx:latest'] }),
+    };
+    const mockNewImage = {
+      inspect: vi.fn().mockResolvedValue({ Id: newImageId, RepoTags: ['nginx:latest'] }),
+    };
+    const mockPullStream = { on: vi.fn() };
+    const engine = {
+      getImage: vi.fn().mockReturnValueOnce(mockOldImage).mockReturnValueOnce(mockNewImage),
+      pull: vi.fn().mockResolvedValue(mockPullStream),
+      modem: {
+        followProgress: vi.fn((_stream, onFinished) => onFinished(null)),
+      },
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    vi.spyOn(containerRegistry, 'deleteImage').mockResolvedValue(undefined);
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId');
+    expect(result).toBeUndefined();
+    expect(engine.pull).toHaveBeenCalledWith('nginx:latest', expect.any(Object));
+    expect(containerRegistry.deleteImage).toHaveBeenCalledOnce();
+    expect(containerRegistry.deleteImage).toHaveBeenCalledWith('engine1', oldImageId);
+  });
+
+  test('should reject if image is already latest version', async () => {
+    const imageId = 'sha256:abc123';
+    const mockImage = {
+      inspect: vi.fn().mockResolvedValue({ Id: imageId, RepoTags: ['nginx:latest'] }),
+    };
+    const mockPullStream = { on: vi.fn() };
+    const engine = {
+      getImage: vi.fn().mockReturnValue(mockImage),
+      pull: vi.fn().mockResolvedValue(mockPullStream),
+      modem: {
+        followProgress: vi.fn((_stream, onFinished) => onFinished(null)),
+      },
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    const deleteSpy = vi.spyOn(containerRegistry, 'deleteImage');
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId')).rejects.toThrowError(
+      'Image is already the latest version',
+    );
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+});
