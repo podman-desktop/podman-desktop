@@ -973,12 +973,9 @@ test('pods with same name on different engines should have separate group', asyn
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait until the store is populated
-  await vi.waitUntil(
-    async () => {
-      return get(containersInfos).length === 0;
-    },
-    { interval: 5, timeout: 5000 },
-  );
+  await vi.waitUntil(async () => {
+    return get(containersInfos).length === 0;
+  });
 
   const CONTAINERS_MOCK: Array<ContainerInfo> = Array.from({ length: 3 }).map((_, index) => ({
     Id: `sha256:${index}`,
@@ -1011,12 +1008,9 @@ test('pods with same name on different engines should have separate group', asyn
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait until the store is populated
-  await vi.waitUntil(
-    async () => {
-      return get(containersInfos).length > 0;
-    },
-    { interval: 5, timeout: 5000 },
-  );
+  await vi.waitUntil(async () => {
+    return get(containersInfos).length > 0;
+  });
 
   const { getAllByRole } = await waitRender({});
 
