@@ -1,5 +1,5 @@
 name: Task
-description: A specific peice of work
+description: A specific piece of work
 type: task
 projects: ["podman-desktop/4"]
 
