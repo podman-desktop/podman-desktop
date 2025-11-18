@@ -556,11 +556,27 @@ declare module '@podman-desktop/api' {
   export interface KubernetesProviderConnectionFactory extends ProviderConnectionFactory {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create?(params: { [key: string]: any }, logger?: Logger, token?: CancellationToken): Promise<void>;
+
+    /**
+     * Check if the provider can create a connection right now
+     * @returns Object with availability status and optional reason if not available
+     */
+    canCreate?(): Promise<ConnectionCreationCapability>;
   }
 
   // create a Vm provider
   export interface VmProviderConnectionFactory extends ProviderConnectionFactory {
     create?(params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken): Promise<void>;
+  }
+
+  /**
+   * Represents the ability to create a new provider connection.
+   * Returned by KubernetesProviderConnectionFactory.canCreate() to indicate
+   * whether connection creation is currently possible and the reason if not.
+   */
+  export interface ConnectionCreationCapability {
+    canCreate: boolean;
+    reason?: string;
   }
 
   export interface AuditRecord {

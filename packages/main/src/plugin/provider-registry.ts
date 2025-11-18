@@ -91,6 +91,15 @@ export type ContainerConnectionProviderLifecycleListener = (
   providerContainerConnectionInfo: ProviderContainerConnectionInfo,
 ) => void;
 
+interface ProviderAvailability {
+  canCreate: boolean;
+  reason?: string;
+}
+
+interface CachedProviderAvailability extends ProviderAvailability {
+  timestamp: number;
+}
+
 /**
  * Manage creation of providers and their lifecycle.
  * subscribe to events to get notified about provider creation and lifecycle changes.
@@ -101,6 +110,8 @@ export class ProviderRegistry {
   private providers: Map<string, ProviderImpl>;
   private providerStatuses = new Map<string, ProviderStatus>();
   private providerWarnings = new Map<string, ProviderInformation[]>();
+  private kubernetesProviderConnectionCreationAvailability = new Map<string, CachedProviderAvailability>();
+  private readonly AVAILABILITY_CACHE_TTL_MS = 5000; // 5 seconds
 
   private providerLifecycles: Map<string, ProviderLifecycle> = new Map();
   private providerLifecycleContexts: Map<string, LifecycleContextImpl> = new Map();
@@ -182,6 +193,7 @@ export class ProviderRegistry {
     // Every 2 seconds, we will check:
     // * The status of the providers
     // * Any new warnings or informations for each provider
+    // * The availability of provider connection creation (canCreate)
     setInterval(() => {
       for (const [providerKey] of this.providers) {
         // Get the provider and its lifecycle
@@ -209,8 +221,59 @@ export class ProviderRegistry {
           this.apiSender.send('provider:update-warnings', provider.id);
           this.providerWarnings.set(providerKey, provider.warnings);
         }
+
+        // Check if kubernetes provider connection creation is available
+        if (provider?.kubernetesProviderConnectionFactory?.canCreate) {
+          const cached = this.kubernetesProviderConnectionCreationAvailability.get(providerKey);
+          // Skip check if cache is still valid
+          if (cached && this.isCacheValid(cached)) {
+            continue;
+          }
+
+          provider.kubernetesProviderConnectionFactory
+            .canCreate()
+            .then((result: ProviderAvailability) => {
+              if (this.hasAvailabilityChanged(cached, result)) {
+                this.updateProviderAvailability(providerKey, result);
+              } else {
+                this.refreshProviderAvailabilityTimestamp(providerKey);
+              }
+            })
+            .catch((error: unknown) => {
+              console.error('Error checking provider connection availability:', error);
+            });
+        }
       }
     }, 2000);
+  }
+
+  private isCacheValid(cached: CachedProviderAvailability): boolean {
+    return Date.now() - cached.timestamp < this.AVAILABILITY_CACHE_TTL_MS;
+  }
+
+  private hasAvailabilityChanged(
+    current: CachedProviderAvailability | undefined,
+    newResult: ProviderAvailability,
+  ): boolean {
+    return !current || current.canCreate !== newResult.canCreate || current.reason !== newResult.reason;
+  }
+
+  private refreshProviderAvailabilityTimestamp(providerKey: string): void {
+    const current = this.kubernetesProviderConnectionCreationAvailability.get(providerKey);
+    if (current) {
+      this.kubernetesProviderConnectionCreationAvailability.set(providerKey, {
+        ...current,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  private updateProviderAvailability(providerKey: string, result: ProviderAvailability): void {
+    this.kubernetesProviderConnectionCreationAvailability.set(providerKey, {
+      ...result,
+      timestamp: Date.now(),
+    } as CachedProviderAvailability);
+    this.apiSender.send('provider-change', {});
   }
 
   createProvider(extensionId: string, extensionDisplayName: string, providerOptions: ProviderOptions): Provider {
@@ -247,6 +310,7 @@ export class ProviderRegistry {
 
   disposeProvider(providerImpl: ProviderImpl): void {
     this.providers.delete(providerImpl.internalId);
+    this.kubernetesProviderConnectionCreationAvailability.delete(providerImpl.internalId);
     this.listeners.forEach(listener => listener('provider:delete', this.toProviderInfo(providerImpl)));
     this.apiSender.send('provider-delete', providerImpl.id);
   }
@@ -797,6 +861,16 @@ export class ProviderRegistry {
       kubernetesProviderConnectionInitialization = true;
     }
 
+    // Check if kubernetes creation is currently available (read from cache)
+    let kubernetesProviderConnectionCreationDisabled = false;
+    let kubernetesProviderConnectionCreationDisabledReason: string | undefined;
+
+    const kubernetesAvailability = this.kubernetesProviderConnectionCreationAvailability.get(provider.internalId);
+    if (kubernetesAvailability) {
+      kubernetesProviderConnectionCreationDisabled = !kubernetesAvailability.canCreate;
+      kubernetesProviderConnectionCreationDisabledReason = kubernetesAvailability.reason;
+    }
+
     // VM connection factory ?
     let vmProviderConnectionInitialization = false;
     const vmProviderConnectionCreationDisplayName = provider.vmProviderConnectionFactory?.creationDisplayName;
@@ -837,6 +911,8 @@ export class ProviderRegistry {
       kubernetesProviderConnectionInitialization,
       kubernetesProviderConnectionCreationDisplayName,
       kubernetesProviderConnectionCreationButtonTitle,
+      kubernetesProviderConnectionCreationDisabled,
+      kubernetesProviderConnectionCreationDisabledReason,
       vmProviderConnectionInitialization,
       vmProviderConnectionCreationDisplayName,
       vmProviderConnectionCreationButtonTitle,

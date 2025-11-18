@@ -54,6 +54,7 @@ vi.mock('@podman-desktop/api', () => ({
     onDidUpdateVersion: vi.fn(),
     createProvider: vi.fn(),
     registerUpdate: vi.fn(),
+    getContainerConnections: vi.fn(),
   },
   containerEngine: {
     listContainers: vi.fn(),
@@ -92,6 +93,7 @@ const PROVIDER_MOCK: podmanDesktopApi.Provider = {
   onDidUpdateVersion: vi.fn(),
   updateVersion: vi.fn(),
   registerUpdate: vi.fn(),
+  updateStatus: vi.fn(),
 } as unknown as podmanDesktopApi.Provider;
 
 beforeEach(() => {
@@ -114,6 +116,7 @@ beforeEach(() => {
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
   vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
+  vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -133,25 +136,26 @@ function activate(options?: Partial<extensionApi.ExtensionContext>): Promise<voi
 }
 
 test('check we received notifications ', async () => {
-  const onDidUpdateContainerConnectionMock = vi.fn();
-  vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(
-    onDidUpdateContainerConnectionMock,
-  );
-
-  const listContainersMock = vi.fn();
-  podmanDesktopApi.containerEngine.listContainers = listContainersMock;
-  listContainersMock.mockResolvedValue([]);
-
-  let callbackCalled = false;
-  onDidUpdateContainerConnectionMock.mockImplementation((callback: () => void) => {
-    callback();
-    callbackCalled = true;
+  vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+    path: 'kind',
+    version: '0.0.1',
   });
 
-  const fakeProvider = {} as unknown as podmanDesktopApi.Provider;
-  extension.refreshKindClustersOnProviderConnectionUpdate(fakeProvider);
-  expect(callbackCalled).toBeTruthy();
-  expect(listContainersMock).toBeCalledTimes(1);
+  let callback: (e: unknown) => Promise<void>;
+
+  vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(cb => {
+    callback = cb as (e: unknown) => Promise<void>;
+    return { dispose: vi.fn() };
+  });
+
+  vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
+
+  await activate();
+
+  expect(callback!).toBeDefined();
+  await callback!({});
+
+  expect(podmanDesktopApi.containerEngine.listContainers).toHaveBeenCalled();
 });
 
 describe('cli tool', () => {
@@ -251,6 +255,7 @@ test('Ensuring a progress task is created when calling kind.image.move command',
     setKubernetesProviderConnectionFactory: vi.fn(),
     onDidUpdateVersion: vi.fn(),
     updateVersion: vi.fn(),
+    updateStatus: vi.fn(),
   }));
 
   const listContainersMock = vi.fn();
@@ -276,6 +281,8 @@ test('Ensuring a progress task is created when calling kind.image.move command',
 
   // ensure the command has been registered
   expect(commandRegistry['kind.image.move']).toBeDefined();
+
+  contextSetValueMock.mockClear();
 
   // simulate a call to the command
   await commandRegistry['kind.image.move']({ id: 'id', image: 'hello:world', engineId: '1' });
@@ -597,5 +604,178 @@ describe('provider#update', () => {
 
     await vi.mocked(PROVIDER_MOCK.registerUpdate).mock.calls[0][0].update({} as unknown as podmanDesktopApi.Logger);
     expect(disposeMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Container provider availability checks', () => {
+  const CONTEXT_KEYS = {
+    CAN_CREATE_CLUSTER: 'kind.canCreateCluster',
+    CANNOT_CREATE_REASON: 'kind.cannotCreateClusterReason',
+  };
+
+  const PROVIDER_STATUS = {
+    READY: 'ready',
+    CONFIGURED: 'configured',
+  };
+
+  const CONNECTION_STATUS = {
+    STARTED: 'started',
+    STOPPED: 'stopped',
+  };
+
+  const ERROR_MESSAGES = {
+    LINUX: 'A container engine is needed (e.g. Podman) to be able to create a kind cluster',
+    NON_LINUX: 'You need a running container provider (e.g. Podman) to create a kind cluster',
+  };
+
+  function createMockConnection(status: string): extensionApi.ProviderContainerConnection {
+    return {
+      connection: {
+        status: () => status,
+        name: 'Podman',
+        type: 'podman',
+      },
+      providerId: 'podman',
+    } as extensionApi.ProviderContainerConnection;
+  }
+
+  function getCanCreateFactory(): (() => Promise<{ canCreate: boolean; reason?: string }>) | undefined {
+    const { canCreate } = vi.mocked(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).mock.calls[0][0];
+    expect(canCreate).toBeDefined();
+    return canCreate;
+  }
+
+  function expectContextValues(canCreate: boolean, reason: string, providerStatus: string): void {
+    expect(podmanDesktopApi.context.setValue).toHaveBeenCalledWith(
+      CONTEXT_KEYS.CAN_CREATE_CLUSTER,
+      canCreate,
+      'onboarding',
+    );
+    expect(podmanDesktopApi.context.setValue).toHaveBeenCalledWith(
+      CONTEXT_KEYS.CANNOT_CREATE_REASON,
+      reason,
+      'onboarding',
+    );
+    expect(PROVIDER_MOCK.updateStatus).toHaveBeenCalledWith(providerStatus);
+  }
+
+  beforeEach(() => {
+    vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+      path: 'kind',
+      version: '0.0.1',
+    });
+  });
+
+  test('should set context to true when running container connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STARTED),
+    ]);
+
+    await activate();
+
+    expectContextValues(true, '', PROVIDER_STATUS.READY);
+  });
+
+  test('should set context to false when no container connections exist on Linux', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+    vi.mocked(podmanDesktopApi.env).isLinux = true;
+
+    await activate();
+
+    expectContextValues(false, ERROR_MESSAGES.LINUX, PROVIDER_STATUS.CONFIGURED);
+  });
+
+  test('should set context to false when no container connections exist on non-Linux', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+    vi.mocked(podmanDesktopApi.env).isLinux = false;
+
+    await activate();
+
+    expectContextValues(false, ERROR_MESSAGES.NON_LINUX, PROVIDER_STATUS.CONFIGURED);
+  });
+
+  test('should set context to false when container connections exist but are stopped', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STOPPED),
+    ]);
+
+    await activate();
+
+    expect(podmanDesktopApi.context.setValue).toHaveBeenCalledWith(
+      CONTEXT_KEYS.CAN_CREATE_CLUSTER,
+      false,
+      'onboarding',
+    );
+    expect(PROVIDER_MOCK.updateStatus).toHaveBeenCalledWith(PROVIDER_STATUS.CONFIGURED);
+  });
+
+  test('canCreate factory method should return true when running connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STARTED),
+    ]);
+
+    await activate();
+
+    const canCreate = getCanCreateFactory();
+    const result = await canCreate?.();
+
+    expect(result).toEqual({
+      canCreate: true,
+      reason: undefined,
+    });
+  });
+
+  test('canCreate factory method should return false with reason when no running connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+
+    await activate();
+
+    const canCreate = getCanCreateFactory();
+    const result = await canCreate?.();
+
+    expect(result).toEqual({
+      canCreate: false,
+      reason: expect.any(String),
+    });
+  });
+
+  test('should listen to container connection register events', async () => {
+    await activate();
+
+    expect(podmanDesktopApi.provider.onDidRegisterContainerConnection).toHaveBeenCalled();
+  });
+
+  test('should listen to container connection unregister events', async () => {
+    await activate();
+
+    expect(podmanDesktopApi.provider.onDidUnregisterContainerConnection).toHaveBeenCalled();
+  });
+
+  test('should update context when container connection status changes', async () => {
+    let onDidUpdateCallback: ((e: unknown) => Promise<void>) | undefined;
+    vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(callback => {
+      onDidUpdateCallback = callback as (e: unknown) => Promise<void>;
+      return { dispose: vi.fn() } as extensionApi.Disposable;
+    });
+
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STOPPED),
+    ]);
+
+    await activate();
+
+    vi.mocked(podmanDesktopApi.context.setValue).mockClear();
+    vi.mocked(PROVIDER_MOCK.updateStatus).mockClear();
+
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STARTED),
+    ]);
+
+    if (onDidUpdateCallback) {
+      await onDidUpdateCallback({});
+    }
+
+    expect(podmanDesktopApi.context.setValue).toHaveBeenCalledWith(CONTEXT_KEYS.CAN_CREATE_CLUSTER, true, 'onboarding');
+    expect(PROVIDER_MOCK.updateStatus).toHaveBeenCalledWith(PROVIDER_STATUS.READY);
   });
 });

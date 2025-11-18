@@ -13,6 +13,7 @@ import type { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 /* eslint-enable import/no-duplicates */
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
+import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type {
   ProviderContainerConnectionInfo,
@@ -82,6 +83,8 @@ let errorMessage: string | undefined = $state();
 let formEl: HTMLFormElement | undefined = $state();
 let connectionAuditResult: AuditResult | undefined = $state();
 let logsTerminal: Terminal | undefined = $state();
+let initialLoadComplete = $state(false);
+let providerInfosInitialized = $state(false);
 
 let existingFormData: { [key: string]: unknown } | undefined;
 let operationFailed = false;
@@ -105,6 +108,23 @@ $effect(() => {
     } finally {
       reconnectedUI = true;
     }
+  }
+});
+
+// Re-audit connection when provider status changes
+$effect(() => {
+  // Access the providerInfos store to track its changes
+  $providerInfos;
+
+  // Skip the first call when initializing
+  if (!providerInfosInitialized) {
+    providerInfosInitialized = true;
+    return;
+  }
+
+  // Only re-audit if initial load is complete, configuration is initialized, and we're not currently in progress
+  if (initialLoadComplete && !inProgress && !operationStarted && configurationKeys.length > 0) {
+    reAuditConnection().catch(() => console.error('unable to re-audit connection'));
   }
 });
 
@@ -157,6 +177,7 @@ onMount(async () => {
     }
   }
   pageIsLoading = false;
+  initialLoadComplete = true;
 });
 
 onDestroy(() => {
@@ -217,6 +238,45 @@ async function loadConnectionParams(): Promise<void> {
   }
 }
 
+/**
+ * Re-audit connection parameters when provider status changes
+ * This ensures warnings/errors are updated if a provider is stopped while on the creation page
+ */
+async function reAuditConnection(): Promise<void> {
+  try {
+    const data = buildAuditData();
+    const auditResult = await window.auditConnectionParameters(providerInfo.internalId, data);
+    if (auditResult) {
+      updateAuditState(auditResult);
+    }
+  } catch (err: unknown) {
+    console.warn(err instanceof Error ? err.message : String(err));
+  }
+}
+
+function buildAuditData(): AuditRequestItems {
+  const data: { [key: string]: unknown } = {};
+
+  if (existingFormData) {
+    Object.assign(data, existingFormData);
+    return data as AuditRequestItems;
+  }
+
+  for (const field of configurationKeys) {
+    if (field.id) {
+      const value = configurationValues.get(field.id);
+      data[field.id] = value?.value ?? field.default;
+    }
+  }
+
+  return data as AuditRequestItems;
+}
+
+function updateAuditState(auditResult: AuditResult): void {
+  isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
+  connectionAuditResult = auditResult;
+}
+
 function handleInvalidComponent(): void {
   isValid = false;
 }
@@ -247,8 +307,10 @@ async function handleValidComponent(): Promise<void> {
 
   try {
     const auditResult = await window.auditConnectionParameters(providerInfo.internalId, data as AuditRequestItems);
-    isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
-    connectionAuditResult = auditResult;
+    if (auditResult) {
+      isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
+      connectionAuditResult = auditResult;
+    }
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.warn(err.message);
