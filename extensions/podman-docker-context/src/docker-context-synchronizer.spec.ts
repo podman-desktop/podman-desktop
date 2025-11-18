@@ -28,21 +28,6 @@ import {
   toEndpoint,
 } from './docker-context-synchronizer.js';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    env: {
-      isLinux: false,
-      isWindows: false,
-      isMac: false,
-    },
-    provider: {
-      onDidUpdateContainerConnection: vi.fn(),
-      onDidRegisterContainerConnection: vi.fn(),
-      getContainerConnections: vi.fn(() => []),
-    },
-  };
-});
-
 const DOCKER_CONNECTION = {
   providerId: 'docker',
   connection: {
