@@ -23,6 +23,7 @@ import { handleConfirmationDialog } from '../../utility/operations';
 import { DetailsPage } from './details-page';
 import { ImageEditPage } from './image-edit-page';
 import { ImagesPage } from './images-page';
+import { PushImagePage } from './push-image-page';
 import { RunImagePage } from './run-image-page';
 
 export class ImageDetailsPage extends DetailsPage {
@@ -94,11 +95,11 @@ export class ImageDetailsPage extends DetailsPage {
     });
   }
 
-  async pushImage(): Promise<void> {
+  async pushImage(): Promise<PushImagePage> {
     return test.step('Push image', async () => {
       await playExpect(this.pushButton).toBeEnabled();
       await this.pushButton.click();
-      await handleConfirmationDialog(this.page, 'Push image', true, 'Push image', '', 60_000, true);
+      return new PushImagePage(this.page);
     });
   }
 
