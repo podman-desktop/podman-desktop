@@ -47,39 +47,6 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
 }));
 
-vi.mock('@podman-desktop/api', () => {
-  return {
-    cli: {
-      createCliTool: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isMac: true,
-      isWindows: false,
-      isLinux: false,
-      createTelemetryLogger: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: vi.fn(),
-      onDidChangeConfiguration: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    provider: {
-      createProvider: vi.fn(),
-    },
-    window: {
-      showQuickPick: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     update: vi.fn(),

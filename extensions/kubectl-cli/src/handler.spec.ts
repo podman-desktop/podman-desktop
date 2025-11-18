@@ -18,38 +18,23 @@
 
 import type { Configuration } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { Detect } from './detect';
 import * as handler from './handler';
 
 vi.mock(import('./detect'));
-
-const config: Configuration = {
-  get: () => {
-    return true;
-  },
-  has: () => true,
-  update: () => Promise.resolve(),
-};
-
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    configuration: {
-      getConfiguration: (): Configuration => config,
-    },
-    window: {
-      showInformationMessage: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-  };
-});
-
 const extensionContextMock: extensionApi.ExtensionContext = {
   storagePath: '/storage-path',
 } as unknown as extensionApi.ExtensionContext;
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(),
+    update: vi.fn(),
+  } as unknown as Configuration);
+});
 
 test('updateConfigAndContextKubectlBinary: make sure configuration gets updated if checkSystemWideKubectl had returned true', async () => {
   vi.mocked(Detect.prototype.checkSystemWideKubectl).mockReturnValue(Promise.resolve(true));
