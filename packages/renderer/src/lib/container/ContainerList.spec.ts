@@ -841,7 +841,9 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   const checkboxes = screen.getAllByRole('checkbox', { name: 'Toggle container' });
   await fireEvent.click(checkboxes[0]);
 
-  const deleteButton = screen.getByRole('button', { name: 'Delete selected containers and pods' });
+  const deleteButton = await vi.waitFor(() =>
+    screen.getByRole('button', { name: 'Delete selected containers and pods' }),
+  );
   await fireEvent.click(deleteButton);
 
   expect(window.showMessageBox).toHaveBeenCalledOnce();
