@@ -43,19 +43,6 @@ vi.mock('shell-path', () => {
   };
 });
 
-vi.mock('@podman-desktop/api', () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isLinux: false,
-      isWindows: false,
-      isMac: false,
-    },
-  };
-});
-
 const originalConsoleDebug = console.debug;
 
 beforeEach(() => {

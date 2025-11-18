@@ -27,44 +27,6 @@ import { Detect } from './detect';
 import { ComposeDownload } from './download';
 import { activate, deactivate } from './extension';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isLinux: false,
-      isWindows: false,
-      isMac: false,
-      createTelemetryLogger: vi.fn(),
-    },
-    configuration: {
-      onDidChangeConfiguration: vi.fn(),
-      getConfiguration: (): extensionApi.Configuration =>
-        ({
-          update: vi.fn(),
-          get: vi.fn(),
-          has: vi.fn(),
-        }) as unknown as extensionApi.Configuration,
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    provider: {
-      createProvider: vi.fn(),
-    },
-    cli: {
-      createCliTool: vi.fn(),
-    },
-    window: {
-      showErrorMessage: vi.fn(),
-    },
-  };
-});
-
 vi.mock('node:fs', () => ({
   promises: {
     unlink: vi.fn(),
@@ -87,6 +49,11 @@ vi.mock(import('./download'));
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(extensionApi.cli.createCliTool).mockReturnValue(cliToolMock);
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    update: vi.fn(),
+    get: vi.fn(),
+    has: vi.fn(),
+  });
 });
 
 afterEach(() => {
