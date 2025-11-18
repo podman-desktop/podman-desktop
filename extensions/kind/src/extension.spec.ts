@@ -34,48 +34,6 @@ vi.mock(import('./image-handler'));
 vi.mock(import('./create-cluster'));
 vi.mock(import('./kind-installer'));
 
-vi.mock('@podman-desktop/api', () => ({
-  window: {
-    withProgress: vi.fn(),
-    createStatusBarItem: vi.fn(),
-    showInformationMessage: vi.fn(),
-  },
-  cli: {
-    createCliTool: vi.fn(),
-  },
-  ProgressLocation: {
-    TASK_WIDGET: 'TASK_WIDGET',
-  },
-  provider: {
-    onDidRegisterContainerConnection: vi.fn(),
-    onDidUnregisterContainerConnection: vi.fn(),
-    onDidUpdateProvider: vi.fn(),
-    onDidUpdateContainerConnection: vi.fn(),
-    onDidUpdateVersion: vi.fn(),
-    createProvider: vi.fn(),
-    registerUpdate: vi.fn(),
-  },
-  containerEngine: {
-    listContainers: vi.fn(),
-    onEvent: vi.fn(),
-  },
-  commands: {
-    registerCommand: vi.fn(),
-  },
-  context: {
-    setValue: vi.fn(),
-  },
-  env: {
-    isWindows: false,
-    isMac: false,
-    isLinux: true,
-    createTelemetryLogger: vi.fn(),
-  },
-  process: {
-    exec: vi.fn(),
-  },
-}));
-
 const CLI_TOOL_MOCK: extensionApi.CliTool = {
   displayName: 'test',
   dispose: vi.fn(),

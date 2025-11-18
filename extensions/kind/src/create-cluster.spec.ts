@@ -42,41 +42,22 @@ vi.mock('node:fs', () => ({
   readFileSync: vi.fn(),
 }));
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    Logger: {},
-    kubernetes: {
-      createResources: vi.fn(),
-      getKubeconfig: vi.fn().mockReturnValue({ path: '/some/path' }),
-      onDidUpdateKubeconfig: vi.fn(),
-    },
-    provider: {
-      getContainerConnections: vi.fn().mockReturnValue([
-        {
-          providerId: 'docker',
-          connection: {
-            name: 'docker-connection',
-            type: 'docker',
-            endpoint: { socketPath: 'socket' },
-            status: (): extensionApi.ProviderConnectionStatus => 'started',
-          },
-        },
-      ]),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    window: {
-      showInformationMessage: vi.fn(),
-    },
-    net: {
-      getFreePort: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  vi.mocked(extensionApi.kubernetes.getKubeconfig).mockReturnValue({
+    path: '/some/path',
+  } as unknown as extensionApi.Uri);
+  vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue([
+    {
+      providerId: 'docker',
+      connection: {
+        name: 'docker-connection',
+        type: 'docker',
+        endpoint: { socketPath: 'socket' },
+        status: (): extensionApi.ProviderConnectionStatus => 'started',
+      },
+    },
+  ]);
   vi.mocked(fs.promises.mkdtemp).mockResolvedValue('/tmp/file');
 
   vi.mocked(KindClusterWatcher.prototype.waitForNodesReady).mockResolvedValue(undefined);

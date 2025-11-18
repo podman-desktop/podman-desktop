@@ -31,29 +31,6 @@ import * as util from './util';
 
 let installer: KindInstaller;
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    window: {
-      showInformationMessage: vi.fn(),
-      showErrorMessage: vi.fn(),
-      withProgress: vi.fn(),
-      showNotification: vi.fn(),
-      showQuickPick: vi.fn(),
-    },
-    ProgressLocation: {
-      APP_ICON: 1,
-    },
-    env: {
-      isLinux: false,
-      isMac: false,
-      isWindows: false,
-    },
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 vi.mock('node:os', async () => {
   return {
     platform: vi.fn(),
