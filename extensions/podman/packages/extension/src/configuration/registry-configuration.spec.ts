@@ -40,27 +40,6 @@ vi.mock('node:os', async () => {
 });
 vi.mock('../extension');
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    commands: {
-      registerCommand: vi.fn(),
-      executeCommand: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isLinux: false,
-      isWindows: false,
-      isMac: false,
-    },
-    window: {
-      showQuickPick: vi.fn(),
-      showInputBox: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.resetAllMocks();

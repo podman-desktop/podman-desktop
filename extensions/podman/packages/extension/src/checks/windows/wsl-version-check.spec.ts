@@ -21,12 +21,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { WSLVersionCheck } from './wsl-version-check';
 
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-}));
-
 beforeEach(() => {
   vi.clearAllMocks();
 });

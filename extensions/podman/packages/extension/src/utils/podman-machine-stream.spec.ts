@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { EventEmitter } from '@podman-desktop/api';
 import { Client } from 'ssh2';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -52,14 +53,8 @@ class TestProviderConnectionShellAccessImpl extends ProviderConnectionShellAcces
   }
 }
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      fire: vi.fn(),
-      dispose: vi.fn(),
-    })),
-    Disposable: vi.fn(),
-  };
+beforeEach(() => {
+  EventEmitter.prototype.fire = vi.fn();
 });
 
 vi.mock('node:fs');

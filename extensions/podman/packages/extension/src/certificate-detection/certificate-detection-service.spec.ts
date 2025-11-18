@@ -29,16 +29,6 @@ import { type CertificateDetectionConfig, CertificateDetectionService } from './
 vi.mock('node:fs/promises');
 vi.mock('node:os');
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    env: {
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-  };
-});
-
 const mockTelemetryLogger: TelemetryLogger = {
   logUsage: vi.fn(),
   logError: vi.fn(),

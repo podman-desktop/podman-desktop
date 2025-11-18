@@ -95,38 +95,6 @@ vi.mock('node:os', async () => {
   };
 });
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    env: {
-      isMac: true,
-      openExternal: vi.fn(),
-    },
-    window: {
-      withProgress: vi.fn(),
-      showNotification: vi.fn(),
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-      showWarningMessage: vi.fn(),
-    },
-    ProgressLocation: {},
-    process: {
-      exec: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: vi.fn(),
-    },
-    Uri: {
-      parse: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-  };
-});
-
 vi.mock(import('../utils/util'), async () => {
   return {
     getAssetsFolder: vi.fn().mockReturnValue(''),

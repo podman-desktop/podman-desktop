@@ -24,15 +24,6 @@ import { PodmanInfoHelper } from './podman-info-helper';
 
 let podmanInfoHelper: PodmanInfoHelper;
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   podmanInfoHelper = new PodmanInfoHelper();
   vi.resetAllMocks();

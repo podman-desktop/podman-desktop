@@ -268,81 +268,6 @@ beforeEach(async () => {
 const originalConsoleError = console.error;
 const consoleErrorMock = vi.fn();
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: (): Configuration => config,
-      onDidChangeConfiguration: (): Disposable => {
-        return {
-          dispose: vi.fn(),
-        };
-      },
-    },
-    provider: {
-      onDidRegisterContainerConnection: vi.fn(),
-      onDidUnregisterContainerConnection: vi.fn(),
-      createProvider: (): extensionApi.Provider => provider,
-    },
-    registry: {
-      registerRegistryProvider: vi.fn(),
-      onDidRegisterRegistry: vi.fn(),
-      onDidUnregisterRegistry: vi.fn(),
-      onDidUpdateRegistry: vi.fn(),
-    },
-    proxy: {
-      isEnabled: (): boolean => false,
-      onDidUpdateProxy: vi.fn(),
-      onDidStateChange: vi.fn(),
-      getProxySettings: vi.fn(),
-    },
-    window: {
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-      showWarningMessage: vi.fn(),
-      showNotification: vi.fn(),
-      withProgress: vi.fn(),
-      createStatusBarItem: () => ({
-        show: vi.fn(),
-        dispose: vi.fn(),
-      }),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      createTelemetryLogger: vi.fn(),
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-    containerEngine: {
-      info: vi.fn(),
-    },
-    Disposable: {
-      from: vi.fn(),
-      create: vi.fn(),
-    },
-    CancellationToken: {},
-    ProgressLocation: {
-      TASK_WIDGET: 'TASK_WIDGET',
-      APP_ICON: 'APP_ICON',
-    },
-    fs: {
-      createFileSystemWatcher: vi.fn(),
-    },
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      fire: vi.fn(),
-      dispose: vi.fn(),
-    })),
-  };
-});
-
 vi.mock('node:child_process', async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const childProcessActual = await vi.importActual<typeof import('node:child_process')>('node:child_process');
@@ -386,7 +311,8 @@ vi.mock(import('./utils/util'), async importOriginal => {
 
 beforeEach(() => {
   console.error = consoleErrorMock;
-
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue(config);
+  vi.mocked(extensionApi.provider.createProvider).mockReturnValue(provider);
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;

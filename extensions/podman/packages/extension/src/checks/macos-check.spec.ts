@@ -33,14 +33,6 @@ vi.mock('node:os', () => {
   };
 });
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   macVersionCheck = new MacVersionCheck();
   vi.clearAllMocks();

@@ -28,19 +28,6 @@ import { getAssetsFolder } from '../utils/util';
 import { WinInstaller } from './win-installer';
 
 vi.mock('node:fs');
-vi.mock('@podman-desktop/api', () => ({
-  commands: {},
-  env: {},
-  window: {
-    withProgress: vi.fn(),
-    showNotification: vi.fn(),
-    showErrorMessage: vi.fn(),
-  },
-  ProgressLocation: {},
-  process: {
-    exec: vi.fn(),
-  },
-}));
 
 const extensionContext = {
   subscriptions: [],

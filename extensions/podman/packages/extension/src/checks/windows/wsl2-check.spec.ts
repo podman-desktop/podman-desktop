@@ -27,15 +27,6 @@ import { WSL2Check } from './wsl2-check';
 
 const userAdminCheck = { execute: vi.fn() } as unknown as UserAdminCheck;
 
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-  commands: {
-    registerCommand: vi.fn(),
-  },
-}));
-
 // mock ps-list
 vi.mock('ps-list', async () => {
   return {

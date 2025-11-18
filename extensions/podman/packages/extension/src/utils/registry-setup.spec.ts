@@ -45,19 +45,6 @@ let registrySetup: TestRegistrySetup;
 // mock the fs module
 vi.mock('node:fs');
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    registry: {
-      registerRegistryProvider: vi.fn(),
-      registerRegistry: vi.fn(),
-      unregisterRegistry: vi.fn(),
-      onDidRegisterRegistry: vi.fn(),
-      onDidUnregisterRegistry: vi.fn(),
-      onDidUpdateRegistry: vi.fn(),
-    },
-  };
-});
-
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 const consoleErroMock = vi.fn();
