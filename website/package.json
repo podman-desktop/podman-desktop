@@ -55,7 +55,7 @@
     "typedoc": "^0.28.14",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
-    "vitest": "https://pkg.pr.new/vitest@617260f"
+    "vitest": "^4.0.10"
   },
   "browserslist": {
     "production": [

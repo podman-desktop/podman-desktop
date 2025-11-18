@@ -187,7 +187,7 @@
     "typescript-eslint": "^8.47.0",
     "validator": "^13.15.23",
     "vite": "^7.2.2",
-    "vitest": "https://pkg.pr.new/vitest@617260f",
+    "vitest": "^4.0.10",
     "xvfb-maybe": "^0.2.1"
   },
   "dependencies": {

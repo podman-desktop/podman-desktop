@@ -197,6 +197,6 @@
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
     "vite": "^7.2.2",
-    "vitest": "https://pkg.pr.new/vitest@617260f"
+    "vitest": "^4.0.10"
   }
 }
