@@ -43,16 +43,6 @@ class TestDockerContextHandler extends DockerContextHandler {
 // mock exists sync
 vi.mock('node:fs');
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    env: {
-      isLinux: false,
-      isWindows: false,
-      isMac: false,
-    },
-  };
-});
-
 const originalConsoleError = console.error;
 let dockerContextHandler: TestDockerContextHandler;
 

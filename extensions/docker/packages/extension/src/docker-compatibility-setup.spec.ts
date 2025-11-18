@@ -23,23 +23,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { DockerCompatibilitySetup } from './docker-compatibility-setup.js';
 import type { DockerContextHandler } from './docker-context-handler.js';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    context: {
-      setValue: vi.fn(),
-    },
-    configuration: {
-      onDidChangeConfiguration: vi.fn(),
-      getConfiguration: vi.fn(),
-    },
-    env: {
-      isLinux: false,
-      isWindows: false,
-      isMac: false,
-    },
-  };
-});
-
 const dockerContextHandler = {
   listContexts: vi.fn(),
   switchContext: vi.fn(),
