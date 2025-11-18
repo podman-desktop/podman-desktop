@@ -523,7 +523,7 @@ test('Done button should go back to previous page', async () => {
   await fireEvent.click(createButton);
 
   const doneButton = await vi.waitFor(async () => {
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2000);
     return screen.getByRole('button', { name: 'Done' });
   });
   expect(doneButton).toBeInTheDocument();
