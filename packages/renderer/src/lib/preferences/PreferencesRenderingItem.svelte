@@ -1,7 +1,6 @@
 <script lang="ts">
-import { faArrowUpRightFromSquare, faFlask, faLock } from '@fortawesome/free-solid-svg-icons';
-import { Button, Tooltip } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
+import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
@@ -10,6 +9,7 @@ import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import Markdown from '../markdown/Markdown.svelte';
+import PreferencesManagedLabel from './PreferencesManagedLabel.svelte';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
 interface Props {
@@ -93,15 +93,9 @@ async function openGitHubDiscussion(): Promise<void> {
       <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
         <div class="flex flex-row space-x-2 items-center">
           <span class="font-semibold">{recordUI.title}</span>
+         
           {#if record.locked}
-            <Tooltip tip="This setting is managed by your organization." right>
-              <Label>
-                <div class="flex flex-row space-x-1 items-center">
-                  <Icon icon={faLock} size="xs"/>
-                  <span>Managed</span>
-                </div>
-              </Label>
-            </Tooltip>
+          <PreferencesManagedLabel />
           {/if}
           {#if record.experimental !== undefined}
             <Label>
