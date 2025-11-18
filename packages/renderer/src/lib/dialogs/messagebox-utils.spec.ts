@@ -16,53 +16,47 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { withConfirmation } from './messagebox-utils';
-
-const showMessageBoxMock = vi.fn();
-
-beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
 });
 
 test('expect withConfirmation call callback if result OK', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world');
 
   await vi.waitFor(() => {
-    expect(showMessageBoxMock).toHaveBeenCalledOnce();
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalled();
   });
 });
 
 test('expect withConfirmation not to call callback if result not OK', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world');
 
   await vi.waitFor(() => {
-    expect(showMessageBoxMock).toHaveBeenCalledOnce();
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
     expect(callback).not.toHaveBeenCalled();
   });
 });
 
 test('expect withConfirmation to propagate error', async () => {
   const error = new Error('Dummy error');
-  showMessageBoxMock.mockRejectedValue(error);
+  vi.mocked(window.showMessageBox).mockRejectedValue(error);
 
   const callback = vi.fn();
   withConfirmation(callback, 'Destroy world');
 
   await vi.waitFor(() => {
-    expect(showMessageBoxMock).toHaveBeenCalledOnce();
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
     expect(callback).toHaveBeenCalledWith(error);
   });
 });

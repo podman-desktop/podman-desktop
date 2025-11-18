@@ -27,7 +27,6 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ImageActions from '/@/lib/image/ImageActions.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 
-const showMessageBoxMock = vi.fn();
 const getContributedMenusMock = vi.fn();
 
 vi.mock('./image-utils', () => {
@@ -48,7 +47,6 @@ class ResizeObserver {
   unobserve = vi.fn();
 }
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'ResizeObserver', { value: ResizeObserver });
 
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
@@ -100,7 +98,7 @@ test('Expect showMessageBox to be called when error occurs', async () => {
   await fireEvent.click(button);
 
   await waitFor(() => {
-    expect(showMessageBoxMock).toHaveBeenCalledOnce();
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
   });
 
   expect(image.status).toBe('DELETING');

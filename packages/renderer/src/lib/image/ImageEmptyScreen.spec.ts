@@ -29,11 +29,9 @@ import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provid
 import ImageEmptyScreen from './ImageEmptyScreen.svelte';
 
 const pullImageMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 beforeAll(() => {
   Object.defineProperty(window, 'pullImage', { value: pullImageMock });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
 });
 
 beforeEach(() => {
@@ -93,7 +91,7 @@ test('expect error to show up in message box when pull has an error', async () =
 
   await userEvent.click(pullButton);
 
-  expect(showMessageBoxMock).toBeCalledWith({
+  expect(window.showMessageBox).toBeCalledWith({
     title: `Error while pulling image`,
     message: `Error while pulling image from test: Cannot pull image`,
   });
@@ -107,7 +105,7 @@ test('expect error to show up in message box with no providers', async () => {
 
   await userEvent.click(pullButton);
 
-  expect(showMessageBoxMock).toBeCalledWith({
+  expect(window.showMessageBox).toBeCalledWith({
     title: `Error while pulling image`,
     message: `No provider connections found`,
   });
@@ -122,5 +120,5 @@ test('expect image to be pulled successfully', async () => {
   await userEvent.click(pullButton);
 
   expect(pullImageMock).toBeCalled();
-  expect(showMessageBoxMock).not.toBeCalled();
+  expect(window.showMessageBox).not.toBeCalled();
 });

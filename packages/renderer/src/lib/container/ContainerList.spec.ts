@@ -799,7 +799,6 @@ test('Sort containers based on selected parameter', async () => {
 test('Expect user confirmation to pop up when preferences require', async () => {
   vi.mocked(window.listContainers).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));

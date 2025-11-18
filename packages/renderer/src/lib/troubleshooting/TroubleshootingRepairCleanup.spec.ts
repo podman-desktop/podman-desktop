@@ -25,17 +25,15 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
 
-const showMessageBoxMock = vi.fn();
 const cleanupProvidersMock = vi.fn();
 
 // fake the window.events object
 beforeAll(() => {
-  (window as any).window.showMessageBox = showMessageBoxMock;
   (window as any).window.cleanupProviders = cleanupProvidersMock;
 });
 
 test('Check cleanupProviders is called and button is in progress', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   render(TroubleshootingRepairCleanup);
 
@@ -65,7 +63,7 @@ test('Check cleanupProviders is called and button is in progress', async () => {
   });
 
   // check that we asked for confirmation
-  expect(showMessageBoxMock).toBeCalledWith({
+  expect(window.showMessageBox).toBeCalledWith({
     buttons: ['Yes', 'Cancel'],
     message: 'This action may delete data. Proceed?',
     title: 'Cleanup',
@@ -76,7 +74,7 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 });
 
 test('Check errors are displayed with clipboard button', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   render(TroubleshootingRepairCleanup);
 
@@ -92,7 +90,7 @@ test('Check errors are displayed with clipboard button', async () => {
   await fireEvent.click(cleanupButton);
 
   // check that we asked for confirmation
-  expect(showMessageBoxMock).toBeCalledWith({
+  expect(window.showMessageBox).toBeCalledWith({
     buttons: ['Yes', 'Cancel'],
     message: 'This action may delete data. Proceed?',
     title: 'Cleanup',
