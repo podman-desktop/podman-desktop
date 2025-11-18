@@ -261,8 +261,8 @@ export async function deletePodmanMachine(page: Page, machineVisibleName: string
 
 export async function getVolumeNameForContainer(page: Page, containerName: string): Promise<string> {
   return test.step('Get volume name for container', async () => {
-    let volumeName;
-    let volumeSummaryContent;
+    let volumeName: string | null;
+    let volumeSummaryContent: string[];
     try {
       const navigationBar = new NavigationBar(page);
       const volumePage = await navigationBar.openVolumes();
