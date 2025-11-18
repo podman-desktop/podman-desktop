@@ -180,7 +180,7 @@
     "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.6",
     "minimist": "^1.2.8",
-    "msw": "^2.12.1",
+    "msw": "^2.12.2",
     "prettier": "^3.6.2",
     "proxy": "^2.2.0",
     "typescript": "5.9.3",
