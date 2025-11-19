@@ -522,40 +522,40 @@ describe.each([
     { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
-  ])(
-    'verify create command called with now flag if start machine after creation is enabled %s',
-    async ({ version, image }) => {
-      vi.mocked(extensionApi.env).isMac = true;
+  ])('verify create command called with now flag if start machine after creation is enabled %s', async ({
+    version,
+    image,
+  }) => {
+    vi.mocked(extensionApi.env).isMac = true;
 
-      vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
-        version,
-      });
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version,
+    });
 
-      await extension.createMachine(
-        {
-          'podman.factory.machine.cpus': '2',
-          'podman.factory.machine.image': 'path',
-          'podman.factory.machine.memory': '1048000000',
-          'podman.factory.machine.diskSize': '250000000000',
-          'podman.factory.machine.now': true,
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.now': true,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining([`--${image}`, 'path']),
+      {
+        logger: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: provider,
         },
-        podmanConfiguration,
-      );
-
-      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
-        podmanCli.getPodmanCli(),
-        expect.arrayContaining([`--${image}`, 'path']),
-        {
-          logger: undefined,
-          env: {
-            CONTAINERS_MACHINE_PROVIDER: provider,
-          },
-          token: undefined,
-        },
-      );
-      expect(console.error).not.toBeCalled();
-    },
-  );
+        token: undefined,
+      },
+    );
+    expect(console.error).not.toBeCalled();
+  });
 
   test('verify error contains name, message and stderr if creation fails', async () => {
     vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
