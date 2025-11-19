@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora-version: ['Fedora-41', 'Fedora-42']
+        fedora-version: ['Fedora-42', 'Fedora-43']
     steps:
       - name: Set the default env. variables
         env:
