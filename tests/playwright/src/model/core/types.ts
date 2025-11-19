@@ -96,7 +96,7 @@ export const KubernetesResourceAttributes: Record<KubernetesResources, string[]>
 
 export enum PodmanVirtualizationProviders {
   WSL = 'Wsl',
-  HyperV = 'Hyper-V',
+  HyperV = 'Hyperv',
   AppleHV = 'Apple HyperVisor',
   LibKrun = 'default GPU enabled (LibKrun)',
   Qemu = 'Qemu',
