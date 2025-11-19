@@ -20,14 +20,13 @@ import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
 import {
-  developerSandboxExtension,
+  bootcExtension,
   extensionsInstallationSmokeList,
-  openshiftCheckerExtension,
-  openshiftDockerExtension,
-  openshiftLocalExtension,
+  imageLayersExplorerExtension,
+  minikubeExtension,
+  podmanQuadletExtension,
 } from '../model/core/extensions';
 import { ExtensionState } from '../model/core/states';
-import { DashboardPage } from '../model/pages/dashboard-page';
 import { ExtensionCatalogCardPage } from '../model/pages/extension-catalog-card-page';
 import { ExtensionsPage } from '../model/pages/extensions-page';
 import { ResourcesPage } from '../model/pages/resources-page';
@@ -35,13 +34,11 @@ import { SettingsBar } from '../model/pages/settings-bar';
 import { WelcomePage } from '../model/pages/welcome-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { Runner } from '../runner/podman-desktop-runner';
-import { isWindows } from '../utility/platform';
 
 let pdRunner: Runner;
 let page: Page;
 
-let extensionDashboardStatus: Locator | undefined;
-let extensionDashboardProvider: Locator | undefined;
+let extensionNavigationBarIcon: Locator | undefined;
 let resourceLabel: string | undefined;
 let ociImageUrl: string;
 
@@ -65,8 +62,6 @@ for (const {
   extensionFullName,
 } of extensionsInstallationSmokeList) {
   test.describe.serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
-    test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
-
     test.beforeAll(async () => {
       await _startup(extensionLabel);
     });
@@ -81,8 +76,7 @@ for (const {
 
     test('Install extension through Extensions Catalog', async () => {
       test.skip(
-        extensionName === openshiftCheckerExtension.extensionName ||
-          extensionName === openshiftDockerExtension.extensionName,
+        extensionName === bootcExtension.extensionName || extensionName === podmanQuadletExtension.extensionName,
       );
       test.setTimeout(200_000);
 
@@ -102,20 +96,19 @@ for (const {
 
     test('Install extension from OCI Image', async () => {
       test.skip(
-        extensionName !== openshiftCheckerExtension.extensionName &&
-          extensionName !== openshiftDockerExtension.extensionName,
+        extensionName === minikubeExtension.extensionName ||
+          extensionName === imageLayersExplorerExtension.extensionName,
       );
       test.setTimeout(200_000);
 
       const extensionsPage = new ExtensionsPage(page);
 
       await extensionsPage.installExtensionFromOCIImage(ociImageUrl, 180_000);
-      if (extensionName !== openshiftDockerExtension.extensionName) {
-        await extensionsPage.openCatalogTab();
-        const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
-        await playExpect(extensionCatalog.parent).toBeVisible();
-        await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
-      }
+
+      await extensionsPage.openCatalogTab();
+      const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
+      await playExpect(extensionCatalog.parent).toBeVisible();
+      await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
 
       await extensionsPage.openInstalledTab();
       await playExpect
@@ -157,12 +150,7 @@ for (const {
 
         test.describe
           .serial('Extension can be disabled and reenabled', () => {
-            test.skip(
-              extensionName === openshiftDockerExtension.extensionName,
-              'OpenShift Docker extension cannot be disabled',
-            );
-
-            test('Disable extension and verify Dashboard and Resources components if present', async () => {
+            test('Disable extension and verify Navbar and Resources components if present', async () => {
               const extensionsPage = await navigationBar.openExtensions();
               const extensionPage = await extensionsPage.openExtensionDetails(
                 extensionLabel,
@@ -173,14 +161,17 @@ for (const {
               await extensionPage.disableExtension();
               await playExpect(extensionPage.status).toHaveText(ExtensionState.Disabled);
 
-              // check that dashboard card provider is hidden/shown
-              if (extensionDashboardProvider && extensionDashboardStatus) {
-                await goToDashboard();
-                await playExpect(extensionDashboardProvider).toBeHidden();
+              // check that extension navbar icon is hidden/shown
+              if (extensionNavigationBarIcon) {
+                await playExpect(extensionNavigationBarIcon).toBeHidden();
               }
 
-              // check that the provider card is on Resources Page
-              if (resourceLabel) {
+              // check that the provider card is on Resources Page -> minikube/bootc require binary installation
+              if (
+                resourceLabel &&
+                extensionName !== minikubeExtension.extensionName &&
+                extensionName !== bootcExtension.extensionName
+              ) {
                 const settingsBar = await goToSettings();
                 const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
                 const extensionResourceBox = resourcesPage.featuredProviderResources.getByRole('region', {
@@ -190,7 +181,7 @@ for (const {
               }
             });
 
-            test('Enable extension and verify Dashboard and Resources components', async () => {
+            test('Enable extension and verify Navbar and Resources components', async () => {
               const extensionsPage = await navigationBar.openExtensions();
               const extensionPage = await extensionsPage.openExtensionDetails(
                 extensionLabel,
@@ -201,20 +192,17 @@ for (const {
               await extensionPage.enableExtension();
               await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10_000 });
 
-              // check that dashboard card provider is hidden/shown
-              if (extensionDashboardProvider && extensionDashboardStatus) {
-                await goToDashboard();
-                await playExpect(extensionDashboardProvider).toBeVisible();
-                await playExpect(extensionDashboardStatus).toBeVisible();
-                if (extensionName === developerSandboxExtension.extensionName) {
-                  await playExpect(extensionDashboardStatus).toHaveText(ExtensionState.Running);
-                } else {
-                  await playExpect(extensionDashboardStatus).toHaveText(ExtensionState.NotInstalled);
-                }
+              // check that extension navbar icon is hidden/shown
+              if (extensionNavigationBarIcon) {
+                await playExpect(extensionNavigationBarIcon).toBeVisible();
               }
 
-              // check that the provider card is on Resources Page
-              if (resourceLabel) {
+              // check that the provider card is on Resources Page -> minikube/bootc require binary installation
+              if (
+                resourceLabel &&
+                extensionName !== minikubeExtension.extensionName &&
+                extensionName !== bootcExtension.extensionName
+              ) {
                 const settingsBar = await goToSettings();
                 const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
                 const extensionResourceBox = resourcesPage.featuredProviderResources.getByRole('region', {
@@ -237,18 +225,14 @@ for (const {
             extensionFullName,
           );
 
-          if (extensionName !== openshiftDockerExtension.extensionName) {
-            await extensionDetails.disableExtension();
-          }
+          await extensionDetails.disableExtension();
           await extensionDetails.removeExtension(false);
 
-          if (extensionName !== openshiftDockerExtension.extensionName) {
-            // now if deleted from extension details, the page details are still there, just different
-            await playExpect(extensionDetails.status).toHaveText(ExtensionState.Downloadable);
-            await playExpect(
-              extensionDetails.page.getByRole('button', { name: `Install ${extensionFullLabel} Extension` }),
-            ).toBeVisible();
-          }
+          // now if deleted from extension details, the page details are still there, just different
+          await playExpect(extensionDetails.status).toHaveText(ExtensionState.Downloadable);
+          await playExpect(
+            extensionDetails.page.getByRole('button', { name: `Install ${extensionFullLabel} Extension` }),
+          ).toBeVisible();
 
           await goToDashboard();
           extensionsPage = await navigationBar.openExtensions();
@@ -261,34 +245,37 @@ for (const {
 }
 
 function initializeLocators(extensionName: string): void {
-  const dashboardPage = new DashboardPage(page);
+  const navigationBar = new NavigationBar(page);
   switch (extensionName) {
-    case developerSandboxExtension.extensionName: {
-      extensionDashboardStatus = dashboardPage.devSandboxStatusLabel;
-      extensionDashboardProvider = dashboardPage.devSandboxProvider;
-      resourceLabel = 'redhat.sandbox';
+    case bootcExtension.extensionName: {
+      //formerly sandbox
+      extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', {
+        name: 'Bootable Containers',
+        exact: true,
+      });
+      resourceLabel = 'bootc';
+      ociImageUrl = 'ghcr.io/containers/podman-desktop-extension-bootc';
+      break;
+    }
+    case podmanQuadletExtension.extensionName: {
+      //formerly openshiftlocal
+      extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', { name: 'Quadlets', exact: true });
+      resourceLabel = undefined;
+      ociImageUrl = 'ghcr.io/podman-desktop/pd-extension-quadlet';
+      break;
+    }
+    case minikubeExtension.extensionName: {
+      //formerly openshiftchecker, only cli tools (requires install)
+      extensionNavigationBarIcon = undefined;
+      resourceLabel = 'minikube';
       ociImageUrl = '';
       break;
     }
-    case openshiftLocalExtension.extensionName: {
-      extensionDashboardStatus = dashboardPage.openshiftLocalStatusLabel;
-      extensionDashboardProvider = dashboardPage.openshiftLocalProvider;
-      resourceLabel = 'crc';
+    case imageLayersExplorerExtension.extensionName: {
+      //formerly openshift docker
+      extensionNavigationBarIcon = undefined;
+      resourceLabel = undefined;
       ociImageUrl = '';
-      break;
-    }
-    case openshiftCheckerExtension.extensionName: {
-      extensionDashboardStatus = undefined;
-      extensionDashboardProvider = undefined;
-      resourceLabel = undefined;
-      ociImageUrl = 'ghcr.io/redhat-developer/podman-desktop-image-checker-openshift-ext:0.1.5';
-      break;
-    }
-    case openshiftDockerExtension.extensionName: {
-      extensionDashboardStatus = undefined;
-      extensionDashboardProvider = undefined;
-      resourceLabel = undefined;
-      ociImageUrl = 'redhatdeveloper/openshift-dd-ext:0.0.1-100';
       break;
     }
   }
