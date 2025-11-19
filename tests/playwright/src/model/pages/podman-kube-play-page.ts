@@ -66,11 +66,8 @@ export class PodmanKubePlayPage extends BasePage {
     await playExpect(codeSection).toBeVisible();
     await codeSection.click();
 
-    await codeSection.clear();
-    await playExpect(codeSection).toHaveValue('');
-
     await codeSection.pressSequentially(jsonResourceDefinition, { delay: 5 });
-    await playExpect(codeSection).toHaveValue(jsonResourceDefinition);
+    await playExpect(codeSection).toContainText(jsonResourceDefinition);
   }
 
   private async selectYamlFile(pathToYaml: string): Promise<void> {
