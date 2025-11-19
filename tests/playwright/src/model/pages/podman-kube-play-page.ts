@@ -15,8 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { Locator, Page } from '@playwright/test';
-import test, { expect as playExpect } from '@playwright/test';
+import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import type { PlayYamlOptions } from '../core/types';
 import { PodmanKubePlayOptions } from '../core/types';
@@ -62,18 +61,21 @@ export class PodmanKubePlayPage extends BasePage {
     await playExpect(this.createYamlFromScratchButton).toBeEnabled();
     await this.createYamlFromScratchButton.click();
     await playExpect(this.createYamlFromScratchButton).toHaveAttribute('aria-pressed', 'true');
-    await playExpect(this.customYamlEditor).toBeVisible();
+
     const codeSection = this.customYamlEditor.getByRole('code');
     await playExpect(codeSection).toBeVisible();
     await codeSection.click();
-    // Workaround: Insert YAML into the Monaco editor using keyboard.type()
-    // because Playwright's fill() method does not work with it
-    await this.page.keyboard.type(jsonResourceDefinition);
+
+    await codeSection.click();
+    await playExpect(codeSection).toHaveValue('');
+
+    await codeSection.pressSequentially(jsonResourceDefinition, { delay: 5 });
+    await playExpect(codeSection).toHaveValue(jsonResourceDefinition);
   }
 
   private async selectYamlFile(pathToYaml: string): Promise<void> {
     if (!pathToYaml) {
-      throw Error(`Path to Yaml file is incorrect or not provided!`);
+      throw Error('Path to Yaml file is incorrect or not provided!');
     }
     await playExpect(this.selectYamlButton).toBeEnabled();
     await this.selectYamlButton.click();
@@ -84,7 +86,7 @@ export class PodmanKubePlayPage extends BasePage {
     await this.yamlPathInput.fill(pathToYaml);
   }
 
-  async playYaml(options: PlayYamlOptions, buildImage: boolean = false, timeout: number = 120_000): Promise<PodsPage> {
+  async playYaml(options: PlayYamlOptions, buildImage = false, timeout = 120_000): Promise<PodsPage> {
     return test.step('Podman Kube Play', async () => {
       const podmanKubePlayOption = options.podmanKubePlayOption;
       switch (podmanKubePlayOption) {

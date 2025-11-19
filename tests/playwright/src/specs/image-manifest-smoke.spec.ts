@@ -39,7 +39,7 @@ const manifestLabelComplex: string = `localhost/${imageNameComplex}`;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let imagesPage: ImagesPage;
-let skipTests: boolean = false;
+let skipTests = false;
 
 let provider: string | undefined;
 
@@ -131,8 +131,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           skipTests = true;
           await deleteImageManifest(page, manifestLabelComplex);
           if (isWindows && provider === 'Wsl') {
-            console.log('Building cross-architecture images with the WSL hypervisor is not working yet');
-            test.fail();
+            test.skip(true, 'Building cross-architecture images with the WSL hypervisor is not working yet');
           }
           throw error;
         }

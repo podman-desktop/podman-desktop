@@ -42,8 +42,8 @@ export interface DeployPodOptions {
 }
 
 export enum PodmanKubePlayOptions {
-  SelectYamlFile,
-  CreateYamlFileFromScratch,
+  SelectYamlFile = 0,
+  CreateYamlFileFromScratch = 1,
 }
 
 export interface PlayFromScratch {
