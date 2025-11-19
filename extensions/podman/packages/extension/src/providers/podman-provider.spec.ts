@@ -28,7 +28,9 @@ const PODMAN_BINARY: PodmanBinary = {
   getBinaryInfo: vi.fn(),
 } as unknown as PodmanBinary;
 
-const PROVIDER_MOCK: Provider = {} as unknown as Provider;
+const PROVIDER_MOCK: Provider = {
+  dispose: vi.fn(),
+} as unknown as Provider;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -97,4 +99,18 @@ describe('initialisation', () => {
       }),
     );
   });
+});
+
+test('dispose should make provider undefined', async () => {
+  const podmanProvider = new PodmanProvider(PODMAN_BINARY);
+  await podmanProvider.init();
+
+  expect(podmanProvider.provider).toBeDefined();
+
+  podmanProvider.dispose();
+
+  // expect error to be thrown
+  expect(() => {
+    return podmanProvider.provider;
+  }).toThrowError('Podman provider not initialized');
 });
