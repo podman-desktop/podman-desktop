@@ -15,7 +15,27 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import os from 'node:os';
+
+import extensionApi from '@podman-desktop/api';
+import { inject } from 'inversify';
+
+import { LibkrunPodmanVersionCheck } from '/@/checks/macos/libkrun-podman-version-check';
 
 export class MacOSPlatform {
   readonly type = 'macOS';
+
+  constructor(
+    @inject(LibkrunPodmanVersionCheck)
+    private readonly libbkrunPodmanVersionCheck: LibkrunPodmanVersionCheck,
+  ) {}
+
+  async isLibkrunSupported(): Promise<boolean> {
+    if (!extensionApi.env.isMac || os.arch() !== 'arm64') {
+      return false;
+    }
+
+    const result = await this.libbkrunPodmanVersionCheck.execute();
+    return result.successful;
+  }
 }
