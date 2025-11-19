@@ -189,9 +189,9 @@ export const extensionsExternalList = [
   openshiftLocalExtension,
 ];
 export const extensionsInstallationSmokeList = [
-  developerSandboxExtension,
-  openshiftLocalExtension,
-  openshiftCheckerExtension,
+  bootcExtension,
+  podmanQuadletExtension,
   openshiftDockerExtension,
+  imageLayersExplorerExtension,
 ];
 export const extensionsAllExternalList = [...extensionsExternalList, headlampExtension];
