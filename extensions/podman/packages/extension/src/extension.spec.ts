@@ -47,6 +47,7 @@ import { PodmanInfoHelper } from '/@/helpers/podman-info-helper';
 import { QemuHelper } from '/@/helpers/qemu-helper';
 import type { Installer } from '/@/installer/installer';
 import { WinPlatform } from '/@/platforms/win-platform';
+import { PodmanProvider } from '/@/providers/podman-provider';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
 import type { InstalledPodman } from '/@/utils/podman-binary';
 import { PodmanBinary } from '/@/utils/podman-binary';
@@ -141,6 +142,10 @@ const podmanConfiguration = {
   },
   updateMachineProviderSettings: updateMachineProviderSettingsMock,
 } as unknown as PodmanConfiguration;
+
+const PODMAN_PROVIDER_MOCK: PodmanProvider = {
+  provider: provider,
+} as unknown as PodmanProvider;
 
 const machineDefaultName = 'podman-machine-default';
 const machine1Name = 'podman-machine-1';
@@ -257,19 +262,24 @@ beforeEach(async () => {
 
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue(undefined);
 
+  function getBind(identifier: ServiceIdentifier<unknown>): unknown {
+    switch (identifier) {
+      case PodmanInstall:
+        return PODMAN_INSTALL_MOCK;
+      case WinPlatform:
+        return WIN_PLATFORM_MOCK;
+      case PodmanBinary:
+        return PODMAN_BINARY_MOCK;
+      case PodmanProvider:
+        return PODMAN_PROVIDER_MOCK;
+    }
+    throw new Error(`Unknown identifier ${String(identifier)}`);
+  }
+
   // configure inversify
   vi.mocked(InversifyBinding.prototype.init).mockResolvedValue({
-    get: (identifier: ServiceIdentifier<unknown>) => {
-      switch (identifier) {
-        case PodmanInstall:
-          return PODMAN_INSTALL_MOCK;
-        case WinPlatform:
-          return WIN_PLATFORM_MOCK;
-        case PodmanBinary:
-          return PODMAN_BINARY_MOCK;
-      }
-      throw new Error(`Unknown identifier ${String(identifier)}`);
-    },
+    get: getBind,
+    getAsync: getBind,
   } as unknown as InversifyContainer);
   await extension.initInversify({ subscriptions: [] } as unknown as extensionApi.ExtensionContext, telemetryLogger);
 });

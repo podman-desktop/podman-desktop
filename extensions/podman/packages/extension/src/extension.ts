@@ -45,6 +45,7 @@ import {
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
 import { WinPlatform } from '/@/platforms/win-platform';
+import { PodmanProvider } from '/@/providers/podman-provider';
 import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, MachineListOutput } from '/@/types';
 import type { InstalledPodman } from '/@/utils/podman-binary';
 import { PodmanBinary } from '/@/utils/podman-binary';
@@ -1254,7 +1255,7 @@ async function exec(args: string[], options?: PodmanRunOptions): Promise<extensi
 export async function initInversify(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<{ podmanInstall: PodmanInstall; winPlatform: WinPlatform }> {
+): Promise<{ podmanInstall: PodmanInstall; winPlatform: WinPlatform; podmanProvider: PodmanProvider }> {
   // create inversify binding for the extension
   inversifyBinding = new InversifyBinding(extensionContext, telemetryLogger);
   const inversifyContainer = await inversifyBinding.init();
@@ -1262,8 +1263,9 @@ export async function initInversify(
   const podmanInstall = inversifyContainer.get(PodmanInstall);
   winPlatform = inversifyContainer.get(WinPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
+  const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
-  return { podmanInstall, winPlatform };
+  return { podmanInstall, winPlatform, podmanProvider };
 }
 
 export async function activate(extensionContext: extensionApi.ExtensionContext): Promise<PodmanExtensionApi> {
@@ -1279,7 +1281,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     await initializeCertificateDetection(telemetryLogger);
   }
 
-  const { podmanInstall } = await initInversify(extensionContext, telemetryLogger);
+  const { podmanInstall, podmanProvider } = await initInversify(extensionContext, telemetryLogger);
 
   const installedPodman = await podmanBinary.getBinaryInfo();
   const version: string | undefined = installedPodman?.version;
@@ -1292,78 +1294,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     isMovedPodmanSocket = isPodmanSocketLocationMoved(version);
   }
 
-  const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];
-  let status: extensionApi.ProviderStatus = 'not-installed';
-  if (version) {
-    status = 'installed';
-  }
-  // update detection checks
-  detectionChecks.push(...getDetectionChecks(installedPodman));
-
-  const providerOptions: extensionApi.ProviderOptions = {
-    name: 'Podman',
-    id: 'podman',
-    detectionChecks,
-    status,
-    version,
-  };
-
-  // add images
-  providerOptions.images = {
-    icon: './icon.png',
-    logo: './logo.png',
-  };
-
-  // Empty connection descriptive message
-  providerOptions.emptyConnectionMarkdownDescription =
-    'Podman is a lightweight, open-source container runtime and image management tool that enables users to run and manage containers without the need for a separate daemon.\n\nMore information: [podman.io](https://podman.io/)';
-
-  const corePodmanEngineLinkGroup = 'Core Podman Engine';
-
-  // add links
-  providerOptions.links = [
-    {
-      title: 'Website',
-      url: 'https://podman.io/',
-    },
-    {
-      title: 'Installation guide',
-      url: 'https://podman.io/getting-started/installation',
-    },
-    {
-      title: 'Docker compatibility guide',
-      url: 'https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility',
-    },
-    {
-      title: 'Join the community',
-      url: 'https://podman.io/community/',
-    },
-    {
-      title: 'Getting started with containers',
-      url: 'https://podman.io/getting-started/',
-      group: corePodmanEngineLinkGroup,
-    },
-    {
-      title: 'View podman commands',
-      url: 'https://docs.podman.io/en/latest/Commands.html',
-      group: corePodmanEngineLinkGroup,
-    },
-    {
-      title: 'Set up podman',
-      url: 'https://podman.io/getting-started/installation',
-      group: corePodmanEngineLinkGroup,
-    },
-    {
-      title: 'View all tutorials',
-      url: 'https://docs.podman.io/en/latest/Tutorials.html',
-      group: corePodmanEngineLinkGroup,
-    },
-  ];
-
   const podmanConfiguration = new PodmanConfiguration(extensionContext);
   await podmanConfiguration.init();
 
-  const provider = extensionApi.provider.createProvider(providerOptions);
+  const provider = podmanProvider.provider;
 
   // Compatibility mode status bar item
   // only available for macOS
