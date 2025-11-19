@@ -247,32 +247,33 @@ describe('differential download', () => {
       configuration: true,
       expectDifferentialDownload: 'disable',
     },
-  ])(
-    'expect differential download to be $expectDifferentialDownload on $platform with config $configuration',
-    ({ platform, configuration, expectDifferentialDownload }) => {
-      // mock platform
-      vi.mocked(isMac).mockReturnValue(platform === 'macos');
-      vi.mocked(isWindows).mockReturnValue(platform === 'windows');
-      vi.mocked(isLinux).mockReturnValue(false);
+  ])('expect differential download to be $expectDifferentialDownload on $platform with config $configuration', ({
+    platform,
+    configuration,
+    expectDifferentialDownload,
+  }) => {
+    // mock platform
+    vi.mocked(isMac).mockReturnValue(platform === 'macos');
+    vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+    vi.mocked(isLinux).mockReturnValue(false);
 
-      mockConfiguration({
-        'update.disableDifferentialDownload': configuration,
-      });
+    mockConfiguration({
+      'update.disableDifferentialDownload': configuration,
+    });
 
-      const updater = new Updater(
-        messageBoxMock,
-        configurationRegistryMock,
-        statusBarRegistryMock,
-        commandRegistryMock,
-        taskManagerMock,
-        apiSenderMock,
-      );
-      updater.init();
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
 
-      // Updater#init should set it to true
-      expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
-    },
-  );
+    // Updater#init should set it to true
+    expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
+  });
 });
 
 test('expect update available entry to be displayed when expected', () => {
