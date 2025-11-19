@@ -25,7 +25,7 @@ import test, { expect as playExpect } from '@playwright/test';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import type { PodmanVirtualizationProviders } from '../model/core/types';
-import { PodmanMachinePrivileges } from '../model/core/types';
+import { matchesProviderVariant, PodmanMachinePrivileges } from '../model/core/types';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import { ExperimentalPage } from '../model/pages/experimental-page';
 import { PreferencesPage } from '../model/pages/preferences-page';
@@ -525,9 +525,13 @@ export async function verifyVirtualizationProvider(
     await playExpect
       .poll(async () => await resourceConnectionCardPage.doesResourceElementExist(), { timeout: 15_000 })
       .toBeTruthy();
-    await playExpect(resourceConnectionCardPage.connectionType).toContainText(virtualizationProvider, {
-      ignoreCase: true,
-    });
+    // Check against all possible variants to handle version differences
+    const connectionTypeText = await resourceConnectionCardPage.connectionType.textContent();
+    if (!connectionTypeText) {
+      throw new Error('Connection type text is empty');
+    }
+    const matchesVariant = matchesProviderVariant(virtualizationProvider, connectionTypeText);
+    playExpect(matchesVariant).toBeTruthy();
   });
 }
 
