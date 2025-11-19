@@ -53,6 +53,7 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 
   const podmanResourceCard = new ResourceConnectionCardPage(page, 'podman');
   provider = await podmanResourceCard.getConnectionInfoByLabel('Connection Type');
+  console.log('Detected provider type is: ', provider);
 
   imagesPage = await navigationBar.openImages();
 });
@@ -130,7 +131,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         } catch (error) {
           skipTests = true;
           await deleteImageManifest(page, manifestLabelComplex);
-          if (isWindows && provider === 'Wsl') {
+          if (!!isWindows && provider?.toLocaleLowerCase().trim() === 'wsl') {
             test.skip(true, 'Building cross-architecture images with the WSL hypervisor is not working yet');
           }
           throw error;
