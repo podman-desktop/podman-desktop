@@ -24,7 +24,7 @@ import { arch } from 'node:os';
 import type { ServiceIdentifier } from '@inversifyjs/common/lib/esm';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
-import { Disposable, provider as apiProvider } from '@podman-desktop/api';
+import { Disposable } from '@podman-desktop/api';
 import type { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -107,17 +107,6 @@ const provider: extensionApi.Provider = {
   warnings: [],
   updateWarnings: updateWarningsMock,
   onDidUpdateDetectionChecks: vi.fn(),
-};
-
-// Use 'provider', but just replace status with 'ready'
-const providerWithReadyStatus = {
-  ...provider,
-  status: 'ready' as extensionApi.ProviderStatus,
-};
-
-const providerWithStoppedStatus = {
-  ...provider,
-  status: 'stopped' as extensionApi.ProviderStatus,
 };
 
 const machineInfo: MachineInfo = {
@@ -331,7 +320,6 @@ vi.mock(import('./utils/util'), async importOriginal => {
 beforeEach(() => {
   console.error = consoleErrorMock;
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue(config);
-  vi.mocked(extensionApi.provider.createProvider).mockReturnValue(provider);
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
@@ -3324,12 +3312,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     });
 
     vi.mock('./utils/warnings');
-
-    // Change the mock return value to return a provider with a ready status for testing,
-    // this uses the original provider, but just replaces the ready status
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithReadyStatus as unknown as extensionApi.Provider,
-    );
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {
@@ -3337,11 +3319,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(extensionApi.env).isWindows = false;
     vi.mocked(extensionApi.env).isLinux = false;
-
-    // Mock the provider to be "stopped"
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithStoppedStatus as unknown as extensionApi.Provider,
-    );
 
     const api = await extension.activate(contextMock);
     expect(api).toBeDefined();
@@ -3377,20 +3354,9 @@ describe('podman-mac-helper tests', () => {
         return '';
       },
     });
-
-    // Change the mock return value to return a provider with a ready status for testing,
-    // this uses the original provider, but just replaces the ready status
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithReadyStatus as unknown as extensionApi.Provider,
-    );
   });
 
   test('mock that the provider is "stopped" and make sure that the notification is NOT shown', async () => {
-    // Mock the provider to be "stopped"
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithStoppedStatus as unknown as extensionApi.Provider,
-    );
-
     // Activate
     const api = await extension.activate(contextMock);
     expect(api).toBeDefined();
