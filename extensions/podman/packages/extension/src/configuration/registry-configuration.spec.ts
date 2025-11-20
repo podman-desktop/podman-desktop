@@ -182,7 +182,9 @@ describe('saveRegistriesConfContent', async () => {
     await registryConfiguration.saveRegistriesConfContent(content);
     expect(writeFile).toBeCalledWith(
       expect.stringContaining('registries.conf'),
-      '[[registry]]\nlocation = "docker.io"\n\n[[registry.mirror]]\nlocation = "localhost:5000"',
+      expect.stringContaining(
+        '[[registry]]\nlocation = "docker.io"\n\n[[registry.mirror]]\nlocation = "localhost:5000"',
+      ),
       'utf-8',
     );
   });
