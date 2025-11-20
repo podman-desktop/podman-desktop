@@ -123,6 +123,7 @@ export async function waitForPodmanMachineStartup(page: Page, timeoutOut = 30_00
     await playExpect(dashboardPage.heading).toBeVisible();
 
     await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout: timeoutOut });
+    await playExpect(dashboardPage.podmanStatusLabel).toBeAttached({ timeout: 10_000 });
     await dashboardPage.podmanStatusLabel.scrollIntoViewIfNeeded();
 
     try {
