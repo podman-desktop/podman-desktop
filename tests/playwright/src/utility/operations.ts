@@ -206,56 +206,92 @@ export async function handleConfirmationDialog(
 export async function deletePodmanMachine(page: Page, machineVisibleName: string): Promise<void> {
   return test.step('Delete Podman machine', async () => {
     const RESOURCE_NAME: string = 'podman';
+
+    // Navigate to resources page
     const navigationBar = new NavigationBar(page);
     const dashboardPage = await navigationBar.openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
+
     const settingsBar = await navigationBar.openSettings();
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
+
     await playExpect
-      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 10_000 })
+      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 15_000 })
       .toBeTruthy();
+
     const podmanResourceCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, machineVisibleName);
     await playExpect(podmanResourceCard.providerConnections).toBeVisible({ timeout: 10_000 });
-    await waitUntil(
-      async () => {
-        return await podmanResourceCard.resourceElement.isVisible();
-      },
-      { timeout: 15_000 },
-    );
-    if (await podmanResourceCard.resourceElement.isVisible()) {
-      await playExpect(podmanResourceCard.resourceElementConnectionActions).toBeVisible();
-      await playExpect(podmanResourceCard.resourceElementConnectionStatus).toBeVisible();
-      if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Starting) {
-        console.log('Podman machine is in starting currently, will send stop command via CLI');
-        // eslint-disable-next-line sonarjs/os-command
-        execSync(`podman machine stop ${machineVisibleName}`);
-        await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
-          timeout: 30_000,
-        });
-        console.log('Podman machine stopped via CLI');
-      }
-      if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Running) {
-        try {
-          await podmanResourceCard.performConnectionAction(ResourceElementActions.Stop);
-          await waitUntil(
-            async () =>
-              (await podmanResourceCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-            { timeout: 30_000, sendError: true },
-          );
-        } catch (_error) {
-          console.log('Podman machine stop failed, will try to stop it via CLI');
-          // eslint-disable-next-line sonarjs/os-command
-          execSync(`podman machine stop ${machineVisibleName}`);
-        }
-        await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
-          timeout: 30_000,
-        });
-      }
-      await podmanResourceCard.performConnectionAction(ResourceElementActions.Delete);
-      await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 60_000 });
-    } else {
+
+    // Wait for resource element to be visible
+    const isResourceVisible = await waitUntil(async () => await podmanResourceCard.resourceElement.isVisible(), {
+      timeout: 30_000,
+    })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isResourceVisible) {
       console.log(`Podman machine [${machineVisibleName}] not present, skipping deletion.`);
+      return;
     }
+
+    // Ensure connection actions and status are visible
+    await playExpect(podmanResourceCard.resourceElementConnectionActions).toBeVisible();
+    await playExpect(podmanResourceCard.resourceElementConnectionStatus).toBeVisible();
+
+    // Handle machine state and stop if needed
+    await ensurePodmanMachineStopped(podmanResourceCard, machineVisibleName);
+
+    // Delete the machine
+    await podmanResourceCard.performConnectionAction(ResourceElementActions.Delete);
+    await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 60_000 });
+  });
+}
+
+async function ensurePodmanMachineStopped(
+  podmanResourceCard: ResourceConnectionCardPage,
+  machineVisibleName: string,
+): Promise<void> {
+  const currentStatus = await podmanResourceCard.resourceElementConnectionStatus.innerText();
+
+  if (currentStatus === ResourceElementState.Off) {
+    console.log('Podman machine already stopped');
+    return;
+  }
+
+  // Handle Starting state - use CLI immediately
+  if (currentStatus === ResourceElementState.Starting) {
+    console.log('Podman machine is starting, will stop via CLI');
+    await stopPodmanMachineViaCLI(machineVisibleName);
+    await waitForPodmanMachineStoppedState(podmanResourceCard);
+    return;
+  }
+
+  // Handle Running state - try UI first, fallback to CLI
+  if (currentStatus === ResourceElementState.Running) {
+    try {
+      await podmanResourceCard.performConnectionAction(ResourceElementActions.Stop);
+      await waitForPodmanMachineStoppedState(podmanResourceCard);
+    } catch (error) {
+      console.log(
+        'Podman machine stop via UI failed, trying CLI:',
+        error instanceof Error ? error.message : String(error),
+      );
+      await stopPodmanMachineViaCLI(machineVisibleName);
+      await waitForPodmanMachineStoppedState(podmanResourceCard);
+    }
+  }
+}
+
+async function stopPodmanMachineViaCLI(machineVisibleName: string): Promise<void> {
+  // eslint-disable-next-line sonarjs/os-command
+  execSync(`podman machine stop ${machineVisibleName}`);
+  console.log(`Podman machine stopped via CLI: ${machineVisibleName}`);
+}
+
+async function waitForPodmanMachineStoppedState(podmanResourceCard: ResourceConnectionCardPage): Promise<void> {
+  await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
+    timeout: 30_000,
   });
 }
 
