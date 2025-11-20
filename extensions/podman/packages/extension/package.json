@@ -444,7 +444,7 @@
     "inversify": "^7.10.4",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "smol-toml": "1.4.2",
+    "smol-toml": "1.5.2",
     "ssh2": "^1.17.0"
   },
   "devDependencies": {
