@@ -178,7 +178,7 @@
     "husky": "^9.1.7",
     "inversify": "^7.10.4",
     "js-yaml": "^4.1.1",
-    "lint-staged": "^16.2.6",
+    "lint-staged": "^16.2.7",
     "minimist": "^1.2.8",
     "msw": "^2.12.2",
     "prettier": "^3.6.2",
