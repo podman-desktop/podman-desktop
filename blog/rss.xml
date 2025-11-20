@@ -4,11 +4,91 @@
         <title>Podman Desktop Blog</title>
         <link>https://podman-desktop.io/blog</link>
         <description>Podman Desktop Blog</description>
-        <lastBuildDate>Wed, 19 Nov 2025 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 20 Nov 2025 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
         <copyright>Copyright © 2025 Podman Desktop</copyright>
+        <item>
+            <title><![CDATA[Leverage your productivity using the Search Bar]]></title>
+            <link>https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar</link>
+            <guid>https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar</guid>
+            <pubDate>Thu, 20 Nov 2025 00:00:00 GMT</pubDate>
+            <description><![CDATA[Boost your performance with Search Bar component]]></description>
+            <content:encoded><![CDATA[<p>We rolled out a brand-new Search Bar in Podman Desktop 1.22, giving users a faster way to navigate and discover content. With the 1.23 update, we’ve made it even better, adding smart improvements and handy features!</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="search-bar">Search Bar<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#search-bar" class="hash-link" aria-label="Direct link to Search Bar" title="Direct link to Search Bar" translate="no">​</a></h2>
+<p>The Search Bar (previously known as the Command Palette) is a powerful, keyboard-first feature that brings everything in Podman Desktop just a few keystrokes away. Located directly in the title bar, it provides unified access to commands, documentation, and navigation across your entire workspace.</p>
+<!--$--><youtube-video style="display:block;width:100%;height:500px" src="https://youtu.be/n-pwWolzxJ0?si=qMu-DX3EMl0pFoL-" controls=""><template shadowrootmode="open">
+    <style>
+      :host {
+        display: inline-block;
+        line-height: 0;
+        position: relative;
+        min-width: 300px;
+        min-height: 150px;
+      }
+      iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+    <iframe src="https://www.youtube.com/embed/n-pwWolzxJ0?preload=metadata&amp;enablejsapi=1&amp;cc_load_policy=1&amp;showinfo=0&amp;rel=0&amp;iv_load_policy=3&amp;modestbranding=1" frameborder="0" width="100%" height="100%" allow="accelerometer; fullscreen; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+  </template></youtube-video><!--/$-->
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="enabling-the-feature">Enabling the Feature<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#enabling-the-feature" class="hash-link" aria-label="Direct link to Enabling the Feature" title="Direct link to Enabling the Feature" translate="no">​</a></h2>
+<p>To enable the Search Bar:</p>
+<ol>
+<li class="">Navigate to <strong>Settings</strong> &gt; <strong>Preferences</strong> &gt; <strong>Appearance</strong>.</li>
+<li class="">Find <strong>Search Bar</strong> in the experimental features section.</li>
+<li class="">Enable it to see the search button appear in your title bar.</li>
+</ol>
+<img src="https://podman-desktop.io/assets/images/search-bar-settings-light-46b556b1caa482db313e5023c01419d8.png" alt="Search Bar Enablement" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/search-bar-settings-dark-fffe905eae077627640bde12cfc48ba2.png" alt="Search Bar Enablement" class="themedComponent_siVc themedComponent--dark_yETr">
+<br>
+<br>
+<p>Once enabled, the traditional title text is replaced with a compact search button, maximizing your workspace while keeping powerful functionality at your fingertips.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="four-search-modes">Four Search Modes<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#four-search-modes" class="hash-link" aria-label="Direct link to Four Search Modes" title="Direct link to Four Search Modes" translate="no">​</a></h2>
+<p>The Search Bar offers four distinct modes, each optimized for different tasks:</p>
+<h4 class="anchor anchorTargetStickyNavbar_tleR" id="1-all-cmdctrl--shift--p">1. <strong>All</strong> (<code>Cmd/Ctrl + Shift + P</code>)<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#1-all-cmdctrl--shift--p" class="hash-link" aria-label="Direct link to 1-all-cmdctrl--shift--p" title="Direct link to 1-all-cmdctrl--shift--p" translate="no">​</a></h4>
+<p>The default mode searches across everything - commands, documentation, containers, images, pods, and navigation pages. Perfect when you know what you want but aren't sure where to find it.</p>
+<h4 class="anchor anchorTargetStickyNavbar_tleR" id="2-commands-f1-or-type-">2. <strong>Commands</strong> (<code>F1</code> or type <code>&gt;</code>)<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#2-commands-f1-or-type-" class="hash-link" aria-label="Direct link to 2-commands-f1-or-type-" title="Direct link to 2-commands-f1-or-type-" translate="no">​</a></h4>
+<p>Execute any available command directly. Simply type to filter through available commands and press Enter to execute. This mode supports command enablement and context, showing only currently available commands.</p>
+<img src="https://podman-desktop.io/assets/images/search-bar-command-light-b8664623573b47e88fb38546479ed66d.png" alt="Commands Mode" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/search-bar-command-dark-62dae7e8d7282d957c0cf077a4ee6456.png" alt="Commands Mode" class="themedComponent_siVc themedComponent--dark_yETr">
+<br>
+<br>
+<div class="theme-admonition theme-admonition-note admonition_WCGJ alert alert--secondary"><div class="admonitionHeading_GCBg"><span class="admonitionIcon_L39b"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg></span>note</div><div class="admonitionContent_pbrs"><p>You can add custom commands to this list by creating a <a href="https://podman-desktop.io/tutorial/creating-an-extension" target="_blank" rel="noopener noreferrer" class="">custom extension</a>.</p></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_tleR" id="3-documentation-cmdctrl--k">3. <strong>Documentation</strong> (<code>Cmd/Ctrl + K</code>)<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#3-documentation-cmdctrl--k" class="hash-link" aria-label="Direct link to 3-documentation-cmdctrl--k" title="Direct link to 3-documentation-cmdctrl--k" translate="no">​</a></h4>
+<p>Quickly search through Podman Desktop's documentation. Find help articles, guides, and references without leaving the application. Each result shows the category and description to help you find exactly what you need.</p>
+<h4 class="anchor anchorTargetStickyNavbar_tleR" id="4-go-to-cmdctrl--f">4. <strong>Go To</strong> (<code>Cmd/Ctrl + F</code>)<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#4-go-to-cmdctrl--f" class="hash-link" aria-label="Direct link to 4-go-to-cmdctrl--f" title="Direct link to 4-go-to-cmdctrl--f" translate="no">​</a></h4>
+<p>Navigate instantly to any resource in your environment:</p>
+<ul>
+<li class=""><strong>Containers</strong> - Jump directly to any running or stopped container</li>
+<li class=""><strong>Images</strong> - Access image details in one keystroke</li>
+<li class=""><strong>Pods</strong> - Navigate to pod management pages</li>
+<li class=""><strong>Volumes</strong> - View and manage volumes quickly</li>
+<li class=""><strong>Pages</strong> - Access any application page (Dashboard, Settings, Extensions, etc.)</li>
+</ul>
+<img src="https://podman-desktop.io/assets/images/search-bar-go-to-light-d10622bf99b81abf62a554b11a50e7f7.png" alt="Go To Mode" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/search-bar-go-to-dark-d4d8d93c3af312cccec7f341a6bb5d93.png" alt="Go To Mode" class="themedComponent_siVc themedComponent--dark_yETr">
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="keyboard-navigation">Keyboard Navigation<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#keyboard-navigation" class="hash-link" aria-label="Direct link to Keyboard Navigation" title="Direct link to Keyboard Navigation" translate="no">​</a></h3>
+<p>The Search Bar is designed for maximum efficiency:</p>
+<ul>
+<li class=""><strong>Tab</strong> - Switch between search modes</li>
+<li class=""><strong>↑/↓ Arrow Keys</strong> - Navigate through results</li>
+<li class=""><strong>Enter</strong> - Select and execute the highlighted item</li>
+<li class=""><strong>Escape</strong> - Close the search palette</li>
+</ul>
+<p>All interactions are keyboard-driven, meaning you can accomplish complex tasks without ever touching your mouse.</p>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="why-use-the-search-bar">Why Use the Search Bar?<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#why-use-the-search-bar" class="hash-link" aria-label="Direct link to Why Use the Search Bar?" title="Direct link to Why Use the Search Bar?" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Speed</strong> - Access any feature or resource in seconds</li>
+<li class=""><strong>Discovery</strong> - Find commands and features you didn't know existed</li>
+<li class=""><strong>Context-Aware</strong> - Only shows relevant commands based on your current context</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="try-it-today">Try It Today<a href="https://podman-desktop.io/blog/2025/11/20/boost-your-performance-with-search-bar#try-it-today" class="hash-link" aria-label="Direct link to Try It Today" title="Direct link to Try It Today" translate="no">​</a></h2>
+<p>Enable the Search Bar in your Podman Desktop settings and experience a faster, more efficient workflow. We'd love to hear your feedback in our <a href="https://github.com/podman-desktop/podman-desktop/discussions/13674" target="_blank" rel="noopener noreferrer" class="">GitHub Discussion</a>.</p>
+<p>Happy containerizing! 🚀</p>]]></content:encoded>
+            <category>podman-desktop</category>
+            <category>features</category>
+        </item>
         <item>
             <title><![CDATA[Podman Desktop 1.23 Release]]></title>
             <link>https://podman-desktop.io/blog/podman-desktop-release-1.23</link>
@@ -3265,53 +3345,6 @@ release, we received pull requests from the following people:</p>
             <category>bootc</category>
             <category>extensions</category>
             <category>extension</category>
-        </item>
-        <item>
-            <title><![CDATA[Using CNCF projects with Podman Desktop]]></title>
-            <link>https://podman-desktop.io/blog/cncf-projects</link>
-            <guid>https://podman-desktop.io/blog/cncf-projects</guid>
-            <pubDate>Mon, 16 Dec 2024 00:00:00 GMT</pubDate>
-            <description><![CDATA[Learn how utilize Podman Desktop in interacting and using CNCF projects!]]></description>
-            <content:encoded><![CDATA[<p><img decoding="async" loading="lazy" alt="plane" src="https://podman-desktop.io/assets/images/plane-b0fd896eb3d2743db0636e98679a665d.png" width="898" height="603" class="img_SS3x"></p>
-<p>Podman Desktop serves as a powerful tool for managing and visualizing cloud-native applications and can interact seamlessly with a range of <a href="https://www.cncf.io/" target="_blank" rel="noopener noreferrer" class="">CNCF (Cloud Native Computing Foundation)</a> projects.</p>
-<p>It's an accessible platform for developers working with single-container applications, multi-container configurations with Compose files, and complex, distributed applications on Kubernetes clusters.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="key-features-of-podman-desktop-for-cncf-projects">Key features of Podman Desktop for CNCF projects<a href="https://podman-desktop.io/blog/cncf-projects#key-features-of-podman-desktop-for-cncf-projects" class="hash-link" aria-label="Direct link to Key features of Podman Desktop for CNCF projects" title="Direct link to Key features of Podman Desktop for CNCF projects" translate="no">​</a></h2>
-<p>Podman Desktop brings together three powerful features for managing small to large-scale projects:</p>
-<ul>
-<li class=""><strong>Container Management</strong>: Supports creating, running, and monitoring containers.</li>
-<li class=""><strong>Compose Support</strong>: Allows you to deploy applications defined in <a href="https://www.compose-spec.io/" target="_blank" rel="noopener noreferrer" class="">Compose files</a>. This is particularly useful for managing applications that require multiple services, such as web servers, databases, and caches.</li>
-<li class=""><strong>Kubernetes Integration</strong>: Offers tools to manage multi-node Kubernetes clusters, making it ideal for handling more complex distributed applications that need orchestration across several pods and services. You can setup your own development cluster with Podman Desktop using our <a class="" href="https://podman-desktop.io/docs/minikube/installing-extension">Minikube</a> or <a class="" href="https://podman-desktop.io/docs/kind/installing-extension">Kind</a> extensions.</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="minikube">Minikube<a href="https://podman-desktop.io/blog/cncf-projects#minikube" class="hash-link" aria-label="Direct link to Minikube" title="Direct link to Minikube" translate="no">​</a></h2>
-<p><a href="https://minikube.sigs.k8s.io/docs/" target="_blank" rel="noopener noreferrer" class="">Minikube</a> is a local Kubernetes development cluster which allows for an easy way to learn and develop for Kubernetes.</p>
-<p>Minikube can be seamlessly integrated with Podman Desktop, enabling Kubernetes development workflows within Podman’s environment. This is made possible by <a href="https://podman-desktop.io/docs/minikube/installing-extension" target="_blank" rel="noopener noreferrer" class="">installing the Minikube extension</a>, which allows creating, managing, and deploying clusters directly from the Podman Desktop.</p>
-<p>The following video provides a complete guide from installation to cluster creation:</p>
-<!--$--><video style="display:block;width:100%;height:100%" src="https://github.com/containers/podman-desktop-media/raw/refs/heads/minikube/video/guide.mp4" controls="" playsinline=""></video><!--/$-->
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="backstage">Backstage<a href="https://podman-desktop.io/blog/cncf-projects#backstage" class="hash-link" aria-label="Direct link to Backstage" title="Direct link to Backstage" translate="no">​</a></h2>
-<p><a href="https://backstage.io/" target="_blank" rel="noopener noreferrer" class="">Backstage</a> is an open-source platform for building developer portals, designed by Spotify. It empowers engineering teams to create customized, centralized hubs for managing and documenting their services, applications, and infrastructure. Backstage’s extensible architecture includes features for cataloging software components, organizing documentation, managing cloud resources, and tracking workflows.</p>
-<p>A popular method for deploying Backstage is through a <a href="https://github.com/backstage/charts" target="_blank" rel="noopener noreferrer" class="">Helm chart</a>. Once deployed, you can view Backstage’s services in the Kubernetes Dashboard to monitor components and ensure proper configuration:</p>
-<p><img decoding="async" loading="lazy" alt="backstage services" src="https://podman-desktop.io/assets/images/backstage-733c9c3d86cab05c0cabe85b475ff5cc.png" width="1070" height="694" class="img_SS3x"></p>
-<p>You can also access your deployed Backstage instance by using Podman Desktop's port forwarding feature. This feature allows you to securely forward a local port to the Backstage service running on your Kubernetes cluster, making it easy to access the instance from a local browser.</p>
-<p><img decoding="async" loading="lazy" alt="backstage port forward" src="https://podman-desktop.io/assets/images/backstage_port-57b8ef824c306ac52a339bd11f3133f1.png" width="1070" height="694" class="img_SS3x"></p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="dapr">Dapr<a href="https://podman-desktop.io/blog/cncf-projects#dapr" class="hash-link" aria-label="Direct link to Dapr" title="Direct link to Dapr" translate="no">​</a></h2>
-<p><a href="https://docs.dapr.io/" target="_blank" rel="noopener noreferrer" class="">Dapr</a> (Distributed Application Runtime) is an open-source, event-driven runtime designed to help developers build resilient, stateless, and stateful applications that can run seamlessly on cloud or edge environments.</p>
-<p>Dapr abstracts the complexities of distributed systems, offering building blocks for service invocation, state management, publish/subscribe messaging, and resource bindings, which simplify the development of microservices and cloud-native applications.</p>
-<p>Dapr can be deployed in a local environment using Podman by following their <a href="https://docs.dapr.io/operations/hosting/self-hosted/self-hosted-with-podman/" target="_blank" rel="noopener noreferrer" class="">self-hosted podman setup</a>.</p>
-<p>To initialize Dapr with Podman after installing the Dapr CLI, execute the following command:</p>
-<div class="language-console codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-console codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><span class="token-line" style="color:#F8F8F2"><span class="token plain">$ dapr init --container-runtime podman</span><br></span></code></pre></div></div>
-<p>Once initialized, you can manage and interact with Dapr directly within Podman Desktop:</p>
-<p><img decoding="async" loading="lazy" alt="dapr" src="https://podman-desktop.io/assets/images/dapr-31224058af60d5500d34044a9af4d569.png" width="1124" height="760" class="img_SS3x"></p>
-<p>Additionally, Podman Desktop provides a "Launch Browser" button, allowing quick and convenient access to the Dapr UI for monitoring and management:</p>
-<p><img decoding="async" loading="lazy" alt="dapr browser" src="https://podman-desktop.io/assets/images/dapr_browser-07d06b22e720bf21bbc916349e805ae7.png" width="1124" height="760" class="img_SS3x"></p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="conclusion">Conclusion<a href="https://podman-desktop.io/blog/cncf-projects#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
-<p>Whether you’re managing Kubernetes clusters, harnessing the power of Backstage for developer portals, or deploying microservices with Dapr, Podman Desktop provides a unified environment to streamline your workflows.</p>
-<p>Check out the <a href="https://www.cncf.io/projects/" target="_blank" rel="noopener noreferrer" class="">list of graduate and incubating projects</a> to discover even more possibilities with Podman Desktop.</p>]]></content:encoded>
-            <category>podman-desktop</category>
-            <category>cncf</category>
-            <category>podman</category>
-            <category>extensions</category>
-            <category>compose</category>
-            <category>containers</category>
         </item>
     </channel>
 </rss>
