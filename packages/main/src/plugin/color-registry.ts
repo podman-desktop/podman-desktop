@@ -1098,6 +1098,7 @@ export class ColorRegistry {
       light: colorPalette.black,
     });
     this.registerColor(`${tooltip}border`, {
+      // @deprecated since 2025-11-12. See https://github.com/podman-desktop/podman-desktop/pull/14819
       dark: colorPalette.charcoal[500],
       light: colorPalette.gray[500],
     });
