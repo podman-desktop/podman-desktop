@@ -95,7 +95,7 @@ async function openGitHubDiscussion(): Promise<void> {
           <span class="font-semibold">{recordUI.title}</span>
          
           {#if record.locked}
-          <PreferencesManagedLabel />
+            <PreferencesManagedLabel />
           {/if}
           {#if record.experimental !== undefined}
             <Label>

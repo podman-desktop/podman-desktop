@@ -26,7 +26,6 @@ import { inject, injectable } from 'inversify';
 
 import {
   CONFIGURATION_DEFAULT_SCOPE,
-  CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
@@ -46,6 +45,7 @@ import { ConfigurationImpl } from './configuration-impl.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
 
@@ -66,6 +66,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   // Contains the value of the current configuration
   private configurationValues: Map<string, { [key: string]: unknown }>;
+  private lockedKeys: LockedKeys;
 
   constructor(
     @inject(ApiSenderType)
@@ -83,6 +84,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
+    this.lockedKeys = new LockedKeys(this.configurationValues);
   }
 
   protected getSettingsFile(): string {
@@ -162,7 +164,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const properties: string[] = [];
 
     // Get all the locked keys at the start to avoid multiple lookups
-    const lockedSet = this.getAllLockedKeys();
+    const lockedSet = this.lockedKeys.getAllKeys();
 
     // biome-ignore lint/complexity/noForEach: <explanation>
     configurations.forEach(configuration => {
@@ -199,19 +201,6 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       this._onDidUpdateConfiguration.fire({ properties });
     }
     return properties;
-  }
-
-  // Simple helper to just get all the locked keys as a Set for easy lookup
-  private getAllLockedKeys(): Set<string> {
-    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
-
-    // Check the casting + existence and return early (empty) if not found.
-    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
-      return new Set();
-    }
-
-    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
-    return new Set(lockedKeys);
   }
 
   private isDefaultScope(scope?: ConfigurationScope | ConfigurationScope[]): boolean {

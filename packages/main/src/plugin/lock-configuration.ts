@@ -29,6 +29,23 @@ export class LockedKeys {
   constructor(private configurationValues: Map<string, { [key: string]: unknown }>) {}
 
   /**
+   * Gets all locked keys as a Set
+   *
+   * @returns Set of locked configuration keys, or empty Set if none
+   */
+  getAllKeys(): Set<string> {
+    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
+
+    // Check the casting + existence and return early (empty) if not found.
+    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
+      return new Set();
+    }
+
+    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
+    return new Set(lockedKeys);
+  }
+
+  /**
    * Checks if a config key is locked and returns its managed value instead
    * of the user-defined one.
    *
