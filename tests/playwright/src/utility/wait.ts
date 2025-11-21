@@ -30,26 +30,24 @@ export async function wait(
   sendError: boolean,
   errorMessage: string,
 ): Promise<void> {
-  return test.step(`Wait for condition ${waitFunction.name} to become '${String(until)}'`, async () => {
-    let time = timeout;
-    while (time > 0) {
-      const waitFuncResult = await waitFunction();
-      if (waitFuncResult === until) {
-        return;
-      }
-      time = time - diff;
-      await delay(diff);
+  let time = timeout;
+  while (time > 0) {
+    const waitFuncResult = await waitFunction();
+    if (waitFuncResult === until) {
+      return;
     }
-    const message =
-      errorMessage.length === 0
-        ? `Timeout (${timeout} ms) was reach while waiting for condition (${waitFunction.name}) to become '${String(
-            until,
-          )}'`
-        : errorMessage;
-    if (sendError) {
-      throw Error(message);
-    }
-  });
+    time = time - diff;
+    await delay(diff);
+  }
+  const message =
+    errorMessage.length === 0
+      ? `Timeout (${timeout} ms) was reach while waiting for condition (${waitFunction.name}) to become '${String(
+          until,
+        )}'`
+      : errorMessage;
+  if (sendError) {
+    throw Error(message);
+  }
 }
 
 /**

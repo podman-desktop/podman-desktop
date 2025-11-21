@@ -56,6 +56,10 @@ test.afterAll(async ({ runner, page }) => {
     console.log('Error during cleanup:', error);
   }
 
+  if (process.env.MACHINE_CLEANUP !== 'true') {
+    await waitForPodmanMachineStartup(page);
+  }
+
   await runner.close();
 });
 
