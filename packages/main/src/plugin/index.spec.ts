@@ -814,3 +814,45 @@ describe('Log race condition fix', () => {
     }).not.toThrow();
   });
 });
+
+describe('updateImage handler', () => {
+  test('should update image and set task status to success', async () => {
+    const handle = handlers.get('container-provider-registry:updateImage');
+    expect(handle).not.equal(undefined);
+
+    const engineId = 'engine1';
+    const imageId = 'alpine:latest';
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockResolvedValue(undefined);
+
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+
+    await handle(undefined, engineId, imageId);
+
+    expect(ContainerProviderRegistry.prototype.updateImage).toHaveBeenCalledWith(engineId, imageId);
+    expect(createTaskSpy).toHaveBeenCalledWith({
+      title: `Updating image '${imageId}'`,
+    });
+  });
+
+  test('should handle update errors and set task error', async () => {
+    const handle = handlers.get('container-provider-registry:updateImage');
+    expect(handle).not.equal(undefined);
+
+    const engineId = 'engine1';
+    const imageId = 'invalid:image';
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockRejectedValue(new Error('Network error'));
+
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+
+    const result = await handle(undefined, engineId, imageId);
+    expect(result).toHaveProperty('error');
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error.message).toBe('Network error');
+
+    expect(createTaskSpy).toHaveBeenCalledWith({
+      title: `Updating image '${imageId}'`,
+    });
+  });
+});
