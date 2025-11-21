@@ -44,6 +44,7 @@ import {
   USER_MODE_NETWORKING_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
+import { MacOSPlatform } from '/@/platforms/macos-platform';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, MachineListOutput } from '/@/types';
@@ -114,6 +115,7 @@ const containerProviderConnections = new Map<string, extensionApi.ContainerProvi
 let telemetryLogger: extensionApi.TelemetryLogger;
 
 let winPlatform: WinPlatform;
+let macOSPlatform: MacOSPlatform;
 let podmanBinary: PodmanBinary;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
@@ -1262,6 +1264,7 @@ export async function initInversify(
 
   const podmanInstall = inversifyContainer.get(PodmanInstall);
   winPlatform = inversifyContainer.get(WinPlatform);
+  macOSPlatform = inversifyContainer.get(MacOSPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
@@ -1290,7 +1293,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionApi.context.setValue(ROOTFUL_MACHINE_INIT_SUPPORTED_KEY, isRootfulMachineInitSupported(version));
     extensionApi.context.setValue(START_NOW_MACHINE_INIT_SUPPORTED_KEY, isStartNowAtMachineInitSupported(version));
     extensionApi.context.setValue(USER_MODE_NETWORKING_SUPPORTED_KEY, isUserModeNetworkingSupported(version));
-    extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, isLibkrunSupported(version));
+    extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, macOSPlatform.isLibkrunSupported());
     isMovedPodmanSocket = isPodmanSocketLocationMoved(version);
   }
 
@@ -1760,11 +1763,10 @@ async function stopAutoStartedMachine(): Promise<void> {
 }
 
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
-  const installedPodman = await podmanBinary.getBinaryInfo();
-
   const containerMachineProviders: (string | undefined)[] = [];
+  const libkrunSupported = await macOSPlatform.isLibkrunSupported();
   // if libkrun is supported we want to show both applehv and libkrun machines
-  if (installedPodman && isLibkrunSupported(installedPodman.version)) {
+  if (libkrunSupported) {
     containerMachineProviders.push(...['applehv', 'libkrun']);
   }
 
@@ -1862,17 +1864,6 @@ const PODMAN_MINIMUM_VERSION_FOR_USER_MODE_NETWORKING = '4.6.0';
 export function isUserModeNetworkingSupported(podmanVersion: string): boolean {
   return (
     extensionApi.env.isWindows && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_USER_MODE_NETWORKING) >= 0
-  );
-}
-
-const PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT = '5.2.0-rc1';
-
-// Checks if libkrun is supported. Only Mac/silicon platform allows this parameter to be tuned
-export function isLibkrunSupported(podmanVersion: string): boolean {
-  return (
-    extensionApi.env.isMac &&
-    os.arch() === 'arm64' &&
-    compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0
   );
 }
 

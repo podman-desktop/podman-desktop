@@ -30,6 +30,7 @@ import {
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '/@/constants';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import { MacOSPlatform } from '/@/platforms/macos-platform';
 import { MachineJSON } from '/@/types';
 import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
 
@@ -37,7 +38,6 @@ import { getDetectionChecks } from '../checks/detection-checks';
 import {
   calcPodmanMachineSetting,
   getJSONMachineList,
-  isLibkrunSupported,
   isRootfulMachineInitSupported,
   isStartNowAtMachineInitSupported,
   isUserModeNetworkingSupported,
@@ -74,6 +74,8 @@ export class PodmanInstall {
     readonly providerCleanup: extensionApi.ProviderCleanup | undefined,
     @inject(PodmanBinary)
     readonly podmanBinary: PodmanBinary,
+    @inject(MacOSPlatform)
+    readonly macosPlatform: MacOSPlatform,
   ) {
     this.storagePath = extensionContext.storagePath;
   }
@@ -106,10 +108,7 @@ export class PodmanInstall {
           START_NOW_MACHINE_INIT_SUPPORTED_KEY,
           isStartNowAtMachineInitSupported(newInstalledPodman.version),
         );
-        extensionApi.context.setValue(
-          PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
-          isLibkrunSupported(newInstalledPodman.version),
-        );
+        extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, this.macosPlatform.isLibkrunSupported());
         await calcPodmanMachineSetting();
       }
       // update detections checks
@@ -315,10 +314,7 @@ export class PodmanInstall {
             START_NOW_MACHINE_INIT_SUPPORTED_KEY,
             isStartNowAtMachineInitSupported(updateInfo.bundledVersion),
           );
-          extensionApi.context.setValue(
-            PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
-            isLibkrunSupported(updateInfo.bundledVersion),
-          );
+          extensionApi.context.setValue(PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY, this.macosPlatform.isLibkrunSupported());
         } else if (answer === 'Ignore') {
           this.podmanInfo.ignoreVersionUpdate = updateInfo.bundledVersion;
         } else if (answer === 'Open release notes') {
