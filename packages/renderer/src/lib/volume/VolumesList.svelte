@@ -144,7 +144,7 @@ let nameColumn = new TableColumn<VolumeInfoUI>('Name', {
 
 let envColumn = new TableColumn<VolumeInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
-  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
 });
 
 let ageColumn = new TableColumn<VolumeInfoUI, Date>('Age', {
