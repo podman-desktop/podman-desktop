@@ -786,6 +786,8 @@ export class PluginSystem {
     const imageRegistry = container.get<ImageRegistry>(ImageRegistry);
     const tempFileService = container.get<TempFileService>(TempFileService);
 
+    imageRegistry.loadUserDefaultRegistryConfig();
+
     container.bind<ExperimentalFeatureFeedbackHandler>(ExperimentalFeatureFeedbackHandler).toSelf().inSingletonScope();
     const experimentalFeatureFeedbackHandler = container.get<ExperimentalFeatureFeedbackHandler>(
       ExperimentalFeatureFeedbackHandler,

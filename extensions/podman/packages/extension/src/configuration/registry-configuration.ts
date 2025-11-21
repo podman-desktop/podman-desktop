@@ -21,8 +21,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 
-import type { Disposable, QuickPickItem } from '@podman-desktop/api';
-import { commands, env, window } from '@podman-desktop/api';
+import type { DefaultRegistry, DefaultRegistryMirror, Disposable, QuickPickItem } from '@podman-desktop/api';
+import { commands, configuration, env, window } from '@podman-desktop/api';
 import mustache from 'mustache';
 import * as toml from 'smol-toml';
 
@@ -43,7 +43,7 @@ interface ActionQuickPickItem extends QuickPickItem {
   actionName: ActionEnum;
 }
 
-interface RegistryConfigurationEntry {
+export interface RegistryConfigurationEntry {
   prefix?: string;
   insecure?: boolean;
   blocked?: boolean;
@@ -65,12 +65,15 @@ export interface RegistryConfiguration {
   getPlaybookScriptPath(): Promise<string>;
 }
 
+export const REGISTRY_MIRROR = 'registry.mirror';
+
 /**
  * Manages the registry configuration file (inside the Podman VM for macOS/Windows)
  */
 export class RegistryConfigurationImpl implements RegistryConfiguration {
   async init(): Promise<Disposable[]> {
     const disposables: Disposable[] = [];
+    await this.loadDefaultUserRegistries();
     disposables.push(this.registerSetupRegistryCommand());
     return disposables;
   }
@@ -79,7 +82,84 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     return commands.registerCommand('podman.setupRegistry', () => this.setupRegistryCommandCallback());
   }
 
-  async checkRegistryConfFileExistsInVm(): Promise<boolean> {
+  async loadDefaultUserRegistries(): Promise<void> {
+    if (env.isMac || env.isWindows) {
+      const checked = await this.checkRegistryConfFileExistsInVm(false);
+      if (!checked) {
+        return;
+      }
+    }
+
+    const defaultRegistries: RegistryConfigurationEntry[] = [];
+    const userDefaultRegistries = configuration.getConfiguration('registries').get('defaults', []) as (
+      | DefaultRegistry
+      | DefaultRegistryMirror
+    )[];
+
+    const configFileContent = await this.readRegistriesConfContent();
+
+    userDefaultRegistries.forEach(registry => {
+      if ('registry' in registry) {
+        defaultRegistries.push({ ...registry.registry });
+      } else if (defaultRegistries.length > 0) {
+        // mirror registries come after the registry to which they belong
+        defaultRegistries[defaultRegistries.length - 1].mirror ??= [];
+        defaultRegistries[defaultRegistries.length - 1].mirror?.push({ ...registry[REGISTRY_MIRROR] });
+      }
+    });
+
+    if (defaultRegistries.length > 0) {
+      const combinedRegistries = this.resolveDefaultRegistryConflicts(defaultRegistries, configFileContent.registry);
+      await this.saveRegistriesConfContent({ registry: combinedRegistries });
+    }
+  }
+
+  resolveDefaultRegistryConflicts(
+    defaultRegistries: RegistryConfigurationEntry[],
+    existingRegistries: RegistryConfigurationEntry[],
+  ): RegistryConfigurationEntry[] {
+    defaultRegistries.forEach(defaultRegistry => {
+      const duplicateRegistry = existingRegistries.find(
+        existingRegistry => existingRegistry.prefix === defaultRegistry.prefix,
+      );
+      if (defaultRegistry.prefix && duplicateRegistry) {
+        if (
+          duplicateRegistry.blocked !== defaultRegistry.blocked ||
+          duplicateRegistry.insecure !== defaultRegistry.insecure ||
+          duplicateRegistry.location !== defaultRegistry.location
+        ) {
+          const diff = [];
+          if (duplicateRegistry.blocked !== defaultRegistry.blocked) {
+            diff.push('blocked');
+          }
+
+          if (duplicateRegistry.insecure !== defaultRegistry.insecure) {
+            diff.push('insecure');
+          }
+
+          if (duplicateRegistry.location !== defaultRegistry.location) {
+            diff.push('location');
+          }
+
+          console.warn(
+            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match: ${diff.join(', ')}. Please update this registry`,
+          );
+        } else {
+          defaultRegistry.mirror?.forEach(mirror => {
+            duplicateRegistry.mirror ??= [];
+            if (!duplicateRegistry.mirror?.map(dupMirror => dupMirror.location).includes(mirror.location)) {
+              duplicateRegistry.mirror.push(mirror);
+            }
+          });
+        }
+      } else {
+        existingRegistries.push(defaultRegistry);
+      }
+    });
+    return existingRegistries;
+  }
+
+  async checkRegistryConfFileExistsInVm(showError = true): Promise<boolean> {
     // check if the podman machine has the file being mounted inside the VM or then says it can't continue
     const machineList = await getJSONMachineList();
 
@@ -108,10 +188,13 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       // check if the file is mounted
       const result = await execPodman(commandLineArgs, machine.VMType);
       if (!result.stdout) {
-        // display an error message if the link is not found
-        await window.showErrorMessage(
-          `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`,
-        );
+        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`;
+        if (showError) {
+          // display an error message if the link is not found
+          await window.showErrorMessage(warningMessage);
+        } else {
+          console.warn(warningMessage);
+        }
         return false;
       }
     }
