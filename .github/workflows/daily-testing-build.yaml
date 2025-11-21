@@ -40,7 +40,7 @@ jobs:
       releaseId: ${{ steps.create_release.outputs.id }}
 
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
           fetch-depth: 0
@@ -113,7 +113,7 @@ jobs:
         os: [ubuntu-24.04, windows-2025, macos-15]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           repository: podman-desktop/testing-prereleases
           ref: ${{ needs.tag.outputs.githubTag }}
