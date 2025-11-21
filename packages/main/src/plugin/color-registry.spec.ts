@@ -99,6 +99,16 @@ class TestColorRegistry extends ColorRegistry {
   override color(colorId: string): ColorBuilder {
     return super.color(colorId);
   }
+
+  override createColorWithOpacity(
+    darkColor: string,
+    lightColor: string,
+    darkAlpha: number,
+    lightAlpha: number,
+    errorContext?: string,
+  ): ColorDefinition {
+    return super.createColorWithOpacity(darkColor, lightColor, darkAlpha, lightAlpha, errorContext);
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();

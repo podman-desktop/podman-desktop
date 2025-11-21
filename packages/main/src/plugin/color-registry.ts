@@ -1692,7 +1692,11 @@ export class ColorRegistry {
   }
 
   protected initCommon(): void {
-    const darkParsed = parse(colorPalette.stone[300]);
-    const lightParsed = parse(colorPalette.stone[600]);
+    const darkParsed = parse(stone[300]);
+    const lightParsed = parse(stone[600]);
+    this.registerColor(`item-disabled`, {
+      dark: formatCss(darkParsed),
+      light: formatCss(lightParsed),
+    });
   }
 }
