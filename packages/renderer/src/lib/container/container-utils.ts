@@ -216,6 +216,7 @@ export class ContainerUtils {
       name: this.getName(containerInfo),
       type: ContainerGroupInfoTypeUI.STANDALONE,
       status: (containerInfo.Status ?? '').toUpperCase(),
+      engineId: containerInfo.engineId,
       engineType: containerInfo.engineType,
       id: containerInfo.Id, // since the container is standalone, let's use its ID as groupInfo#id
       engineName: containerInfo.engineName,
