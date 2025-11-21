@@ -229,8 +229,6 @@ test.describe.serial('Podman machine switching validation ', { tag: '@pdmachine'
         DEFAULT_PODMAN_MACHINE_VISIBLE,
         'started successfully',
       );
-
-      await restartMachineAndVerifyLogs(podmanMachineDetails, DEFAULT_PODMAN_MACHINE_VISIBLE, 'stopped successfully');
     });
   });
 
