@@ -10,7 +10,7 @@ interface Props {
   children?: Snippet;
 }
 
-let { name = '', tip = '', role, capitalize, children }: Props = $props();
+let { name = '', tip = '', role, capitalize = false, children }: Props = $props();
 </script>
 
 <Tooltip top tip={tip}>
