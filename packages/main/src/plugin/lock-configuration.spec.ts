@@ -51,7 +51,7 @@ describe('LockedKeys.getAllKeys', () => {
       [CONFIGURATION_LOCKED_KEY]: 'not-an-array',
     });
     const result = lockedKeys.getAllKeys();
-    expect(result).toEqual(new Set());
+    expect(result.size).toEqual(0);
   });
 
   test('should return set of locked keys when locked configuration exists', () => {
