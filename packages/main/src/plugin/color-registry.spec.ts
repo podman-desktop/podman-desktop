@@ -30,6 +30,7 @@ import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
+import type { ColorBuilder } from './color-registry.js';
 import { ColorRegistry } from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 
@@ -93,6 +94,10 @@ class TestColorRegistry extends ColorRegistry {
     alpha: { light: number; dark: number },
   ): void {
     super.registerColorWithOpacity(colorId, colors, alpha);
+  }
+
+  override color(colorId: string): ColorBuilder {
+    return super.color(colorId);
   }
 }
 
@@ -855,5 +860,87 @@ describe('registerColorWithOpacity', () => {
     // Verify the colors contain alpha information
     expect(call?.[1].dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
     expect(call?.[1].light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+  });
+});
+
+describe('fluent interface (color method)', () => {
+  test('registers color using fluent interface without opacity', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-test').light('#ffffff').dark('#000000');
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-test');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].light).toBe('#ffffff');
+    expect(call?.[1].dark).toBe('#000000');
+  });
+
+  test('registers color using fluent interface with opacity', () => {
+    const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
+    spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-opacity-test').light('#ffffff', 0.5).dark('#000000', 0.8);
+
+    expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-opacity-test');
+    expect(call?.[1]).toEqual({ light: '#ffffff', dark: '#000000' });
+    expect(call?.[2]).toEqual({ light: 0.5, dark: 0.8 });
+  });
+
+  test('fluent interface works in any order (dark first, then light)', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-reverse').dark('#000000').light('#ffffff');
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-reverse');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].light).toBe('#ffffff');
+    expect(call?.[1].dark).toBe('#000000');
+  });
+
+  test('fluent interface with mixed opacity (only light has opacity)', () => {
+    const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
+    spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-mixed').light('#ffffff', 0.5).dark('#000000');
+
+    expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-mixed');
+    expect(call?.[1]).toEqual({ light: '#ffffff', dark: '#000000' });
+    expect(call?.[2]).toEqual({ light: 0.5, dark: 1 });
+  });
+
+  test('fluent interface with color palette', () => {
+    const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
+    spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-palette').light(colorPalette.stone[600], 0.4).dark(colorPalette.stone[300], 0.4);
+
+    expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-palette');
+    expect(call?.[1]).toEqual({ light: colorPalette.stone[600], dark: colorPalette.stone[300] });
+    expect(call?.[2]).toEqual({ light: 0.4, dark: 0.4 });
+  });
+
+  test('fluent interface does not register until both light and dark are set', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    // Only set light, should not register yet
+    const builder = colorRegistry.color('incomplete-test').light('#ffffff');
+    expect(spyOnRegisterColor).not.toHaveBeenCalled();
+
+    // Now set dark, should register
+    builder.dark('#000000');
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
   });
 });
