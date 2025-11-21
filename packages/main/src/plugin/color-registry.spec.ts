@@ -30,6 +30,7 @@ import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
+import type { ColorBuilder } from './color-registry.js';
 import { ColorRegistry } from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 
@@ -75,6 +76,28 @@ class TestColorRegistry extends ColorRegistry {
 
   override initCommon(): void {
     super.initCommon();
+  }
+
+  override createColorWithOpacity(
+    darkColor: string,
+    lightColor: string,
+    darkAlpha: number,
+    lightAlpha: number,
+    errorContext?: string,
+  ): ColorDefinition {
+    return super.createColorWithOpacity(darkColor, lightColor, darkAlpha, lightAlpha, errorContext);
+  }
+
+  override registerColorWithOpacity(
+    colorId: string,
+    colors: ColorDefinition,
+    alpha: { light: number; dark: number },
+  ): void {
+    super.registerColorWithOpacity(colorId, colors, alpha);
+  }
+
+  override color(colorId: string): ColorBuilder {
+    return super.color(colorId);
   }
 }
 
@@ -710,5 +733,214 @@ describe('initCommon', () => {
     // Check that alpha is present (either rgba format or oklch with alpha)
     expect(darkColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
     expect(lightColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
+  });
+});
+
+describe('createColorWithOpacity', () => {
+  test('creates color with opacity correctly', () => {
+    const result = colorRegistry.createColorWithOpacity('#ffffff', '#000000', 0.5, 0.3);
+
+    expect(result).toBeDefined();
+    expect(result.dark).toBeDefined();
+    expect(result.light).toBeDefined();
+    expect(typeof result.dark).toBe('string');
+    expect(typeof result.light).toBe('string');
+
+    // Verify the colors contain alpha information (formatCss may return color(srgb ... / ...) or rgba format)
+    expect(result.dark).toMatch(/\/\s*0\.5|rgba.*0\.5|50%|alpha/i);
+    expect(result.light).toMatch(/\/\s*0\.3|rgba.*0\.3|30%|alpha/i);
+  });
+
+  test('creates color with different alpha values for dark and light', () => {
+    const result = colorRegistry.createColorWithOpacity(colorPalette.white, colorPalette.black, 0.8, 0.333);
+
+    expect(result).toBeDefined();
+    expect(result.dark).toBeDefined();
+    expect(result.light).toBeDefined();
+
+    // Verify alpha values are applied (formatCss may return color(srgb ... / ...) or rgba format)
+    expect(result.dark).toMatch(/\/\s*0\.8|rgba.*0\.8|80%|alpha/i);
+    expect(result.light).toMatch(/\/\s*0\.333|rgba.*0\.333|33\.3%|alpha/i);
+  });
+
+  test('throws error with context when color parsing fails', () => {
+    expect(() => {
+      colorRegistry.createColorWithOpacity('invalid-color', '#000000', 0.5, 0.5, 'test-context');
+    }).toThrowError('Failed to parse colors for test-context');
+  });
+
+  test('throws error without context when color parsing fails', () => {
+    expect(() => {
+      colorRegistry.createColorWithOpacity('invalid-color', '#000000', 0.5, 0.5);
+    }).toThrowError('Failed to parse colors');
+  });
+
+  test('handles hex colors correctly', () => {
+    const result = colorRegistry.createColorWithOpacity('#ff0000', '#00ff00', 0.4, 0.4);
+
+    expect(result).toBeDefined();
+    expect(result.dark).toBeDefined();
+    expect(result.light).toBeDefined();
+    // Verify alpha values are present (formatCss may return color(srgb ... / ...) or rgba format)
+    expect(result.dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+    expect(result.light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+  });
+});
+
+describe('registerColorWithOpacity', () => {
+  test('registers color with opacity correctly', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.registerColorWithOpacity(
+      'test-color',
+      { light: '#000000', dark: '#ffffff' },
+      { light: 0.3, dark: 0.5 },
+    );
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('test-color');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].dark).toBeDefined();
+    expect(call?.[1].light).toBeDefined();
+    expect(typeof call?.[1].dark).toBe('string');
+    expect(typeof call?.[1].light).toBe('string');
+
+    // Verify the colors contain alpha information
+    expect(call?.[1].dark).toMatch(/\/\s*0\.5|rgba.*0\.5|50%|alpha/i);
+    expect(call?.[1].light).toMatch(/\/\s*0\.3|rgba.*0\.3|30%|alpha/i);
+  });
+
+  test('uses colorId as error context', () => {
+    const spyOnCreateColorWithOpacity = vi.spyOn(colorRegistry, 'createColorWithOpacity');
+
+    colorRegistry.registerColorWithOpacity(
+      'my-test-color',
+      { light: '#000000', dark: '#ffffff' },
+      { light: 0.7, dark: 0.6 },
+    );
+
+    expect(spyOnCreateColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnCreateColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('#ffffff');
+    expect(call?.[1]).toBe('#000000');
+    expect(call?.[2]).toBe(0.6);
+    expect(call?.[3]).toBe(0.7);
+    expect(call?.[4]).toBe('my-test-color'); // Error context should be the colorId
+  });
+
+  test('throws error with colorId context when invalid color provided', () => {
+    expect(() => {
+      colorRegistry.registerColorWithOpacity(
+        'invalid-test-color',
+        { light: 'invalid-color', dark: '#000000' },
+        { light: 0.5, dark: 0.5 },
+      );
+    }).toThrowError('Failed to parse colors for invalid-test-color');
+  });
+
+  test('works with ColorDefinition from palette', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.registerColorWithOpacity(
+      'palette-test-color',
+      { light: colorPalette.stone[600], dark: colorPalette.stone[300] },
+      { light: 0.4, dark: 0.4 },
+    );
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('palette-test-color');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].dark).toBeDefined();
+    expect(call?.[1].light).toBeDefined();
+
+    // Verify the colors contain alpha information
+    expect(call?.[1].dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+    expect(call?.[1].light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+  });
+});
+
+describe('fluent interface (color method)', () => {
+  test('registers color using fluent interface without opacity', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-test').light('#ffffff').dark('#000000');
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-test');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].light).toBe('#ffffff');
+    expect(call?.[1].dark).toBe('#000000');
+  });
+
+  test('registers color using fluent interface with opacity', () => {
+    const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
+    spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-opacity-test').light('#ffffff', 0.5).dark('#000000', 0.8);
+
+    expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-opacity-test');
+    expect(call?.[1]).toEqual({ light: '#ffffff', dark: '#000000' });
+    expect(call?.[2]).toEqual({ light: 0.5, dark: 0.8 });
+  });
+
+  test('fluent interface works in any order (dark first, then light)', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-reverse').dark('#000000').light('#ffffff');
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-reverse');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].light).toBe('#ffffff');
+    expect(call?.[1].dark).toBe('#000000');
+  });
+
+  test('fluent interface with mixed opacity (only light has opacity)', () => {
+    const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
+    spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-mixed').light('#ffffff', 0.5).dark('#000000');
+
+    expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-mixed');
+    expect(call?.[1]).toEqual({ light: '#ffffff', dark: '#000000' });
+    expect(call?.[2]).toEqual({ light: 0.5, dark: 1 });
+  });
+
+  test('fluent interface with color palette', () => {
+    const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
+    spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
+
+    colorRegistry.color('fluent-palette').light(colorPalette.stone[600], 0.4).dark(colorPalette.stone[300], 0.4);
+
+    expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('fluent-palette');
+    expect(call?.[1]).toEqual({ light: colorPalette.stone[600], dark: colorPalette.stone[300] });
+    expect(call?.[2]).toEqual({ light: 0.4, dark: 0.4 });
+  });
+
+  test('fluent interface does not register until both light and dark are set', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    // Only set light, should not register yet
+    const builder = colorRegistry.color('incomplete-test').light('#ffffff');
+    expect(spyOnRegisterColor).not.toHaveBeenCalled();
+
+    // Now set dark, should register
+    builder.dark('#000000');
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
   });
 });
