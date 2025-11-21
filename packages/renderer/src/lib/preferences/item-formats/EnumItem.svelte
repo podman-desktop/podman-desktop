@@ -6,6 +6,7 @@ import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/m
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string | undefined;
 export let onChange = async (_id: string, _value: string): Promise<void> => {};
+export let disabled = false;
 
 let invalidEntry = false;
 
@@ -24,5 +25,6 @@ function onChangeHandler(newValue: unknown): void {
   bind:value={value}
   ariaInvalid={invalidEntry}
   ariaLabel={record.description}
+  disabled={disabled}
   options={record.enum?.map(recordEnum => ({label: recordEnum, value: recordEnum}))}>
 </Dropdown>

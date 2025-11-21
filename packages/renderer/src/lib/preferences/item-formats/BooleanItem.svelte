@@ -6,6 +6,7 @@ import SlideToggle from '../../ui/SlideToggle.svelte';
 export let record: IConfigurationPropertyRecordedSchema;
 export let checked = false;
 export let onChange = async (_id: string, _value: boolean): Promise<void> => {};
+export let disabled = false;
 let invalidEntry = false;
 
 function onChecked(state: boolean): void {
@@ -23,7 +24,7 @@ function onChecked(state: boolean): void {
   bind:checked={checked}
   on:checked={(event): void => onChecked(event.detail)}
   readonly={!!record.readonly}
-  disabled={!!record.readonly}
+  disabled={disabled}
   aria-invalid={invalidEntry}
   aria-label={record.description ?? record.markdownDescription}>
   <span class="text-xs">{checked ? 'Enabled' : 'Disabled'}</span>

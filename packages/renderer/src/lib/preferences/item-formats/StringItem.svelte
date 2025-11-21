@@ -6,6 +6,7 @@ import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/m
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string | undefined;
 export let onChange = async (_id: string, _value: string): Promise<void> => {};
+export let disabled = false;
 
 let invalidEntry = false;
 
@@ -24,6 +25,7 @@ function onInput(event: Event): void {
   placeholder={record.placeholder}
   value={value}
   readonly={!!record.readonly}
+  disabled={disabled}
   id="input-standard-{record.id}"
   aria-invalid={invalidEntry}
   aria-label={record.description} />

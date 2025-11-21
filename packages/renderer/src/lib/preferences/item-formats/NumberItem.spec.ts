@@ -194,3 +194,28 @@ test('Expect onChange is not triggered in case of error on validation', async ()
   // then we should have the onChange call to be 1
   await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith('record', 1));
 });
+
+test('NumberItem is disabled when disabled prop is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 1,
+    maximum: 20,
+  };
+  const value = 10;
+  const onChange = vi.fn();
+  render(NumberItem, { record, value, disabled: true, onChange });
+
+  const input = screen.getByRole('textbox', { name: 'record-description' });
+  expect(input).toBeInTheDocument();
+
+  // Verify the input is disabled
+  expect(input).toBeDisabled();
+
+  // Verify onChange is not called when trying to type
+  await userEvent.type(input, '5');
+  expect(onChange).not.toHaveBeenCalled();
+});
