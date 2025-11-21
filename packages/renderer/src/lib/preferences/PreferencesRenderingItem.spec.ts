@@ -96,3 +96,20 @@ test('props title full should use full record id', async () => {
     expect(element).toHaveClass('font-semibold');
   });
 });
+
+test('locked record should display managed-by label', async () => {
+  const lockedRecord: IConfigurationPropertyRecordedSchema = {
+    id: 'proxy.http',
+    title: 'Proxy',
+    parentId: 'proxy',
+    description: 'HTTP proxy configuration',
+    type: 'string',
+    locked: true,
+  };
+
+  const { getByText } = render(PreferencesRenderingItem, {
+    record: lockedRecord,
+  });
+
+  await vi.waitFor(() => getByText('Managed'));
+});
