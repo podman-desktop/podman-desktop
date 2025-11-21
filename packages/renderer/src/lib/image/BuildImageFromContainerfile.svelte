@@ -26,6 +26,7 @@ import EngineFormPage from '../ui/EngineFormPage.svelte';
 import TerminalWindow from '../ui/TerminalWindow.svelte';
 import { type BuildImageCallback, disconnectUI, eventCollect, reconnectUI, startBuild } from './build-image-task';
 import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards.svelte';
+import BuildTargetDropdown from './BuildTargetDropdown.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 interface Props {
@@ -143,6 +144,7 @@ async function buildSinglePlatformImage(): Promise<void> {
       buildImageInfo.cancellableTokenId,
       formattedBuildArgs,
       buildImageInfo.taskId,
+      buildImageInfo.target,
     );
   } catch (error) {
     eventCollect(buildImageInfo.buildImageKey, 'error', String(error));
@@ -205,6 +207,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         buildImageInfo.cancellableTokenId,
         formattedBuildArgs,
         buildImageInfo.taskId,
+        buildImageInfo.target,
       )) as BuildOutput;
 
       // Extract and store the build ID as this is required for creating the manifest, only if it is available.
@@ -385,6 +388,12 @@ let hasInvalidFields = $derived(
           error={errorContainerImageName}
           class="w-full" />
       </div>
+
+      {#if buildImageInfo.containerFilePath}
+        <div hidden={buildImageInfo.buildRunning}>
+            <BuildTargetDropdown bind:target={buildImageInfo.target} containerFilePath={buildImageInfo.containerFilePath} />
+        </div>
+      {/if}
 
       {#if providerConnections.length > 1}
         <div hidden={buildImageInfo.buildRunning}>
