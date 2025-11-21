@@ -115,28 +115,23 @@ export async function delay(ms: number): Promise<void> {
   });
 }
 
-export async function waitForPodmanMachineStartup(page: Page, timeoutOut = 30_000): Promise<void> {
+export async function waitForPodmanMachineStartup(page: Page, timeout = 30_000): Promise<void> {
   return test.step('Wait for Podman machine to be running', async () => {
     await createPodmanMachineFromCLI();
 
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
-
-    await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout: timeoutOut });
-    await playExpect(dashboardPage.podmanStatusLabel).toBeAttached({ timeout: 10_000 });
-    await dashboardPage.podmanStatusLabel.scrollIntoViewIfNeeded();
+    await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout });
 
     try {
       // sometimes the podman machine is stuck in STARTING state, so we try to reset it once
-      await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout: timeoutOut });
-    } catch (_error) {
-      console.log('Podman machine stuck in STARTING state, trying to restart it');
+      await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout });
+    } catch (error) {
+      console.error('Podman machine stuck in STARTING state, trying to restart it', error);
       await resetPodmanMachinesFromCLI();
       await createPodmanMachineFromCLI();
     }
 
-    await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', {
-      timeout: timeoutOut,
-    });
+    await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', { timeout });
   });
 }
