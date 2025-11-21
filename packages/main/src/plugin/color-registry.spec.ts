@@ -86,6 +86,14 @@ class TestColorRegistry extends ColorRegistry {
   ): ColorDefinition {
     return super.createColorWithOpacity(darkColor, lightColor, darkAlpha, lightAlpha, errorContext);
   }
+
+  override registerColorWithOpacity(
+    colorId: string,
+    colors: ColorDefinition,
+    alpha: { light: number; dark: number },
+  ): void {
+    super.registerColorWithOpacity(colorId, colors, alpha);
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -771,5 +779,81 @@ describe('createColorWithOpacity', () => {
     // Verify alpha values are present (formatCss may return color(srgb ... / ...) or rgba format)
     expect(result.dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
     expect(result.light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+  });
+});
+
+describe('registerColorWithOpacity', () => {
+  test('registers color with opacity correctly', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.registerColorWithOpacity(
+      'test-color',
+      { light: '#000000', dark: '#ffffff' },
+      { light: 0.3, dark: 0.5 },
+    );
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('test-color');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].dark).toBeDefined();
+    expect(call?.[1].light).toBeDefined();
+    expect(typeof call?.[1].dark).toBe('string');
+    expect(typeof call?.[1].light).toBe('string');
+
+    // Verify the colors contain alpha information
+    expect(call?.[1].dark).toMatch(/\/\s*0\.5|rgba.*0\.5|50%|alpha/i);
+    expect(call?.[1].light).toMatch(/\/\s*0\.3|rgba.*0\.3|30%|alpha/i);
+  });
+
+  test('uses colorId as error context', () => {
+    const spyOnCreateColorWithOpacity = vi.spyOn(colorRegistry, 'createColorWithOpacity');
+
+    colorRegistry.registerColorWithOpacity(
+      'my-test-color',
+      { light: '#000000', dark: '#ffffff' },
+      { light: 0.7, dark: 0.6 },
+    );
+
+    expect(spyOnCreateColorWithOpacity).toHaveBeenCalledTimes(1);
+    const call = spyOnCreateColorWithOpacity.mock.calls[0];
+    expect(call?.[0]).toBe('#ffffff');
+    expect(call?.[1]).toBe('#000000');
+    expect(call?.[2]).toBe(0.6);
+    expect(call?.[3]).toBe(0.7);
+    expect(call?.[4]).toBe('my-test-color'); // Error context should be the colorId
+  });
+
+  test('throws error with colorId context when invalid color provided', () => {
+    expect(() => {
+      colorRegistry.registerColorWithOpacity(
+        'invalid-test-color',
+        { light: 'invalid-color', dark: '#000000' },
+        { light: 0.5, dark: 0.5 },
+      );
+    }).toThrowError('Failed to parse colors for invalid-test-color');
+  });
+
+  test('works with ColorDefinition from palette', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.registerColorWithOpacity(
+      'palette-test-color',
+      { light: colorPalette.stone[600], dark: colorPalette.stone[300] },
+      { light: 0.4, dark: 0.4 },
+    );
+
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
+    const call = spyOnRegisterColor.mock.calls[0];
+    expect(call?.[0]).toBe('palette-test-color');
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1].dark).toBeDefined();
+    expect(call?.[1].light).toBeDefined();
+
+    // Verify the colors contain alpha information
+    expect(call?.[1].dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+    expect(call?.[1].light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
   });
 });

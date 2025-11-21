@@ -181,6 +181,26 @@ export class ColorRegistry {
     };
   }
 
+  /**
+   * Registers a color with opacity applied to the given colors.
+   * This is a convenience method that combines registerColor and createColorWithOpacity
+   * to avoid duplicating the color ID.
+   *
+   * @param colorId - The unique identifier for the color
+   * @param colors - The color definition containing light and dark color values
+   * @param alpha - The alpha values (0-1) for light and dark themes
+   */
+  protected registerColorWithOpacity(
+    colorId: string,
+    colors: ColorDefinition,
+    alpha: { light: number; dark: number },
+  ): void {
+    this.registerColor(
+      colorId,
+      this.createColorWithOpacity(colors.dark, colors.light, alpha.dark, alpha.light, colorId),
+    );
+  }
+
   // check if the given theme is dark
   // if light or dark it's easy
   // else we check the parent theme
@@ -1585,9 +1605,10 @@ export class ColorRegistry {
   }
 
   protected initCommon(): void {
-    this.registerColor(
+    this.registerColorWithOpacity(
       `item-disabled`,
-      this.createColorWithOpacity(colorPalette.stone[300], colorPalette.stone[600], 0.4, 0.4, 'item-disabled'),
+      { light: colorPalette.stone[600], dark: colorPalette.stone[300] },
+      { light: 0.4, dark: 0.4 },
     );
   }
 }
