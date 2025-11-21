@@ -76,6 +76,16 @@ class TestColorRegistry extends ColorRegistry {
   override initCommon(): void {
     super.initCommon();
   }
+
+  override createColorWithOpacity(
+    darkColor: string,
+    lightColor: string,
+    darkAlpha: number,
+    lightAlpha: number,
+    errorContext?: string,
+  ): ColorDefinition {
+    return super.createColorWithOpacity(darkColor, lightColor, darkAlpha, lightAlpha, errorContext);
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -710,5 +720,56 @@ describe('initCommon', () => {
     // Check that alpha is present (either rgba format or oklch with alpha)
     expect(darkColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
     expect(lightColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
+  });
+});
+
+describe('createColorWithOpacity', () => {
+  test('creates color with opacity correctly', () => {
+    const result = colorRegistry.createColorWithOpacity('#ffffff', '#000000', 0.5, 0.3);
+
+    expect(result).toBeDefined();
+    expect(result.dark).toBeDefined();
+    expect(result.light).toBeDefined();
+    expect(typeof result.dark).toBe('string');
+    expect(typeof result.light).toBe('string');
+
+    // Verify the colors contain alpha information (formatCss may return color(srgb ... / ...) or rgba format)
+    expect(result.dark).toMatch(/\/\s*0\.5|rgba.*0\.5|50%|alpha/i);
+    expect(result.light).toMatch(/\/\s*0\.3|rgba.*0\.3|30%|alpha/i);
+  });
+
+  test('creates color with different alpha values for dark and light', () => {
+    const result = colorRegistry.createColorWithOpacity(colorPalette.white, colorPalette.black, 0.8, 0.333);
+
+    expect(result).toBeDefined();
+    expect(result.dark).toBeDefined();
+    expect(result.light).toBeDefined();
+
+    // Verify alpha values are applied (formatCss may return color(srgb ... / ...) or rgba format)
+    expect(result.dark).toMatch(/\/\s*0\.8|rgba.*0\.8|80%|alpha/i);
+    expect(result.light).toMatch(/\/\s*0\.333|rgba.*0\.333|33\.3%|alpha/i);
+  });
+
+  test('throws error with context when color parsing fails', () => {
+    expect(() => {
+      colorRegistry.createColorWithOpacity('invalid-color', '#000000', 0.5, 0.5, 'test-context');
+    }).toThrowError('Failed to parse colors for test-context');
+  });
+
+  test('throws error without context when color parsing fails', () => {
+    expect(() => {
+      colorRegistry.createColorWithOpacity('invalid-color', '#000000', 0.5, 0.5);
+    }).toThrowError('Failed to parse colors');
+  });
+
+  test('handles hex colors correctly', () => {
+    const result = colorRegistry.createColorWithOpacity('#ff0000', '#00ff00', 0.4, 0.4);
+
+    expect(result).toBeDefined();
+    expect(result.dark).toBeDefined();
+    expect(result.light).toBeDefined();
+    // Verify alpha values are present (formatCss may return color(srgb ... / ...) or rgba format)
+    expect(result.dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+    expect(result.light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
   });
 });

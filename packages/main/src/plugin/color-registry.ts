@@ -146,6 +146,41 @@ export class ColorRegistry {
     this.notifyUpdate();
   }
 
+  /**
+   * Creates a ColorDefinition with opacity applied to the given colors.
+   * Parses the colors, applies alpha values, and formats them as CSS.
+   *
+   * @param darkColor - The color string for dark theme
+   * @param lightColor - The color string for light theme
+   * @param darkAlpha - The alpha value (0-1) for dark theme
+   * @param lightAlpha - The alpha value (0-1) for light theme
+   * @param errorContext - Optional context string for error messages
+   * @returns A ColorDefinition object with formatted CSS colors
+   */
+  protected createColorWithOpacity(
+    darkColor: string,
+    lightColor: string,
+    darkAlpha: number,
+    lightAlpha: number,
+    errorContext?: string,
+  ): ColorDefinition {
+    const darkParsed = parse(darkColor);
+    const lightParsed = parse(lightColor);
+
+    if (!darkParsed || !lightParsed) {
+      const context = errorContext ? ` for ${errorContext}` : '';
+      throw new Error(`Failed to parse colors${context}`);
+    }
+
+    darkParsed.alpha = darkAlpha;
+    lightParsed.alpha = lightAlpha;
+
+    return {
+      dark: formatCss(darkParsed),
+      light: formatCss(lightParsed),
+    };
+  }
+
   // check if the given theme is dark
   // if light or dark it's easy
   // else we check the parent theme
@@ -1550,20 +1585,9 @@ export class ColorRegistry {
   }
 
   protected initCommon(): void {
-    const darkParsed = parse(colorPalette.stone[300]);
-    const lightParsed = parse(colorPalette.stone[600]);
-
-    if (!darkParsed || !lightParsed) {
-      throw new Error('Failed to parse stone palette colors');
-    }
-
-    darkParsed.alpha = 0.4;
-    lightParsed.alpha = 0.4;
-
-    this.registerColor(`item-disabled`, {
-      dark: formatCss(darkParsed),
-      light: formatCss(lightParsed),
-      // TODO: light HC + dark HC
-    });
+    this.registerColor(
+      `item-disabled`,
+      this.createColorWithOpacity(colorPalette.stone[300], colorPalette.stone[600], 0.4, 0.4, 'item-disabled'),
+    );
   }
 }
