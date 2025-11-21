@@ -15,7 +15,7 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
-import EnvironmentColumn from '/@/lib/table/columns/EnvironmentColumn.svelte';
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 
 import { providerInfos } from '../../stores/providers';
 import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '../../stores/volumes';
@@ -143,7 +143,7 @@ let nameColumn = new TableColumn<VolumeInfoUI>('Name', {
 });
 
 let envColumn = new TableColumn<VolumeInfoUI>('Environment', {
-  renderer: EnvironmentColumn,
+  renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 

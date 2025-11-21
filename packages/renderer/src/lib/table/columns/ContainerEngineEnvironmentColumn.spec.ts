@@ -24,7 +24,7 @@ import { expect, test } from 'vitest';
 import { ContainerGroupInfoTypeUI, type ContainerGroupInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
-import EnvironmentColumn from '/@/lib/table/columns/EnvironmentColumn.svelte';
+import EnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import type { VolumeInfoUI } from '/@/lib/volume/VolumeInfoUI';
 
 import type { NetworkInfoUI } from '../../network/NetworkInfoUI';

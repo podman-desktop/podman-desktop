@@ -4,7 +4,7 @@ import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } fr
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
-import EnvironmentColumn from '/@/lib/table/columns/EnvironmentColumn.svelte';
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
 
@@ -89,7 +89,7 @@ let driverColumn = new TableColumn<NetworkInfoUI>('Driver', {
 });
 
 let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
-  renderer: EnvironmentColumn,
+  renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
