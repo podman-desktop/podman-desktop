@@ -1,9 +1,11 @@
 <script lang="ts">
-import ProviderInfo from '../../ui/ProviderInfo.svelte';
-import type { NetworkInfoUI } from '../NetworkInfoUI';
+import ProviderInfo from '/@/lib/ui/ProviderInfo.svelte';
 
 interface Props {
-  object: NetworkInfoUI;
+  object: {
+    engineId: string;
+    engineName: string;
+  };
 }
 
 let { object }: Props = $props();

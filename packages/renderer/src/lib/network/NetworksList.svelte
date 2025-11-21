@@ -4,13 +4,13 @@ import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } fr
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
-import NetworkColumnEnvironment from './columns/NetworkColumnEnvironment.svelte';
 import NetworkColumnId from './columns/NetworkColumnId.svelte';
 import NetworkColumnName from './columns/NetworkColumnName.svelte';
 import { NetworkUtils } from './network-utils';
@@ -89,7 +89,7 @@ let driverColumn = new TableColumn<NetworkInfoUI>('Driver', {
 });
 
 let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
-  renderer: NetworkColumnEnvironment,
+  renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 
@@ -139,7 +139,7 @@ function key(network: NetworkInfoUI): string {
   {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">  
+  <div class="flex min-w-full h-full">
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
