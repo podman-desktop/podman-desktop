@@ -28,21 +28,21 @@ import {
 export class LockedKeys {
   constructor(private configurationValues: Map<string, { [key: string]: unknown }>) {}
 
+  private getLockedKeysArray(): string[] | undefined {
+    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
+    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
+      return undefined;
+    }
+    return lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
+  }
+
   /**
    * Gets all locked keys as a Set
    *
    * @returns Set of locked configuration keys, or empty Set if none
    */
   getAllKeys(): Set<string> {
-    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
-
-    // Check the casting + existence and return early (empty) if not found.
-    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
-      return new Set();
-    }
-
-    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
-    return new Set(lockedKeys);
+    return new Set(this.getLockedKeysArray());
   }
 
   /**
@@ -53,17 +53,8 @@ export class LockedKeys {
    * @returns return the managed value if locked, undefined otherwise
    */
   get<T>(localKey: string): T | undefined {
-    const lockedConfig = this.configurationValues.get(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE);
-
-    // Bail early if there's no locked config or it's malformed
-    if (!lockedConfig?.[CONFIGURATION_LOCKED_KEY] || !Array.isArray(lockedConfig[CONFIGURATION_LOCKED_KEY])) {
-      return undefined;
-    }
-
-    const lockedKeys = lockedConfig[CONFIGURATION_LOCKED_KEY] as string[];
-
     // Bail early if this key isn't in the locked list
-    if (!lockedKeys.includes(localKey)) {
+    if (!this.getLockedKeysArray()?.includes(localKey)) {
       return undefined;
     }
 
