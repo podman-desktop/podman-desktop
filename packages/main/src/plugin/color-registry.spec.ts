@@ -334,6 +334,13 @@ describe('registerColor', () => {
     expect(darkColors[0]?.id).toBe('foo');
     expect(darkColors[0]?.value).toBe('#000');
   });
+
+  test('registerColor with string id but missing definition should throw error', async () => {
+    // Calling with string id but no definition should throw
+    expect(() => colorRegistry.registerColor('my-color')).toThrowError(
+      'Definition is required when passing colorId as string',
+    );
+  });
 });
 
 describe('listColors', () => {
