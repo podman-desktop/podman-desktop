@@ -484,7 +484,7 @@ describe('getMatchingConnectionFromProvider', () => {
       name: 'internal',
       status: 'installed',
     });
-    
+
     const containerConnection: ProviderContainerConnectionInfo = {
       connectionType: 'container',
       name: 'test-container',
@@ -493,7 +493,7 @@ describe('getMatchingConnectionFromProvider', () => {
       endpoint: { socketPath: '/test.sock' },
       status: 'started',
     };
-    
+
     provider.registerContainerProviderConnection({
       name: 'test-container',
       displayName: 'Test Container',
@@ -501,8 +501,11 @@ describe('getMatchingConnectionFromProvider', () => {
       endpoint: { socketPath: '/test.sock' },
       status: () => 'started',
     });
-    
-    const connection = providerRegistry.getMatchingConnectionFromProvider((provider as any).internalId, containerConnection);
+
+    const connection = providerRegistry.getMatchingConnectionFromProvider(
+      (provider as unknown as { internalId: string }).internalId,
+      containerConnection,
+    );
     expect(connection).toBeDefined();
     expect(providerRegistry.isContainerConnection(connection)).toBe(true);
   });
@@ -513,21 +516,24 @@ describe('getMatchingConnectionFromProvider', () => {
       name: 'internal2',
       status: 'installed',
     });
-    
+
     const kubernetesConnection: ProviderKubernetesConnectionInfo = {
       connectionType: 'kubernetes',
       name: 'test-k8s',
       endpoint: { apiURL: 'https://localhost:6443' },
       status: 'started',
     };
-    
+
     provider.registerKubernetesProviderConnection({
       name: 'test-k8s',
       endpoint: { apiURL: 'https://localhost:6443' },
       status: () => 'started',
     });
-    
-    const connection = providerRegistry.getMatchingConnectionFromProvider((provider as any).internalId, kubernetesConnection);
+
+    const connection = providerRegistry.getMatchingConnectionFromProvider(
+      (provider as unknown as { internalId: string }).internalId,
+      kubernetesConnection,
+    );
     expect(connection).toBeDefined();
     expect(providerRegistry.isKubernetesConnection(connection)).toBe(true);
   });
@@ -538,19 +544,22 @@ describe('getMatchingConnectionFromProvider', () => {
       name: 'internal3',
       status: 'installed',
     });
-    
+
     const vmConnection: ProviderVmConnectionInfo = {
       connectionType: 'vm',
       name: 'test-vm',
       status: 'started',
     };
-    
+
     provider.registerVmProviderConnection({
       name: 'test-vm',
       status: () => 'started',
     });
-    
-    const connection = providerRegistry.getMatchingConnectionFromProvider((provider as any).internalId, vmConnection);
+
+    const connection = providerRegistry.getMatchingConnectionFromProvider(
+      (provider as unknown as { internalId: string }).internalId,
+      vmConnection,
+    );
     expect(connection).toBeDefined();
     expect(providerRegistry.isContainerConnection(connection)).toBe(false);
     expect(providerRegistry.isKubernetesConnection(connection)).toBe(false);
@@ -562,14 +571,17 @@ describe('getMatchingConnectionFromProvider', () => {
       name: 'internal4',
       status: 'installed',
     });
-    
+
     const invalidConnection = {
       name: 'test-invalid',
       status: 'started',
     } as ProviderConnectionInfo;
-    
+
     expect(() => {
-      providerRegistry.getMatchingConnectionFromProvider((provider as any).internalId, invalidConnection);
+      providerRegistry.getMatchingConnectionFromProvider(
+        (provider as unknown as { internalId: string }).internalId,
+        invalidConnection,
+      );
     }).toThrow('Unable to determine connection type');
   });
 
@@ -579,7 +591,7 @@ describe('getMatchingConnectionFromProvider', () => {
       name: 'internal5',
       status: 'installed',
     });
-    
+
     provider.registerContainerProviderConnection({
       name: 'existing-container',
       displayName: 'Existing',
@@ -587,7 +599,7 @@ describe('getMatchingConnectionFromProvider', () => {
       endpoint: { socketPath: '/existing.sock' },
       status: () => 'started',
     });
-    
+
     const nonExistentConnection: ProviderContainerConnectionInfo = {
       connectionType: 'container',
       name: 'non-existent',
@@ -596,12 +608,16 @@ describe('getMatchingConnectionFromProvider', () => {
       endpoint: { socketPath: '/nonexistent.sock' },
       status: 'started',
     };
-    
+
     expect(() => {
-      providerRegistry.getMatchingConnectionFromProvider((provider as any).internalId, nonExistentConnection);
+      providerRegistry.getMatchingConnectionFromProvider(
+        (provider as unknown as { internalId: string }).internalId,
+        nonExistentConnection,
+      );
     }).toThrow();
   });
-});describe('isProviderVmConnectionInfo', () => {
+});
+describe('isProviderVmConnectionInfo', () => {
   test('should return true for VM connection info', async () => {
     const connection: ProviderVmConnectionInfo = {
       connectionType: 'vm',
