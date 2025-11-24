@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { isLinux } from '/@/utility/platform';
+
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteNetwork } from '../utility/operations';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -37,6 +39,8 @@ test.afterAll(async ({ runner, page }) => {
     await runner.close();
   }
 });
+
+test.skip(!!isLinux, 'Tests suite is currently not supported on Linux platform');
 
 test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
   test('Check default network exists', async ({ navigationBar }) => {
