@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora-version: ['Fedora-41', 'Fedora-42']
+        fedora-version: ['Fedora-42', 'Fedora-43']
     steps:
       - name: Set the default env. variables
         env:
@@ -57,7 +57,7 @@ jobs:
 
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
         id: run-e2e-tf
-        uses: sclorg/testing-farm-as-github-action@f3a39272a197ed060d5f786186b0e7a3ee7b0b4f
+        uses: sclorg/testing-farm-as-github-action@b23f0de29ac969d12411215a983da264b4ced149
         with:
           api_key: ${{ secrets.TF_TOKEN }}
           create_github_summary: "false"

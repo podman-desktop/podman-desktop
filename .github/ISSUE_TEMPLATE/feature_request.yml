@@ -1,5 +1,6 @@
 name: Feature 💡
-description: Suggest an idea for this project
+description: A request, idea, or new functionality
+type: feature
 labels: [kind/feature 💡]
 projects: ["podman-desktop/4"]
 

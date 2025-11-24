@@ -18,7 +18,7 @@
 
 import fs from 'node:fs';
 
-import { type Configuration, env, process } from '@podman-desktop/api';
+import { type Configuration, configuration, env, process } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { findPodmanInstallations } from './podman-cli';
@@ -39,26 +39,10 @@ vi.mock('node:fs', () => {
   };
 });
 
-// Mock external dependencies
-vi.mock('@podman-desktop/api', () => {
-  return {
-    configuration: {
-      getConfiguration: (): Configuration => config,
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isWindows: false,
-      isMac: true,
-      isLinux: false,
-    },
-  };
-});
-
 describe('findPodmanInstallations', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(configuration.getConfiguration).mockReturnValue(config);
     vi.mocked(env).isWindows = false;
     vi.mocked(env).isMac = true;
     vi.mocked(env).isLinux = false;

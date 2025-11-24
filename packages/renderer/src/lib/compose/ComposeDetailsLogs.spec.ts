@@ -26,13 +26,7 @@ import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '../container/Con
 import ComposeDetailsLogs from './ComposeDetailsLogs.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), clear: vi.fn(), dispose: vi.fn() }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
@@ -66,6 +60,9 @@ const containerInfoUIMock: ContainerInfoUI = {
     name: 'foobar',
     type: ContainerGroupInfoTypeUI.COMPOSE,
     id: 'podman:foobar',
+    engineId: 'foobar',
+    engineName: 'foobar',
+    engineType: 'podman',
   },
   selected: false,
   created: 0,

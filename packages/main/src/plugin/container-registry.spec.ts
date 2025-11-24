@@ -1267,6 +1267,7 @@ test('pulling an image with platform linux/arm64 will add platform to pull optio
   const connection = containerRegistry.getFirstRunningPodmanContainerProvider();
   expect(connection).toBeDefined();
   const providerConnectionInfo: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'podman1',
     type: 'podman1',
     endpoint: {
@@ -1364,6 +1365,7 @@ describe('buildImage', () => {
     } as InternalContainerProvider);
 
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'connection',
       displayName: 'podman',
       type: 'docker',
@@ -1447,6 +1449,7 @@ describe('buildImage', () => {
     } as unknown as InternalContainerProvider);
 
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       displayName: 'podman',
       type: 'podman',
@@ -1532,6 +1535,7 @@ describe('buildImage', () => {
     } as unknown as InternalContainerProvider);
 
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       displayName: 'podman',
       type: 'podman',
@@ -1634,6 +1638,7 @@ describe('buildImage', () => {
     } as unknown as InternalContainerProvider);
 
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       displayName: 'podman',
       type: 'podman',
@@ -1738,6 +1743,7 @@ describe('buildImage', () => {
     } as unknown as InternalContainerProvider);
 
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       displayName: 'podman',
       type: 'podman',
@@ -1818,6 +1824,7 @@ describe('buildImage', () => {
     } as unknown as InternalContainerProvider);
 
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       displayName: 'podman',
       type: 'podman',
@@ -2551,6 +2558,7 @@ describe('createVolume', () => {
     };
 
     const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       type: 'podman',
       endpoint: {
@@ -2588,6 +2596,7 @@ describe('createVolume', () => {
     };
 
     const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'podman',
       type: 'podman',
       endpoint: {
@@ -3444,6 +3453,7 @@ test('createNetwork', async () => {
   };
 
   const providerConnectionInfo: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'podman',
     type: 'podman',
     endpoint: {
@@ -3958,6 +3968,7 @@ test('check createPod uses running podman connection if ProviderContainerConnect
   containerRegistry.addInternalProvider('podman1', internalProvider);
 
   const containerProviderConnection: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'podman1',
     displayName: 'podman1',
     endpoint: {

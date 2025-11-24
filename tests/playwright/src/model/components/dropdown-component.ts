@@ -77,7 +77,7 @@ export class DropdownComponent {
    * @param optionText - The text to match when finding the option button (defaults to optionValue)
    * @param exact - Whether to use exact text matching (defaults to false for case-insensitive matching)
    */
-  async selectOption(optionValue: string, optionText?: string, exact: boolean = false): Promise<void> {
+  async selectOption(optionValue: string, optionText?: string, exact = false): Promise<void> {
     const displayText = optionText ?? optionValue;
 
     return test.step(`Select dropdown option: ${displayText}`, async () => {
@@ -192,7 +192,7 @@ export class DropdownComponent {
    * Wait for the dropdown to be ready for interaction
    * @param timeout - Maximum time to wait in milliseconds
    */
-  async waitForReady(timeout: number = 10_000): Promise<void> {
+  async waitForReady(timeout = 10_000): Promise<void> {
     return test.step(`Wait for dropdown to be ready: ${this.ariaLabel}`, async () => {
       await playExpect(this.containerLocator).toBeVisible({ timeout });
       await playExpect(this.triggerButton).toBeVisible({ timeout });

@@ -50,6 +50,7 @@ import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
 import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
+import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
 import type {
@@ -136,7 +137,7 @@ import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
-import { ApiSenderType } from './api.js';
+import { ApiSenderType, IPCHandle } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -473,6 +474,7 @@ export class PluginSystem {
     const apiSender = this.getApiSender(this.getWebContentsSender());
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
+    container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
     const directoryStrategy = new DirectoryStrategy();
@@ -599,6 +601,10 @@ export class PluginSystem {
 
     container.bind<AutostartEngine>(AutostartEngine).toSelf().inSingletonScope();
     const autoStartEngine = container.get<AutostartEngine>(AutostartEngine);
+
+    container.bind<ContainerfileParser>(ContainerfileParser).toSelf().inSingletonScope();
+    const containerfileParser = container.get(ContainerfileParser);
+    containerfileParser.init();
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
     providerRegistry.registerAutostartEngine(autoStartEngine);
@@ -1439,6 +1445,7 @@ export class PluginSystem {
         cancellableTokenId?: number,
         buildargs?: { [key: string]: string },
         taskId?: number,
+        target?: string,
       ): Promise<unknown> => {
         // create task
         const task = taskManager.createTask({
@@ -1478,6 +1485,7 @@ export class PluginSystem {
               provider: selectedProvider,
               abortController,
               buildargs,
+              target,
             },
           )
           .then(result => {

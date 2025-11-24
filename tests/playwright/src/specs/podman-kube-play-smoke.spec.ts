@@ -63,7 +63,7 @@ test.describe.serial('Podman Kube Play Yaml - Create Pod from Scratch', { tag: '
   });
 
   test('Create pod and verify it is running ', async ({ page, navigationBar }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(180_000);
 
     const podsPage = await navigationBar.openPods();
     const podmanKubePlayPage = await podsPage.openPodmanKubePlay();

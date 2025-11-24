@@ -20,7 +20,9 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { findPodmanInstallations, getCustomBinaryPath, getPodmanCli, type InstalledPodman } from './podman-cli';
+import type { InstalledPodman } from '/@/utils/podman-binary';
+
+import { findPodmanInstallations, getCustomBinaryPath, getPodmanCli } from './podman-cli';
 
 const xdgDataDirectory = '.local/share/containers';
 export function appHomeDir(): string {
@@ -148,6 +150,8 @@ export enum VMTYPE {
 
 export const APPLEHV_LABEL = 'Apple HyperVisor';
 export const LIBKRUN_LABEL = 'default GPU enabled (LibKrun)';
+export const HYPERV_LABEL = 'Hyper-V';
+export const WSL_LABEL = 'WSL';
 
 export function getProviderLabel(provider: string): string {
   switch (provider) {
@@ -155,6 +159,10 @@ export function getProviderLabel(provider: string): string {
       return LIBKRUN_LABEL;
     case VMTYPE.APPLEHV:
       return APPLEHV_LABEL;
+    case VMTYPE.WSL:
+      return WSL_LABEL;
+    case VMTYPE.HYPERV:
+      return HYPERV_LABEL;
     default:
       return provider;
   }
@@ -166,6 +174,10 @@ export function getProviderByLabel(label: string): string {
       return VMTYPE.LIBKRUN;
     case APPLEHV_LABEL:
       return VMTYPE.APPLEHV;
+    case WSL_LABEL:
+      return VMTYPE.WSL;
+    case HYPERV_LABEL:
+      return VMTYPE.HYPERV;
     default:
       return label;
   }

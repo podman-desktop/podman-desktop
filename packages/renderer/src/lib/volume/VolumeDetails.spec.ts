@@ -30,7 +30,6 @@ import type { VolumeListInfo } from '/@api/volume-info';
 import VolumeDetails from './VolumeDetails.svelte';
 
 const listVolumesMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 const myVolume: VolumeListInfo = {
   engineId: 'engine0',
@@ -55,7 +54,6 @@ const myVolume: VolumeListInfo = {
 const removeVolumeMock = vi.fn();
 
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'listVolumes', { value: listVolumesMock });
   Object.defineProperty(window, 'removeVolume', { value: removeVolumeMock });
   Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
@@ -63,7 +61,7 @@ beforeAll(() => {
 
 test('Expect redirect to previous page if volume is deleted', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   const routerGotoSpy = vi.spyOn(router, 'goto');
   listVolumesMock.mockResolvedValue([myVolume]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));

@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as podmanCli from './podman-cli';
 import {
@@ -26,38 +26,22 @@ import {
   getMultiplePodmanInstallationsWarnings,
   getProviderByLabel,
   getProviderLabel,
+  HYPERV_LABEL,
   LIBKRUN_LABEL,
   normalizeWSLOutput,
   VMTYPE,
+  WSL_LABEL,
 } from './util';
 
-const config: extensionApi.Configuration = {
-  get: () => {
-    // not implemented
-  },
-  has: () => true,
-  update: vi.fn(),
-};
-
-vi.mock('@podman-desktop/api', () => {
-  return {
-    configuration: {
-      getConfiguration: (): extensionApi.Configuration => config,
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-  };
-});
-
-afterEach(() => {
+beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+  vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue([]);
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(),
+    has: () => true,
+    update: vi.fn(),
+  } as unknown as extensionApi.Configuration);
 });
 
 test('normalizeWSLOutput returns the same string if there is no need to normalize it', async () => {
@@ -134,9 +118,19 @@ test('expect applehv label with applehv provider', async () => {
   expect(label).equals(APPLEHV_LABEL);
 });
 
-test('expect provider name with provider different from libkrun and applehv', async () => {
+test('expect wsl label with wsl provider', async () => {
   const label = getProviderLabel(VMTYPE.WSL);
-  expect(label).equals(VMTYPE.WSL);
+  expect(label).equals(WSL_LABEL);
+});
+
+test('expect hyperv label with hyperv provider', async () => {
+  const label = getProviderLabel(VMTYPE.HYPERV);
+  expect(label).equals(HYPERV_LABEL);
+});
+
+test('expect provider name with provider different from libkrun and applehv', async () => {
+  const label = getProviderLabel('unknown');
+  expect(label).equals('unknown');
 });
 
 test('expect libkrun provider with libkrun label', async () => {
@@ -149,17 +143,17 @@ test('expect applehv provider with applehv label', async () => {
   expect(provider).equals(VMTYPE.APPLEHV);
 });
 
-test('expect wsl name with provider wsl label', async () => {
-  const provider = getProviderByLabel(VMTYPE.WSL);
+test('expect wsl label with wsl provider wsl label', async () => {
+  const provider = getProviderByLabel(WSL_LABEL);
   expect(provider).equals(VMTYPE.WSL);
 });
 
-describe('Check multiple Podman installations', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue([]);
-  });
+test('expect hyperv label with hyperv provider wsl label', async () => {
+  const provider = getProviderByLabel(HYPERV_LABEL);
+  expect(provider).equals(VMTYPE.HYPERV);
+});
 
+describe('Check multiple Podman installations', () => {
   test('should return empty warnings when no Podman installation provided', async () => {
     const warnings = await getMultiplePodmanInstallationsWarnings(undefined);
 

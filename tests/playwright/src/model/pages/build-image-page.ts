@@ -180,7 +180,7 @@ export class BuildImagePage extends BasePage {
     archType: string[] = [ArchitectureType.Default],
   ): Promise<void> {
     if (!containerFilePath) {
-      throw Error(`Path to containerfile is incorrect or not provided!`);
+      throw Error('Path to containerfile is incorrect or not provided!');
     }
 
     await this.containerFilePathInput.fill(containerFilePath);

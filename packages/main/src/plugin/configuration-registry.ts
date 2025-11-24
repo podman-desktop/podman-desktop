@@ -45,6 +45,7 @@ import { ConfigurationImpl } from './configuration-impl.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
 
@@ -65,6 +66,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   // Contains the value of the current configuration
   private configurationValues: Map<string, { [key: string]: unknown }>;
+  private lockedKeys: LockedKeys;
 
   constructor(
     @inject(ApiSenderType)
@@ -82,6 +84,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
+    this.lockedKeys = new LockedKeys(this.configurationValues);
   }
 
   protected getSettingsFile(): string {
@@ -159,6 +162,10 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   doRegisterConfigurations(configurations: IConfigurationNode[], notify?: boolean): string[] {
     const properties: string[] = [];
+
+    // Get all the locked keys at the start to avoid multiple lookups
+    const lockedSet = this.lockedKeys.getAllKeys();
+
     // biome-ignore lint/complexity/noForEach: <explanation>
     configurations.forEach(configuration => {
       for (const key in configuration.properties) {
@@ -168,6 +175,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
           title: configuration.title,
           id: key,
           parentId: configuration.id,
+          locked: lockedSet.has(key),
         };
         if (configuration.extension) {
           configProperty.extension = { id: configuration.extension?.id };

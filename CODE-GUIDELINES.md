@@ -187,6 +187,24 @@ const text = getByText('text in the page');
 expect(text).toHaveStyle({ color: '#FFFFF'});
 ```
 
+### `waitFor` vs `waitUntil`
+
+Use `waitFor` (https://vitest.dev/api/vi.html#vi-waitfor) to retry an assertion until it passes, and `waitUntil` (https://vitest.dev/api/vi.html#vi-waituntil) to wait for a function to return a truthy value.
+
+→ `waitFor` → needs an exception
+
+→ `waitUntil` → needs a boolean
+
+**Example:**
+
+```typescript
+// Use waitFor with an assertion
+await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+
+// Use waitUntil with a boolean value
+await vi.waitUntil(() => get(imagesInfos).length > 0);
+```
+
 ### Mocking a sub-component
 
 To test a component in isolation without testing its sub-components, you have the possibility to mock

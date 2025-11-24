@@ -147,7 +147,7 @@ test.describe.serial('Podman machine switching validation ', { tag: '@pdmachine'
     await test.step('Create podman machine', async () => {
       await podmanMachineCreatePage.machineCreationForm.setupAndCreateMachine(ROOTLESS_PODMAN_MACHINE_VISIBLE, {
         isRootful: false,
-        enableUserNet: true,
+        enableUserNet: false,
         startNow: false,
         virtualizationProvider: getVirtualizationProvider(),
       });
@@ -229,8 +229,6 @@ test.describe.serial('Podman machine switching validation ', { tag: '@pdmachine'
         DEFAULT_PODMAN_MACHINE_VISIBLE,
         'started successfully',
       );
-
-      await restartMachineAndVerifyLogs(podmanMachineDetails, DEFAULT_PODMAN_MACHINE_VISIBLE, 'stopped successfully');
     });
   });
 

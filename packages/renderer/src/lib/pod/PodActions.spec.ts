@@ -57,7 +57,6 @@ const podmanPod: PodInfoUI = new Pod('pod', [{ Id: 'pod' }], 'RUNNING', 'podman'
 const listContainersMock = vi.fn();
 const getContributedMenusMock = vi.fn();
 const updateMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 const openExternalSpy = vi.fn();
 
 class ResizeObserver {
@@ -68,7 +67,6 @@ class ResizeObserver {
 
 beforeAll(() => {
   Object.defineProperty(window, 'ResizeObserver', { value: ResizeObserver });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'listContainers', { value: listContainersMock });
   Object.defineProperty(window, 'startPod', { value: vi.fn() });
   Object.defineProperty(window, 'stopPod', { value: vi.fn() });
@@ -132,7 +130,7 @@ test('Expect no error and status restarting pod', async () => {
 
 test('Expect no error and status deleting pod', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   listContainersMock.mockResolvedValue([]);
 
   render(PodActions, { pod: podmanPod, onUpdate: updateMock });

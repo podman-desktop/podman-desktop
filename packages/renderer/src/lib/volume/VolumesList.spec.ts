@@ -247,6 +247,12 @@ describe('Create volume', () => {
       } as unknown as ProviderInfo,
     ]);
 
+    await waitFor(() => {
+      // wait store are populated
+      expect(get(volumeListInfos)).not.toHaveLength(0);
+      expect(get(providerInfos)).not.toHaveLength(0);
+    });
+
     await waitRender({});
 
     // now check if we have a create volume button, it should not be there
@@ -427,7 +433,7 @@ test('Expect to see empty page and no table when no container engine is running'
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // wait imageInfo store is populated
-  await vi.waitFor(() => get(volumeListInfos).length > 0);
+  await vi.waitUntil(() => get(volumeListInfos).length > 0);
 
   await waitRender({});
 

@@ -26,6 +26,43 @@ import {
 
 import { LockedKeys } from './lock-configuration.js';
 
+describe('LockedKeys.getAllKeys', () => {
+  let configurationValues: Map<string, { [key: string]: unknown }>;
+  let lockedKeys: LockedKeys;
+
+  beforeEach(() => {
+    configurationValues = new Map();
+    lockedKeys = new LockedKeys(configurationValues);
+  });
+
+  test('should return empty set when no locked configuration exists', () => {
+    const result = lockedKeys.getAllKeys();
+    expect(result).toEqual(new Set());
+  });
+
+  test('should return empty set when locked configuration has no "locked" property', () => {
+    configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
+    const result = lockedKeys.getAllKeys();
+    expect(result).toEqual(new Set());
+  });
+
+  test('should return empty set when "locked" property is not an array', () => {
+    configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {
+      [CONFIGURATION_LOCKED_KEY]: 'not-an-array',
+    });
+    const result = lockedKeys.getAllKeys();
+    expect(result.size).toEqual(0);
+  });
+
+  test('should return set of locked keys when locked configuration exists', () => {
+    configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {
+      [CONFIGURATION_LOCKED_KEY]: ['key1', 'key2', 'key3'],
+    });
+    const result = lockedKeys.getAllKeys();
+    expect(result).toEqual(new Set(['key1', 'key2', 'key3']));
+  });
+});
+
 describe('Simple tests covering .get for LockedKeys', () => {
   let configurationValues: Map<string, { [key: string]: unknown }>;
   let lockedKeys: LockedKeys;

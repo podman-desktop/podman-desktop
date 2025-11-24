@@ -698,27 +698,37 @@ export class ProviderRegistry {
 
   private getProviderConnectionInfo(connection: ProviderConnection): ProviderConnectionInfo {
     if (this.isContainerConnection(connection)) {
-      const { name, displayName, status, type, endpoint, shellAccess, vmType, vmTypeDisplayName } = connection;
-      return {
-        name,
-        displayName: displayName ?? name,
-        status: status(),
-        type: type ?? 'docker',
-        endpoint: { socketPath: endpoint.socketPath },
-        shellAccess: !!shellAccess,
-        vmType: vmType ? { id: vmType, name: vmTypeDisplayName ?? vmType } : undefined,
+      providerConnection = {
         connectionType: 'container',
-        lifecycleMethods: this.getLifecycleMethods(connection),
+        name: connection.name,
+        displayName: connection.displayName ?? connection.name,
+        status: connection.status(),
+        type: connection.type,
+        endpoint: {
+          socketPath: connection.endpoint.socketPath,
+        },
+        shellAccess: !!connection.shellAccess,
+        vmType: connection.vmType
+          ? {
+              id: connection.vmType,
+              name: connection.vmTypeDisplayName ?? connection.vmType,
+            }
+          : undefined,
       };
-    }
-    if (this.isKubernetesConnection(connection)) {
-      const { name, status, endpoint } = connection;
-      return {
-        name,
-        status: status(),
-        endpoint: { apiURL: endpoint.apiURL },
+    } else if (this.isKubernetesConnection(connection)) {
+      providerConnection = {
         connectionType: 'kubernetes',
-        lifecycleMethods: this.getLifecycleMethods(connection),
+        name: connection.name,
+        status: connection.status(),
+        endpoint: {
+          apiURL: connection.endpoint.apiURL,
+        },
+      };
+    } else {
+      providerConnection = {
+        connectionType: 'vm',
+        name: connection.name,
+        status: connection.status(),
       };
     }
 

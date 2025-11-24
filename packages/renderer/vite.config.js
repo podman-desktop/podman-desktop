@@ -55,6 +55,11 @@ export default defineConfig({
       },
       { find: '@floating-ui/dom', replacement: `${PACKAGE_ROOT}/__mocks__/@floating-ui/dom.ts` },
     ],
+    server: {
+      deps: {
+        inline: ['@fortawesome/fontawesome-free/css/all.min.css'],
+      },
+    },
     deps: {
       inline: ['moment'],
     },

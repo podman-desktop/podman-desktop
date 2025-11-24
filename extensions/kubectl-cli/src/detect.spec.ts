@@ -40,14 +40,6 @@ vi.mock('shell-path', () => {
   };
 });
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 const originalConsoleDebug = console.debug;
 
 beforeEach(() => {

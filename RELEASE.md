@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-- Create Enhancement Issue `Release vX.X.X` for current sprint (if such an issue does not already exist), then update the label to `kind/release` and assign it to yourself.
+- Create Task issue `Release vX.X.X` for the current sprint (if such an issue does not already exist), then update the type to Release and assign it to yourself.
 - Confirm with Podman Desktop maintainers that pending / need-to-go-in PR's have been merged.
 - Notify main contributors on Discord / Slack.
 - Release notes for the blog: Communicate with the person who has been tasked with creating the documentation. If you are assigned, see the below ["Documentation"](#documentation) section.
@@ -34,14 +34,14 @@ Below is what a typical release week may look like (This is just an example of t
 1. Above PR MUST be merged before continuing with the steps.
 1. Edit the new release https://github.com/containers/podman-desktop/releases/edit/v0.12.0
 1. Select previous tag (v0.11.0) and click on `Generate release notes` and then click on `Update release`
-1. 🚨 Create the flathub PR once the release is available. This allows users to test the new version. We will hold the merge until it is approved.
-1. The flathub workflow will create an automated PR to the flathub repository https://github.com/flathub/io.podman_desktop.PodmanDesktop
+1. 🚨 Create the flathub PR once the release is available. This allows users / QE to test the new version. **IMPORTANT NOTE:** We will hold the merge until it is approved.
 
-- Go to https://github.com/containers/podman-desktop/actions/workflows/publish-flathub.yaml
-- Click on the top right drop-down `Run workflow`
-- Enter the release version `0.12.0` for example. DO NOT add the `v`
-- Click `Run workflow`
-- You can view the PR at: https://github.com/flathub/io.podman_desktop.PodmanDesktop/pulls/podman-desktop-bot
+   This PR can be created by doing the following:
+   - Go to https://github.com/containers/podman-desktop/actions/workflows/publish-flathub.yaml
+   - Click on the top right drop-down `Run workflow`
+   - Enter the release version `0.12.0` for example. DO NOT add the `v`
+   - Click `Run workflow`
+   - You can view the PR at: https://github.com/flathub/io.podman_desktop.PodmanDesktop/pulls/podman-desktop-bot
 
 ## Test release before it is rolling out.
 

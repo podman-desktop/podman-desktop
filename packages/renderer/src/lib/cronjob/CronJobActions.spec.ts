@@ -25,7 +25,6 @@ import CronJobActions from './CronJobActions.svelte';
 import type { CronJobUI } from './CronJobUI';
 
 const deleteMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 const cronjob: CronJobUI = {
   uid: '123',
@@ -41,13 +40,12 @@ const cronjob: CronJobUI = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
   vi.mocked(window.kubernetesDeleteCronJob).mockImplementation(deleteMock);
 });
 
 test('Expect no error and status deleting cronjob', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(CronJobActions, { cronjob, detailed: false });
 
   // click on delete button

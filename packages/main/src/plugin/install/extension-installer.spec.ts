@@ -72,13 +72,6 @@ const extensionsCatalog = {
   getFetchableExtensions: getFetchableExtensionsMock,
 } as unknown as ExtensionsCatalog;
 
-vi.mock('electron', () => {
-  const mockIpcMain = {
-    on: vi.fn().mockReturnThis(),
-  };
-  return { ipcMain: mockIpcMain };
-});
-
 const telemetryMock = {
   track: vi.fn(),
 } as unknown as Telemetry;
@@ -90,24 +83,17 @@ const directories = {
 
 const contributionManager = {} as unknown as ContributionManager;
 
-vi.mock('node:fs');
-
-vi.mock('./../docker-extension/docker-desktop-installer', async () => {
-  const ddInstallerReal = await vi.importActual('../docker-extension/docker-desktop-installer');
-
-  return {
-    DockerDesktopInstaller: vi.fn().mockImplementation(() => {
-      return {
-        extractExtensionFiles: vi.fn(),
-        setupContribution: vi.fn(),
-      };
-    }),
-    DockerDesktopContribution: ddInstallerReal['DockerDesktopContribution'],
-  };
-});
+vi.mock(import('electron'), () => ({
+  ipcMain: {
+    on: vi.fn().mockReturnThis(),
+  } as unknown as IpcMain,
+}));
+vi.mock(import('node:fs'));
+vi.mock(import('./../docker-extension/docker-desktop-installer.js'));
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+
   vi.mocked(rmSync).mockReturnValue(undefined);
   vi.mocked(directories.getPluginsDirectory).mockReturnValue('/fake/plugins/directory');
   vi.mocked(directories.getContributionStorageDir).mockReturnValue('/fake/dd/directory');
@@ -255,14 +241,12 @@ test('should report error', async () => {
   const spyExtractExtensionFiles = vi.spyOn(extensionInstaller, 'extractExtensionFiles');
   spyExtractExtensionFiles.mockResolvedValueOnce();
 
-  const ipcMainOnMethod = vi.spyOn(ipcMain, 'on');
-
   const replyMethodMock = vi.fn();
 
   const spyInstaller = vi.spyOn(extensionInstaller, 'installFromImage');
   spyInstaller.mockRejectedValueOnce(new Error('fake error'));
 
-  ipcMainOnMethod.mockImplementation(
+  vi.mocked(ipcMain.on).mockImplementation(
     (_channel: string, listener: (event: IpcMainEvent, ...args: unknown[]) => void) => {
       // let's call the callback
       listener({ reply: replyMethodMock } as unknown as IpcMainEvent, imageToPull, 0);

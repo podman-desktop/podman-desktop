@@ -76,11 +76,6 @@ test.skip(
 );
 
 test.skip(
-  !!process.env.CI && !!isWindows,
-  'Tests suite should not run in CI on Windows, there seems to be some problem running this test suite in azure cicd',
-);
-
-test.skip(
   getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
   'Podman Desktop is not able to have 2 HyperV machines running at the same time',
 );

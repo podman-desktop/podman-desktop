@@ -25,7 +25,6 @@ import JobActions from './JobActions.svelte';
 import type { JobUI } from './JobUI';
 
 const deleteMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 const job: JobUI = {
   uid: '123',
@@ -40,13 +39,12 @@ const job: JobUI = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
   vi.mocked(window.kubernetesDeleteJob).mockImplementation(deleteMock);
 });
 
 test('Expect no error and status deleting job', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(JobActions, { job, detailed: false });
 
   // click on delete button

@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { podsInfos } from '/@/stores/pods';
@@ -29,18 +29,8 @@ import type { PodInfo } from '/@api/pod-info';
 
 import PodDetails from './PodDetails.svelte';
 
-const mocks = vi.hoisted(() => ({
-  TerminalMock: vi.fn(),
-}));
-vi.mock('@xterm/xterm', () => ({
-  Terminal: mocks.TerminalMock,
-}));
-vi.mock('@xterm/addon-search');
-
-const listPodsMock = vi.fn();
-const listContainersMock = vi.fn();
-const showMessageBoxMock = vi.fn();
-const getConfigurationValueMock = vi.fn();
+vi.mock(import('@xterm/xterm'));
+vi.mock(import('@xterm/addon-search'));
 
 const myPod: PodInfo = {
   Cgroup: '',
@@ -58,38 +48,20 @@ const myPod: PodInfo = {
   kind: 'podman',
 };
 
-const removePodMock = vi.fn();
-const getContributedMenusMock = vi.fn();
+beforeEach(() => {
+  vi.resetAllMocks();
 
-beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
-  Object.defineProperty(window, 'listPods', { value: listPodsMock });
-  Object.defineProperty(window, 'listContainers', { value: listContainersMock.mockResolvedValue([]) });
-  Object.defineProperty(window, 'removePod', { value: removePodMock });
-  Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock, writable: true });
-  Object.defineProperty(window, 'addEventListener', { value: vi.fn() });
-  Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
-  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
-  mocks.TerminalMock.mockReturnValue({
-    loadAddon: vi.fn(),
-    open: vi.fn(),
-    write: vi.fn(),
-    dispose: vi.fn(),
-  });
-  global.ResizeObserver = vi.fn().mockReturnValue({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  });
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
+  vi.mocked(window.listContainers).mockResolvedValue([]);
+  vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 });
 
 test('Expect redirect to previous page if pod is deleted', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   const routerGotoSpy = vi.spyOn(router, 'goto');
-  listPodsMock.mockResolvedValue([myPod]);
+  vi.mocked(window.listPods).mockResolvedValue([myPod]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   while (get(podsInfos).length !== 1) {
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -97,7 +69,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
 
   // remove myPod from the store when we call 'removePod'
   // it will then refresh the store and update PodsDetails page
-  removePodMock.mockImplementation(() => {
+  vi.mocked(window.removePod).mockImplementation(async () => {
     podsInfos.update(pods => pods.filter(pod => pod.Id !== myPod.Id));
   });
 
@@ -119,7 +91,7 @@ test('Expect redirect to previous page if pod is deleted', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   // check that remove method has been called
-  expect(removePodMock).toHaveBeenCalled();
+  expect(window.removePod).toHaveBeenCalled();
 
   // expect that we have called the router when page has been removed
   // to jump to the previous page
@@ -132,14 +104,14 @@ test('Expect redirect to previous page if pod is deleted', async () => {
 
 test('Expect redirect to logs', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   const routerGotoSpy = vi.spyOn(router, 'goto');
   const subscribeSpy = vi.spyOn(router, 'subscribe');
   subscribeSpy.mockImplementation(listener => {
     listener({ path: '/pods/podman/myPod/engine0/' } as unknown as TinroRoute);
     return (): void => {};
   });
-  listPodsMock.mockResolvedValue([myPod]);
+  vi.mocked(window.listPods).mockResolvedValue([myPod]);
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   while (get(podsInfos).length !== 1) {
     await new Promise(resolve => setTimeout(resolve, 500));
