@@ -21,7 +21,6 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
-import searchBarImage from '../assets/titleBar.searchBar.webp';
 import { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 
@@ -62,14 +61,6 @@ export class AppearanceInit {
           type: 'string',
           enum: [AppearanceSettings.IconAndTitle, AppearanceSettings.Icon],
           default: AppearanceSettings.IconAndTitle,
-        },
-        [SEARCHBAR_FULL_KEY]: {
-          description: 'Show searchbar in the title bar',
-          type: 'object',
-          experimental: {
-            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/13674',
-            image: searchBarImage,
-          },
         },
       },
     };
