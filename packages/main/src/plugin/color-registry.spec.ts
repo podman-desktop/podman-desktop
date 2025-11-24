@@ -216,8 +216,8 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#202020');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe('#f9fafb');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe('#202020');
   });
 
   test('Check on macOS/Linux', async () => {
@@ -237,8 +237,8 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#0f0f11');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe('#f9fafb');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe('#0f0f11');
   });
 });
 
@@ -256,8 +256,8 @@ test('initCardContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('card-bg');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[300]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.charcoal[800]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe(tailwindColorPalette.gray[300]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe(tailwindColorPalette.charcoal[800]);
 });
 
 test('initContent', async () => {
@@ -274,8 +274,8 @@ test('initContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[600]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe(tailwindColorPalette.purple[900]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe(tailwindColorPalette.gray[600]);
 });
 
 describe('registerColor', () => {
@@ -604,12 +604,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[2]?.[0]).toStrictEqual('label-primary-bg');
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.purple[300]);
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1]?.light).toBe(tailwindColorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1]?.dark).toBe(tailwindColorPalette.purple[700]);
 
     expect(spyOnRegisterColor.mock.calls[3]?.[0]).toStrictEqual('label-primary-text');
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.purple[700]);
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1]?.light).toBe(tailwindColorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1]?.dark).toBe(tailwindColorPalette.purple[300]);
   });
 
   test('secondary color', () => {
@@ -617,12 +617,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[4]?.[0]).toStrictEqual('label-secondary-bg');
-    expect(spyOnRegisterColor.mock.calls[4]?.[1].light).toBe(tailwindColorPalette.sky[200]);
-    expect(spyOnRegisterColor.mock.calls[4]?.[1].dark).toBe(tailwindColorPalette.sky[900]);
+    expect(spyOnRegisterColor.mock.calls[4]?.[1]?.light).toBe(tailwindColorPalette.sky[200]);
+    expect(spyOnRegisterColor.mock.calls[4]?.[1]?.dark).toBe(tailwindColorPalette.sky[900]);
 
     expect(spyOnRegisterColor.mock.calls[5]?.[0]).toStrictEqual('label-secondary-text');
-    expect(spyOnRegisterColor.mock.calls[5]?.[1].light).toBe(tailwindColorPalette.sky[900]);
-    expect(spyOnRegisterColor.mock.calls[5]?.[1].dark).toBe(tailwindColorPalette.sky[200]);
+    expect(spyOnRegisterColor.mock.calls[5]?.[1]?.light).toBe(tailwindColorPalette.sky[900]);
+    expect(spyOnRegisterColor.mock.calls[5]?.[1]?.dark).toBe(tailwindColorPalette.sky[200]);
   });
 
   test('tertiary color', () => {
@@ -630,12 +630,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[6]?.[0]).toStrictEqual('label-tertiary-bg');
-    expect(spyOnRegisterColor.mock.calls[6]?.[1].light).toBe(tailwindColorPalette.green[200]);
-    expect(spyOnRegisterColor.mock.calls[6]?.[1].dark).toBe(tailwindColorPalette.green[900]);
+    expect(spyOnRegisterColor.mock.calls[6]?.[1]?.light).toBe(tailwindColorPalette.green[200]);
+    expect(spyOnRegisterColor.mock.calls[6]?.[1]?.dark).toBe(tailwindColorPalette.green[900]);
 
     expect(spyOnRegisterColor.mock.calls[7]?.[0]).toStrictEqual('label-tertiary-text');
-    expect(spyOnRegisterColor.mock.calls[7]?.[1].light).toBe(tailwindColorPalette.green[900]);
-    expect(spyOnRegisterColor.mock.calls[7]?.[1].dark).toBe(tailwindColorPalette.green[200]);
+    expect(spyOnRegisterColor.mock.calls[7]?.[1]?.light).toBe(tailwindColorPalette.green[900]);
+    expect(spyOnRegisterColor.mock.calls[7]?.[1]?.dark).toBe(tailwindColorPalette.green[200]);
   });
 
   test('quaternary color', () => {
@@ -643,12 +643,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[8]?.[0]).toStrictEqual('label-quaternary-bg');
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(tailwindColorPalette.amber[100]);
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(tailwindColorPalette.amber[800]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1]?.light).toBe(tailwindColorPalette.amber[100]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1]?.dark).toBe(tailwindColorPalette.amber[800]);
 
     expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(tailwindColorPalette.amber[900]);
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(tailwindColorPalette.amber[400]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1]?.light).toBe(tailwindColorPalette.amber[900]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1]?.dark).toBe(tailwindColorPalette.amber[400]);
   });
 });
 
@@ -704,17 +704,17 @@ describe('initCommon', () => {
     const call = spyOnRegisterColor.mock.calls[0];
     expect(call?.[0]).toBe('item-disabled');
     expect(call?.[1]).toBeDefined();
-    expect(call?.[1].dark).toBeDefined();
-    expect(call?.[1].light).toBeDefined();
+    expect(call?.[1]?.dark).toBeDefined();
+    expect(call?.[1]?.light).toBeDefined();
 
     // verify both colors are strings (formatted CSS)
-    expect(typeof call?.[1].dark).toBe('string');
-    expect(typeof call?.[1].light).toBe('string');
+    expect(typeof call?.[1]?.dark).toBe('string');
+    expect(typeof call?.[1]?.light).toBe('string');
 
     // verify the colors contain alpha information (should be rgba or oklch with alpha)
     // The colors should be formatted CSS strings with 0.4 alpha
-    const darkColor = call?.[1].dark as string;
-    const lightColor = call?.[1].light as string;
+    const darkColor = call?.[1]?.dark as string;
+    const lightColor = call?.[1]?.light as string;
 
     // Check that alpha is present (either rgba format or oklch with alpha)
     expect(darkColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
