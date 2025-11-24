@@ -930,6 +930,10 @@ describe('container-provider-registry:buildImage', () => {
 
     await vi.waitFor(() => {
       expect(navigateToImageBuildMock).toHaveBeenCalledExactlyOnceWith(55);
+    });
+  });
+});
+
 describe('updateImage handler', () => {
   test('should update image and set task status to success', async () => {
     const handle = handlers.get('container-provider-registry:updateImage');

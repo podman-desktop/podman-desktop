@@ -1236,6 +1236,7 @@ export class PluginSystem {
           task.status = 'success';
         } catch (error: unknown) {
           task.error = String(error);
+          task.status = 'failure';
           throw error;
         }
       },
