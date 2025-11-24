@@ -109,6 +109,7 @@ export class ImageRegistry {
             insecure: registry.registry.insecure,
             blocked: registry.registry.blocked,
           },
+          // isUserDefaultRegistry
           true,
         );
       }
@@ -218,8 +219,11 @@ export class ImageRegistry {
         this.apiSender.send('registry-update', matchingRegistry);
         console.warn(`User default registry is already registered and the blocked status adjusted to: ${registry.url}`);
       } else {
+        if (!matchingRegistry.icon && registry.icon) {
+          matchingRegistry.icon = registry.icon;
+        }
         // Ignore and don't register
-        console.log(`Registry is already registered: ${registry.url}`);
+        console.debug(`Registry is already registered: ${registry.url}`);
       }
       return Disposable.noop();
     }

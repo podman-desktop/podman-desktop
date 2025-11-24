@@ -26,6 +26,8 @@ import { commands, configuration, env, window } from '@podman-desktop/api';
 import mustache from 'mustache';
 import * as toml from 'smol-toml';
 
+import { REGISTRY_MIRROR } from '/@/constants';
+
 import { getJSONMachineList } from '../extension';
 import { execPodman } from '../utils/util';
 import playbookRegistryConfFileTemplate from './playbook-setup-registry-conf-file.mustache?raw';
@@ -64,8 +66,6 @@ export interface RegistryConfiguration {
   init(): Promise<Disposable[]>;
   getPlaybookScriptPath(): Promise<string>;
 }
-
-export const REGISTRY_MIRROR = 'registry.mirror';
 
 /**
  * Manages the registry configuration file (inside the Podman VM for macOS/Windows)
@@ -114,6 +114,37 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     }
   }
 
+  protected checkForDifference(
+    duplicateRegistry: RegistryConfigurationEntry,
+    defaultRegistry: RegistryConfigurationEntry,
+  ): boolean {
+    if (
+      duplicateRegistry.blocked !== defaultRegistry.blocked ||
+      duplicateRegistry.insecure !== defaultRegistry.insecure ||
+      duplicateRegistry.location !== defaultRegistry.location
+    ) {
+      const diff = [];
+      if (duplicateRegistry.blocked !== defaultRegistry.blocked) {
+        diff.push('blocked');
+      }
+
+      if (duplicateRegistry.insecure !== defaultRegistry.insecure) {
+        diff.push('insecure');
+      }
+
+      if (duplicateRegistry.location !== defaultRegistry.location) {
+        diff.push('location');
+      }
+
+      console.warn(
+        `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match: ${diff.join(', ')}. Please update this registry`,
+      );
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   resolveDefaultRegistryConflicts(
     defaultRegistries: RegistryConfigurationEntry[],
     existingRegistries: RegistryConfigurationEntry[],
@@ -123,28 +154,8 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
         existingRegistry => existingRegistry.prefix === defaultRegistry.prefix,
       );
       if (defaultRegistry.prefix && duplicateRegistry) {
-        if (
-          duplicateRegistry.blocked !== defaultRegistry.blocked ||
-          duplicateRegistry.insecure !== defaultRegistry.insecure ||
-          duplicateRegistry.location !== defaultRegistry.location
-        ) {
-          const diff = [];
-          if (duplicateRegistry.blocked !== defaultRegistry.blocked) {
-            diff.push('blocked');
-          }
-
-          if (duplicateRegistry.insecure !== defaultRegistry.insecure) {
-            diff.push('insecure');
-          }
-
-          if (duplicateRegistry.location !== defaultRegistry.location) {
-            diff.push('location');
-          }
-
-          console.warn(
-            `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match: ${diff.join(', ')}. Please update this registry`,
-          );
-        } else {
+        const diff = this.checkForDifference(duplicateRegistry, defaultRegistry);
+        if (!diff) {
           defaultRegistry.mirror?.forEach(mirror => {
             duplicateRegistry.mirror ??= [];
             if (!duplicateRegistry.mirror?.map(dupMirror => dupMirror.location).includes(mirror.location)) {

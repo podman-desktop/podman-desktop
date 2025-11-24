@@ -25,8 +25,10 @@ import type { Configuration, DefaultRegistry, DefaultRegistryMirror } from '@pod
 import { commands, configuration, env, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { REGISTRY_MIRROR } from '/@/constants';
+
 import type { RegistryConfigurationEntry, RegistryConfigurationFile } from './registry-configuration';
-import { ActionEnum, REGISTRY_MIRROR, RegistryConfigurationImpl } from './registry-configuration';
+import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
 
 let registryConfiguration: RegistryConfigurationImpl;
 vi.mock('node:fs');

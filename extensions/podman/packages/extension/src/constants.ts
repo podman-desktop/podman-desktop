@@ -31,3 +31,4 @@ export const PODMAN_MACHINE_EDIT_CPU = 'podman.podmanMachineEditCPUSupported';
 export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupported';
 export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
 export const PODMAN_MACHINE_EDIT_ROOTFUL = 'podman.podmanMachineEditRootfulSupported';
+export const REGISTRY_MIRROR = 'registry.mirror';
