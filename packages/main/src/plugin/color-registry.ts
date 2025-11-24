@@ -149,7 +149,10 @@ export class ColorRegistry {
       colorDef = definition;
     } else {
       colorId = colorIdOrDefinition.id;
-      colorDef = { light: colorIdOrDefinition.light, dark: colorIdOrDefinition.dark };
+      // Preserve all fields from ColorDefinition (e.g., future HC variants)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, sonarjs/no-unused-vars
+      const { id, ...rest } = colorIdOrDefinition;
+      colorDef = rest;
     }
 
     if (this.#definitions.has(colorId)) {

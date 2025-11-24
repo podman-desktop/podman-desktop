@@ -49,13 +49,6 @@ class TestColorRegistry extends ColorRegistry {
     super.setDone();
   }
 
-  override registerColor(
-    colorIdOrDefinition: string | (ColorDefinition & { id: string }),
-    definition?: ColorDefinition,
-  ): void {
-    super.registerColor(colorIdOrDefinition, definition);
-  }
-
   override initTitlebar(): void {
     super.initTitlebar();
   }
@@ -315,6 +308,31 @@ describe('registerColor', () => {
     expect(() => colorRegistry.registerColor('dummyColor', { light: 'lightColor2', dark: 'darkColor2' })).toThrowError(
       'Color dummyColor already registered',
     );
+  });
+
+  test('registerColor using object form', async () => {
+    // spy notifyUpdate
+    const spyOnNotifyUpdate = vi.spyOn(colorRegistry, 'notifyUpdate');
+    spyOnNotifyUpdate.mockReturnValue(undefined);
+
+    // register using object form
+    colorRegistry.registerColor({ id: 'foo', light: '#fff', dark: '#000' });
+
+    // expect notifyUpdate to be called
+    expect(spyOnNotifyUpdate).toHaveBeenCalled();
+
+    // should have the color in two themes, light and dark
+    const lightColors = colorRegistry.listColors('light');
+    expect(lightColors).toBeDefined();
+    expect(lightColors).toHaveLength(1);
+    expect(lightColors[0]?.id).toBe('foo');
+    expect(lightColors[0]?.value).toBe('#fff');
+
+    const darkColors = colorRegistry.listColors('dark');
+    expect(darkColors).toBeDefined();
+    expect(darkColors).toHaveLength(1);
+    expect(darkColors[0]?.id).toBe('foo');
+    expect(darkColors[0]?.value).toBe('#000');
   });
 });
 
