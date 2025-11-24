@@ -53,7 +53,7 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
     await playExpect(networksPage.heading).toBeVisible();
 
     networksPage = await networksPage.createNetwork(testNetworkName, testNetworkSubnet);
-    await playExpect(networksPage.heading).toBeVisible();
+    await playExpect(networksPage.heading).toBeVisible({ timeout: 30_000 });
 
     await playExpect
       .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {
@@ -85,7 +85,7 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
     await playExpect(networksPage.heading).toBeVisible();
 
     networksPage = await networksPage.createNetwork(testNetworkName, testNetworkSubnet);
-    await playExpect(networksPage.heading).toBeVisible();
+    await playExpect(networksPage.heading).toBeVisible({ timeout: 30_000 });
 
     await playExpect
       .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {

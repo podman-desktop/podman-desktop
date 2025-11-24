@@ -49,9 +49,9 @@ export class CreateNetworkPage extends BasePage {
       await playExpect(this.subnetBox).toBeVisible();
       await this.subnetBox.clear();
       await playExpect(this.subnetBox).toHaveValue('');
-
       await this.subnetBox.fill(subnet);
       await playExpect(this.subnetBox).toHaveValue(subnet);
+
       await playExpect(this.createButton).toBeEnabled();
       await this.createButton.click();
       return new NetworksPage(this.page);
