@@ -13,12 +13,12 @@ interface Props {
 let { name = '', tip = '', role, capitalize = false, children }: Props = $props();
 </script>
 
-<Tooltip top tip={tip}>
+<Tooltip containerClass="w-full" top tip={tip}>
   <div
     role={role}
-    class="flex items-center bg-[var(--pd-label-bg)] p-1 rounded-md text-sm text-[var(--pd-label-text)] gap-x-1">
+    class="flex items-center bg-[var(--pd-label-bg)] p-1 rounded-md text-sm text-[var(--pd-label-text)] gap-x-1 w-full">
     {@render children?.()}
-    <span class:capitalize={capitalize}>
+    <span class:capitalize={capitalize} class="overflow-x-hidden text-ellipsis w-full">
       {name}
     </span>
   </div>
