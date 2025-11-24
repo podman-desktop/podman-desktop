@@ -1270,14 +1270,20 @@ export class ContainerProviderRegistry {
     try {
       // first get image info to check if it has a registry
       const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
-      if (!imageInfo.RepoTags || imageInfo.RepoTags.length === 0) {
+      if (imageInfo.RepoTags.length === 0) {
         throw new Error('Image has no registry tags and cannot be updated');
       }
-      // get the first repo tag (we know it exists because length > 0)
-      const repoTag = imageInfo.RepoTags[0]!;
+      // get the first repo tag
+      const repoTag = imageInfo.RepoTags[0];
+      if (!repoTag) {
+        throw new Error('Image has no registry tags and cannot be updated');
+      }
+
+      // store whether the image originally had a single tag
+      const hadSingleTag = imageInfo.RepoTags.length === 1;
 
       // check if this is a localhost image
-      if (repoTag.startsWith('localhost/') || repoTag.startsWith('127.0.0.1')) {
+      if (repoTag.startsWith('localhost') || repoTag.startsWith('127.0.0.1')) {
         throw new Error('Local images cannot be updated');
       }
 
@@ -1308,16 +1314,16 @@ export class ContainerProviderRegistry {
         throw new Error('Image is already the latest version');
       }
 
-      // Only delete the old image if it had a single tag
-      if (updatedImageInfo.RepoTags?.length === 1) {
+      // Only delete the old image if it originally had a single tag
+      if (hadSingleTag) {
         try {
           await this.deleteImage(engineId, oldImageId);
-        } catch (error) {
-          console.warn(`Could not delete old image ${oldImageId}:`, error);
+        } catch (error: unknown) {
+          console.warn(`Could not delete old image ${oldImageId}: ${error}`);
           // Don't fail the update if we can't delete the old image
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       telemetryOptions = { error: error };
       throw error;
     } finally {
