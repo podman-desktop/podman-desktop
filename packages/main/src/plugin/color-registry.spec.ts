@@ -28,7 +28,7 @@ import type { ColorDefinition } from '/@api/color-info.js';
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
-import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
+import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
 import type { ColorBuilder } from './color-registry.js';
 import { ColorRegistry } from './color-registry.js';
@@ -276,8 +276,8 @@ test('initCardContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('card-bg');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(colorPalette.gray[300]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(colorPalette.charcoal[800]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[300]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.charcoal[800]);
 });
 
 test('initContent', async () => {
@@ -294,8 +294,8 @@ test('initContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(colorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(colorPalette.gray[600]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[600]);
 });
 
 describe('registerColor', () => {
@@ -622,12 +622,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[2]?.[0]).toStrictEqual('label-primary-bg');
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(colorPalette.purple[300]);
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(colorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.purple[700]);
 
     expect(spyOnRegisterColor.mock.calls[3]?.[0]).toStrictEqual('label-primary-text');
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(colorPalette.purple[700]);
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(colorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.purple[300]);
   });
 
   test('secondary color', () => {
@@ -635,12 +635,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[4]?.[0]).toStrictEqual('label-secondary-bg');
-    expect(spyOnRegisterColor.mock.calls[4]?.[1].light).toBe(colorPalette.sky[200]);
-    expect(spyOnRegisterColor.mock.calls[4]?.[1].dark).toBe(colorPalette.sky[900]);
+    expect(spyOnRegisterColor.mock.calls[4]?.[1].light).toBe(tailwindColorPalette.sky[200]);
+    expect(spyOnRegisterColor.mock.calls[4]?.[1].dark).toBe(tailwindColorPalette.sky[900]);
 
     expect(spyOnRegisterColor.mock.calls[5]?.[0]).toStrictEqual('label-secondary-text');
-    expect(spyOnRegisterColor.mock.calls[5]?.[1].light).toBe(colorPalette.sky[900]);
-    expect(spyOnRegisterColor.mock.calls[5]?.[1].dark).toBe(colorPalette.sky[200]);
+    expect(spyOnRegisterColor.mock.calls[5]?.[1].light).toBe(tailwindColorPalette.sky[900]);
+    expect(spyOnRegisterColor.mock.calls[5]?.[1].dark).toBe(tailwindColorPalette.sky[200]);
   });
 
   test('tertiary color', () => {
@@ -648,12 +648,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[6]?.[0]).toStrictEqual('label-tertiary-bg');
-    expect(spyOnRegisterColor.mock.calls[6]?.[1].light).toBe(colorPalette.green[200]);
-    expect(spyOnRegisterColor.mock.calls[6]?.[1].dark).toBe(colorPalette.green[900]);
+    expect(spyOnRegisterColor.mock.calls[6]?.[1].light).toBe(tailwindColorPalette.green[200]);
+    expect(spyOnRegisterColor.mock.calls[6]?.[1].dark).toBe(tailwindColorPalette.green[900]);
 
     expect(spyOnRegisterColor.mock.calls[7]?.[0]).toStrictEqual('label-tertiary-text');
-    expect(spyOnRegisterColor.mock.calls[7]?.[1].light).toBe(colorPalette.green[900]);
-    expect(spyOnRegisterColor.mock.calls[7]?.[1].dark).toBe(colorPalette.green[200]);
+    expect(spyOnRegisterColor.mock.calls[7]?.[1].light).toBe(tailwindColorPalette.green[900]);
+    expect(spyOnRegisterColor.mock.calls[7]?.[1].dark).toBe(tailwindColorPalette.green[200]);
   });
 
   test('quaternary color', () => {
@@ -661,12 +661,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[8]?.[0]).toStrictEqual('label-quaternary-bg');
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(colorPalette.amber[100]);
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(colorPalette.amber[800]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(tailwindColorPalette.amber[100]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(tailwindColorPalette.amber[800]);
 
     expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(colorPalette.amber[900]);
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(colorPalette.amber[400]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(tailwindColorPalette.amber[900]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(tailwindColorPalette.amber[400]);
   });
 });
 
@@ -690,8 +690,8 @@ describe('badge', () => {
 
     // check the call
     expect(spyOnRegisterColor).toBeCalledWith('badge-devmode-extension-bg', {
-      dark: colorPalette.dustypurple[600],
-      light: colorPalette.dustypurple[600],
+      dark: tailwindColorPalette.dustypurple[600],
+      light: tailwindColorPalette.dustypurple[600],
     });
   });
 });
