@@ -926,62 +926,62 @@ export class ColorRegistry {
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[600],
+      dark: colorPalette.violet[600],
+      light: colorPalette.violet[700],
     });
-    this.registerColor(`${button}primary-hover-bg`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+    this.registerColor(`${button}primary-hover`, {
+      dark: colorPalette.violet[500],
+      light: colorPalette.violet[600],
     });
-    this.registerColor(`${button}secondary`, {
-      dark: colorPalette.gray[200],
-      light: colorPalette.purple[600],
+    this.registerColor(`${button}primary-border`, {
+      dark: colorPalette.violet[700],
+      light: colorPalette.violet[700],
+    });
+    this.registerColor(`${button}primary-label`, {
+      dark: colorPalette.white,
+      light: colorPalette.white,
+    });
+    this.registerColor(`${button}secondary-bg`, {
+      dark: colorPalette.stone[800],
+      light: colorPalette.violet[200],
     });
     this.registerColor(`${button}secondary-hover`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: colorPalette.stone[700],
+      light: colorPalette.violet[100],
     });
-    this.registerColor(`${button}text`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+    this.registerColor(`${button}secondary-border`, {
+      dark: colorPalette.stone[300],
+      light: colorPalette.violet[700],
     });
-    this.registerColor(`${button}disabled`, {
-      dark: colorPalette.charcoal[300],
-      light: colorPalette.gray[600],
-    });
-    this.registerColor(`${button}disabled-text`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.gray[900],
-    });
-    this.registerColor(`${button}danger-border`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[700],
+    this.registerColor(`${button}secondary-label`, {
+      dark: colorPalette.stone[100],
+      light: colorPalette.violet[700],
     });
     this.registerColor(`${button}danger-bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: colorPalette.red[600],
+      light: colorPalette.red[200],
     });
-    this.registerColor(`${button}danger-text`, {
+    this.registerColor(`${button}danger-hover`, {
       dark: colorPalette.red[500],
+      light: colorPalette.red[100],
+    });
+    this.registerColor(`${button}danger-border`, {
+      dark: colorPalette.red[300],
       light: colorPalette.red[700],
     });
-    this.registerColor(`${button}danger-hover-text`, {
+    this.registerColor(`${button}danger-label`, {
       dark: colorPalette.white,
-      light: colorPalette.white,
+      light: colorPalette.red[700],
     });
-    this.registerColor(`${button}danger-hover-bg`, {
-      dark: colorPalette.red[600],
-      light: colorPalette.red[600],
+    this.registerColor(`${button}disabled-bg`, {
+      dark: colorPalette.stone[700],
+      light: colorPalette.stone[300],
     });
-    this.registerColor(`${button}danger-disabled-border`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.gray[900],
+    this.registerColor(`${button}disabled-label`, {
+      dark: colorPalette.stone[300],
+      light: colorPalette.stone[600],
     });
-    this.registerColor(`${button}danger-disabled-text`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.gray[900],
-    });
-    this.registerColor(`${button}danger-disabled-bg`, {
+    this.registerColor(`${button}hc-stroke`, {
       dark: colorPalette.transparent,
       light: colorPalette.transparent,
     });
