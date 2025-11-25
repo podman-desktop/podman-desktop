@@ -18,51 +18,28 @@
 
 import type { Configuration } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import type * as detect from './detect';
+import { Detect } from './detect';
 import * as handler from './handler';
 
-const config: Configuration = {
-  get: () => {
-    return true;
-  },
-  has: () => true,
-  update: () => Promise.resolve(),
-};
-
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    configuration: {
-      getConfiguration: (): Configuration => config,
-    },
-    window: {
-      showInformationMessage: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-  };
-});
-
+vi.mock(import('./detect'));
 const extensionContextMock: extensionApi.ExtensionContext = {
   storagePath: '/storage-path',
 } as unknown as extensionApi.ExtensionContext;
 
-test('updateConfigAndContextKubectlBinary: make sure configuration gets updated if checkSystemWideKubectl had returned true', async () => {
-  vi.mock('./detect', () => {
-    // Create mock Detect
-    const detectMock: detect.Detect = {
-      checkSystemWideKubectl: vi.fn().mockReturnValue(Promise.resolve(true)),
-      checkForKubectl: vi.fn().mockReturnValue(Promise.resolve(true)),
-      getStoragePath: vi.fn().mockReturnValue(Promise.resolve('mockPath')),
-    } as unknown as detect.Detect;
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(),
+    update: vi.fn(),
+  } as unknown as Configuration);
+});
 
-    // Make sure we return it with the above mocked values
-    return {
-      Detect: vi.fn().mockReturnValue(detectMock),
-    };
-  });
+test('updateConfigAndContextKubectlBinary: make sure configuration gets updated if checkSystemWideKubectl had returned true', async () => {
+  vi.mocked(Detect.prototype.checkSystemWideKubectl).mockReturnValue(Promise.resolve(true));
+  vi.mocked(Detect.prototype.checkForKubectl).mockReturnValue(Promise.resolve(true));
+  vi.mocked(Detect.prototype.getStoragePath).mockReturnValue(Promise.resolve('mockPath'));
 
   // Spy on setValue and configuration updates
   const contextUpdateSpy = vi.spyOn(extensionApi.context, 'setValue');

@@ -13,10 +13,23 @@ interface Props {
   bottomLeft?: boolean;
   bottomRight?: boolean;
   classStyle?: string;
+  containerClass?: string;
 }
 
-let { tip, tipSlot, top, bottom, left, right, topLeft, topRight, bottomLeft, bottomRight, classStyle }: Props =
-  $props();
+let {
+  tip,
+  tipSlot,
+  top,
+  bottom,
+  left,
+  right,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+  classStyle,
+  containerClass,
+}: Props = $props();
 </script>
 
 <Tooltip
@@ -29,6 +42,7 @@ let { tip, tipSlot, top, bottom, left, right, topLeft, topRight, bottomLeft, bot
   {topRight}
   {bottomLeft}
   {bottomRight}
+  {containerClass}
   class={classStyle}>
   {#snippet tipSnippet()}
     {#if tipSlot}

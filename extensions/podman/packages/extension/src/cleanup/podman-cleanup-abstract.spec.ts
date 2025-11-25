@@ -38,15 +38,6 @@ class TestAbsPodmanCleanup extends AbsPodmanCleanup {
 }
 let absPodmanCleanup: TestAbsPodmanCleanup;
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 // mock exists sync
 vi.mock('node:fs', async () => {
   return {

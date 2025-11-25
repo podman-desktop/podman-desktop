@@ -9,6 +9,7 @@ import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import Markdown from '../markdown/Markdown.svelte';
+import PreferencesManagedLabel from './PreferencesManagedLabel.svelte';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
 interface Props {
@@ -92,6 +93,10 @@ async function openGitHubDiscussion(): Promise<void> {
       <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
         <div class="flex flex-row space-x-2 items-center">
           <span class="font-semibold">{recordUI.title}</span>
+         
+          {#if record.locked}
+            <PreferencesManagedLabel />
+          {/if}
           {#if record.experimental !== undefined}
             <Label>
               <div class="flex flex-row space-x-1 items-center">

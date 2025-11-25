@@ -23,11 +23,7 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';
-import {
-  ContextPermissionsChecker,
-  type ContextPermissionsRequest,
-  type ContextResourcePermission,
-} from './context-permissions-checker.js';
+import { ContextPermissionsChecker, type ContextResourcePermission } from './context-permissions-checker.js';
 import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 import { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import type { ResourceFactory } from './resource-factory.js';
@@ -36,7 +32,7 @@ import type { CacheUpdatedEvent, OfflineEvent, ResourceInformer } from './resour
 
 const onCacheUpdatedMock = vi.fn<Event<CacheUpdatedEvent>>();
 const onOfflineMock = vi.fn<Event<OfflineEvent>>();
-const startMock = vi.fn();
+const startInformerMock = vi.fn();
 const informerDisposeMock = vi.fn();
 
 class TestContextsManagerExperimental extends ContextsManagerExperimental {
@@ -60,7 +56,7 @@ class TestContextsManagerExperimental extends ContextsManagerExperimental {
             return {
               onCacheUpdated: onCacheUpdatedMock,
               onOffline: onOfflineMock,
-              start: startMock,
+              start: startInformerMock,
               dispose: informerDisposeMock,
             } as unknown as ResourceInformer<KubernetesObject>;
           },
@@ -147,13 +143,35 @@ const kcWithContext2asDefault = {
   currentContext: 'context2',
 };
 
-vi.mock('./context-health-checker.js');
-vi.mock('./context-permissions-checker.js');
+vi.mock(import('./context-health-checker.js'), () => ({
+  ContextHealthChecker: vi.fn(
+    class {
+      contextName: string;
+      constructor(kubeConfig: KubeConfigSingleContext) {
+        this.contextName = kubeConfig.getKubeConfig().currentContext;
+      }
+    },
+  ) as unknown as typeof ContextHealthChecker,
+}));
+/**
+ * During the test we need to know which constructor kubeConfig an instance of ContextPermissionsChecker has received
+ * This is verified using the context name
+ */
+vi.mock(import('./context-permissions-checker.js'), () => ({
+  ContextPermissionsChecker: vi.fn(
+    class {
+      contextName: string;
+      constructor(_kubeconfig: KubeConfigSingleContext, contextName: string) {
+        this.contextName = contextName;
+      }
+    },
+  ) as unknown as typeof ContextPermissionsChecker,
+}));
 
 let kcWith2contexts: KubeConfig;
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   kcWith2contexts = {
     contexts: [
       {
@@ -188,41 +206,28 @@ beforeEach(() => {
     currentContext: 'context1',
   } as unknown as KubeConfig;
 
-  vi.mocked(ContextHealthChecker).mockClear();
-  vi.mocked(ContextPermissionsChecker).mockClear();
+  // mock ContextHealthChecker prototype
+  vi.mocked(ContextHealthChecker.prototype).onReachable = vi.fn();
+  vi.mocked(ContextHealthChecker.prototype).onStateChange = vi.fn();
+  vi.mocked(ContextHealthChecker.prototype).start = vi.fn();
+  vi.mocked(ContextHealthChecker.prototype).dispose = vi.fn();
+  vi.mocked(ContextHealthChecker.prototype).getState = vi.fn();
+
+  // adding event properties on prototypes
+  vi.mocked(ContextPermissionsChecker.prototype).onPermissionResult = vi.fn();
+  vi.mocked(ContextPermissionsChecker.prototype).start = vi.fn();
+  vi.mocked(ContextPermissionsChecker.prototype).dispose = vi.fn();
+  vi.mocked(ContextPermissionsChecker.prototype).getPermissions = vi.fn();
 });
 
 describe('HealthChecker is built and start is called for each context the first time', async () => {
   let kc: KubeConfig;
   let manager: TestContextsManagerExperimental;
-  const healthStartMock = vi.fn();
-  const healthDisposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-  const onreachableMock = vi.fn();
-  const permissionsStartMock = vi.fn();
 
   beforeEach(async () => {
     kc = new KubeConfig();
     kc.loadFromOptions(kcWith2contexts);
 
-    vi.mocked(ContextHealthChecker).mockImplementation(
-      () =>
-        ({
-          start: healthStartMock,
-          dispose: healthDisposeMock,
-          onStateChange: onStateChangeMock,
-          onReachable: onreachableMock,
-        }) as unknown as ContextHealthChecker,
-    );
-
-    vi.mocked(ContextPermissionsChecker).mockImplementation(
-      () =>
-        ({
-          start: permissionsStartMock,
-          onPermissionResult: vi.fn(),
-          isForContext: vi.fn(),
-        }) as unknown as ContextPermissionsChecker,
-    );
     manager = new TestContextsManagerExperimental();
   });
 
@@ -235,9 +240,9 @@ describe('HealthChecker is built and start is called for each context the first 
     const kc2 = new KubeConfig();
     kc2.loadFromOptions(kcWithContext2asDefault);
     expect(ContextHealthChecker).toHaveBeenCalledWith(new KubeConfigSingleContext(kc2, context2));
-    expect(healthStartMock).toHaveBeenCalledTimes(1);
+    expect(ContextHealthChecker.prototype.start).toHaveBeenCalledTimes(1);
 
-    expect(healthDisposeMock).not.toHaveBeenCalled();
+    expect(ContextHealthChecker.prototype.dispose).not.toHaveBeenCalled();
 
     expect(ContextPermissionsChecker).not.toHaveBeenCalled();
   });
@@ -246,7 +251,7 @@ describe('HealthChecker is built and start is called for each context the first 
     const kcSingle1 = new KubeConfigSingleContext(kc, context1);
     const kcSingle2 = new KubeConfigSingleContext(kc, context2);
     let call = 0;
-    onreachableMock.mockImplementation(f => {
+    vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
       call++;
       f({
         kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
@@ -254,6 +259,9 @@ describe('HealthChecker is built and start is called for each context the first 
         checking: false,
         reachable: true,
       } as ContextHealthState);
+      return {
+        dispose: vi.fn(),
+      };
     });
     await manager.update(kc);
 
@@ -261,56 +269,39 @@ describe('HealthChecker is built and start is called for each context the first 
     expect(ContextPermissionsChecker).toHaveBeenCalledTimes(2);
     expect(ContextPermissionsChecker).toHaveBeenCalledWith(kcSingle1, 'context1', expect.anything());
 
-    expect(permissionsStartMock).toHaveBeenCalledTimes(2);
+    expect(ContextPermissionsChecker.prototype.start).toHaveBeenCalledTimes(2);
+    return {
+      dispose: vi.fn(),
+    };
   });
 });
 
 describe('HealthChecker pass and PermissionsChecker resturns a value', async () => {
   let kc: KubeConfig;
   let manager: TestContextsManagerExperimental;
-  const healthStartMock = vi.fn();
-  const healthDisposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-  const onreachableMock = vi.fn();
-  const permissionsStartMock = vi.fn();
-  const onPermissionResultMock = vi.fn();
 
   beforeEach(async () => {
     kc = new KubeConfig();
     kc.loadFromOptions(kcWith2contexts);
 
-    vi.mocked(ContextHealthChecker).mockImplementation(
-      () =>
-        ({
-          start: healthStartMock,
-          dispose: healthDisposeMock,
-          onStateChange: onStateChangeMock,
-          onReachable: onreachableMock,
-        }) as unknown as ContextHealthChecker,
-    );
-
-    vi.mocked(ContextPermissionsChecker).mockImplementation(
-      () =>
-        ({
-          start: permissionsStartMock,
-          onPermissionResult: onPermissionResultMock,
-        }) as unknown as ContextPermissionsChecker,
-    );
     manager = new TestContextsManagerExperimental();
   });
 
   test('permissions are correctly dispatched', async () => {
     const kcSingle1 = new KubeConfigSingleContext(kc, context1);
     let permissionCall = 0;
-    onreachableMock.mockImplementation(f => {
+    vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
       f({
         kubeConfig: kcSingle1,
         contextName: 'context1',
         checking: false,
         reachable: true,
       } as ContextHealthState);
+      return {
+        dispose: vi.fn(),
+      };
     });
-    onPermissionResultMock.mockImplementation(f => {
+    vi.mocked(ContextPermissionsChecker.prototype.onPermissionResult).mockImplementation(f => {
       permissionCall++;
       switch (permissionCall) {
         case 1:
@@ -319,6 +310,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle1,
             resources: ['resource1', 'resource2'],
             permitted: true,
+            attrs: {},
           });
           break;
         case 3:
@@ -327,9 +319,13 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle1,
             resources: ['resource3'],
             permitted: true,
+            attrs: {},
           });
           break;
       }
+      return {
+        dispose: vi.fn(),
+      };
     });
     const permissions1: ContextResourcePermission[] = [
       {
@@ -354,24 +350,17 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
       },
     ];
     let getPermissionsCall = 0;
-    vi.mocked(ContextPermissionsChecker).mockImplementation(
-      () =>
-        ({
-          start: permissionsStartMock,
-          onPermissionResult: onPermissionResultMock,
-          isForContext: vi.fn(),
-          getPermissions: vi.fn().mockImplementation(() => {
-            getPermissionsCall++;
-            switch (getPermissionsCall) {
-              case 1:
-                return permissions1;
-              case 2:
-                return permissions2;
-            }
-            return [];
-          }),
-        }) as unknown as ContextPermissionsChecker,
-    );
+    vi.mocked(ContextPermissionsChecker.prototype.getPermissions).mockImplementation(() => {
+      getPermissionsCall++;
+      switch (getPermissionsCall) {
+        case 1:
+          return permissions1;
+        case 2:
+          return permissions2;
+      }
+      return [];
+    });
+
     await manager.update(kc);
     const permissions = manager.getPermissions();
     expect(permissions).toEqual([...permissions1, ...permissions2]);
@@ -382,7 +371,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
     const kcSingle2 = new KubeConfigSingleContext(kc, context2);
     let call = 0;
     let permissionCall = 0;
-    onreachableMock.mockImplementation(f => {
+    vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
       call++;
       f({
         kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
@@ -390,8 +379,11 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
         checking: false,
         reachable: true,
       } as ContextHealthState);
+      return {
+        dispose: vi.fn(),
+      };
     });
-    onPermissionResultMock.mockImplementation(f => {
+    vi.mocked(ContextPermissionsChecker.prototype.onPermissionResult).mockImplementation(f => {
       permissionCall++;
       switch (permissionCall) {
         case 1:
@@ -400,6 +392,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle1,
             resources: ['resource1', 'resource2'],
             permitted: true,
+            attrs: {},
           });
           break;
         case 3:
@@ -408,6 +401,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle2,
             resources: ['resource1', 'resource2'],
             permitted: true,
+            attrs: {},
           });
           break;
         case 5:
@@ -416,6 +410,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle1,
             resources: ['resource3'],
             permitted: true,
+            attrs: {},
           });
           break;
         case 7:
@@ -424,20 +419,16 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle2,
             resources: ['resource3'],
             permitted: true,
+            attrs: {},
           });
           break;
       }
+      return {
+        dispose: vi.fn(),
+      };
     });
-    vi.mocked(ContextPermissionsChecker).mockImplementation(
-      () =>
-        ({
-          start: permissionsStartMock,
-          onPermissionResult: onPermissionResultMock,
-          isForContext: vi.fn(),
-        }) as unknown as ContextPermissionsChecker,
-    );
     await manager.update(kc);
-    expect(startMock).toHaveBeenCalledTimes(2); // on resource1 for each context (resource2 and resource3 do not have informer declared)
+    expect(startInformerMock).toHaveBeenCalledTimes(2); // on resource1 for each context (resource2 and resource3 do not have informer declared)
   });
 
   test('informer is started for permitted resources only', async () => {
@@ -445,7 +436,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
     const kcSingle2 = new KubeConfigSingleContext(kc, context2);
     let call = 0;
     let permissionCall = 0;
-    onreachableMock.mockImplementation(f => {
+    vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
       call++;
       f({
         kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
@@ -453,8 +444,11 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
         checking: false,
         reachable: true,
       } as ContextHealthState);
+      return {
+        dispose: vi.fn(),
+      };
     });
-    onPermissionResultMock.mockImplementation(f => {
+    vi.mocked(ContextPermissionsChecker.prototype.onPermissionResult).mockImplementation(f => {
       permissionCall++;
       switch (permissionCall) {
         case 1:
@@ -463,6 +457,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle1,
             resources: ['resource1', 'resource2'],
             permitted: true,
+            attrs: {},
           });
           break;
         case 3:
@@ -471,6 +466,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle2,
             resources: ['resource1', 'resource2'],
             permitted: false,
+            attrs: {},
           });
           break;
         case 5:
@@ -479,6 +475,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle1,
             resources: ['resource3'],
             permitted: true,
+            attrs: {},
           });
           break;
         case 7:
@@ -487,20 +484,16 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
             kubeConfig: kcSingle2,
             resources: ['resource3'],
             permitted: true,
+            attrs: {},
           });
           break;
       }
+      return {
+        dispose: vi.fn(),
+      };
     });
-    vi.mocked(ContextPermissionsChecker).mockImplementation(
-      () =>
-        ({
-          start: permissionsStartMock,
-          onPermissionResult: onPermissionResultMock,
-          isForContext: vi.fn(),
-        }) as unknown as ContextPermissionsChecker,
-    );
     await manager.update(kc);
-    expect(startMock).toHaveBeenCalledTimes(1); // on resource1 for context1 only (resource2 and resource3 do not have informer declared;, and resource1 is not permitted in context2)
+    expect(startInformerMock).toHaveBeenCalledTimes(1); // on resource1 for context1 only (resource2 and resource3 do not have informer declared;, and resource1 is not permitted in context2)
   });
 
   describe('informer is started', async () => {
@@ -511,7 +504,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
       kcSingle2 = new KubeConfigSingleContext(kc, context2);
       let call = 0;
       let permissionCall = 0;
-      onreachableMock.mockImplementation(f => {
+      vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
         call++;
         f({
           kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
@@ -519,8 +512,11 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
           checking: false,
           reachable: call === 1,
         } as ContextHealthState);
+        return {
+          dispose: vi.fn(),
+        };
       });
-      onPermissionResultMock.mockImplementation(f => {
+      vi.mocked(ContextPermissionsChecker.prototype.onPermissionResult).mockImplementation(f => {
         permissionCall++;
         switch (permissionCall) {
           case 1:
@@ -529,6 +525,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
               kubeConfig: kcSingle1,
               resources: ['resource1', 'resource2'],
               permitted: true,
+              attrs: {},
             });
             break;
           case 3:
@@ -537,6 +534,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
               kubeConfig: kcSingle2,
               resources: ['resource1', 'resource2'],
               permitted: true,
+              attrs: {},
             });
             break;
           case 5:
@@ -545,6 +543,7 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
               kubeConfig: kcSingle1,
               resources: ['resource3'],
               permitted: true,
+              attrs: {},
             });
             break;
           case 7:
@@ -553,21 +552,17 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
               kubeConfig: kcSingle2,
               resources: ['resource3'],
               permitted: true,
+              attrs: {},
             });
             break;
         }
+        return {
+          dispose: vi.fn(),
+        };
       });
     });
 
     test('cache updated with a change on resource count', async () => {
-      vi.mocked(ContextPermissionsChecker).mockImplementation(
-        () =>
-          ({
-            start: permissionsStartMock,
-            onPermissionResult: onPermissionResultMock,
-            contextName: 'ctx',
-          }) as unknown as ContextPermissionsChecker,
-      );
       onCacheUpdatedMock.mockImplementation(f => {
         f({
           kubeconfig: kcSingle1,
@@ -584,20 +579,12 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
       manager.onResourceCountUpdated(onResourceCountUpdatedCB);
       await manager.update(kc);
       // called twice: on resource1 for each context
-      expect(startMock).toHaveBeenCalledTimes(2);
+      expect(startInformerMock).toHaveBeenCalledTimes(2);
       expect(onResourceUpdatedCB).toHaveBeenCalledTimes(2);
       expect(onResourceCountUpdatedCB).toHaveBeenCalledTimes(2);
     });
 
     test('cache updated without a change on resource count', async () => {
-      vi.mocked(ContextPermissionsChecker).mockImplementation(
-        () =>
-          ({
-            start: permissionsStartMock,
-            onPermissionResult: onPermissionResultMock,
-            contextName: 'ctx1',
-          }) as unknown as ContextPermissionsChecker,
-      );
       onCacheUpdatedMock.mockImplementation(f => {
         f({
           kubeconfig: kcSingle1,
@@ -614,22 +601,14 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
       manager.onResourceCountUpdated(onResourceCountUpdatedCB);
       await manager.update(kc);
       // called twice: on resource1 for each context
-      expect(startMock).toHaveBeenCalledTimes(2);
+      expect(startInformerMock).toHaveBeenCalledTimes(2);
       expect(onResourceUpdatedCB).toHaveBeenCalledTimes(2);
       expect(onResourceCountUpdatedCB).not.toHaveBeenCalled();
     });
 
     test('getResourcesCount', async () => {
-      vi.mocked(ContextPermissionsChecker).mockImplementation(
-        () =>
-          ({
-            start: permissionsStartMock,
-            onPermissionResult: onPermissionResultMock,
-            contextName: 'ctx1',
-          }) as unknown as ContextPermissionsChecker,
-      );
       const listMock = vi.fn();
-      startMock.mockReturnValue({
+      startInformerMock.mockReturnValue({
         list: listMock,
         get: vi.fn(),
       } as ObjectCache<KubernetesObject>);
@@ -651,16 +630,8 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
     });
 
     test('getActiveResourcesCount', async () => {
-      vi.mocked(ContextPermissionsChecker).mockImplementation(
-        () =>
-          ({
-            start: permissionsStartMock,
-            onPermissionResult: onPermissionResultMock,
-            contextName: 'ctx1',
-          }) as unknown as ContextPermissionsChecker,
-      );
       const listMock = vi.fn();
-      startMock.mockReturnValue({
+      startInformerMock.mockReturnValue({
         list: listMock,
         get: vi.fn(),
       } as ObjectCache<KubernetesObject>);
@@ -689,16 +660,8 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
     });
 
     test('getResources', async () => {
-      vi.mocked(ContextPermissionsChecker).mockImplementation(
-        () =>
-          ({
-            start: permissionsStartMock,
-            onPermissionResult: onPermissionResultMock,
-            contextName: 'ctx1',
-          }) as unknown as ContextPermissionsChecker,
-      );
       const listMock = vi.fn();
-      startMock.mockReturnValue({
+      startInformerMock.mockReturnValue({
         list: listMock,
         get: vi.fn(),
       } as ObjectCache<KubernetesObject>);
@@ -719,16 +682,8 @@ describe('HealthChecker pass and PermissionsChecker resturns a value', async () 
     });
 
     test('one offline informer clears all caches', async () => {
-      vi.mocked(ContextPermissionsChecker).mockImplementation(
-        () =>
-          ({
-            start: permissionsStartMock,
-            onPermissionResult: onPermissionResultMock,
-            contextName: 'ctx1',
-          }) as unknown as ContextPermissionsChecker,
-      );
       const listMock = vi.fn();
-      startMock.mockReturnValue({
+      startInformerMock.mockReturnValue({
         list: listMock,
         get: vi.fn(),
       } as ObjectCache<KubernetesObject>);
@@ -792,30 +747,16 @@ test('nothing is done when called again and kubeconfig does not change', async (
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const startMock = vi.fn();
-  const disposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    () =>
-      ({
-        start: startMock,
-        dispose: disposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: vi.fn(),
-      }) as unknown as ContextHealthChecker,
-  );
-
   await manager.update(kc);
 
   vi.mocked(ContextHealthChecker).mockClear();
-  vi.mocked(startMock).mockClear();
+  vi.mocked(ContextHealthChecker.prototype.start).mockClear();
 
   // check it is not called again if kubeconfig does not change
   await manager.update(kc);
   expect(ContextHealthChecker).not.toHaveBeenCalled();
-  expect(startMock).not.toHaveBeenCalled();
-  expect(disposeMock).not.toHaveBeenCalled();
+  expect(ContextHealthChecker.prototype.start).not.toHaveBeenCalled();
+  expect(ContextHealthChecker.prototype.dispose).not.toHaveBeenCalled();
 });
 
 test('HealthChecker is built and start is called for each context being changed', async () => {
@@ -823,32 +764,18 @@ test('HealthChecker is built and start is called for each context being changed'
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const startMock = vi.fn();
-  const disposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    () =>
-      ({
-        start: startMock,
-        dispose: disposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: vi.fn(),
-      }) as unknown as ContextHealthChecker,
-  );
-
   await manager.update(kc);
 
   // check it is called again if kubeconfig changes
   vi.mocked(ContextHealthChecker).mockClear();
-  vi.mocked(startMock).mockClear();
+  vi.mocked(ContextHealthChecker.prototype.start).mockClear();
 
   kcWith2contexts.users[0]!.certFile = 'file';
   kc.loadFromOptions(kcWith2contexts);
   await manager.update(kc);
-  expect(disposeMock).toHaveBeenCalledTimes(1);
+  expect(ContextHealthChecker.prototype.dispose).toHaveBeenCalledTimes(1);
   expect(ContextHealthChecker).toHaveBeenCalledTimes(1);
-  expect(startMock).toHaveBeenCalledTimes(1);
+  expect(ContextHealthChecker.prototype.start).toHaveBeenCalledTimes(1);
 });
 
 test('HealthChecker, PermissionsChecker and informers are disposed for each context being removed', async () => {
@@ -856,56 +783,43 @@ test('HealthChecker, PermissionsChecker and informers are disposed for each cont
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const healthStartMock = vi.fn();
-  const healthDisposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-  const permissionsStartMock = vi.fn();
-  const permissionsDisposeMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation((kubeConfig: KubeConfigSingleContext) => {
-    const contextName = kubeConfig.getKubeConfig().currentContext;
+  vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
+    f({
+      kubeConfig: {
+        getNamespace: vi.fn().mockReturnValue(kcWith2contexts.currentContext),
+      } as unknown as KubeConfigSingleContext,
+      contextName: kcWith2contexts.currentContext,
+      checking: false,
+      reachable: true,
+    });
     return {
-      start: healthStartMock,
-      dispose: healthDisposeMock,
-      onStateChange: onStateChangeMock,
-      onReachable: vi.fn().mockImplementation(f =>
-        f({
-          kubeConfig: {
-            getNamespace: vi.fn().mockReturnValue(contextName),
-          } as unknown as KubeConfigSingleContext,
-          contextName,
-          checking: false,
-          reachable: true,
-        } as ContextHealthState),
-      ),
-    } as unknown as ContextHealthChecker;
+      dispose: vi.fn(),
+    };
   });
 
-  vi.mocked(ContextPermissionsChecker).mockImplementation(
-    (_kubeconfig: KubeConfigSingleContext, contextName: string, _request: ContextPermissionsRequest) => {
-      return {
-        start: permissionsStartMock,
-        dispose: permissionsDisposeMock,
-        onPermissionResult: vi.fn().mockImplementation(f => {
-          f({
-            permitted: true,
-            resources: ['resource1'],
-            kubeConfig: new KubeConfigSingleContext(kcWith2contexts, contextName === 'context1' ? context1 : context2),
-          });
-        }),
-        contextName,
-      } as unknown as ContextPermissionsChecker;
-    },
-  );
+  vi.mocked(ContextPermissionsChecker.prototype.onPermissionResult).mockImplementation(function (
+    this: ContextPermissionsChecker,
+    f,
+  ) {
+    f({
+      permitted: true,
+      resources: ['resource1'],
+      kubeConfig: new KubeConfigSingleContext(kcWith2contexts, this.contextName === 'context1' ? context1 : context2),
+      attrs: {},
+    });
+    return {
+      dispose: vi.fn(),
+    };
+  });
 
   await manager.update(kc);
 
   // check when kubeconfig changes
   vi.mocked(ContextHealthChecker).mockClear();
-  vi.mocked(healthStartMock).mockClear();
+  vi.mocked(ContextHealthChecker.prototype.start).mockClear();
   vi.mocked(ContextPermissionsChecker).mockClear();
-  vi.mocked(permissionsStartMock).mockClear();
-  vi.mocked(permissionsDisposeMock).mockClear();
+  vi.mocked(ContextPermissionsChecker.prototype.start).mockClear();
+  vi.mocked(ContextPermissionsChecker.prototype.dispose).mockClear();
 
   // we remove context1 from kubeconfig
   const kc1 = {
@@ -916,11 +830,11 @@ test('HealthChecker, PermissionsChecker and informers are disposed for each cont
   } as unknown as KubeConfig;
   kc.loadFromOptions(kc1);
   await manager.update(kc);
-  expect(healthDisposeMock).toHaveBeenCalledTimes(1);
+  expect(ContextHealthChecker.prototype.dispose).toHaveBeenCalledTimes(1);
   expect(ContextHealthChecker).toHaveBeenCalledTimes(0);
-  expect(healthStartMock).toHaveBeenCalledTimes(0);
+  expect(ContextHealthChecker.prototype.start).toHaveBeenCalledTimes(0);
 
-  expect(permissionsDisposeMock).toHaveBeenCalledTimes(2); // one for namespaced, one for non-namespaced
+  expect(ContextPermissionsChecker.prototype.dispose).toHaveBeenCalledTimes(2); // one for namespaced, one for non-namespaced
 
   expect(informerDisposeMock).toHaveBeenCalledTimes(1); // for resource1 on context1
 });
@@ -930,30 +844,15 @@ test('getHealthCheckersStates calls getState for each health checker', async () 
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const startMock = vi.fn();
-  const disposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    (kubeConfig: KubeConfigSingleContext) =>
-      ({
-        start: startMock,
-        dispose: disposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: vi.fn(),
-        getState: vi.fn().mockImplementation(() => {
-          return {
-            kubeConfig: new KubeConfigSingleContext(
-              kcWith2contexts,
-              kubeConfig.getKubeConfig().currentContext === 'context1' ? context1 : context2,
-            ),
-            contextName: kubeConfig.getKubeConfig().currentContext,
-            checking: kubeConfig.getKubeConfig().currentContext === 'context1' ? true : false,
-            reachable: false,
-          };
-        }),
-      }) as unknown as ContextHealthChecker,
-  );
+  // TODO: cleanup
+  vi.mocked(ContextHealthChecker.prototype.getState).mockImplementation(function (this: ContextHealthChecker) {
+    return {
+      kubeConfig: new KubeConfigSingleContext(kcWith2contexts, this.contextName === 'context1' ? context1 : context2),
+      contextName: this.contextName,
+      checking: this.contextName === 'context1' ? true : false,
+      reachable: false,
+    };
+  });
 
   await manager.update(kc);
 
@@ -973,26 +872,10 @@ test('getPermissions calls getPermissions for each permissions checker', async (
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const startMock = vi.fn();
-  const disposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-  const onReachableMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    () =>
-      ({
-        start: startMock,
-        dispose: disposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: onReachableMock,
-        getState: vi.fn(),
-      }) as unknown as ContextHealthChecker,
-  );
-
   const kcSingle1 = new KubeConfigSingleContext(kc, context1);
   const kcSingle2 = new KubeConfigSingleContext(kc, context2);
   let call = 0;
-  onReachableMock.mockImplementation(f => {
+  vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
     call++;
     f({
       kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
@@ -1000,23 +883,15 @@ test('getPermissions calls getPermissions for each permissions checker', async (
       checking: false,
       reachable: true,
     } as ContextHealthState);
+    return {
+      dispose: vi.fn(),
+    };
   });
-
-  const getPermissionsMock = vi.fn();
-  vi.mocked(ContextPermissionsChecker).mockImplementation(
-    () =>
-      ({
-        start: vi.fn(),
-        getPermissions: getPermissionsMock,
-        onPermissionResult: vi.fn(),
-        isForContext: vi.fn(),
-      }) as unknown as ContextPermissionsChecker,
-  );
 
   await manager.update(kc);
 
   manager.getPermissions();
-  expect(getPermissionsMock).toHaveBeenCalledTimes(2);
+  expect(ContextPermissionsChecker.prototype.getPermissions).toHaveBeenCalledTimes(2);
 });
 
 test('dispose calls dispose for each health checker', async () => {
@@ -1024,24 +899,10 @@ test('dispose calls dispose for each health checker', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const startMock = vi.fn();
-  const disposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    () =>
-      ({
-        start: startMock,
-        dispose: disposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: vi.fn(),
-      }) as unknown as ContextHealthChecker,
-  );
-
   await manager.update(kc);
 
   manager.dispose();
-  expect(disposeMock).toHaveBeenCalledTimes(1);
+  expect(ContextHealthChecker.prototype.dispose).toHaveBeenCalledTimes(1);
 });
 
 test('dispose calls dispose for each permissions checker', async () => {
@@ -1049,25 +910,11 @@ test('dispose calls dispose for each permissions checker', async () => {
   kc.loadFromOptions(kcWith2contexts);
   const manager = new TestContextsManagerExperimental();
 
-  const startMock = vi.fn();
-  const disposeMock = vi.fn();
-  const onStateChangeMock = vi.fn();
-  const onReachableMock = vi.fn();
-
-  vi.mocked(ContextHealthChecker).mockImplementation(
-    () =>
-      ({
-        start: startMock,
-        dispose: disposeMock,
-        onStateChange: onStateChangeMock,
-        onReachable: onReachableMock,
-      }) as unknown as ContextHealthChecker,
-  );
-
   const kcSingle1 = new KubeConfigSingleContext(kc, context1);
   const kcSingle2 = new KubeConfigSingleContext(kc, context2);
   let call = 0;
-  onReachableMock.mockImplementation(f => {
+
+  vi.mocked(ContextHealthChecker.prototype.onReachable).mockImplementation(f => {
     call++;
     f({
       kubeConfig: call === 1 ? kcSingle1 : kcSingle2,
@@ -1075,26 +922,15 @@ test('dispose calls dispose for each permissions checker', async () => {
       checking: false,
       reachable: true,
     } as ContextHealthState);
+    return {
+      dispose: vi.fn(),
+    };
   });
-
-  const getPermissionsMock = vi.fn();
-  const permissionsDisposeMock = vi.fn();
-
-  vi.mocked(ContextPermissionsChecker).mockImplementation(
-    () =>
-      ({
-        start: vi.fn(),
-        getPermissions: getPermissionsMock,
-        onPermissionResult: vi.fn(),
-        dispose: permissionsDisposeMock,
-        isForContext: vi.fn(),
-      }) as unknown as ContextPermissionsChecker,
-  );
 
   await manager.update(kc);
 
   manager.dispose();
-  expect(permissionsDisposeMock).toHaveBeenCalledTimes(2);
+  expect(ContextPermissionsChecker.prototype.dispose).toHaveBeenCalledTimes(2);
 });
 
 test('only current context is monitored', async () => {

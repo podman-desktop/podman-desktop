@@ -24,6 +24,7 @@ import { getDefaultVirtualizationProvider } from '/@/utility/provider';
 
 import { DropdownComponent } from '../../components/dropdown-component';
 import type { PodmanVirtualizationProviders } from '../../core/types';
+import { matchesProviderVariant, PodmanVirtualizationProviderVariants } from '../../core/types';
 import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
@@ -123,11 +124,23 @@ export class MachineCreationForm extends BasePage {
       // Only select if the dropdown is actually present/visible
       if (!(await this.providerTypeDropdown.getContainer().isVisible())) return;
       await this.providerTypeDropdown.waitForReady();
-      // Compare by the hidden input value (case-insensitive)
-      const currentValue = (await this.providerTypeDropdown.getCurrentValue()).toLowerCase();
-      if (virtualizationProvider.toLowerCase() !== currentValue) {
-        await this.providerTypeDropdown.selectOption(virtualizationProvider, virtualizationProvider, false);
-        await this.providerTypeDropdown.verifyState(virtualizationProvider, virtualizationProvider);
+      // Compare by the hidden input value using variant matching to handle version differences
+      const currentValue = await this.providerTypeDropdown.getCurrentValue();
+      if (!matchesProviderVariant(virtualizationProvider, currentValue)) {
+        // Try to find which variant actually exists in the dropdown
+        const availableOptions = await this.providerTypeDropdown.getAvailableOptions();
+        const variants = PodmanVirtualizationProviderVariants[virtualizationProvider];
+        // Find the first variant that matches any available option
+        const matchingVariant = variants.find(variant =>
+          availableOptions.some(option => option.toLowerCase().trim() === variant.toLowerCase().trim()),
+        );
+        if (!matchingVariant) {
+          throw new Error(
+            `No matching variant found for provider ${virtualizationProvider}. Available options: ${availableOptions.join(', ')}. Expected variants: ${variants.join(', ')}`,
+          );
+        }
+        await this.providerTypeDropdown.selectOption(matchingVariant, matchingVariant, false);
+        await this.providerTypeDropdown.verifyState(matchingVariant, matchingVariant);
       }
     });
   }

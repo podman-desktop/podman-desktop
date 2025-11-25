@@ -17,10 +17,11 @@
  ***********************************************************************/
 
 import type { App } from 'electron';
-import { app, BrowserWindow, Menu, Tray } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { mainWindowDeferred } from './index.js';
@@ -73,53 +74,22 @@ const fakeWindow = {
   },
 } as unknown as BrowserWindow;
 
-const initMock = vi.fn();
 const extensionLoader = {
   getConfigurationRegistry: vi.fn(),
-};
+} as unknown as ExtensionLoader;
 
-vi.mock('./plugin', async () => {
-  return {
-    PluginSystem: vi.fn(),
-  };
-});
-
-vi.mock('./util', async () => {
-  return {
-    isWindows: vi.fn().mockReturnValue(false),
-    isMac: vi.fn().mockReturnValue(false),
-    isLinux: vi.fn().mockReturnValue(false),
-  };
-});
+vi.mock(import('./plugin/index.js'));
+vi.mock(import('./util.js'), () => ({
+  isWindows: vi.fn().mockReturnValue(false),
+  isMac: vi.fn().mockReturnValue(false),
+  isLinux: vi.fn().mockReturnValue(false),
+}));
 
 vi.mock('electron', async () => {
-  class MyCustomWindow {
-    static readonly singleton = new MyCustomWindow();
-
-    loadURL(): void {}
-    setBounds(): void {}
-
-    on(): void {}
-
-    show(): void {}
-    focus(): void {}
-    isMinimized(): boolean {
-      return false;
-    }
-    isDestroyed(): boolean {
-      return false;
-    }
-
-    static getAllWindows(): unknown[] {
-      return [MyCustomWindow.singleton];
-    }
-  }
-
   return {
     autoUpdater: {
       on: vi.fn(),
     },
-
     screen: {
       getCursorScreenPoint: vi.fn(),
       getDisplayNearestPoint: vi.fn().mockImplementation(() => {
@@ -146,34 +116,52 @@ vi.mock('electron', async () => {
     nativeTheme: {
       on: vi.fn(),
     },
-    Menu: {
-      buildFromTemplate: vi.fn(),
-      getApplicationMenu: vi.fn(),
-      setApplicationMenu: vi.fn(),
-    },
-    BrowserWindow: MyCustomWindow /*{
-      getAllWindows: vi.fn().mockReturnValue([]),
-    },*/,
-    Tray: vi.fn(),
+    Menu: vi.fn(
+      class {
+        static readonly buildFromTemplate: typeof Menu.buildFromTemplate = vi.fn();
+        static readonly getApplicationMenu: typeof Menu.getApplicationMenu = vi.fn();
+        static readonly setApplicationMenu: typeof Menu.setApplicationMenu = vi.fn();
+      },
+    ),
+    BrowserWindow: vi.fn(
+      class MyCustomWindow {
+        static readonly singleton = new MyCustomWindow();
+
+        loadURL(): void {}
+        setBounds(): void {}
+
+        on(): void {}
+
+        show(): void {}
+        focus(): void {}
+        isMinimized(): boolean {
+          return false;
+        }
+        isDestroyed(): boolean {
+          return false;
+        }
+
+        static getAllWindows(): unknown[] {
+          return [MyCustomWindow.singleton];
+        }
+      },
+    ),
+    Tray: vi.fn(
+      class {
+        tray = vi.fn();
+        setImage = vi.fn();
+        setToolTip = vi.fn();
+        setContextMenu = vi.fn();
+      },
+    ),
   };
 });
 
 beforeEach(() => {
   console.log = consoleLogMock;
   vi.clearAllMocks();
-  vi.mocked(Tray).mockImplementation(() => {
-    return {
-      tray: vi.fn(),
-      setImage: vi.fn(),
-      setToolTip: vi.fn(),
-      setContextMenu: vi.fn(),
-    } as unknown as Tray;
-  });
-  vi.mocked(PluginSystem).mockImplementation(() => {
-    return {
-      initExtensions: initMock.mockImplementation(() => extensionLoader),
-    } as unknown as PluginSystem;
-  });
+
+  vi.mocked(PluginSystem.prototype.initExtensions).mockResolvedValue(extensionLoader);
 
   vi.mocked(app.whenReady).mockReturnValue(constants.appReadyDeferredPromise);
   const newDefer = Promise.withResolvers<BrowserWindow>();
@@ -233,7 +221,7 @@ test('app-ready event with activate event', async () => {
   expect(spyFocus).toHaveBeenCalled();
 
   // capture the pluginSystem.initExtensions call
-  const initExtensionsCalls = vi.mocked(initMock).mock.calls;
+  const initExtensionsCalls = vi.mocked(PluginSystem.prototype.initExtensions).mock.calls;
   expect(initExtensionsCalls).toHaveLength(1);
 
   // grab onDidConfigurationRegistry parameter
@@ -242,7 +230,7 @@ test('app-ready event with activate event', async () => {
   expect(_onDidConfigurationRegistry).toBeDefined();
 
   // cast as Emitter
-  const onDidConfigurationRegistry = _onDidConfigurationRegistry as Emitter<IConfigurationRegistry>;
+  const onDidConfigurationRegistry = _onDidConfigurationRegistry as unknown as Emitter<IConfigurationRegistry>;
 
   // create a Menu
   vi.mocked(Menu.getApplicationMenu).mockReturnValue({

@@ -26,19 +26,6 @@ import { getAssetsFolder } from '../utils/util';
 import { MacOSInstaller } from './mac-os-installer';
 
 vi.mock('node:fs');
-vi.mock('@podman-desktop/api', () => ({
-  commands: {},
-  env: {},
-  window: {
-    withProgress: vi.fn(),
-    showNotification: vi.fn(),
-    showErrorMessage: vi.fn(),
-  },
-  ProgressLocation: {},
-  process: {
-    exec: vi.fn(),
-  },
-}));
 
 const extensionContext = {
   subscriptions: [],

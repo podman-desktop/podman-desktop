@@ -27,25 +27,11 @@ import {
 } from './dashboard-page-registry.svelte';
 
 // Mock the individual registry creation functions
-vi.mock(import('/@/lib/recommendation/ExtensionBanners.svelte'), () => ({
-  default: vi.fn(),
-}));
-
-vi.mock(import('/@/lib/learning-center/LearningCenter.svelte'), () => ({
-  default: vi.fn(),
-}));
-
-vi.mock(import('/@/lib/dashboard/ProvidersSection.svelte'), () => ({
-  default: vi.fn(),
-}));
-
-vi.mock(import('/@/lib/dashboard/ReleaseNotesBox.svelte'), () => ({
-  default: vi.fn(),
-}));
-
-vi.mock(import('/@/lib/explore-features/ExploreFeatures.svelte'), () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('/@/lib/recommendation/ExtensionBanners.svelte'));
+vi.mock(import('/@/lib/learning-center/LearningCenter.svelte'));
+vi.mock(import('/@/lib/dashboard/ProvidersSection.svelte'));
+vi.mock(import('/@/lib/dashboard/ReleaseNotesBox.svelte'));
+vi.mock(import('/@/lib/explore-features/ExploreFeatures.svelte'));
 
 beforeEach(() => {
   vi.resetAllMocks();

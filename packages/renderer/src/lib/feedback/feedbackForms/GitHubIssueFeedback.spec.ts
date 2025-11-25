@@ -320,30 +320,30 @@ test.each<FeedbackCategory>(['bug', 'feature'])('Expect %s to have specific tele
   );
 });
 
-test.each<FeedbackCategory>(['bug', 'feature'])(
-  'Expect %s to have specific telemetry track events with error if the preview on GitHub fails',
-  async category => {
-    vi.mocked(window.previewOnGitHub).mockRejectedValue('error: unable to preview on GitHub');
-    const { title, description, preview } = renderGitHubIssueFeedback({
-      category: category,
-      onCloseForm: vi.fn(),
-      contentChange: vi.fn(),
-    });
+test.each<FeedbackCategory>([
+  'bug',
+  'feature',
+])('Expect %s to have specific telemetry track events with error if the preview on GitHub fails', async category => {
+  vi.mocked(window.previewOnGitHub).mockRejectedValue('error: unable to preview on GitHub');
+  const { title, description, preview } = renderGitHubIssueFeedback({
+    category: category,
+    onCloseForm: vi.fn(),
+    contentChange: vi.fn(),
+  });
 
-    expect(window.telemetryTrack).toHaveBeenNthCalledWith(1, `feedback.FormOpened`, { feedbackCategory: category });
+  expect(window.telemetryTrack).toHaveBeenNthCalledWith(1, `feedback.FormOpened`, { feedbackCategory: category });
 
-    await userEvent.type(title, `${category} title`);
-    await userEvent.type(description, `${category} description`);
-    await userEvent.click(preview);
+  await userEvent.type(title, `${category} title`);
+  await userEvent.type(description, `${category} description`);
+  await userEvent.click(preview);
 
-    await vi.waitFor(() =>
-      expect(window.telemetryTrack).toHaveBeenNthCalledWith(2, `feedback.FormSubmitted`, {
-        feedbackCategory: category,
-        error: 'error: unable to preview on GitHub',
-      }),
-    );
-  },
-);
+  await vi.waitFor(() =>
+    expect(window.telemetryTrack).toHaveBeenNthCalledWith(2, `feedback.FormSubmitted`, {
+      feedbackCategory: category,
+      error: 'error: unable to preview on GitHub',
+    }),
+  );
+});
 
 test('Expect close confirmation to be true if cancel clicked', async () => {
   const closeMock = vi.fn();

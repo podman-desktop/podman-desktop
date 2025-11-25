@@ -24,15 +24,6 @@ import { PodmanBinaryLocationHelper } from './podman-binary-location-helper';
 
 let podmanBinaryLocationHelper: PodmanBinaryLocationHelper;
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   podmanBinaryLocationHelper = new PodmanBinaryLocationHelper();
   vi.resetAllMocks();

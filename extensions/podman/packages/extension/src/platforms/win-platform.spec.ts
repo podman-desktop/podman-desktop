@@ -31,8 +31,6 @@ import type { WSL2Check } from '/@/checks/windows/wsl2-check';
 
 import { WinPlatform } from './win-platform';
 
-vi.mock('@podman-desktop/api', () => ({ env: { isWindows: false } }));
-
 const EXTENSION_CONTEXT_MOCK = {} as ExtensionContext;
 const TELEMETRY_LOGGER_MOCK = {} as TelemetryLogger;
 

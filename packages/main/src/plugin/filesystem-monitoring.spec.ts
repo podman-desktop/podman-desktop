@@ -49,6 +49,9 @@ afterEach(async () => {
 
 test(
   'should send event into onDid when a file is watched into an existing directory',
+  {
+    skip: isWindows(),
+  },
   async () => {
     const watchedFile = path.join(rootdir, 'file.txt');
     watcher = new FileSystemWatcherImpl(watchedFile);
@@ -85,9 +88,6 @@ test(
     await vi.waitFor(async () => {
       expect(unlinkListener).toHaveBeenCalledWith(Uri.file(watchedFile));
     });
-  },
-  {
-    skip: isWindows(),
   },
 );
 

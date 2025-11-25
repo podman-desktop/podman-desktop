@@ -57,6 +57,7 @@ test('Expect that removing the connection is going back to the previous page', a
     internalId: '0',
     kubernetesConnections: [
       {
+        connectionType: 'kubernetes',
         name: kindCluster1,
         status: 'started',
         endpoint: {
@@ -64,6 +65,7 @@ test('Expect that removing the connection is going back to the previous page', a
         },
       },
       {
+        connectionType: 'kubernetes',
         name: kindCluster2,
         status: 'stopped',
         endpoint: {
@@ -72,6 +74,7 @@ test('Expect that removing the connection is going back to the previous page', a
         lifecycleMethods: ['delete'],
       },
       {
+        connectionType: 'kubernetes',
         name: kindCluster3,
         status: 'started',
         endpoint: {
@@ -159,6 +162,7 @@ test('Expect to see error message if action fails', async () => {
     internalId: '0',
     kubernetesConnections: [
       {
+        connectionType: 'kubernetes',
         name: kindCluster,
         status: 'stopped',
         endpoint: {

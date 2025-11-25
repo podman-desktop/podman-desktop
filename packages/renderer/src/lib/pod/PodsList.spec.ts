@@ -45,6 +45,7 @@ const kubernetesGetCurrentNamespaceMock = vi.fn();
 const provider: ProviderInfo = {
   containerConnections: [
     {
+      connectionType: 'container',
       name: 'MyConnection',
       displayName: 'MyConnection',
       status: 'started',
@@ -593,7 +594,7 @@ test('Expect to see empty page and no table when no container engine is running'
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
   // wait imageInfo store is populated
-  await vi.waitFor(() => get(podsInfos).length > 0);
+  await vi.waitUntil(() => get(podsInfos).length > 0);
 
   await waitRender({});
 

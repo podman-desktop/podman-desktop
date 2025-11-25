@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import test, { expect as playExpect } from '@playwright/test';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import type { PodmanVirtualizationProviders } from '../model/core/types';
-import { PodmanMachinePrivileges } from '../model/core/types';
+import { matchesProviderVariant, PodmanMachinePrivileges } from '../model/core/types';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
 import { ExperimentalPage } from '../model/pages/experimental-page';
 import { PreferencesPage } from '../model/pages/preferences-page';
@@ -168,6 +168,37 @@ export async function deletePod(page: Page, name: string, timeout = 50_000): Pro
   });
 }
 
+/**
+ * Delete network defined by its name
+ * @param page playwright's page object
+ * @param name name of network to be removed
+ */
+export async function deleteNetwork(page: Page, name: string): Promise<void> {
+  return test.step(`Delete network with name ${name}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const networksPage = await navigationBar.openNetworks();
+    await playExpect(networksPage.heading).toBeVisible({ timeout: 10_000 });
+    const networkExists = await networksPage.networkExists(name);
+
+    if (!networkExists) {
+      console.log(`network '${name}' does not exist, skipping...`);
+    } else {
+      await networksPage.deleteNetwork(name);
+
+      try {
+        console.log('Waiting for network to get deleted ...');
+        await playExpect
+          .poll(async () => await networksPage.getNetworkRowByName(name), { timeout: 30_000 })
+          .toBeFalsy();
+      } catch (error) {
+        if (!(error as Error).message.includes('Page is empty')) {
+          throw Error(`Error waiting for network '${name}' to get removed, ${error}`);
+        }
+      }
+    }
+  });
+}
+
 // Handles dialog that has accessible name `dialogTitle` and either confirms or rejects it.
 export async function handleConfirmationDialog(
   page: Page,
@@ -199,6 +230,63 @@ export async function handleConfirmationDialog(
 }
 
 /**
+ * Handles the Edit Network dialog by filling DNS server fields and clicking Cancel or Update button.
+ * @param page playwright's page object
+ * @param networkName name of the network being edited
+ * @param options optional configuration for DNS servers and action
+ */
+export async function handleEditNetworkDialog(
+  page: Page,
+  networkName: string,
+  options?: {
+    dnsServersToAdd?: string;
+    dnsServersToRemove?: string;
+    action?: 'Cancel' | 'Update';
+  },
+): Promise<void> {
+  return test.step(`Handle Edit Network dialog for: ${networkName}`, async () => {
+    const dialogTitle = `Edit Network ${networkName}`;
+    const editDialog = page.getByRole('dialog', { name: dialogTitle });
+    await playExpect(editDialog).toBeVisible();
+
+    // Get the two input fields (both have placeholder "8.8.8.8 1.1.1.1")
+    const inputFields = editDialog.getByPlaceholder('8.8.8.8 1.1.1.1');
+    const dnsServersToAddInput = inputFields.nth(0);
+    const dnsServersToRemoveInput = inputFields.nth(1);
+
+    const cancelButton = editDialog.getByRole('button', { name: 'Cancel', exact: true });
+    const updateButton = editDialog.getByRole('button', { name: 'Update', exact: true });
+
+    if (options?.dnsServersToAdd !== undefined) {
+      await dnsServersToAddInput.clear();
+      await playExpect(dnsServersToAddInput).toHaveValue('');
+
+      await dnsServersToAddInput.fill(options.dnsServersToAdd);
+      await playExpect(dnsServersToAddInput).toHaveValue(options.dnsServersToAdd);
+    }
+
+    if (options?.dnsServersToRemove !== undefined) {
+      await dnsServersToRemoveInput.clear();
+      await playExpect(dnsServersToRemoveInput).toHaveValue('');
+
+      await dnsServersToRemoveInput.fill(options.dnsServersToRemove);
+      await playExpect(dnsServersToRemoveInput).toHaveValue(options.dnsServersToRemove);
+    }
+
+    const action = options?.action ?? 'Update';
+    if (action === 'Cancel') {
+      await playExpect(cancelButton).toBeEnabled();
+      await cancelButton.click();
+    } else {
+      await playExpect(updateButton).toBeEnabled();
+      await updateButton.click();
+    }
+
+    await playExpect(editDialog).not.toBeVisible();
+  });
+}
+
+/**
  * Async function that stops and deletes Podman Machine through Settings -> Resources page
  * @param page playwright's page object
  * @param machineVisibleName Name of the Podman Machine to delete
@@ -206,63 +294,99 @@ export async function handleConfirmationDialog(
 export async function deletePodmanMachine(page: Page, machineVisibleName: string): Promise<void> {
   return test.step('Delete Podman machine', async () => {
     const RESOURCE_NAME: string = 'podman';
+
+    // Navigate to resources page
     const navigationBar = new NavigationBar(page);
     const dashboardPage = await navigationBar.openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
+
     const settingsBar = await navigationBar.openSettings();
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
+
     await playExpect
-      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 10_000 })
+      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 15_000 })
       .toBeTruthy();
+
     const podmanResourceCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, machineVisibleName);
     await playExpect(podmanResourceCard.providerConnections).toBeVisible({ timeout: 10_000 });
-    await waitUntil(
-      async () => {
-        return await podmanResourceCard.resourceElement.isVisible();
-      },
-      { timeout: 15_000 },
-    );
-    if (await podmanResourceCard.resourceElement.isVisible()) {
-      await playExpect(podmanResourceCard.resourceElementConnectionActions).toBeVisible();
-      await playExpect(podmanResourceCard.resourceElementConnectionStatus).toBeVisible();
-      if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Starting) {
-        console.log('Podman machine is in starting currently, will send stop command via CLI');
-        // eslint-disable-next-line sonarjs/os-command
-        execSync(`podman machine stop ${machineVisibleName}`);
-        await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
-          timeout: 30_000,
-        });
-        console.log('Podman machine stopped via CLI');
-      }
-      if ((await podmanResourceCard.resourceElementConnectionStatus.innerText()) === ResourceElementState.Running) {
-        try {
-          await podmanResourceCard.performConnectionAction(ResourceElementActions.Stop);
-          await waitUntil(
-            async () =>
-              (await podmanResourceCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-            { timeout: 30_000, sendError: true },
-          );
-        } catch (_error) {
-          console.log('Podman machine stop failed, will try to stop it via CLI');
-          // eslint-disable-next-line sonarjs/os-command
-          execSync(`podman machine stop ${machineVisibleName}`);
-        }
-        await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
-          timeout: 30_000,
-        });
-      }
-      await podmanResourceCard.performConnectionAction(ResourceElementActions.Delete);
-      await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 60_000 });
-    } else {
+
+    // Wait for resource element to be visible
+    const isResourceVisible = await waitUntil(async () => await podmanResourceCard.resourceElement.isVisible(), {
+      timeout: 30_000,
+    })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isResourceVisible) {
       console.log(`Podman machine [${machineVisibleName}] not present, skipping deletion.`);
+      return;
     }
+
+    // Ensure connection actions and status are visible
+    await playExpect(podmanResourceCard.resourceElementConnectionActions).toBeVisible();
+    await playExpect(podmanResourceCard.resourceElementConnectionStatus).toBeVisible();
+
+    // Handle machine state and stop if needed
+    await ensurePodmanMachineStopped(podmanResourceCard, machineVisibleName);
+
+    // Delete the machine
+    await podmanResourceCard.performConnectionAction(ResourceElementActions.Delete);
+    await playExpect(podmanResourceCard.resourceElement).toBeHidden({ timeout: 60_000 });
+  });
+}
+
+async function ensurePodmanMachineStopped(
+  podmanResourceCard: ResourceConnectionCardPage,
+  machineVisibleName: string,
+): Promise<void> {
+  const currentStatus = await podmanResourceCard.resourceElementConnectionStatus.innerText();
+
+  if (currentStatus === ResourceElementState.Off) {
+    console.log('Podman machine already stopped');
+    return;
+  }
+
+  // Handle Starting state - use CLI immediately
+  if (currentStatus === ResourceElementState.Starting) {
+    console.log('Podman machine is starting, will stop via CLI');
+    await stopPodmanMachineViaCLI(machineVisibleName);
+    await waitForPodmanMachineStoppedState(podmanResourceCard);
+    return;
+  }
+
+  // Handle Running state - try UI first, fallback to CLI
+  if (currentStatus === ResourceElementState.Running) {
+    try {
+      await podmanResourceCard.performConnectionAction(ResourceElementActions.Stop);
+      await waitForPodmanMachineStoppedState(podmanResourceCard);
+    } catch (error) {
+      console.log(
+        'Podman machine stop via UI failed, trying CLI:',
+        error instanceof Error ? error.message : String(error),
+      );
+      await stopPodmanMachineViaCLI(machineVisibleName);
+      await waitForPodmanMachineStoppedState(podmanResourceCard);
+    }
+  }
+}
+
+async function stopPodmanMachineViaCLI(machineVisibleName: string): Promise<void> {
+  // eslint-disable-next-line sonarjs/os-command
+  execSync(`podman machine stop ${machineVisibleName}`);
+  console.log(`Podman machine stopped via CLI: ${machineVisibleName}`);
+}
+
+async function waitForPodmanMachineStoppedState(podmanResourceCard: ResourceConnectionCardPage): Promise<void> {
+  await playExpect(podmanResourceCard.resourceElementConnectionStatus).toHaveText(ResourceElementState.Off, {
+    timeout: 30_000,
   });
 }
 
 export async function getVolumeNameForContainer(page: Page, containerName: string): Promise<string> {
   return test.step('Get volume name for container', async () => {
-    let volumeName;
-    let volumeSummaryContent;
+    let volumeName: string | null;
+    let volumeSummaryContent: string[];
     try {
       const navigationBar = new NavigationBar(page);
       const volumePage = await navigationBar.openVolumes();
@@ -525,9 +649,13 @@ export async function verifyVirtualizationProvider(
     await playExpect
       .poll(async () => await resourceConnectionCardPage.doesResourceElementExist(), { timeout: 15_000 })
       .toBeTruthy();
-    await playExpect(resourceConnectionCardPage.connectionType).toContainText(virtualizationProvider, {
-      ignoreCase: true,
-    });
+    // Check against all possible variants to handle version differences
+    const connectionTypeText = await resourceConnectionCardPage.connectionType.textContent();
+    if (!connectionTypeText) {
+      throw new Error('Connection type text is empty');
+    }
+    const matchesVariant = matchesProviderVariant(virtualizationProvider, connectionTypeText);
+    playExpect(matchesVariant).toBeTruthy();
   });
 }
 

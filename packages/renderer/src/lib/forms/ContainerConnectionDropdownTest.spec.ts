@@ -25,6 +25,7 @@ import ContainerConnectionDropdownTest from '/@/lib/forms/ContainerConnectionDro
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 const MULTI_CONNECTIONS: ProviderContainerConnectionInfo[] = Array.from({ length: 5 }).map((_, index) => ({
+  connectionType: 'container',
   name: `connection-${index}`,
   displayName: `Connection ${index}`,
   endpoint: {

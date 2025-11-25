@@ -22,18 +22,6 @@ import { afterEach, expect, test, vi } from 'vitest';
 import * as extension from '../extension';
 import { DarwinSocketCompatibility, getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
 
-vi.mock('@podman-desktop/api', () => {
-  return {
-    window: {
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();

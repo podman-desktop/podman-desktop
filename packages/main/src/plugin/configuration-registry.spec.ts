@@ -532,4 +532,60 @@ describe('Managed Locked', () => {
 
     expect(managedConfig).toEqual({});
   });
+
+  test('should mark configuration properties as locked when they appear in locked.json', async () => {
+    // We'll use foo.enabled and security.setting as locked properties for this test
+    const managedLocked = { locked: ['foo.enabled', 'security.setting'] };
+    const testLockedConfiguration = {
+      getContent: vi.fn().mockResolvedValue(managedLocked),
+    } as unknown as LockedConfiguration;
+
+    const testRegistry = new ConfigurationRegistry(
+      apiSender,
+      directories,
+      defaultConfiguration,
+      testLockedConfiguration,
+    );
+    await testRegistry.init();
+
+    // Two settings to register
+    const nodes: IConfigurationNode[] = [
+      {
+        id: 'foo',
+        title: 'This Foobar Setting',
+        type: 'object',
+        properties: {
+          'foo.enabled': {
+            description: 'Enable foo',
+            type: 'boolean',
+            default: false,
+          },
+        },
+      },
+      {
+        id: 'other',
+        title: 'Some Other Settings',
+        type: 'object',
+        properties: {
+          'other.setting': {
+            description: 'Some other setting',
+            type: 'string',
+            default: 'value',
+          },
+        },
+      },
+    ];
+
+    testRegistry.registerConfigurations(nodes);
+
+    const properties = testRegistry.getConfigurationProperties();
+
+    // telemetry.enabled should be marked as locked
+    expect(properties['foo.enabled']).toBeDefined();
+    expect(properties['foo.enabled']?.locked).toBe(true);
+
+    // other.setting should NOT be marked as locked
+    expect(properties['other.setting']).toBeDefined();
+    expect(properties['other.setting']?.locked).toBe(false);
+  });
 });

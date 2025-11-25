@@ -25,7 +25,6 @@ import ServiceActions from './ServiceActions.svelte';
 import type { ServiceUI } from './ServiceUI';
 
 const deleteMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 class ServiceUIImpl {
   #status: string;
@@ -54,7 +53,6 @@ class ServiceUIImpl {
 const service: ServiceUI = new ServiceUIImpl('123', 'my-service', 'RUNNING', '', false, '', '', '');
 
 beforeEach(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'kubernetesDeleteService', { value: deleteMock });
 });
 
@@ -65,7 +63,7 @@ afterEach(() => {
 
 test('Expect no error and status deleting service', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(ServiceActions, { service });
 
   // click on delete button

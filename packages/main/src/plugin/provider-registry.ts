@@ -700,6 +700,7 @@ export class ProviderRegistry {
     let providerConnection: ProviderConnectionInfo;
     if (this.isContainerConnection(connection)) {
       providerConnection = {
+        connectionType: 'container',
         name: connection.name,
         displayName: connection.displayName ?? connection.name,
         status: connection.status(),
@@ -717,6 +718,7 @@ export class ProviderRegistry {
       };
     } else if (this.isKubernetesConnection(connection)) {
       providerConnection = {
+        connectionType: 'kubernetes',
         name: connection.name,
         status: connection.status(),
         endpoint: {
@@ -725,6 +727,7 @@ export class ProviderRegistry {
       };
     } else {
       providerConnection = {
+        connectionType: 'vm',
         name: connection.name,
         status: connection.status(),
       };

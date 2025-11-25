@@ -47,15 +47,15 @@
     "@octokit/rest": "^22.0.1",
     "@tailwindcss/postcss": "^4.1.17",
     "markdownlint": "^0.39.0",
-    "markdownlint-cli2": "^0.19.0",
+    "markdownlint-cli2": "^0.19.1",
     "markdownlint-cli2-formatter-summarize": "^0.0.8",
-    "msw": "^2.12.1",
+    "msw": "^2.12.3",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",
     "typedoc": "^0.28.14",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.10"
   },
   "browserslist": {
     "production": [

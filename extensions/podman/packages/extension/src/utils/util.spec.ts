@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as extensionApi from '@podman-desktop/api';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as podmanCli from './podman-cli';
 import {
@@ -33,33 +33,15 @@ import {
   WSL_LABEL,
 } from './util';
 
-const config: extensionApi.Configuration = {
-  get: () => {
-    // not implemented
-  },
-  has: () => true,
-  update: vi.fn(),
-};
-
-vi.mock('@podman-desktop/api', () => {
-  return {
-    configuration: {
-      getConfiguration: (): extensionApi.Configuration => config,
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-  };
-});
-
-afterEach(() => {
+beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+  vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue([]);
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: vi.fn(),
+    has: () => true,
+    update: vi.fn(),
+  } as unknown as extensionApi.Configuration);
 });
 
 test('normalizeWSLOutput returns the same string if there is no need to normalize it', async () => {
@@ -172,11 +154,6 @@ test('expect hyperv label with hyperv provider wsl label', async () => {
 });
 
 describe('Check multiple Podman installations', () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue([]);
-  });
-
   test('should return empty warnings when no Podman installation provided', async () => {
     const warnings = await getMultiplePodmanInstallationsWarnings(undefined);
 

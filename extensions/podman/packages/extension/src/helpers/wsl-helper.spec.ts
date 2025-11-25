@@ -24,15 +24,6 @@ import { WslHelper } from './wsl-helper';
 
 let wslHelper: WslHelper;
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   wslHelper = new WslHelper();
   vi.resetAllMocks();

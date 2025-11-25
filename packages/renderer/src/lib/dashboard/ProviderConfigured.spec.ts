@@ -25,13 +25,6 @@ import ProviderConfigured from '/@/lib/dashboard/ProviderConfigured.svelte';
 import { verifyStatus } from './ProviderStatusTestHelper.spec';
 
 beforeAll(() => {
-  // Cannot mock with vi.mocked(window.ResizeObserver)
-  // we use "global" similar to PodDetails.spec.ts implementation
-  global.ResizeObserver = vi.fn().mockReturnValue({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  });
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
   // fake the window.events object
   (window.events as unknown) = {

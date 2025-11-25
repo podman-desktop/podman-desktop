@@ -15,6 +15,7 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import { viewsContributions } from '/@/stores/views';
 import type { ContainerInfo } from '/@api/container-info';
@@ -33,7 +34,6 @@ import ImageIcon from '../images/ImageIcon.svelte';
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '../view/views';
 import { ImageUtils } from './image-utils';
 import ImageColumnActions from './ImageColumnActions.svelte';
-import ImageColumnEnvironment from './ImageColumnEnvironment.svelte';
 import ImageColumnName from './ImageColumnName.svelte';
 import ImageColumnStatus from './ImageColumnStatus.svelte';
 import ImageEmptyScreen from './ImageEmptyScreen.svelte';
@@ -236,7 +236,7 @@ let nameColumn = new TableColumn<ImageInfoUI>('Name', {
 });
 
 let envColumn = new TableColumn<ImageInfoUI>('Environment', {
-  renderer: ImageColumnEnvironment,
+  renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 

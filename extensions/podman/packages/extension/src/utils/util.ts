@@ -20,7 +20,9 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { findPodmanInstallations, getCustomBinaryPath, getPodmanCli, type InstalledPodman } from './podman-cli';
+import type { InstalledPodman } from '/@/utils/podman-binary';
+
+import { findPodmanInstallations, getCustomBinaryPath, getPodmanCli } from './podman-cli';
 
 const xdgDataDirectory = '.local/share/containers';
 export function appHomeDir(): string {

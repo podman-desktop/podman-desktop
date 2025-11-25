@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,31 +18,25 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { render } from '@testing-library/svelte';
+import { expect, test, vi } from 'vitest';
 
-import VolumeColumnEnvironment from './VolumeColumnEnvironment.svelte';
-import type { VolumeInfoUI } from './VolumeInfoUI';
+import PreferencesManagedLabel from '/@/lib/preferences/PreferencesManagedLabel.svelte';
 
-test('Expect simple column styling', async () => {
-  const volume: VolumeInfoUI = {
-    name: '',
-    shortName: '',
-    mountPoint: '',
-    scope: '',
-    driver: '',
-    created: '',
-    age: '',
-    size: 0,
-    humanSize: '',
-    engineId: '',
-    engineName: 'my-engine',
-    selected: false,
-    status: 'UNUSED',
-    containersUsage: [],
-  };
-  render(VolumeColumnEnvironment, { object: volume });
+test('should display the managed label text after rendering', async () => {
+  const { getByText } = render(PreferencesManagedLabel);
 
-  const text = screen.getByText(volume.engineName);
-  expect(text).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const element = getByText('Managed');
+    expect(element).toBeInTheDocument();
+  });
+});
+
+test('simple test to see if the svg (icon) renders', async () => {
+  const { container } = render(PreferencesManagedLabel);
+
+  await vi.waitFor(() => {
+    const svgElement = container.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
+  });
 });

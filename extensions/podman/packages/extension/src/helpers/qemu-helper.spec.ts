@@ -30,15 +30,6 @@ class TestQemuHelper extends QemuHelper {
   }
 }
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   qemuHelper = new TestQemuHelper();
   vi.resetAllMocks();
