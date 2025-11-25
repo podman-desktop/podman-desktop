@@ -147,11 +147,11 @@ USER 0
 
 RUN dnf -y install dnf-plugins-core && \
     dnf -y install dnf-plugin-versionlock && \
-    dnf -y install mesa-vulkan-drivers vulkan-loader-devel vulkan-headers vulkan-tools vulkan-loader glslc && \
+    dnf -y install mesa-vulkan-drivers vulkan-loader-devel vulkan-headers vulkan-tools vulkan-loader glslc --setopt=install_weak_deps=False && \
     dnf -y copr enable slp/mesa-krunkit fedora-40-aarch64 && \
     dnf -y downgrade mesa-vulkan-drivers.aarch64 --repo=copr:copr.fedorainfracloud.org:slp:mesa-krunkit && \
     dnf versionlock mesa-vulkan-drivers && \
-    dnf clean all
+    dnf clean all && rm -rf /var/cache/dnf
 ```
 
 2. Build the image:
