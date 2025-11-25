@@ -27,7 +27,7 @@ let userChoice: 'file' | 'custom' = $state('file');
 
 let hasInvalidFields = $derived.by(() => {
   if (!selectedContextName) {
-    return false;
+    return true;
   }
   switch (userChoice) {
     case 'file':
@@ -49,7 +49,14 @@ const kubeFileDialogOptions: OpenDialogOptions = {
   ],
 };
 
+function getSelectedContextNamespace(): string | undefined {
+  const selectedContext = contexts.find(context => context.name === selectedContextName);
+  return selectedContext?.namespace;
+}
+
 async function kubeApply(): Promise<void> {
+  runError = '';
+
   // this if is here to suppress linter error that selectedContextName can be undefined
   if (!selectedContextName) {
     throw new Error('No context selected');
@@ -75,7 +82,7 @@ async function kubeApply(): Promise<void> {
       ],
     });
 
-    if (!result || result.length === 0) {
+    if (!result?.length) {
       return;
     }
     yamlFilePath = result;
@@ -84,11 +91,10 @@ async function kubeApply(): Promise<void> {
   runStarted = true;
   runFinished = false;
   try {
-    const namespace = await window.kubernetesGetCurrentNamespace();
     let objects: KubernetesObject[] = await window.kubernetesApplyResourcesFromFile(
       selectedContextName,
       yamlFilePath,
-      namespace,
+      getSelectedContextNamespace(),
     );
     if (objects.length === 0) {
       playKubeResultRaw = `No resource(s) were applied.`;
@@ -132,141 +138,140 @@ function toggle(choice: 'file' | 'custom'): void {
 
 onMount(async () => {
   contexts = await window.kubernetesGetContexts();
-  selectedContextName = await window.kubernetesGetCurrentContextName();
+  if (contexts.length) {
+    selectedContextName = await window.kubernetesGetCurrentContextName();
+  }
 });
 </script>
 
+<EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
+  {#snippet icon()}
+    <KubePlayIcon size="30px" />
+  {/snippet}
 
-
-  <EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
-    {#snippet icon()}
-      <KubePlayIcon size="30px" />
-    {/snippet}
-
-    {#snippet content()}
-      <div class="space-y-6">
-        <div>
-          <label for="" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]">Kubernetes Context</label>
-        </div>
-        <div class="flex flex-col">
-          <div class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)] border-[var(--pd-content-card-border)]">
-            <Dropdown 
-              id="kubeContexts"
-              name="kubeContexts"
-              value={selectedContextName}
-              options={contexts.map(context => ({
-                label: context.name,
-                value: context.name,
-              }))}/>
-            </div>
-        </div>
-        <div hidden={runStarted}>
-          <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
-            >Kubernetes YAML file</label>
-        </div>
-
-        <div class="flex flex-col">
-          {#snippet file()}
-            <FileInput
-              name="containerFilePath"
-              id="containerFilePath"
-              readonly
-              required
-              bind:value={kubernetesYamlFilePath}
-              placeholder="Select a .yaml file to play"
-              options={kubeFileDialogOptions}
-              class="w-full p-2" />
-          {/snippet}
-
-          {#snippet custom()}
-            <div
-              class="pl-2"
-              class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
-              class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
-              Create file from scratch
-            </div>
-          {/snippet}
-
-          {#snippet optionSnippet(option: 'file' | 'custom', content: Snippet)}
-            <button
-              class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-              aria-label=".yaml file to play"
-              aria-pressed={userChoice === option ? 'true' : 'false'}
-              class:border-[var(--pd-content-card-border-selected)]={userChoice === option}
-              class:border-[var(--pd-content-card-border)]={userChoice !== option}
-              onclick={toggle.bind(undefined, option)}>
-              <div class="flex flex-row align-middle items-center">
-                <div
-                  class="text-2xl pr-2"
-                  class:text-[var(--pd-content-card-border-selected)]={userChoice === option}
-                  class:text-[var(--pd-content-card-border)]={userChoice !== option}>
-                  <Fa icon={faCircleCheck} />
-                </div>
-                {@render content()}
-              </div>
-            </button>
-          {/snippet}
-
-          {@render optionSnippet('file', file)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
-          {@render optionSnippet('custom', custom)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
-        </div>
-
-        <!-- Monaco Editor for custom YAML content -->
-        {#if userChoice === 'custom'}
-          <div class="space-y-3">
-            <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
-              Custom Kubernetes YAML Content
-            </label>
-            <div id="custom-yaml-editor" class="h-[400px] border">
-              <MonacoEditor
-                readOnly={false}
-                language="yaml"
-                on:contentChange={(e): void => {
-                  customYamlContent = e.detail;
-                }} />
-            </div>
-          </div>
-        {/if}
-
-        {#if !runFinished}
-          <Button
-            on:click={kubeApply}
-            disabled={hasInvalidFields || runStarted}
-            class="w-full"
-            inProgress={runStarted}
-            icon={KubePlayIcon}>
-            {userChoice === 'custom' ? 'Play Custom YAML' : 'Play'}
-          </Button>
-        {/if}
-        {#if runStarted}
-          <div class="text-[var(--pd-content-card-text)] text-sm">
-            Please wait during the Play Kube and do not change screen. This process may take a few minutes to complete...
-          </div>
-        {/if}
-
-        {#if runWarning}
-          <WarningMessage class="text-sm" error={runWarning} />
-        {/if}
-
-        {#if runError}
-          <ErrorMessage class="text-sm" error={runError} />
-        {/if}
-
-        {#if playKubeResultRaw}
-          <!-- Output area similar to DeployPodToKube.svelte -->
-          <div class="space-y-3">
-            <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
-              Created resources
-            </label>
-            <div id="custom-yaml-editor" class="h-[400px] border">
-              <MonacoEditor content={playKubeResultRaw} language="json" />
-            </div>
-          </div>
-        {/if}
-
-        {#if runFinished}
-          <Button onclick={goBackToPodsPage} class="w-full">Done</Button>
-        {/if}
+  {#snippet content()}
+    
+  <div class="space-y-6">
+    <div>
+      <label for="" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
+        >Kubernetes Context</label>
+    </div>
+    <div class="flex flex-col">
+      <div
+        class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)] border-[var(--pd-content-card-border)]">
+        <Dropdown
+          id="kubeContexts"
+          name="kubeContexts"
+          value={selectedContextName}
+          options={contexts.map(context => ({
+            label: context.name,
+            value: context.name,
+          }))}>
+            {#snippet left()}
+              {#if !contexts.length }
+                <ErrorMessage aria-label="No Kubernetes contexts available" icon={true} error="No Kubernetes contexts available" class="pr-2"/>
+              {/if}
+            {/snippet}
+          </Dropdown>
       </div>
-    {/snippet}
-  </EngineFormPage>
+    </div>
+    
+    <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
+      >Kubernetes YAML file</label>
+    
+    <div class="flex flex-col">
+      {#snippet file()}
+        <FileInput
+          name="containerFilePath"
+          id="containerFilePath"
+          readonly
+          required
+          bind:value={kubernetesYamlFilePath}
+          placeholder="Select a .yaml file to play"
+          options={kubeFileDialogOptions}
+          class="w-full p-2" />
+      {/snippet}
+
+      {#snippet custom()}
+        <div
+          class="pl-2"
+          class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
+          class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
+          Create custom YAML from scratch
+        </div>
+      {/snippet}
+
+      {#snippet optionSnippet(option: 'file' | 'custom', label: string, content: Snippet)}
+        <button disabled={runStarted}
+          class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
+          aria-label={label}
+          aria-pressed={userChoice === option ? 'true' : 'false'}
+          class:border-[var(--pd-content-card-border-selected)]={userChoice === option}
+          class:border-[var(--pd-content-card-border)]={userChoice !== option}
+          onclick={toggle.bind(undefined, option)}>
+          <div class="flex flex-row align-middle items-center">
+            <div
+              class="text-2xl pr-2"
+              class:text-[var(--pd-content-card-border-selected)]={userChoice === option}
+              class:text-[var(--pd-content-card-border)]={userChoice !== option}>
+              <Fa icon={faCircleCheck} />
+            </div>
+            {@render content()}
+          </div>
+        </button>
+      {/snippet}
+
+      {@render optionSnippet('file', '.yaml file to play', file)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
+      {@render optionSnippet('custom', 'Custom yaml to play', custom)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
+    </div>
+
+    <!-- Monaco Editor for custom YAML content -->
+    {#if userChoice === 'custom'}
+      <div class="space-y-3">
+        <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
+          Custom Kubernetes YAML Content
+        </label>
+        <div id="custom-yaml-editor" class="h-[400px] border">
+          <MonacoEditor
+            readOnly={runStarted}
+            language="yaml"
+            on:contentChange={(e): void => {
+              customYamlContent = e.detail;
+            }}/>
+        </div>
+      </div>
+    {/if}
+
+    {#if runStarted}
+      <div class="text-[var(--pd-content-card-text)] text-sm">
+        Please wait during the Play Kube and do not change screen. This process may take a few minutes to complete...
+      </div>
+    {/if}
+
+    {#if runWarning}
+      <WarningMessage class="text-sm" error={runWarning} />
+    {/if}
+
+    {#if runError}
+      <ErrorMessage class="text-sm" error={runError} />
+    {/if}
+
+    {#if playKubeResultRaw}
+      <div class="text-[var(--pd-content-card-text)] text-sm">{playKubeResultRaw}</div>
+    {/if}
+
+    <div class="flex gap-2">
+      <Button
+        on:click={kubeApply}
+        disabled={hasInvalidFields || runStarted}
+        class="grow"
+        inProgress={runStarted}
+        icon={KubePlayIcon}>
+        {userChoice === 'custom' ? 'Apply Custom YAML' : 'Apply'}
+      </Button>
+
+      <Button onclick={goBackToPodsPage} class="grow">Done</Button>
+    </div>
+  </div>
+  {/snippet}
+</EngineFormPage>

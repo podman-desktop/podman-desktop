@@ -31,7 +31,7 @@ onMount(() => {
 
 {#if icon}
   {#if error !== undefined && error !== ''}
-    <Tooltip left={left} top={top} tip={error} class={customClassWidth}>
+    <Tooltip left={left} top={top} tip={error} class={customClassWidth} aria-label={ariaLabel ?? 'Error Icon Tooltip Content'}>
       <Icon icon={faExclamationCircle} size='1.1x' class={`cursor-pointer text-[var(--pd-state-error)] ${className}`} />
     </Tooltip>
   {/if}

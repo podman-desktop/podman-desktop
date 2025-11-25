@@ -137,7 +137,7 @@ $effect((): (() => void) => {
 });
 </script>
 
-<div class={containerClass ?? 'relative inline-block'} aria-label={ariaLabel}>
+<div role="tooltip" class={containerClass ?? 'relative inline-block'} aria-label={ariaLabel}>
   <span
     role="none"
     data-testid="tooltip-trigger"
