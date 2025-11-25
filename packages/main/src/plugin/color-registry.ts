@@ -134,38 +134,18 @@ export class ColorRegistry {
     return Array.from(this.#themes.keys());
   }
 
-  public registerColor(
-    colorIdOrDefinition: string | (ColorDefinition & { id: string }),
-    definition?: ColorDefinition,
-  ): void {
-    let colorId: string;
-    let colorDef: ColorDefinition;
-
-    if (typeof colorIdOrDefinition === 'string') {
-      colorId = colorIdOrDefinition;
-      if (!definition) {
-        throw new Error('Definition is required when passing colorId as string');
-      }
-      colorDef = definition;
-    } else {
-      colorId = colorIdOrDefinition.id;
-      // Preserve all fields from ColorDefinition (e.g., future HC variants)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars, sonarjs/no-unused-vars
-      const { id, ...rest } = colorIdOrDefinition;
-      colorDef = rest;
-    }
-
+  protected registerColor(colorId: string, definition: ColorDefinition): void {
     if (this.#definitions.has(colorId)) {
       console.warn(`Color ${colorId} already registered.`);
       throw new Error(`Color ${colorId} already registered.`);
     }
 
     // store the color definition
-    this.#definitions.set(colorId, colorDef);
+    this.#definitions.set(colorId, definition);
 
     // set the colors in the default themes
-    this.#themes.get('light')?.set(colorId, colorDef.light);
-    this.#themes.get('dark')?.set(colorId, colorDef.dark);
+    this.#themes.get('light')?.set(colorId, definition.light);
+    this.#themes.get('dark')?.set(colorId, definition.dark);
     this.notifyUpdate();
   }
 
