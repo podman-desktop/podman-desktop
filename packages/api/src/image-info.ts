@@ -24,6 +24,7 @@ import type { ProviderContainerConnectionInfo } from './provider-info.js';
 export interface ImageInfo extends Dockerode.ImageInfo {
   engineId: string;
   engineName: string;
+  engineType: 'podman' | 'docker';
   History?: string[];
   Digest: string;
   isManifest?: boolean;

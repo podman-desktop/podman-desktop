@@ -36,6 +36,7 @@ const fakeVolume: VolumeInfoUI = {
   humanSize: '5 MB',
   engineId: 'fakeEngineId',
   engineName: 'fakeEngineName',
+  engineType: 'podman',
   selected: false,
   status: 'USED',
   containersUsage: [

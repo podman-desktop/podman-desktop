@@ -33,6 +33,7 @@ const imageInfo: ImageInfoUI = {
   tag: 'image-tag',
   engineId: 'podman.Podman Machine',
   engineName: 'Podman',
+  engineType: 'podman',
   humanSize: '128kb',
   arch: 'amd64',
   age: '2 hours',

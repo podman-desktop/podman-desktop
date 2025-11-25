@@ -6,6 +6,7 @@ import { providerInfos } from '/@/stores/providers';
 interface Props {
   object: {
     engineId: string;
+    engineType: 'podman' | 'docker';
   };
 }
 
@@ -21,5 +22,5 @@ const connection = $derived(
 </script>
 
 <Label tip={connection?.endpoint.socketPath} name={connection?.displayName}>
-  <ProviderInfoCircle type="podman" />
+  <ProviderInfoCircle type={object.engineType} />
 </Label>

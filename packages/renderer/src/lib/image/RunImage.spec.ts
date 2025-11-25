@@ -69,6 +69,7 @@ async function createRunImage(entrypoint?: string | string[], cmd?: string[]): P
     createdAt: 0,
     engineId: '',
     engineName: '',
+    engineType: 'podman',
     size: 0,
     humanSize: '',
     id: '',
