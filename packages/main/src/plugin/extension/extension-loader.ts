@@ -976,8 +976,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       },
 
       suggestRegistry: (registry: containerDesktopAPI.RegistrySuggestedProvider): Disposable => {
-        // isUserDefaultRegistry = false
-        return imageRegistry.suggestRegistry(registry, false);
+        return imageRegistry.suggestRegistry({ registry, isUserDefaultRegistry: false });
       },
 
       unregisterRegistry: (registry: containerDesktopAPI.Registry): void => {

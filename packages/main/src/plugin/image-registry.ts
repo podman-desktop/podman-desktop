@@ -102,16 +102,15 @@ export class ImageRegistry {
     this.defaultRegistries = this.configurationRegistry.getConfiguration('registries').get('defaults', []);
     this.defaultRegistries.forEach(registry => {
       if ('registry' in registry) {
-        this.suggestRegistry(
-          {
+        this.suggestRegistry({
+          registry: {
             name: registry.registry.prefix,
             url: registry.registry.location,
             insecure: registry.registry.insecure,
             blocked: registry.registry.blocked,
           },
-          // isUserDefaultRegistry
-          true,
-        );
+          isUserDefaultRegistry: true,
+        });
       }
     });
   }
@@ -205,10 +204,13 @@ export class ImageRegistry {
     });
   }
 
-  suggestRegistry(
-    registry: containerDesktopAPI.RegistrySuggestedProvider,
-    isUserDefaultRegistry?: boolean,
-  ): Disposable {
+  suggestRegistry({
+    registry,
+    isUserDefaultRegistry,
+  }: {
+    registry: containerDesktopAPI.RegistrySuggestedProvider;
+    isUserDefaultRegistry?: boolean;
+  }): Disposable {
     // Do not add it to the list if it's already been suggested by URL (Quay, DockerHub, etc.).
     // this may have been done by another extension.
     const matchingRegistry = this.suggestedRegistries.find(reg => reg.url === registry.url);

@@ -125,7 +125,6 @@ function setNewSuggestedRegistryFormVisible(i: number, registry: containerDeskto
 
   // Set the value of the URL to the one we want to show
   newRegistryRequest.serverUrl = registry.url;
-  newRegistryRequest.insecure = registry.insecure;
 
   // Unhide the one we want to show
   listedSuggestedRegistries[i] = true;
@@ -161,7 +160,6 @@ function clearSavedCredentials(): void {
   newRegistryRequest.serverUrl = '';
   newRegistryRequest.username = '';
   newRegistryRequest.secret = '';
-  delete newRegistryRequest.insecure;
 }
 
 async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<void> {
@@ -437,7 +435,7 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
               {#if listedSuggestedRegistries[i]}
                 <Button onclick={(): void => hideSuggestedRegistries()} type="link">Cancel</Button>
               {:else}
-                <Button disabled={registry.blocked} onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
+                <Button onclick={(): void => setNewSuggestedRegistryFormVisible(i, registry)}>Configure</Button>
               {/if}
             </div>
           </div>

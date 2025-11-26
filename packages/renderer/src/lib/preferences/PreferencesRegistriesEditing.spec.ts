@@ -18,25 +18,14 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { Registry, RegistrySuggestedProvider } from '@podman-desktop/api';
-import { waitFor, within } from '@testing-library/dom';
+import type { Registry } from '@podman-desktop/api';
+import { waitFor } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
+import { registriesInfos } from '../../stores/registries';
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
-
-const suggestedRegistry: RegistrySuggestedProvider = {
-  name: 'registry 1',
-  url: 'registry1/foo',
-};
-
-const blockedSuggestedRegistry: RegistrySuggestedProvider = {
-  name: 'registry 2',
-  url: '/registry2/foo',
-  blocked: true,
-};
 
 describe('PreferencesRegistriesEditing', () => {
   test('Expect that add registry button is visible and enabled', async () => {
@@ -117,23 +106,5 @@ describe('PreferencesRegistriesEditing', () => {
       secret: 'password',
       insecure: true,
     });
-  });
-
-  test('Expect blocked suggested registries to have the configure button disabled', async () => {
-    registriesSuggestedInfos.set([suggestedRegistry, blockedSuggestedRegistry]);
-
-    render(PreferencesRegistriesEditing, {});
-
-    const suggestedRegistryRow = screen.getByRole('row', { name: suggestedRegistry.name });
-    const blockedSuggestedRegistryRow = screen.getByRole('row', { name: blockedSuggestedRegistry.name });
-
-    expect(suggestedRegistryRow).toBeInTheDocument();
-    expect(blockedSuggestedRegistryRow).toBeInTheDocument();
-
-    const configureButton = within(suggestedRegistryRow).getByRole('button', { name: 'Configure' });
-    expect(configureButton).toBeEnabled();
-
-    const disabledConfigureButton = within(blockedSuggestedRegistryRow).getByRole('button', { name: 'Configure' });
-    expect(disabledConfigureButton).toBeDisabled();
   });
 });

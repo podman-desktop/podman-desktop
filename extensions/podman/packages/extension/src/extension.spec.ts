@@ -178,7 +178,7 @@ vi.mock('./compatibility-mode', async () => {
   };
 });
 
-vi.mock('./configuration/registry-configuration', async () => {
+vi.mock(import('./configuration/registry-configuration'), async () => {
   const RegistryConfigurationImpl = vi.fn();
   RegistryConfigurationImpl.prototype.init = vi.fn(() => []);
   return { RegistryConfigurationImpl };

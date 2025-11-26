@@ -21,15 +21,14 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 
-import type { DefaultRegistry, DefaultRegistryMirror, Disposable, QuickPickItem } from '@podman-desktop/api';
-import { commands, configuration, env, window } from '@podman-desktop/api';
+import type { Disposable, QuickPickItem } from '@podman-desktop/api';
+import { commands, env, window } from '@podman-desktop/api';
 import mustache from 'mustache';
 import * as toml from 'smol-toml';
 
-import { REGISTRY_MIRROR } from '/@/constants';
-
 import { getJSONMachineList } from '../extension';
 import { execPodman } from '../utils/util';
+import { DefaultRegistryLoader } from './default-registry-loader';
 import playbookRegistryConfFileTemplate from './playbook-setup-registry-conf-file.mustache?raw';
 
 interface RegistryEntryQuickPickItem extends QuickPickItem {
@@ -71,6 +70,12 @@ export interface RegistryConfiguration {
  * Manages the registry configuration file (inside the Podman VM for macOS/Windows)
  */
 export class RegistryConfigurationImpl implements RegistryConfiguration {
+  #defaultRegistryLoader: DefaultRegistryLoader;
+
+  constructor(defaultRegistryLoader: DefaultRegistryLoader = new DefaultRegistryLoader()) {
+    this.#defaultRegistryLoader = defaultRegistryLoader;
+  }
+
   async init(): Promise<Disposable[]> {
     const disposables: Disposable[] = [];
     await this.loadDefaultUserRegistries();
@@ -90,87 +95,19 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       }
     }
 
-    const defaultRegistries: RegistryConfigurationEntry[] = [];
-    const userDefaultRegistries = configuration.getConfiguration('registries').get('defaults', []) as (
-      | DefaultRegistry
-      | DefaultRegistryMirror
-    )[];
-
+    const defaultRegistries = this.#defaultRegistryLoader.loadFromConfiguration();
     const configFileContent = await this.readRegistriesConfContent();
 
-    userDefaultRegistries.forEach(registry => {
-      if ('registry' in registry) {
-        defaultRegistries.push({ ...registry.registry });
-      } else if (defaultRegistries.length > 0) {
-        // mirror registries come after the registry to which they belong
-        defaultRegistries[defaultRegistries.length - 1].mirror ??= [];
-        defaultRegistries[defaultRegistries.length - 1].mirror?.push({ ...registry[REGISTRY_MIRROR] });
-      }
-    });
-
     if (defaultRegistries.length > 0) {
-      const combinedRegistries = this.resolveDefaultRegistryConflicts(defaultRegistries, configFileContent.registry);
+      const combinedRegistries = this.#defaultRegistryLoader.resolveConflicts(
+        defaultRegistries,
+        configFileContent.registry,
+      );
       await this.saveRegistriesConfContent({ registry: combinedRegistries });
     }
   }
 
-  protected checkForDifference(
-    duplicateRegistry: RegistryConfigurationEntry,
-    defaultRegistry: RegistryConfigurationEntry,
-  ): boolean {
-    if (
-      duplicateRegistry.blocked !== defaultRegistry.blocked ||
-      duplicateRegistry.insecure !== defaultRegistry.insecure ||
-      duplicateRegistry.location !== defaultRegistry.location
-    ) {
-      const diff = [];
-      if (duplicateRegistry.blocked !== defaultRegistry.blocked) {
-        diff.push('blocked');
-      }
-
-      if (duplicateRegistry.insecure !== defaultRegistry.insecure) {
-        diff.push('insecure');
-      }
-
-      if (duplicateRegistry.location !== defaultRegistry.location) {
-        diff.push('location');
-      }
-
-      console.warn(
-        `Default user registry ${defaultRegistry.prefix} already exists in the registries.conf.d file, but some of its properties do not match: ${diff.join(', ')}. Please update this registry`,
-      );
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  resolveDefaultRegistryConflicts(
-    defaultRegistries: RegistryConfigurationEntry[],
-    existingRegistries: RegistryConfigurationEntry[],
-  ): RegistryConfigurationEntry[] {
-    defaultRegistries.forEach(defaultRegistry => {
-      const duplicateRegistry = existingRegistries.find(
-        existingRegistry => existingRegistry.prefix === defaultRegistry.prefix,
-      );
-      if (defaultRegistry.prefix && duplicateRegistry) {
-        const diff = this.checkForDifference(duplicateRegistry, defaultRegistry);
-        if (!diff) {
-          defaultRegistry.mirror?.forEach(mirror => {
-            duplicateRegistry.mirror ??= [];
-            if (!duplicateRegistry.mirror?.map(dupMirror => dupMirror.location).includes(mirror.location)) {
-              duplicateRegistry.mirror.push(mirror);
-            }
-          });
-        }
-      } else {
-        existingRegistries.push(defaultRegistry);
-      }
-    });
-    return existingRegistries;
-  }
-
-  async checkRegistryConfFileExistsInVm(showError = true): Promise<boolean> {
+  async checkRegistryConfFileExistsInVm(showError: boolean): Promise<boolean> {
     // check if the podman machine has the file being mounted inside the VM or then says it can't continue
     const machineList = await getJSONMachineList();
 
@@ -215,7 +152,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
   async setupRegistryCommandCallback(): Promise<void> {
     // on Linux the file is accessible directly
     if (env.isMac || env.isWindows) {
-      const checked = await this.checkRegistryConfFileExistsInVm();
+      const checked = await this.checkRegistryConfFileExistsInVm(true);
       if (!checked) {
         return;
       }

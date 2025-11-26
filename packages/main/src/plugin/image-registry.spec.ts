@@ -1226,9 +1226,9 @@ test('Handle conflicts with existing suggested registries and user default regis
 
   imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy, configurationRegistry);
 
-  imageRegistry.suggestRegistry(suggestedRegistry1, false);
-  imageRegistry.suggestRegistry(suggestedRegistry2, false);
-  imageRegistry.suggestRegistry(suggestedRegistry3, false);
+  imageRegistry.suggestRegistry({ registry: suggestedRegistry1, isUserDefaultRegistry: false });
+  imageRegistry.suggestRegistry({ registry: suggestedRegistry2, isUserDefaultRegistry: false });
+  imageRegistry.suggestRegistry({ registry: suggestedRegistry3, isUserDefaultRegistry: false });
 
   imageRegistry.loadUserDefaultRegistryConfig();
 
