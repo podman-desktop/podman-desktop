@@ -66,5 +66,5 @@ test('KubeApplyYAMLButton should redirect to', async () => {
 
   await userEvent.click(applyYAMLBtn);
 
-  expect(gotoSpy).toHaveBeenCalledWith('/kube/apply');
+  expect(gotoSpy).toHaveBeenCalledWith('/kubernetes/apply');
 });
