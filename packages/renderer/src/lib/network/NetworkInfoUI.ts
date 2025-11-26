@@ -24,7 +24,7 @@ export interface NetworkInfoUI {
   created: string;
   engineId: string;
   engineName: string;
-  engineType: string;
+  engineType: 'podman' | 'docker';
   selected: boolean;
   status: string;
   containers: NetworkContainer[];

@@ -613,6 +613,7 @@ export class ContainerProviderRegistry {
               ...image,
               engineName: provider.name,
               engineId: provider.id,
+              engineType: provider.connection.type,
               Digest: `sha256:${image.Id}`,
             };
             return imageInfo;
@@ -673,6 +674,7 @@ export class ContainerProviderRegistry {
               ...image,
               engineName: provider.name,
               engineId: provider.id,
+              engineType: provider.connection.type,
               isManifest,
               Id: image.Digest ? `sha256:${image.Id}` : image.Id,
               Digest: image.Digest ?? `sha256:${image.Id}`,
@@ -884,9 +886,10 @@ export class ContainerProviderRegistry {
 
           const engineName = provider.name;
           const engineId = provider.id;
+          const engineType = provider.connection.type;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const volumeInfos = volumeListInfo.Volumes.map((volumeList: any) => {
-            const volumeInfo: VolumeInfo = { ...volumeList, engineName, engineId };
+            const volumeInfo: VolumeInfo = { ...volumeList, engineName, engineId, engineType };
 
             // compute containers using this volume
             const containersUsingThisVolume = containers

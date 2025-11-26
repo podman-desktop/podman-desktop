@@ -89,6 +89,7 @@ test('Expect images being ordered by newest first', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:456456456456456',
@@ -98,6 +99,7 @@ test('Expect images being ordered by newest first', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:7897891234567890123',
@@ -107,6 +109,7 @@ test('Expect images being ordered by newest first', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
   ] as unknown as ImageInfo[]);
 
@@ -160,6 +163,7 @@ test('Expect filter empty screen', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
   ] as unknown as ImageInfo[]);
 
@@ -205,6 +209,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:1234567890123',
@@ -214,6 +219,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'docker',
       engineName: 'docker',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:1234567890123',
@@ -223,6 +229,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:2345678901234',
@@ -232,6 +239,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:3456789012345',
@@ -241,6 +249,7 @@ test('Expect two images in list given image id and engine id', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
   ] as unknown as ImageInfo[]);
 
@@ -302,6 +311,7 @@ describe('Contributions', () => {
         Status: 'Running',
         engineId: 'podman',
         engineName: 'podman',
+        engineType: 'podman',
         Labels: labels,
       },
     ] as unknown as ImageInfo[]);
@@ -380,6 +390,7 @@ describe('Contributions', () => {
         Status: 'Running',
         engineId: 'podman',
         engineName: 'podman',
+        engineType: 'podman',
         Labels: labels,
       },
     ] as unknown as ImageInfo[]);
@@ -468,6 +479,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:456456456456456',
@@ -477,6 +489,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:7897891234567890123',
@@ -486,6 +499,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
   ] as unknown as ImageInfo[]);
 
@@ -549,6 +563,7 @@ test('Manifest images display without actions', async () => {
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
     {
       Id: 'sha256:7897891234567890123',
@@ -625,6 +640,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
   ] as unknown as ImageInfo[]);
 
@@ -684,6 +700,7 @@ test('Expect to see empty page and no table when no container engine is running'
       Status: 'Running',
       engineId: 'podman',
       engineName: 'podman',
+      engineType: 'podman',
     },
   ] as unknown as ImageInfo[]);
 

@@ -38,6 +38,7 @@ const volume: VolumeInfoUI = {
   humanSize: '',
   engineId: 'engine-id',
   engineName: '',
+  engineType: 'podman',
   selected: false,
   status: 'UNUSED',
   containersUsage: [],

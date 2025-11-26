@@ -37,6 +37,7 @@ test('Expect simple column styling', async () => {
     humanSize: '',
     engineId: '',
     engineName: '',
+    engineType: 'podman',
     selected: false,
     status: 'USED',
     containersUsage: [],
