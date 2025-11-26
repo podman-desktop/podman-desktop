@@ -5,4 +5,4 @@ import { router } from 'tinro';
 import SolidKubeIcon from '../images/SolidKubeIcon.svelte';
 </script>
 
-<Button on:click={(): void => router.goto('/kube/apply')} title="Apply YAML" icon={SolidKubeIcon}>Apply YAML</Button>
+<Button on:click={(): void => router.goto('/kubernetes/apply')} title="Apply YAML" icon={SolidKubeIcon}>Apply YAML</Button>
