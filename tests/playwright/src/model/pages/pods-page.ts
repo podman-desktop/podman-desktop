@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { MainPage } from './main-page';
 import { PodmanKubePlayPage } from './podman-kube-play-page';
 import { PodDetailsPage } from './pods-details-page';

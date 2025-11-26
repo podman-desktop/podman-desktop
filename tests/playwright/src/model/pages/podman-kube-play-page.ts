@@ -17,8 +17,9 @@
  ***********************************************************************/
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import type { PlayYamlOptions } from '../core/types';
-import { PodmanKubePlayOptions } from '../core/types';
+import type { PlayYamlOptions } from '/@/model/core/types';
+import { PodmanKubePlayOptions } from '/@/model/core/types';
+
 import { BasePage } from './base-page';
 import { PodsPage } from './pods-page';
 

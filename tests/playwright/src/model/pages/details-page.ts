@@ -18,7 +18,8 @@
 
 import test, { type Locator, type Page } from '@playwright/test';
 
-import { waitUntil } from '../../utility/wait';
+import { waitUntil } from '/@/utility/wait';
+
 import { BasePage } from './base-page';
 
 export abstract class DetailsPage extends BasePage {

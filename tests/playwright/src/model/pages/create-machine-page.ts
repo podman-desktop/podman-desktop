@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import type { PodmanVirtualizationProviders } from '../core/types';
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
+
 import { BasePage } from './base-page';
 import { MachineCreationForm } from './forms/machine-creation-form';
 import { ResourcesPage } from './resources-page';

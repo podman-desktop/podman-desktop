@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { SettingsPage } from './settings-page';
 
 export class KubeContextPage extends SettingsPage {
@@ -75,7 +76,7 @@ export class KubeContextPage extends SettingsPage {
     await switchButton.click();
   }
 
-  async deleteContext(name: string, handleConfirmation: boolean = true): Promise<void> {
+  async deleteContext(name: string, handleConfirmation = true): Promise<void> {
     const contextRow = await this.getContextRowByName(name);
     if (contextRow === undefined) {
       throw Error(`Context: '${name}' does not exist`);

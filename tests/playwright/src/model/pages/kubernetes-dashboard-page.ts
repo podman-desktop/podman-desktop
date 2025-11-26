@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { KubernetesResources } from '../core/types';
+import { KubernetesResources } from '/@/model/core/types';
+
 import { MainPage } from './main-page';
 
 export class KubernetesDashboardPage extends MainPage {
@@ -95,6 +96,6 @@ export class KubernetesDashboardPage extends MainPage {
     }
 
     const countText = await countLocator.textContent();
-    return countText ? parseInt(countText, 10) : 0;
+    return countText ? Number.parseInt(countText, 10) : 0;
   }
 }

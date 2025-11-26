@@ -99,7 +99,7 @@ test.describe.serial('Compose compose workflow verification', { tag: '@smoke' },
   test('Check Podman Desktop autorefresh when using podman compose up', async ({ navigationBar }) => {
     test.setTimeout(300_000);
 
-    const composeFilePath = path.resolve(__dirname, '..', '..', 'resources', `compose.yaml`);
+    const composeFilePath = path.resolve(__dirname, '..', '..', 'resources', 'compose.yaml');
     await runComposeUpFromCLI(composeFilePath);
 
     const containersPage = await navigationBar.openContainers();

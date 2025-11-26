@@ -18,7 +18,8 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import type { ResourceElementActions } from '../core/operations';
+import type { ResourceElementActions } from '/@/model/core/operations';
+
 import { ResourceCardPage } from './resource-card-page';
 
 export class ResourceConnectionCardPage extends ResourceCardPage {
@@ -50,7 +51,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
     return (await this.resourceElement.count()) > 0;
   }
 
-  public async performConnectionAction(operation: ResourceElementActions, timeout: number = 25000): Promise<void> {
+  public async performConnectionAction(operation: ResourceElementActions, timeout = 25000): Promise<void> {
     return test.step(`Perform connection action '${operation}' on resource element '${this.resourceElement}'`, async () => {
       const button = this.resourceElementConnectionActions.getByRole('button', {
         name: operation,
