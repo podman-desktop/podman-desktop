@@ -135,7 +135,6 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       });
       configData = {};
     }
-    this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
 
     // Load managed defaults
     const defaults = await this.defaultConfiguration.getContent();
@@ -145,7 +144,42 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const locked = await this.lockedConfiguration.getContent();
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, locked);
 
+    // Apply managed defaults to user config for any undefined keys
+    // that have not been set yet in the local settings.json
+    this.applyManagedDefaults(configData, defaults);
+
+    // Set the updated configuration data
+    this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
+
     return notifications;
+  }
+
+  /**
+   * Apply default settings from default-settings.json (object) to user config (settings.json) (also an object being passed in),
+   * and mutably update the object.
+   * @returns array of keys that were applied to configData (useful for testing and debugging purposes)
+   */
+  protected applyManagedDefaults(configData: Record<string, unknown>, defaults: Record<string, unknown>): string[] {
+    const appliedKeys: string[] = [];
+
+    // Keeping it simple here by iterating over the default keys
+    // and applying it to any undefined keys in the user config.
+    // we do NOT do any deep merging of objects here, as we are only interested if there is a
+    // top-level key that is undefined in the user config, and then copy over the configuration default.
+    for (const key of Object.keys(defaults)) {
+      if (configData[key] === undefined) {
+        configData[key] = defaults[key];
+        appliedKeys.push(key);
+      }
+    }
+
+    // We concatenate the applied keys into one console.log so we don't spam the console,
+    // this is only shown once when initialized / copy over the keys, but does not subsequently log
+    // after each startup.
+    if (appliedKeys.length > 0) {
+      console.log(`[Managed-by]: Applied default settings for: ${appliedKeys.join(', ')}`);
+    }
+    return appliedKeys;
   }
 
   /**
