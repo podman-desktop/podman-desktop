@@ -39,9 +39,9 @@ To verify that your managed configuration is being loaded correctly:
    ```
 4. If you don't see these messages, the configuration files may not be in the correct location or may have syntax errors.
 
-## Verifying a value is being locked by managed-by configuration
+## Verifying if a value is locked by the managed-by configuration
 
-To verify in the GUI if a value is being locked by your managed-by configuration:
+To verify in the GUI if a value is locked by your managed-by configuration:
 
 1. Open Podman Desktop.
 2. Go to **Settings > Preferences**.
