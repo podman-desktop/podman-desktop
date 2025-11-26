@@ -140,7 +140,7 @@ onMount(async () => {
   <div class="space-y-6">
     <div>
       <label for="" class="block mb-2 text-base font-bold text-(--pd-content-card-header-text)"
-        >Kubernetes Context</label>
+        >Kubernetes Context {selectedContextName}</label>
     </div>
     <div class="flex flex-col">
       <div
@@ -148,7 +148,7 @@ onMount(async () => {
         <Dropdown
           id="kubeContexts"
           name="kubeContexts"
-          value={selectedContextName}
+          bind:value={selectedContextName}
           options={contexts.map(context => ({
             label: context.name,
             value: context.name,
