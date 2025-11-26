@@ -39,6 +39,18 @@ To verify that your managed configuration is being loaded correctly:
    ```
 4. If you don't see these messages, the configuration files may not be in the correct location or may have syntax errors.
 
+## Verifying if a value is locked by the managed-by configuration
+
+To verify in the GUI if a value is locked by your managed-by configuration:
+
+1. Open Podman Desktop.
+2. Go to **Settings > Preferences**.
+3. Find your managed-by value:
+
+![Managed by label](img/managed-by-label.png)
+
+4. Confirm that it has the **Managed** label applied.
+
 ## File permission issues
 
 On Linux and macOS, managed configuration files must have appropriate permissions:
