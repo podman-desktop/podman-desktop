@@ -17,7 +17,8 @@
  ***********************************************************************/
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import type { DeployPodOptions } from '../core/types';
+import type { DeployPodOptions } from '/@/model/core/types';
+
 import { BasePage } from './base-page';
 
 export class DeployToKubernetesPage extends BasePage {
@@ -75,10 +76,10 @@ export class DeployToKubernetesPage extends BasePage {
       containerExposedPort,
       isOpenShiftCluster,
       useOpenShiftRoutes,
-    }: DeployPodOptions = {},
+    }: DeployPodOptions,
     context: string,
-    namespace: string = 'default',
-    timeout: number = 100_000,
+    namespace = 'default',
+    timeout = 100_000,
   ): Promise<void> {
     return test.step(`Deploy pod ${name}`, async () => {
       await playExpect(this.podName).toBeVisible();

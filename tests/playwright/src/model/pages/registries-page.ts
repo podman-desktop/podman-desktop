@@ -19,7 +19,8 @@
 import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
-import { waitUntil } from '../../utility/wait';
+import { waitUntil } from '/@/utility/wait';
+
 import { SettingsPage } from './settings-page';
 
 export class RegistriesPage extends SettingsPage {
@@ -104,7 +105,7 @@ export class RegistriesPage extends SettingsPage {
       });
       try {
         await dropdownMenu.waitFor({ state: 'visible', timeout: 3_000 });
-      } catch (err) {
+      } catch (_err) {
         throw Error(`Dropdown menu on ${title} registry not available.`);
       }
       await dropdownMenu.click();

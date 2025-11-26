@@ -18,9 +18,10 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { isMac } from '../../utility/platform';
-import { KubernetesResourceState } from '../core/states';
+import { KubernetesResourceState } from '/@/model/core/states';
+import { handleConfirmationDialog } from '/@/utility/operations';
+import { isMac } from '/@/utility/platform';
+
 import { DetailsPage } from './details-page';
 
 export class KubernetesResourceDetailsPage extends DetailsPage {

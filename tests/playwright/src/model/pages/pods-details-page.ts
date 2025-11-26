@@ -19,8 +19,9 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { PodState } from '../core/states';
+import { PodState } from '/@/model/core/states';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { DetailsPage } from './details-page';
 import { PodsPage } from './pods-page';
 
@@ -52,7 +53,7 @@ export class PodDetailsPage extends DetailsPage {
   }
 
   async getState(): Promise<string> {
-    return test.step(`Get Pod State`, async () => {
+    return test.step('Get Pod State', async () => {
       const currentState = await this.header.getByRole('status').getAttribute('title');
       for (const state of Object.values(PodState)) {
         if (currentState === state) return state;
@@ -63,28 +64,28 @@ export class PodDetailsPage extends DetailsPage {
   }
 
   async startPod(): Promise<void> {
-    return test.step(`Start Pod`, async () => {
+    return test.step('Start Pod', async () => {
       await playExpect(this.startButton).toBeEnabled({ timeout: 10_000 });
       await this.startButton.click();
     });
   }
 
   async stopPod(): Promise<void> {
-    return test.step(`Stop Pod`, async () => {
+    return test.step('Stop Pod', async () => {
       await playExpect(this.stopButton).toBeEnabled({ timeout: 10_000 });
       await this.stopButton.click();
     });
   }
 
   async restartPod(): Promise<void> {
-    return test.step(`Restart Pod`, async () => {
+    return test.step('Restart Pod', async () => {
       await playExpect(this.restartButton).toBeEnabled({ timeout: 20_000 });
       await this.restartButton.click();
     });
   }
 
   async deletePod(): Promise<PodsPage> {
-    return test.step(`Delete Pod`, async () => {
+    return test.step('Delete Pod', async () => {
       await playExpect(this.deleteButton).toBeEnabled({ timeout: 10_000 });
       await this.deleteButton.click();
       await handleConfirmationDialog(this.page);

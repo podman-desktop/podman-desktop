@@ -16,12 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type Page } from '@playwright/test';
-
 import { ResourceCardPage } from './resource-card-page';
 
-export class ResourceCliCardPage extends ResourceCardPage {
-  constructor(page: Page, resourceName: string) {
-    super(page, resourceName);
-  }
-}
+export class ResourceCliCardPage extends ResourceCardPage {}

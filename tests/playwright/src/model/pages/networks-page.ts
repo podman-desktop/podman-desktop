@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog, handleEditNetworkDialog } from '../../utility/operations';
+import { handleConfirmationDialog, handleEditNetworkDialog } from '/@/utility/operations';
+
 import { CreateNetworkPage } from './create-network-page';
 import { MainPage } from './main-page';
 import { NetworkDetailsPage } from './network-details-page';

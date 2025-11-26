@@ -89,6 +89,7 @@ export * from './model/pages/resource-connection-card-page';
 export * from './model/pages/resource-details-page';
 export * from './model/pages/resources-page';
 export * from './model/pages/run-image-page';
+export * from './model/pages/select-image-page';
 export * from './model/pages/settings-bar';
 export * from './model/pages/settings-page';
 export * from './model/pages/tasks-page';

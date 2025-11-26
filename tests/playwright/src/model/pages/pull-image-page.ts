@@ -136,7 +136,7 @@ export class PullImagePage extends BasePage {
   }
 
   async getFirstSearchResultInstantly(): Promise<string> {
-    return test.step(`Get first search result from the results table`, async () => {
+    return test.step('Get first search result from the results table', async () => {
       const resultRow = this.getFirstResultButtonLocator();
       return await resultRow.innerText();
     });
@@ -195,7 +195,7 @@ export class PullImagePage extends BasePage {
         throw new Error('Image name is invalid');
       }
 
-      let searchString;
+      let searchString: string;
 
       if (searchForVersion) {
         searchString = `${imageName}:${imageTag}`;

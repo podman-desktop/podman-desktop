@@ -19,7 +19,8 @@
 import { type Locator, type Page, test } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { waitUntil } from '../../utility/wait';
+import { waitUntil } from '/@/utility/wait';
+
 import { BasePage } from './base-page';
 
 /**
