@@ -20,127 +20,22 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { router } from 'tinro';
+import { afterAll, expect, test, vi } from 'vitest';
 
 import KubeApplyYamlButton from './KubeApplyYAMLButton.svelte';
 
-const currentContext: string = 'test-context';
-const currentNamespace: string = 'test-namespace';
-const openDialogMock = vi.fn();
-const kubernetesApplyResourcesFromFileMock = vi.fn();
-
-// fake the window object
-beforeAll(() => {
-  Object.defineProperty(window, 'openDialog', { value: openDialogMock });
-  Object.defineProperty(window, 'kubernetesGetCurrentNamespace', {
-    value: vi.fn().mockResolvedValue(currentNamespace),
-  });
-  Object.defineProperty(window, 'kubernetesGetCurrentContextName', {
-    value: vi.fn().mockResolvedValue(currentContext),
-  });
-  Object.defineProperty(window, 'kubernetesApplyResourcesFromFile', { value: kubernetesApplyResourcesFromFileMock });
+afterAll(() => {
+  vi.restoreAllMocks();
 });
 
-test('Verify clicking button will open file dialog and canceling will exit', async () => {
+test(`Verify clicking button will open 'Apply Kubernetes YAML' form`, async () => {
+  const gotoSpy = vi.spyOn(router, 'goto').mockReturnValue(undefined);
   render(KubeApplyYamlButton);
-
-  openDialogMock.mockResolvedValue([]);
 
   const button = screen.getByRole('button', { name: 'Apply YAML' });
   expect(button).toBeInTheDocument();
   await userEvent.click(button);
 
-  expect(openDialogMock).toHaveBeenCalled();
-  expect(kubernetesApplyResourcesFromFileMock).not.toHaveBeenCalled();
-});
-
-test('Verify selected file will be applied', async () => {
-  render(KubeApplyYamlButton);
-
-  const filename = 'service.yaml';
-  openDialogMock.mockResolvedValue([filename]);
-
-  const button = screen.getByRole('button', { name: 'Apply YAML' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-
-  expect(openDialogMock).toHaveBeenCalled();
-  expect(kubernetesApplyResourcesFromFileMock).toHaveBeenCalledWith(currentContext, [filename], currentNamespace);
-});
-
-test('Verify success will open an info dialog', async () => {
-  render(KubeApplyYamlButton);
-
-  const filename = 'service.yaml';
-  openDialogMock.mockResolvedValue([filename]);
-  kubernetesApplyResourcesFromFileMock.mockReturnValue([{}]);
-
-  const button = screen.getByRole('button', { name: 'Apply YAML' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-
-  expect(openDialogMock).toHaveBeenCalled();
-  expect(kubernetesApplyResourcesFromFileMock).toHaveBeenCalledWith(currentContext, [filename], currentNamespace);
-
-  expect(window.showMessageBox).toHaveBeenCalled();
-  expect(window.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ type: 'info' }));
-});
-
-test('Verify multiple file success will open an info dialog', async () => {
-  render(KubeApplyYamlButton);
-
-  const filename1 = 'service1.yaml';
-  const filename2 = 'service2.yaml';
-  openDialogMock.mockResolvedValue([filename1, filename2]);
-  kubernetesApplyResourcesFromFileMock.mockReturnValue([{}]);
-
-  const button = screen.getByRole('button', { name: 'Apply YAML' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-
-  expect(openDialogMock).toHaveBeenCalled();
-  expect(kubernetesApplyResourcesFromFileMock).toHaveBeenCalledWith(
-    currentContext,
-    [filename1, filename2],
-    currentNamespace,
-  );
-
-  expect(window.showMessageBox).toHaveBeenCalled();
-  expect(window.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ type: 'info' }));
-});
-
-test('Verify no results will open a warning dialog', async () => {
-  render(KubeApplyYamlButton);
-
-  const filename = 'service.yaml';
-  openDialogMock.mockResolvedValue([filename]);
-  kubernetesApplyResourcesFromFileMock.mockReturnValue([]);
-
-  const button = screen.getByRole('button', { name: 'Apply YAML' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-
-  expect(openDialogMock).toHaveBeenCalled();
-  expect(kubernetesApplyResourcesFromFileMock).toHaveBeenCalledWith(currentContext, [filename], currentNamespace);
-
-  expect(window.showMessageBox).toHaveBeenCalled();
-  expect(window.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ type: 'warning' }));
-});
-
-test('Verify failure will open an error dialog', async () => {
-  render(KubeApplyYamlButton);
-
-  const filename = 'service.yaml';
-  openDialogMock.mockResolvedValue([filename]);
-  kubernetesApplyResourcesFromFileMock.mockRejectedValue('error');
-
-  const button = screen.getByRole('button', { name: 'Apply YAML' });
-  expect(button).toBeInTheDocument();
-  await userEvent.click(button);
-
-  expect(openDialogMock).toHaveBeenCalled();
-  expect(kubernetesApplyResourcesFromFileMock).toHaveBeenCalledWith(currentContext, [filename], currentNamespace);
-
-  expect(window.showMessageBox).toHaveBeenCalled();
-  expect(window.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+  expect(gotoSpy).toHaveBeenCalledWith('/kube/apply');
 });

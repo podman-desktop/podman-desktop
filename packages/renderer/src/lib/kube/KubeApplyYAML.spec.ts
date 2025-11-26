@@ -109,7 +109,7 @@ test(`'Apply Custom YAML' button gets enabled when custom YAML editor content ch
   expect(button).toBeEnabled();
 });
 
-test(`'No Kubernetes contexts available' error is shown when there is not contexts defined`, () => {
+test(`'No Kubernetes contexts available' error is shown when there are no contexts defined`, () => {
   vi.mocked(window.kubernetesGetContexts).mockResolvedValue([]);
 
   const { getByRole } = render(KubeApplyYAML);

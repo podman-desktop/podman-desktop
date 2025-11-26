@@ -21,7 +21,7 @@ let runStarted = $state(false);
 let runFinished = $state(false);
 let runError = $state('');
 let runWarning = $state('');
-let kubernetesYamlFilePath: string | undefined = $state(undefined);
+let kubernetesYamlFilePath: string = $state('');
 let customYamlContent: string = $state('');
 let userChoice: 'file' | 'custom' = $state('file');
 
@@ -71,21 +71,7 @@ async function kubeApply(): Promise<void> {
     tempFilePath = await window.createTempFile(customYamlContent);
     yamlFilePath = [tempFilePath];
   } else {
-    const result = await window.openDialog({
-      title: 'Select a .yaml file to apply',
-      selectors: ['openFile', 'multiSelections'],
-      filters: [
-        {
-          name: 'YAML files',
-          extensions: ['yaml', 'yml', 'YAML', 'YML'],
-        },
-      ],
-    });
-
-    if (!result?.length) {
-      return;
-    }
-    yamlFilePath = result;
+    yamlFilePath = [kubernetesYamlFilePath];
   }
 
   runStarted = true;
@@ -153,12 +139,12 @@ onMount(async () => {
     
   <div class="space-y-6">
     <div>
-      <label for="" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
+      <label for="" class="block mb-2 text-base font-bold text-(--pd-content-card-header-text)"
         >Kubernetes Context</label>
     </div>
     <div class="flex flex-col">
       <div
-        class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)] border-[var(--pd-content-card-border)]">
+        class="border-2 rounded-md p-5 cursor-pointer bg-(--pd-content-card-inset-bg) border-(--pd-content-card-border)">
         <Dropdown
           id="kubeContexts"
           name="kubeContexts"
@@ -176,7 +162,7 @@ onMount(async () => {
       </div>
     </div>
     
-    <label for="containerFilePath" class="block mb-2 text-base font-bold text-[var(--pd-content-card-header-text)]"
+    <label for="containerFilePath" class="block mb-2 text-base font-bold text-(--pd-content-card-header-text)"
       >Kubernetes YAML file</label>
     
     <div class="flex flex-col">
@@ -203,7 +189,7 @@ onMount(async () => {
 
       {#snippet optionSnippet(option: 'file' | 'custom', label: string, content: Snippet)}
         <button disabled={runStarted}
-          class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
+          class="border-2 rounded-md p-5 cursor-pointer bg-(--pd-content-card-inset-bg)"
           aria-label={label}
           aria-pressed={userChoice === option ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === option}
@@ -228,7 +214,7 @@ onMount(async () => {
     <!-- Monaco Editor for custom YAML content -->
     {#if userChoice === 'custom'}
       <div class="space-y-3">
-        <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
+        <label for="custom-yaml-editor" class="block text-base font-bold text-(--pd-content-card-header-text)">
           Custom Kubernetes YAML Content
         </label>
         <div id="custom-yaml-editor" class="h-[400px] border">
@@ -243,8 +229,8 @@ onMount(async () => {
     {/if}
 
     {#if runStarted}
-      <div class="text-[var(--pd-content-card-text)] text-sm">
-        Please wait during the Play Kube and do not change screen. This process may take a few minutes to complete...
+      <div class="text-(--pd-content-card-text) text-sm">
+        Please don't leave the page while the Kubernetes YAML is being applied. This process may take a few minutes to complete...
       </div>
     {/if}
 
@@ -257,7 +243,7 @@ onMount(async () => {
     {/if}
 
     {#if playKubeResultRaw}
-      <div class="text-[var(--pd-content-card-text)] text-sm">{playKubeResultRaw}</div>
+      <div class="text-(--pd-content-card-text) text-sm">{playKubeResultRaw}</div>
     {/if}
 
     <div class="flex gap-2">
