@@ -120,6 +120,13 @@ async function deleteSelectedObjects(): Promise<void> {
 }
 
 let selectedItemsNumber = $state<number>(0);
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(obj: KubernetesObject): string {
+  return obj.metadata?.uid ?? `${obj.metadata?.namespace}:${obj.metadata?.name}`;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title={plural}>
@@ -156,6 +163,7 @@ let selectedItemsNumber = $state<number>(0);
       data={objects}
       columns={columns}
       row={row}
+      key={key}
       defaultSortColumn="Name">
     </Table>
 
