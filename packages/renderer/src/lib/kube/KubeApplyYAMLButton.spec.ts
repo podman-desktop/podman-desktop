@@ -21,21 +21,22 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { afterAll, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import KubeApplyYamlButton from './KubeApplyYAMLButton.svelte';
 
-afterAll(() => {
-  vi.restoreAllMocks();
-});
+vi.mock('tinro', () => ({
+  router: {
+    goto: vi.fn().mockReturnValue(undefined),
+  },
+}));
 
 test(`Verify clicking button will open 'Apply Kubernetes YAML' form`, async () => {
-  const gotoSpy = vi.spyOn(router, 'goto').mockReturnValue(undefined);
   render(KubeApplyYamlButton);
 
   const button = screen.getByRole('button', { name: 'Apply YAML' });
   expect(button).toBeInTheDocument();
   await userEvent.click(button);
 
-  expect(gotoSpy).toHaveBeenCalledWith('/kubernetes/apply');
+  expect(router.goto).toHaveBeenCalledWith('/kubernetes/apply');
 });
