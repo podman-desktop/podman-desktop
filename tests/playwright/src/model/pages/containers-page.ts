@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { ContainerState } from '../core/states';
 import { BuildImagePage } from './build-image-page';
 import { ContainerDetailsPage } from './container-details-page';
