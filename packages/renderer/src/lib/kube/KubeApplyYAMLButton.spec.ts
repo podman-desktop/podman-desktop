@@ -37,5 +37,5 @@ test(`Verify clicking button will open 'Apply Kubernetes YAML' form`, async () =
   expect(button).toBeInTheDocument();
   await userEvent.click(button);
 
-  expect(gotoSpy).toHaveBeenCalledWith('/kube/apply');
+  expect(gotoSpy).toHaveBeenCalledWith('/kubernetes/apply');
 });
