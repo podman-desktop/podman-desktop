@@ -3,7 +3,7 @@ import { faArrowCircleDown, faCog, faTriangleExclamation } from '@fortawesome/fr
 import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
-import { SvelteMap } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
@@ -22,6 +22,9 @@ import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
+
+// Get the preferred registries from configuration
+let preferredRegistries = $state<string[]>([DOCKER_PREFIX]);
 
 let logsPull = $state<Terminal>();
 let pullError = $state('');
@@ -169,6 +172,21 @@ onMount(() => {
   selectedProviderConnection ??= providerConnections.length > 0 ? providerConnections[0] : undefined;
 });
 
+onMount(async () => {
+  const configuration = await window.getConfigurationValue<string>('registries.preferredRegistries');
+  if (configuration) {
+    const registries = configuration
+      .split(',')
+      .map(r => r.trim())
+      .filter(r => r !== '');
+    preferredRegistries = registries.length > 0 ? registries : [];
+
+    if (!preferredRegistries.includes(DOCKER_PREFIX)) {
+      preferredRegistries.push(DOCKER_PREFIX);
+    }
+  }
+});
+
 let imageNameInvalid = $state<string>();
 let imageNameIsInvalid = $state(imageToPull === undefined || imageToPull.trim() === '');
 function validateImageName(image: string): void {
@@ -203,23 +221,45 @@ async function searchImages(value: string): Promise<string[]> {
   if (value === undefined || value.trim() === '') {
     return [];
   }
-  const options: ImageSearchOptions = {
-    query: '',
-  };
+
   if (!value.includes('/')) {
-    options.registry = DOCKER_PREFIX;
-    options.query = value;
+    // Search across all preferred registries
+    const allResults: string[] = [];
+    const seenFullNames = new SvelteSet<string>();
+
+    for (const registry of preferredRegistries) {
+      try {
+        const options: ImageSearchOptions = {
+          registry: registry,
+          query: value,
+        };
+        const searchResult = await window.searchImageInRegistry(options);
+        // Add all results with their full registry prefix
+        for (const r of searchResult) {
+          const fullName = [registry, r.name].join('/');
+          // Only add if we haven't seen this exact full name before
+          if (!seenFullNames.has(fullName)) {
+            seenFullNames.add(fullName);
+            allResults.push(fullName);
+          }
+        }
+      } catch (error: unknown) {
+        console.error(`Failed to search registry ${registry}: ${error}`);
+      }
+    }
+    return allResults;
   } else {
+    // User specified a registry in the search term
     const [registry, ...rest] = value.split('/');
-    options.registry = registry;
-    options.query = rest.join('/');
+    const options: ImageSearchOptions = {
+      registry: registry,
+      query: rest.join('/'),
+    };
+    const searchResult = await window.searchImageInRegistry(options);
+    return searchResult.map(r => {
+      return [options.registry, r.name].join('/');
+    });
   }
-  let result: string[];
-  const searchResult = await window.searchImageInRegistry(options);
-  result = searchResult.map(r => {
-    return [options.registry, r.name].join('/');
-  });
-  return result;
 }
 
 let latestTagMessage = $state<string>();
@@ -263,9 +303,30 @@ async function searchFunction(value: string): Promise<void> {
   try {
     const result = await searchImages(value);
     sortResults = (a: string, b: string): number => {
+      // Check if results match the search value exactly
       const dockerIoValue = `docker.io/${value}`;
       const aStartsWithValue = a.startsWith(value) || a.startsWith(dockerIoValue);
       const bStartsWithValue = b.startsWith(value) || b.startsWith(dockerIoValue);
+
+      // Check if results are from preferred registries and get their priority
+      const aRegistryIndex = preferredRegistries.findIndex(reg => a.startsWith(`${reg}/`));
+      const bRegistryIndex = preferredRegistries.findIndex(reg => b.startsWith(`${reg}/`));
+
+      // Prioritize preferred registries by order
+      if (aRegistryIndex !== -1 && bRegistryIndex !== -1) {
+        // Both are in preferred registries, sort by their order
+        if (aRegistryIndex !== bRegistryIndex) {
+          return aRegistryIndex - bRegistryIndex;
+        }
+      } else if (aRegistryIndex !== -1) {
+        // Only a is in preferred registries
+        return -1;
+      } else if (bRegistryIndex !== -1) {
+        // Only b is in preferred registries
+        return 1;
+      }
+
+      // Then prioritize exact matches
       if (aStartsWithValue === bStartsWithValue) {
         return a.localeCompare(b);
       } else if (aStartsWithValue && !bStartsWithValue) {

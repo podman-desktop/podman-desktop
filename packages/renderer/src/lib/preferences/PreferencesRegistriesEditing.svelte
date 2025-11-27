@@ -2,13 +2,17 @@
 import { faPlusCircle, faTrash, faUser, faUserPen } from '@fortawesome/free-solid-svg-icons';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
+import type { Unsubscriber } from 'svelte/store';
 
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
+import { configurationProperties } from '/@/stores/configurationProperties';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
 import IconImage from '../appearance/IconImage.svelte';
 import Dialog from '../dialogs/Dialog.svelte';
+import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
 // contains the original instances of registries when user clicks on `Edit password` menu item
@@ -45,11 +49,24 @@ const newRegistryRequest = $state<containerDesktopAPI.Registry>({
   secret: '',
 });
 
+// Preferred registries configuration property
+let preferredRegistriesProperty = $state<IConfigurationPropertyRecordedSchema | undefined>();
+let propertiesUnsubscribe: Unsubscriber;
+
 onMount(async () => {
   let providerSourceNames = await window.getImageRegistryProviderNames();
   if (providerSourceNames && providerSourceNames.length > 0) {
     defaultProviderSourceName = providerSourceNames[0];
   }
+
+  // Subscribe to configuration properties to get the preferred registries property
+  propertiesUnsubscribe = configurationProperties.subscribe(properties => {
+    preferredRegistriesProperty = properties.find(prop => prop.id === 'registries.preferredRegistries');
+  });
+});
+
+onDestroy(() => {
+  propertiesUnsubscribe?.();
 });
 
 function markRegistryAsModified(registry: containerDesktopAPI.Registry): void {
@@ -240,6 +257,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
       </Button>
     </div>
   {/snippet}
+
+  <!-- Preferred Registries section start -->
+  {#if preferredRegistriesProperty}
+    <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mb-4">
+      <PreferencesRenderingItem record={preferredRegistriesProperty} />
+    </div>
+  {/if}
+  <!-- Preferred Registries section end -->
 
   <div class="container bg-[var(--pd-invert-content-card-bg)] rounded-md p-3">
     <!-- Registries table start -->
