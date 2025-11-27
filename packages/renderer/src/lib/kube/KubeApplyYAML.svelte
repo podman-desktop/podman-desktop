@@ -5,9 +5,10 @@ import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, type Snippet } from 'svelte';
+import { get } from 'svelte/store';
+import { router } from 'tinro';
 
-import { handleNavigation } from '/@/navigation';
-import { NavigationPage } from '/@api/navigation-page';
+import { lastPage } from '/@/stores/breadcrumb';
 
 import MonacoEditor from '../editor/MonacoEditor.svelte';
 import KubeApplyIcon from '../kube/KubePlayIcon.svelte';
@@ -99,13 +100,6 @@ async function kubeApply(): Promise<void> {
     runStarted = false;
     runFinished = true;
   }
-}
-
-function goBackToPodsPage(): void {
-  // redirect to the pods page
-  handleNavigation({
-    page: NavigationPage.PODMAN_PODS,
-  });
 }
 
 function toggle(choice: 'file' | 'custom'): void {
@@ -241,17 +235,17 @@ onMount(async () => {
       <div class="text-(--pd-content-card-text) text-sm">{applyKubeResultRaw}</div>
     {/if}
 
-    <div class="flex gap-2">
+    <div class="grid grid-cols-[auto_auto] gap-4 justify-stretch">
       <Button
+        type="primary"
         on:click={kubeApply}
         disabled={hasInvalidFields || runStarted}
-        class="grow"
         inProgress={runStarted}
         icon={KubeApplyIcon}>
         {userChoice === 'custom' ? 'Apply Custom YAML' : 'Apply'}
       </Button>
 
-      <Button onclick={goBackToPodsPage} class="grow">Done</Button>
+      <Button onclick={():void => router.goto(get(lastPage).path)} type="secondary">{runFinished? 'Done' : 'Close'}</Button>
     </div>
   </div>
   {/snippet}
