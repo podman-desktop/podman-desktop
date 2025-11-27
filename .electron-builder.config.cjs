@@ -83,6 +83,12 @@ const config = {
     const PODMAN_EXTENSION_ASSETS = 'extensions/podman/packages/extension/assets';
     context.packager.config.extraResources = DEFAULT_ASSETS;
 
+    // include product.json
+    context.packager.config.extraResources.push({
+      from: 'product.json',
+      to: 'product.json',
+    });
+
     // universal build, add both pkg files
     // this is hack to avoid issue https://github.com/electron/universal/issues/36
     if (
