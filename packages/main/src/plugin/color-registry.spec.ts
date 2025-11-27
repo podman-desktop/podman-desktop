@@ -30,8 +30,13 @@ import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
-import type { ColorBuilder } from './color-registry.js';
-import { ColorRegistry } from './color-registry.js';
+import {
+  type ColorBuilder,
+  colorDefinition,
+  colorPalette,
+  ColorPaletteHelper,
+  ColorRegistry,
+} from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 
 class TestColorRegistry extends ColorRegistry {
@@ -50,8 +55,11 @@ class TestColorRegistry extends ColorRegistry {
     super.setDone();
   }
 
-  override registerColor(colorId: string, definition: ColorDefinition): void {
-    super.registerColor(colorId, definition);
+  override registerColor(
+    colorIdOrDefinition: string | (ColorDefinition & { id: string }),
+    definition?: ColorDefinition,
+  ): void {
+    super.registerColor(colorIdOrDefinition, definition);
   }
 
   override initTitlebar(): void {
@@ -88,26 +96,8 @@ class TestColorRegistry extends ColorRegistry {
     return super.createColorWithOpacity(darkColor, lightColor, darkAlpha, lightAlpha, errorContext);
   }
 
-  override registerColorWithOpacity(
-    colorId: string,
-    colors: ColorDefinition,
-    alpha: { light: number; dark: number },
-  ): void {
-    super.registerColorWithOpacity(colorId, colors, alpha);
-  }
-
   override color(colorId: string): ColorBuilder {
     return super.color(colorId);
-  }
-
-  override createColorWithOpacity(
-    darkColor: string,
-    lightColor: string,
-    darkAlpha: number,
-    lightAlpha: number,
-    errorContext?: string,
-  ): ColorDefinition {
-    return super.createColorWithOpacity(darkColor, lightColor, darkAlpha, lightAlpha, errorContext);
   }
 }
 
@@ -246,8 +236,8 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#202020');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe('#f9fafb');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe('#202020');
   });
 
   test('Check on macOS/Linux', async () => {
@@ -267,8 +257,8 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#0f0f11');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe('#f9fafb');
+    expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe('#0f0f11');
   });
 });
 
@@ -286,8 +276,8 @@ test('initCardContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('card-bg');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[300]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.charcoal[800]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe(tailwindColorPalette.gray[300]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe(tailwindColorPalette.charcoal[800]);
 });
 
 test('initContent', async () => {
@@ -304,8 +294,8 @@ test('initContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[600]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.light).toBe(tailwindColorPalette.purple[900]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1]?.dark).toBe(tailwindColorPalette.gray[600]);
 });
 
 describe('registerColor', () => {
@@ -345,6 +335,44 @@ describe('registerColor', () => {
     expect(() => colorRegistry.registerColor('dummyColor', { light: 'lightColor2', dark: 'darkColor2' })).toThrowError(
       'Color dummyColor already registered',
     );
+  });
+});
+
+describe('New Builder Pattern', () => {
+  test('ColorPaletteHelper stores color and alpha', () => {
+    const helper = colorPalette('#ffffff').withAlpha(0.5);
+    expect(helper).toBeInstanceOf(ColorPaletteHelper);
+    expect(helper.color).toBe('#ffffff');
+    expect(helper.alpha).toBe(0.5);
+  });
+
+  test('ColorDefinitionBuilder builds correct definition', () => {
+    const builder = colorDefinition('test-color');
+    builder.withLight(colorPalette('#ffffff').withAlpha(0.5)).withDark(colorPalette('#000000').withAlpha(0.8));
+
+    const def = builder.build();
+    expect(def.id).toBe('test-color');
+    expect(def.light).toBeDefined();
+    expect(def.dark).toBeDefined();
+    // Check for alpha presence
+    expect(def.light).toMatch(/0\.5|50%/);
+    expect(def.dark).toMatch(/0\.8|80%/);
+  });
+
+  test('ColorDefinitionBuilder accepts strings directly', () => {
+    const builder = colorDefinition('test-color-simple');
+    builder.withLight('#ffffff').withDark('#000000');
+
+    const def = builder.build();
+    expect(def.id).toBe('test-color-simple');
+    expect(def.light).toBeDefined();
+    expect(def.dark).toBeDefined();
+  });
+
+  test('ColorDefinitionBuilder throws if incomplete', () => {
+    const builder = colorDefinition('incomplete');
+    builder.withLight('#ffffff');
+    expect(() => builder.build()).toThrowError('Color definition for incomplete is incomplete.');
   });
 });
 
@@ -724,25 +752,28 @@ describe('initCommon', () => {
   test('registers item-disabled color with correct alpha', () => {
     expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
 
-    // check the call
+    // check the call - initCommon uses the new pattern with a single object argument
     const call = spyOnRegisterColor.mock.calls[0];
-    expect(call?.[0]).toBe('item-disabled');
-    expect(call?.[1]).toBeDefined();
-    expect(call?.[1].dark).toBeDefined();
-    expect(call?.[1].light).toBeDefined();
+    const arg = call?.[0];
+
+    // Verify it's the new pattern (object with id, dark, light)
+    expect(arg).toBeDefined();
+    expect(typeof arg).toBe('object');
+    expect(arg).not.toBeNull();
+
+    // Type assertion for the new pattern
+    const colorDef = arg as unknown as ColorDefinition & { id: string };
+    expect(colorDef.id).toBe('item-disabled');
+    expect(colorDef.dark).toBeDefined();
+    expect(colorDef.light).toBeDefined();
 
     // verify both colors are strings (formatted CSS)
-    expect(typeof call?.[1].dark).toBe('string');
-    expect(typeof call?.[1].light).toBe('string');
+    expect(typeof colorDef.dark).toBe('string');
+    expect(typeof colorDef.light).toBe('string');
 
-    // verify the colors contain alpha information (should be rgba or oklch with alpha)
-    // The colors should be formatted CSS strings with 0.4 alpha
-    const darkColor = call?.[1].dark as string;
-    const lightColor = call?.[1].light as string;
-
-    // Check that alpha is present (either rgba format or oklch with alpha)
-    expect(darkColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
-    expect(lightColor).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
+    // verify the colors contain alpha information
+    expect(colorDef.dark).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
+    expect(colorDef.light).toMatch(/rgba|oklch.*\/\s*0\.4|40%|alpha/i);
   });
 });
 
@@ -817,14 +848,14 @@ describe('registerColorWithOpacity', () => {
     const call = spyOnRegisterColor.mock.calls[0];
     expect(call?.[0]).toBe('test-color');
     expect(call?.[1]).toBeDefined();
-    expect(call?.[1].dark).toBeDefined();
-    expect(call?.[1].light).toBeDefined();
-    expect(typeof call?.[1].dark).toBe('string');
-    expect(typeof call?.[1].light).toBe('string');
+    expect(call?.[1]?.dark).toBeDefined();
+    expect(call?.[1]?.light).toBeDefined();
+    expect(typeof call?.[1]?.dark).toBe('string');
+    expect(typeof call?.[1]?.light).toBe('string');
 
     // Verify the colors contain alpha information
-    expect(call?.[1].dark).toMatch(/\/\s*0\.5|rgba.*0\.5|50%|alpha/i);
-    expect(call?.[1].light).toMatch(/\/\s*0\.3|rgba.*0\.3|30%|alpha/i);
+    expect(call?.[1]?.dark).toMatch(/\/\s*0\.5|rgba.*0\.5|50%|alpha/i);
+    expect(call?.[1]?.light).toMatch(/\/\s*0\.3|rgba.*0\.3|30%|alpha/i);
   });
 
   test('uses colorId as error context', () => {
@@ -869,12 +900,12 @@ describe('registerColorWithOpacity', () => {
     const call = spyOnRegisterColor.mock.calls[0];
     expect(call?.[0]).toBe('palette-test-color');
     expect(call?.[1]).toBeDefined();
-    expect(call?.[1].dark).toBeDefined();
-    expect(call?.[1].light).toBeDefined();
+    expect(call?.[1]?.dark).toBeDefined();
+    expect(call?.[1]?.light).toBeDefined();
 
     // Verify the colors contain alpha information
-    expect(call?.[1].dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
-    expect(call?.[1].light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+    expect(call?.[1]?.dark).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
+    expect(call?.[1]?.light).toMatch(/\/\s*0\.4|rgba.*0\.4|40%|alpha/i);
   });
 });
 
@@ -883,21 +914,21 @@ describe('fluent interface (color method)', () => {
     const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
     spyOnRegisterColor.mockReturnValue(undefined);
 
-    colorRegistry.color('fluent-test').light('#ffffff').dark('#000000');
+    colorRegistry.color('fluent-test').withLight('#ffffff').withDark('#000000');
 
     expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
     const call = spyOnRegisterColor.mock.calls[0];
     expect(call?.[0]).toBe('fluent-test');
     expect(call?.[1]).toBeDefined();
-    expect(call?.[1].light).toBe('#ffffff');
-    expect(call?.[1].dark).toBe('#000000');
+    expect(call?.[1]?.light).toBe('#ffffff');
+    expect(call?.[1]?.dark).toBe('#000000');
   });
 
   test('registers color using fluent interface with opacity', () => {
     const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
     spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
 
-    colorRegistry.color('fluent-opacity-test').light('#ffffff', 0.5).dark('#000000', 0.8);
+    colorRegistry.color('fluent-opacity-test').withLight('#ffffff', 0.5).withDark('#000000', 0.8);
 
     expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
     const call = spyOnRegisterColorWithOpacity.mock.calls[0];
@@ -910,21 +941,21 @@ describe('fluent interface (color method)', () => {
     const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
     spyOnRegisterColor.mockReturnValue(undefined);
 
-    colorRegistry.color('fluent-reverse').dark('#000000').light('#ffffff');
+    colorRegistry.color('fluent-reverse').withDark('#000000').withLight('#ffffff');
 
     expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
     const call = spyOnRegisterColor.mock.calls[0];
     expect(call?.[0]).toBe('fluent-reverse');
     expect(call?.[1]).toBeDefined();
-    expect(call?.[1].light).toBe('#ffffff');
-    expect(call?.[1].dark).toBe('#000000');
+    expect(call?.[1]?.light).toBe('#ffffff');
+    expect(call?.[1]?.dark).toBe('#000000');
   });
 
   test('fluent interface with mixed opacity (only light has opacity)', () => {
     const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
     spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
 
-    colorRegistry.color('fluent-mixed').light('#ffffff', 0.5).dark('#000000');
+    colorRegistry.color('fluent-mixed').withLight('#ffffff', 0.5).withDark('#000000');
 
     expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
     const call = spyOnRegisterColorWithOpacity.mock.calls[0];
@@ -939,8 +970,8 @@ describe('fluent interface (color method)', () => {
 
     colorRegistry
       .color('fluent-palette')
-      .light(tailwindColorPalette.stone[600], 0.4)
-      .dark(tailwindColorPalette.stone[300], 0.4);
+      .withLight(tailwindColorPalette.stone[600], 0.4)
+      .withDark(tailwindColorPalette.stone[300], 0.4);
 
     expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
     const call = spyOnRegisterColorWithOpacity.mock.calls[0];
@@ -954,11 +985,11 @@ describe('fluent interface (color method)', () => {
     spyOnRegisterColor.mockReturnValue(undefined);
 
     // Only set light, should not register yet
-    const builder = colorRegistry.color('incomplete-test').light('#ffffff');
+    const builder = colorRegistry.color('incomplete-test').withLight('#ffffff');
     expect(spyOnRegisterColor).not.toHaveBeenCalled();
 
     // Now set dark, should register
-    builder.dark('#000000');
+    builder.withDark('#000000');
     expect(spyOnRegisterColor).toHaveBeenCalledTimes(1);
   });
 });

@@ -36,14 +36,150 @@ const { amber, black, charcoal, dustypurple, fuschia, gray, green, purple, red, 
 /**
  * Builder class for fluent color registration interface.
  * Allows method chaining like:
- * registry.color('my-color').light('#fff', 0.5).dark('#000', 0.8);
+ * registry.color('my-color').withLight('#fff', 0.5).withDark('#000', 0.8);
+ */
+export class ColorPaletteHelper {
+  #color: string;
+  #alpha = 1;
+
+  constructor(color: string) {
+    this.#color = color;
+  }
+
+  /**
+   * Set the alpha value for the color.
+   * @param alpha - The alpha value (0-1), defaults to 1 (fully opaque)
+   * @returns This builder for method chaining
+   */
+  withAlpha(alpha: number): this {
+    this.#alpha = alpha;
+    return this;
+  }
+
+  /**
+   * Get the color value.
+   * @returns The color value
+   */
+  get color(): string {
+    return this.#color;
+  }
+
+  /**
+   * Get the alpha value.
+   * @returns The alpha value
+   */
+  get alpha(): number {
+    return this.#alpha;
+  }
+}
+
+/**
+ * Creates a ColorPaletteHelper for the given color.
+ * @param color - The color value
+ * @returns A ColorPaletteHelper instance
+ */
+export function colorPalette(color: string): ColorPaletteHelper {
+  return new ColorPaletteHelper(color);
+}
+
+/**
+ * Builder class for fluent color registration interface.
+ * Allows method chaining like:
+ * registry.color('my-color').withLight('#fff', 0.5).withDark('#000', 0.8);
+ */
+export class ColorDefinitionBuilder {
+  #id: string;
+  #lightColor?: string | ColorPaletteHelper;
+  #darkColor?: string | ColorPaletteHelper;
+
+  constructor(id: string) {
+    this.#id = id;
+  }
+
+  /**
+   * Set the light theme color.
+   * @param color - The color value or ColorPaletteHelper
+   * @returns This builder for method chaining
+   */
+  withLight(color: string | ColorPaletteHelper): this {
+    this.#lightColor = color;
+    return this;
+  }
+
+  /**
+   * Set the dark theme color.
+   * @param color - The color value or ColorPaletteHelper
+   * @returns This builder for method chaining
+   */
+  withDark(color: string | ColorPaletteHelper): this {
+    this.#darkColor = color;
+    return this;
+  }
+
+  /**
+   * Build the color definition.
+   * @returns The color definition with id
+   */
+  build(): ColorDefinition & { id: string } {
+    if (!this.#lightColor || !this.#darkColor) {
+      throw new Error(`Color definition for ${this.#id} is incomplete.`);
+    }
+
+    /**
+     * Processes the color value.
+     * @param c - The color value or ColorPaletteHelper
+     * @returns The color object with color and alpha values
+     */
+    const processColor = (c: string | ColorPaletteHelper): { color: string; alpha: number } => {
+      if (c instanceof ColorPaletteHelper) {
+        return { color: c.color, alpha: c.alpha };
+      }
+      return { color: c, alpha: 1 };
+    };
+
+    const light = processColor(this.#lightColor);
+    const dark = processColor(this.#darkColor);
+
+    /**
+     * Formats the color with opacity.
+     * @param c - The color object with color and alpha values
+     * @returns The formatted color string
+     */
+    const formatColor = (c: { color: string; alpha: number }): string => {
+      const parsed = parse(c.color);
+      if (!parsed) throw new Error(`Failed to parse color ${c.color}`);
+      parsed.alpha = c.alpha;
+      return formatCss(parsed) ?? '';
+    };
+
+    return {
+      id: this.#id,
+      light: formatColor(light),
+      dark: formatColor(dark),
+    };
+  }
+}
+
+/**
+ * Creates a ColorDefinitionBuilder for the given color ID.
+ * @param id - The color ID
+ * @returns A ColorDefinitionBuilder instance
+ */
+export function colorDefinition(id: string): ColorDefinitionBuilder {
+  return new ColorDefinitionBuilder(id);
+}
+
+/**
+ * Builder class for fluent color registration interface.
+ * Allows method chaining like:
+ * registry.color('my-color').withLight('#fff', 0.5).withDark('#000', 0.8);
  */
 export class ColorBuilder {
   private colorId: string;
   private lightColor?: string;
-  private lightAlpha: number = 1;
+  private lightAlpha = 1;
   private darkColor?: string;
-  private darkAlpha: number = 1;
+  private darkAlpha = 1;
   private registry: ColorRegistry;
 
   constructor(colorId: string, registry: ColorRegistry) {
@@ -57,7 +193,7 @@ export class ColorBuilder {
    * @param alpha - The alpha value (0-1), defaults to 1 (fully opaque)
    * @returns This builder for method chaining
    */
-  light(color: string, alpha: number = 1): this {
+  withLight(color: string, alpha = 1): this {
     this.lightColor = color;
     this.lightAlpha = alpha;
     this.tryRegister();
@@ -70,7 +206,7 @@ export class ColorBuilder {
    * @param alpha - The alpha value (0-1), defaults to 1 (fully opaque)
    * @returns This builder for method chaining
    */
-  dark(color: string, alpha: number = 1): this {
+  withDark(color: string, alpha = 1): this {
     this.darkColor = color;
     this.darkAlpha = alpha;
     this.tryRegister();
@@ -202,18 +338,35 @@ export class ColorRegistry {
     return Array.from(this.#themes.keys());
   }
 
-  protected registerColor(colorId: string, definition: ColorDefinition): void {
+  public registerColor(
+    colorIdOrDefinition: string | (ColorDefinition & { id: string }),
+    definition?: ColorDefinition,
+  ): void {
+    let colorId: string;
+    let colorDef: ColorDefinition;
+
+    if (typeof colorIdOrDefinition === 'string') {
+      colorId = colorIdOrDefinition;
+      if (!definition) {
+        throw new Error('Definition is required when passing colorId as string');
+      }
+      colorDef = definition;
+    } else {
+      colorId = colorIdOrDefinition.id;
+      colorDef = { light: colorIdOrDefinition.light, dark: colorIdOrDefinition.dark };
+    }
+
     if (this.#definitions.has(colorId)) {
       console.warn(`Color ${colorId} already registered.`);
       throw new Error(`Color ${colorId} already registered.`);
     }
 
     // store the color definition
-    this.#definitions.set(colorId, definition);
+    this.#definitions.set(colorId, colorDef);
 
     // set the colors in the default themes
-    this.#themes.get('light')?.set(colorId, definition.light);
-    this.#themes.get('dark')?.set(colorId, definition.dark);
+    this.#themes.get('light')?.set(colorId, colorDef.light);
+    this.#themes.get('dark')?.set(colorId, colorDef.dark);
     this.notifyUpdate();
   }
 
@@ -257,15 +410,14 @@ export class ColorRegistry {
    * This is a convenience method that combines registerColor and createColorWithOpacity
    * to avoid duplicating the color ID.
    *
+   * Note: This method is public to allow ColorBuilder to access it, but is primarily
+   * intended for internal use within the color registration system.
+   *
    * @param colorId - The unique identifier for the color
    * @param colors - The color definition containing light and dark color values
    * @param alpha - The alpha values (0-1) for light and dark themes
    */
-  protected registerColorWithOpacity(
-    colorId: string,
-    colors: ColorDefinition,
-    alpha: { light: number; dark: number },
-  ): void {
+  registerColorWithOpacity(colorId: string, colors: ColorDefinition, alpha: { light: number; dark: number }): void {
     this.registerColor(
       colorId,
       this.createColorWithOpacity(colors.dark, colors.light, alpha.dark, alpha.light, colorId),
@@ -1057,7 +1209,12 @@ export class ColorRegistry {
       dark: purple[400],
       light: purple[700],
     });
-    this.color(`${link}-hover-bg`).light(black, 0.2).dark(white, 0.2);
+    this.registerColor(
+      colorDefinition(`${link}-hover-bg`)
+        .withLight(colorPalette(black).withAlpha(0.2))
+        .withDark(colorPalette(white).withAlpha(0.2))
+        .build(),
+    );
   }
 
   // button
@@ -1144,12 +1301,22 @@ export class ColorRegistry {
       dark: white,
       light: black,
     });
-    this.color(`${button}close-hover-bg`).light(black, 0.2).dark(white, 0.2);
+    this.registerColor(
+      colorDefinition(`${button}close-hover-bg`)
+        .withLight(colorPalette(black).withAlpha(0.2))
+        .withDark(colorPalette(white).withAlpha(0.2))
+        .build(),
+    );
     this.registerColor(`${button}link-text`, {
       dark: purple[400],
       light: purple[700],
     });
-    this.color(`${button}link-hover-bg`).light(black, 0.2).dark(white, 0.2);
+    this.registerColor(
+      colorDefinition(`${button}link-hover-bg`)
+        .withLight(colorPalette(black).withAlpha(0.2))
+        .withDark(colorPalette(white).withAlpha(0.2))
+        .build(),
+    );
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
@@ -1683,11 +1850,11 @@ export class ColorRegistry {
   }
 
   protected initCommon(): void {
-    const darkParsed = parse(stone[300]);
-    const lightParsed = parse(stone[600]);
-    this.registerColorWithOpacity(
-      `item-disabled`,
-    this.color('item-disabled').light(colorPalette.stone[600], 0.4).dark(colorPalette.stone[300], 0.4);
+    this.registerColor(
+      colorDefinition('item-disabled')
+        .withLight(colorPalette(stone[600]).withAlpha(0.4))
+        .withDark(colorPalette(stone[300]).withAlpha(0.4))
+        .build(),
     );
   }
 }
