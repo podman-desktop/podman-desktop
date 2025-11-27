@@ -62,8 +62,8 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
       .toBeTruthy();
   });
 
-  test('Delete network from networks page and verify it was removed', async ({ navigationBar }) => {
-    const networksPage = await navigationBar.openNetworks();
+  test('Delete network from networks page and verify it was removed', async ({ navigationBar, page }) => {
+    let networksPage = await navigationBar.openNetworks();
     await playExpect(networksPage.heading).toBeVisible();
 
     await playExpect
@@ -73,11 +73,26 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
       .toBeTruthy();
 
     await networksPage.deleteNetwork(testNetworkName);
-    await playExpect
-      .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {
-        timeout: 30_000,
-      })
-      .toBeFalsy();
+
+    const maxAttempts = 30;
+    let isDeleted = false;
+
+    for (let attempt = 0; attempt < maxAttempts && !isDeleted; attempt++) {
+      const dashboardPage = await navigationBar.openDashboard();
+      await playExpect(dashboardPage.heading).toBeVisible();
+
+      networksPage = await navigationBar.openNetworks();
+      await playExpect(networksPage.heading).toBeVisible();
+
+      const networkRow = await networksPage.getNetworkRowByName(testNetworkName);
+      if (!networkRow) {
+        isDeleted = true;
+      } else {
+        await page.waitForTimeout(1_000);
+      }
+    }
+
+    playExpect(isDeleted).toBeTruthy();
   });
 
   test('Delete network from details page and verify it was removed', async ({ navigationBar }) => {

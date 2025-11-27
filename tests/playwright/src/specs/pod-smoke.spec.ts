@@ -230,7 +230,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     await playExpect(restartButton).toBeVisible();
   });
 
-  test(`Checking pods under containers`, async ({ navigationBar, page }) => {
+  test('Checking pods under containers', async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
     await playExpect.poll(async () => containers.containerExists(podToRun), { timeout: 10_000 }).toBeTruthy();
     await playExpect
