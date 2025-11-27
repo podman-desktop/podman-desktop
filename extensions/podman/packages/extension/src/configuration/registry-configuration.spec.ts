@@ -24,6 +24,7 @@ import * as os from 'node:os';
 import { commands, env, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { DefaultRegistryLoader } from './default-registry-loader';
 import type { RegistryConfigurationFile } from './registry-configuration';
 import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
 
@@ -120,6 +121,7 @@ describe('init', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(registryConfiguration, 'registerSetupRegistryCommand').mockReturnValue(fakeDisposable);
+    vi.spyOn(registryConfiguration, 'loadDefaultUserRegistries').mockResolvedValue(undefined);
   });
 
   test('check command is registered', async () => {
@@ -264,4 +266,58 @@ describe('displayRegistryQuickPick', () => {
       ],
     });
   });
+});
+
+test('loadDefaultUserRegistries', async () => {
+  const mockDefaultRegistryLoader = {
+    loadFromConfiguration: vi.fn().mockReturnValue([
+      {
+        prefix: 'registry1',
+        location: '/registry1/foo',
+        blocked: true,
+        mirror: [{ location: 'mirror1/foo' }],
+      },
+      {
+        prefix: 'registry2',
+        location: '/registry2/foo',
+        blocked: true,
+      },
+    ]),
+    resolveConflicts: vi.fn().mockImplementation((defaultRegs, existingRegs) => [...existingRegs, ...defaultRegs]),
+  } as unknown as DefaultRegistryLoader;
+
+  registryConfiguration = new RegistryConfigurationImpl(mockDefaultRegistryLoader);
+
+  vi.spyOn(registryConfiguration, 'readRegistriesConfContent').mockResolvedValue({ registry: [] });
+  vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
+  vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(true);
+
+  vi.mocked(env).isMac = true;
+
+  await registryConfiguration.loadDefaultUserRegistries();
+
+  expect(mockDefaultRegistryLoader.loadFromConfiguration).toBeCalled();
+  expect(mockDefaultRegistryLoader.resolveConflicts).toBeCalled();
+  expect(registryConfiguration.saveRegistriesConfContent).toBeCalled();
+});
+
+test('loadDefaultUserRegistries does not save when no default registries', async () => {
+  const mockDefaultRegistryLoader = {
+    loadFromConfiguration: vi.fn().mockReturnValue([]),
+    resolveConflicts: vi.fn(),
+  } as unknown as DefaultRegistryLoader;
+
+  registryConfiguration = new RegistryConfigurationImpl(mockDefaultRegistryLoader);
+
+  vi.spyOn(registryConfiguration, 'readRegistriesConfContent').mockResolvedValue({ registry: [] });
+  vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
+  vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(true);
+
+  vi.mocked(env).isMac = true;
+
+  await registryConfiguration.loadDefaultUserRegistries();
+
+  expect(mockDefaultRegistryLoader.loadFromConfiguration).toBeCalled();
+  expect(mockDefaultRegistryLoader.resolveConflicts).not.toBeCalled();
+  expect(registryConfiguration.saveRegistriesConfContent).not.toBeCalled();
 });

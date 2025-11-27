@@ -446,7 +446,13 @@ beforeEach(() => {
     isEnabled: vi.fn(),
   } as unknown as Proxy;
 
-  const imageRegistry = new ImageRegistry({} as ApiSenderType, telemetry, certificates, proxy);
+  const imageRegistry = new ImageRegistry(
+    {} as ApiSenderType,
+    telemetry,
+    certificates,
+    proxy,
+    {} as ConfigurationRegistry,
+  );
   containerRegistry = new TestContainerProviderRegistry(apiSender, configurationRegistry, imageRegistry, telemetry);
 });
 
