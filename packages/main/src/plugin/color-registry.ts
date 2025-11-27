@@ -1057,10 +1057,7 @@ export class ColorRegistry {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColor(`${link}-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.color(`${link}-hover-bg`).light(black, 0.2).dark(white, 0.2);
   }
 
   // button
@@ -1147,18 +1144,12 @@ export class ColorRegistry {
       dark: white,
       light: black,
     });
-    this.registerColor(`${button}close-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.color(`${button}close-hover-bg`).light(black, 0.2).dark(white, 0.2);
     this.registerColor(`${button}link-text`, {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColor(`${button}link-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.color(`${button}link-hover-bg`).light(black, 0.2).dark(white, 0.2);
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
