@@ -34,6 +34,8 @@ jobs:
   tag:
     name: Tagging
     runs-on: ubuntu-24.04
+    # do not run on forks
+    if: github.event.repository.fork == false
     outputs:
       githubTag: ${{ steps.TAG_UTIL.outputs.githubTag }}
       desktopVersion: ${{ steps.TAG_UTIL.outputs.desktopVersion }}
@@ -104,6 +106,8 @@ jobs:
     name: Build / ${{ matrix.os }}
     needs: tag
     runs-on: ${{ matrix.os }}
+    # do not run on forks
+    if: github.event.repository.fork == false
     env:
       ELECTRON_ENABLE_INSPECT: true
       GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
@@ -149,6 +153,8 @@ jobs:
     needs: [tag, build]
     name: Release
     runs-on: ubuntu-24.04
+    # do not run on forks
+    if: github.event.repository.fork == false
     steps:
       - name: id
         run: echo the release id is ${{ needs.tag.outputs.releaseId }}
