@@ -1149,6 +1149,22 @@ declare module '@podman-desktop/api' {
     export const onDidStateChange: Event<boolean>;
   }
 
+  export interface DefaultRegistry {
+    registry: {
+      prefix: string;
+      insecure?: boolean;
+      blocked?: boolean;
+      location: string;
+    };
+  }
+
+  export interface DefaultRegistryMirror {
+    'registry.mirror': {
+      location: string;
+      insecure?: boolean;
+    };
+  }
+
   // An interface for "Default" registries that include the name, URL as well as an icon
   // This allows an extension to "suggest" a registry to the user that you may
   // login via a username & password.
@@ -1158,6 +1174,8 @@ declare module '@podman-desktop/api' {
 
     // Optional base64 PNG image (for transparency / non vector icons)
     icon?: string | { light: string; dark: string };
+    insecure?: boolean;
+    blocked?: boolean;
   }
 
   export interface Registry extends RegistryCreateOptions {
