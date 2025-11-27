@@ -1149,6 +1149,39 @@ declare module '@podman-desktop/api' {
     export const onDidStateChange: Event<boolean>;
   }
 
+  /**
+   * Represents a default container registry configuration entry.
+   * The schema reflects the containers-registries.conf format.
+   * @see {@link https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md}
+   */
+  export interface DefaultRegistry {
+    registry: {
+      /** The prefix used to match images. */
+      prefix: string;
+      /** If true, the registry is not accessed directly but through mirrors. */
+      insecure?: boolean;
+      /** If true, pulling from this registry is blocked. */
+      blocked?: boolean;
+      /** The physical location of the registry. */
+      location: string;
+    };
+  }
+
+  /**
+   * Represents a mirror configuration for a container registry.
+   * Mirrors are tried in order for pulling images.
+   * The schema reflects the containers-registries.conf format.
+   * @see {@link https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md}
+   */
+  export interface DefaultRegistryMirror {
+    'registry.mirror': {
+      /** The physical location of the mirror. */
+      location: string;
+      /** If true, the mirror uses HTTP instead of HTTPS. */
+      insecure?: boolean;
+    };
+  }
+
   // An interface for "Default" registries that include the name, URL as well as an icon
   // This allows an extension to "suggest" a registry to the user that you may
   // login via a username & password.
@@ -1156,8 +1189,12 @@ declare module '@podman-desktop/api' {
     name: string;
     url: string;
 
-    // Optional base64 PNG image (for transparency / non vector icons)
+    // Optional base64 PNG image (for transparency / non vector icons).
     icon?: string | { light: string; dark: string };
+    /** If true, the registry uses HTTP instead of HTTPS. */
+    insecure?: boolean;
+    /** If true, pulling from this registry is blocked. */
+    blocked?: boolean;
   }
 
   export interface Registry extends RegistryCreateOptions {
