@@ -101,7 +101,12 @@ async function kubeApply(): Promise<void> {
     }
   } catch (error) {
     runError = 'Could not apply Kubernetes YAML: ' + error;
+  } finally {
+    if (tempFilePath) {
+      await window.removeTempFile(tempFilePath);
+    }
   }
+
   runStarted = false;
   runFinished = true;
 }
