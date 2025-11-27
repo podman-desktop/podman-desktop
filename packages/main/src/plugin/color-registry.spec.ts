@@ -762,7 +762,12 @@ describe('createColorWithOpacity', () => {
   });
 
   test('creates color with different alpha values for dark and light', () => {
-    const result = colorRegistry.createColorWithOpacity(colorPalette.white, colorPalette.black, 0.8, 0.333);
+    const result = colorRegistry.createColorWithOpacity(
+      tailwindColorPalette.white,
+      tailwindColorPalette.black,
+      0.8,
+      0.333,
+    );
 
     expect(result).toBeDefined();
     expect(result.dark).toBeDefined();
@@ -856,7 +861,7 @@ describe('registerColorWithOpacity', () => {
 
     colorRegistry.registerColorWithOpacity(
       'palette-test-color',
-      { light: colorPalette.stone[600], dark: colorPalette.stone[300] },
+      { light: tailwindColorPalette.stone[600], dark: tailwindColorPalette.stone[300] },
       { light: 0.4, dark: 0.4 },
     );
 
@@ -932,12 +937,15 @@ describe('fluent interface (color method)', () => {
     const spyOnRegisterColorWithOpacity = vi.spyOn(colorRegistry, 'registerColorWithOpacity');
     spyOnRegisterColorWithOpacity.mockReturnValue(undefined);
 
-    colorRegistry.color('fluent-palette').light(colorPalette.stone[600], 0.4).dark(colorPalette.stone[300], 0.4);
+    colorRegistry
+      .color('fluent-palette')
+      .light(tailwindColorPalette.stone[600], 0.4)
+      .dark(tailwindColorPalette.stone[300], 0.4);
 
     expect(spyOnRegisterColorWithOpacity).toHaveBeenCalledTimes(1);
     const call = spyOnRegisterColorWithOpacity.mock.calls[0];
     expect(call?.[0]).toBe('fluent-palette');
-    expect(call?.[1]).toEqual({ light: colorPalette.stone[600], dark: colorPalette.stone[300] });
+    expect(call?.[1]).toEqual({ light: tailwindColorPalette.stone[600], dark: tailwindColorPalette.stone[300] });
     expect(call?.[2]).toEqual({ light: 0.4, dark: 0.4 });
   });
 
