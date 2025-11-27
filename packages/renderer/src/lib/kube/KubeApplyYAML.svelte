@@ -2,7 +2,8 @@
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { Context, KubernetesObject } from '@kubernetes/client-node';
 import type { OpenDialogOptions } from '@podman-desktop/api';
-import Icon, { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount, type Snippet } from 'svelte';
 
 import { handleNavigation } from '/@/navigation';
