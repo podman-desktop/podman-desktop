@@ -2,9 +2,8 @@
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { Context, KubernetesObject } from '@kubernetes/client-node';
 import type { OpenDialogOptions } from '@podman-desktop/api';
-import { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
+import Icon, { Button, Dropdown, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { onMount, type Snippet } from 'svelte';
-import Fa from 'svelte-fa';
 
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
@@ -200,7 +199,7 @@ onMount(async () => {
               class="text-2xl pr-2"
               class:text-[var(--pd-content-card-border-selected)]={userChoice === option}
               class:text-[var(--pd-content-card-border)]={userChoice !== option}>
-              <Fa icon={faCircleCheck} />
+              <Icon icon={faCircleCheck} />
             </div>
             {@render content()}
           </div>
