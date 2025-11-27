@@ -146,10 +146,15 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
     // Apply managed defaults to user config for any undefined keys
     // that have not been set yet in the local settings.json
-    this.applyManagedDefaults(configData, defaults);
+    const listOfAppliedKeys = this.applyManagedDefaults(configData, defaults);
 
-    // Set the updated configuration data
+    // Set the updated configuration data, this doesn't "save-to-disk" yet until we run saveDefault()...
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
+
+    // Note: saveDefault() will filter out any keys that match the schema default, so only non-default values will actually be persisted to settings.json
+    if (listOfAppliedKeys.length > 0) {
+      this.saveDefault();
+    }
 
     return notifications;
   }
