@@ -138,8 +138,8 @@ onMount(async () => {
     
   <div class="space-y-6">
     <div>
-      <label for="" class="block mb-2 text-base font-bold text-(--pd-content-card-header-text)"
-        >Kubernetes Context {selectedContextName}</label>
+      <label for="kubeContexts" class="block mb-2 text-base font-bold text-(--pd-content-card-header-text)"
+        >Kubernetes Context</label>
     </div>
     <div class="flex flex-col">
       <div
