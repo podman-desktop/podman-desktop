@@ -30,7 +30,7 @@ let hasInvalidFields = $derived.by(() => {
   }
   switch (userChoice) {
     case 'file':
-      return kubernetesYamlFilePath === undefined;
+      return !kubernetesYamlFilePath;
     case 'custom':
       return customYamlContent.length === 0;
   }
