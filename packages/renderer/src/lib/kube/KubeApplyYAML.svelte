@@ -10,13 +10,13 @@ import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
 
 import MonacoEditor from '../editor/MonacoEditor.svelte';
-import KubePlayIcon from '../kube/KubePlayIcon.svelte';
+import KubeApplyIcon from '../kube/KubePlayIcon.svelte';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
 import FileInput from '../ui/FileInput.svelte';
 import WarningMessage from '../ui/WarningMessage.svelte';
 
 let contexts: Context[] = $state([]);
-let selectedContextName: string | undefined = $state();
+let selectedContextName: string = $state('');
 let runStarted = $state(false);
 let runFinished = $state(false);
 let runError = $state('');
@@ -37,10 +37,10 @@ let hasInvalidFields = $derived.by(() => {
   }
 });
 
-let playKubeResultRaw: string | undefined = $state(undefined);
+let applyKubeResultRaw: string | undefined = $state(undefined);
 
 const kubeFileDialogOptions: OpenDialogOptions = {
-  title: 'Select a .yaml file to play',
+  title: 'Select a .yaml file to apply',
   filters: [
     {
       name: 'YAML files',
@@ -55,35 +55,26 @@ function getSelectedContextNamespace(): string | undefined {
 }
 
 async function kubeApply(): Promise<void> {
-  runError = '';
-
-  // this if is here to suppress linter error that selectedContextName can be undefined
-  if (!selectedContextName) {
-    throw new Error('No context selected');
-  }
-
   let tempFilePath: string = '';
-
   let yamlFilePath: string[] = [];
-
-  if (userChoice === 'custom') {
-    // Create a temporary file with the custom YAML content
-    tempFilePath = await window.createTempFile(customYamlContent);
-    yamlFilePath = [tempFilePath];
-  } else {
-    yamlFilePath = [kubernetesYamlFilePath];
-  }
-
   runStarted = true;
   runFinished = false;
+  runError = '';
+
   try {
+    if (userChoice === 'custom') {
+      tempFilePath = await window.createTempFile(customYamlContent);
+      yamlFilePath = [tempFilePath];
+    } else {
+      yamlFilePath = [kubernetesYamlFilePath];
+    }
     let objects: KubernetesObject[] = await window.kubernetesApplyResourcesFromFile(
       selectedContextName,
       yamlFilePath,
       getSelectedContextNamespace(),
     );
     if (objects.length === 0) {
-      playKubeResultRaw = `No resource(s) were applied.`;
+      applyKubeResultRaw = `No resource(s) were applied.`;
     } else if (objects.length === 1) {
       runWarning = `Successfully applied 1 ${objects[0].kind ?? 'unknown resource'}.`;
     } else {
@@ -97,7 +88,7 @@ async function kubeApply(): Promise<void> {
       const resources = Object.entries(counts)
         .map(obj => `${obj[1]} ${obj[0]}`)
         .join(', ');
-      playKubeResultRaw = `Successfully applied ${objects.length} resources (${resources}).`;
+      applyKubeResultRaw = `Successfully applied ${objects.length} resources (${resources}).`;
     }
   } catch (error) {
     runError = 'Could not apply Kubernetes YAML: ' + error;
@@ -105,10 +96,9 @@ async function kubeApply(): Promise<void> {
     if (tempFilePath) {
       await window.removeTempFile(tempFilePath);
     }
+    runStarted = false;
+    runFinished = true;
   }
-
-  runStarted = false;
-  runFinished = true;
 }
 
 function goBackToPodsPage(): void {
@@ -130,14 +120,14 @@ function toggle(choice: 'file' | 'custom'): void {
 onMount(async () => {
   contexts = await window.kubernetesGetContexts();
   if (contexts.length) {
-    selectedContextName = await window.kubernetesGetCurrentContextName();
+    selectedContextName = (await window.kubernetesGetCurrentContextName()) ?? '';
   }
 });
 </script>
 
-<EngineFormPage title="Create pods from a Kubernetes YAML file" inProgress={runStarted && !runFinished}>
+<EngineFormPage title="Apply Kubernetes YAML" inProgress={runStarted && !runFinished}>
   {#snippet icon()}
-    <KubePlayIcon size="30px" />
+    <KubeApplyIcon size="30px" />
   {/snippet}
 
   {#snippet content()}
@@ -178,7 +168,7 @@ onMount(async () => {
           readonly
           required
           bind:value={kubernetesYamlFilePath}
-          placeholder="Select a .yaml file to play"
+          placeholder="Select a .yaml file to apply"
           options={kubeFileDialogOptions}
           class="w-full p-2" />
       {/snippet}
@@ -212,8 +202,8 @@ onMount(async () => {
         </button>
       {/snippet}
 
-      {@render optionSnippet('file', '.yaml file to play', file)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
-      {@render optionSnippet('custom', 'Custom yaml to play', custom)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
+      {@render optionSnippet('file', '.yaml file to apply', file)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
+      {@render optionSnippet('custom', 'Custom yaml to apply', custom)} <!-- eslint-disable-line sonarjs/no-use-of-empty-return-value -->
     </div>
 
     <!-- Monaco Editor for custom YAML content -->
@@ -247,8 +237,8 @@ onMount(async () => {
       <ErrorMessage class="text-sm" error={runError} />
     {/if}
 
-    {#if playKubeResultRaw}
-      <div class="text-(--pd-content-card-text) text-sm">{playKubeResultRaw}</div>
+    {#if applyKubeResultRaw}
+      <div class="text-(--pd-content-card-text) text-sm">{applyKubeResultRaw}</div>
     {/if}
 
     <div class="flex gap-2">
@@ -257,7 +247,7 @@ onMount(async () => {
         disabled={hasInvalidFields || runStarted}
         class="grow"
         inProgress={runStarted}
-        icon={KubePlayIcon}>
+        icon={KubeApplyIcon}>
         {userChoice === 'custom' ? 'Apply Custom YAML' : 'Apply'}
       </Button>
 
