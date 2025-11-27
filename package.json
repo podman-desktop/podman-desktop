@@ -57,7 +57,7 @@
     "test:e2e:pdmachine": "pnpm run test:e2e:build && pnpm run test:e2e:pdmachine:run",
     "test:e2e:pdmachine:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/ -g @pdmachine",
     "test:e2e:extension": "pnpm run test:e2e:build && pnpm run test:e2e:extension:run",
-    "test:e2e:extension:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/extension-installation.spec.ts",
+    "test:e2e:extension:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/network-smoke.spec.ts",
     "test:e2e:remote": "pnpm run test:e2e:build && pnpm run test:e2e:remote:run",
     "test:e2e:remote:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/special-specs/podman-remote/ -g @podman-remote",
     "test:e2e:update": "pnpm run test:e2e:build && pnpm run test:e2e:update:run",
