@@ -1696,7 +1696,7 @@ export class ColorRegistry {
     const lightParsed = parse(stone[600]);
     this.registerColorWithOpacity(
       `item-disabled`,
-      { light: colorPalette.stone[600], dark: colorPalette.stone[300] },
+    this.color('item-disabled').light(colorPalette.stone[600], 0.4).dark(colorPalette.stone[300], 0.4);
     );
   }
 }
