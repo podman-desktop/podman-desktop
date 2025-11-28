@@ -21,7 +21,7 @@ import 'reflect-metadata';
 import { existsSync } from 'node:fs';
 import { rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import minimist from 'minimist';
 
@@ -79,6 +79,8 @@ export async function main(args: string[]): Promise<void> {
 
   const output: string | undefined = parsed['output'];
   if (!output) throw new Error('missing output argument');
+
+  if (!isAbsolute(output)) throw new Error('the output should be an absolute directory');
 
   await Promise.all((product.remoteExtensions ?? []).map(downloadExtension.bind(undefined, output))).catch(
     console.error,
