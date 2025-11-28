@@ -40,6 +40,7 @@ import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import { PodInfo } from '/@api/pod-info.js';
 import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
@@ -1412,6 +1413,9 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const telemetry = this.telemetry;
     const env: typeof containerDesktopAPI.env = {
+      get appName() {
+        return product.name;
+      },
       get isMac() {
         return isMac();
       },
