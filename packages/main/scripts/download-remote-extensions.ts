@@ -33,12 +33,17 @@ import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 import product from '../../../product.json' with { type: 'json' };
 
-const apiSenderTypeMock = {} as unknown as ApiSenderType;
-const telemetryMock = {} as unknown as Telemetry;
-const certificateMock = {
+/**
+ * We create _dummy_ classes for the constructor of ImageRegistry
+ * We do not use those classes when calling ImageRegistry#downloadAndExtractImage as the internal logic
+ * uses different node_modules; those classes are needed for other things the class is doing
+ */
+const dummyApiSenderType = {} as unknown as ApiSenderType;
+const dummyTelemetry = {} as unknown as Telemetry;
+const dummyCertificate = {
   getAllCertificates: (): undefined => undefined,
 } as unknown as Certificates;
-const proxyMock = {
+const dummyProxy = {
   onDidUpdateProxy: (): void => {},
   onDidStateChange: (): void => {},
   isEnabled: (): boolean => false,
@@ -50,7 +55,7 @@ export interface RemoteExtension {
 }
 
 export async function downloadExtension(destination: string, info: RemoteExtension): Promise<void> {
-  const imageRegistry = new ImageRegistry(apiSenderTypeMock, telemetryMock, certificateMock, proxyMock);
+  const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
   // tmp folder
   const tmpFolderPath = join(tmpdir(), info.name);
