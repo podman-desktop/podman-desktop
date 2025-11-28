@@ -19,7 +19,7 @@
 import 'reflect-metadata';
 
 import { existsSync } from 'node:fs';
-import { rename } from 'node:fs/promises';
+import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 
@@ -71,6 +71,10 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
     );
   }
 
+  // ensure the destination directory exists
+  await mkdir(destination, { recursive: true });
+
+  // rename tmp to destination
   await rename(join(tmpFolderPath, 'extension'), finalPath);
 }
 

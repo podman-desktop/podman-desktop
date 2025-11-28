@@ -17,7 +17,7 @@
  ********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { rename } from 'node:fs/promises';
+import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -68,6 +68,14 @@ describe('downloadExtension', () => {
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
       join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
+  });
+
+  test('should mkdir the destination directory', async () => {
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+
+    expect(mkdir).toHaveBeenCalledExactlyOnceWith(ABS_DEST_DIR, {
+      recursive: true,
+    });
   });
 });
 
