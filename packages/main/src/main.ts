@@ -23,6 +23,7 @@ import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { IDisposable } from '/@api/disposable.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';
 
@@ -69,7 +70,7 @@ export class Main implements IDisposable {
     try {
       this.init(additionalData);
     } catch (err: unknown) {
-      console.error('failed to init Podman Desktop', err);
+      console.error(`failed to init ${product.name}`, err);
     }
   }
 
@@ -79,7 +80,7 @@ export class Main implements IDisposable {
      */
     const isSingleInstance = this.app.requestSingleInstanceLock(additionalData);
     if (!isSingleInstance) {
-      console.warn('An instance of Podman Desktop is already running. Stopping');
+      console.warn(`An instance of ${product.name} is already running. Stopping`);
       this.app.quit();
       process.exit(0);
     }
