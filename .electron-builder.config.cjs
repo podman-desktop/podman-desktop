@@ -202,6 +202,12 @@ const config = {
     category: 'Development',
     icon: './buildResources/icon-512x512.png',
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
+    extraFiles: [
+      {
+        from: 'buildResources/run.sh',
+        to: '.',
+      },
+    ],
   },
   mac: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
