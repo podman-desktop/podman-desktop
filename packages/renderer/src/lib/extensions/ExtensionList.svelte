@@ -20,7 +20,10 @@ interface Props {
   screen?: ExtensionListScreen;
 }
 
-let { searchTerm = '', screen = 'installed' }: Props = $props();
+let { searchTerm: initialSearchTerm = '', screen: initialScreen = 'installed' }: Props = $props();
+
+let searchTerm = $state(initialSearchTerm);
+let screen = $state(initialScreen);
 
 const extensionsUtils = new ExtensionsUtils();
 
@@ -59,9 +62,17 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
   screen = newScreen;
   searchTerm = extensionsUtils.filterTerms(searchTerm).join(' ');
 }
+
+const searchPlaceholder = $derived(
+  screen === 'installed'
+    ? 'Search installed extensions...'
+    : screen === 'catalog'
+      ? 'Search catalog extensions...'
+      : 'Search local extensions...',
+);
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="extensions">
+<NavPage bind:searchTerm={searchTerm} title="extensions" searchPlaceholder={searchPlaceholder}>
   {#snippet additionalActions()}
     <Button
       on:click={(): void => {
