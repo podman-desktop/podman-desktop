@@ -28,6 +28,7 @@ import * as toml from 'smol-toml';
 
 import { getJSONMachineList } from '../extension';
 import { execPodman } from '../utils/util';
+import { DefaultRegistryLoader } from './default-registry-loader';
 import playbookRegistryConfFileTemplate from './playbook-setup-registry-conf-file.mustache?raw';
 
 interface RegistryEntryQuickPickItem extends QuickPickItem {
@@ -43,7 +44,7 @@ interface ActionQuickPickItem extends QuickPickItem {
   actionName: ActionEnum;
 }
 
-interface RegistryConfigurationEntry {
+export interface RegistryConfigurationEntry {
   prefix?: string;
   insecure?: boolean;
   blocked?: boolean;
@@ -69,8 +70,15 @@ export interface RegistryConfiguration {
  * Manages the registry configuration file (inside the Podman VM for macOS/Windows)
  */
 export class RegistryConfigurationImpl implements RegistryConfiguration {
+  #defaultRegistryLoader: DefaultRegistryLoader;
+
+  constructor(defaultRegistryLoader: DefaultRegistryLoader = new DefaultRegistryLoader()) {
+    this.#defaultRegistryLoader = defaultRegistryLoader;
+  }
+
   async init(): Promise<Disposable[]> {
     const disposables: Disposable[] = [];
+    await this.loadDefaultUserRegistries();
     disposables.push(this.registerSetupRegistryCommand());
     return disposables;
   }
@@ -79,7 +87,27 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
     return commands.registerCommand('podman.setupRegistry', () => this.setupRegistryCommandCallback());
   }
 
-  async checkRegistryConfFileExistsInVm(): Promise<boolean> {
+  async loadDefaultUserRegistries(): Promise<void> {
+    if (env.isMac || env.isWindows) {
+      const checked = await this.checkRegistryConfFileExistsInVm(false);
+      if (!checked) {
+        return;
+      }
+    }
+
+    const defaultRegistries = this.#defaultRegistryLoader.loadFromConfiguration();
+    const configFileContent = await this.readRegistriesConfContent();
+
+    if (defaultRegistries.length > 0) {
+      const combinedRegistries = this.#defaultRegistryLoader.resolveConflicts(
+        defaultRegistries,
+        configFileContent.registry,
+      );
+      await this.saveRegistriesConfContent({ registry: combinedRegistries });
+    }
+  }
+
+  async checkRegistryConfFileExistsInVm(showError: boolean): Promise<boolean> {
     // check if the podman machine has the file being mounted inside the VM or then says it can't continue
     const machineList = await getJSONMachineList();
 
@@ -108,10 +136,13 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       // check if the file is mounted
       const result = await execPodman(commandLineArgs, machine.VMType);
       if (!result.stdout) {
-        // display an error message if the link is not found
-        await window.showErrorMessage(
-          `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`,
-        );
+        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`;
+        if (showError) {
+          // display an error message if the link is not found
+          await window.showErrorMessage(warningMessage);
+        } else {
+          console.warn(warningMessage);
+        }
         return false;
       }
     }
@@ -121,7 +152,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
   async setupRegistryCommandCallback(): Promise<void> {
     // on Linux the file is accessible directly
     if (env.isMac || env.isWindows) {
-      const checked = await this.checkRegistryConfFileExistsInVm();
+      const checked = await this.checkRegistryConfFileExistsInVm(true);
       if (!checked) {
         return;
       }

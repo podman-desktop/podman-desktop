@@ -38,6 +38,7 @@ import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from
 import { isMac, isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { Certificates } from './certificates.js';
+import { ConfigurationRegistry } from './configuration-registry.js';
 import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';
 import { Telemetry } from './telemetry/telemetry.js';
@@ -54,6 +55,7 @@ export interface RegistryAuthInfo {
 export class ImageRegistry {
   private registries: containerDesktopAPI.Registry[] = [];
   private suggestedRegistries: containerDesktopAPI.RegistrySuggestedProvider[] = [];
+  private defaultRegistries: (containerDesktopAPI.DefaultRegistry | containerDesktopAPI.DefaultRegistryMirror)[] = [];
   private providers: Map<string, containerDesktopAPI.RegistryProvider> = new Map();
 
   private readonly _onDidRegisterRegistry = new Emitter<containerDesktopAPI.Registry>();
@@ -79,6 +81,8 @@ export class ImageRegistry {
     private certificates: Certificates,
     @inject(Proxy)
     private proxy: Proxy,
+    @inject(ConfigurationRegistry)
+    private configurationRegistry: ConfigurationRegistry,
   ) {
     this.proxy.onDidUpdateProxy(settings => {
       this.proxySettings = settings;
@@ -92,6 +96,23 @@ export class ImageRegistry {
     if (this.proxyEnabled) {
       this.proxySettings = this.proxy.proxy;
     }
+  }
+
+  loadUserDefaultRegistryConfig(): void {
+    this.defaultRegistries = this.configurationRegistry.getConfiguration('registries').get('defaults', []);
+    this.defaultRegistries.forEach(registry => {
+      if ('registry' in registry) {
+        this.suggestRegistry({
+          registry: {
+            name: registry.registry.prefix,
+            url: registry.registry.location,
+            insecure: registry.registry.insecure,
+            blocked: registry.registry.blocked,
+          },
+          isUserDefaultRegistry: true,
+        });
+      }
+    });
   }
 
   extractRegistryServerFromImage(imageName: string): string | undefined {
@@ -183,12 +204,29 @@ export class ImageRegistry {
     });
   }
 
-  suggestRegistry(registry: containerDesktopAPI.RegistrySuggestedProvider): Disposable {
-    // Do not add it to the list if it's already been suggested by name & URL (Quay, DockerHub, etc.).
+  suggestRegistry({
+    registry,
+    isUserDefaultRegistry,
+  }: {
+    registry: containerDesktopAPI.RegistrySuggestedProvider;
+    isUserDefaultRegistry?: boolean;
+  }): Disposable {
+    // Do not add it to the list if it's already been suggested by URL (Quay, DockerHub, etc.).
     // this may have been done by another extension.
-    if (this.suggestedRegistries.find(reg => reg.url === registry.url && reg.name === registry.name)) {
-      // Ignore and don't register
-      console.log(`Registry already registered: ${registry.url}`);
+    const matchingRegistry = this.suggestedRegistries.find(reg => reg.url === registry.url);
+    if (matchingRegistry) {
+      if (isUserDefaultRegistry && matchingRegistry.blocked !== registry.blocked) {
+        // user default registry blocked status overrides other blocked values for the same location
+        matchingRegistry.blocked = registry.blocked;
+        this.apiSender.send('registry-update', matchingRegistry);
+        console.warn(`User default registry is already registered and the blocked status adjusted to: ${registry.url}`);
+      } else {
+        if (!matchingRegistry.icon && registry.icon) {
+          matchingRegistry.icon = registry.icon;
+        }
+        // Ignore and don't register
+        console.debug(`Registry is already registered: ${registry.url}`);
+      }
       return Disposable.noop();
     }
 
