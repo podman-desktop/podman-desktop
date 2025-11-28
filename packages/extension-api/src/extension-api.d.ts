@@ -4402,6 +4402,11 @@ declare module '@podman-desktop/api' {
    */
   export namespace env {
     /**
+     * The name of the application. (e.g., 'Podman Desktop')
+     */
+    export const appName: string;
+
+    /**
      * Flag indicating whether we are running on macOS (Mac OS X) operating system.
      *
      * If the value of this flag is true, it means the current system is macOS.
