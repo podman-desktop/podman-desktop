@@ -32,6 +32,7 @@ test('Expect simple column styling', async () => {
     name: '',
     engineId: '',
     engineName: '',
+    engineType: 'podman',
     tag: '',
     createdAt: 0,
     age: '',

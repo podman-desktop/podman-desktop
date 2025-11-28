@@ -137,6 +137,7 @@ suite('image checker module', () => {
       const imageInfo: ImageInfo = {
         engineId: 'eng-id',
         engineName: 'eng-name',
+        engineType: 'podman',
         Id: 'id',
         ParentId: 'parent-id',
         RepoTags: undefined,
@@ -163,6 +164,7 @@ suite('image checker module', () => {
       const imageInfo: ImageInfo = {
         engineId: 'eng-id',
         engineName: 'eng-name',
+        engineType: 'podman',
         Id: 'id',
         ParentId: 'parent-id',
         RepoTags: undefined,

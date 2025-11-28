@@ -24,6 +24,7 @@ export interface ImageInfoUI {
   name: string;
   engineId: string;
   engineName: string;
+  engineType: 'podman' | 'docker';
   tag: string;
   createdAt: number;
   age: string;

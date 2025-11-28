@@ -29,6 +29,7 @@ const image: ImageInfoUI = {
   shortId: 'short-id',
   name: 'my-image-name',
   engineId: 'podman',
+  engineType: 'podman',
   engineName: '',
   tag: 'latest-tag',
   createdAt: 0,

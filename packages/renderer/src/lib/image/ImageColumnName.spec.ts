@@ -33,6 +33,7 @@ const image: ImageInfoUI = {
   name: 'my-image-name',
   engineId: 'podman',
   engineName: '',
+  engineType: 'podman',
   tag: 'latest',
   createdAt: 0,
   age: '',
