@@ -47,7 +47,7 @@ beforeEach(() => {
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
   vi.mocked(existsSync).mockReturnValue(true);
-  vi.mocked(product).remoteExtensions = [];
+  (vi.mocked(product).remoteExtensions as RemoteExtension[]) = [];
 });
 
 describe('downloadExtension', () => {
@@ -101,7 +101,7 @@ describe('main', () => {
   });
 
   test('--output argument should be used as destination', async () => {
-    vi.mocked(product).remoteExtensions = [REMOTE_INFO_MOCK];
+    (vi.mocked(product).remoteExtensions as RemoteExtension[]) = [REMOTE_INFO_MOCK];
 
     await main(['--output', ABS_DEST_DIR]);
 
