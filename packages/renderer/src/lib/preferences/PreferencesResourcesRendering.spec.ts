@@ -123,6 +123,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   onboardingList.set([]);
+  vi.clearAllMocks();
 });
 
 describe.each<{
