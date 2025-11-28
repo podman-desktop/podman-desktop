@@ -36,7 +36,7 @@ vi.mock(import('/@/plugin/image-registry.js'));
 vi.mock(import('../../../product.json'));
 
 const TMP_DIR = 'tmp-dir';
-const DEST_DIR = 'dest-dir';
+const ABS_DEST_DIR = '/dest-dir';
 const REMOTE_INFO_MOCK: RemoteExtension = {
   name: 'dummy-extension',
   oci: 'localhost/dummy-extension:latest',
@@ -52,7 +52,7 @@ beforeEach(() => {
 
 describe('downloadExtension', () => {
   test('should call ImageRegistry#downloadAndExtractImage with appropriate argument', async () => {
-    await downloadExtension(DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
 
     expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledExactlyOnceWith(
       REMOTE_INFO_MOCK.oci,
@@ -62,11 +62,11 @@ describe('downloadExtension', () => {
   });
 
   test('should rename tmp directory to destination', async () => {
-    await downloadExtension(DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
-      join(DEST_DIR, REMOTE_INFO_MOCK.name),
+      join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
   });
 });
@@ -78,10 +78,16 @@ describe('main', () => {
     }).rejects.toThrowError('missing output argument');
   });
 
+  test('non absolute --output should throw an error', async () => {
+    await expect(async () => {
+      await main(['--output', './foo']);
+    }).rejects.toThrowError('the output should be an absolute directory');
+  });
+
   test('empty remoteExtensions in product.json should not call any ImageRegistry#downloadAndExtractImage', async () => {
     expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
 
-    await main(['--output', DEST_DIR]);
+    await main(['--output', ABS_DEST_DIR]);
 
     expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
   });
@@ -89,11 +95,11 @@ describe('main', () => {
   test('--output argument should be used as destination', async () => {
     vi.mocked(product).remoteExtensions = [REMOTE_INFO_MOCK];
 
-    await main(['--output', DEST_DIR]);
+    await main(['--output', ABS_DEST_DIR]);
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
-      join(DEST_DIR, REMOTE_INFO_MOCK.name),
+      join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
   });
 });
