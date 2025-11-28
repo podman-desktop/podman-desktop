@@ -21,6 +21,7 @@ import type * as Dockerode from 'dockerode';
 export interface VolumeInfo extends Dockerode.VolumeInspectInfo {
   engineId: string;
   engineName: string;
+  engineType: 'podman' | 'docker';
   CreatedAt: string;
   containersUsage: { id: string; names: string[] }[];
 }
