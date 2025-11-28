@@ -103,11 +103,12 @@ for (const {
       const extensionsPage = new ExtensionsPage(page);
 
       await extensionsPage.installExtensionFromOCIImage(ociImageUrl, 180_000);
-
-      await extensionsPage.openCatalogTab();
-      const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
-      await playExpect(extensionCatalog.parent).toBeVisible();
-      await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
+      if (extensionName !== openshiftDockerExtension.extensionName) {
+        await extensionsPage.openCatalogTab();
+        const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
+        await playExpect(extensionCatalog.parent).toBeVisible();
+        await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
+      }
 
       await extensionsPage.openInstalledTab();
       await playExpect
@@ -149,6 +150,11 @@ for (const {
 
         test.describe
           .serial('Extension can be disabled and reenabled', () => {
+            test.skip(
+              extensionName === openshiftDockerExtension.extensionName,
+              'OpenShift Docker extension cannot be disabled',
+            );
+
             test('Disable extension and verify Navbar and Resources components if present', async () => {
               const extensionsPage = await navigationBar.openExtensions();
               const extensionPage = await extensionsPage.openExtensionDetails(
@@ -223,15 +229,18 @@ for (const {
             extensionFullLabel,
             extensionFullName,
           );
-
-          await extensionDetails.disableExtension();
+          if (extensionName !== openshiftDockerExtension.extensionName) {
+            await extensionDetails.disableExtension();
+          }
           await extensionDetails.removeExtension(false);
 
-          // now if deleted from extension details, the page details are still there, just different
-          await playExpect(extensionDetails.status).toHaveText(ExtensionState.Downloadable);
-          await playExpect(
-            extensionDetails.page.getByRole('button', { name: `Install ${extensionFullLabel} Extension` }),
-          ).toBeVisible();
+          if (extensionName !== openshiftDockerExtension.extensionName) {
+            // now if deleted from extension details, the page details are still there, just different
+            await playExpect(extensionDetails.status).toHaveText(ExtensionState.Downloadable);
+            await playExpect(
+              extensionDetails.page.getByRole('button', { name: `Install ${extensionFullLabel} Extension` }),
+            ).toBeVisible();
+          }
 
           await goToDashboard();
           extensionsPage = await navigationBar.openExtensions();
