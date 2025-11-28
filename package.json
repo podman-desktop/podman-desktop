@@ -45,7 +45,7 @@
     "test:e2e:all": "pnpm run test:e2e:build && pnpm run test:e2e:all:run",
     "test:e2e:all:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/",
     "test:e2e:smoke": "pnpm run test:e2e:build && pnpm run test:e2e:smoke:run",
-    "test:e2e:smoke:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/ -g @smoke",
+    "test:e2e:smoke:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/network-smoke.spec.ts",
     "test:e2e:ui-stress": "npm run test:e2e:build && npm run test:e2e:ui-stress:run",
     "test:e2e:ui-stress:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/special-specs/ui-stress/ -g @ui-stress",
     "test:e2e:k8s": "pnpm run test:e2e:build && pnpm run test:e2e:k8s:run",
