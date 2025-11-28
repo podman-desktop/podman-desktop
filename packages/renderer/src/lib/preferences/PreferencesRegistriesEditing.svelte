@@ -8,6 +8,7 @@ import type { Unsubscriber } from 'svelte/store';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 
 import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
 import IconImage from '../appearance/IconImage.svelte';
@@ -61,7 +62,9 @@ onMount(async () => {
 
   // Subscribe to configuration properties to get the preferred registries property
   propertiesUnsubscribe = configurationProperties.subscribe(properties => {
-    preferredRegistriesProperty = properties.find(prop => prop.id === 'registries.preferredRegistries');
+    preferredRegistriesProperty = properties.find(
+      prop => prop.id === `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+    );
   });
 });
 

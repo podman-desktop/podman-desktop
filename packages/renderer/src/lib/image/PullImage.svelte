@@ -9,6 +9,7 @@ import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import type { ImageSearchOptions } from '/@api/image-registry';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
 
@@ -173,7 +174,9 @@ onMount(() => {
 });
 
 onMount(async () => {
-  const configuration = await window.getConfigurationValue<string>('registries.preferredRegistries');
+  const configuration = await window.getConfigurationValue<string>(
+    `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+  );
   if (configuration) {
     const registries = configuration
       .split(',')
