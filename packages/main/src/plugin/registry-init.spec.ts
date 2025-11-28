@@ -16,37 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from './api.js';
-import { ConfigurationRegistry } from './configuration-registry.js';
-import type { DefaultConfiguration } from './default-configuration.js';
-import type { Directories } from './directories.js';
-import type { LockedConfiguration } from './locked-configuration.js';
+import type { ConfigurationRegistry } from './configuration-registry.js';
 import { RegistryInit } from './registry-init.js';
 
-let configurationRegistry: ConfigurationRegistry;
+const configurationRegistryMock: ConfigurationRegistry = {
+  registerConfigurations: vi.fn(),
+  deregisterConfigurations: vi.fn(),
+} as unknown as ConfigurationRegistry;
 
-beforeAll(() => {
-  configurationRegistry = new ConfigurationRegistry(
-    {} as ApiSenderType,
-    {} as Directories,
-    {} as DefaultConfiguration,
-    {} as LockedConfiguration,
-  );
-  configurationRegistry.registerConfigurations = vi.fn();
-  configurationRegistry.deregisterConfigurations = vi.fn();
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('should register a configuration', () => {
-  const registryInit = new RegistryInit(configurationRegistry);
+  const registryInit = new RegistryInit(configurationRegistryMock);
   registryInit.init();
 
-  expect(configurationRegistry.registerConfigurations).toBeCalled();
-  const configurationNode = vi.mocked(configurationRegistry.registerConfigurations).mock.calls[0]?.[0][0];
+  expect(configurationRegistryMock.registerConfigurations).toBeCalled();
+  const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
   expect(configurationNode?.id).toBe('preferences.registries');
   expect(configurationNode?.title).toBe('Registries');
   expect(configurationNode?.type).toBe('object');
   expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(1);
+  expect(Object.keys(configurationNode?.properties ?? {})).toHaveLength(1);
 });

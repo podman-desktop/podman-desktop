@@ -2,12 +2,12 @@
 import { faPlusCircle, faTrash, faUser, faUserPen } from '@fortawesome/free-solid-svg-icons';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { onMount } from 'svelte';
 
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 
 import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
 import IconImage from '../appearance/IconImage.svelte';
@@ -50,23 +50,17 @@ const newRegistryRequest = $state<containerDesktopAPI.Registry>({
 });
 
 // Preferred registries configuration property
-let preferredRegistriesProperty = $state<IConfigurationPropertyRecordedSchema | undefined>();
-let propertiesUnsubscribe: Unsubscriber;
+let preferredRegistriesProperty: IConfigurationPropertyRecordedSchema | undefined = $derived(
+  $configurationProperties.find(
+    prop => prop.id === `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+  ),
+);
 
 onMount(async () => {
   let providerSourceNames = await window.getImageRegistryProviderNames();
   if (providerSourceNames && providerSourceNames.length > 0) {
     defaultProviderSourceName = providerSourceNames[0];
   }
-
-  // Subscribe to configuration properties to get the preferred registries property
-  propertiesUnsubscribe = configurationProperties.subscribe(properties => {
-    preferredRegistriesProperty = properties.find(prop => prop.id === 'registries.preferredRegistries');
-  });
-});
-
-onDestroy(() => {
-  propertiesUnsubscribe?.();
 });
 
 function markRegistryAsModified(registry: containerDesktopAPI.Registry): void {

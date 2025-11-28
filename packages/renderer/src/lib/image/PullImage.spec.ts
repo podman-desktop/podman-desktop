@@ -26,6 +26,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import PullImage from './PullImage.svelte';
@@ -80,7 +81,7 @@ beforeEach(() => {
     if (key === 'terminal.integrated.scrollback') {
       return 1000;
     }
-    if (key === 'registries.preferredRegistries') {
+    if (key === `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`) {
       return 'docker.io';
     }
     return undefined;
@@ -488,13 +489,14 @@ describe('container connections', () => {
 describe('Preferred Registries', () => {
   beforeEach(() => {
     vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
-      if (key === 'terminal.integrated.scrollback') {
-        return 1000;
+      switch (key) {
+        case 'terminal.integrated.scrollback':
+          return 1000;
+        case `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`:
+          return 'quay.io, ghcr.io, docker.io';
+        default:
+          return undefined;
       }
-      if (key === 'registries.preferredRegistries') {
-        return 'quay.io, ghcr.io, docker.io';
-      }
-      return undefined;
     });
   });
 
@@ -502,35 +504,36 @@ describe('Preferred Registries', () => {
     render(PullImage);
 
     await vi.waitFor(() => {
-      expect(window.getConfigurationValue).toHaveBeenCalledWith('registries.preferredRegistries');
+      expect(window.getConfigurationValue).toHaveBeenCalledWith(
+        `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+      );
     });
   });
 
   test('should search all preferred registries when no registry prefix specified', async () => {
     vi.mocked(window.searchImageInRegistry).mockImplementation(async options => {
-      if (options.registry === 'quay.io') {
-        return [
-          { name: 'nginx', description: '', star_count: 0, is_official: false },
-          { name: 'redis', description: '', star_count: 0, is_official: false },
-        ];
+      switch (options.registry) {
+        case 'quay.io':
+          return [
+            { name: 'nginx', description: '', star_count: 0, is_official: false },
+            { name: 'redis', description: '', star_count: 0, is_official: false },
+          ];
+        case 'ghcr.io':
+          return [
+            { name: 'nginx', description: '', star_count: 0, is_official: false },
+            { name: 'postgres', description: '', star_count: 0, is_official: false },
+          ];
+        case 'docker.io':
+          return [
+            { name: 'nginx', description: '', star_count: 0, is_official: false },
+            { name: 'mysql', description: '', star_count: 0, is_official: false },
+          ];
+        default:
+          return [];
       }
-      if (options.registry === 'ghcr.io') {
-        return [
-          { name: 'nginx', description: '', star_count: 0, is_official: false },
-          { name: 'postgres', description: '', star_count: 0, is_official: false },
-        ];
-      }
-      if (options.registry === 'docker.io') {
-        return [
-          { name: 'nginx', description: '', star_count: 0, is_official: false },
-          { name: 'mysql', description: '', star_count: 0, is_official: false },
-        ];
-      }
-      return [];
     });
 
     render(PullImage);
-    await tick();
 
     const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
     await userEvent.click(textbox);
@@ -559,13 +562,10 @@ describe('Preferred Registries', () => {
     });
 
     render(PullImage);
-    await tick();
 
     const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
     await userEvent.click(textbox);
     await userEvent.paste('nginx');
-
-    await tick();
 
     // Verify deduplication happens (exact implementation depends on how results are displayed)
     // This test verifies the searchImages function is called
@@ -581,7 +581,6 @@ describe('Preferred Registries', () => {
     });
 
     render(PullImage);
-    await tick();
 
     const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
     await userEvent.click(textbox);
@@ -603,7 +602,6 @@ describe('Preferred Registries', () => {
     });
 
     render(PullImage);
-    await tick();
 
     const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
     await userEvent.click(textbox);
@@ -619,15 +617,15 @@ describe('Preferred Registries', () => {
 
   test('should use default docker.io if no preferred registries configured', async () => {
     vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
-      if (key === 'terminal.integrated.scrollback') {
-        return 1000;
+      switch (key) {
+        case 'terminal.integrated.scrollback':
+          return 1000;
+        default:
+          return undefined;
       }
-      // Don't return a value for registries.preferredRegistries
-      return undefined;
     });
 
     render(PullImage);
-    await tick();
 
     const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
     await userEvent.click(textbox);

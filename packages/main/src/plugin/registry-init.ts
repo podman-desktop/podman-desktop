@@ -19,9 +19,7 @@
 import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-
-const SectionName = 'registries';
-const PreferredRegistries = 'preferredRegistries';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info.js';
 
 @injectable()
 export class RegistryInit {
@@ -33,7 +31,7 @@ export class RegistryInit {
       title: 'Registries',
       type: 'object',
       properties: {
-        [`${SectionName}.${PreferredRegistries}`]: {
+        [`${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`]: {
           markdownDescription:
             'String of preferred registries for pulling images. Registries are used in the order specified. Use registry URLs without `https://` prefix (e.g., `docker.io`, `quay.io`, `ghcr.io`). Separate multiple registries with commas.',
           type: 'string',

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faArrowCircleDown, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
@@ -9,6 +9,7 @@ import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import type { ImageSearchOptions } from '/@api/image-registry';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
 
@@ -173,7 +174,9 @@ onMount(() => {
 });
 
 onMount(async () => {
-  const configuration = await window.getConfigurationValue<string>('registries.preferredRegistries');
+  const configuration = await window.getConfigurationValue<string>(
+    `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+  );
   if (configuration) {
     const registries = configuration
       .split(',')
@@ -224,7 +227,6 @@ async function searchImages(value: string): Promise<string[]> {
 
   if (!value.includes('/')) {
     // Search across all preferred registries
-    const allResults: string[] = [];
     const seenFullNames = new SvelteSet<string>();
 
     for (const registry of preferredRegistries) {
@@ -240,14 +242,13 @@ async function searchImages(value: string): Promise<string[]> {
           // Only add if we haven't seen this exact full name before
           if (!seenFullNames.has(fullName)) {
             seenFullNames.add(fullName);
-            allResults.push(fullName);
           }
         }
       } catch (error: unknown) {
         console.error(`Failed to search registry ${registry}: ${error}`);
       }
     }
-    return allResults;
+    return Array.from(seenFullNames.values());
   } else {
     // User specified a registry in the search term
     const [registry, ...rest] = value.split('/');
@@ -358,6 +359,9 @@ async function searchFunction(value: string): Promise<void> {
   {#snippet content()}
   <div class="space-y-6">
     <div class="w-full">
+
+      <div class="self-center text-[var(--pd-table-body-text)] pb-4">Specify preferred registries for pulling images in <Link on:click={gotoManageRegistries}>Settings &gt; Registries</Link>.</div>
+
       <label for="imageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
         >Image to Pull</label>
       <div class="flex flex-col">
