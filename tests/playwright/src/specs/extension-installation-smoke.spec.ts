@@ -19,11 +19,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
+import { isWindows } from '/@/utility/platform';
+
 import {
   bootcExtension,
   extensionsInstallationSmokeList,
   imageLayersExplorerExtension,
-  minikubeExtension,
+  openshiftDockerExtension,
   podmanQuadletExtension,
 } from '../model/core/extensions';
 import { ExtensionState } from '../model/core/states';
@@ -62,6 +64,8 @@ for (const {
   extensionFullName,
 } of extensionsInstallationSmokeList) {
   test.describe.serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
+    test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
+
     test.beforeAll(async () => {
       await _startup(extensionLabel);
     });
@@ -75,9 +79,7 @@ for (const {
     });
 
     test('Install extension through Extensions Catalog', async () => {
-      test.skip(
-        extensionName === bootcExtension.extensionName || extensionName === podmanQuadletExtension.extensionName,
-      );
+      test.skip(extensionName !== imageLayersExplorerExtension.extensionName);
       test.setTimeout(200_000);
 
       const extensionsPage = new ExtensionsPage(page);
@@ -95,10 +97,7 @@ for (const {
     });
 
     test('Install extension from OCI Image', async () => {
-      test.skip(
-        extensionName === minikubeExtension.extensionName ||
-          extensionName === imageLayersExplorerExtension.extensionName,
-      );
+      test.skip(extensionName === imageLayersExplorerExtension.extensionName);
       test.setTimeout(200_000);
 
       const extensionsPage = new ExtensionsPage(page);
@@ -166,10 +165,10 @@ for (const {
                 await playExpect(extensionNavigationBarIcon).toBeHidden();
               }
 
-              // check that the provider card is on Resources Page -> minikube/bootc require binary installation
+              // check that the provider card is on Resources Page -> bootc require binary installation, docker doesn't have
               if (
                 resourceLabel &&
-                extensionName !== minikubeExtension.extensionName &&
+                extensionName !== openshiftDockerExtension.extensionName &&
                 extensionName !== bootcExtension.extensionName
               ) {
                 const settingsBar = await goToSettings();
@@ -197,10 +196,10 @@ for (const {
                 await playExpect(extensionNavigationBarIcon).toBeVisible();
               }
 
-              // check that the provider card is on Resources Page -> minikube/bootc require binary installation
+              // check that the provider card is on Resources Page -> bootc requires binary installation
               if (
                 resourceLabel &&
-                extensionName !== minikubeExtension.extensionName &&
+                extensionName !== openshiftDockerExtension.extensionName &&
                 extensionName !== bootcExtension.extensionName
               ) {
                 const settingsBar = await goToSettings();
@@ -248,7 +247,6 @@ function initializeLocators(extensionName: string): void {
   const navigationBar = new NavigationBar(page);
   switch (extensionName) {
     case bootcExtension.extensionName: {
-      //formerly sandbox
       extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', {
         name: 'Bootable Containers',
         exact: true,
@@ -258,21 +256,21 @@ function initializeLocators(extensionName: string): void {
       break;
     }
     case podmanQuadletExtension.extensionName: {
-      //formerly openshiftlocal
       extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', { name: 'Quadlets', exact: true });
       resourceLabel = undefined;
-      ociImageUrl = 'ghcr.io/podman-desktop/pd-extension-quadlet';
+      ociImageUrl = 'ghcr.io/podman-desktop/pd-extension-quadlet:latest';
       break;
     }
-    case minikubeExtension.extensionName: {
-      //formerly openshiftchecker, only cli tools (requires install)
-      extensionNavigationBarIcon = undefined;
-      resourceLabel = 'minikube';
-      ociImageUrl = '';
+    case openshiftDockerExtension.extensionName: {
+      extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', {
+        name: 'OpenShift',
+        exact: true,
+      });
+      resourceLabel = undefined;
+      ociImageUrl = 'redhatdeveloper/openshift-dd-ext:0.0.1-100';
       break;
     }
     case imageLayersExplorerExtension.extensionName: {
-      //formerly openshift docker
       extensionNavigationBarIcon = undefined;
       resourceLabel = undefined;
       ociImageUrl = '';

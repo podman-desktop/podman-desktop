@@ -191,7 +191,7 @@ export const extensionsExternalList = [
 export const extensionsInstallationSmokeList = [
   bootcExtension,
   podmanQuadletExtension,
-  minikubeExtension,
+  openshiftDockerExtension,
   imageLayersExplorerExtension,
 ];
 export const extensionsAllExternalList = [...extensionsExternalList, headlampExtension];
