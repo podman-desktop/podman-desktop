@@ -8,7 +8,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=24.0.0",
     "npm": ">=10.2.3"
   },
   "main": "packages/main/dist/index.cjs",
@@ -149,7 +149,7 @@
     "@types/getos": "^3.0.4",
     "@types/hosted-git-info": "^3.0.5",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22",
+    "@types/node": "^24",
     "@types/minimist": "^1.2.5",
     "@types/tar": "^6.1.13",
     "@types/tar-fs": "^2.0.4",
@@ -160,7 +160,7 @@
     "@vitest/eslint-plugin": "^1.6.1",
     "cross-env": "10.1.0",
     "dts-for-context-bridge": "0.7.1",
-    "electron": "39.2.7",
+    "electron": "40.0.0-beta.4",
     "electron-builder": "26.0.12",
     "electron-builder-notarize": "^1.5.2",
     "eslint": "^9.39.2",
