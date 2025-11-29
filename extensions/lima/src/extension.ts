@@ -118,6 +118,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           light: './logo-light.png',
         },
       },
+      links: [
+        {
+          title: 'Website',
+          url: 'https://lima-vm.io/',
+        },
+      ],
     });
     extensionContext.subscriptions.push(provider);
   }
