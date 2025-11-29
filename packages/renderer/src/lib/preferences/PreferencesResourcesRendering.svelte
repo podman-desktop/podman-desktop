@@ -460,6 +460,8 @@ $effect(() => {
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
+              <span class="my-auto text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
+                  >{provider.version ? `v${provider.version}` : ''}</span>
             </div>
             <div class="text-center mt-10">
               <!-- Some providers have a status of 'unknown' so that they do not appear in the dashboard, this allows onboarding to still show. -->
@@ -643,10 +645,6 @@ $effect(() => {
                 {/snippet}
               </PreferencesConnectionActions>
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
-                <div aria-label="Connection Version">
-                  {provider.name}
-                  {provider.version ? `v${provider.version}` : ''}
-                </div>
                 <div aria-label="Connection Type">{container.vmType ? capitalize(container.vmType.name) : ''}</div>
               </div>
             </div>
