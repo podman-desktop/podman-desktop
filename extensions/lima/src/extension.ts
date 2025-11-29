@@ -24,7 +24,7 @@ import * as extensionApi from '@podman-desktop/api';
 import { configuration, ProgressLocation } from '@podman-desktop/api';
 
 import { ImageHandler } from './image-handler';
-import { getLimactl, getLimaInstallation } from './limactl';
+import { getLimactl, getLimaInfo, getLimaInstallation } from './limactl';
 
 type limaProviderType = 'docker' | 'podman' | 'kubernetes';
 
@@ -40,6 +40,21 @@ function prettyInstanceName(instanceName: string): string {
     name = `Lima ${instanceName}`;
   }
   return name;
+}
+
+async function updateContainerConfiguration(
+  containerProviderConnection: extensionApi.ContainerProviderConnection,
+  instanceName: string,
+): void {
+  // get configuration for this connection
+  const containerConfiguration = extensionApi.configuration.getConfiguration('lima', containerProviderConnection);
+
+  const limaInfo = await getLimaInfo(instanceName);
+  containerProviderConnection.vmType = limaInfo?.vmType;
+  await containerConfiguration.update('arch', limaInfo?.arch);
+  await containerConfiguration.update('cpus', limaInfo?.cpus);
+  await containerConfiguration.update('memory', limaInfo?.memory);
+  await containerConfiguration.update('disk', limaInfo?.disk);
 }
 
 function registerProvider(
@@ -59,6 +74,7 @@ function registerProvider(
         socketPath: providerPath,
       },
     };
+    updateContainerConfiguration(connection, instanceName);
     providerState = 'started';
     const disposable = provider.registerContainerProviderConnection(connection);
     provider.updateStatus('started');
