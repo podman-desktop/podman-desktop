@@ -56,6 +56,7 @@
         "lima.memory": {
           "type": "number",
           "format": "memory",
+          "base": 2,
           "scope": "ContainerConnection",
           "description": "Memory",
           "readonly": true
@@ -63,6 +64,7 @@
         "lima.disk": {
           "type": "number",
           "format": "diskSize",
+          "base": 2,
           "scope": "ContainerConnection",
           "description": "Disk",
           "readonly": true
