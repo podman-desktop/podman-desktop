@@ -50,3 +50,19 @@ export function getLimactl(): string {
 export function getCustomBinaryPath(): string | undefined {
   return extensionApi.configuration.getConfiguration('lima').get('binary.path');
 }
+
+export interface InstalledLima {
+  version: string;
+}
+
+export async function getLimaInstallation(): Promise<InstalledLima | undefined> {
+  try {
+    const { stdout: versionOut } = await extensionApi.process.exec(getLimactl(), ['--version']);
+    const versionArr = versionOut.split(' ');
+    const version = versionArr[versionArr.length - 1];
+    return { version };
+  } catch (err) {
+    // no limactl binary
+    return undefined;
+  }
+}
