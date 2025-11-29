@@ -465,8 +465,10 @@ $effect(() => {
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
-              <span class="my-auto text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
-                  >{provider.version ? `v${provider.version}` : ''}</span>
+              {#if provider.version}
+                <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 break-words"
+                  >v{provider.version}</span>
+              {/if}
             </div>
             <ProviderActionButtons
               provider={provider}
