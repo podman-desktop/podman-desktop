@@ -1059,8 +1059,8 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
       '@argos-ci/playwright':
-        specifier: ^6.3.3
-        version: 6.3.3
+        specifier: ^6.3.4
+        version: 6.3.4
       '@playwright/test':
         specifier: 1.57.0
         version: 1.57.0
@@ -1189,8 +1189,8 @@ packages:
     resolution: {integrity: sha512-jERRoj+da36Y9NwFyws00LKFmCLHBTklIE0DYRptrPUSf3aitly6KmllkKHGi2UU1XcIqAO2Pzy1l5shCs/FXw==}
     engines: {node: '>=20.0.0'}
 
-  '@argos-ci/playwright@6.3.3':
-    resolution: {integrity: sha512-bnnTMdHlH2GPDWKZAamZ9g5htVE1KpJ5DU94PH00uxbzpIB6wlHX2c+DTxNchDxnPAqvyhT1T4xZT0LtAif57w==}
+  '@argos-ci/playwright@6.3.4':
+    resolution: {integrity: sha512-QI8JuMPS7+9xxs4akNBtw2NntzMT/NPP83s5ygmUK5xq8S+Pqudyh23YFpCa7ytn93E5L/1XyoAq2aVYgwbrag==}
     engines: {node: '>=20.0.0'}
 
   '@argos-ci/util@3.2.0':
@@ -8859,6 +8859,10 @@ packages:
     resolution: {integrity: sha512-xRc4oEhT6eaBpU1XF7AjpOFD+xQmXNB5OVKwp4tqCuBpHLS/ZbBDrc07mYTDqVMg6PfxUjjNp85O6Cd2Z/5HWA==}
     engines: {node: '>= 0.6'}
 
+  mime-types@3.0.2:
+    resolution: {integrity: sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A==}
+    engines: {node: '>=18'}
+
   mime@1.6.0:
     resolution: {integrity: sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==}
     engines: {node: '>=4'}
@@ -12165,13 +12169,13 @@ snapshots:
       convict: 6.2.4
       debug: 4.4.3
       fast-glob: 3.3.3
-      mime-types: 3.0.1
+      mime-types: 3.0.2
       sharp: 0.34.5
       tmp: 0.2.5
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@6.3.3':
+  '@argos-ci/playwright@6.3.4':
     dependencies:
       '@argos-ci/browser': 5.1.0
       '@argos-ci/core': 4.5.0
@@ -21846,6 +21850,10 @@ snapshots:
       mime-db: 1.52.0
 
   mime-types@3.0.1:
+    dependencies:
+      mime-db: 1.54.0
+
+  mime-types@3.0.2:
     dependencies:
       mime-db: 1.54.0
 
