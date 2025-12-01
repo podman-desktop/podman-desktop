@@ -153,8 +153,8 @@ jobs:
     needs: [tag, build]
     name: Release
     runs-on: ubuntu-24.04
-    # do not run on forks
-    if: github.event.repository.fork == false
+    # do not run on forks and once all the builds are completed (no matter the status)
+    if: github.event.repository.fork == false && always()
     steps:
       - name: id
         run: | 
