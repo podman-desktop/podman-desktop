@@ -451,11 +451,14 @@ export class ExtensionLoader implements IAsyncDisposable {
       fs.mkdirSync(this.extensionsStorageDirectory);
     }
 
-    let folders;
+    let folders: string[] = [];
     // scan all extensions that we can find from the extensions folder
     if (import.meta.env.PROD) {
       // in production mode, use the extensions locally
-      folders = await this.readProductionFolders(path.join(__dirname, '../../../extensions'));
+      folders = [
+        ...(await this.readProductionFolders(path.join(__dirname, '../../../extensions'))),
+        ...(await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions-extra'))),
+      ];
     } else {
       // in development mode, use the extensions locally
       folders = await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions'));
@@ -632,6 +635,8 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async readDevelopmentFolders(folderPath: string): Promise<string[]> {
+    if (!fs.existsSync(folderPath)) return [];
+
     const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
     // filter only directories ignoring node_modules directory
     return entries
