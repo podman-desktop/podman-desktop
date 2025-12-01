@@ -56,9 +56,15 @@ export interface AnalyzedExtension {
   dispose(): void;
 }
 
+export interface ExtensionAnalyzerOptions {
+  extensionPath: string;
+  removable: boolean;
+  devMode?: boolean;
+}
+
 @injectable()
 export class ExtensionAnalyzer {
-  async analyzeExtension(extensionPath: string, removable: boolean, devMode: boolean): Promise<AnalyzedExtension> {
+  async analyzeExtension({ extensionPath, removable, devMode }: ExtensionAnalyzerOptions): Promise<AnalyzedExtension> {
     const resolvedExtensionPath = await realpath(extensionPath);
     // do nothing if there is no package.json file
     let error = undefined;
@@ -72,8 +78,8 @@ export class ExtensionAnalyzer {
         manifest: undefined,
         readme: '',
         api: <typeof containerDesktopAPI>{},
-        removable,
-        devMode,
+        removable: removable,
+        devMode: devMode ?? false,
         subscriptions: [],
         dispose(): void {},
         error,
@@ -105,7 +111,7 @@ export class ExtensionAnalyzer {
       mainPath: manifest.main ? path.resolve(resolvedExtensionPath, manifest.main) : undefined,
       readme,
       removable,
-      devMode,
+      devMode: devMode ?? false,
       subscriptions: disposables,
       dispose(): void {
         for (const disposable of disposables) {

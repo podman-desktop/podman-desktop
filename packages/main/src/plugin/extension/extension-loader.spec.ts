@@ -2586,7 +2586,10 @@ test('reload extensions', async () => {
   await extensionLoader.reloadExtension(extension, false);
 
   expect(deactivateSpy).toBeCalledWith(extension.id);
-  expect(analyzeExtensionSpy).toBeCalledWith(extension.path, false);
+  expect(analyzeExtensionSpy).toBeCalledWith({
+    extensionPath: extension.path,
+    removable: false,
+  });
   expect(loadExtensionSpy).toBeCalledWith(analyzedExtension, true);
 
   expect(vi.mocked(notificationRegistry.addNotification)).toBeCalledWith({

@@ -90,7 +90,7 @@ import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';
 import { getFreePort } from '../util/port.js';
 import { ViewRegistry } from '../view-registry.js';
-import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
+import { type AnalyzedExtension, ExtensionAnalyzer, ExtensionAnalyzerOptions } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import { ExtensionWatcher } from './extension-watcher.js';
 
@@ -312,7 +312,10 @@ export class ExtensionLoader implements IAsyncDisposable {
     // eslint-disable-next-line sonarjs/no-unsafe-unzip
     admZip.extractAllTo(unpackedDirectory, true);
 
-    const extension = await this.analyzeExtension(unpackedDirectory, true);
+    const extension = await this.analyzeExtension({
+      extensionPath: unpackedDirectory,
+      removable: true,
+    });
     if (!extension.error) {
       await this.loadExtension(extension);
       this.apiSender.send('extension-started', {});
@@ -462,12 +465,27 @@ export class ExtensionLoader implements IAsyncDisposable {
     const analyzedExtensions: AnalyzedExtension[] = [];
 
     const analyzedFoldersExtension = (
-      await Promise.all(folders.map(folder => this.analyzeExtension(folder, false)))
+      await Promise.all(
+        folders.map(folder =>
+          this.analyzeExtension({
+            extensionPath: folder,
+            removable: false,
+          }),
+        ),
+      )
     ).filter(extension => !extension.error);
     analyzedExtensions.push(...analyzedFoldersExtension);
 
     const analyzedExternalExtensions = (
-      await Promise.all(externalExtensions.map(folder => this.analyzeExtension(folder, false, true)))
+      await Promise.all(
+        externalExtensions.map(folder =>
+          this.analyzeExtension({
+            extensionPath: folder,
+            removable: false,
+            devMode: true,
+          }),
+        ),
+      )
     ).filter(extension => !extension.error);
     analyzedExtensions.push(...analyzedExternalExtensions);
 
@@ -481,7 +499,14 @@ export class ExtensionLoader implements IAsyncDisposable {
 
       // collect all extensions from the pluginDirectory folders
       const analyzedPluginsDirectoryExtensions: AnalyzedExtension[] = (
-        await Promise.all(pluginDirectories.map(folder => this.analyzeExtension(folder, true)))
+        await Promise.all(
+          pluginDirectories.map(folder =>
+            this.analyzeExtension({
+              extensionPath: folder,
+              removable: true,
+            }),
+          ),
+        )
       ).filter(extension => !extension.error);
       analyzedExtensions.push(...analyzedPluginsDirectoryExtensions);
     }
@@ -503,7 +528,11 @@ export class ExtensionLoader implements IAsyncDisposable {
   protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
     for (const folder of this.extensionDevelopmentFolder.getDevelopmentFolders()) {
       if (fs.existsSync(folder.path)) {
-        const analyzedExtension = await this.analyzeExtension(folder.path, false, true);
+        const analyzedExtension = await this.analyzeExtension({
+          extensionPath: folder.path,
+          removable: false,
+          devMode: true,
+        });
         if (!analyzedExtension.error) {
           analyzedExtensions.push(analyzedExtension);
         } else {
@@ -686,7 +715,10 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     // reload the extension
     try {
-      const updatedExtension = await this.analyzeExtension(extension.path, removable);
+      const updatedExtension = await this.analyzeExtension({
+        extensionPath: extension.path,
+        removable,
+      });
 
       if (!updatedExtension.error) {
         await this.loadExtension(updatedExtension, true);
@@ -814,12 +846,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     }
   }
 
-  async analyzeExtension(
-    extensionPath: string,
-    removable: boolean,
-    devMode: boolean = false,
-  ): Promise<AnalyzedExtensionWithApi> {
-    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable, devMode);
+  async analyzeExtension(options: ExtensionAnalyzerOptions): Promise<AnalyzedExtensionWithApi> {
+    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(options);
 
     const api = this.createApi(analyzedExtension);
 
@@ -1826,7 +1854,11 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const extension = this.analyzedExtensions.get(extensionId);
     if (extension) {
-      const analyzedExtension = await this.analyzeExtension(extension.path, extension.removable, extension.devMode);
+      const analyzedExtension = await this.analyzeExtension({
+        extensionPath: extension.path,
+        removable: extension.removable,
+        devMode: extension.devMode,
+      });
 
       if (!analyzedExtension.error) {
         await this.loadExtension(analyzedExtension, true);

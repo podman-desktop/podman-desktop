@@ -219,7 +219,10 @@ export class ExtensionInstaller {
     if (isPDExtension) {
       let analyzedExtension: AnalyzedExtension | undefined;
       try {
-        analyzedExtension = await this.extensionLoader.analyzeExtension(finalFolderPath, true);
+        analyzedExtension = await this.extensionLoader.analyzeExtension({
+          extensionPath: finalFolderPath,
+          removable: true,
+        });
       } catch (error) {
         sendError('Error while analyzing extension: ' + error);
       }
