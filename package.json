@@ -208,7 +208,7 @@
     "electron-context-menu": "4.1.1",
     "electron-updater": "6.7.2",
     "electron-util": "^1.0.0",
-    "express": "^4.21.2",
+    "express": "^4.22.0",
     "getos": "^3.2.1",
     "got": "^14.4.2",
     "hosted-git-info": "^9.0.2",
