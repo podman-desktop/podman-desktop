@@ -58,7 +58,10 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension(path.resolve('/', 'fake', 'path'), false, false);
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: path.resolve('/', 'fake', 'path'),
+      removable: false,
+    });
 
     expect(extension).toBeDefined();
     expect(extension?.error).toBeDefined();
@@ -91,7 +94,10 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension(path.resolve('/', 'linked', 'path'), false, false);
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: path.resolve('/', 'linked', 'path'),
+      removable: false,
+    });
 
     expect(extension).toBeDefined();
     expect(extension?.error).toBeDefined();
@@ -120,7 +126,10 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension('/fake/path', false, false);
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: false,
+    });
 
     expect(extension).toBeDefined();
     expect(extension?.error).toBeDefined();
@@ -149,7 +158,11 @@ describe('analyze extension and main', () => {
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
     loadManifestMock.mockResolvedValue(fakeManifest);
 
-    const extension = await extensionAnalyzer.analyzeExtension('/fake/path', false, true);
+    const extension = await extensionAnalyzer.analyzeExtension({
+      extensionPath: '/fake/path',
+      removable: false,
+      devMode: true,
+    });
 
     expect(extension?.id).toBe('fooPublisher.fooName');
     expect(extension?.devMode).toBeTruthy();

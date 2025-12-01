@@ -718,6 +718,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       const updatedExtension = await this.analyzeExtension({
         extensionPath: extension.path,
         removable,
+        devMode: extension.devMode,
       });
 
       if (!updatedExtension.error) {
