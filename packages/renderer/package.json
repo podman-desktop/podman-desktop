@@ -49,7 +49,7 @@
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-search": "^0.15.0",
     "vitest-canvas-mock": "^1.1.3",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.2"
   },
   "dependencies": {
     "@podman-desktop/ui-svelte": "workspace:*",

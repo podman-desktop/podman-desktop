@@ -113,7 +113,7 @@
     "@kubernetes/client-node": "^1.4.0",
     "@podman-desktop/api": "workspace:*",
     "mustache": "^4.2.0",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "adm-zip": "^0.5.16",
