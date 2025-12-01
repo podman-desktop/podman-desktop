@@ -699,6 +699,9 @@ function parseVersion(version: string): number[] {
  * @returns true if current >= reference
  */
 function compareVersions(current: number[], reference: number[]): boolean {
+  console.log(`Current podman CLI version: ${current.join('.')}`);
+  console.log(`Reference podman CLI version: ${reference.join('.')}`);
+
   const maxLength = Math.max(current.length, reference.length);
 
   for (let i = 0; i < maxLength; i++) {
