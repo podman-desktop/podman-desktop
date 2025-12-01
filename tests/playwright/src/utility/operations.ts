@@ -740,13 +740,17 @@ export function getPodmanCliVersion(): string {
 /**
  * Checks if the installed Podman CLI version is equal to or greater than the reference version.
  * @param referenceVersion - The minimum required version (e.g., "5.7.0", "5.7", "6.0")
- * @returns true if the installed version is >= the reference version
- * @throws Error if the version cannot be determined or parsed
+ * @returns true if the installed version is >= the reference version, false if podman is not available or version cannot be determined
  */
 export function isPodmanCliVersionAtLeast(referenceVersion: string): boolean {
-  const currentVersion = getPodmanCliVersion();
-  const currentVersionArray = parseVersion(currentVersion);
-  const referenceVersionArray = parseVersion(referenceVersion);
+  try {
+    const currentVersion = getPodmanCliVersion();
+    const currentVersionArray = parseVersion(currentVersion);
+    const referenceVersionArray = parseVersion(referenceVersion);
 
-  return compareVersions(currentVersionArray, referenceVersionArray);
+    return compareVersions(currentVersionArray, referenceVersionArray);
+  } catch {
+    // If podman is not available or version cannot be determined, return false
+    return false;
+  }
 }

@@ -25,7 +25,10 @@ const testNetworkName = 'e2e-test-network';
 const testNetworkSubnet = '10.89.0.0/24';
 
 test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
-  test.skip(!isPodmanCliVersionAtLeast('5.7.0'), 'Skipping network smoke tests for Podman CLI version less than 5.7.0');
+  test.skip(
+    !isPodmanCliVersionAtLeast('5.7.0'),
+    'Skipping network smoke tests since Podman CLI version is less than 5.7.0 or not available',
+  );
 
   test.beforeAll(async ({ runner, welcomePage, page }) => {
     runner.setVideoAndTraceName('network-smoke');
