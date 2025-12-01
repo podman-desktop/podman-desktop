@@ -936,7 +936,6 @@ export class KubernetesClient {
       }
       return res;
     } catch (error) {
-      this.telemetry.track('kubernetesReadNamespacedPod.error', error);
       throw this.wrapK8sClientError(error);
     }
   }
