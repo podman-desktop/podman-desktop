@@ -17,26 +17,38 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry, UserDefaultRegistry, UserDefaultRegistryMirror } from './default-registry-loader';
 import { DefaultRegistryLoader } from './default-registry-loader';
 import type { RegistryConfigurationEntry } from './registry-configuration';
 
+const originalConsoleWarn = console.warn;
+const getMock = vi.fn();
 let defaultRegistryLoader: DefaultRegistryLoader;
 let mockConfigurationRegistry: ConfigurationRegistry;
 
 beforeEach(() => {
-  vi.restoreAllMocks();
+  // Double check that we reset ALL mocks before each test so we do not have any leakage between tests.
   vi.resetAllMocks();
+
+  // Mock console.warn globally
+  console.warn = vi.fn();
+
+  // Default to returning an empty array
+  getMock.mockReturnValue([]);
 
   mockConfigurationRegistry = {
     getConfiguration: vi.fn().mockReturnValue({
-      get: vi.fn().mockReturnValue([]),
+      get: getMock,
     } as unknown as Configuration),
   };
 
   defaultRegistryLoader = new DefaultRegistryLoader(mockConfigurationRegistry);
+});
+
+afterEach(() => {
+  console.warn = originalConsoleWarn;
 });
 
 describe('loadFromConfiguration', () => {
@@ -61,14 +73,7 @@ describe('loadFromConfiguration', () => {
       },
     };
 
-    // Set it all up
-    const getMock = vi.fn().mockReturnValue([userRegistry1, userRegistry2]);
-    mockConfigurationRegistry = {
-      getConfiguration: vi.fn().mockReturnValue({
-        get: getMock,
-      } as unknown as Configuration),
-    };
-    defaultRegistryLoader = new DefaultRegistryLoader(mockConfigurationRegistry);
+    getMock.mockReturnValue([userRegistry1, userRegistry2]);
 
     // Make sure that both registries end up existing in the result
     const result = defaultRegistryLoader.loadFromConfiguration();
@@ -113,14 +118,7 @@ describe('loadFromConfiguration', () => {
       },
     };
 
-    // Setup
-    const getMock = vi.fn().mockReturnValue([userRegistry1, userRegistryMirror1, userRegistry2, userRegistryMirror2]);
-    mockConfigurationRegistry = {
-      getConfiguration: vi.fn().mockReturnValue({
-        get: getMock,
-      } as unknown as Configuration),
-    };
-    defaultRegistryLoader = new DefaultRegistryLoader(mockConfigurationRegistry);
+    getMock.mockReturnValue([userRegistry1, userRegistryMirror1, userRegistry2, userRegistryMirror2]);
 
     // Make sure that both registries and their mirrors end up existing in the result
     const result = defaultRegistryLoader.loadFromConfiguration();
@@ -155,15 +153,7 @@ describe('loadFromConfiguration', () => {
       },
     };
 
-    const getMock = vi.fn().mockReturnValue([userRegistryMirror]);
-
-    mockConfigurationRegistry = {
-      getConfiguration: vi.fn().mockReturnValue({
-        get: getMock,
-      } as unknown as Configuration),
-    };
-
-    defaultRegistryLoader = new DefaultRegistryLoader(mockConfigurationRegistry);
+    getMock.mockReturnValue([userRegistryMirror]);
 
     // Ignore any mirrors that don't have the registry before them...
     // this should equal blank (since registry.mirror without a preceding registry is ignored)
@@ -288,8 +278,6 @@ describe('resolveConflicts', () => {
   });
 
   test('warns and does not merge when properties differ', () => {
-    const consoleWarnMock = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     const defaultRegistries: RegistryConfigurationEntry[] = [
       {
         prefix: 'registry1',
@@ -311,7 +299,7 @@ describe('resolveConflicts', () => {
     const result = defaultRegistryLoader.resolveConflicts(defaultRegistries, existingRegistries);
 
     // We want to check that we get the correct warning about differing properties
-    expect(consoleWarnMock).toHaveBeenCalledWith(
+    expect(console.warn).toHaveBeenCalledWith(
       'Default user registry registry1 already exists in registries.conf, but properties differ: blocked, insecure. User settings take precedence.',
     );
 
@@ -324,7 +312,5 @@ describe('resolveConflicts', () => {
         insecure: false,
       },
     ]);
-
-    consoleWarnMock.mockRestore();
   });
 });
