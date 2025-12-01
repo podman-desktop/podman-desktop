@@ -3,5 +3,7 @@
   "appId": "io.podman_desktop.PodmanDesktop",
   "artifactName": "podman-desktop",
   "urlProtocol": "podman-desktop",
-  "remoteExtensions": []
+  "extensions": {
+    "remote": []
+  }
 }

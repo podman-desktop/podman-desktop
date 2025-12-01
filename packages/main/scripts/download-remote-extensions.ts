@@ -30,8 +30,7 @@ import type { Certificates } from '/@/plugin/certificates.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-
-import product from '../../../product.json' with { type: 'json' };
+import product from '/@product.json' with { type: 'json' };
 
 /**
  * We create _dummy_ classes for the constructor of ImageRegistry
@@ -83,6 +82,14 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
   await rename(join(tmpFolderPath, 'extension'), finalPath);
 }
 
+export function getRemoteExtensions(): RemoteExtension[] {
+  if (!product) return [];
+  if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') return [];
+  if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote))
+    return [];
+  return product.extensions.remote as RemoteExtension[];
+}
+
 export async function main(args: string[]): Promise<void> {
   const parsed = minimist(args);
 
@@ -91,9 +98,7 @@ export async function main(args: string[]): Promise<void> {
 
   if (!isAbsolute(output)) throw new Error('the output should be an absolute directory');
 
-  await Promise.all((product.remoteExtensions ?? []).map(downloadExtension.bind(undefined, output))).catch(
-    console.error,
-  );
+  await Promise.all(getRemoteExtensions().map(downloadExtension.bind(undefined, output))).catch(console.error);
 }
 
 // do not start if we are in a VITEST env

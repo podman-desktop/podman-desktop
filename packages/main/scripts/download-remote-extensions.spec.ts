@@ -24,16 +24,16 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ImageRegistry } from '/@/plugin/image-registry.js';
+import product from '/@product.json' with { type: 'json' };
 
-import product from '../../../product.json' with { type: 'json' };
 import type { RemoteExtension } from './download-remote-extensions.js';
-import { downloadExtension, main } from './download-remote-extensions.js';
+import { downloadExtension, getRemoteExtensions, main } from './download-remote-extensions.js';
 
 vi.mock(import('node:fs/promises'));
 vi.mock(import('node:fs'));
 vi.mock(import('node:os'));
 vi.mock(import('/@/plugin/image-registry.js'));
-vi.mock(import('../../../product.json'));
+vi.mock(import('/@product.json'));
 
 const TMP_DIR = 'tmp-dir';
 const ABS_DEST_DIR = '/dest-dir';
@@ -47,7 +47,7 @@ beforeEach(() => {
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
   vi.mocked(existsSync).mockReturnValue(true);
-  (vi.mocked(product).remoteExtensions as RemoteExtension[]) = [];
+  (vi.mocked(product).extensions.remote as RemoteExtension[]) = [];
 });
 
 describe('downloadExtension', () => {
@@ -77,6 +77,40 @@ describe('downloadExtension', () => {
       recursive: true,
     });
   });
+
+  test('extracted content without extension should throw an error', async () => {
+    // mock existsSync for path ending with 'extension' should return false
+    vi.mocked(existsSync).mockImplementation(path => {
+      return !String(path).endsWith('extension');
+    });
+
+    await expect(async () => {
+      await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    }).rejects.toThrowError(
+      `extension ${REMOTE_INFO_MOCK.name} has malformed content: the OCI image should contains an "extension" folder`,
+    );
+  });
+
+  test('extracted content without package.json should throw an error', async () => {
+    // mock existsSync for path ending with 'package.json' should return false
+    vi.mocked(existsSync).mockImplementation(path => {
+      return !String(path).endsWith('package.json');
+    });
+
+    await expect(async () => {
+      await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    }).rejects.toThrowError(
+      `extension ${REMOTE_INFO_MOCK.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
+    );
+  });
+});
+
+describe('getRemoteExtensions', () => {
+  test('expect to read product.json#extensions#remote', () => {
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+
+    expect(getRemoteExtensions()).toStrictEqual([REMOTE_INFO_MOCK]);
+  });
 });
 
 describe('main', () => {
@@ -101,7 +135,7 @@ describe('main', () => {
   });
 
   test('--output argument should be used as destination', async () => {
-    (vi.mocked(product).remoteExtensions as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
 
     await main(['--output', ABS_DEST_DIR]);
 
