@@ -44,7 +44,7 @@ import type {
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
-import type { WebContents } from 'electron';
+import type { IpcMainEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
@@ -137,7 +137,7 @@ import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
-import { ApiSenderType, IPCHandle } from './api.js';
+import { ApiSenderType, IPCHandle, IPCMainOn } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -283,6 +283,11 @@ export class PluginSystem {
         return error instanceof Error ? { error } : { error: { message: error } };
       }
     });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ipcMainOn(channel: string, listener: (event: IpcMainEvent, ...args: any[]) => void): void {
+    ipcMain.on(channel, listener);
   }
 
   // Create an Error to access stack trace
@@ -475,6 +480,7 @@ export class PluginSystem {
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
+    container.bind<IPCMainOn>(IPCMainOn).toConstantValue(this.ipcMainOn);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
     const directoryStrategy = new DirectoryStrategy();
@@ -3251,15 +3257,8 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
-    const extensionInstaller = new ExtensionInstaller(
-      apiSender,
-      this.extensionLoader,
-      imageRegistry,
-      extensionsCatalog,
-      telemetry,
-      directories,
-      contributionManager,
-    );
+    container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
+    const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();
 
     // launch the updater

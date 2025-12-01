@@ -45,7 +45,7 @@ export class ContainerfileParser {
     const lines = content.split('\n');
     const targets: string[] = [];
 
-    const fromAsRegex = /FROM\s+\S+\s+AS\s+(\S+)/i;
+    const fromAsRegex = /FROM\s+\S+(?:\s+\S+)*\s+AS\s+(\S+)/i;
 
     for (const line of lines) {
       const match = fromAsRegex.exec(line);

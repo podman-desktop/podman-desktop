@@ -20,7 +20,7 @@ const exec = require('child_process').exec;
 const Arch = require('builder-util').Arch;
 const path = require('path');
 const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
-
+const product = require('./product.json');
 if (process.env.VITE_APP_VERSION === undefined) {
   const now = new Date();
   process.env.VITE_APP_VERSION = `${now.getUTCFullYear() - 2000}.${now.getUTCMonth() + 1}.${now.getUTCDate()}-${
@@ -70,8 +70,8 @@ async function addElectronFuses(context) {
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
-  productName: 'Podman Desktop',
-  appId: 'io.podman_desktop.PodmanDesktop',
+  productName: product.name,
+  appId: product.appId,
   directories: {
     output: 'dist',
     buildResources: 'buildResources',
@@ -82,6 +82,12 @@ const config = {
     const DEFAULT_ASSETS = [];
     const PODMAN_EXTENSION_ASSETS = 'extensions/podman/packages/extension/assets';
     context.packager.config.extraResources = DEFAULT_ASSETS;
+
+    // include product.json
+    context.packager.config.extraResources.push({
+      from: 'product.json',
+      to: 'product.json',
+    });
 
     // universal build, add both pkg files
     // this is hack to avoid issue https://github.com/electron/universal/issues/36
@@ -126,10 +132,10 @@ const config = {
   },
   files: ['packages/**/dist/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
   portable: {
-    artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
   },
   nsis: {
-    artifactName: `podman-desktop${artifactNameSuffix}-\${version}-setup-\${arch}.\${ext}`,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-setup-\${arch}.\${ext}`,
     oneClick: false,
     include: 'buildResources/installer.nsh',
   },
@@ -184,7 +190,7 @@ const config = {
       '--env=XDG_SESSION_TYPE=x11',
     ],
     useWaylandFlags: 'false',
-    artifactName: 'podman-desktop-${version}.${ext}',
+    artifactName: `${product.artifactName}-\${version}.\${ext}`,
     runtimeVersion: '25.08',
     branch: 'main',
     files: [
@@ -198,7 +204,7 @@ const config = {
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {
-    artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
     entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
     target: {
@@ -227,8 +233,8 @@ const config = {
     ],
   },
   protocols: {
-    name: 'Podman Desktop',
-    schemes: ['podman-desktop'],
+    name: product.name,
+    schemes: [product.urlProtocol],
     role: 'Editor',
   },
   publish: {
