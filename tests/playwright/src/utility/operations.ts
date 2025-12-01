@@ -681,3 +681,72 @@ export async function verifyMachinePrivileges(
     });
   });
 }
+
+/**
+ * Parses a version string into an array of numeric components.
+ * Handles versions like "5.7.0", "5.7", "6.0", "5.4.1"
+ * @param version - Version string to parse
+ * @returns Array of numeric version components [major, minor, patch]
+ */
+function parseVersion(version: string): number[] {
+  return version.split('.').map(part => Number.parseInt(part, 10));
+}
+
+/**
+ * Compares two version arrays to determine if the first is >= the second.
+ * @param current - Current version components array
+ * @param reference - Reference version components array
+ * @returns true if current >= reference
+ */
+function compareVersions(current: number[], reference: number[]): boolean {
+  const maxLength = Math.max(current.length, reference.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const currentPart = current[i] ?? 0;
+    const referencePart = reference[i] ?? 0;
+
+    if (currentPart > referencePart) {
+      return true;
+    }
+    if (currentPart < referencePart) {
+      return false;
+    }
+  }
+
+  return true; // versions are equal
+}
+
+/**
+ * Gets the current Podman CLI version by running `podman -v`.
+ * @returns The version string (e.g., "5.7.0")
+ * @throws Error if the version cannot be determined
+ */
+export function getPodmanCliVersion(): string {
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    const output = execSync('podman -v').toString().trim();
+    // Output format: "podman version 5.7.0"
+    const versionRegex = /podman version (\d+(?:\.\d+)*)/i;
+    const match = versionRegex.exec(output);
+    if (!match?.[1]) {
+      throw new Error(`Unable to parse Podman version from output: ${output}`);
+    }
+    return match[1];
+  } catch (error) {
+    throw new Error(`Failed to get Podman CLI version: ${error}`);
+  }
+}
+
+/**
+ * Checks if the installed Podman CLI version is equal to or greater than the reference version.
+ * @param referenceVersion - The minimum required version (e.g., "5.7.0", "5.7", "6.0")
+ * @returns true if the installed version is >= the reference version
+ * @throws Error if the version cannot be determined or parsed
+ */
+export function isPodmanCliVersionAtLeast(referenceVersion: string): boolean {
+  const currentVersion = getPodmanCliVersion();
+  const currentVersionArray = parseVersion(currentVersion);
+  const referenceVersionArray = parseVersion(referenceVersion);
+
+  return compareVersions(currentVersionArray, referenceVersionArray);
+}

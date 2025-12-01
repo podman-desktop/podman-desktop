@@ -16,13 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteNetwork } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteNetwork, isPodmanCliVersionAtLeast } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const defaultNetworkName = 'bridge';
 const testNetworkName = 'e2e-test-network';
 const testNetworkSubnet = '10.89.0.0/24';
+
+test.skip(!isPodmanCliVersionAtLeast('5.7.0'), 'Skipping network smoke tests for Podman CLI version less than 5.7.0');
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('network-smoke');
@@ -62,8 +64,8 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
       .toBeTruthy();
   });
 
-  test('Delete network from networks page and verify it was removed', async ({ navigationBar, page }) => {
-    let networksPage = await navigationBar.openNetworks();
+  test('Delete network from networks page and verify it was removed', async ({ navigationBar }) => {
+    const networksPage = await navigationBar.openNetworks();
     await playExpect(networksPage.heading).toBeVisible();
 
     await playExpect
@@ -73,26 +75,11 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
       .toBeTruthy();
 
     await networksPage.deleteNetwork(testNetworkName);
-
-    const maxAttempts = 30;
-    let isDeleted = false;
-
-    for (let attempt = 0; attempt < maxAttempts && !isDeleted; attempt++) {
-      const dashboardPage = await navigationBar.openDashboard();
-      await playExpect(dashboardPage.heading).toBeVisible();
-
-      networksPage = await navigationBar.openNetworks();
-      await playExpect(networksPage.heading).toBeVisible();
-
-      const networkRow = await networksPage.getNetworkRowByName(testNetworkName);
-      if (!networkRow) {
-        isDeleted = true;
-      } else {
-        await page.waitForTimeout(1_000);
-      }
-    }
-
-    playExpect(isDeleted).toBeTruthy();
+    await playExpect
+      .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {
+        timeout: 30_000,
+      })
+      .toBeFalsy();
   });
 
   test('Delete network from details page and verify it was removed', async ({ navigationBar }) => {
