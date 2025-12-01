@@ -54,6 +54,7 @@ export interface NavigationParameters {
   [NavigationPage.PROVIDER_TASK]: { internalId: string; taskId: number | undefined };
   [NavigationPage.EXPERIMENTAL_FEATURES]: never;
   [NavigationPage.NETWORK]: { name: string; engineId: string };
+  [NavigationPage.NETWORK_CREATE]: never;
   [NavigationPage.EXTENSIONS_CATALOG]: { searchTerm?: string };
 }
 
