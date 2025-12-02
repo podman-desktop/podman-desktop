@@ -101,8 +101,6 @@ async function playKubeFile(): Promise<void> {
           replace: $state.snapshot(kubeReplace),
         });
 
-        console.log('window.playKube result', result);
-
         // remove the null values from the result
         playKubeResultRaw = JSON.stringify(removeEmptyOrNull(result), undefined, 2);
         playKubeResultJSON = JSON.parse(playKubeResultRaw);
