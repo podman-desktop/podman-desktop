@@ -273,7 +273,7 @@ describe('Options', () => {
     setup();
     const { getByRole, getByLabelText } = render(KubePlayYAML, {});
 
-    // Enable build
+    // Enable replace
     const checkbox = getByRole('checkbox', { name: 'Replace' });
     await userEvent.click(checkbox);
 
