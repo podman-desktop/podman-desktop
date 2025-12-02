@@ -11,6 +11,7 @@ The current Maintainers Group for the Podman Desktop Project consists of:
 | Evžen Gasta | @gastoner | Red Hat|
 | Florent Benoit | @benoitf | Red Hat|
 | Jeff MAURY | @jeffmaury | Red Hat|
+| Matthew Demyttenaere | @firewall | Red Hat|
 | Ondrej Dockal | @odockal | Red Hat|
 | Philippe Martin | @feloy | Red Hat|
 | Rujuta Shinde | @rujutashinde | Red Hat|
