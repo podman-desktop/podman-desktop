@@ -1,7 +1,7 @@
 <script lang="ts">
 import Label from '/@/lib/ui/Label.svelte';
 import ProviderInfoCircle from '/@/lib/ui/ProviderInfoCircle.svelte';
-import { providerInfos } from '/@/stores/providers';
+import { containerConnectionCount, providerInfos } from '/@/stores/providers';
 
 interface Props {
   object: {
@@ -18,8 +18,16 @@ const connection = $derived(
     .find(provider => provider.id === providerId)
     ?.containerConnections?.find(({ name }) => name === connectionName),
 );
+
+const displayName = $derived.by(() => {
+  if (!connection) return object.engineId;
+
+  if ($containerConnectionCount[connection.type] > 1) return connection.displayName;
+
+  return connection.type;
+});
 </script>
 
-<Label tip={connection?.endpoint.socketPath} name={connection?.displayName}>
-  <ProviderInfoCircle type="podman" />
+<Label tip={connection?.endpoint?.socketPath} name={displayName}>
+  <ProviderInfoCircle type={connection?.type} />
 </Label>
