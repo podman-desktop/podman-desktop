@@ -21,6 +21,7 @@ let runStarted = $state(false);
 let runFinished = $state(false);
 let runError = $state('');
 let kubeBuild: boolean = $state(false);
+let kubeReplace: boolean = $state(false);
 let runWarning = $state('');
 let kubernetesYamlFilePath: string | undefined = $state(undefined);
 let customYamlContent: string = $state('');
@@ -96,8 +97,11 @@ async function playKubeFile(): Promise<void> {
     if (yamlFilePath && selectedProviderConnection) {
       try {
         const result = await window.playKube(yamlFilePath, $state.snapshot(selectedProviderConnection), {
-          build: kubeBuild,
+          build: $state.snapshot(kubeBuild),
+          replace: $state.snapshot(kubeReplace),
         });
+
+        console.log('window.playKube result', result);
 
         // remove the null values from the result
         playKubeResultRaw = JSON.stringify(removeEmptyOrNull(result), undefined, 2);
@@ -284,11 +288,16 @@ function toggle(choice: 'podman' | 'custom'): void {
         </div>
       {/if}
 
-      <div >
-        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Build options</div>
-        <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
-          <div>Enable build</div>
-        </Checkbox>
+      <div class="flex flex-col gap-y-2">
+        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Options</div>
+        <div class="flex flex-row gap-x-2">
+          <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
+            <div>Enable build</div>
+          </Checkbox>
+          <Checkbox class="mx-1 my-auto" title="Replace" bind:checked={kubeReplace} >
+            <div>Replace</div>
+          </Checkbox>
+        </div>
       </div>
 
       {#if !runFinished}

@@ -6058,6 +6058,10 @@ describe('kube play', () => {
     ApiVersion: '1.41',
   } as unknown as Dockerode.DockerVersion;
 
+  const KUBE_PLAY_OPT = {
+    replace: true,
+  };
+
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -6086,12 +6090,16 @@ describe('kube play', () => {
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
-    await containerRegistry.playKube('dummy-file', {
-      name: PODMAN_PROVIDER.name,
-      endpoint: PODMAN_PROVIDER.connection.endpoint,
-    } as unknown as ProviderContainerConnectionInfo);
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
   });
 
   test('KubePlayContext returning zero build contexts should play kube with file', async () => {
@@ -6101,11 +6109,15 @@ describe('kube play', () => {
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
-    await containerRegistry.playKube('dummy-file', {
-      name: PODMAN_PROVIDER.name,
-      endpoint: PODMAN_PROVIDER.connection.endpoint,
-    } as unknown as ProviderContainerConnectionInfo);
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
   });
 });

@@ -1037,6 +1037,7 @@ export class PluginSystem {
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
+          replace?: boolean;
         },
       ): Promise<PlayKubeInfo> => {
         return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);

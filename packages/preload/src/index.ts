@@ -403,6 +403,7 @@ export function initExposure(): void {
       selectedProvider: ProviderContainerConnectionInfo,
       options?: {
         build?: boolean;
+        replace?: boolean;
       },
     ): Promise<PlayKubeInfo> => {
       return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider, options);
