@@ -452,11 +452,16 @@ export class ExtensionLoader implements IAsyncDisposable {
       fs.mkdirSync(this.extensionsStorageDirectory);
     }
 
-    let folders;
+    let folders: string[];
     // scan all extensions that we can find from the extensions folder
     if (import.meta.env.PROD) {
-      // in production mode, use the extensions locally
-      folders = await this.readProductionFolders(path.join(__dirname, '../../../extensions'));
+      // in production mode, use the extensions & extensions-extra locally
+      const promises = await Promise.all([
+        this.readProductionFolders(path.join(__dirname, '../../../extensions')),
+        this.readDevelopmentFolders(path.join(__dirname, '../../../extensions-extra')),
+      ]);
+
+      folders = promises.flat();
     } else {
       // in development mode, use the extensions locally
       folders = await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions'));

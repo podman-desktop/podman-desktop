@@ -282,6 +282,7 @@ const extensionWatcher = {
   stop: vi.fn(),
   dispose: vi.fn(),
   reloadExtension: vi.fn(),
+  onNeedToReloadExtension: vi.fn(),
 } as unknown as ExtensionWatcher;
 
 const extensionDevelopmentFolder = {
@@ -378,6 +379,29 @@ vi.mock('node:fs');
 beforeEach(() => {
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
   vi.clearAllMocks();
+
+  vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([]);
+});
+
+describe('extensionLoader#start', () => {
+  test('should load extensions & extensions-extra', async () => {
+    vi.stubEnv('PROD', true);
+
+    const readProductionFoldersMock = vi.spyOn(extensionLoader, 'readProductionFolders');
+    readProductionFoldersMock.mockResolvedValue([]);
+    const readDevelopmentFoldersMock = vi.spyOn(extensionLoader, 'readDevelopmentFolders');
+    readDevelopmentFoldersMock.mockResolvedValue([]);
+
+    await extensionLoader.start();
+
+    expect(readProductionFoldersMock).toHaveBeenCalledOnce();
+    const prodFolder = readProductionFoldersMock.mock.calls[0]?.[0];
+    expect(prodFolder?.endsWith('extensions')).toBeTruthy();
+
+    expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
+    const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
+    expect(devFolder?.endsWith('extensions-extra')).toBeTruthy();
+  });
 });
 
 test('Should watch for files and load them at startup', async () => {
