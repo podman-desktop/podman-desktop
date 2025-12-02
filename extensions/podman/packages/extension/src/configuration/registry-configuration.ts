@@ -138,24 +138,42 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
 
   // Loads the default user registries from settings.json into the registries.conf file
   // also resolving any conflicts that may exist.
+  // NOTE: On macOS/Windows, the Podman machine must be running to configure default registries.
+  // The registries.conf file is written on the host ($HOME/.config/containers/registries.conf),
+  // and a symlink inside the VM (/etc/containers/registries.conf.d/) points to the host file
+  // via the mounted home directory. We verify the symlink exists before writing to ensure
+  // the VM will pick up the changes. On Linux, the file is accessed directly without a VM.
   async loadDefaultUserRegistries(): Promise<void> {
+    // First check if there are any default registries configured in settings.json
+    // if there isn't any in settings.json we can skip the rest of the process and just return early
+    const defaultRegistries = this.#defaultRegistryLoader.loadFromConfiguration();
+    if (defaultRegistries.length === 0) {
+      return;
+    }
+
+    // On macOS/Windows, verify the VM is running and symlink exists before writing
     if (env.isMac || env.isWindows) {
-      const checked = await this.checkRegistryConfFileExistsInVm(false);
-      if (!checked) {
+      try {
+        const checked = await this.checkRegistryConfFileExistsInVm(false);
+        if (!checked) {
+          return;
+        }
+      } catch (error: unknown) {
+        // Gracefully handle podman installation issues to avoid blocking extension activation.
+        // This typically occurs when podman is not installed (ENOENT error), while trying to check the VM.
+        // Note: If podman is installed but no machines exist or machines are stopped,
+        // the code returns early without error - this catch is specifically for binary issues.
+        console.warn('Unable to load default user registries (podman may have not been installed):', error);
         return;
       }
     }
 
-    const defaultRegistries = this.#defaultRegistryLoader.loadFromConfiguration();
     const configFileContent = await this.readRegistriesConfContent();
-
-    if (defaultRegistries.length > 0) {
-      const combinedRegistries = this.#defaultRegistryLoader.resolveConflicts(
-        defaultRegistries,
-        configFileContent.registry,
-      );
-      await this.saveRegistriesConfContent({ registry: combinedRegistries });
-    }
+    const combinedRegistries = this.#defaultRegistryLoader.resolveConflicts(
+      defaultRegistries,
+      configFileContent.registry,
+    );
+    await this.saveRegistriesConfContent({ registry: combinedRegistries });
   }
 
   async setupRegistryCommandCallback(): Promise<void> {

@@ -303,7 +303,7 @@ test('when loadDefaultUserRegistries is called, make sure it calls all three fun
   expect(registryConfiguration.saveRegistriesConfContent).toBeCalled();
 });
 
-test('when loadDefaultUserRegistries is called and there are no default registries, it does not save', async () => {
+test('when loadDefaultUserRegistries is called and there are no default registries, it does not check podman machine VM or save', async () => {
   const mockDefaultRegistryLoader = {
     loadFromConfiguration: vi.fn().mockReturnValue([]),
     resolveConflicts: vi.fn(),
@@ -313,14 +313,45 @@ test('when loadDefaultUserRegistries is called and there are no default registri
 
   vi.spyOn(registryConfiguration, 'readRegistriesConfContent').mockResolvedValue({ registry: [] });
   vi.spyOn(registryConfiguration, 'saveRegistriesConfContent').mockResolvedValue();
-  vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(true);
+  const checkVmSpy = vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockResolvedValue(true);
 
   vi.mocked(env).isMac = true;
 
   await registryConfiguration.loadDefaultUserRegistries();
 
-  // Make sure the only call is loadFromConfiguration! Resolve conflicts as well as saveRegistriesConfContent should NOT be called
+  // Only loadFromConfiguration should be called - VM check should be skipped when no registries configured
   expect(mockDefaultRegistryLoader.loadFromConfiguration).toBeCalled();
+  expect(checkVmSpy).not.toBeCalled();
   expect(mockDefaultRegistryLoader.resolveConflicts).not.toBeCalled();
   expect(registryConfiguration.saveRegistriesConfContent).not.toBeCalled();
+});
+
+test('when loadDefaultUserRegistries encounters an error (ex. podman not installed), it handles gracefully and does not block extension startup', async () => {
+  // Simulate podman not being installed by having checkRegistryConfFileExistsInVm throw
+  // an error of 'spawn podman ENOENT' (which is what happens when trying to run podman when it's not installed)
+  const mockDefaultRegistryLoader = {
+    loadFromConfiguration: vi.fn().mockReturnValue([{ prefix: 'registry1', location: '/registry1/foo' }]),
+    resolveConflicts: vi.fn(),
+  } as unknown as DefaultRegistryLoader;
+  registryConfiguration = new RegistryConfigurationImpl(mockDefaultRegistryLoader);
+  vi.spyOn(registryConfiguration, 'checkRegistryConfFileExistsInVm').mockRejectedValue(
+    new Error('spawn podman ENOENT'),
+  );
+  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  // Mock the environment to macOS to make sure we are doing the "VM" check (mac uses podman machine)
+  vi.mocked(env).isMac = true;
+
+  // Should not throw and is handled gracefully, as we cannot setup registries if podman if podman is not installed
+  // and we do not want to block extension startup in this case
+  await expect(registryConfiguration.loadDefaultUserRegistries()).resolves.toBeUndefined();
+
+  // Verify warning was logged on startup
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    'Unable to load default user registries (podman may have not been installed):',
+    expect.any(Error),
+  );
+
+  // We expect the configuration to still attempt to load the default registries (since mockDefaultRegistryLoader is returning the registry values)
+  expect(mockDefaultRegistryLoader.loadFromConfiguration).toBeCalled();
 });
