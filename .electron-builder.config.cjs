@@ -21,6 +21,8 @@ const Arch = require('builder-util').Arch;
 const path = require('path');
 const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
 const product = require('./product.json');
+const fs = require('node:fs');
+
 if (process.env.VITE_APP_VERSION === undefined) {
   const now = new Date();
   process.env.VITE_APP_VERSION = `${now.getUTCFullYear() - 2000}.${now.getUTCMonth() + 1}.${now.getUTCDate()}-${
@@ -62,6 +64,33 @@ async function addElectronFuses(context) {
     [FuseV1Options.RunAsNode]: false,
     [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
     [FuseV1Options.EnableNodeCliInspectArguments]: electronEnableInspect,
+  });
+}
+
+/**
+ * This function will start the script that will bundle the extensions#remote from the `product.json`
+ * to the extensions-extra folder
+ *
+ * @remarks it should be called in the beforePack to populate the folder extensions-extra before electron builder pack them
+ * @return {Promise<void>}
+ */
+async function packageRemoteExtensions() {
+  const downloadScript = path.join('packages', 'main', 'dist', 'download-remote-extensions.cjs');
+  if(!fs.existsSync(downloadScript)) {
+    console.warn(`${downloadScript} not found, skipping remote extension download`);
+    return;
+  }
+
+  const destination = path.resolve('./extensions-extra');
+
+  return new Promise((resolve, reject) => {
+    exec(`node ${downloadScript} --output=${destination}`, (error, stdout, stderr) => {
+      if(error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
   });
 }
 
@@ -126,11 +155,14 @@ const config = {
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-arm64.zst`);
       }
     }
+
+    // download & package extensions
+    await packageRemoteExtensions();
   },
   afterPack: async context => {
     await addElectronFuses(context);
   },
-  files: ['packages/**/dist/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
+  files: ['packages/**/dist/**', 'extensions-extra/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
   portable: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
   },
