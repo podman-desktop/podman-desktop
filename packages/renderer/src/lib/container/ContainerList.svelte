@@ -318,7 +318,7 @@ let nameColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Name',
 
 let envColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
-  comparator: (a, b): number => (a.engineId ?? '').localeCompare(b.engineId ?? ''),
+  comparator: (a, b): number => (a.engineName ?? '').localeCompare(b.engineName ?? ''),
 });
 
 let imageColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Image', {
