@@ -23,9 +23,12 @@ import type { Page } from '@playwright/test';
 
 import { ArchitectureType } from '../model/core/platforms';
 import type { ImagesPage } from '../model/pages/images-page';
+import { RegistriesPage } from '../model/pages/registries-page';
 import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
 import { ResourcesPage } from '../model/pages/resources-page';
+import { SettingsBar } from '../model/pages/settings-bar';
 import { NavigationBar } from '../model/workbench/navigation';
+import { canTestRegistry, setupRegistry } from '../setupFiles/setup-registry';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
@@ -43,6 +46,11 @@ let skipTests = false;
 
 let provider: string | undefined;
 
+let registryUrl: string;
+let registryUsername: string;
+let registryPswdSecret: string;
+let manifestFullName: string;
+
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   runner.setVideoAndTraceName('image-manifest-smoke-e2e');
 
@@ -54,6 +62,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   const podmanResourceCard = new ResourceConnectionCardPage(page, 'podman');
   provider = await podmanResourceCard.getConnectionInfoByLabel('Connection Type');
   console.log('Detected provider type is: ', provider);
+
+  [registryUrl, registryUsername, registryPswdSecret] = setupRegistry();
 
   imagesPage = await navigationBar.openImages();
 });
@@ -158,9 +168,61 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await imageDetailsPage.backLink.click();
       });
 
+      test.describe
+        .serial('Push Manifest to authenticated registry', () => {
+          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+
+          test('Add registry for manifest push', async ({ navigationBar, page }) => {
+            test.skip(skipTests, 'Build manifest failed, skipping the test');
+
+            await navigationBar.openSettings();
+            const settingsBar = new SettingsBar(page);
+            const registryPage = await settingsBar.openTabPage(RegistriesPage);
+            await playExpect(registryPage.heading).toBeVisible();
+
+            await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
+
+            const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+            const username = registryBox.getByText(registryUsername);
+            await playExpect(username).toBeVisible();
+          });
+
+          test('Rename manifest for registry push', async ({ navigationBar }) => {
+            test.skip(skipTests, 'Build manifest failed, skipping the test');
+
+            imagesPage = await navigationBar.openImages();
+            await playExpect(imagesPage.heading).toBeVisible({ timeout: 10_000 });
+
+            manifestFullName = `${registryUrl}/${registryUsername}/${imageNameComplex}`;
+
+            imagesPage = await imagesPage.renameImage(manifestLabelComplex, manifestFullName, 'latest');
+            await playExpect(imagesPage.heading).toBeVisible({ timeout: 10_000 });
+
+            await playExpect
+              .poll(async () => imagesPage.waitForRowToExists(manifestFullName, 30_000), {
+                timeout: 0,
+              })
+              .toBeTruthy();
+          });
+
+          test('Push manifest to registry', async () => {
+            test.skip(skipTests, 'Build manifest failed, skipping the test');
+            test.setTimeout(120_000);
+
+            await playExpect(imagesPage.heading).toBeVisible();
+
+            const imageDetailsPage = await imagesPage.openImageDetails(manifestFullName);
+            await playExpect(imageDetailsPage.heading).toBeVisible();
+
+            await imageDetailsPage.pushImage();
+          });
+        });
+
       test('Delete Manifest', async ({ page }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
-        await deleteImageManifest(page, manifestLabelComplex);
+        // Use the renamed manifest name if registry tests ran, otherwise use the original name
+        const manifestToDelete = canTestRegistry() && manifestFullName ? manifestFullName : manifestLabelComplex;
+        await deleteImageManifest(page, manifestToDelete);
       });
     });
 });
