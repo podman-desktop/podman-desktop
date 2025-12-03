@@ -29,6 +29,7 @@
 - [**Contributing**](#contributing)
 - [**Communication**](#communication)
 - [**Code of Conduct**](#code-of-conduct)
+- [**Share your Feedback**](#share-your-feedback)
 - [**License**](#license)
 
 ## Overview
@@ -131,10 +132,16 @@ Kubernetes questions & development:
 [![Mastodon](https://img.shields.io/badge/mastodon-6364ff?style=for-the-badge&logo=mastodon&logoColor=white)](https://fosstodon.org/@podmandesktop)
 [![Bluesky](https://img.shields.io/badge/bluesky-1283FE.svg?style=for-the-badge&logo=Bluesky&logoColor=white)](https://bsky.app/profile/podman-desktop.io)
 
+## Share Your Feedback
 
-### Adopters
+Are you using **Podman Desktop** at your company?
+We’d love to hear how you’re using (or planning to use) Podman Desktop. Spend **30 minutes** chatting with us about your use case, and we’ll send you some Podman-Desktop swag as a thank-you!
 
-Check out the [list of companies](./ADOPTERS.md) already using Podman Desktop.
+👉 Please complete this [form](https://docs.google.com/forms/d/e/1FAIpQLSeo1KWIL59mwuutbm31BWEvSAjMN9eYg3IrkrVyNH1ACvnwFA/viewform?usp=preview), and we’ll be in touch to arrange a time.
+
+Check out the growing [list of companies](./ADOPTERS.md) already using Podman Desktop, and add your organization to be part of the community of adopters.
+
+Your feedback is invaluable and will play a direct role in guiding the evolution of Podman Desktop. We greatly appreciate your time and perspective.
 
 ## Code of Conduct
 
