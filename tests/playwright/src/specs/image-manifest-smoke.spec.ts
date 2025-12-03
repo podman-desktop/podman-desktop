@@ -201,10 +201,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
             imagesPage = await navigationBar.openImages();
             await playExpect(imagesPage.heading).toBeVisible();
 
-            const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
-            await playExpect(imageDetailsPage.heading).toBeVisible();
-
-            await imageDetailsPage.pushImage();
+            await imagesPage.pushManifest(manifestLabelComplex);
           });
         });
 

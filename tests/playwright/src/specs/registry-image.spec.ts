@@ -91,7 +91,7 @@ test.describe.serial('Pulling image from authenticated registry workflow verific
     test('Image pulling from authenticated registry verification', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
 
-      const fullImageTitle = imageUrl.concat(':' + imageTag);
+      const fullImageTitle = imageUrl.concat(`:${imageTag}`);
       const pullImagePage = await imagesPage.openPullImage();
       const updatedImages = await pullImagePage.pullImage(fullImageTitle);
 
