@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -97,7 +97,14 @@ test('Expect Create button is disabled when name is empty', async () => {
   expect(createButton).toBeDisabled();
 });
 
-test('Expect all form fields to be present', async () => {
+test('Expect Basic and Advanced tabs to be present', async () => {
+  renderCreate();
+
+  expect(screen.getByRole('button', { name: 'Basic' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
+});
+
+test('Expect all basic form fields to be present', async () => {
   renderCreate();
 
   expect(screen.getByRole('textbox', { name: 'Name *' })).toBeInTheDocument();
@@ -120,6 +127,9 @@ test('Expect createNetwork to be called with correct parameters', async () => {
     expect.anything(),
     expect.objectContaining({
       Name: 'my-test-network',
+      Driver: 'bridge',
+      EnableIPv6: false,
+      Internal: false,
     }),
   );
 });
@@ -231,4 +241,52 @@ test('Expect automatic routing to network details after successful network creat
     },
     { timeout: 3000 },
   );
+});
+
+test('Expect to switch to Advanced tab and see advanced options', async () => {
+  renderCreate();
+
+  // Click the Advanced tab
+  const advancedTab = screen.getByRole('button', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Expect advanced options to be visible (Network Driver is now in Basic tab)
+  expect(screen.getByText('IPv6 (Dual Stack)')).toBeInTheDocument();
+  expect(screen.getByText('Internal Network')).toBeInTheDocument();
+  expect(screen.getByText('IP Range')).toBeInTheDocument();
+  expect(screen.getByText('Gateway')).toBeInTheDocument();
+  expect(screen.getByText('DNS Servers')).toBeInTheDocument();
+});
+
+test('Expect DNS section to show Podman only message for Docker provider', async () => {
+  const docker = createProviderConnection({
+    name: 'docker',
+    displayName: 'Docker',
+    endpoint: { socketPath: '/var/run/docker.sock' },
+    type: 'docker',
+  });
+
+  renderCreate([docker]);
+
+  // Click the Advanced tab
+  const advancedTab = screen.getByRole('button', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Expect Podman only message
+  expect(screen.getByText('(Podman only)')).toBeInTheDocument();
+  expect(screen.getByText('Custom DNS servers are only available for Podman networks.')).toBeInTheDocument();
+});
+
+test('Expect Basic tab to show network driver dropdown with ipvlan/macvlan options', async () => {
+  renderCreate();
+
+  // Driver dropdown should be visible on Basic tab (no need to switch tabs)
+  expect(screen.getByText('Network Driver')).toBeInTheDocument();
+
+  // Check that IPvlan and Macvlan options exist in the dropdown
+  const ipvlanOption = document.querySelector('option[value="ipvlan"]');
+  expect(ipvlanOption).toBeTruthy();
+
+  const macvlanOption = document.querySelector('option[value="macvlan"]');
+  expect(macvlanOption).toBeTruthy();
 });
