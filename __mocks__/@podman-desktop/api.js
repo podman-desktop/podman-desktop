@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { vi, beforeEach } from 'vitest';
+import product from './product.json' with { type: 'json' };
 
 /**
  * Mock the extension API for vitest.
@@ -50,6 +51,8 @@ const context = {
 const env = {
   createTelemetryLogger: vi.fn(),
   openExternal: vi.fn(),
+
+  appName: product.name,
 
   isLinux: false,
   isWindows: false,
