@@ -28,7 +28,6 @@ import product from '/@product.json' with { type: 'json' };
 
 import type { RemoteExtension } from './download-remote-extensions.js';
 import { downloadExtension, getRemoteExtensions, main } from './download-remote-extensions.js';
-import ErrnoException = NodeJS.ErrnoException;
 
 vi.mock(import('node:fs/promises'));
 vi.mock(import('node:fs'));
@@ -77,7 +76,7 @@ describe('downloadExtension', () => {
   test('if rename throw ErrnoException', async () => {
     vi.mocked(rename).mockRejectedValue({
       code: 'EXDEV',
-    } as ErrnoException);
+    } as NodeJS.ErrnoException);
 
     await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
 
