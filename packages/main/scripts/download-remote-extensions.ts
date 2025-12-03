@@ -19,7 +19,7 @@
 import 'reflect-metadata';
 
 import { existsSync } from 'node:fs';
-import { mkdir, rename } from 'node:fs/promises';
+import { cp, mkdir, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 
@@ -79,7 +79,30 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
   await mkdir(destination, { recursive: true });
 
   // rename tmp to destination
-  await rename(join(tmpFolderPath, 'extension'), finalPath);
+  await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
+}
+
+/**
+ * On a platform where the tmpdir is not on the same device as the destination
+ * the rename will fail
+ * @param src
+ * @param dest
+ */
+export async function moveSafely(src: string, dest: string): Promise<void> {
+  try {
+    await rename(src, dest);
+  } catch (error: unknown) {
+    if (!error || typeof error !== 'object' || !('code' in error)) {
+      throw error;
+    }
+
+    if (error.code !== 'EXDEV') {
+      throw error;
+    }
+
+    await cp(src, dest, { recursive: true });
+    await rm(src, { recursive: true });
+  }
 }
 
 export function getRemoteExtensions(): RemoteExtension[] {
