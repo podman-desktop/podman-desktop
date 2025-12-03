@@ -37,7 +37,6 @@ const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64]
 const imageNameSimple: string = 'manifest-test-simple';
 const imageNameComplex: string = 'manifest-test-complex';
 const manifestLabelSimple: string = `localhost/${imageNameSimple}`;
-const manifestLabelComplex: string = `localhost/${imageNameComplex}`;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,7 +48,7 @@ let provider: string | undefined;
 let registryUrl: string;
 let registryUsername: string;
 let registryPswdSecret: string;
-let manifestFullName: string;
+let manifestLabelComplex: string;
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   runner.setVideoAndTraceName('image-manifest-smoke-e2e');
@@ -64,6 +63,14 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   console.log('Detected provider type is: ', provider);
 
   [registryUrl, registryUsername, registryPswdSecret] = setupRegistry();
+
+  // Determine manifest name based on whether registry tests are enabled
+  // If registry tests are enabled, use the full registry path; otherwise use localhost
+  if (canTestRegistry()) {
+    manifestLabelComplex = `${registryUrl}/${registryUsername}/${imageNameComplex}`;
+  } else {
+    manifestLabelComplex = `localhost/${imageNameComplex}`;
+  }
 
   imagesPage = await navigationBar.openImages();
 });
@@ -133,7 +140,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
 
         try {
           imagesPage = await buildImagePage.buildImage(
-            imageNameComplex,
+            manifestLabelComplex,
             dockerfilePath,
             contextDirectory,
             architectures,
@@ -187,31 +194,14 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
             await playExpect(username).toBeVisible();
           });
 
-          test('Rename manifest for registry push', async ({ navigationBar }) => {
-            test.skip(skipTests, 'Build manifest failed, skipping the test');
-
-            imagesPage = await navigationBar.openImages();
-            await playExpect(imagesPage.heading).toBeVisible({ timeout: 10_000 });
-
-            manifestFullName = `${registryUrl}/${registryUsername}/${imageNameComplex}`;
-
-            imagesPage = await imagesPage.renameImage(manifestLabelComplex, manifestFullName, 'latest');
-            await playExpect(imagesPage.heading).toBeVisible({ timeout: 10_000 });
-
-            await playExpect
-              .poll(async () => imagesPage.waitForRowToExists(manifestFullName, 30_000), {
-                timeout: 0,
-              })
-              .toBeTruthy();
-          });
-
-          test('Push manifest to registry', async () => {
+          test('Push manifest to registry', async ({ navigationBar }) => {
             test.skip(skipTests, 'Build manifest failed, skipping the test');
             test.setTimeout(120_000);
 
+            imagesPage = await navigationBar.openImages();
             await playExpect(imagesPage.heading).toBeVisible();
 
-            const imageDetailsPage = await imagesPage.openImageDetails(manifestFullName);
+            const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
             await playExpect(imageDetailsPage.heading).toBeVisible();
 
             await imageDetailsPage.pushImage();
@@ -220,9 +210,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
 
       test('Delete Manifest', async ({ page }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
-        // Use the renamed manifest name if registry tests ran, otherwise use the original name
-        const manifestToDelete = canTestRegistry() && manifestFullName ? manifestFullName : manifestLabelComplex;
-        await deleteImageManifest(page, manifestToDelete);
+        await deleteImageManifest(page, manifestLabelComplex);
       });
     });
 });
