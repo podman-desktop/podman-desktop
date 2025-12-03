@@ -347,10 +347,7 @@ test('when loadDefaultUserRegistries encounters an error (ex. podman not install
   await expect(registryConfiguration.loadDefaultUserRegistries()).resolves.toBeUndefined();
 
   // Verify warning was logged on startup
-  expect(consoleWarnSpy).toHaveBeenCalledWith(
-    'Unable to load default user registries (podman may have not been installed):',
-    expect.any(Error),
-  );
+  expect(consoleWarnSpy).toHaveBeenCalledWith('Unable to load default user registries:', expect.any(Error));
 
   // We expect the configuration to still attempt to load the default registries (since mockDefaultRegistryLoader is returning the registry values)
   expect(mockDefaultRegistryLoader.loadFromConfiguration).toBeCalled();

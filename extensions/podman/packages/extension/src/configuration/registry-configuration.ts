@@ -159,11 +159,11 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
           return;
         }
       } catch (error: unknown) {
-        // Gracefully handle podman installation issues to avoid blocking extension activation.
-        // This typically occurs when podman is not installed (ENOENT error), while trying to check the VM.
-        // Note: If podman is installed but no machines exist or machines are stopped,
-        // the code returns early without error - this catch is specifically for binary issues.
-        console.warn('Unable to load default user registries (podman may have not been installed):', error);
+        // Gracefully handle errors to avoid blocking extension activation.
+        // This can occur for various reasons: podman not installed, VM connectivity issues,
+        // SSH failures, or other unexpected errors while checking the VM state. This would occur in the rare
+        // case where the user has configured registries, but the podman binary not accessible.
+        console.warn('Unable to load default user registries:', error);
         return;
       }
     }
