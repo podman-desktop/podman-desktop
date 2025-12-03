@@ -122,7 +122,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       // check if the file is mounted
       const result = await execPodman(commandLineArgs, machine.VMType);
       if (!result.stdout) {
-        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`;
+        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using ${env.appName}.`;
         if (showWindowPopupError) {
           // display an error message if the link is not found
           // otherwise, log to console (for silent checks)
