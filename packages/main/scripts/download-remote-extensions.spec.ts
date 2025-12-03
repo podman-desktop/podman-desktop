@@ -17,7 +17,7 @@
  ********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { mkdir, rename } from 'node:fs/promises';
+import { cp, mkdir, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -68,6 +68,27 @@ describe('downloadExtension', () => {
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
       join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
+
+    expect(cp).not.toHaveBeenCalled();
+    expect(rm).not.toHaveBeenCalled();
+  });
+
+  test('if rename throw ErrnoException', async () => {
+    vi.mocked(rename).mockRejectedValue({
+      code: 'EXDEV',
+    } as NodeJS.ErrnoException);
+
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+
+    const tmpFolder = join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension');
+
+    expect(rename).toHaveBeenCalledOnce();
+    expect(cp).toHaveBeenCalledExactlyOnceWith(tmpFolder, join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name), {
+      recursive: true,
+    });
+    expect(rm).toHaveBeenCalledExactlyOnceWith(tmpFolder, {
+      recursive: true,
+    });
   });
 
   test('should mkdir the destination directory', async () => {
