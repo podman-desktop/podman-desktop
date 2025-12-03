@@ -21,7 +21,7 @@ import TabItem from '@theme/TabItem';
 <TabItem value="windows" label="Windows">
 
 ```
-%APPDATA%\podman-desktop\configuration\settings.json
+%USERPROFILE%\.local\share\containers\podman-desktop\configuration\settings.json
 ```
 
 </TabItem>

@@ -76,7 +76,7 @@ _Locked configuration_
 
 _User configuration_
 
-- Location: `%APPDATA%\podman-desktop\configuration\settings.json`
+- Location: `%USERPROFILE%\.local\share\containers\podman-desktop\configuration\settings.json`
 - Permissions: User read/write
 - Purpose: Normal user settings configured through the UI
 
