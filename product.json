@@ -6,6 +6,9 @@
   "telemetry": {
     "key": "Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy"
   },
+  "catalog": {
+    "default": "https://registry.podman-desktop.io/api/extensions.json"
+  },
   "extensions": {
     "remote": []
   }
