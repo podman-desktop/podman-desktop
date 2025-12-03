@@ -12,7 +12,6 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import type { PodInfo } from '/@api/pod-info';
 
@@ -132,7 +131,7 @@ let nameColumn = new TableColumn<PodInfoUI>('Name', {
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
-let envColumn = new TableColumn<ImageInfoUI>('Environment', {
+let envColumn = new TableColumn<PodInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
