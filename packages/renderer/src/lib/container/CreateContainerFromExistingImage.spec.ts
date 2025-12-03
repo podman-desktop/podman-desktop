@@ -45,6 +45,7 @@ const localImageList = [
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
+    engineType: 'podman',
   } as unknown as ImageInfo,
   {
     Id: 'sha256:1234567890123',
@@ -53,6 +54,7 @@ const localImageList = [
     Size: 123,
     engineId: 'docker',
     engineName: 'docker',
+    engineType: 'podman',
   } as unknown as ImageInfo,
   {
     Id: 'sha256:1234567890123',
@@ -61,6 +63,7 @@ const localImageList = [
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
+    engineType: 'podman',
   } as unknown as ImageInfo,
   {
     Id: 'sha256:2345678901234',
@@ -69,6 +72,7 @@ const localImageList = [
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
+    engineType: 'podman',
   } as unknown as ImageInfo,
   {
     Id: 'sha256:3456789012345',
@@ -77,6 +81,7 @@ const localImageList = [
     Size: 123,
     engineId: 'podman',
     engineName: 'podman',
+    engineType: 'podman',
   } as unknown as ImageInfo,
 ];
 

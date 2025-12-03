@@ -52,6 +52,7 @@ const fakedImage: ImageInfoUI = {
   name: 'name',
   engineId: 'engineId',
   engineName: 'engineName',
+  engineType: 'podman',
   tag: 'tag',
   createdAt: 0,
   age: 'age',
