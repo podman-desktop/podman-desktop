@@ -262,7 +262,7 @@ export class ImagesPage extends MainPage {
       await playExpect(pushManifestButton).toBeVisible();
       await pushManifestButton.click();
 
-      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', 60_000, true);
+      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', 60_000);
     });
   }
 
