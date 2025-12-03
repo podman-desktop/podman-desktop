@@ -442,6 +442,261 @@ test('should remove the object configuration if value is equal to default one', 
   );
 });
 
+// Tests for applyManagedDefaults method
+describe('applyManagedDefaults function tests', () => {
+  let writeFileSync: ReturnType<typeof vi.mocked<typeof fs.writeFileSync>>;
+
+  beforeEach(() => {
+    writeFileSync = vi.mocked(fs.writeFileSync);
+    writeFileSync.mockClear();
+  });
+
+  test('apply default-config.json values to undefined keys in config', async () => {
+    // "Default" user config
+    const managedDefaults = {
+      'setting.foo': 'defaultValue1',
+      'setting.bar': 'defaultValue2',
+    };
+
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    // Create the test registry
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    // Setup the values
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const userConfig = configurationValues.get('DEFAULT');
+
+    expect(userConfig?.['setting.foo']).toEqual('defaultValue1');
+    expect(userConfig?.['setting.bar']).toEqual('defaultValue2');
+  });
+
+  test('do not overwrite existing user settings with defaults', async () => {
+    const userSettings = {
+      'setting.foo': 'userValue',
+    };
+    const managedDefaults = {
+      'setting.foo': 'defaultValue1',
+      'setting.bar': 'defaultValue2',
+    };
+
+    // Mock fs.promises.readFile to return user settings.json
+    const readFileMock = vi.mocked(fs.promises.readFile);
+    readFileMock.mockResolvedValue(JSON.stringify(userSettings));
+
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const userConfig = configurationValues.get('DEFAULT');
+
+    // User's existing value should be preserved
+    expect(userConfig?.['setting.foo']).toEqual('userValue');
+    // Default should be applied for undefined key
+    expect(userConfig?.['setting.bar']).toEqual('defaultValue2');
+  });
+
+  test('make sure that the user config remains unchanged when defaults are empty', async () => {
+    getContentMock.mockResolvedValue({});
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const userConfig = configurationValues.get('DEFAULT');
+
+    // Make sure it's still blank.. (nothing was added / changes, etc.)
+    expect(userConfig).toEqual({});
+  });
+
+  test('handle any nested values / make sure entire object is copied', async () => {
+    const managedDefaults = {
+      'nested.setting': {
+        nested: {
+          value: 'nested',
+        },
+        array: [1, 2, 3],
+      },
+    };
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+    const configurationValues = (
+      testRegistry as unknown as { configurationValues: Map<string, { [key: string]: unknown }> }
+    ).configurationValues;
+    const userConfig = configurationValues.get('DEFAULT');
+
+    // Make sure it matches the managedDefaults config
+    expect(userConfig?.['nested.setting']).toEqual({
+      nested: {
+        value: 'nested',
+      },
+      array: [1, 2, 3],
+    });
+  });
+
+  test('logs are shown to console', async () => {
+    const managedDefaults = {
+      'setting.foo': 'defaultValue1',
+      'setting.bar': 'defaultValue2',
+    };
+
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    const originalConsoleLog = console.log;
+    const mockedConsoleLog = vi.fn();
+    console.log = mockedConsoleLog;
+
+    // Make sure that the console log is called when the settings are applied on each run
+    try {
+      const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+      await testRegistry.init();
+
+      expect(mockedConsoleLog).toHaveBeenCalledWith(
+        expect.stringContaining('[Managed-by]: Applied default settings for:'),
+      );
+      expect(mockedConsoleLog).toHaveBeenCalledWith(expect.stringContaining('setting.foo'));
+      expect(mockedConsoleLog).toHaveBeenCalledWith(expect.stringContaining('setting.bar'));
+    } finally {
+      console.log = originalConsoleLog;
+    }
+  });
+
+  test('check the applyManagedDefaults returns array of applied keys', async () => {
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const configData: Record<string, unknown> = { existingKey: 'existingValue' };
+    const defaults: Record<string, unknown> = {
+      existingKey: 'defaultValue',
+      newKey1: 'newValue1',
+      newKey2: 'newValue2',
+    };
+
+    // Kindof hacky, but use applyManagedDefaults directly to test the return value, but gives
+    // you a good return of what keys were applied
+    const appliedKeys = (
+      testRegistry as unknown as {
+        applyManagedDefaults: (c: Record<string, unknown>, d: Record<string, unknown>) => string[];
+      }
+    ).applyManagedDefaults(configData, defaults);
+
+    // Make sure all the keys were applied correctly!
+    expect(appliedKeys).toEqual(['newKey1', 'newKey2']);
+    expect(configData['existingKey']).toEqual('existingValue');
+    expect(configData['newKey1']).toEqual('newValue1');
+    expect(configData['newKey2']).toEqual('newValue2');
+  });
+
+  test('should call write to file (calls saveDefault) when managed defaults are applied', async () => {
+    const managedDefaults = {
+      'setting.foo': 'defaultValue1',
+    };
+
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    // saveDefault should have been called (via writeFileSync)
+    expect(writeFileSync).toHaveBeenCalled();
+  });
+
+  test('should NOT write to file when no managed defaults are applied', async () => {
+    // No managed defaults
+    getContentMock.mockResolvedValue({});
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    // saveDefault should NOT have been called
+    expect(writeFileSync).not.toHaveBeenCalled();
+  });
+
+  test('should not persist managed default to settings.json if it matches schema default', async () => {
+    // Managed default that matches the schema default
+    const managedDefaults = {
+      'my.fake.property': 'myDefault',
+    };
+
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    // Register the configuration with schema default 'myDefault' (same as managed default)
+    const node: IConfigurationNode = {
+      id: 'my.fake.property',
+      title: 'Fake Property',
+      type: 'object',
+      properties: {
+        ['my.fake.property']: {
+          description: 'Test property',
+          type: 'string',
+          default: 'myDefault',
+        },
+      },
+    };
+    testRegistry.registerConfigurations([node]);
+
+    // Clear previous calls and trigger saveDefault to check what would be written
+    // now that configurations are registered
+    writeFileSync.mockClear();
+    testRegistry.saveDefault();
+
+    // The value should NOT be in the settings.json since it matches the schema default
+    expect(writeFileSync).toHaveBeenCalled();
+    const writtenContent = JSON.parse(writeFileSync.mock.calls[0]?.[1] as string);
+    expect(writtenContent['my.fake.property']).toBeUndefined();
+  });
+
+  test('should persist managed default to settings.json if it differs from schema default', async () => {
+    // Managed default that differs from schema default
+    const managedDefaults = {
+      'my.fake.property': 'customValue',
+    };
+
+    getContentMock.mockResolvedValue(managedDefaults);
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    // Register the configuration with schema default 'myDefault' (different from managed default)
+    const node: IConfigurationNode = {
+      id: 'my.fake.property',
+      title: 'Fake Property',
+      type: 'object',
+      properties: {
+        ['my.fake.property']: {
+          description: 'Test property',
+          type: 'string',
+          default: 'myDefault',
+        },
+      },
+    };
+    testRegistry.registerConfigurations([node]);
+
+    // Clear previous calls and trigger saveDefault to check what would be written
+    writeFileSync.mockClear();
+    testRegistry.saveDefault();
+
+    // The value SHOULD be in the settings.json since it differs from schema default
+    expect(writeFileSync).toHaveBeenCalled();
+    const writtenContent = JSON.parse(writeFileSync.mock.calls[0]?.[1] as string);
+    expect(writtenContent['my.fake.property']).toEqual('customValue');
+  });
+});
+
 // Tests for the new managed defaults functionality
 describe('Managed Defaults', () => {
   test('should load managed defaults configuration', async () => {

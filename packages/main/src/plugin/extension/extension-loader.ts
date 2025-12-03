@@ -632,6 +632,9 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async readDevelopmentFolders(folderPath: string): Promise<string[]> {
+    // only readdir on existing folder
+    if (!fs.existsSync(folderPath)) return [];
+
     const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
     // filter only directories ignoring node_modules directory
     return entries
@@ -660,6 +663,9 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async readProductionFolders(folderPath: string): Promise<string[]> {
+    // only readdir on existing folder
+    if (!fs.existsSync(folderPath)) return [];
+
     const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
     return entries
       .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')

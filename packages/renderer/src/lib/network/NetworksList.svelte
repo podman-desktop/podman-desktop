@@ -2,11 +2,12 @@
 import { faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { router } from 'tinro';
 
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import { handleNavigation } from '/@/navigation';
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
+import { NavigationPage } from '/@api/navigation-page';
 
 import { withBulkConfirmation } from '../actions/BulkActions';
 import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
@@ -68,7 +69,7 @@ async function deleteSelectedNetworks(): Promise<void> {
 }
 
 function gotoCreateNetwork(): void {
-  router.goto('/networks/create');
+  handleNavigation({ page: NavigationPage.NETWORK_CREATE });
 }
 
 let idColumn = new TableColumn<NetworkInfoUI>('Id', {

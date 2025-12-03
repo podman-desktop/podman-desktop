@@ -316,13 +316,13 @@ vi.mock('electron', () => {
   };
 });
 
-vi.mock('../../util.js', async () => {
+vi.mock(import('../../util.js'), async () => {
   return {
     getBase64Image: vi.fn(),
   };
 });
 
-vi.mock('node:fs/promises');
+vi.mock(import('node:fs/promises'));
 // mock fs.promises.readdir and use Dirent<string> as return type
 const readdirMock = vi.mocked(
   fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent<string>[]>,
@@ -2463,6 +2463,13 @@ describe('loading extension folders', () => {
 
       expect(folders).length(0);
     });
+    test('if folder does not exists do not readdir', async () => {
+      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      const folders = await extensionLoader.readDevelopmentFolders('path');
+
+      expect(folders).length(0);
+      expect(readdirMock).not.toHaveBeenCalled();
+    });
     test('ignores node_modules folders', async () => {
       readdirMock.mockResolvedValue([nodeModulesEntry]);
 
@@ -2472,7 +2479,10 @@ describe('loading extension folders', () => {
     });
     test('ignores folders without package.json', async () => {
       readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+      vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
       const folders = await extensionLoader.readDevelopmentFolders('path');
 
       expect(folders).length(0);
@@ -2480,7 +2490,11 @@ describe('loading extension folders', () => {
 
     test('recognizes a plain extension when only ext/package.json is present', async () => {
       readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync').mockReturnValueOnce(false).mockReturnValueOnce(true);
+      vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
       const folders = await extensionLoader.readDevelopmentFolders('path');
 
       expect(folders).length(1);
@@ -2489,7 +2503,11 @@ describe('loading extension folders', () => {
 
     test('recognizes as an api extension when only ext/packages/extension/package.json is present', async () => {
       readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true).mockReturnValueOnce(true);
+      vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true);
       const folders = await extensionLoader.readDevelopmentFolders('path');
 
       expect(folders).length(1);
@@ -2498,7 +2516,11 @@ describe('loading extension folders', () => {
 
     test('recognizes as an api extension when ext/package.json and ext/packages/extension/package.json are present', async () => {
       readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true).mockReturnValueOnce(false);
+      vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
       const folders = await extensionLoader.readDevelopmentFolders('path');
 
       expect(folders).length(1);
@@ -2508,6 +2530,8 @@ describe('loading extension folders', () => {
     test('works correctly for multiple different extensions, files and empty folders', async () => {
       readdirMock.mockResolvedValue([fileEntry, dirEntry, dirEntry2, dirEntry3, dirEntry4]);
       vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
         // an api extension
         .mockReturnValueOnce(true)
         // an plain extension
@@ -2544,7 +2568,10 @@ describe('loading extension folders', () => {
     });
     test('recognizes a plain extension when only ext/package.json is present', async () => {
       readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync').mockReturnValueOnce(true);
+      vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true);
       const folders = await extensionLoader.readProductionFolders('path');
 
       expect(folders).length(1);
@@ -2552,7 +2579,10 @@ describe('loading extension folders', () => {
     });
     test('recognizes an api extension when ext/package.json is not present', async () => {
       readdirMock.mockResolvedValue([dirEntry]);
-      vi.spyOn(fs, 'existsSync').mockReturnValueOnce(false);
+      vi.spyOn(fs, 'existsSync')
+        // existSync on the folder path => true
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
       const folders = await extensionLoader.readProductionFolders('path');
 
       expect(folders).length(1);
