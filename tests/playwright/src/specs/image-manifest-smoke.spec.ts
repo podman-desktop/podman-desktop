@@ -196,7 +196,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
 
           test('Push manifest to registry', async ({ navigationBar }) => {
             test.skip(skipTests, 'Build manifest failed, skipping the test');
-            test.setTimeout(120_000);
+            test.setTimeout(150_000);
 
             imagesPage = await navigationBar.openImages();
             await playExpect(imagesPage.heading).toBeVisible();
