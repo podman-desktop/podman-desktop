@@ -120,9 +120,25 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
     });
   test.describe
     .serial('Image Manifest Validation - Complex Containerfile', () => {
-      test('Build the image using cross-arch build (complex)', async ({ page }) => {
+      test('Add registry for manifest push', async ({ navigationBar, page }) => {
+        test.skip(!canTestRegistry(), 'Registry tests are disabled');
+
+        await navigationBar.openSettings();
+        const settingsBar = new SettingsBar(page);
+        const registryPage = await settingsBar.openTabPage(RegistriesPage);
+        await playExpect(registryPage.heading).toBeVisible();
+
+        await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
+
+        const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+        const username = registryBox.getByText(registryUsername);
+        await playExpect(username).toBeVisible();
+      });
+
+      test('Build the image using cross-arch build (complex)', async ({ page, navigationBar }) => {
         test.setTimeout(120_000);
 
+        imagesPage = await navigationBar.openImages();
         await playExpect(imagesPage.heading).toBeVisible();
 
         const buildImagePage = await imagesPage.openBuildImage();
@@ -162,8 +178,11 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
       });
 
-      test('Check Manifest details', async () => {
+      test('Check Manifest details', async ({ navigationBar }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
+
+        imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
 
         const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
         await Promise.all(
@@ -175,35 +194,30 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await imageDetailsPage.backLink.click();
       });
 
-      test.describe
-        .serial('Push Manifest to authenticated registry', () => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+      test('Push manifest to registry', async ({ navigationBar }) => {
+        test.skip(!canTestRegistry(), 'Registry tests are disabled');
+        test.skip(skipTests, 'Build manifest failed, skipping the test');
+        test.setTimeout(150_000);
 
-          test('Add registry for manifest push', async ({ navigationBar, page }) => {
-            test.skip(skipTests, 'Build manifest failed, skipping the test');
+        imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
 
-            await navigationBar.openSettings();
-            const settingsBar = new SettingsBar(page);
-            const registryPage = await settingsBar.openTabPage(RegistriesPage);
-            await playExpect(registryPage.heading).toBeVisible();
+        await imagesPage.pushManifest(manifestLabelComplex);
+      });
 
-            await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
+      test('Remove registry after manifest push', async ({ page, navigationBar }) => {
+        test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
-            const registryBox = registryPage.registriesTable.getByLabel('GitHub');
-            const username = registryBox.getByText(registryUsername);
-            await playExpect(username).toBeVisible();
-          });
+        await navigationBar.openSettings();
+        const settingsBar = new SettingsBar(page);
+        const registryPage = await settingsBar.openTabPage(RegistriesPage);
+        await playExpect(registryPage.heading).toBeVisible();
 
-          test('Push manifest to registry', async ({ navigationBar }) => {
-            test.skip(skipTests, 'Build manifest failed, skipping the test');
-            test.setTimeout(150_000);
-
-            imagesPage = await navigationBar.openImages();
-            await playExpect(imagesPage.heading).toBeVisible();
-
-            await imagesPage.pushManifest(manifestLabelComplex);
-          });
-        });
+        await registryPage.removeRegistry('GitHub');
+        const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+        const username = registryBox.getByText(registryUsername);
+        await playExpect(username).toBeHidden();
+      });
 
       test('Delete Manifest', async ({ page }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
