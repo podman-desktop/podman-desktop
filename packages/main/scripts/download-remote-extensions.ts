@@ -85,8 +85,6 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
 /**
  * On a platform where the tmpdir is not on the same device as the destination
  * the rename will fail
- * @param src
- * @param dest
  */
 export async function moveSafely(src: string, dest: string): Promise<void> {
   try {
