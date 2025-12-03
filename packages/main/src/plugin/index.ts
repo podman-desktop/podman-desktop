@@ -142,6 +142,7 @@ import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
+import { AutostopEngine } from './autostop-engine.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { Certificates } from './certificates.js';
 import { CliToolRegistry } from './cli-tool-registry.js';
@@ -606,7 +607,9 @@ export class PluginSystem {
     });
 
     container.bind<AutostartEngine>(AutostartEngine).toSelf().inSingletonScope();
+    container.bind<AutostopEngine>(AutostopEngine).toSelf().inSingletonScope();
     const autoStartEngine = container.get<AutostartEngine>(AutostartEngine);
+    const autostopEngine = container.get<AutostopEngine>(AutostopEngine);
 
     container.bind<ContainerfileParser>(ContainerfileParser).toSelf().inSingletonScope();
     const containerfileParser = container.get(ContainerfileParser);
@@ -614,6 +617,7 @@ export class PluginSystem {
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
     providerRegistry.registerAutostartEngine(autoStartEngine);
+    providerRegistry.registerAutostopEngine(autostopEngine);
 
     providerRegistry.addProviderListener((name: string, providerInfo: ProviderInfo) => {
       if (name === 'provider:update-status') {
