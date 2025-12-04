@@ -125,3 +125,33 @@ test('expect binding to properly work', async () => {
   expect(alert).toBeDefined();
   expect(alert).toHaveTextContent(CONTAINER_CONNECTION_INFO.name);
 });
+
+test('expect dropdown value to be derived from value prop', () => {
+  // When a value prop is provided, the dropdown should display the correct selection
+  render(ContainerConnectionDropdown, {
+    connections: [CONTAINER_CONNECTION_INFO],
+    value: CONTAINER_CONNECTION_INFO,
+  });
+
+  expect(Dropdown).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      // The dropdown value should be the key derived from the connection
+      value: `${CONTAINER_CONNECTION_INFO.type}:${CONTAINER_CONNECTION_INFO.name}`,
+    }),
+  );
+});
+
+test('expect dropdown value to be undefined when value prop is undefined', () => {
+  render(ContainerConnectionDropdown, {
+    connections: [CONTAINER_CONNECTION_INFO],
+    value: undefined,
+  });
+
+  expect(Dropdown).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      value: undefined,
+    }),
+  );
+});

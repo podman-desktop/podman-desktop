@@ -23,22 +23,22 @@ let {
   disabled,
 }: Props = $props();
 
-let selected: string | undefined = $state<string>();
+/**
+ * Map of unique keys to connection objects.
+ * Key format: `${type}:${name}` ensures unique identification.
+ */
+let items = $derived(new Map(connections.map(c => [`${c.type}:${c.name}`, c])));
 
 /**
- * Internally this component generate a unique string for each connection provided
- * This ensure we have a unique identifier
+ * Derive the dropdown's selected key from the value prop.
+ * This ensures the dropdown displays the correct selection when value changes externally.
  */
-let items: Map<string, ProviderContainerConnectionInfo> = $derived(
-  new Map(connections.map(connection => [`${connection.type}:${connection.name}`, connection])),
-);
+let selected = $derived(value ? `${value.type}:${value.name}` : undefined);
 
 function handleChange(nValue: unknown): void {
   if (typeof nValue === 'string') {
-    selected = nValue;
     value = items.get(nValue);
   } else {
-    selected = undefined;
     value = undefined;
   }
 
