@@ -21,23 +21,15 @@ import '@testing-library/jest-dom/vitest';
 import type { ProviderStatus } from '@podman-desktop/api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import CreateNetwork from '/@/lib/network/CreateNetwork.svelte';
+import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { networksListInfo } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
 import type { NetworkInspectInfo } from '/@api/network-info';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
-
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
-
-const mockRouter = await import('tinro');
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -45,6 +37,12 @@ beforeEach(() => {
 
   // Reset stores
   networksListInfo.set([]);
+
+  // Mock breadcrumb for Route components
+  mockBreadcrumb();
+
+  // Start on basic tab by default - use just /basic since Route path="/*" creates the context
+  router.goto('/basic');
 });
 
 // Helper to create a provider connection
@@ -100,15 +98,14 @@ test('Expect Create button is disabled when name is empty', async () => {
 test('Expect Basic and Advanced tabs to be present', async () => {
   renderCreate();
 
-  expect(screen.getByRole('button', { name: 'Basic' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Advanced' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Basic' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Advanced' })).toBeInTheDocument();
 });
 
 test('Expect all basic form fields to be present', async () => {
   renderCreate();
 
   expect(screen.getByRole('textbox', { name: 'Name *' })).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Subnet' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 });
@@ -185,6 +182,10 @@ test('Expect createNetwork to be called with subnet when provided', async () => 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
   await userEvent.type(networkName, 'my-test-network');
 
+  // Switch to Advanced tab to access subnet field
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
   const subnet = screen.getByRole('textbox', { name: 'Subnet' });
   await userEvent.type(subnet, '10.89.0.0/24');
 
@@ -208,15 +209,17 @@ test('Expect createNetwork to be called with subnet when provided', async () => 
 });
 
 test('Expect cancel button to navigate to networks page', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
   renderCreate();
 
   const cancelButton = screen.getByRole('button', { name: 'Cancel' });
   await userEvent.click(cancelButton);
 
-  expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
+  expect(gotoSpy).toHaveBeenCalledWith('/networks');
 });
 
 test('Expect automatic routing after successful network creation when network appears in store', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
   const networkId = 'network123';
   vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId });
 
@@ -235,7 +238,7 @@ test('Expect automatic routing after successful network creation when network ap
 
   await waitFor(
     () => {
-      expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
+      expect(gotoSpy).toHaveBeenCalledWith('/networks');
     },
     { timeout: 3000 },
   );
@@ -245,10 +248,12 @@ test('Expect to switch to Advanced tab and see advanced options', async () => {
   renderCreate();
 
   // Click the Advanced tab
-  const advancedTab = screen.getByRole('button', { name: 'Advanced' });
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
   await fireEvent.click(advancedTab);
 
-  // Expect advanced options to be visible (Network Driver is now in Basic tab)
+  // Expect advanced options to be visible
+  expect(screen.getByText('Network Driver')).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Subnet' })).toBeInTheDocument();
   expect(screen.getByText('IPv6 (Dual Stack)')).toBeInTheDocument();
   expect(screen.getByText('Internal Network')).toBeInTheDocument();
   expect(screen.getByText('IP Range')).toBeInTheDocument();
@@ -267,7 +272,7 @@ test('Expect DNS section to show Podman only message for Docker provider', async
   renderCreate([docker]);
 
   // Click the Advanced tab
-  const advancedTab = screen.getByRole('button', { name: 'Advanced' });
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
   await fireEvent.click(advancedTab);
 
   // Expect Podman only message
@@ -275,10 +280,14 @@ test('Expect DNS section to show Podman only message for Docker provider', async
   expect(screen.getByText('Custom DNS servers are only available for Podman networks.')).toBeInTheDocument();
 });
 
-test('Expect Basic tab to show network driver dropdown with ipvlan/macvlan options', async () => {
+test('Expect Advanced tab to show network driver dropdown with ipvlan/macvlan options', async () => {
   renderCreate();
 
-  // Driver dropdown should be visible on Basic tab (no need to switch tabs)
+  // Switch to Advanced tab to access driver dropdown
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Driver dropdown should be visible on Advanced tab
   expect(screen.getByText('Network Driver')).toBeInTheDocument();
 
   // Check that IPvlan and Macvlan options exist in the dropdown
@@ -287,4 +296,318 @@ test('Expect Basic tab to show network driver dropdown with ipvlan/macvlan optio
 
   const macvlanOption = document.querySelector('option[value="macvlan"]');
   expect(macvlanOption).toBeTruthy();
+});
+
+test('Expect createNetwork to be called with IPv6 enabled', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'ipv6-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Enable IPv6
+  const ipv6Checkbox = screen.getByTitle('Enable IPv6');
+  await userEvent.click(ipv6Checkbox);
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'ipv6-network',
+      EnableIPv6: true,
+    }),
+  );
+});
+
+test('Expect createNetwork to be called with Internal network enabled', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'internal-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Enable Internal network
+  const internalCheckbox = screen.getByTitle('Internal network');
+  await userEvent.click(internalCheckbox);
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'internal-network',
+      Internal: true,
+    }),
+  );
+});
+
+test('Expect createNetwork to be called with gateway when provided', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'gateway-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Enter subnet and gateway
+  const subnet = screen.getByRole('textbox', { name: 'Subnet' });
+  await userEvent.type(subnet, '10.89.0.0/24');
+
+  const gateway = screen.getByRole('textbox', { name: 'Gateway' });
+  await userEvent.type(gateway, '10.89.0.1');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'gateway-network',
+      IPAM: expect.objectContaining({
+        Driver: 'default',
+        Config: expect.arrayContaining([
+          expect.objectContaining({
+            Subnet: '10.89.0.0/24',
+            Gateway: '10.89.0.1',
+          }),
+        ]),
+      }),
+    }),
+  );
+});
+
+test('Expect createNetwork to be called with IP range when provided', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'iprange-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Enter subnet and IP range
+  const subnet = screen.getByRole('textbox', { name: 'Subnet' });
+  await userEvent.type(subnet, '10.89.0.0/24');
+
+  const ipRange = screen.getByRole('textbox', { name: 'IP Range' });
+  await userEvent.type(ipRange, '10.89.0.0/25');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'iprange-network',
+      IPAM: expect.objectContaining({
+        Driver: 'default',
+        Config: expect.arrayContaining([
+          expect.objectContaining({
+            Subnet: '10.89.0.0/24',
+            IPRange: '10.89.0.0/25',
+          }),
+        ]),
+      }),
+    }),
+  );
+});
+
+test('Expect createNetwork to be called with custom DNS servers for Podman', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'dns-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Enter DNS server (DNS is enabled by default for Podman bridge networks)
+  const dnsInputs = screen.getAllByPlaceholderText('8.8.8.8');
+  await userEvent.type(dnsInputs[0], '8.8.8.8');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'dns-network',
+      Options: expect.objectContaining({
+        dns: '8.8.8.8',
+      }),
+    }),
+  );
+});
+
+test('Expect createNetwork to be called with ipvlan driver and explicit subnet', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'ipvlan-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Select ipvlan driver - click dropdown button to open, then click option
+  const driverDropdown = screen.getByRole('button', { name: 'Bridge' });
+  await fireEvent.click(driverDropdown);
+  const ipvlanOption = screen.getByRole('button', { name: 'IPvlan' });
+  await fireEvent.click(ipvlanOption);
+
+  // Enter explicit subnet for ipvlan
+  const subnet = screen.getByRole('textbox', { name: /Subnet/ });
+  await userEvent.type(subnet, '192.168.1.0/24');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'ipvlan-network',
+      Driver: 'ipvlan',
+      IPAM: expect.objectContaining({
+        Config: expect.arrayContaining([
+          expect.objectContaining({
+            Subnet: '192.168.1.0/24',
+          }),
+        ]),
+      }),
+    }),
+  );
+});
+
+test('Expect createNetwork to be called with all advanced options combined', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'full-network');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Enter subnet, gateway, IP range
+  const subnet = screen.getByRole('textbox', { name: 'Subnet' });
+  await userEvent.type(subnet, '10.50.0.0/24');
+
+  const gateway = screen.getByRole('textbox', { name: 'Gateway' });
+  await userEvent.type(gateway, '10.50.0.1');
+
+  const ipRange = screen.getByRole('textbox', { name: 'IP Range' });
+  await userEvent.type(ipRange, '10.50.0.128/25');
+
+  // Enable IPv6 and Internal
+  const ipv6Checkbox = screen.getByTitle('Enable IPv6');
+  await userEvent.click(ipv6Checkbox);
+
+  const internalCheckbox = screen.getByTitle('Internal network');
+  await userEvent.click(internalCheckbox);
+
+  // Enter DNS server
+  const dnsInputs = screen.getAllByPlaceholderText('8.8.8.8');
+  await userEvent.type(dnsInputs[0], '1.1.1.1');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'full-network',
+      Driver: 'bridge',
+      EnableIPv6: true,
+      Internal: true,
+      IPAM: expect.objectContaining({
+        Driver: 'default',
+        Config: expect.arrayContaining([
+          expect.objectContaining({
+            Subnet: '10.50.0.0/24',
+            Gateway: '10.50.0.1',
+            IPRange: '10.50.0.128/25',
+          }),
+        ]),
+      }),
+      Options: expect.objectContaining({
+        dns: '1.1.1.1',
+      }),
+    }),
+  );
+});
+
+test('Expect createNetwork to use default subnet when ipvlan selected without explicit subnet', async () => {
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  renderCreate();
+
+  const networkName = screen.getByRole('textbox', { name: 'Name *' });
+  await userEvent.type(networkName, 'ipvlan-default-subnet');
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Select ipvlan driver - click dropdown button to open, then click option
+  const driverDropdown = screen.getByRole('button', { name: 'Bridge' });
+  await fireEvent.click(driverDropdown);
+  const ipvlanOption = screen.getByRole('button', { name: 'IPvlan' });
+  await fireEvent.click(ipvlanOption);
+
+  // Don't enter subnet - should use default 10.89.0.0/24
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  expect(createButton).toBeEnabled();
+  await userEvent.click(createButton);
+
+  expect(window.createNetwork).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      Name: 'ipvlan-default-subnet',
+      Driver: 'ipvlan',
+      IPAM: expect.objectContaining({
+        Config: expect.arrayContaining([
+          expect.objectContaining({
+            Subnet: '10.89.0.0/24',
+          }),
+        ]),
+      }),
+    }),
+  );
+});
+
+test('Expect DNS checkbox to disable DNS servers input when unchecked', async () => {
+  renderCreate();
+
+  // Switch to Advanced tab
+  const advancedTab = screen.getByRole('link', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // DNS should be enabled by default for Podman bridge
+  expect(screen.getByTitle('Enable DNS')).toBeInTheDocument();
+
+  // Disable DNS
+  const dnsCheckbox = screen.getByTitle('Enable DNS');
+  await userEvent.click(dnsCheckbox);
+
+  // DNS server inputs should no longer be visible
+  expect(screen.queryByPlaceholderText('8.8.8.8')).not.toBeInTheDocument();
 });
