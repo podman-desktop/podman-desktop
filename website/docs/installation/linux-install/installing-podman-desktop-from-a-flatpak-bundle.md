@@ -28,7 +28,7 @@ Consider installing a Flatpak bundle rather than [from Flathub](/docs/installati
 2. Install Podman Desktop from the downloaded Flatpak bundle:
 
    ```shell-session
-   $ flatpak install --user $HOME/Downloads/podman-desktop-<version>.flatpak
+   flatpak install --user $HOME/Downloads/podman-desktop-<version>.flatpak
    ```
 
 #### Verification
@@ -36,7 +36,7 @@ Consider installing a Flatpak bundle rather than [from Flathub](/docs/installati
 - Open Podman Desktop from a terminal:
 
   ```shell-session
-  $ flatpak run io.podman_desktop.PodmanDesktop
+  flatpak run io.podman_desktop.PodmanDesktop
   ```
 
 #### Additional resources

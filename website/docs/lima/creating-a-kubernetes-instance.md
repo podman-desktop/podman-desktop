@@ -27,13 +27,13 @@ Consider creating a custom Lima instance to:
    - To create a single-node Kubernetes cluster running [k3s](https://k3s.io/):
 
      ```shell-session
-     $ limactl start template://k3s
+     limactl start template://k3s
      ```
 
    - To create a single-node Kubernetes cluster running [k8s](https://k8s.io/):
 
      ```shell-session
-     $ limactl start template://k8s
+     limactl start template://k8s
      ```
 
    - To select the number of CPUs, the memory, and the disk size, add the options to the `limactl start` command:
@@ -64,5 +64,5 @@ Consider creating a custom Lima instance to:
 1. Use the `kubectl.lima` wrapper script to connect to the cluster:
 
    ```shell-session
-   $ kubectl.lima version
+   kubectl.lima version
    ```

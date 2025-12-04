@@ -29,7 +29,7 @@ With Podman Desktop, you can push an image to your local Lima-powered Kubernetes
 Lima enables you to list loaded images:
 
 ```shell-session
-$ LIMA_INSTANCE=<name> lima sudo crictl images
+LIMA_INSTANCE=<name> lima sudo crictl images
 ```
 
 You can also create a pod that uses the loaded image:

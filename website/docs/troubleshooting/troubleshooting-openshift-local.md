@@ -13,7 +13,7 @@ You can find here troubleshooting help for issues specific to OpenShift Local.
 2. To verify that the host is ready to run OpenShift Local, in a terminal, run this command and verify the output has no errors:
 
    ```shell-session
-   $ crc setup --check-only
+   crc setup --check-only
    ```
 
    Sample output:
@@ -29,5 +29,5 @@ You can find here troubleshooting help for issues specific to OpenShift Local.
 3. To verify the configured preset, in a terminal, run:
 
    ```shell-session
-   $ crc config get preset
+   crc config get preset
    ```

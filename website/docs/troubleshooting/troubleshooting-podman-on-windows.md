@@ -15,7 +15,7 @@ You can find here troubleshooting help for issues specific to Windows.
 1. You are not able to stop your Podman Machine.
 
    ```shell-session
-   $ podman machine stop
+   podman machine stop
    ```
 
 2. The Logs contain this error:
@@ -29,7 +29,7 @@ You can find here troubleshooting help for issues specific to Windows.
 1. To display the active Windows Subsystem for Linux (WSL) distribution list: in the terminal, run:
 
    ```shell-session
-   $ wsl --list
+   wsl --list
    ```
 
 1. The command returns the list of active WSL distributions. Identify your Podman Machine in the list, such as `podman-machine-default`.
@@ -37,7 +37,7 @@ You can find here troubleshooting help for issues specific to Windows.
 1. To stop, and uninstall your Podman Machine: in the terminal, replace `podman-machine-default` by your Podman machine name, and run:
 
    ```shell-session
-   $ wsl --unregister podman-machine-default
+   wsl --unregister podman-machine-default
    ```
 
 #### Additional resources

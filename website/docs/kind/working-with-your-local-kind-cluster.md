@@ -32,5 +32,5 @@ Alternatively, use the status bar or the Podman Desktop **Settings** to set your
 - The Kubernetes CLI reports that the current context is your cluster with the `kind` suffix:
 
   ```shell-session
-  $ kubectl config current-context
+  kubectl config current-context
   ```

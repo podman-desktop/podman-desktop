@@ -21,17 +21,17 @@ Therefore, set the Podman machine to rootful mode.
 1. Stop the Podman machine:
 
    ```shell-session
-   $ podman machine stop
+   podman machine stop
    ```
 
 2. Set the Podman machine in rootful mode:
 
    ```shell-session
-   $ podman machine set --rootful
+   podman machine set --rootful
    ```
 
 3. Start the Podman machine:
 
    ```shell-session
-   $ podman machine start
+   podman machine start
    ```

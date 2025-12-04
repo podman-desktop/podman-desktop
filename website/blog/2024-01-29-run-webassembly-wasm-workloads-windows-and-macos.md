@@ -97,7 +97,7 @@ There is already an OCI image on quay.io
 To run the workload, we will use the following command:
 
 ```shell-shession
-$ podman run --platform wasi/wasm quay.io/podman-desktop-demo/wasm-rust-hello-world
+podman run --platform wasi/wasm quay.io/podman-desktop-demo/wasm-rust-hello-world
 ```
 
 When running the command, you will see a Podman Hello World that was compiled using a Rust project using the println function and compiled into Wasm using `--target wasm32-wasi` parameter at compilation time.

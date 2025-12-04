@@ -27,25 +27,25 @@ Consider creating a custom Lima instance to:
    - To create a Lima instance with rootless Podman, use the `podman` template:
 
      ```shell-session
-     $ limactl start --name=podman template://podman
+     limactl start --name=podman template://podman
      ```
 
    - To create a Lima instance with rootful Podman, use the `podman-rootful` template:
 
      ```shell-session
-     $ limactl start --name=podman template://podman-rootful
+     limactl start --name=podman template://podman-rootful
      ```
 
    - To create an Lima instance with rootless Docker, use the `docker` template:
 
      ```shell-session
-     $ limactl start --name=docker template://docker
+     limactl start --name=docker template://docker
      ```
 
    - To create an Lima instance with rootful Docker, use the `docker-rootful` template:
 
      ```shell-session
-     $ limactl start --name=docker template://docker-rootful
+     limactl start --name=docker template://docker-rootful
      ```
 
    - To select the number of CPUs, the memory, and the disk size, add the options to the `limactl start` command:
@@ -83,11 +83,11 @@ Consider creating a custom Lima instance to:
 - To verify the connection to a running "podman" instance:
 
   ```shell-session
-  $ podman.lima version
+  podman.lima version
   ```
 
 - To verify the connection to a running "docker" instance:
 
   ```shell-session
-  $ docker.lima version
+  docker.lima version
   ```

@@ -45,7 +45,7 @@ Then, you can run the `docker context use podman` command to switch to that cont
 1. Identify the location of your Podman pipe <!-- markdownlint-disable MD029 -->
 
 ```shell-session
-$ podman machine inspect --format '{{.ConnectionInfo.PodmanPipe.Path}}'
+ podman machine inspect --format '{{.ConnectionInfo.PodmanPipe.Path}}'
 ```
 
 2. Set the `DOCKER_HOST` environment variable to your Podman pipe location. You'll need to replace back slashes with forward slashes and add the `npipe://` scheme to the path retrieved previously: <!-- markdownlint-disable MD029 -->
@@ -92,13 +92,13 @@ Setting the `DOCKER_HOST` environment variable isn't necessary on Windows becaus
 1. Identify the location of your Podman socket.
 
 ```shell-session
-$ podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}'
+podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}'
 ```
 
 2. Set the `DOCKER_HOST` environment variable to your Podman socket location. Be sure to add the `unix://` scheme to the path retrieved previously:
 
 ```shell-session
-$ export DOCKER_HOST=unix://<your_podman_socket_location>
+export DOCKER_HOST=unix://<your_podman_socket_location>
 ```
 
 </TabItem>
@@ -107,13 +107,13 @@ $ export DOCKER_HOST=unix://<your_podman_socket_location>
 1. Identify the location of your Podman socket.
 
 ```shell-session
-$ podman info --format '{{.Host.RemoteSocket.Path}}'
+podman info --format '{{.Host.RemoteSocket.Path}}'
 ```
 
 2. Set the `DOCKER_HOST` environment variable to your Podman socket location. Be sure to add the `unix://` scheme to the path retrieved previously:
 
 ```shell-session
-$ export DOCKER_HOST=unix://<your_podman_socket_location>
+export DOCKER_HOST=unix://<your_podman_socket_location>
 ```
 
    </TabItem>

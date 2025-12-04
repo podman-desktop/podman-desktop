@@ -21,5 +21,5 @@ tags: [installing-the-kind-CLI, kind]
 1. You can run the `kind` CLI:
 
    ```shell-session
-   $ kind get clusters
+   kind get clusters
    ```

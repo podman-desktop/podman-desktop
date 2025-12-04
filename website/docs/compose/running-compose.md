@@ -19,7 +19,7 @@ With Podman Desktop, you can manage multi-container applications defined in a Co
 - Run the command in a terminal:
 
   ```shell-session
-  $ podman compose --file compose.yaml up --detach
+  podman compose --file compose.yaml up --detach
   ```
 
   <details>
@@ -32,7 +32,7 @@ With Podman Desktop, you can manage multi-container applications defined in a Co
   1. Run `docker-compose` rather than `podman compose`:
 
   ```shell-session
-  $ docker-compose --file compose.yaml up --detach
+  docker-compose --file compose.yaml up --detach
   ```
 
   </details>
@@ -45,7 +45,7 @@ With Podman Desktop, you can manage multi-container applications defined in a Co
   </summary>
 
   ```shell-session
-  $ podman compose --help
+  podman compose --help
   ```
 
   </details>

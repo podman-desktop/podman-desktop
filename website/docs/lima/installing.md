@@ -14,7 +14,7 @@ tags: [migrating-to-kubernetes, lima]
   See [Installing Lima](https://lima-vm.io/docs/installation/).
 
   ```shell-session
-  $ brew install lima
+  brew install lima
   ```
 
 #### Verification
@@ -22,13 +22,13 @@ tags: [migrating-to-kubernetes, lima]
 1. You can run the `limactl` CLI:
 
    ```shell-session
-   $ limactl list
+   limactl list
    ```
 
 1. (Optionally) To open a shell:
 
    ```shell-session
-   $ # requires a running instance
-   $ export LIMA_INSTANCE=<instance>
-   $ lima
+   # requires a running instance
+   export LIMA_INSTANCE=<instance>
+   lima
    ```

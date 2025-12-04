@@ -21,5 +21,5 @@ tags: [installing-the-minikube-CLI, minikube]
 1. You can run the `minikube` CLI:
 
    ```shell-session
-   $ minikube profile list
+   minikube profile list
    ```

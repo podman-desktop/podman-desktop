@@ -28,13 +28,13 @@ Alternatively, you can install Podman Desktop from:
 1. Verify the Flathub repository is enabled, and add it if required:
 
    ```shell-session
-   $ flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+   flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
    ```
 
 2. Install Podman Desktop from Flathub:
 
    ```shell-session
-   $ flatpak install --user flathub io.podman_desktop.PodmanDesktop
+   flatpak install --user flathub io.podman_desktop.PodmanDesktop
    ```
 
 #### Verification
@@ -42,7 +42,7 @@ Alternatively, you can install Podman Desktop from:
 - Open Podman Desktop from a terminal:
 
   ```shell-session
-  $ flatpak run io.podman_desktop.PodmanDesktop
+  flatpak run io.podman_desktop.PodmanDesktop
   ```
 
 #### Update
@@ -50,7 +50,7 @@ Alternatively, you can install Podman Desktop from:
 - Update Podman Desktop from Flathub:
 
   ```shell-session
-  $ flatpak update --user io.podman_desktop.PodmanDesktop
+  flatpak update --user io.podman_desktop.PodmanDesktop
   ```
 
 #### Additional resources

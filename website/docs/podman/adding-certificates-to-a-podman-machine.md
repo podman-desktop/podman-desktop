@@ -29,19 +29,19 @@ On Windows, the Podman commands use the CAs from the certificate store. For exam
 1. Start an interactive session with the default Podman machine:
 
 ```sh
-$ podman machine ssh <machine_name>
+podman machine ssh <machine_name>
 ```
 
 2. Optional: Switch to a root shell only if Podman runs in the default rootless mode:
 
 ```sh
-$ sudo su -
+sudo su -
 ```
 
 3. Change to the directory where the certificates must be placed:
 
 ```sh
-$ cd /etc/pki/ca-trust/source/anchors
+cd /etc/pki/ca-trust/source/anchors
 ```
 
 4. Perform one of the following steps:
@@ -49,7 +49,7 @@ $ cd /etc/pki/ca-trust/source/anchors
 - Use the `curl` command to download a certificate:
 
   ```sh
-  $ curl [-k] -o <my-certificate> https://<my-server.com/my-certificate>
+  curl [-k] -o <my-certificate> https://<my-server.com/my-certificate>
   ```
 
 - Use any editor, such as Notepad or Vim to create a certificate file with .crt, .cer, or .pem extension.
@@ -63,13 +63,13 @@ $ cd /etc/pki/ca-trust/source/anchors
 5. Add the certificate to the list of trusted certificates:
 
 ```sh
-$ update-ca-trust
+update-ca-trust
 ```
 
 6. Optional: Run the `exit` command to exit the root shell.
 
 ```sh
-$ exit
+exit
 ```
 
 7. Run the `exit` command to exit the Podman machine.
@@ -77,6 +77,6 @@ $ exit
 8. Optional: Reboot the Podman machine.
 
 ```sh
-$ podman machine stop <machine_name>
-$ podman machine start <machine_name>
+podman machine stop <machine_name>
+podman machine start <machine_name>
 ```

@@ -20,13 +20,13 @@ You can use the subscription manager package to install Podman Desktop on a Red 
 1. Open a terminal, and enable the RHEL extensions repository:
 
    ```sh
-   $ sudo subscription-manager repos --enable rhel-10-for-$(arch)-extensions-rpms
+   sudo subscription-manager repos --enable rhel-10-for-$(arch)-extensions-rpms
    ```
 
 1. Enter your password when prompted.
 1. Install Podman Desktop:
    ```sh
-   $ sudo dnf install podman-desktop
+   sudo dnf install podman-desktop
    ```
 1. Enter `y` to confirm that the installed size is okay.
 1. Enter `y` to import the GPG key and complete the installation.
