@@ -158,7 +158,8 @@ function key(network: NetworkInfoUI): string {
         columns={columns}
         row={row}
         key={key}
-        defaultSortColumn="Name">
+        defaultSortColumn="Name"
+        enableLayoutConfiguration={true}>
       </Table>
     {/if}
   </div>
