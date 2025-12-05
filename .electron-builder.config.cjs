@@ -75,7 +75,7 @@ async function addElectronFuses(context) {
  */
 async function packageRemoteExtensions() {
   const downloadScript = path.join('packages', 'main', 'dist', 'download-remote-extensions.cjs');
-  if(!fs.existsSync(downloadScript)) {
+  if (!fs.existsSync(downloadScript)) {
     console.warn(`${downloadScript} not found, skipping remote extension download`);
     return;
   }
@@ -83,11 +83,8 @@ async function packageRemoteExtensions() {
   const destination = path.resolve('./extensions-extra');
 
   return new Promise((resolve, reject) => {
-    execFile('node', [
-      downloadScript,
-      `--output=${destination}`,
-    ], (error, stdout, stderr) => {
-      if(error) {
+    execFile('node', [downloadScript, `--output=${destination}`], (error, stdout, stderr) => {
+      if (error) {
         reject(error);
       } else {
         resolve();
@@ -164,7 +161,12 @@ const config = {
   afterPack: async context => {
     await addElectronFuses(context);
   },
-  files: ['packages/**/dist/**', 'extensions-extra/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
+  files: [
+    'packages/**/dist/**',
+    'extensions-extra/**',
+    'extensions/**/builtin/*.cdix/**',
+    'packages/main/src/assets/**',
+  ],
   portable: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
   },
