@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
-import { formatCss, parse } from 'culori';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
@@ -27,6 +26,7 @@ import tailwindColorPalette from '../../../../tailwind-color-palette.json' with 
 import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
+import { ColorBuilder } from './color-builder.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
@@ -147,6 +147,45 @@ export class ColorRegistry {
     this.#themes.get('light')?.set(colorId, definition.light);
     this.#themes.get('dark')?.set(colorId, definition.dark);
     this.notifyUpdate();
+  }
+
+  /**
+   * Register a color using a built color definition that includes the id.
+   * This is a convenience method for use with the this.color() builder.
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('my-color').withLight('#ffffff', 0.5).withDark('#000000', 0.8).build()
+   * );
+   *
+   * @param definition - The color definition with id, light, and dark values
+   */
+  protected registerColorDefinition(definition: ColorDefinition & { id: string }): void {
+    this.registerColor(definition.id, {
+      light: definition.light,
+      dark: definition.dark,
+    });
+  }
+
+  /**
+   * Create a ColorBuilder for fluent color definition creation.
+   * Call build() on the result and pass it to registerColorDefinition().
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('my-color').withLight('#ffffff').withDark('#000000').build()
+   * );
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('transparent-color').withLight('#ffffff', 0.5).withDark('#000000', 0.8).build()
+   * );
+   *
+   * @param colorId - The unique color identifier
+   * @returns A ColorBuilder instance for method chaining
+   */
+  protected color(colorId: string): ColorBuilder {
+    return new ColorBuilder(colorId);
   }
 
   // check if the given theme is dark
@@ -918,10 +957,7 @@ export class ColorRegistry {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColor(`${link}-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.registerColorDefinition(this.color(`${link}-hover-bg`).withLight(black, 0.13).withDark(white, 0.13).build());
   }
 
   // button
@@ -1008,18 +1044,16 @@ export class ColorRegistry {
       dark: white,
       light: black,
     });
-    this.registerColor(`${button}close-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.registerColorDefinition(
+      this.color(`${button}close-hover-bg`).withLight(black, 0.13).withDark(white, 0.13).build(),
+    );
     this.registerColor(`${button}link-text`, {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColor(`${button}link-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.registerColorDefinition(
+      this.color(`${button}link-hover-bg`).withLight(black, 0.13).withDark(white, 0.13).build(),
+    );
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
@@ -1553,20 +1587,8 @@ export class ColorRegistry {
   }
 
   protected initCommon(): void {
-    const darkParsed = parse(stone[300]);
-    const lightParsed = parse(stone[600]);
-
-    if (!darkParsed || !lightParsed) {
-      throw new Error('Failed to parse stone palette colors');
-    }
-
-    darkParsed.alpha = 0.4;
-    lightParsed.alpha = 0.4;
-
-    this.registerColor(`item-disabled`, {
-      dark: formatCss(darkParsed),
-      light: formatCss(lightParsed),
-      // TODO: light HC + dark HC
-    });
+    this.registerColorDefinition(
+      this.color('item-disabled').withLight(stone[600], 0.4).withDark(stone[300], 0.4).build(),
+    );
   }
 }
