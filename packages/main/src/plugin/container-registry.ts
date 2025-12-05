@@ -1271,8 +1271,14 @@ export class ContainerProviderRegistry {
       // get image info to validate the image can be updated
       const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
 
+      // validate the image has tags
+      const repoTags = imageInfo.RepoTags;
+      if (!repoTags?.length) {
+        throw new Error('Image has no tags and cannot be updated');
+      }
+
       // validate the provided tag exists on this image
-      if (!imageInfo.RepoTags?.includes(tag)) {
+      if (!repoTags.includes(tag)) {
         throw new Error(`Tag '${tag}' not found on this image`);
       }
 
@@ -1282,7 +1288,7 @@ export class ContainerProviderRegistry {
       }
 
       // store whether the image originally had a single tag
-      const hadSingleTag = imageInfo.RepoTags?.length === 1;
+      const hadSingleTag = repoTags.length === 1;
 
       // check if this is an immutable tag (contains a SHA digest)
       if (tag.includes('@sha256:')) {
