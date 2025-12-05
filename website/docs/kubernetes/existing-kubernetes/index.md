@@ -26,7 +26,7 @@ You can also use the Kubernetes CLI to configure access to your Kubernetes clust
 1. Register your _`<my_kubernetes>`_ Kubernetes cluster:
 
    ```shell-session
-   $ kubectl config set-cluster <my_kubernetes> --server=<my_kubernetes_url>
+   kubectl config set-cluster <my_kubernetes> --server=<my_kubernetes_url>
    ```
 
 #### Verification

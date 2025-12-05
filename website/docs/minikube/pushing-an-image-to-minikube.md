@@ -29,7 +29,7 @@ With Podman Desktop, you can push an image to your local Minikube-powered Kubern
 Minikube enables you to list loaded images:
 
 ```command
-$ minikube image list
+minikube image list
 ```
 
 You can also create a pod that uses the loaded image:

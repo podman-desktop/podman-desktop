@@ -36,13 +36,13 @@ This can be installed by following the [official NVIDIA guide](https://docs.nvid
 SSH into the Podman Machine:
 
 ```sh
-$ podman machine ssh
+podman machine ssh
 ```
 
 Run the following commands **on the Podman Machine, not the host system**:
 
 ```sh
-$ curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
  tee /etc/yum.repos.d/nvidia-container-toolkit.repo && \
  yum install -y nvidia-container-toolkit && \
  nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml && \
@@ -62,7 +62,7 @@ To verify that containers created can access the GPU, you can use `nvidia-smi` f
 Run the following official NVIDIA container on your host machine:
 
 ```sh
-$ podman run --rm --device nvidia.com/gpu=all nvidia/cuda:11.0.3-base-ubuntu20.04 nvidia-smi
+podman run --rm --device nvidia.com/gpu=all nvidia/cuda:11.0.3-base-ubuntu20.04 nvidia-smi
 ```
 
 Example output:
@@ -161,13 +161,13 @@ RUN dnf -y install dnf-plugins-core && \
 3. Verify you can see the GPU by running a test container:
 
 ```sh
-$  podman run --rm -it --device /dev/dri --name gpu-info <gpu-container-image>  vulkaninfo | grep "GPU"
+ podman run --rm -it --device /dev/dri --name gpu-info <gpu-container-image>  vulkaninfo | grep "GPU"
 ```
 
 Example output:
 
 ```sh
-$  podman run --rm -it --device /dev/dri --name gpu-info quay.io/slopezpa/fedora-vgpu vulkaninfo | grep "GPU"
+ podman run --rm -it --device /dev/dri --name gpu-info quay.io/slopezpa/fedora-vgpu vulkaninfo | grep "GPU"
   GPU id = 0 (Virtio-GPU Venus (Apple M1 Pro))
   GPU id = 1 (llvmpipe (LLVM 17.0.6, 128 bits))
 GPU0:
@@ -203,13 +203,13 @@ Important note that the virtualized GPU (Virtio-GPU Venus (Apple M1 Pro)) only s
    Generate the CDI file:
 
    ```sh
-   $ nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+   nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
    ```
 
    Check the list of generated devices:
 
    ```sh
-   $ nvidia-ctk cdi list
+   nvidia-ctk cdi list
    ```
 
    More information as well as troubleshooting tips can be found [on the official NVIDIA CDI guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html).
@@ -221,14 +221,14 @@ Important note that the virtualized GPU (Virtio-GPU Venus (Apple M1 Pro)) only s
    Check whether SELinux is installed and enabled:
 
    ```sh
-   $ getenforce
+   getenforce
    ```
 
    - If `getenforce` is not found or its output is `Permissive` or `Disabled`, no action is needed.
    - If the output is `Enforcing`, configure SELinux to enable device access for containers:
 
      ```sh
-     $ sudo setsebool -P container_use_devices true
+     sudo setsebool -P container_use_devices true
      ```
 
 #### Verification
@@ -238,7 +238,7 @@ To verify that containers created can access the GPU, you can use `nvidia-smi` f
 Run the following official NVIDIA container on your host machine:
 
 ```sh
-$ podman run --rm --device nvidia.com/gpu=all nvidia/cuda:11.0.3-base-ubuntu20.04 nvidia-smi
+podman run --rm --device nvidia.com/gpu=all nvidia/cuda:11.0.3-base-ubuntu20.04 nvidia-smi
 ```
 
 #### Additional resources

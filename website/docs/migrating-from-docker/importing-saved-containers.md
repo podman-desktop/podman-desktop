@@ -23,14 +23,14 @@ Consider importing saved containers to continue using familiar containers.
     <TabItem value="podman" label="Podman">
 
   ```shell-session
-  $ podman save <your_container> > <your_container_archive>.tar
+  podman save <your_container> > <your_container_archive>.tar
   ```
 
     </TabItem>
     <TabItem value="docker" label="Docker">
 
   ```shell-session
-  $ docker export <your_container> -o <your_container_archive>.tar
+  docker export <your_container> -o <your_container_archive>.tar
   ```
 
     </TabItem>
@@ -42,7 +42,7 @@ Consider importing saved containers to continue using familiar containers.
   Run the command for each container archive:
 
   ```shell-session
-  $ podman import <your_container_archive>.tar
+  podman import <your_container_archive>.tar
   ```
 
 #### Verification

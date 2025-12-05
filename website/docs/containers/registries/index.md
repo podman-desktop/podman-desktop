@@ -90,7 +90,7 @@ If your registry has an insecure certificate, such as a self-signed certificate,
       - The configuration file is in the Podman machine: open a terminal in the Podman Machine.
 
       ```shell-session
-      $ podman machine ssh --username root [optional-machine-name]
+      podman machine ssh --username root [optional-machine-name]
       ```
 
       </TabItem>
@@ -98,7 +98,7 @@ If your registry has an insecure certificate, such as a self-signed certificate,
       - The configuration file is in the Podman machine: open a terminal in the Podman Machine.
 
       ```shell-session
-      $ podman machine ssh --username root [optional-machine-name]
+      podman machine ssh --username root [optional-machine-name]
       ```
 
       </TabItem>
@@ -106,7 +106,7 @@ If your registry has an insecure certificate, such as a self-signed certificate,
       - The configuration file is in your host: open a terminal with superuser privileges.
 
       ```shell-session
-      $ sudo su -
+      sudo su -
       ```
 
       </TabItem>
@@ -151,7 +151,7 @@ If your registry has an insecure certificate, such as a self-signed certificate,
    - Stop all Podman processes.
 
    ```shell-session
-   $ pkill podman
+   pkill podman
    ```
 
    </TabItem>
@@ -159,7 +159,7 @@ If your registry has an insecure certificate, such as a self-signed certificate,
    - Restart Podman.
 
    ```shell-session
-   $ sudo systemctl restart podman
+   sudo systemctl restart podman
    ```
 
    </TabItem>

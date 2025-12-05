@@ -64,7 +64,7 @@ Perform any of the following steps:
 - Run the following command to check the output returns the Podman version rather than the Docker version:
 
   ```shell-session
-  $ docker info --format=json | jq -r .ServerVersion
+  docker info --format=json | jq -r .ServerVersion
   ```
 
 - Run the `docker context list` command to check that the Docker CLI context is set to the default value `npipe:////./pipe/docker_engine`.
@@ -94,7 +94,7 @@ Perform any of the following steps:
 - Check whether the Docker socket is a symbolic link for the Podman socket:
 
   ```shell-session
-  $ ls -la /var/run/docker.sock
+  ls -la /var/run/docker.sock
   ```
 
   The output points to a `podman.sock` file, as shown below:
@@ -106,7 +106,7 @@ Perform any of the following steps:
 - Run the following command to check the output returns the Podman version rather than the Docker version:
 
   ```shell-session
-  $ curl -s --unix-socket /var/run/docker.sock "http://v1.41/info"  | jq -r .ServerVersion
+  curl -s --unix-socket /var/run/docker.sock "http://v1.41/info"  | jq -r .ServerVersion
   ```
 
 - Run the `docker context list` command to check that the Docker CLI context is set to `unix:///var/run/docker.sock`.
@@ -127,7 +127,7 @@ Perform any of the following steps:
 - Run the following command to check the output returns the Podman version rather than the Docker version:
 
   ```shell-session
-  $ docker info --format=json | jq -r .ServerVersion
+  docker info --format=json | jq -r .ServerVersion
   ```
 
 - Run the `docker context list` command to check that the Docker CLI context is set to the default value `unix:///var/run/docker.sock`.
@@ -155,7 +155,7 @@ Perform any of the following steps:
 - Run the following command to check the output returns the Docker version rather than the Podman version:
 
   ```shell-session
-  $ docker info --format=json | jq -r .ServerVersion
+  docker info --format=json | jq -r .ServerVersion
   ```
 
 </TabItem>
@@ -178,7 +178,7 @@ Perform any of the following steps:
 - Check that the Docker socket is not a symbolic link for the Podman socket:
 
   ```shell-session
-  $ ls -la /var/run/docker.sock
+  ls -la /var/run/docker.sock
   ```
 
   The output returns the following:
@@ -190,7 +190,7 @@ Perform any of the following steps:
 - Run the following command to check the output returns the Docker version rather than the Podman version:
 
   ```shell-session
-  $ curl -s --unix-socket /var/run/docker.sock "http://v1.41/info"  | jq -r .ServerVersion
+  curl -s --unix-socket /var/run/docker.sock "http://v1.41/info"  | jq -r .ServerVersion
   ```
 
 </TabItem>
@@ -207,7 +207,7 @@ Perform any of the following steps:
 - Run the following command to check the output returns the Docker version rather than the Podman version:
 
   ```shell-session
-  $ docker info --format=json | jq -r .ServerVersion
+  docker info --format=json | jq -r .ServerVersion
   ```
 
 </TabItem>

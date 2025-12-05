@@ -50,7 +50,7 @@ With Podman Desktop and the OpenShift Local extension, you can manage your OpenS
    1. To configure your system, run the command:
 
    ```shell-session
-   $ crc setup
+   crc setup
    ```
 
    1. Exit and restart Podman Desktop.

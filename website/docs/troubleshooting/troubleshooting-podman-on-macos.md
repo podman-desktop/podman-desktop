@@ -96,8 +96,8 @@ Then run a terminal in native mode (default) and install Podman machine `brew in
 Finally clean the Podman machine VMs that had been previously created, and create new ones.
 
 ```shell-session
-$ podman machine rm podman-machine-default
-$ podman machine init
+podman machine rm podman-machine-default
+podman machine init
 ```
 
 You should be a happy camper from here.
@@ -111,7 +111,7 @@ After a failed start, the Podman machine might be unable to start because a QEMU
 1. Kill the remaining QEMU process and stop the Podman machine:
 
    ```shell-session
-   $ ps -edf | grep qemu-system | grep -v grep | awk '{print $2}' | xargs -I{} kill -9 {}; podman machine stop
+   ps -edf | grep qemu-system | grep -v grep | awk '{print $2}' | xargs -I{} kill -9 {}; podman machine stop
    ```
 
 2. Start the Podman machine.
@@ -137,15 +137,15 @@ Keep your brew-based installation and apply one of these workarounds:
 - Rollback the QEMU brew package to v8.0.3.
 
   ```shell-session
-  $ brew uninstall qemu
-  $ curl -OSL https://raw.githubusercontent.com/Homebrew/homebrew-core/dc0669eca9479e9eeb495397ba3a7480aaa45c2e/Formula/qemu.rb
-  $ brew install ./qemu.rb
+  brew uninstall qemu
+  curl -OSL https://raw.githubusercontent.com/Homebrew/homebrew-core/dc0669eca9479e9eeb495397ba3a7480aaa45c2e/Formula/qemu.rb
+  brew install ./qemu.rb
   ```
 
 - Alternatively, sign the QEMU brew binary locally:
 
   ```shell-session
-  $ cat >entitlements.xml <<EOF
+  cat >entitlements.xml <<EOF
   <?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
@@ -155,7 +155,7 @@ Keep your brew-based installation and apply one of these workarounds:
   </dict>
   </plist>
   EOF
-  $ codesign --sign - --entitlements entitlements.xml --force /usr/local/bin/qemu-system-$(uname -m | sed -e s/arm64/aarch64/)
+  codesign --sign - --entitlements entitlements.xml --force /usr/local/bin/qemu-system-$(uname -m | sed -e s/arm64/aarch64/)
   ```
 
 #### Additional resources
@@ -181,42 +181,42 @@ For M3 processors:
    1. Remove eventual installation from podman/podman desktop installer:
 
       ```shell-session
-      $ sudo rm -rf opt/podman
+      sudo rm -rf opt/podman
       ```
 
    1. Remove brew installations:
 
       ```shell-session
-      $ brew uninstall podman-desktop
-      $ brew uninstall podman
-      $ brew uninstall qemu
+      brew uninstall podman-desktop
+      brew uninstall podman
+      brew uninstall qemu
       ```
 
    1. Remove Podman files:
 
       ```shell-session
-      $ rm -rf ~/.ssh/podman-machine-default
-      $ rm -rf ~/.ssh/podman-machine-default.pub
-      $ rm -rf ~/.local/share/containers
-      $ rm -rf ~/.config/containers
+      rm -rf ~/.ssh/podman-machine-default
+      rm -rf ~/.ssh/podman-machine-default.pub
+      rm -rf ~/.local/share/containers
+      rm -rf ~/.config/containers
       ```
 
 1. Reinstall Podman using brew:
 
    ```shell-session
-   $ brew install podman
+   brew install podman
    ```
 
 1. Install bunzip2:
 
    ```shell-session
-   $ brew install bzip2
+   brew install bzip2
    ```
 
 1. Install QEMU 8.2.0 to `/opt/homebrew/Cellar/qemu/8.2.0`:
 
    ```shell-session
-   $ curl -sL https://github.com/AkihiroSuda/qemu/raw/704f7cad5105246822686f65765ab92045f71a3b/pc-bios/edk2-aarch64-code.fd.bz2 | bunzip2 > /opt/homebrew/Cellar/qemu/8.2.0/share/qemu/edk2-aarch64-code.fd
+   curl -sL https://github.com/AkihiroSuda/qemu/raw/704f7cad5105246822686f65765ab92045f71a3b/pc-bios/edk2-aarch64-code.fd.bz2 | bunzip2 > /opt/homebrew/Cellar/qemu/8.2.0/share/qemu/edk2-aarch64-code.fd
    ```
 
 1. Install patched EDK2.
@@ -227,14 +227,14 @@ For M3 processors:
 1. Find QEMU configuration directory to define _`qemu-config-directory`_ in next step:
 
    ```shell-session
-   $ podman machine info | grep MachineConfigDir
+   podman machine info | grep MachineConfigDir
 
    ```
 
 1. Update podman machine config json:
 
    ```shell-session
-   $ sed -i 's@file=.\*edk2-aarch64-code.fd@file=/path/to/downloaded/edk2-aarch64-code.fd@g' qemu-config-directory/podman-machine-default.json
+   sed -i 's@file=.\*edk2-aarch64-code.fd@file=/path/to/downloaded/edk2-aarch64-code.fd@g' qemu-config-directory/podman-machine-default.json
    ```
 
 1. Start Podman machine.
@@ -250,14 +250,14 @@ When you create a Podman machine with the `GPU enabled (LibKrun)` provider type,
 **_Podman machine is not listed_**
 
 ```shell-session
-$ podman machine list
+podman machine list
 NAME        VM TYPE     CREATED     LAST UP     CPUS        MEMORY      DISK SIZE
 ```
 
 **_Error: interacting with the default Podman machine_**
 
 ```shell-session
-$ podman machine ssh
+podman machine ssh
 Error: vm podman-machine-default not found: podman-machine-default: VM does not exist
 ```
 
@@ -282,18 +282,18 @@ With Podman Desktop 1.16, the log files are automatically cleaned at the restart
 Check the size of the Podman Desktop log files to troubleshoot:
 
 ```sh
-$ ls -la ~/Library/Logs/Podman\ Desktop/*.log
+ls -la ~/Library/Logs/Podman\ Desktop/*.log
 ```
 
 With Podman Desktop 1.16.0 or later versions, your computer might require a restart to truncate the Podman Desktop log files.
 To avoid restarting your computer, run these commands one by one:
 
 ```shell-session
-$ launchctl unload  ~/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist
+launchctl unload  ~/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist
 ```
 
 ```shell-session
-$ launchctl load  ~/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist
+launchctl load  ~/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist
 ```
 
 ## Unable to upgrade Podman Desktop to the latest version using Homebrew
@@ -305,7 +305,7 @@ When you use Homebrew to upgrade to the latest version of Podman Desktop, you mi
 To resolve the error, use the `--greedy` flag with the `upgrade` command:
 
 ```sh
-$ brew upgrade --greedy podman-desktop
+brew upgrade --greedy podman-desktop
 ```
 
 The `--greedy` flag instructs Homebrew to check and upgrade casks marked with `:latest` versions. This ensures self-updating applications, such as Podman Desktop, are included in the upgrade process if a newer cask version exists.

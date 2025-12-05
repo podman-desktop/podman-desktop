@@ -17,13 +17,13 @@ For more information on yq, see the yq [documentation](https://mikefarah.gitbook
 - To create a new instance:
 
   ```shell-session
-  $ limactl create <instance>
+  limactl create <instance>
   ```
 
 - To edit an existing instance:
 
   ```shell-session
-  $ limactl edit <instance>
+  limactl edit <instance>
   ```
 
 Some of the things you can edit:

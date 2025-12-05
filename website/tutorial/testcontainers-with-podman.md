@@ -27,7 +27,7 @@ Thanks to the container technology, you can obtain fresh, clean instances withou
 Before we start, you need to have installed [Podman](https://podman.io/) and run it in socket listening:
 
 ```shell
-$ podman system service --time=0 &
+ podman system service --time=0 &
 ```
 
 Set Testcontainers runtime to Podman by using one of the following options:
@@ -44,7 +44,7 @@ Set Testcontainers runtime to Podman by using one of the following options:
     Run the following command after configuration:
 
     ```bash
-    $ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+    export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
     ```
 
   - Linux:
@@ -62,7 +62,7 @@ Set Testcontainers runtime to Podman by using one of the following options:
 > **_OPTIONAL:_** If you are running Podman in rootless mode, you must disable Ryuk by defining this environment variable:
 >
 > ```bash
-> $ export TESTCONTAINERS_RYUK_DISABLED=true
+> export TESTCONTAINERS_RYUK_DISABLED=true
 > ```
 
 ## Creating a project
@@ -72,13 +72,13 @@ This example uses the Redis service and Redis module from Testcontainers. You ca
 1. Initialize a project.
 
    ```bash
-   $ npm init -y
+   npm init -y
    ```
 
 2. Installing dependencies.
 
    ```bash
-   $ npm install testcontainers vitest @testcontainers/redis redis typescript --save-dev
+   npm install testcontainers vitest @testcontainers/redis redis typescript --save-dev
    ```
 
 3. Update `package.json` file.
@@ -204,7 +204,7 @@ This example uses the Redis service and Redis module from Testcontainers. You ca
 When running Testcontainers for the first time, ensure that you run your tests in `DEBUG` mode by using this command:
 
 ```bash
-$ DEBUG=testcontainers* npm test
+DEBUG=testcontainers* npm test
 ```
 
 Then, you should be able to see lines similar to the ones below:

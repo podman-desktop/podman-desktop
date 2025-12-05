@@ -54,13 +54,13 @@ To enable users to install your extension from the catalog, push your extension 
 1. Build an image:
 
    ```shell-session
-   $ podman build -t quay.io/username/my-extension .
+   podman build -t quay.io/username/my-extension .
    ```
 
 1. Push the image and manifest to the OCI image registry:
 
    ```shell-session
-   $ podman push quay.io/username/my-extension
+   podman push quay.io/username/my-extension
    ```
 
 #### Adding platform-specific files

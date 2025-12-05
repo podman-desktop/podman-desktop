@@ -30,7 +30,7 @@ After each step, quit and restart Podman Desktop to ensure that it can detect yo
 1. In a terminal, verify you can access the Podman CLI, and verify the version.
 
    ```shell-session
-   $ podman version
+   podman version
    ```
 
 1. Update Podman to the latest stable version by using your installation method.
@@ -51,7 +51,7 @@ Podman Desktop might fail creating a Podman machine.
 1. In a terminal, create the Podman machine with the Podman CLI:
 
    ```shell-session
-   $ podman machine init
+   podman machine init
    ```
 
 1. If the creation fails, read the logs carefully to continue troubleshooting.
@@ -67,7 +67,7 @@ Podman Desktop might fail starting a Podman machine. On the **Settings > Resourc
 1. In a terminal, start the Podman machine with the Podman CLI:
 
    ```shell-session
-   $ podman machine start
+   podman machine start
    ```
 
 1. If the start fails, read the logs carefully to continue troubleshooting.
@@ -87,13 +87,13 @@ Podman Desktop might fail listing images or container.
 1. On Windows and macOS: In a terminal, verify that at least one Podman machine is running:
 
    ```shell-session
-   $ podman machine list
+   podman machine list
    ```
 
 1. To verify that you can connect using the CLI, open a terminal and run the `hello` container:
 
    ```shell-session
-   $ podman run quay.io/podman/hello
+   podman run quay.io/podman/hello
    ```
 
 ## Podman Desktop fails listing containers
@@ -110,23 +110,23 @@ Podman Desktop might display "No containers" on the Containers page, even if act
 1. In a terminal, restart the Podman machine:
 
    ```shell-session
-   $ podman machine stop
-   $ podman machine start
+   podman machine stop
+   podman machine start
    ```
 
 1. If the previous step did not work for you, delete your Podman machine, and create a new one:
 
    ```shell-session
-   $ podman machine rm
-   $ podman machine init
+   podman machine rm
+   podman machine init
    ```
 
 1. If the previous steps did not work for you, delete your Podman configuration files, and create a new Podman machine:
 
    ```shell-session
-   $ rm -rf ~/.local/share/containers/podman
-   $ rm -rf ~/.config/containers/
-   $ podman machine init
+   rm -rf ~/.local/share/containers/podman
+   rm -rf ~/.config/containers/
+   podman machine init
    ```
 
 ## Podman Desktop is failing to display the images or containers from a rootful Podman machine
@@ -140,7 +140,7 @@ Podman Desktop might then reconnect in rootless mode, and fail to display the im
 1. Verify that the Podman default connection is the rootful connection to your Podman machine:
 
    ```shell-session
-   $ podman system connection ls
+   podman system connection ls
    ```
 
    The default connection has `true` at the end of the line.
@@ -168,20 +168,20 @@ Podman Desktop might then reconnect in rootless mode, and fail to display the im
 1. Set the Podman machine in rootful mode:
 
    ```shell-session
-   $ podman machine set --rootful
+   podman machine set --rootful
    ```
 
 1. Restart the Podman machine:
 
    ```shell-session
-   $ podman machine stop
-   $ podman machine start
+   podman machine stop
+   podman machine start
    ```
 
 1. Verify that Podman default connection points to the rootful connection:
 
    ```shell-session
-   $ podman system connection ls
+   podman system connection ls
    ```
 
    Continue with the next steps only if the default connection is not the rootful connection to your Podman machine.
@@ -189,14 +189,14 @@ Podman Desktop might then reconnect in rootless mode, and fail to display the im
 1. Set the Podman machine, such as `podman-machine-default` in rootful mode:
 
    ```shell-session
-   $ podman system connection default podman-machine-default-root
+   podman system connection default podman-machine-default-root
    ```
 
 1. Restart the Podman machine:
 
    ```shell-session
-   $ podman machine stop
-   $ podman machine start
+   podman machine stop
+   podman machine start
    ```
 
 #### Verification
@@ -204,7 +204,7 @@ Podman Desktop might then reconnect in rootless mode, and fail to display the im
 1. The Podman default connection is the rootful connection to your Podman machine:
 
    ```shell-session
-   $ podman system connection ls
+   podman system connection ls
    ```
 
 ## Warning about Docker compatibility mode
@@ -228,7 +228,7 @@ This might appear when either:
 2. On macOS, Run the `podman-mac-helper` binary:
 
    ```shell-session
-   $ sudo podman-mac-helper install
+   sudo podman-mac-helper install
    ```
 
 3. Restart the Podman machine to recreate and activate the default Docker socket path.

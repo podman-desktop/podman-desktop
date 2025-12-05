@@ -27,7 +27,7 @@ In foldable details, you can find alternative steps for least common contexts:
 1. Start a session in your WSL distribution:
 
    ```shell-session
-   > wsl --distribution your-distribution-name
+   wsl --distribution your-distribution-name
    ```
 
 1. To communicate with the remote Podman Machine, you need a Podman client.
@@ -43,15 +43,15 @@ In foldable details, you can find alternative steps for least common contexts:
    Download and unpack the binary:
 
    ```shell-session
-   $ wget https://github.com/containers/podman/releases/download/v4.9.1/podman-remote-static-linux_amd64.tar.gz
-   $ sudo tar -C /usr/local -xzf podman-remote-static-linux_amd64.tar.gz
+   wget https://github.com/containers/podman/releases/download/v4.9.1/podman-remote-static-linux_amd64.tar.gz
+   sudo tar -C /usr/local -xzf podman-remote-static-linux_amd64.tar.gz
    ```
 
    Make this executable as `podman` with the following addition to `.bashrc`:
 
    ```shell-session
-   $ export PATH="$PATH:/usr/local/bin"
-   $ alias podman='podman-remote-static-linux_amd64'
+   export PATH="$PATH:/usr/local/bin"
+   alias podman='podman-remote-static-linux_amd64'
    ```
 
 1. Configure the Podman client in your WSL distribution to communicate with the remote Podman machine defined by Podman Desktop.
@@ -61,7 +61,7 @@ In foldable details, you can find alternative steps for least common contexts:
    Set the default Podman system connection to your Podman Machine (assuming Podman Desktop is configured with the default of Podman Machine enabled with root privileges):
 
    ```shell-session
-   $ podman system connection add --default podman-machine-default-root unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
+   podman system connection add --default podman-machine-default-root unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
    ```
 
    <details>
@@ -84,7 +84,7 @@ In foldable details, you can find alternative steps for least common contexts:
    In your WSL session, list the available sockets:
 
    ```shell-session
-   $ find /mnt/wsl/podman-sockets/ -name '*.sock'
+   find /mnt/wsl/podman-sockets/ -name '*.sock'
    ```
 
    Each Podman Machine has a socket for:
@@ -108,7 +108,7 @@ In foldable details, you can find alternative steps for least common contexts:
       Open a new Command Prompt, and list your Podman system connections:
 
       ```shell-session
-      > podman system connection list
+      podman system connection list
       ```
 
       The default connection line ends with `true`.
@@ -142,8 +142,8 @@ In foldable details, you can find alternative steps for least common contexts:
    To give access to the remote Podman machine to your user: create the group if necessary, assign group membership, and exit your session on the WSL distribution to apply the new group membership:
 
    ```shell-session
-   $ sudo usermod --append --groups 10 $(whoami)
-   $ exit
+   sudo usermod --append --groups 10 $(whoami)
+   exit
    ```
 
 ## Testing the connection
@@ -153,13 +153,13 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
 1. Start a session in your WSL distribution:
 
    ```shell-session
-   > wsl
+   wsl
    ```
 
 1. Verify that your user is member of the group delivering access to the remote Podman Machine socket:
 
    ```shell-session
-   $ groups
+   groups
    ```
 
    On the default Ubuntu WSL, the list contains the `uucp` group.
@@ -187,13 +187,13 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
    - Rootful Podman:
 
      ```shell-session
-     $ getent group 10
+     getent group 10
      ```
 
    - Rootless Podman:
 
      ```shell-session
-     $ getent group 1000
+     getent group 1000
      ```
 
    </div>
@@ -202,13 +202,13 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
 1. Verify that Podman default system connections is set to your remote Podman machine:
 
    ```shell-session
-   $ podman system connection list
+   podman system connection list
    ```
 
 1. Verify that Podman has a `Server` version corresponding to your Podman Machine version:
 
    ```shell-session
-   $ podman version
+   podman version
    ```
 
    Sample output:
@@ -240,8 +240,8 @@ Verify that, on your WSL distribution, the Podman CLI communicates with your Pod
    On your WSL distribution, start a container such as `quay.io/podman/hello`, and list the name of the last running container:
 
    ```shell-session
-   $ podman run quay.io/podman/hello
-   $ podman ps -a --no-trunc --last 1
+   podman run quay.io/podman/hello
+   podman ps -a --no-trunc --last 1
    ```
 
    On **Podman Desktop > Containers**, the output lists the same container (same name, same image).
@@ -256,26 +256,26 @@ To change the active connection:
    - To set the connection to rootless:
 
      ```shell-session
-     $ podman machine set --rootful=false
+     podman machine set --rootful=false
      ```
 
    - To set the connection to rootful:
 
      ```shell-session
-     $ podman machine set --rootful=true
+     podman machine set --rootful=true
      ```
 
 1. In your WSL session, Change the Podman system connection configuration:
    - To set the connection to rootless:
 
      ```shell-session
-     $ podman system connection add --default podman-machine-default-user unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
+     podman system connection add --default podman-machine-default-user unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-user.sock
      ```
 
    - To set the connection to rootful:
 
      ```shell-session
-     $ podman system connection add --default podman-machine-default-root unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
+     podman system connection add --default podman-machine-default-root unix:///mnt/wsl/podman-sockets/podman-machine-default/podman-root.sock
      ```
 
 ## Next steps

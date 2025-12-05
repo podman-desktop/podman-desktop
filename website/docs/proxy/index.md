@@ -168,20 +168,20 @@ Requirements:
    2. Copy the certificate to the Podman machine:
 
    ```shell-session
-   $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
+   cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
    ```
 
    3. Open a shell prompt on the Podman machine:
 
       ```shell-session
-      $ podman machine ssh
+      podman machine ssh
       ```
 
    4. Add the custom Certificate Authorities (CA) for your proxy:
 
       ```shell-session
-      $ sudo cp <proxy_ca.pem> /etc/pki/ca-trust/source/anchors/
-      $ sudo update-ca-trust
+      sudo cp <proxy_ca.pem> /etc/pki/ca-trust/source/anchors/
+      sudo update-ca-trust
       ```
 
    </div>
@@ -197,7 +197,7 @@ Requirements:
    1. Open a shell prompt on the Podman machine:
 
    ```shell-session
-   $ podman machine ssh
+   podman machine ssh
    ```
 
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
@@ -242,20 +242,20 @@ Requirements:
    2. Copy the certificate to the Podman machine:
 
    ```shell-session
-   $ cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
+   cat proxy_ca.pem | podman machine ssh podman-machine-default "cat > proxy_ca.pem"
    ```
 
    3. Open a shell prompt on the Podman machine:
 
       ```shell-session
-      $ podman machine ssh
+      podman machine ssh
       ```
 
    4. Add the custom Certificate Authorities (CA) for your proxy:
 
       ```shell-session
-      $ sudo cp <proxy_ca.pem> /etc/pki/ca-trust/source/anchors/
-      $ sudo update-ca-trust
+      sudo cp <proxy_ca.pem> /etc/pki/ca-trust/source/anchors/
+      sudo update-ca-trust
       ```
 
    </div>
@@ -271,7 +271,7 @@ Requirements:
    1. Open a shell prompt on the Podman machine:
 
    ```shell-session
-   $ podman machine ssh
+   podman machine ssh
    ```
 
    2. Edit the `containers.conf` file to pass the proxy environment variables to Podman CLI.
@@ -318,14 +318,14 @@ Configure Podman:
 1. Add the custom Certificate Authorities (CA) for your proxy:
 
    ```shell-session
-   $ sudo cp <proxy_ca.pem> /etc/pki/ca-trust/source/anchors/
-   $ sudo update-ca-trust
+   sudo cp <proxy_ca.pem> /etc/pki/ca-trust/source/anchors/
+   sudo update-ca-trust
    ```
 
 1. Restart all `podman` processes.
 
    ```shell-session
-   $ pkill podman
+   pkill podman
    ```
 
 </TabItem>

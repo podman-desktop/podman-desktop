@@ -19,7 +19,7 @@ You might get this error message `Failed to create minikube cluster. E0125 05:58
 1. Run the following command to delete the Minikube cluster.
 
    ```shell-session
-   $ minikube delete
+   minikube delete
    ```
 
 2. Create a new [Minikube cluster](/docs/minikube/installing-extension) using the Podman Desktop UI.
