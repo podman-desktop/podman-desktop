@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ProxyTypes } from '../model/core/types';
-import { ProxyPage } from '../model/pages/proxy-page';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { ProxyTypes } from '/@/model/core/types';
+import { ProxyPage } from '/@/model/pages/proxy-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const invalidProxyUrl = 'invalid-proxy-url';
 const httpProxyUrl = 'http://http.proxy:8080';

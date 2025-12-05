@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import type { SettingsBar } from '../model/pages/settings-bar';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { isLinux, isMac } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import type { SettingsBar } from '/@/model/pages/settings-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isLinux, isMac } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 let settingsBar: SettingsBar;
 let cliToolsPage: CLIToolsPage;

@@ -24,8 +24,8 @@ import { _electron as electron, test } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
 import { isLinux } from '/@/utility/platform';
+import { waitWhile } from '/@/utility/wait';
 
-import { waitWhile } from '../utility/wait';
 import { RunnerOptions } from './runner-options';
 
 type WindowState = {
@@ -131,17 +131,17 @@ export class Runner {
   public getPage(): Page {
     if (this._page) {
       return this._page;
-    } else {
-      throw Error('Application was not started yet');
     }
+
+    throw Error('Application was not started yet');
   }
 
   public getElectronApp(): ElectronApplication {
     if (this._app) {
       return this._app;
-    } else {
-      throw Error('Application was not started yet');
     }
+
+    throw Error('Application was not started yet');
   }
 
   public async getBrowserWindow(): Promise<JSHandle<BrowserWindow>> {
@@ -197,11 +197,11 @@ export class Runner {
       await video.saveAs(path);
       await video.delete();
     } else {
-      console.log(`Video file associated was not found`);
+      console.log('Video file associated was not found');
     }
   }
 
-  public async close(timeout: number = 30_000): Promise<void> {
+  public async close(timeout = 30_000): Promise<void> {
     // Stop playwright tracing
     await this.stopTracing();
 
@@ -219,7 +219,7 @@ export class Runner {
         ]);
       } catch (err: unknown) {
         console.log(`Caught exception in closing: ${err}`);
-        console.log(`Trying to kill the electron app process`);
+        console.log('Trying to kill the electron app process');
         if (pid) {
           console.log(`Killing the electron app process with PID: ${pid}`);
           try {

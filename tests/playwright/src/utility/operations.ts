@@ -22,21 +22,21 @@ import * as os from 'node:os';
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ResourceElementState } from '../model/core/states';
-import type { PodmanVirtualizationProviders } from '../model/core/types';
-import { matchesProviderVariant, PodmanMachinePrivileges } from '../model/core/types';
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import { ExperimentalPage } from '../model/pages/experimental-page';
-import { PreferencesPage } from '../model/pages/preferences-page';
-import { RegistriesPage } from '../model/pages/registries-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { VolumeDetailsPage } from '../model/pages/volume-details-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { isLinux, isMac, isWindows } from './platform';
-import { waitUntil, waitWhile } from './wait';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementState } from '/@/model/core/states';
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
+import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
+import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import { ExperimentalPage } from '/@/model/pages/experimental-page';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { VolumeDetailsPage } from '/@/model/pages/volume-details-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
+import { waitUntil, waitWhile } from '/@/utility/wait';
 
 /**
  * Stop and delete container defined by its name

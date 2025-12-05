@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { PreferencesPage } from '../model/pages/preferences-page';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const preferencesTestString = 'this text should persist through page change';
 

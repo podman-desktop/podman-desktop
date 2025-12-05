@@ -15,9 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { expect as playExpect, test } from '../../utility/fixtures';
-import { isLinux } from '../../utility/platform';
-import { waitForPodmanMachineStartup } from '../../utility/wait';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isLinux } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
 console.log(`numberOfObjects => ${numberOfObjects}`);

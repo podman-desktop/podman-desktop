@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ExtensionState } from '../model/core/states';
-import type { DashboardPage } from '../model/pages/dashboard-page';
-import type { ExtensionDetailsPage } from '../model/pages/extension-details-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { ExtensionState } from '/@/model/core/states';
+import type { DashboardPage } from '/@/model/pages/dashboard-page';
+import type { ExtensionDetailsPage } from '/@/model/pages/extension-details-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const extensionsToTest = [
   {

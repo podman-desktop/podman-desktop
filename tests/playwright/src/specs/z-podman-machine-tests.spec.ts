@@ -18,14 +18,14 @@
 
 import type { Locator, Page } from '@playwright/test';
 
-import { ResourceElementState } from '../model/core/states';
-import { PodmanMachinePrivileges } from '../model/core/types';
-import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
-import { PodmanOnboardingPage } from '../model/pages/podman-onboarding-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import type { NavigationBar } from '../model/workbench/navigation';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { ResourceElementState } from '/@/model/core/states';
+import { PodmanMachinePrivileges } from '/@/model/core/types';
+import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
+import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import type { NavigationBar } from '/@/model/workbench/navigation';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
@@ -33,10 +33,10 @@ import {
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
-} from '../utility/operations';
-import { isLinux } from '../utility/platform';
-import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+} from '/@/utility/operations';
+import { isLinux } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const DEFAULT_PODMAN_MACHINE = 'Podman Machine';
 const DEFAULT_PODMAN_MACHINE_VISIBLE = 'podman-machine-default';

@@ -21,17 +21,17 @@ import { fileURLToPath } from 'node:url';
 
 import type { Page } from '@playwright/test';
 
-import { ArchitectureType } from '../model/core/platforms';
-import type { ImagesPage } from '../model/pages/images-page';
-import { RegistriesPage } from '../model/pages/registries-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { NavigationBar } from '../model/workbench/navigation';
-import { canTestRegistry, setupRegistry } from '../setupFiles/setup-registry';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { isWindows } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ArchitectureType } from '/@/model/core/platforms';
+import type { ImagesPage } from '/@/model/pages/images-page';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isWindows } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
 const imageNameSimple: string = 'manifest-test-simple';

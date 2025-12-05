@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { TroubleshootingPage } from '../model/pages/troubleshooting-page';
-import { StatusBar } from '../model/workbench/status-bar';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { TroubleshootingPage } from '/@/model/pages/troubleshooting-page';
+import { StatusBar } from '/@/model/workbench/status-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('troubleshooting-e2e');
@@ -53,7 +53,7 @@ test.describe.serial('Troubleshooting page verification', { tag: '@smoke' }, () 
   test('Content of the application Log', async () => {
     await troubleshootingPage.openLogs();
     const logs = await troubleshootingPage.getLogs();
-    for (const logEntry in [
+    for (const logEntry of [
       /System ready. Loading extensions/,
       /PluginSystem: received dom-ready event from the UI/,
       /Delayed startup, flushing/,

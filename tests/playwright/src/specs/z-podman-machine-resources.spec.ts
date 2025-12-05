@@ -18,13 +18,13 @@
 
 import type { Locator, Page } from '@playwright/test';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ResourceElementState } from '../model/core/states';
-import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '../model/core/types';
-import { CreateMachinePage } from '../model/pages/create-machine-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementState } from '/@/model/core/states';
+import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model/core/types';
+import { CreateMachinePage } from '/@/model/pages/create-machine-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
@@ -32,10 +32,10 @@ import {
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
-} from '../utility/operations';
-import { isLinux, isWindows } from '../utility/platform';
-import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
-import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
+} from '/@/utility/operations';
+import { isLinux, isWindows } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
+import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
 const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
 const RESOURCE_NAME = 'podman';

@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ResourceElementState } from '../model/core/states';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '../utility/operations';
-import { isLinux } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ResourceElementState } from '/@/model/core/states';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { createPodmanMachineFromCLI, deletePodmanMachine, resetPodmanMachinesFromCLI } from '/@/utility/operations';
+import { isLinux } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const PODMAN_MACHINE_NAME: string = 'podman-machine-default';
 

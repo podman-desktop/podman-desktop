@@ -19,23 +19,22 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
-import { isWindows } from '/@/utility/platform';
-
 import {
   bootcExtension,
   extensionsInstallationSmokeList,
   imageLayersExplorerExtension,
   openshiftDockerExtension,
   podmanQuadletExtension,
-} from '../model/core/extensions';
-import { ExtensionState } from '../model/core/states';
-import { ExtensionCatalogCardPage } from '../model/pages/extension-catalog-card-page';
-import { ExtensionsPage } from '../model/pages/extensions-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { WelcomePage } from '../model/pages/welcome-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { Runner } from '../runner/podman-desktop-runner';
+} from '/@/model/core/extensions';
+import { ExtensionState } from '/@/model/core/states';
+import { ExtensionCatalogCardPage } from '/@/model/pages/extension-catalog-card-page';
+import { ExtensionsPage } from '/@/model/pages/extensions-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { WelcomePage } from '/@/model/pages/welcome-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { Runner } from '/@/runner/podman-desktop-runner';
+import { isWindows } from '/@/utility/platform';
 
 let pdRunner: Runner;
 let page: Page;

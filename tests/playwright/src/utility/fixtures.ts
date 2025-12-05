@@ -19,11 +19,11 @@
 import type { Page } from '@playwright/test';
 import { test as base } from '@playwright/test';
 
-import { WelcomePage } from '../model/pages/welcome-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { StatusBar } from '../model/workbench/status-bar';
-import { Runner } from '../runner/podman-desktop-runner';
-import { RunnerOptions } from '../runner/runner-options';
+import { WelcomePage } from '/@/model/pages/welcome-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { StatusBar } from '/@/model/workbench/status-bar';
+import { Runner } from '/@/runner/podman-desktop-runner';
+import { RunnerOptions } from '/@/runner/runner-options';
 
 export type TestFixtures = {
   runner: Runner;

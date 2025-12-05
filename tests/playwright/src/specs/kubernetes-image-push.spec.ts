@@ -19,18 +19,18 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { KubernetesResourceState } from '../model/core/states';
-import { KubernetesResources } from '../model/core/types';
-import { canRunKindTests } from '../setupFiles/setup-kind';
-import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { KubernetesResourceState } from '/@/model/core/states';
+import { KubernetesResources } from '/@/model/core/types';
+import { canRunKindTests } from '/@/setupFiles/setup-kind';
+import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   checkKubernetesResourceState,
   createKubernetesResource,
   deleteKubernetesResource,
-} from '../utility/kubernetes';
-import { ensureCliInstalled } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+} from '/@/utility/kubernetes';
+import { ensureCliInstalled } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const CLUSTER_NAME: string = 'kind-cluster';
 const CLUSTER_CREATION_TIMEOUT: number = 300_000;

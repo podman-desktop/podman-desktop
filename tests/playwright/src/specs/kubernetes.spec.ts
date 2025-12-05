@@ -21,20 +21,20 @@ import { fileURLToPath } from 'node:url';
 
 import { expect as playExpect } from '@playwright/test';
 
-import { KubernetesResourceState } from '../model/core/states';
-import { KubernetesResources } from '../model/core/types';
-import { canRunKindTests } from '../setupFiles/setup-kind';
-import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { test } from '../utility/fixtures';
+import { KubernetesResourceState } from '/@/model/core/states';
+import { KubernetesResources } from '/@/model/core/types';
+import { canRunKindTests } from '/@/setupFiles/setup-kind';
+import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
+import { test } from '/@/utility/fixtures';
 import {
   checkDeploymentReplicasInfo,
   checkKubernetesResourceState,
   createKubernetesResource,
   deleteKubernetesResource,
   editDeploymentYamlFile,
-} from '../utility/kubernetes';
-import { deletePod, ensureCliInstalled } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+} from '/@/utility/kubernetes';
+import { deletePod, ensureCliInstalled } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const CLUSTER_NAME: string = 'kind-cluster';
 const CLUSTER_CREATION_TIMEOUT: number = 300_000;
