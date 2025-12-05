@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-const exec = require('child_process').exec;
+const { exec, execFile } = require('child_process');
 const Arch = require('builder-util').Arch;
 const path = require('path');
 const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
@@ -83,7 +83,10 @@ async function packageRemoteExtensions() {
   const destination = path.resolve('./extensions-extra');
 
   return new Promise((resolve, reject) => {
-    exec(`node ${downloadScript} --output=${destination}`, (error, stdout, stderr) => {
+    execFile('node', [
+      downloadScript,
+      `--output=${destination}`,
+    ], (error, stdout, stderr) => {
       if(error) {
         reject(error);
       } else {
