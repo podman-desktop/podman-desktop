@@ -24,6 +24,7 @@ import * as extensionApi from '@podman-desktop/api';
 import { configuration, ProgressLocation } from '@podman-desktop/api';
 
 import { ImageHandler } from './image-handler';
+import { ProviderConnectionShellAccessImpl } from './lima-stream';
 import { getLimactl, getLimaInfo, getLimaInstallation } from './limactl';
 
 type limaProviderType = 'docker' | 'podman' | 'kubernetes';
@@ -65,11 +66,18 @@ async function registerProvider(
   instanceName: string,
 ): Promise<void> {
   let providerState: extensionApi.ProviderConnectionStatus = 'unknown';
+  let providerConnectionShellAccess = undefined;
+  const limaInfo = await getLimaInfo(instanceName);
+  if (limaInfo) {
+    providerConnectionShellAccess = new ProviderConnectionShellAccessImpl(limaInfo);
+    extensionContext.subscriptions.push(providerConnectionShellAccess);
+  }
   if (providerType === 'podman' || providerType === 'docker') {
     const connection: extensionApi.ContainerProviderConnection = {
       name: prettyInstanceName(instanceName),
       type: providerType,
       status: () => providerState,
+      shellAccess: providerConnectionShellAccess,
       endpoint: {
         socketPath: providerPath,
       },
