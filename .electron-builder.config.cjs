@@ -72,7 +72,6 @@ async function addElectronFuses(context) {
  * to the extensions-extra folder
  *
  * @remarks it should be called in the beforePack to populate the folder extensions-extra before electron builder pack them
- * @return {Promise<void>}
  */
 async function packageRemoteExtensions() {
   const downloadScript = path.join('packages', 'main', 'dist', 'download-remote-extensions.cjs');
