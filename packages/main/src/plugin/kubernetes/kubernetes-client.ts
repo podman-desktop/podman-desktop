@@ -735,8 +735,10 @@ export class KubernetesClient {
       const logStream = new PassThrough();
 
       logStream.on('data', chunk => {
-        // use write rather than console.log to prevent double line feed
-        callback('data', chunk.toString('utf-8'));
+         // use write rather than console.log to prevent double line feed
+        // Use latin1 encoding to preserve all bytes and avoid replacement characters
+        // ANSI escape sequences and other binary data will be preserved correctly
+        callback('data', chunk.toString('latin1'));
       });
 
       await log.log(ns, name, container, logStream, { follow: true });
