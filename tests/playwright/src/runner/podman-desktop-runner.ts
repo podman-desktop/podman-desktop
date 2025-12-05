@@ -23,6 +23,8 @@ import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
 import { _electron as electron, test } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
+import { isLinux } from '/@/utility/platform';
+
 import { waitWhile } from '../utility/wait';
 import { RunnerOptions } from './runner-options';
 
@@ -323,6 +325,11 @@ export class Runner {
     const dir = join(this._customFolder);
     console.log(`podman desktop custom config will be written to: ${dir}`);
     env.PODMAN_DESKTOP_HOME_DIR = dir;
+
+    // required to get dashboard opened, https://github.com/podman-desktop/podman-desktop/issues/15220
+    if (isLinux) {
+      env.XDG_SESSION_TYPE = 'x11';
+    }
 
     // add a custom config file by disabling OpenDevTools
     const settingsFile = resolve(dir, 'configuration', 'settings.json');

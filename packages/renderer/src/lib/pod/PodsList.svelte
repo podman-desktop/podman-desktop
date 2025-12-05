@@ -12,6 +12,7 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import type { PodInfo } from '/@api/pod-info';
 
 import { filtered, podsInfos, searchPattern } from '../../stores/pods';
@@ -130,6 +131,11 @@ let nameColumn = new TableColumn<PodInfoUI>('Name', {
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
+let envColumn = new TableColumn<PodInfoUI>('Environment', {
+  renderer: ContainerEngineEnvironmentColumn,
+  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+});
+
 let containersColumn = new TableColumn<PodInfoUI>('Containers', {
   renderer: PodColumnContainers,
   comparator: (a, b): number => a.containers.length - b.containers.length,
@@ -148,6 +154,7 @@ let ageColumn = new TableColumn<PodInfoUI, Date | undefined>('Age', {
 const columns = [
   statusColumn,
   nameColumn,
+  envColumn,
   containersColumn,
   ageColumn,
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),

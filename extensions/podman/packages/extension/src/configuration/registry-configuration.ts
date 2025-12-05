@@ -122,7 +122,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       // check if the file is mounted
       const result = await execPodman(commandLineArgs, machine.VMType);
       if (!result.stdout) {
-        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using Podman Desktop.`;
+        const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using ${env.appName}.`;
         if (showWindowPopupError) {
           // display an error message if the link is not found
           // otherwise, log to console (for silent checks)
@@ -138,24 +138,42 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
 
   // Loads the default user registries from settings.json into the registries.conf file
   // also resolving any conflicts that may exist.
+  // NOTE: On macOS/Windows, the Podman machine must be running to configure default registries.
+  // The registries.conf file is written on the host ($HOME/.config/containers/registries.conf),
+  // and a symlink inside the VM (/etc/containers/registries.conf.d/) points to the host file
+  // via the mounted home directory. We verify the symlink exists before writing to ensure
+  // the VM will pick up the changes. On Linux, the file is accessed directly without a VM.
   async loadDefaultUserRegistries(): Promise<void> {
+    // First check if there are any default registries configured in settings.json
+    // if there isn't any in settings.json we can skip the rest of the process and just return early
+    const defaultRegistries = this.#defaultRegistryLoader.loadFromConfiguration();
+    if (defaultRegistries.length === 0) {
+      return;
+    }
+
+    // On macOS/Windows, verify the VM is running and symlink exists before writing
     if (env.isMac || env.isWindows) {
-      const checked = await this.checkRegistryConfFileExistsInVm(false);
-      if (!checked) {
+      try {
+        const checked = await this.checkRegistryConfFileExistsInVm(false);
+        if (!checked) {
+          return;
+        }
+      } catch (error: unknown) {
+        // Gracefully handle errors to avoid blocking extension activation.
+        // This can occur for various reasons: podman not installed, VM connectivity issues,
+        // SSH failures, or other unexpected errors while checking the VM state. This would occur in the rare
+        // case where the user has configured registries, but the podman binary not accessible.
+        console.warn('Unable to load default user registries:', error);
         return;
       }
     }
 
-    const defaultRegistries = this.#defaultRegistryLoader.loadFromConfiguration();
     const configFileContent = await this.readRegistriesConfContent();
-
-    if (defaultRegistries.length > 0) {
-      const combinedRegistries = this.#defaultRegistryLoader.resolveConflicts(
-        defaultRegistries,
-        configFileContent.registry,
-      );
-      await this.saveRegistriesConfContent({ registry: combinedRegistries });
-    }
+    const combinedRegistries = this.#defaultRegistryLoader.resolveConflicts(
+      defaultRegistries,
+      configFileContent.registry,
+    );
+    await this.saveRegistriesConfContent({ registry: combinedRegistries });
   }
 
   async setupRegistryCommandCallback(): Promise<void> {

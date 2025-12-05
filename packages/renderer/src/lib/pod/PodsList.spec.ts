@@ -284,6 +284,9 @@ test('Expect single podman pod being displayed', async () => {
     name: `${pod1.Name}`,
   });
   expect(pod1Row).toBeInTheDocument();
+
+  const env = screen.getByRole('cell', { name: 'Provider info circle podman' });
+  expect(env).toBeInTheDocument();
 });
 
 test('Expect 2 podman pods being displayed', async () => {

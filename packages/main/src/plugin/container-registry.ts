@@ -2530,9 +2530,13 @@ export class ContainerProviderRegistry {
     selectedProvider: ProviderContainerConnectionInfo,
     options?: {
       build?: boolean;
+      replace?: boolean;
     },
   ): Promise<PlayKubeInfo> {
-    const telemetryOptions: Record<string, unknown> = {};
+    const telemetryOptions: Record<string, unknown> = {
+      build: options?.build ?? false,
+      replace: options?.replace ?? false,
+    };
     try {
       const provider = this.getMatchingContainerProvider(selectedProvider);
       if (!provider?.libpodApi) {
@@ -2541,7 +2545,7 @@ export class ContainerProviderRegistry {
 
       // if we don't build, we use the file directory
       if (!options?.build) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath);
+        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
       }
 
       // ensure build support is true, otherwise let's throw a nice user friendly error
@@ -2556,12 +2560,10 @@ export class ContainerProviderRegistry {
 
       // if we have no context let's just use the the yaml
       if (kubePlay.getBuildContexts().length === 0) {
-        return provider.libpodApi.playKube(kubernetesYamlFilePath);
+        return provider.libpodApi.playKube(kubernetesYamlFilePath, options);
       }
 
-      return provider.libpodApi.playKube(kubePlay.build(), {
-        build: true,
-      });
+      return provider.libpodApi.playKube(kubePlay.build(), options);
     } catch (error: unknown) {
       telemetryOptions['error'] = error;
       throw error;

@@ -338,6 +338,42 @@ describe('extractImageDataFromImageName', () => {
   test('invalid empty', async () => {
     expect(() => imageRegistry.extractImageDataFromImageName('')).toThrow('Image name is empty');
   });
+
+  test('OCI image with three path segments', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName('quay.io/foo/bar/my-ext');
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('latest');
+    expect(nameAndTag.name).toBe('foo/bar/my-ext');
+  });
+
+  test('OCI image with three path segments and tag', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName('quay.io/foo/bar/my-ext:v1.2.3');
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('v1.2.3');
+    expect(nameAndTag.name).toBe('foo/bar/my-ext');
+  });
+
+  test('OCI image with four path segments', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'registry.example.com/org/team/project/image:v1.0.0',
+    );
+    expect(nameAndTag.registry).toBe('registry.example.com');
+    expect(nameAndTag.registryURL).toBe('https://registry.example.com/v2');
+    expect(nameAndTag.tag).toBe('v1.0.0');
+    expect(nameAndTag.name).toBe('org/team/project/image');
+  });
+
+  test('OCI image with five path segments', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'myregistry.io/level1/level2/level3/level4/myimage:latest',
+    );
+    expect(nameAndTag.registry).toBe('myregistry.io');
+    expect(nameAndTag.registryURL).toBe('https://myregistry.io/v2');
+    expect(nameAndTag.tag).toBe('latest');
+    expect(nameAndTag.name).toBe('level1/level2/level3/level4/myimage');
+  });
 });
 
 test('expect getImageConfigLabels works', async () => {

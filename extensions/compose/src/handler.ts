@@ -88,7 +88,7 @@ export async function installComposeBinary(
     }
   } else {
     await extensionApi.window.showErrorMessage(
-      `Podman Desktop was unable to locate the docker-compose binary in the ${extensionContext.storagePath}/bin folder. Please reinstall docker-compose to ${extensionContext.storagePath}/bin and try again.`,
+      `${extensionApi.env.appName} was unable to locate the docker-compose binary in the ${extensionContext.storagePath}/bin folder. Please reinstall docker-compose to ${extensionContext.storagePath}/bin and try again.`,
     );
   }
 }

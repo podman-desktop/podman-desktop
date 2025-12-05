@@ -246,6 +246,26 @@ export class ImagesPage extends MainPage {
     await handleConfirmationDialog(this.page);
   }
 
+  async pushManifest(manifestName: string): Promise<void> {
+    return test.step(`Push manifest: ${manifestName}`, async () => {
+      const manifest = await this.getImageRowByName(manifestName);
+      if (!manifest) {
+        throw new Error(`Manifest with name "${manifestName}" not found`);
+      }
+
+      const kebabMenuButton = manifest.getByRole('button', { name: 'kebab menu', exact: true });
+      await playExpect(kebabMenuButton).toBeVisible();
+      await kebabMenuButton.click();
+
+      // Push Manifest button has role='none', so we use getByTitle instead of getByRole
+      const pushManifestButton = manifest.getByTitle('Push Manifest');
+      await playExpect(pushManifestButton).toBeVisible();
+      await pushManifestButton.click();
+
+      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', 120_000, true);
+    });
+  }
+
   async getAllImageBadges(name: string): Promise<string[]> {
     return test.step(`Get all badges for image: ${name}`, async () => {
       const locators = await this.getAllBadgeLocators(name);

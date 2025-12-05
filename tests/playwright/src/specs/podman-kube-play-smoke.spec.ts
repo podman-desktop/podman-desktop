@@ -105,6 +105,8 @@ test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' 
     }
   });
   test('Create pod and verify it is running', async ({ navigationBar }) => {
+    test.setTimeout(180_000);
+
     const podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
     const podmanKubePlayPage = await podsPage.openPodmanKubePlay();

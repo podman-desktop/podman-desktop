@@ -220,13 +220,26 @@ test('expect workflow selection boxes have the correct selection borders', async
   expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
 });
 
-describe('Build options', () => {
-  test('checkbox should be disabled by default', async () => {
+describe('Options', () => {
+  test('build checkbox should be disabled by default', async () => {
     setup();
     const { getByRole } = render(KubePlayYAML, {});
 
     const checkbox = await vi.waitFor(() => {
       const element = getByRole('checkbox', { name: 'Enable build' });
+      expect(element).toBeInstanceOf(HTMLInputElement);
+      return element;
+    });
+
+    expect(checkbox).not.toBeChecked();
+  });
+
+  test('replace checkbox should be disabled by default', async () => {
+    setup();
+    const { getByRole } = render(KubePlayYAML, {});
+
+    const checkbox = await vi.waitFor(() => {
+      const element = getByRole('checkbox', { name: 'Replace' });
       expect(element).toBeInstanceOf(HTMLInputElement);
       return element;
     });
@@ -253,6 +266,28 @@ describe('Build options', () => {
       'Containerfile',
       expect.anything(),
       expect.objectContaining({ build: true }),
+    );
+  });
+
+  test('enabled replace option propagates to playKube call', async () => {
+    setup();
+    const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+
+    // Enable replace
+    const checkbox = getByRole('checkbox', { name: 'Replace' });
+    await userEvent.click(checkbox);
+
+    // Select file and play
+    const browseButton = getByLabelText('browse');
+    await userEvent.click(browseButton);
+
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    await userEvent.click(playButton);
+
+    expect(window.playKube).toHaveBeenCalledWith(
+      'Containerfile',
+      expect.anything(),
+      expect.objectContaining({ replace: true }),
     );
   });
 });

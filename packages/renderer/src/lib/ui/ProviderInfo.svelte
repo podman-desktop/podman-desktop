@@ -30,6 +30,6 @@ function getProviderName(providerName: string): ProviderNameType {
 }
 </script>
 
-<Label tip={provider === 'Kubernetes' ? context : ''} name={provider} capitalize>
+<Label containerClass="w-full" tip={provider === 'Kubernetes' ? context : ''} name={provider} capitalize>
   <ProviderInfoCircle type={providerName} />
 </Label>

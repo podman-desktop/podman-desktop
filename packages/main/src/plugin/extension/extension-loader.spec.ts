@@ -38,6 +38,7 @@ import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { PodInspectInfo } from '/@api/pod-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { getBase64Image } from '../../util.js';
 import type { ApiSenderType } from '../api.js';
@@ -281,6 +282,7 @@ const extensionWatcher = {
   stop: vi.fn(),
   dispose: vi.fn(),
   reloadExtension: vi.fn(),
+  onNeedToReloadExtension: vi.fn(),
 } as unknown as ExtensionWatcher;
 
 const extensionDevelopmentFolder = {
@@ -377,6 +379,29 @@ vi.mock('node:fs');
 beforeEach(() => {
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
   vi.clearAllMocks();
+
+  vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([]);
+});
+
+describe('extensionLoader#start', () => {
+  test('should load extensions & extensions-extra', async () => {
+    vi.stubEnv('PROD', true);
+
+    const readProductionFoldersMock = vi.spyOn(extensionLoader, 'readProductionFolders');
+    readProductionFoldersMock.mockResolvedValue([]);
+    const readDevelopmentFoldersMock = vi.spyOn(extensionLoader, 'readDevelopmentFolders');
+    readDevelopmentFoldersMock.mockResolvedValue([]);
+
+    await extensionLoader.start();
+
+    expect(readProductionFoldersMock).toHaveBeenCalledOnce();
+    const prodFolder = readProductionFoldersMock.mock.calls[0]?.[0];
+    expect(prodFolder?.endsWith('extensions')).toBeTruthy();
+
+    expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
+    const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
+    expect(devFolder?.endsWith('extensions-extra')).toBeTruthy();
+  });
 });
 
 test('Should watch for files and load them at startup', async () => {
@@ -2737,4 +2762,11 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
   await extensionLoader.asyncDispose();
 
   expect(deactivateMock).toHaveBeenCalledOnce();
+});
+
+describe('env API', () => {
+  test('expect env.appName to be product name', () => {
+    const api = createApi();
+    expect(api.env.appName).toBe(product.name);
+  });
 });

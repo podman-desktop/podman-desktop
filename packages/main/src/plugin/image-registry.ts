@@ -422,7 +422,8 @@ export class ImageRegistry {
       valid = true;
     } else if (slashes.length > 2 && slashes[0]) {
       registry = slashes[0];
-      name = `${slashes[1]}/${slashes[2]}`;
+      // join all remaining parts as the image name
+      name = slashes.slice(1).join('/');
       valid = true;
     }
     if (!valid) {

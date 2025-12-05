@@ -40,6 +40,7 @@ import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import { PodInfo } from '/@api/pod-info.js';
 import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
@@ -451,11 +452,16 @@ export class ExtensionLoader implements IAsyncDisposable {
       fs.mkdirSync(this.extensionsStorageDirectory);
     }
 
-    let folders;
+    let folders: string[];
     // scan all extensions that we can find from the extensions folder
     if (import.meta.env.PROD) {
-      // in production mode, use the extensions locally
-      folders = await this.readProductionFolders(path.join(__dirname, '../../../extensions'));
+      // in production mode, use the extensions & extensions-extra locally
+      const promises = await Promise.all([
+        this.readProductionFolders(path.join(__dirname, '../../../extensions')),
+        this.readDevelopmentFolders(path.join(__dirname, '../../../extensions-extra')),
+      ]);
+
+      folders = promises.flat();
     } else {
       // in development mode, use the extensions locally
       folders = await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions'));
@@ -1412,6 +1418,9 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const telemetry = this.telemetry;
     const env: typeof containerDesktopAPI.env = {
+      get appName() {
+        return product.name;
+      },
       get isMac() {
         return isMac();
       },

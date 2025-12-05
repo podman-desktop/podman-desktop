@@ -201,6 +201,7 @@ import { OpenDevToolsInit } from './open-devtools-init.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { Proxy } from './proxy.js';
 import { RecommendationsRegistry } from './recommendations/recommendations-registry.js';
+import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
@@ -688,6 +689,11 @@ export class PluginSystem {
     const editorInit = container.get<EditorInit>(EditorInit);
     editorInit.init();
 
+    // init registry configuration
+    container.bind<RegistryInit>(RegistryInit).toSelf().inSingletonScope();
+    const registryInit = container.get<RegistryInit>(RegistryInit);
+    registryInit.init();
+
     // init welcome configuration
     container.bind<WelcomeInit>(WelcomeInit).toSelf().inSingletonScope();
     const welcomeInit = container.get<WelcomeInit>(WelcomeInit);
@@ -1037,6 +1043,7 @@ export class PluginSystem {
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
+          replace?: boolean;
         },
       ): Promise<PlayKubeInfo> => {
         return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);

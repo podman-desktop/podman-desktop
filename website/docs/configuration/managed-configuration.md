@@ -21,6 +21,28 @@ Podman Desktop stores values for the following types of configuration in three s
 2. **Managed defaults configuration** - Read-only administrator-enforced default values that cannot be edited by the user.
 3. **Locked configuration** - Read-only administrator-enforced list of keys that must use managed values.
 
+### Default settings
+
+On startup, Podman Desktop checks `default-settings.json` and applies any settings that don't already exist in the user's `settings.json`. This is a one-time copy per setting:
+
+- Settings already in the user's `settings.json` are not overwritten
+- Settings that match the built-in schema default are not copied (to avoid unnecessary entries)
+- Only settings that differ from the schema default are persisted to `settings.json`
+
+This allows administrators to pre-configure settings for new users while respecting existing user preferences.
+
+### Locked settings
+
+Settings listed in `locked.json` are enforced on every read and cannot be changed by the user:
+
+- The value is always read from `default-settings.json`, ignoring the user's `settings.json`
+- The setting appears displays a lock icon in the UI
+- User changes to locked keys are ignored
+
+Use locked settings when you need to enforce compliance, such as proxy servers or telemetry policies.
+
+### Configuration priority
+
 When a configuration changes, Podman Desktop returns a value after checking the user configuration files in the following priority order:
 
 1. **Locked keys** - Return a value from the managed defaults configuration file, which is of highest priority
@@ -76,7 +98,7 @@ _Locked configuration_
 
 _User configuration_
 
-- Location: `%APPDATA%\podman-desktop\configuration\settings.json`
+- Location: `%USERPROFILE%\.local\share\containers\podman-desktop\configuration\settings.json`
 - Permissions: User read/write
 - Purpose: Normal user settings configured through the UI
 
