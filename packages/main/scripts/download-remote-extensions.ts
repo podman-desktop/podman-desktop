@@ -19,7 +19,7 @@
 import 'reflect-metadata';
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, rename, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 
@@ -56,6 +56,16 @@ export interface RemoteExtension {
 export const OCI_ARG = 'oci';
 export const NAME_ARG = 'name';
 
+export const DIGEST_FILENAME = '.digest';
+
+async function findExtensionDigest(extension: string): Promise<string | undefined> {
+  try {
+    return await readFile(join(extension, DIGEST_FILENAME), { encoding: 'utf-8' });
+  } catch (_: unknown) {
+    return undefined;
+  }
+}
+
 export async function downloadExtension(destination: string, info: RemoteExtension): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
@@ -64,13 +74,31 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
 
   const finalPath = join(destination, info.name);
 
-  await imageRegistry.downloadAndExtractImage(info.oci, tmpFolderPath, console.log);
-
-  if (!existsSync(join(tmpFolderPath, 'extension'))) {
+  const { config } = await imageRegistry.getManifestFromImageName(info.oci);
+  if (!config) {
     throw new Error(
-      `extension ${info.name} has malformed content: the OCI image should contains an "extension" folder`,
+      `extension ${info.name} has malformed content: the OCI image manifest should contains a "config" field`,
     );
   }
+  if (!config.digest) {
+    throw new Error(
+      `extension ${info.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
+    );
+  }
+
+  // check if the extension is already downloaded
+  if (existsSync(finalPath)) {
+    const existingDigest = await findExtensionDigest(finalPath);
+    if (existingDigest === config.digest) {
+      console.log(`cache hit for ${info.name}`);
+      return;
+    } else {
+      console.log(`invalid digest for ${info.name}, cleanup ${finalPath}`);
+      await rm(finalPath, { recursive: true });
+    }
+  }
+
+  await imageRegistry.downloadAndExtractImage(info.oci, tmpFolderPath, console.log);
 
   if (!existsSync(join(tmpFolderPath, 'extension', 'package.json'))) {
     throw new Error(
@@ -83,6 +111,7 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
 
   // rename tmp to destination
   await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
+  await writeFile(join(finalPath, DIGEST_FILENAME), config.digest, { encoding: 'utf-8' });
 }
 
 /**

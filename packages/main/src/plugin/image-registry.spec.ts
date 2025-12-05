@@ -414,6 +414,37 @@ test('expect getImageConfigLabels works', async () => {
   expect(labels['org.opencontainers.image.vendor']).toBeDefined();
 });
 
+test('expect getManifestFromImageName works', async () => {
+  // need to mock the http request
+  const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');
+  spyGetAuthInfo.mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+
+  // need to mock the http request
+  const spyGetToken = vi.spyOn(imageRegistry, 'getToken');
+  spyGetToken.mockResolvedValue('12345');
+
+  // mock http responses
+  const handlers = [
+    // multi-arch index
+
+    http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+      HttpResponse.json(imageRegistryManifestMultiArchJson),
+    ),
+
+    // image index
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+      () => HttpResponse.json(imageRegistryManifestJson),
+    ),
+  ];
+
+  server = setupServer(...handlers);
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const manifest = await imageRegistry.getManifestFromImageName('my-podman-desktop-fake-registry.io/my/extension');
+  expect(manifest).toStrictEqual(imageRegistryManifestJson);
+});
+
 test('expect downloadAndExtractImage works', async () => {
   // need to mock the http request
   const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');

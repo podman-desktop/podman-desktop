@@ -438,6 +438,21 @@ export class ImageRegistry {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getManifestFromImageName(imageName: string): Promise<any> {
+    const imageData = this.extractImageDataFromImageName(imageName);
+
+    // grab auth info from the registry
+    const authInfo = await this.getAuthInfo(imageData.registry);
+    const token = await this.getToken(authInfo, imageData);
+    if (authInfo.scheme.toLowerCase() !== 'bearer') {
+      throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
+    }
+
+    // now, grab manifest for the given image URL
+    return await this.getManifest(imageData, token);
+  }
+
   // Fetch the image Labels from the registry for a given image URL
   async getImageConfigLabels(imageName: string): Promise<{ [key: string]: unknown }> {
     const imageData = this.extractImageDataFromImageName(imageName);

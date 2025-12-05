@@ -17,7 +17,7 @@
  ********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, rename, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -28,6 +28,7 @@ import product from '/@product.json' with { type: 'json' };
 
 import type { RemoteExtension } from './download-remote-extensions.js';
 import {
+  DIGEST_FILENAME,
   downloadExtension,
   getRemoteExtensionFromProductJSON,
   main,
@@ -49,12 +50,35 @@ const REMOTE_INFO_MOCK: RemoteExtension = {
   oci: 'localhost/dummy-extension:latest',
 };
 
+const MANIFEST_MOCK = {
+  config: {
+    digest: 'sha256:00',
+  },
+};
+
+const TMP_EXTENSION_DEST = join(TMP_DIR, REMOTE_INFO_MOCK.name);
+const TMP_EXTENSION_PACKAGE_JSON = join(TMP_EXTENSION_DEST, 'extension', 'package.json');
+
+const FINAL_EXTENSION_DEST = join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name);
+const FINAL_EXTENSION_DIGEST_FILE = join(FINAL_EXTENSION_DEST, DIGEST_FILENAME);
+
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
-  vi.mocked(existsSync).mockReturnValue(true);
   (vi.mocked(product).extensions.remote as RemoteExtension[]) = [];
+
+  vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue(MANIFEST_MOCK);
+
+  // mock final check to be valid
+  vi.mocked(existsSync).mockImplementation(path => {
+    switch (path) {
+      case TMP_EXTENSION_PACKAGE_JSON:
+        return true;
+      default:
+        return false;
+    }
+  });
 });
 
 describe('downloadExtension', () => {
@@ -66,6 +90,59 @@ describe('downloadExtension', () => {
       expect.stringContaining(TMP_DIR),
       expect.any(Function),
     );
+  });
+
+  test('cache hit should not re-download', async () => {
+    // mock cache hit
+    vi.mocked(readFile).mockResolvedValue(MANIFEST_MOCK.config.digest);
+
+    // mock final check to be valid
+    vi.mocked(existsSync).mockImplementation(path => {
+      switch (path) {
+        case FINAL_EXTENSION_DEST: // mock  the final destination folder already exists
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+
+    // ensure we read the digest file
+    expect(readFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, {
+      encoding: 'utf-8',
+    });
+    // ensure we did not call ImageRegistry#downloadAndExtractImage
+    expect(ImageRegistry.prototype.downloadAndExtractImage).not.toHaveBeenCalled();
+  });
+
+  test('different digest should rm & download OCI', async () => {
+    // mock cache hit
+    vi.mocked(readFile).mockResolvedValue('sha256:01');
+
+    // mock final check to be valid
+    vi.mocked(existsSync).mockImplementation(path => {
+      switch (path) {
+        case TMP_EXTENSION_PACKAGE_JSON: // mock the tmp extension package.json already exists
+        case FINAL_EXTENSION_DEST: // mock the final destination folder already exists
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+
+    // ensure we read the digest file
+    expect(readFile).toHaveBeenCalledOnce();
+
+    // ensure we rm the final destination
+    expect(rm).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DEST, {
+      recursive: true,
+    });
+
+    // ensure we did call ImageRegistry#downloadAndExtractImage
+    expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalled();
   });
 
   test('should rename tmp directory to destination', async () => {
@@ -104,19 +181,6 @@ describe('downloadExtension', () => {
     expect(mkdir).toHaveBeenCalledExactlyOnceWith(ABS_DEST_DIR, {
       recursive: true,
     });
-  });
-
-  test('extracted content without extension should throw an error', async () => {
-    // mock existsSync for path ending with 'extension' should return false
-    vi.mocked(existsSync).mockImplementation(path => {
-      return !String(path).endsWith('extension');
-    });
-
-    await expect(async () => {
-      await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
-    }).rejects.toThrowError(
-      `extension ${REMOTE_INFO_MOCK.name} has malformed content: the OCI image should contains an "extension" folder`,
-    );
   });
 
   test('extracted content without package.json should throw an error', async () => {
