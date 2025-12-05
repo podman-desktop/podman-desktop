@@ -19,102 +19,130 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { readable, writable } from 'svelte/store';
+import { beforeEach, expect, test, vi } from 'vitest';
 
-import { ContainerGroupInfoTypeUI, type ContainerGroupInfoUI } from '/@/lib/container/ContainerInfoUI';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import EnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
-import type { VolumeInfoUI } from '/@/lib/volume/VolumeInfoUI';
+import * as providers from '/@/stores/providers';
+import type { ProviderInfo } from '/@api/provider-info';
 
-import type { NetworkInfoUI } from '../../network/NetworkInfoUI';
+vi.mock(import('/@/stores/providers'));
 
-test('Expect simple column styling - pod', async () => {
-  const pod: ContainerGroupInfoUI = {
-    type: ContainerGroupInfoTypeUI.POD,
-    expanded: false,
-    selected: false,
-    allContainersCount: 0,
-    containers: [],
-    name: '',
-    engineName: 'podman',
-    engineType: ContainerGroupInfoTypeUI.PODMAN,
-    engineId: '',
-    id: 'pod-id',
-  };
-  const { getByText } = render(EnvironmentColumn, { object: pod });
+const PARTIAL_IMAGE: Omit<ImageInfoUI, 'engineId' | 'engineName' | 'engineType'> = {
+  id: 'my-image',
+  shortId: '',
+  name: '',
+  tag: '',
+  createdAt: 0,
+  age: '',
+  arch: '',
+  size: 0,
+  humanSize: '',
+  base64RepoTag: '',
+  selected: false,
+  status: 'UNUSED',
+  icon: ImageIcon,
+  badges: [],
+  digest: 'sha256:1234567890',
+};
 
-  const text = getByText('podman');
+const PODMAN_MACHINE_DEFAULT_IMAGE: ImageInfoUI = {
+  ...PARTIAL_IMAGE,
+  engineId: 'podman.podman-machine-default',
+  engineName: 'Podman',
+};
+
+const PODMAN_REMOTE_IMAGE: ImageInfoUI = {
+  ...PARTIAL_IMAGE,
+  engineId: 'podman.remote-podman',
+  engineName: 'Podman',
+};
+
+const DOCKER_IMAGE: ImageInfoUI = {
+  ...PARTIAL_IMAGE,
+  engineId: 'docker.docker-context',
+  engineName: 'Docker',
+};
+
+const PODMAN_PROVIDER: ProviderInfo = {
+  id: 'podman',
+  name: 'Podman',
+  kubernetesConnections: [],
+  vmConnections: [],
+  containerConnections: [
+    {
+      name: 'podman-machine-default',
+      displayName: 'Podman Machine Default',
+      status: 'started',
+      type: 'podman',
+      endpoint: {
+        socketPath: '/var/run/podman-machine.sock',
+      },
+    },
+    {
+      name: 'remote-podman',
+      displayName: 'Podman Remote',
+      status: 'started',
+      type: 'podman',
+      endpoint: {
+        socketPath: '/var/run/podman-remote.sock',
+      },
+    },
+  ],
+} as unknown as ProviderInfo;
+
+const DOCKER_PROVIDER: ProviderInfo = {
+  id: 'docker',
+  name: 'Docker',
+  kubernetesConnections: [],
+  vmConnections: [],
+  containerConnections: [
+    {
+      name: 'docker-context',
+      displayName: 'Docker',
+      status: 'started',
+      type: 'docker',
+      endpoint: {
+        socketPath: '/var/run/docker.sock',
+      },
+    },
+  ],
+} as unknown as ProviderInfo;
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(providers).containerConnectionCount = readable({
+    podman: 2,
+    docker: 1,
+  });
+  vi.mocked(providers).providerInfos = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+});
+
+test('single connection connection type should use it as label', async () => {
+  const { getByText } = render(EnvironmentColumn, { object: DOCKER_IMAGE });
+
+  const text = getByText('docker');
   expect(text).toBeInTheDocument();
 });
 
-test('Expect simple column styling - image', async () => {
-  const image: ImageInfoUI = {
-    id: 'my-image',
-    shortId: '',
-    name: '',
-    engineId: '',
-    engineName: 'podman',
-    tag: '',
-    createdAt: 0,
-    age: '',
-    arch: '',
-    size: 0,
-    humanSize: '',
-    base64RepoTag: '',
-    selected: false,
-    status: 'UNUSED',
-    icon: ImageIcon,
-    badges: [],
-    digest: 'sha256:1234567890',
-  };
+test.each<{
+  image: ImageInfoUI;
+  expected: string;
+}>([
+  {
+    image: PODMAN_REMOTE_IMAGE,
+    expected: 'Podman Remote',
+  },
+  {
+    image: PODMAN_MACHINE_DEFAULT_IMAGE,
+    expected: 'Podman Machine Default',
+  },
+])('multiple connection connection type should use the $expected', async ({ image, expected }) => {
   const { getByText } = render(EnvironmentColumn, { object: image });
 
-  const text = getByText(image.engineName);
-  expect(text).toBeInTheDocument();
-});
-
-test('Expect simple column styling - network', async () => {
-  const network: NetworkInfoUI = {
-    engineId: 'engine1',
-    engineName: 'Engine 1',
-    engineType: 'podman',
-    name: 'Network 1',
-    id: '123456789012345',
-    created: '',
-    shortId: '123456789012',
-    driver: '',
-    selected: false,
-    status: 'UNUSED',
-    containers: [],
-    ipv6_enabled: false,
-  };
-
-  const { getByText } = render(EnvironmentColumn, { object: network });
-
-  const text = getByText(network.engineName);
-  expect(text).toBeInTheDocument();
-});
-
-test('Expect simple column styling - volume', async () => {
-  const volume: VolumeInfoUI = {
-    name: '',
-    shortName: '',
-    mountPoint: '',
-    scope: '',
-    driver: '',
-    created: '',
-    age: '',
-    size: 0,
-    humanSize: '',
-    engineId: '',
-    engineName: 'my-engine',
-    selected: false,
-    status: 'UNUSED',
-    containersUsage: [],
-  };
-  const { getByText } = render(EnvironmentColumn, { object: volume });
-
-  const text = getByText(volume.engineName);
+  const text = getByText(expected);
   expect(text).toBeInTheDocument();
 });
