@@ -111,6 +111,9 @@ const config = {
     const PODMAN_EXTENSION_ASSETS = 'extensions/podman/packages/extension/assets';
     context.packager.config.extraResources = DEFAULT_ASSETS;
 
+    // download & package remote extensions
+    await packageRemoteExtensions();
+
     // include product.json
     context.packager.config.extraResources.push({
       from: 'product.json',
@@ -154,9 +157,6 @@ const config = {
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-arm64.zst`);
       }
     }
-
-    // download & package extensions
-    await packageRemoteExtensions();
   },
   afterPack: async context => {
     await addElectronFuses(context);
