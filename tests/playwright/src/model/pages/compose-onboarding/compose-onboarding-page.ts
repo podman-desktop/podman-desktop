@@ -18,7 +18,7 @@
 
 import type { Locator, Page } from 'playwright';
 
-import { OnboardingPage } from '../onboarding-page';
+import { OnboardingPage } from '/@/model/pages/onboarding-page';
 
 export class ComposeOnboardingPage extends OnboardingPage {
   readonly heading: Locator;

@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { RegistriesPage } from '../model/pages/registries-page';
-import { canTestRegistry, setupRegistry } from '../setupFiles/setup-registry';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 let registryUrl: string;
 let registryUsername: string;

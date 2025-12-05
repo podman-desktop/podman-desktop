@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { removeFolderIfExists } from '../utility/cleanup';
+import { removeFolderIfExists } from '/@/utility/cleanup';
 
 let setupCalled = false;
 let teardownCalled = false;
@@ -30,7 +30,7 @@ export async function setup(): Promise<void> {
       await removeFolderIfExists('tests/output');
     } else {
       console.log(
-        `On CI, skipping before All tests/output cleanup, see https://github.com/containers/podman-desktop/issues/5460`,
+        'On CI, skipping before All tests/output cleanup, see https://github.com/containers/podman-desktop/issues/5460',
       );
     }
     setupCalled = true;

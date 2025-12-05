@@ -19,8 +19,8 @@
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { NavigationBar } from '../model/workbench/navigation';
-import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from './operations';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from '/@/utility/operations';
 
 export async function wait(
   waitFunction: () => Promise<boolean>,

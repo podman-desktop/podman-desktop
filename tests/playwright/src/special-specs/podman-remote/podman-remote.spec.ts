@@ -18,11 +18,10 @@
 
 import type { Locator } from '@playwright/test';
 
+import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
-
-import { PreferencesPage } from '../../model/pages/preferences-page';
-import { expect as playExpect, test } from '../../utility/fixtures';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 // Image is pulled onto the podman machine before the test execution
 const IMAGE = 'ghcr.io/podmandesktop-ci/alpine-remote';

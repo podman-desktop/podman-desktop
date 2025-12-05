@@ -21,11 +21,11 @@ import { execSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import type { KubernetesResourceState } from '../model/core/states';
-import { KubernetesResources } from '../model/core/types';
-import { ContainerDetailsPage } from '../model/pages/container-details-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { handleConfirmationDialog } from './operations';
+import type { KubernetesResourceState } from '/@/model/core/states';
+import { KubernetesResources } from '/@/model/core/types';
+import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { handleConfirmationDialog } from '/@/utility/operations';
 
 export async function deployContainerToCluster(
   page: Page,

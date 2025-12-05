@@ -18,15 +18,15 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { ContainersPage } from '../pages/containers-page';
-import { DashboardPage } from '../pages/dashboard-page';
-import { ExtensionsPage } from '../pages/extensions-page';
-import { ImagesPage } from '../pages/images-page';
-import { KubernetesBar } from '../pages/kubernetes-bar';
-import { NetworksPage } from '../pages/networks-page';
-import { PodsPage } from '../pages/pods-page';
-import { SettingsBar } from '../pages/settings-bar';
-import { VolumesPage } from '../pages/volumes-page';
+import { ContainersPage } from '/@/model/pages/containers-page';
+import { DashboardPage } from '/@/model/pages/dashboard-page';
+import { ExtensionsPage } from '/@/model/pages/extensions-page';
+import { ImagesPage } from '/@/model/pages/images-page';
+import { KubernetesBar } from '/@/model/pages/kubernetes-bar';
+import { NetworksPage } from '/@/model/pages/networks-page';
+import { PodsPage } from '/@/model/pages/pods-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { VolumesPage } from '/@/model/pages/volumes-page';
 
 export class NavigationBar {
   readonly page: Page;

@@ -18,9 +18,9 @@
 
 import { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { BasePage } from '../pages/base-page';
-import { TasksPage } from '../pages/tasks-page';
+import { BasePage } from '/@/model/pages/base-page';
+import { TasksPage } from '/@/model/pages/tasks-page';
+import { handleConfirmationDialog } from '/@/utility/operations';
 
 export class StatusBar extends BasePage {
   readonly content: Locator;

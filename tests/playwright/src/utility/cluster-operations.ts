@@ -19,22 +19,22 @@
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ContainerState, ResourceElementState } from '../model/core/states';
-import type { KindClusterOptions } from '../model/core/types';
-import { CreateKindClusterPage } from '../model/pages/create-kind-cluster-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourceDetailsPage } from '../model/pages/resource-details-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { VolumesPage } from '../model/pages/volumes-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { StatusBar } from '../model/workbench/status-bar';
-import { getVolumeNameForContainer } from './operations';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ContainerState, ResourceElementState } from '/@/model/core/states';
+import type { KindClusterOptions } from '/@/model/core/types';
+import { CreateKindClusterPage } from '/@/model/pages/create-kind-cluster-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourceDetailsPage } from '/@/model/pages/resource-details-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { VolumesPage } from '/@/model/pages/volumes-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { StatusBar } from '/@/model/workbench/status-bar';
+import { getVolumeNameForContainer } from '/@/utility/operations';
 
 export async function createKindCluster(
   page: Page,
   clusterName: string,
-  timeout: number = 300_000,
+  timeout = 300_000,
   { configFilePath, providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {},
 ): Promise<void> {
   return test.step(`Create Kind cluster with settings: configFilePath=${configFilePath}, 
@@ -84,10 +84,10 @@ export async function createKindCluster(
 
 export async function deleteCluster(
   page: Page,
-  resourceName: string = 'kind',
-  containerName: string = 'kind-cluster-control-plane',
-  clusterName: string = 'kind-cluster',
-  timeout: number = 50_000,
+  resourceName = 'kind',
+  containerName = 'kind-cluster-control-plane',
+  clusterName = 'kind-cluster',
+  timeout = 50_000,
 ): Promise<void> {
   return test.step(`Delete ${resourceName} cluster`, async () => {
     const volumeName = await getVolumeNameForContainer(page, containerName);
@@ -137,7 +137,7 @@ export async function resourceConnectionAction(
   resourceCard: ResourceConnectionCardPage,
   resourceConnectionAction: ResourceElementActions,
   expectedResourceState: ResourceElementState,
-  timeout: number = 30_000,
+  timeout = 30_000,
 ): Promise<void> {
   return test.step(`Performs "${resourceConnectionAction}" action, expects "${expectedResourceState}" state.`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -162,7 +162,7 @@ export async function resourceConnectionActionDetails(
   resourceName: string,
   resourceConnectionAction: ResourceElementActions,
   expectedResourceState: ResourceElementState,
-  timeout: number = 30_000,
+  timeout = 30_000,
 ): Promise<void> {
   return test.step(`Performs a connection action '${resourceConnectionAction}' on the resource from the details page, verifies the expected resource state '${expectedResourceState}'`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -194,10 +194,10 @@ export async function resourceConnectionActionDetails(
 
 export async function deleteClusterFromDetails(
   page: Page,
-  resourceName: string = 'kind',
-  containerName: string = 'kind-cluster-control-plane',
-  clusterName: string = 'kind-cluster',
-  timeout: number = 30_000,
+  resourceName = 'kind',
+  containerName = 'kind-cluster-control-plane',
+  clusterName = 'kind-cluster',
+  timeout = 30_000,
 ): Promise<void> {
   return test.step(`Deletes the '${clusterName}' cluster from the details page`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -231,7 +231,7 @@ export async function validateClusterResourcesDeletion(
   clusterName: string,
   containerName: string,
   volumeName: string,
-  timeout: number = 20_000,
+  timeout = 20_000,
 ): Promise<void> {
   return test.step(`Validates that resources associated with the deleted '${clusterName}' cluster are removed`, async () => {
     const navigationBar = new NavigationBar(page);

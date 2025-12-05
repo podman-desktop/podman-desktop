@@ -55,7 +55,7 @@ export async function performBrowserLogin(
     screenshotsPath: string | undefined;
   } = { screenshotsPath: '' },
 ): Promise<void> {
-  console.log(`Performing browser login...`);
+  console.log('Performing browser login...');
   const path = options.screenshotsPath;
   if (path) {
     await page.screenshot({ path: join(path, 'screenshots', 'initial_page.png'), type: 'png', fullPage: true });
