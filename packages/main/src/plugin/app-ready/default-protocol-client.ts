@@ -20,9 +20,10 @@ import type { App as ElectronApp } from 'electron';
 
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 /**
- * Configures the application as the default protocol client for handling 'podman-desktop' protocol links.
+ * Configures the application as the default protocol client for handling {@link product.urlProtocol} (e.g. 'podman-desktop') protocol links.
  */
 export class DefaultProtocolClient implements AppPlugin {
   constructor(private readonly app: ElectronApp) {}
@@ -31,9 +32,9 @@ export class DefaultProtocolClient implements AppPlugin {
     if (!import.meta.env.PROD) return;
 
     if (isWindows()) {
-      this.app.setAsDefaultProtocolClient('podman-desktop', process.execPath, process.argv);
+      this.app.setAsDefaultProtocolClient(product.urlProtocol, process.execPath, process.argv);
     } else {
-      this.app.setAsDefaultProtocolClient('podman-desktop');
+      this.app.setAsDefaultProtocolClient(product.urlProtocol);
     }
   }
 
