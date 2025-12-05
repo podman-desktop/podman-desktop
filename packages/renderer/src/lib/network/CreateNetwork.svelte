@@ -5,11 +5,11 @@ import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
+import { handleNavigation } from '/@/navigation';
 import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
-import { handleNavigation } from '../../navigation';
 import { networksListInfo } from '../../stores/networks';
 import { providerInfos } from '../../stores/providers';
 import EngineFormPage from '../ui/EngineFormPage.svelte';
@@ -60,8 +60,7 @@ async function createNetwork(): Promise<void> {
       throw new Error('Network creation failed: Missing network ID or engine ID');
     }
 
-    // Wait for the network store to be updated before navigating
-    await waitForNetworkInStore(result.Id, networkInfo.networkName);
+    await waitForNetworkInStore(result.Id, result.engineId);
 
     // Route to the network details page
     handleNavigation({
@@ -81,19 +80,16 @@ async function createNetwork(): Promise<void> {
 
 /**
  * Wait for the network to appear in the store before navigating.
- * This ensures the UI is consistent when the user lands on the details page.
  */
-async function waitForNetworkInStore(networkId: string, networkName: string): Promise<void> {
+async function waitForNetworkInStore(networkId: string, engineId: string): Promise<void> {
   return new Promise<void>(resolve => {
-    // Set a timeout to avoid waiting indefinitely
     const timeout = setTimeout(() => {
       unsubscribe();
       resolve();
-    }, 10000); // 10 second timeout
+    }, 10000);
 
     const unsubscribe = networksListInfo.subscribe(networks => {
-      // Check both ID and name to handle cases where Docker and Podman might have overlapping IDs
-      if (networks.some(n => n.Id === networkId && n.Name === networkName)) {
+      if (networks.some(network => network.Id === networkId && network.engineId === engineId)) {
         clearTimeout(timeout);
         unsubscribe();
         resolve();
