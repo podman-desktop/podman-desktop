@@ -21,13 +21,21 @@ import { cp, mkdir, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { ParsedArgs } from 'minimist';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import product from '/@product.json' with { type: 'json' };
 
 import type { RemoteExtension } from './download-remote-extensions.js';
-import { downloadExtension, getRemoteExtensions, main } from './download-remote-extensions.js';
+import {
+  downloadExtension,
+  findRemoteExtensionFromArgs,
+  findRemoteExtensionFromProductJSON,
+  main,
+  OCI_ARG,
+  sanitiseImageName,
+} from './download-remote-extensions.js';
 
 vi.mock(import('node:fs/promises'));
 vi.mock(import('node:fs'));
@@ -126,11 +134,70 @@ describe('downloadExtension', () => {
   });
 });
 
-describe('getRemoteExtensions', () => {
+describe('findRemoteExtensionFromArgs', () => {
+  const PARSED_MOCK: ParsedArgs = {
+    _: [],
+  };
+
+  test('should handle undefined entry for --oci arg', () => {
+    expect(findRemoteExtensionFromArgs(PARSED_MOCK)).toHaveLength(0);
+  });
+
+  test('should handle single string value for --oci arg', () => {
+    expect(
+      findRemoteExtensionFromArgs({
+        ...PARSED_MOCK,
+        [OCI_ARG]: 'ghcr.io/org/my-user:latest',
+      }),
+    ).toStrictEqual([
+      {
+        oci: 'ghcr.io/org/my-user:latest',
+        name: 'ghcrioorgmyuser',
+      },
+    ]);
+  });
+
+  test('should handle single multiple string values for --oci arg', () => {
+    expect(
+      findRemoteExtensionFromArgs({
+        ...PARSED_MOCK,
+        [OCI_ARG]: ['ghcr.io/org/foo-user:latest', 'ghcr.io/org/bar-user:latest'],
+      }),
+    ).toStrictEqual([
+      {
+        oci: 'ghcr.io/org/foo-user:latest',
+        name: 'ghcrioorgfoouser',
+      },
+      {
+        oci: 'ghcr.io/org/bar-user:latest',
+        name: 'ghcrioorgbaruser',
+      },
+    ]);
+  });
+});
+
+describe('findRemoteExtensionFromProductJSON', () => {
   test('expect to read product.json#extensions#remote', () => {
     (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
 
-    expect(getRemoteExtensions()).toStrictEqual([REMOTE_INFO_MOCK]);
+    expect(findRemoteExtensionFromProductJSON()).toStrictEqual([REMOTE_INFO_MOCK]);
+  });
+});
+
+describe('sanitiseImageName', () => {
+  test.each<{ oci: string; expected: string }>([
+    // oci with a tag
+    {
+      oci: 'localhost/dummy-extension:latest',
+      expected: 'localhostdummyextension',
+    },
+    // oci without a tag
+    {
+      oci: 'localhost/dummy-extension',
+      expected: 'localhostdummyextension',
+    },
+  ])('$oci should be sanitized to $expected', ({ oci, expected }) => {
+    expect(sanitiseImageName(oci)).toBe(expected);
   });
 });
 
@@ -145,6 +212,17 @@ describe('main', () => {
     await expect(async () => {
       await main(['--output', './foo']);
     }).rejects.toThrowError('the output should be an absolute directory');
+  });
+
+  test(`--${OCI_ARG} should be preferred to product.json`, async () => {
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+
+    await main(['--output', ABS_DEST_DIR, `--${OCI_ARG}`, 'localhost/dummy-extension:latest']);
+
+    expect(rename).toHaveBeenCalledExactlyOnceWith(
+      join(TMP_DIR, 'localhostdummyextension', 'extension'),
+      join(ABS_DEST_DIR, 'localhostdummyextension'),
+    );
   });
 
   test('empty remoteExtensions in product.json should not call any ImageRegistry#downloadAndExtractImage', async () => {

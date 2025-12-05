@@ -53,6 +53,8 @@ export interface RemoteExtension {
   oci: string;
 }
 
+export const OCI_ARG = 'oci';
+
 export async function downloadExtension(destination: string, info: RemoteExtension): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
@@ -103,12 +105,36 @@ export async function moveSafely(src: string, dest: string): Promise<void> {
   }
 }
 
-export function getRemoteExtensions(): RemoteExtension[] {
+export function sanitiseImageName(name: string): string {
+  const sanitized = name?.split(':')?.[0]?.replace(/[^a-zA-Z0-9]/g, '');
+  if (!sanitized) throw new Error('invalid image name');
+  return sanitized;
+}
+
+export function findRemoteExtensionFromProductJSON(): RemoteExtension[] {
   if (!product) return [];
   if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') return [];
   if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote))
     return [];
   return product.extensions.remote as RemoteExtension[];
+}
+
+export function findRemoteExtensionFromArgs(args: minimist.ParsedArgs): RemoteExtension[] {
+  const raw = args[OCI_ARG];
+  if (!raw) return [];
+
+  let images: string[];
+  if (Array.isArray(raw) && raw.every(name => typeof name === 'string')) {
+    images = raw;
+  } else if (typeof raw === 'string') {
+    images = [raw];
+  } else {
+    throw new Error('invalid argument for --' + OCI_ARG + ', should be a string');
+  }
+  return images.map(image => ({
+    oci: image,
+    name: sanitiseImageName(image),
+  }));
 }
 
 export async function main(args: string[]): Promise<void> {
@@ -119,7 +145,13 @@ export async function main(args: string[]): Promise<void> {
 
   if (!isAbsolute(output)) throw new Error('the output should be an absolute directory');
 
-  await Promise.all(getRemoteExtensions().map(downloadExtension.bind(undefined, output))).catch(console.error);
+  // Get the extensions from the cli args or fallback to product.json
+  const extensions: RemoteExtension[] = findRemoteExtensionFromArgs(parsed);
+  if (extensions.length === 0) {
+    extensions.push(...findRemoteExtensionFromProductJSON());
+  }
+
+  await Promise.all(extensions.map(downloadExtension.bind(undefined, output))).catch(console.error);
 }
 
 // do not start if we are in a VITEST env
