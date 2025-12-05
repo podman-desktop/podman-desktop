@@ -97,7 +97,9 @@ export class ProviderConnectionShellAccessImpl implements ProviderConnectionShel
     this.#client = new Client();
     this.#client
       .on('ready', () => {
-        this.#client?.shell((err, stream) => {
+        const window = { term: 'xterm-256color' };
+        const options = { env: { COLORTERM: 'truecolor' } };
+        this.#client?.shell(window, options, (err, stream) => {
           if (err) {
             this.onErrorEmit.fire({ error: err.message });
             return;
