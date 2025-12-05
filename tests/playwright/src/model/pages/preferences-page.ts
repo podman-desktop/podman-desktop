@@ -40,7 +40,10 @@ export class PreferencesPage extends SettingsPage {
       }
       playExpect(this.kubePathInput).toBeDefined();
       await this.kubePathInput.clear();
+      await playExpect(this.kubePathInput).toHaveValue('');
+
       await this.kubePathInput.fill(pathToKube);
+      await playExpect(this.kubePathInput).toHaveValue(pathToKube);
     });
   }
 }
