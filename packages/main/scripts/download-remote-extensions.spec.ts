@@ -17,7 +17,7 @@
  ********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readFile, rename, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -155,6 +155,14 @@ describe('downloadExtension', () => {
 
     expect(cp).not.toHaveBeenCalled();
     expect(rm).not.toHaveBeenCalled();
+  });
+
+  test('should write digest file to destination', async () => {
+    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+
+    expect(writeFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, MANIFEST_MOCK.config.digest, {
+      encoding: 'utf-8',
+    });
   });
 
   test('if rename throw ErrnoException', async () => {
