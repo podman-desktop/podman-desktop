@@ -90,7 +90,7 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
   if (existsSync(finalPath)) {
     const existingDigest = await findExtensionDigest(finalPath);
     if (existingDigest === config.digest) {
-      console.log(`cache hit for ${info.name}`);
+      console.log(`cache hit for ${info.name} ${config.digest.substring(0, 18)}`);
       return;
     } else {
       console.log(`invalid digest for ${info.name}, cleanup ${finalPath}`);
