@@ -279,6 +279,7 @@ export type NetworkCreateOptions = Dockerode.NetworkCreateOptions;
 
 export interface NetworkCreateResult {
   Id: string;
+  engineId: string;
 }
 
 // Form state interface for creating networks in the UI

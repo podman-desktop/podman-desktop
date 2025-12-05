@@ -3779,6 +3779,7 @@ declare module '@podman-desktop/api' {
 
   export interface NetworkCreateResult {
     Id: string;
+    engineId: string;
   }
 
   /**
