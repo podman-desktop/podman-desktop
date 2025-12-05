@@ -1234,15 +1234,15 @@ export class PluginSystem {
 
     this.ipcHandle(
       'container-provider-registry:updateImage',
-      async (_listener, engineId: string, imageId: string): Promise<void> => {
+      async (_listener, engineId: string, imageId: string, tag: string): Promise<void> => {
         const task = taskManager.createTask({
-          title: `Updating image '${imageId}'`,
+          title: `Updating image '${tag}'`,
         });
         try {
-          await containerProviderRegistry.updateImage(engineId, imageId);
+          await containerProviderRegistry.updateImage(engineId, imageId, tag);
           task.status = 'success';
         } catch (error: unknown) {
-          task.error = String(error);
+          task.error = `Something went wrong while trying to update image: ${String(error)}`;
           task.status = 'failure';
           throw error;
         }
