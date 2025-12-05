@@ -54,6 +54,7 @@ export interface RemoteExtension {
 }
 
 export const OCI_ARG = 'oci';
+export const NAME_ARG = 'name';
 
 export async function downloadExtension(destination: string, info: RemoteExtension): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
@@ -105,13 +106,7 @@ export async function moveSafely(src: string, dest: string): Promise<void> {
   }
 }
 
-export function sanitiseImageName(name: string): string {
-  const sanitized = name?.split(':')?.[0]?.replace(/[^a-zA-Z0-9]/g, '');
-  if (!sanitized) throw new Error('invalid image name');
-  return sanitized;
-}
-
-export function findRemoteExtensionFromProductJSON(): RemoteExtension[] {
+export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
   if (!product) return [];
   if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') return [];
   if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote))
@@ -119,25 +114,12 @@ export function findRemoteExtensionFromProductJSON(): RemoteExtension[] {
   return product.extensions.remote as RemoteExtension[];
 }
 
-export function findRemoteExtensionFromArgs(args: minimist.ParsedArgs): RemoteExtension[] {
-  const raw = args[OCI_ARG];
-  if (!raw) return [];
-
-  let images: string[];
-  if (Array.isArray(raw) && raw.every(name => typeof name === 'string')) {
-    images = raw;
-  } else if (typeof raw === 'string') {
-    images = [raw];
-  } else {
-    throw new Error('invalid argument for --' + OCI_ARG + ', should be a string');
-  }
-  return images.map(image => ({
-    oci: image,
-    name: sanitiseImageName(image),
-  }));
-}
-
-export async function main(args: string[]): Promise<void> {
+/**
+ * Parsing the args provided
+ * the `--output` is mandatory and should be an absolute path
+ * the `--oci` and `--name` are optional but should be both defined if specified
+ */
+export function parseArgs(args: string[]): { output: string; extension?: RemoteExtension } {
   const parsed = minimist(args);
 
   const output: string | undefined = parsed['output'];
@@ -145,13 +127,44 @@ export async function main(args: string[]): Promise<void> {
 
   if (!isAbsolute(output)) throw new Error('the output should be an absolute directory');
 
-  // Get the extensions from the cli args or fallback to product.json
-  const extensions: RemoteExtension[] = findRemoteExtensionFromArgs(parsed);
-  if (extensions.length === 0) {
-    extensions.push(...findRemoteExtensionFromProductJSON());
+  const oci = parsed[OCI_ARG];
+  const name = parsed[NAME_ARG];
+
+  // if --oci and --name are not provided, return the output directory as the extension directory
+  if (!oci && !name) {
+    return { output };
   }
 
-  await Promise.all(extensions.map(downloadExtension.bind(undefined, output))).catch(console.error);
+  if (!oci || !name) {
+    throw new Error(`when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`);
+  }
+
+  if (Array.isArray(oci) || Array.isArray(name)) {
+    throw new Error(`when specifying --${OCI_ARG} and --${NAME_ARG}, only one is allowed`);
+  }
+
+  if (typeof oci !== 'string' || typeof name !== 'string') {
+    throw new Error(`when specifying --${OCI_ARG} and --${NAME_ARG}, should be valid strings`);
+  }
+
+  return {
+    output,
+    extension: { oci, name },
+  };
+}
+
+export async function main(args: string[]): Promise<void> {
+  const { output, extension } = parseArgs(args);
+
+  // if an extension has been provided through CLI download it directly
+  if (extension) {
+    return downloadExtension(output, extension);
+  }
+
+  // otherwise fallback to bundled product.json
+  await Promise.all(getRemoteExtensionFromProductJSON().map(downloadExtension.bind(undefined, output))).catch(
+    console.error,
+  );
 }
 
 // do not start if we are in a VITEST env
