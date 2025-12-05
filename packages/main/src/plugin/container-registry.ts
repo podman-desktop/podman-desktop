@@ -790,12 +790,9 @@ export class ContainerProviderRegistry {
   ): Promise<NetworkCreateResult> {
     let telemetryOptions = {};
     try {
-      const matchingContainerProvider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
-      if (!matchingContainerProvider?.api) {
-        throw new Error('no running provider for the matching container');
-      }
-      const network = await matchingContainerProvider.api.createNetwork(options);
-      return { Id: network.id, engineId: matchingContainerProvider.id };
+      const matchingEngine = this.getMatchingEngineFromConnection(providerContainerConnectionInfo);
+      const network = await matchingEngine.createNetwork(options);
+      return { Id: network.id };
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
