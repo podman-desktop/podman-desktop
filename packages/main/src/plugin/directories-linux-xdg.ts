@@ -21,8 +21,9 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
+import product from '/@product.json' with { type: 'json' };
+
 import type { Directories } from './directories.js';
-import { SYSTEM_DEFAULTS_FOLDER_LINUX } from './managed-by-constants.js';
 
 /**
  * Directory provider that follows XDG Base Directory Specification for Linux
@@ -42,12 +43,12 @@ export class LinuxXDGDirectories implements Directories {
     // XDG_CONFIG_HOME: user-specific configuration files
     // biome-ignore lint/complexity/useLiteralKeys: XDG_CONFIG_HOME comes from an index signature
     const xdgConfigHome = process.env['XDG_CONFIG_HOME'] ?? path.resolve(os.homedir(), '.config');
-    this.configurationDirectory = path.resolve(xdgConfigHome, 'containers', 'podman-desktop');
+    this.configurationDirectory = path.resolve(xdgConfigHome, product.paths.config);
 
     // XDG_DATA_HOME: user-specific data files (plugins, extensions data)
     // biome-ignore lint/complexity/useLiteralKeys: XDG_DATA_HOME comes from an index signature
     const xdgDataHome = process.env['XDG_DATA_HOME'] ?? path.resolve(os.homedir(), '.local', 'share');
-    this.dataDirectory = path.resolve(xdgDataHome, 'containers', 'podman-desktop');
+    this.dataDirectory = path.resolve(xdgDataHome, product.paths.config);
 
     // All data-related directories go under dataDirectory
     this.pluginsDirectory = path.resolve(this.dataDirectory, 'plugins');
@@ -86,6 +87,6 @@ export class LinuxXDGDirectories implements Directories {
   }
 
   getManagedDefaultsDirectory(): string {
-    return SYSTEM_DEFAULTS_FOLDER_LINUX;
+    return product.paths.managed.linux;
   }
 }
