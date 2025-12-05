@@ -268,7 +268,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
       // regex for div with number of visits
       const regex = /<div[^>]*>(\d+)<\/div>/i;
       const matches = RegExp(regex).exec(text);
-      playExpect(matches![1]).toEqual(i.toString());
+      playExpect(matches?.[1]).toEqual(i.toString());
       playExpect(matches).toBeDefined();
       playExpect(text).toContain('time(s)');
     }
