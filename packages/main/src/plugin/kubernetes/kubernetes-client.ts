@@ -247,6 +247,8 @@ export class KubernetesClient {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/11424',
             image: kubernetesImage,
           },
+          // enabled by default
+          default: {},
         },
       },
     };
