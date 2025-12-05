@@ -576,9 +576,12 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:saveImages', options);
   });
 
-  contextBridge.exposeInMainWorld('updateImage', async (engineId: string, imageId: string): Promise<void> => {
-    return ipcInvoke('container-provider-registry:updateImage', engineId, imageId);
-  });
+  contextBridge.exposeInMainWorld(
+    'updateImage',
+    async (engineId: string, imageId: string, tag: string): Promise<void> => {
+      return ipcInvoke('container-provider-registry:updateImage', engineId, imageId, tag);
+    },
+  );
 
   contextBridge.exposeInMainWorld('loadImages', async (options: ImageLoadOptions): Promise<void> => {
     return ipcInvoke('container-provider-registry:loadImages', options);

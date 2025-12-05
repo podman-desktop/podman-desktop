@@ -1265,30 +1265,27 @@ export class ContainerProviderRegistry {
     return crypto.createHash('sha512').update(imageName).digest('hex');
   }
 
-  async updateImage(engineId: string, imageId: string): Promise<void> {
+  async updateImage(engineId: string, imageId: string, tag: string): Promise<void> {
     let telemetryOptions = {};
     try {
-      // first get image info to check if it has a registry
+      // get image info to validate the image can be updated
       const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
-      if (imageInfo.RepoTags.length === 0) {
-        throw new Error('Image has no registry tags and cannot be updated');
+
+      // validate the provided tag exists on this image
+      if (!imageInfo.RepoTags?.includes(tag)) {
+        throw new Error(`Tag '${tag}' not found on this image`);
       }
-      // get the first repo tag
-      const repoTag = imageInfo.RepoTags[0];
-      if (!repoTag) {
-        throw new Error('Image has no registry tags and cannot be updated');
+
+      // check if image has a remote registry source (RepoDigests is populated when pulled from a registry)
+      if (!imageInfo.RepoDigests?.length) {
+        throw new Error('Image has no remote registry source and cannot be updated');
       }
 
       // store whether the image originally had a single tag
-      const hadSingleTag = imageInfo.RepoTags.length === 1;
-
-      // check if this is a localhost image
-      if (repoTag.startsWith('localhost') || repoTag.startsWith('127.0.0.1')) {
-        throw new Error('Local images cannot be updated');
-      }
+      const hadSingleTag = imageInfo.RepoTags?.length === 1;
 
       // check if this is an immutable tag (contains a SHA digest)
-      if (repoTag.includes('@sha256:')) {
+      if (tag.includes('@sha256:')) {
         throw new Error('Image with digest-based tag is immutable and cannot be updated');
       }
 
@@ -1296,9 +1293,9 @@ export class ContainerProviderRegistry {
       const oldImageId = imageInfo.Id;
 
       // pull the latest build of the image
-      const authconfig = this.imageRegistry.getAuthconfigForImage(repoTag);
+      const authconfig = this.imageRegistry.getAuthconfigForImage(tag);
       const matchingEngine = this.getMatchingEngine(engineId);
-      const pullStream = await matchingEngine.pull(repoTag, { authconfig });
+      const pullStream = await matchingEngine.pull(tag, { authconfig });
 
       await new Promise<void>((resolve, reject) => {
         matchingEngine.modem.followProgress(pullStream, (err: Error | null) => {
@@ -1308,7 +1305,7 @@ export class ContainerProviderRegistry {
       });
 
       // check if the image was actually updated
-      const updatedImageInfo = await matchingEngine.getImage(repoTag).inspect();
+      const updatedImageInfo = await matchingEngine.getImage(tag).inspect();
 
       if (updatedImageInfo.Id === oldImageId) {
         throw new Error('Image is already the latest version');
