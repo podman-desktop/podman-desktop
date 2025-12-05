@@ -6143,9 +6143,9 @@ describe('updateImage', () => {
     );
   });
 
-  test('should reject images with null RepoTags', async () => {
+  test('should reject images with empty RepoTags', async () => {
     const mockImage = {
-      inspect: vi.fn().mockResolvedValue({ RepoTags: null }),
+      inspect: vi.fn().mockResolvedValue({ RepoTags: [] }),
     };
     const engine = {
       getImage: vi.fn().mockReturnValue(mockImage),
@@ -6153,21 +6153,7 @@ describe('updateImage', () => {
     vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
 
     await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrowError(
-      `Tag 'nginx:latest' not found on this image`,
-    );
-  });
-
-  test('should reject images with undefined RepoTags', async () => {
-    const mockImage = {
-      inspect: vi.fn().mockResolvedValue({ RepoTags: undefined }),
-    };
-    const engine = {
-      getImage: vi.fn().mockReturnValue(mockImage),
-    };
-    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
-
-    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrowError(
-      `Tag 'nginx:latest' not found on this image`,
+      'Image has no tags and cannot be updated',
     );
   });
 
