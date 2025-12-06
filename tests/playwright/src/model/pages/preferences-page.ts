@@ -19,8 +19,6 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { delay } from '/@/utility/wait';
-
 import { SettingsPage } from './settings-page';
 
 export class PreferencesPage extends SettingsPage {
@@ -44,15 +42,14 @@ export class PreferencesPage extends SettingsPage {
 
   async isPreferenceManaged(name: string): Promise<boolean> {
     const preferenceRow = this.getPreferenceRowByName(name);
-    const managedIndicator = await preferenceRow.getByText('Managed').all();
-    return managedIndicator.length > 0;
+    return (await preferenceRow.getByText('Managed').count()) > 0;
   }
 
-  async resetPreference(preferenceRow: Locator): Promise<void> {
+  async resetPreference(name: string): Promise<void> {
+    const preferenceRow = this.getPreferenceRowByName(name);
     const resetButton = preferenceRow.getByRole('button', { name: 'Reset to default value' });
     await playExpect(resetButton).toBeVisible();
     await resetButton.click();
-    await delay(1000); // wait for the preference to be applied
   }
 
   async getAppearancePreferenceValue(): Promise<string> {
@@ -77,11 +74,8 @@ export class PreferencesPage extends SettingsPage {
     await selectionButton.click();
 
     const option = appearancePreferenceRow.getByRole('button', { name: value, exact: true });
-    await playExpect(option).toBeAttached();
-    await option.scrollIntoViewIfNeeded();
     await playExpect(option).toBeVisible();
     await option.click();
-    await delay(1000); // wait for the preference to be applied
   }
 
   async selectKubeFile(pathToKube: string): Promise<void> {
