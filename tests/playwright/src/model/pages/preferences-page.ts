@@ -36,8 +36,9 @@ export class PreferencesPage extends SettingsPage {
   }
 
   getPreferenceRowByName(name: string): Locator {
-    const preferenceLocator = this.content.getByText(name, { exact: true }).last();
-    return preferenceLocator.locator('xpath=ancestor::div[@class="flex flex-row justify-between"]');
+    return this.content
+      .locator('div.flex.flex-row.justify-between')
+      .filter({ has: this.page.getByText(name, { exact: true }) });
   }
 
   async isPreferenceManaged(name: string): Promise<boolean> {
@@ -69,7 +70,9 @@ export class PreferencesPage extends SettingsPage {
     await appearancePreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(appearancePreferenceRow).toBeVisible();
 
-    const selectionButton = appearancePreferenceRow.locator('button#input-standard-preferences\\.appearance');
+    const selectionButton = appearancePreferenceRow.getByLabel(
+      'Select between light or dark mode, or use your system setting.',
+    );
     await playExpect(selectionButton).toBeVisible();
     await selectionButton.click();
 
