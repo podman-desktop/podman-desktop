@@ -1,0 +1,464 @@
+
+> podman-desktop@1.24.0-next lint:check /Users/sachin/podman-desktop
+> node --max-old-space-size=8192 node_modules/eslint/bin/eslint.js --cache . --cache-strategy content
+
+
+/Users/sachin/podman-desktop/extensions/compose/src/cli-run.spec.ts
+   85:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  106:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  133:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/cli-run.ts
+  74:8  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/compose-github-releases.spec.ts
+   56:5   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  106:35  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/compose-github-releases.ts
+  109:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/detect.ts
+  163:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/download.spec.ts
+  56:3  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/download.ts
+  79:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/compose/src/extension.ts
+  439:19  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/docker/packages/extension/src/docker-context-handler.ts
+   47:32  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   87:38  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  102:30  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  152:32  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kind/src/extension.spec.ts
+  430:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  444:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kind/src/extension.ts
+  604:19  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kind/src/kind-installer.spec.ts
+   95:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  113:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  133:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  150:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  222:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  235:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  243:15  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  260:7   warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  268:15  warning  Unexpected sync method: 'existsSync'    n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kind/src/kind-installer.ts
+  168:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  198:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kube-context/src/extension.ts
+  134:32  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  161:7   warning  Unexpected sync method: 'existsSync'    n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/cli-run.ts
+  83:55  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/detect.ts
+  80:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/download.spec.ts
+  56:3  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  69:3  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/download.ts
+  76:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/extension.ts
+  465:19  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/kubectl-github-releases.spec.ts
+  55:5  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  73:7  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/kubectl-cli/src/kubectl-github-releases.ts
+  82:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/lima/src/extension.ts
+  105:7   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  105:36  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  124:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  133:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/cleanup/podman-cleanup-abstract.spec.ts
+   66:35  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+   74:5   warning  Unexpected sync method: 'existsSync'    n/no-sync
+   83:5   warning  Unexpected sync method: 'existsSync'    n/no-sync
+  134:3   warning  Unexpected sync method: 'existsSync'    n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/cleanup/podman-cleanup-abstract.ts
+  59:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  72:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  91:26  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/configuration/registry-configuration.spec.ts
+  147:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  155:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/configuration/registry-configuration.ts
+  275:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/extension.spec.ts
+   590:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   624:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1070:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1114:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2217:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2254:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2291:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2332:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2371:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2425:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2426:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2429:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2481:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  3428:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/extension.ts
+   552:8   warning  Unexpected sync method: 'existsSync'  n/no-sync
+   665:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+   665:41  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1120:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1123:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1158:82  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1512:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2078:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/installer/mac-os-installer.ts
+  41:25  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  47:34  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  67:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/installer/podman-install.ts
+  366:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  370:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/installer/win-installer.spec.ts
+  66:3  warning  Unexpected sync method: 'existsSync'   n/no-sync
+  67:3  warning  Unexpected sync method: 'readdirSync'  n/no-sync
+  80:3  warning  Unexpected sync method: 'existsSync'   n/no-sync
+  81:3  warning  Unexpected sync method: 'readdirSync'  n/no-sync
+  95:3  warning  Unexpected sync method: 'existsSync'   n/no-sync
+  96:3  warning  Unexpected sync method: 'readdirSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/installer/win-installer.ts
+  75:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/remote/podman-remote-connections.ts
+  157:26  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/utils/compatibility-mode.ts
+   59:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+   61:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   63:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   74:12  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  169:12  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/utils/podman-cli.spec.ts
+   64:15  warning  Unexpected sync method: 'realpathSync'  n/no-sync
+   72:15  warning  Unexpected sync method: 'statSync'      n/no-sync
+   88:17  warning  Unexpected sync method: 'statSync'      n/no-sync
+  293:14  warning  Unexpected sync method: 'statSync'      n/no-sync
+  294:14  warning  Unexpected sync method: 'statSync'      n/no-sync
+  295:14  warning  Unexpected sync method: 'statSync'      n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/utils/podman-cli.ts
+  46:28  warning  Unexpected sync method: 'realpathSync'  n/no-sync
+  47:23  warning  Unexpected sync method: 'statSync'      n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/utils/podman-configuration.ts
+   73:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  146:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  175:25  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  181:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  235:41  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  241:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  309:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/utils/podman-machine-stream.ts
+  123:21  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/extensions/podman/packages/extension/src/utils/registry-setup.ts
+  176:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  193:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/scripts/download-remote-extensions.spec.ts
+   74:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  100:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  124:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  196:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/scripts/download-remote-extensions.ts
+   90:7  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  103:8  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/certificates.ts
+  128:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/configuration-registry.spec.ts
+  104:3  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  109:3  warning  Unexpected sync method: 'cpSync'         n/no-sync
+  236:3  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  438:3  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  451:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  612:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  623:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  654:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  658:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  690:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  694:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/configuration-registry.ts
+  362:5  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/container-registry.spec.ts
+  1658:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1763:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/container-registry.ts
+  2612:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/contribution-manager.spec.ts
+  707:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/contribution-manager.ts
+  107:10  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  108:7   warning  Unexpected sync method: 'mkdirSync'     n/no-sync
+  141:15  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  145:17  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  147:40  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+  198:28  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  403:10  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  413:10  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  429:10  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  504:12  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  518:11  warning  Unexpected sync method: 'existsSync'    n/no-sync
+  550:12  warning  Unexpected sync method: 'existsSync'    n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/directories-legacy.ts
+  59:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  60:7   warning  Unexpected sync method: 'mkdirSync'   n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/docker-extension/docker-desktop-installation.ts
+  125:5  warning  Unexpected sync method: 'rmSync'      n/no-sync
+  422:7  warning  Unexpected sync method: 'unlinkSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/explore-features/explore-features.spec.ts
+  228:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  231:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  234:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  237:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/explore-features/explore-features.ts
+  136:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/extension/extension-analyzer.ts
+   71:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  102:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/extension/extension-development-folders.ts
+  152:7  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/extension/extension-loader.spec.ts
+  2271:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2701:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2703:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  2705:15  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/extension/extension-loader.ts
+   310:5   warning  Unexpected sync method: 'mkdirSync'   n/no-sync
+   329:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   330:7   warning  Unexpected sync method: 'mkdirSync'   n/no-sync
+   333:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   334:7   warning  Unexpected sync method: 'mkdirSync'   n/no-sync
+   419:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+   451:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   452:7   warning  Unexpected sync method: 'mkdirSync'   n/no-sync
+   499:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+   536:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   642:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   651:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   653:20  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   673:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   681:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1725:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1725:43  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/extension/extension-tsconfig-parser.spec.ts
+  42:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  48:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  58:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/extension/extension-tsconfig-parser.ts
+  44:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/filesystem-monitoring.ts
+  35:9   warning  Unexpected sync method: 'existsSync'    n/no-sync
+  36:32  warning  Unexpected sync method: 'realpathSync'  n/no-sync
+  47:36  warning  Unexpected sync method: 'realpathSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/image-registry.spec.ts
+  471:3   warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  477:3   warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  480:21  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  481:21  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  528:25  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  532:30  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  536:32  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  540:27  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  544:29  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  575:3   warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  578:12  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  631:25  warning  Unexpected sync method: 'existsSync'     n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/image-registry.ts
+  579:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  588:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/install/extension-installer.spec.ts
+  92:3  warning  Unexpected sync method: 'rmSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/install/extension-installer.ts
+   73:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  217:5   warning  Unexpected sync method: 'rmSync'      n/no-sync
+  345:13  warning  Unexpected sync method: 'rmdirSync'   n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/kubernetes/kubernetes-client.spec.ts
+  1143:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/kubernetes/kubernetes-client.ts
+   263:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+   310:9   warning  Unexpected sync method: 'existsSync'  n/no-sync
+  1199:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/onboarding-registry.spec.ts
+  81:5  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/podman/kube.spec.ts
+  134:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  135:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  139:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  144:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  153:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  154:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  167:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  168:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/podman/kube.ts
+  124:11  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/proxy.spec.ts
+  109:3  warning  Unexpected sync method: 'readFileSync'   n/no-sync
+  110:3  warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+  111:3  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  112:3  warning  Unexpected sync method: 'mkdirSync'      n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/safe-storage/safe-storage-registry.spec.ts
+   52:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  114:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/safe-storage/safe-storage-registry.ts
+  56:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  59:10  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  73:7   warning  Unexpected sync method: 'cpSync'      n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/telemetry/identity.ts
+  38:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/troubleshooting.ts
+  92:14  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/util/directory-strategy.spec.ts
+  63:28  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  75:28  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/util/directory-strategy.ts
+  47:13  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/plugin/webview/webview-registry.ts
+  172:12  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/system/macos-startup.spec.ts
+  164:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  169:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  175:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  180:5  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/system/macos-startup.ts
+  113:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/system/windows-startup.spec.ts
+  68:3  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/system/windows-startup.ts
+  62:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  82:9  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/packages/main/src/util.ts
+  48:9   warning  Unexpected sync method: 'existsSync'    n/no-sync
+  49:28  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/runner/podman-desktop-runner.ts
+  248:9   warning  Unexpected sync method: 'existsSync'     n/no-sync
+  250:7   warning  Unexpected sync method: 'rmSync'         n/no-sync
+  264:11  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  266:9   warning  Unexpected sync method: 'rmSync'         n/no-sync
+  272:11  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  274:9   warning  Unexpected sync method: 'rmSync'         n/no-sync
+  339:10  warning  Unexpected sync method: 'existsSync'     n/no-sync
+  340:7   warning  Unexpected sync method: 'mkdirSync'      n/no-sync
+  347:5   warning  Unexpected sync method: 'writeFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/special-specs/installation/podman-installer.spec.ts
+  89:16  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/special-specs/installation/update-install.spec.ts
+  160:7  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/specs/kubernetes-context-smoke.spec.ts
+  38:3  warning  Unexpected sync method: 'copyFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/utility/cleanup.ts
+  28:7  warning  Unexpected sync method: 'existsSync'  n/no-sync
+  30:5  warning  Unexpected sync method: 'rmSync'      n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/utility/kubernetes.ts
+  65:23  warning  Unexpected sync method: 'execSync'  n/no-sync
+  72:28  warning  Unexpected sync method: 'execSync'  n/no-sync
+
+/Users/sachin/podman-desktop/tests/playwright/src/utility/operations.ts
+  376:3   warning  Unexpected sync method: 'execSync'  n/no-sync
+  450:7   warning  Unexpected sync method: 'execSync'  n/no-sync
+  459:7   warning  Unexpected sync method: 'execSync'  n/no-sync
+  473:7   warning  Unexpected sync method: 'execSync'  n/no-sync
+  485:5   warning  Unexpected sync method: 'execSync'  n/no-sync
+  501:7   warning  Unexpected sync method: 'execSync'  n/no-sync
+  513:9   warning  Unexpected sync method: 'execSync'  n/no-sync
+  516:9   warning  Unexpected sync method: 'execSync'  n/no-sync
+  586:16  warning  Unexpected sync method: 'execSync'  n/no-sync
+  589:16  warning  Unexpected sync method: 'execSync'  n/no-sync
+  627:22  warning  Unexpected sync method: 'execSync'  n/no-sync
+  730:20  warning  Unexpected sync method: 'execSync'  n/no-sync
+
+/Users/sachin/podman-desktop/website-argos/screenshot.spec.ts
+  30:20  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/website-argos/utils.ts
+  35:19  warning  Unexpected sync method: 'readFileSync'  n/no-sync
+
+/Users/sachin/podman-desktop/website/release-notes-parser.ts
+  68:12  warning  Unexpected sync method: 'existsSync'  n/no-sync
+
+✖ 275 problems (0 errors, 275 warnings)
+
