@@ -63,8 +63,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1
       electron-updater:
-        specifier: 6.7.2
-        version: 6.7.2
+        specifier: 6.7.3
+        version: 6.7.3
       electron-util:
         specifier: ^1.0.0
         version: 1.0.0
@@ -6580,8 +6580,8 @@ packages:
   electron-to-chromium@1.5.250:
     resolution: {integrity: sha512-/5UMj9IiGDMOFBnN4i7/Ry5onJrAGSbOGo3s9FEKmwobGq6xw832ccET0CE3CkkMBZ8GJSlUIesZofpyurqDXw==}
 
-  electron-updater@6.7.2:
-    resolution: {integrity: sha512-URw19f7afuB5HQOdxhu5wdnWE+w/lTGsXJ3RdObSJXIkW0i9r3ZUWrd1CjggTrD0qzEuxBODe4VFPM8OBg4qEA==}
+  electron-updater@6.7.3:
+    resolution: {integrity: sha512-EgkT8Z9noqXKbwc3u5FkJA+r48jwZ5DTUiOkJMOTEEH//n5Am6wfQGz7nvSFEA2oIAMv9jRzn5JKTyWeSKOPgg==}
 
   electron-util@1.0.0:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
@@ -18991,7 +18991,7 @@ snapshots:
 
   electron-to-chromium@1.5.250: {}
 
-  electron-updater@6.7.2:
+  electron-updater@6.7.3:
     dependencies:
       builder-util-runtime: 9.5.1
       fs-extra: 10.1.0
@@ -18999,7 +18999,7 @@ snapshots:
       lazy-val: 1.0.5
       lodash.escaperegexp: 4.1.2
       lodash.isequal: 4.5.0
-      semver: 7.7.2
+      semver: 7.7.3
       tiny-typed-emitter: 2.1.0
     transitivePeerDependencies:
       - supports-color
