@@ -119,7 +119,7 @@ jobs:
 
       - name: setup telemetry key for production
         run: |
-          jq --arg key "${{ secrets.SEGMENT_WRITE_KEY }}" '.telemetry.key = $key' product.json > product.json.tmp && mv product.json.tmp product.json
+          jq --arg key "${{ secrets.SEGMENT_WRITE_KEY }}" '.telemetry.key = $key' product.json > product.json.tmp && rm product.json && mv product.json.tmp product.json
 
       - name: Execute pnpm
         run: pnpm install
