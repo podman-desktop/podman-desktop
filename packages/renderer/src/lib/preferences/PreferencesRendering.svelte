@@ -84,9 +84,9 @@ function updateSearchValue(event: any): void {
           {@const records = matchingRecords.get(configSection)}
           {#if records}
             <div>
-              <div class="text-lg font-medium first-letter:uppercase">{records.at(0)?.title}</div>
+              <div role="heading" aria-level="2" class="text-lg font-medium first-letter:uppercase">{records.at(0)?.title}</div>
               {#each records as configItem (configItem.id)}
-                <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2">
+                <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mt-2 ml-2" aria-labelledby="{configItem.id}">
                   <PreferencesRenderingItem record={configItem} />
                 </div>
               {/each}
