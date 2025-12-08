@@ -83,20 +83,45 @@ async function findExtensionDigest(extension: string): Promise<string | undefine
   }
 }
 
+export function findAuthEnvironment(registry: string): RegistryAuth | undefined {
+  const prefix = `AUTH_${registry.replace(/[^a-zA-Z]/g, '_').toUpperCase()}`;
+  const usernameKey = `${prefix}_USER`;
+  const secretKey = `${prefix}_SECRET`;
+  console.debug(`Lookup environment variable ${usernameKey} & ${secretKey}`);
+
+  const usernameValue = process.env[usernameKey];
+  const secretValue = process.env[secretKey];
+
+  // if both undefined => ignore
+  if (!usernameValue && !secretValue) return undefined;
+
+  // if only one is defined => raise error
+  if (!usernameValue || !secretValue) {
+    throw new Error(`if one of ${usernameKey} and ${secretKey} is specified, both need to be defined.`);
+  }
+
+  return {
+    username: usernameValue,
+    secret: secretValue,
+  };
+}
+
 export async function downloadExtension(options: DownloadOptions): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
-  if (options.auth) {
-    const registry = imageRegistry.extractRegistryServerFromImage(options.extension.oci);
-    if (!registry) throw new Error(`cannot determine registry for image ${options.extension.oci}`);
+  const registry = imageRegistry.extractRegistryServerFromImage(options.extension.oci);
+  if (!registry) throw new Error(`cannot determine registry for image ${options.extension.oci}`);
 
+  const auth = options.auth ?? findAuthEnvironment(registry);
+
+  if (auth) {
     console.debug(`Configuring registry ${registry}`);
 
     imageRegistry.registerRegistry({
       source: 'scripts',
       serverUrl: registry,
-      username: options.auth.username,
-      secret: options.auth.secret,
+      username: auth.username,
+      secret: auth.secret,
     });
   }
 

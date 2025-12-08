@@ -30,6 +30,7 @@ import type { RemoteExtension } from './download-remote-extensions.js';
 import {
   DIGEST_FILENAME,
   downloadExtension,
+  findAuthEnvironment,
   getRemoteExtensionFromProductJSON,
   main,
   NAME_ARG,
@@ -66,6 +67,7 @@ const FINAL_EXTENSION_DIGEST_FILE = join(FINAL_EXTENSION_DEST, DIGEST_FILENAME);
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.unstubAllEnvs();
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
   (vi.mocked(product).extensions.remote as RemoteExtension[]) = [];
@@ -81,6 +83,56 @@ beforeEach(() => {
       default:
         return false;
     }
+  });
+});
+
+describe('findAuthEnvironment', () => {
+  test('should return undefined if none are defined', () => {
+    const result = findAuthEnvironment('quay.io');
+    expect(result).toBeUndefined();
+  });
+
+  test.each<{
+    registry: string;
+    env: {
+      user: string;
+      secret: string;
+    };
+  }>([
+    {
+      registry: 'quay.io',
+      env: {
+        user: 'AUTH_QUAY_IO_USER',
+        secret: 'AUTH_QUAY_IO_SECRET',
+      },
+    },
+    {
+      registry: 'my-registry.example.io',
+      env: {
+        user: 'AUTH_MY_REGISTRY_EXAMPLE_IO_USER',
+        secret: 'AUTH_MY_REGISTRY_EXAMPLE_IO_SECRET',
+      },
+    },
+  ])('registry $registry should use $env.user & $env.secret', ({ registry, env }) => {
+    vi.stubEnv(env.user, 'foo');
+    vi.stubEnv(env.secret, 'bar');
+
+    const result = findAuthEnvironment(registry);
+    expect(result).toStrictEqual({
+      username: 'foo',
+      secret: 'bar',
+    });
+  });
+
+  test.each<string>([
+    'AUTH_QUAY_IO_USER',
+    'AUTH_QUAY_IO_SECRET',
+  ])('should throw an error if %s is the only env defined', env => {
+    vi.stubEnv(env, 'foo');
+
+    expect(() => {
+      findAuthEnvironment('quay.io');
+    }).toThrowError('if one of AUTH_QUAY_IO_USER and AUTH_QUAY_IO_SECRET is specified, both need to be defined.');
   });
 });
 
