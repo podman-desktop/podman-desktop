@@ -146,7 +146,7 @@ The administrator creates a managed defaults file with corporate settings:
 <Tabs groupId="operating-systems">
 <TabItem value="linux" label="Linux">
 
-```json title="/usr/share/containers/podman-desktop/default-settings.json"
+```json title="/usr/share/podman-desktop/default-settings.json"
 {
   "proxy.http": "http://corp-proxy.example.com:8080",
   "telemetry.enabled": false
@@ -183,7 +183,7 @@ The administrator creates a locked configuration file to enforce these settings:
 <Tabs groupId="operating-systems">
 <TabItem value="linux" label="Linux">
 
-```json title="/usr/share/containers/podman-desktop/locked.json"
+```json title="/usr/share/podman-desktop/locked.json"
 {
   "locked": ["proxy.http", "telemetry.enabled"]
 }
