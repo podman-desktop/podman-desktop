@@ -6122,7 +6122,17 @@ describe('kube play', () => {
   });
 });
 
+const originalConsoleWarn = console.warn;
+
 describe('updateImage', () => {
+  beforeEach(() => {
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.warn = originalConsoleWarn;
+  });
+
   test('should reject if no provider', async () => {
     await expect(containerRegistry.updateImage('dummy', 'imageId', 'nginx:latest')).rejects.toThrowError(
       'no engine matching this engine',
@@ -6311,13 +6321,10 @@ describe('updateImage', () => {
     };
     vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
     vi.spyOn(containerRegistry, 'deleteImage').mockRejectedValue(new Error('Deletion failed'));
-    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = await containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest');
     expect(result).toBeUndefined();
     expect(getImageMock).toHaveBeenCalledTimes(2);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringMatching(/Could not delete old image.*Deletion failed/));
-
-    consoleWarnSpy.mockRestore();
+    expect(console.warn).toHaveBeenCalledWith(expect.stringMatching(/Could not delete old image.*Deletion failed/));
   });
 });
