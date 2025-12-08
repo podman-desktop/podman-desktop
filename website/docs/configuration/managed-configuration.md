@@ -36,7 +36,7 @@ This allows administrators to pre-configure settings for new users while respect
 Settings listed in `locked.json` are enforced on every read and cannot be changed by the user:
 
 - The value is always read from `default-settings.json`, ignoring the user's `settings.json`
-- The setting appears displays a lock icon in the UI
+- The setting displays a lock icon in the UI
 - User changes to locked keys are ignored
 
 Use locked settings when you need to enforce compliance, such as proxy servers or telemetry policies.
