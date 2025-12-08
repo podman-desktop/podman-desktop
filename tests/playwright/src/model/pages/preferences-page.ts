@@ -25,6 +25,7 @@ export class PreferencesPage extends SettingsPage {
   readonly heading: Locator;
   readonly searchbar: Locator;
   readonly kubePathInput: Locator;
+  readonly APPEARANCE_PREFERENCE_LABEL = 'Appearance';
 
   constructor(page: Page) {
     super(page, 'Preferences');
@@ -54,7 +55,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getAppearancePreferenceValue(): Promise<string> {
-    const appearancePreferenceRow = this.getPreferenceRowByName('Appearance');
+    const appearancePreferenceRow = this.getPreferenceRowByName(this.APPEARANCE_PREFERENCE_LABEL);
     await playExpect(appearancePreferenceRow).toBeAttached();
     await appearancePreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(appearancePreferenceRow).toBeVisible();
@@ -65,7 +66,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async setAppearancePreference(value: string): Promise<void> {
-    const appearancePreferenceRow = this.getPreferenceRowByName('Appearance');
+    const appearancePreferenceRow = this.getPreferenceRowByName(this.APPEARANCE_PREFERENCE_LABEL);
     await playExpect(appearancePreferenceRow).toBeAttached();
     await appearancePreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(appearancePreferenceRow).toBeVisible();

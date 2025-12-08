@@ -42,7 +42,6 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Managed Configuration - no settings scenario', { tag: '@managed-configuration' }, () => {
-  const appearancePreferenceLabel = 'Appearance';
   let settingsBar: SettingsBar;
   let preferencesPage: PreferencesPage;
   let preferenceRow: Locator;
@@ -50,17 +49,19 @@ test.describe.serial('Managed Configuration - no settings scenario', { tag: '@ma
   test.beforeAll(async ({ navigationBar }) => {
     settingsBar = await navigationBar.openSettings();
     preferencesPage = await settingsBar.openTabPage(PreferencesPage);
-    const appearanceSubsectionButton = settingsBar.getPreferencesLinkLocator(appearancePreferenceLabel);
+    const appearanceSubsectionButton = settingsBar.getPreferencesLinkLocator(
+      preferencesPage.APPEARANCE_PREFERENCE_LABEL,
+    );
     await playExpect(appearanceSubsectionButton).toBeVisible();
     await appearanceSubsectionButton.click();
-    preferenceRow = preferencesPage.getPreferenceRowByName(appearancePreferenceLabel);
+    preferenceRow = preferencesPage.getPreferenceRowByName(preferencesPage.APPEARANCE_PREFERENCE_LABEL);
     await playExpect(preferenceRow).toBeAttached();
     await preferenceRow.scrollIntoViewIfNeeded();
     await playExpect(preferenceRow).toBeVisible();
   });
 
   test(`Verify Appearance preference set to default values`, async () => {
-    const isManaged = await preferencesPage.isPreferenceManaged(appearancePreferenceLabel);
+    const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.APPEARANCE_PREFERENCE_LABEL);
     playExpect(isManaged).toBe(false);
 
     const actualValue = await preferencesPage.getAppearancePreferenceValue();
@@ -78,7 +79,7 @@ test.describe.serial('Managed Configuration - no settings scenario', { tag: '@ma
 
   // test is expected to fail because of https://github.com/podman-desktop/podman-desktop/issues/15242
   test.fail(`Restore Appearance preference to default value`, async () => {
-    await preferencesPage.resetPreference(appearancePreferenceLabel);
+    await preferencesPage.resetPreference(preferencesPage.APPEARANCE_PREFERENCE_LABEL);
     const restoredValue = await preferencesPage.getAppearancePreferenceValue();
     playExpect(restoredValue).toBe('system');
   });
