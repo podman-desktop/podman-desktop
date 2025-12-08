@@ -128,6 +128,15 @@ async function updatePod(): Promise<void> {
       useServices: deployUsingServices,
       useRoutes: deployUsingRoutes,
     });
+  } else if (
+    createdPod?.status?.containerStatuses?.some(status => status.state?.waiting?.reason === 'ImagePullBackOff')
+  ) {
+    clearInterval(updatePodInterval);
+    await window.telemetryTrack('deployToKube', { errorMessage: 'ImagePullBackOff' });
+    deployError = 'ImagePullBackOff error, please check that the image is accessible from the Kubernetes cluster.';
+    deployStarted = false;
+    deployFinished = false;
+    return;
   }
 }
 
