@@ -128,6 +128,18 @@ describe('LegacyDirectories', () => {
       expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.macOS);
     });
 
+    test('should use appId format for macOS managed folder path', () => {
+      vi.mocked(isMac).mockReturnValue(true);
+      vi.mocked(isWindows).mockReturnValue(false);
+      vi.mocked(isLinux).mockReturnValue(false);
+
+      provider = new LegacyDirectories();
+
+      // The macOS managed path folder should be the appId (macOS format is different vs Windows / Linux)
+      // so make sure we still have the correct format
+      expect(provider.getManagedDefaultsDirectory()).toBe(`/Library/Application Support/${product.appId}`);
+    });
+
     test('should map PROGRAMDATA into windows managed folder path', () => {
       vi.mocked(isMac).mockReturnValue(false);
       vi.mocked(isWindows).mockReturnValue(true);

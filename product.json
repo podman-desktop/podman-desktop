@@ -6,7 +6,7 @@
   "paths": {
     "config": "containers/podman-desktop",
     "managed": {
-      "macOS": "/Library/Application Support/Podman Desktop",
+      "macOS": "/Library/Application Support/io.podman_desktop.PodmanDesktop",
       "windows": "%PROGRAMDATA%\\Podman Desktop",
       "linux": "/usr/share/podman-desktop"
     }
