@@ -564,11 +564,18 @@ test('ImagePullBackOff error should be reported', async () => {
   await vi.runAllTimersAsync();
 
   await waitFor(() => {
+    // The error is reported to the telemetry and to the user
     expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
       errorMessage: 'ImagePullBackOff',
     });
     expect(screen.getByLabelText('Deploy Error Message')).toHaveTextContent(
       'ImagePullBackOff error, please check that the image is accessible from the Kubernetes cluster',
     );
+  });
+  await vi.waitFor(() => {
+    // The deploy button is displayed again, meaning that the deploy process has been aborted
+    const deployButton = screen.getByRole('button', { name: 'Deploy' });
+    expect(deployButton).toBeVisible();
+    expect(deployButton).toBeEnabled();
   });
 });
