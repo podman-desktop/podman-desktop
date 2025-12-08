@@ -30,11 +30,14 @@ import type { RemoteExtension } from './download-remote-extensions.js';
 import {
   DIGEST_FILENAME,
   downloadExtension,
+  findAuthEnvironment,
   getRemoteExtensionFromProductJSON,
   main,
   NAME_ARG,
   OCI_ARG,
   parseArgs,
+  REGISTRY_SECRET_ARG,
+  REGISTRY_USER_ARG,
 } from './download-remote-extensions.js';
 
 vi.mock(import('node:fs/promises'));
@@ -64,11 +67,13 @@ const FINAL_EXTENSION_DIGEST_FILE = join(FINAL_EXTENSION_DEST, DIGEST_FILENAME);
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.unstubAllEnvs();
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
   (vi.mocked(product).extensions.remote as RemoteExtension[]) = [];
 
   vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue(MANIFEST_MOCK);
+  vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue('quay.io');
 
   // mock final check to be valid
   vi.mocked(existsSync).mockImplementation(path => {
@@ -81,9 +86,62 @@ beforeEach(() => {
   });
 });
 
+describe('findAuthEnvironment', () => {
+  test('should return undefined if none are defined', () => {
+    const result = findAuthEnvironment('quay.io');
+    expect(result).toBeUndefined();
+  });
+
+  test.each<{
+    registry: string;
+    env: {
+      user: string;
+      secret: string;
+    };
+  }>([
+    {
+      registry: 'quay.io',
+      env: {
+        user: 'AUTH_QUAY_IO_USER',
+        secret: 'AUTH_QUAY_IO_SECRET',
+      },
+    },
+    {
+      registry: 'my-registry.example.io',
+      env: {
+        user: 'AUTH_MY_REGISTRY_EXAMPLE_IO_USER',
+        secret: 'AUTH_MY_REGISTRY_EXAMPLE_IO_SECRET',
+      },
+    },
+  ])('registry $registry should use $env.user & $env.secret', ({ registry, env }) => {
+    vi.stubEnv(env.user, 'foo');
+    vi.stubEnv(env.secret, 'bar');
+
+    const result = findAuthEnvironment(registry);
+    expect(result).toStrictEqual({
+      username: 'foo',
+      secret: 'bar',
+    });
+  });
+
+  test.each<string>([
+    'AUTH_QUAY_IO_USER',
+    'AUTH_QUAY_IO_SECRET',
+  ])('should throw an error if %s is the only env defined', env => {
+    vi.stubEnv(env, 'foo');
+
+    expect(() => {
+      findAuthEnvironment('quay.io');
+    }).toThrowError('if one of AUTH_QUAY_IO_USER and AUTH_QUAY_IO_SECRET is specified, both need to be defined.');
+  });
+});
+
 describe('downloadExtension', () => {
   test('should call ImageRegistry#downloadAndExtractImage with appropriate argument', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledExactlyOnceWith(
       REMOTE_INFO_MOCK.oci,
@@ -106,7 +164,10 @@ describe('downloadExtension', () => {
       }
     });
 
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     // ensure we read the digest file
     expect(readFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, {
@@ -131,7 +192,10 @@ describe('downloadExtension', () => {
       }
     });
 
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     // ensure we read the digest file
     expect(readFile).toHaveBeenCalledOnce();
@@ -146,7 +210,10 @@ describe('downloadExtension', () => {
   });
 
   test('should rename tmp directory to destination', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
@@ -157,8 +224,43 @@ describe('downloadExtension', () => {
     expect(rm).not.toHaveBeenCalled();
   });
 
+  test('invalid OCI registry name with auth should throw an error', async () => {
+    vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue(undefined);
+
+    await expect(async () => {
+      await downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+        auth: {
+          username: 'foo',
+          secret: 'bar',
+        },
+      });
+    }).rejects.toThrowError(`cannot determine registry for image ${REMOTE_INFO_MOCK.oci}`);
+  });
+
+  test('should register registry', async () => {
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+      auth: {
+        username: 'foo',
+        secret: 'bar',
+      },
+    });
+    expect(ImageRegistry.prototype.registerRegistry).toHaveBeenCalledExactlyOnceWith({
+      source: 'scripts',
+      serverUrl: 'quay.io',
+      username: 'foo',
+      secret: 'bar',
+    });
+  });
+
   test('should write digest file to destination', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(writeFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, MANIFEST_MOCK.config.digest, {
       encoding: 'utf-8',
@@ -170,7 +272,10 @@ describe('downloadExtension', () => {
       code: 'EXDEV',
     } as NodeJS.ErrnoException);
 
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     const tmpFolder = join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension');
 
@@ -184,7 +289,10 @@ describe('downloadExtension', () => {
   });
 
   test('should mkdir the destination directory', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(mkdir).toHaveBeenCalledExactlyOnceWith(ABS_DEST_DIR, {
       recursive: true,
@@ -198,7 +306,10 @@ describe('downloadExtension', () => {
     });
 
     await expect(async () => {
-      await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+      await downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      });
     }).rejects.toThrowError(
       `extension ${REMOTE_INFO_MOCK.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
     );
@@ -232,6 +343,16 @@ describe('parseArgs', () => {
       args: ['--output', ABS_DEST_DIR, `--${OCI_ARG}`, 'ghcr.io/org/my-user:latest'],
       error: `when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`,
     },
+    {
+      name: `having --${REGISTRY_USER_ARG} without --${REGISTRY_SECRET_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, 'foo'],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+    },
+    {
+      name: `having --${REGISTRY_SECRET_ARG} without --${REGISTRY_USER_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_SECRET_ARG}`, 'dummy-secret'],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+    },
     // zero length args
     {
       name: `zero length --${NAME_ARG} should throw an error`,
@@ -242,6 +363,16 @@ describe('parseArgs', () => {
       name: `zero length --${OCI_ARG} should throw an error`,
       args: ['--output', ABS_DEST_DIR, `--${OCI_ARG}`, '', `--${NAME_ARG}`, 'foo'],
       error: `when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`,
+    },
+    {
+      name: `zero length --${REGISTRY_USER_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, '', `--${REGISTRY_SECRET_ARG}`, 'dummy-secret'],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+    },
+    {
+      name: `zero length --${REGISTRY_SECRET_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, 'foo', `--${REGISTRY_SECRET_ARG}`, ''],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
     },
     // too many args
     {
@@ -272,6 +403,34 @@ describe('parseArgs', () => {
       ],
       error: `when specifying --${OCI_ARG} and --${NAME_ARG}, only one is allowed`,
     },
+    {
+      name: `multiple --${REGISTRY_USER_ARG} should throw an error`,
+      args: [
+        '--output',
+        ABS_DEST_DIR,
+        `--${REGISTRY_USER_ARG}`,
+        'user-1',
+        `--${REGISTRY_USER_ARG}`,
+        'user-2',
+        `--${REGISTRY_SECRET_ARG}`,
+        'secret',
+      ],
+      error: `when specifying --${REGISTRY_USER_ARG} and --${REGISTRY_SECRET_ARG}, only one is allowed`,
+    },
+    {
+      name: `multiple --${REGISTRY_SECRET_ARG} should throw an error`,
+      args: [
+        '--output',
+        ABS_DEST_DIR,
+        `--${REGISTRY_SECRET_ARG}`,
+        'secret-1',
+        `--${REGISTRY_SECRET_ARG}`,
+        'secret-2',
+        `--${REGISTRY_USER_ARG}`,
+        'foo',
+      ],
+      error: `when specifying --${REGISTRY_USER_ARG} and --${REGISTRY_SECRET_ARG}, only one is allowed`,
+    },
     // wrong type args
     {
       name: `boolean --${NAME_ARG} should throw an error`,
@@ -290,9 +449,11 @@ describe('parseArgs', () => {
   });
 
   test(`should handle no --${NAME_ARG} & --${OCI_ARG} args`, () => {
-    expect(parseArgs(['--output', ABS_DEST_DIR])).toStrictEqual({
-      output: ABS_DEST_DIR,
-    });
+    expect(parseArgs(['--output', ABS_DEST_DIR])).toStrictEqual(
+      expect.objectContaining({
+        output: ABS_DEST_DIR,
+      }),
+    );
   });
 
   test('should handle single string value for --oci arg', () => {
@@ -308,13 +469,28 @@ describe('parseArgs', () => {
         `--${NAME_ARG}`,
         'my-user',
       ]),
-    ).toStrictEqual({
-      output: ABS_DEST_DIR,
-      extension: {
-        oci: 'ghcr.io/org/my-user:latest',
-        name: 'my-user',
-      },
-    });
+    ).toStrictEqual(
+      expect.objectContaining({
+        output: ABS_DEST_DIR,
+        extension: {
+          oci: 'ghcr.io/org/my-user:latest',
+          name: 'my-user',
+        },
+      }),
+    );
+  });
+
+  test(`should parse --${REGISTRY_USER_ARG} & --${REGISTRY_SECRET_ARG} args`, () => {
+    expect(
+      parseArgs(['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, 'foo', `--${REGISTRY_SECRET_ARG}`, 'bar']),
+    ).toStrictEqual(
+      expect.objectContaining({
+        auth: {
+          username: 'foo',
+          secret: 'bar',
+        },
+      }),
+    );
   });
 });
 
