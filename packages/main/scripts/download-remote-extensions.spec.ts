@@ -35,6 +35,8 @@ import {
   NAME_ARG,
   OCI_ARG,
   parseArgs,
+  REGISTRY_SECRET_ARG,
+  REGISTRY_USER_ARG,
 } from './download-remote-extensions.js';
 
 vi.mock(import('node:fs/promises'));
@@ -83,7 +85,10 @@ beforeEach(() => {
 
 describe('downloadExtension', () => {
   test('should call ImageRegistry#downloadAndExtractImage with appropriate argument', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(ImageRegistry.prototype.downloadAndExtractImage).toHaveBeenCalledExactlyOnceWith(
       REMOTE_INFO_MOCK.oci,
@@ -106,7 +111,10 @@ describe('downloadExtension', () => {
       }
     });
 
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     // ensure we read the digest file
     expect(readFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, {
@@ -131,7 +139,10 @@ describe('downloadExtension', () => {
       }
     });
 
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     // ensure we read the digest file
     expect(readFile).toHaveBeenCalledOnce();
@@ -146,7 +157,10 @@ describe('downloadExtension', () => {
   });
 
   test('should rename tmp directory to destination', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(rename).toHaveBeenCalledExactlyOnceWith(
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
@@ -158,7 +172,10 @@ describe('downloadExtension', () => {
   });
 
   test('should write digest file to destination', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(writeFile).toHaveBeenCalledExactlyOnceWith(FINAL_EXTENSION_DIGEST_FILE, MANIFEST_MOCK.config.digest, {
       encoding: 'utf-8',
@@ -170,7 +187,10 @@ describe('downloadExtension', () => {
       code: 'EXDEV',
     } as NodeJS.ErrnoException);
 
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     const tmpFolder = join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension');
 
@@ -184,7 +204,10 @@ describe('downloadExtension', () => {
   });
 
   test('should mkdir the destination directory', async () => {
-    await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+    });
 
     expect(mkdir).toHaveBeenCalledExactlyOnceWith(ABS_DEST_DIR, {
       recursive: true,
@@ -198,7 +221,10 @@ describe('downloadExtension', () => {
     });
 
     await expect(async () => {
-      await downloadExtension(ABS_DEST_DIR, REMOTE_INFO_MOCK);
+      await downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+      });
     }).rejects.toThrowError(
       `extension ${REMOTE_INFO_MOCK.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
     );
@@ -232,6 +258,16 @@ describe('parseArgs', () => {
       args: ['--output', ABS_DEST_DIR, `--${OCI_ARG}`, 'ghcr.io/org/my-user:latest'],
       error: `when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`,
     },
+    {
+      name: `having --${REGISTRY_USER_ARG} without --${REGISTRY_SECRET_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, 'foo'],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+    },
+    {
+      name: `having --${REGISTRY_SECRET_ARG} without --${REGISTRY_USER_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_SECRET_ARG}`, 'dummy-secret'],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+    },
     // zero length args
     {
       name: `zero length --${NAME_ARG} should throw an error`,
@@ -242,6 +278,16 @@ describe('parseArgs', () => {
       name: `zero length --${OCI_ARG} should throw an error`,
       args: ['--output', ABS_DEST_DIR, `--${OCI_ARG}`, '', `--${NAME_ARG}`, 'foo'],
       error: `when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`,
+    },
+    {
+      name: `zero length --${REGISTRY_USER_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, '', `--${REGISTRY_SECRET_ARG}`, 'dummy-secret'],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+    },
+    {
+      name: `zero length --${REGISTRY_SECRET_ARG} should throw an error`,
+      args: ['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, 'foo', `--${REGISTRY_SECRET_ARG}`, ''],
+      error: `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
     },
     // too many args
     {
@@ -272,6 +318,34 @@ describe('parseArgs', () => {
       ],
       error: `when specifying --${OCI_ARG} and --${NAME_ARG}, only one is allowed`,
     },
+    {
+      name: `multiple --${REGISTRY_USER_ARG} should throw an error`,
+      args: [
+        '--output',
+        ABS_DEST_DIR,
+        `--${REGISTRY_USER_ARG}`,
+        'user-1',
+        `--${REGISTRY_USER_ARG}`,
+        'user-2',
+        `--${REGISTRY_SECRET_ARG}`,
+        'secret',
+      ],
+      error: `when specifying --${REGISTRY_USER_ARG} and --${REGISTRY_SECRET_ARG}, only one is allowed`,
+    },
+    {
+      name: `multiple --${REGISTRY_SECRET_ARG} should throw an error`,
+      args: [
+        '--output',
+        ABS_DEST_DIR,
+        `--${REGISTRY_SECRET_ARG}`,
+        'secret-1',
+        `--${REGISTRY_SECRET_ARG}`,
+        'secret-2',
+        `--${REGISTRY_USER_ARG}`,
+        'foo',
+      ],
+      error: `when specifying --${REGISTRY_USER_ARG} and --${REGISTRY_SECRET_ARG}, only one is allowed`,
+    },
     // wrong type args
     {
       name: `boolean --${NAME_ARG} should throw an error`,
@@ -290,9 +364,11 @@ describe('parseArgs', () => {
   });
 
   test(`should handle no --${NAME_ARG} & --${OCI_ARG} args`, () => {
-    expect(parseArgs(['--output', ABS_DEST_DIR])).toStrictEqual({
-      output: ABS_DEST_DIR,
-    });
+    expect(parseArgs(['--output', ABS_DEST_DIR])).toStrictEqual(
+      expect.objectContaining({
+        output: ABS_DEST_DIR,
+      }),
+    );
   });
 
   test('should handle single string value for --oci arg', () => {
@@ -308,13 +384,28 @@ describe('parseArgs', () => {
         `--${NAME_ARG}`,
         'my-user',
       ]),
-    ).toStrictEqual({
-      output: ABS_DEST_DIR,
-      extension: {
-        oci: 'ghcr.io/org/my-user:latest',
-        name: 'my-user',
-      },
-    });
+    ).toStrictEqual(
+      expect.objectContaining({
+        output: ABS_DEST_DIR,
+        extension: {
+          oci: 'ghcr.io/org/my-user:latest',
+          name: 'my-user',
+        },
+      }),
+    );
+  });
+
+  test(`should parse --${REGISTRY_USER_ARG} & --${REGISTRY_SECRET_ARG} args`, () => {
+    expect(
+      parseArgs(['--output', ABS_DEST_DIR, `--${REGISTRY_USER_ARG}`, 'foo', `--${REGISTRY_SECRET_ARG}`, 'bar']),
+    ).toStrictEqual(
+      expect.objectContaining({
+        auth: {
+          username: 'foo',
+          secret: 'bar',
+        },
+      }),
+    );
   });
 });
 
