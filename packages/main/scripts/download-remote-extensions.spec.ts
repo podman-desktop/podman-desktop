@@ -71,6 +71,7 @@ beforeEach(() => {
   (vi.mocked(product).extensions.remote as RemoteExtension[]) = [];
 
   vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue(MANIFEST_MOCK);
+  vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue('quay.io');
 
   // mock final check to be valid
   vi.mocked(existsSync).mockImplementation(path => {
@@ -169,6 +170,38 @@ describe('downloadExtension', () => {
 
     expect(cp).not.toHaveBeenCalled();
     expect(rm).not.toHaveBeenCalled();
+  });
+
+  test('invalid OCI registry name with auth should throw an error', async () => {
+    vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue(undefined);
+
+    await expect(async () => {
+      await downloadExtension({
+        destination: ABS_DEST_DIR,
+        extension: REMOTE_INFO_MOCK,
+        auth: {
+          username: 'foo',
+          secret: 'bar',
+        },
+      });
+    }).rejects.toThrowError(`cannot determine registry for image ${REMOTE_INFO_MOCK.oci}`);
+  });
+
+  test('should register registry', async () => {
+    await downloadExtension({
+      destination: ABS_DEST_DIR,
+      extension: REMOTE_INFO_MOCK,
+      auth: {
+        username: 'foo',
+        secret: 'bar',
+      },
+    });
+    expect(ImageRegistry.prototype.registerRegistry).toHaveBeenCalledExactlyOnceWith({
+      source: 'scripts',
+      serverUrl: 'quay.io',
+      username: 'foo',
+      secret: 'bar',
+    });
   });
 
   test('should write digest file to destination', async () => {
