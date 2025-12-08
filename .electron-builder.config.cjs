@@ -83,13 +83,18 @@ async function packageRemoteExtensions() {
   const destination = path.resolve('./extensions-extra');
 
   return new Promise((resolve, reject) => {
-    execFile('node', [downloadScript, `--output=${destination}`], (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
+    execFile(
+      'node',
+      [downloadScript, `--output=${destination}`],
+      (error, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
   });
 }
 
