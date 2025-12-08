@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022-2024 Red Hat, Inc.
+# Copyright (C) 2022-2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ github.event.inputs.branch }}
+          token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
       - name: Generate tag utilities
         id: TAG_UTIL
         run: |
