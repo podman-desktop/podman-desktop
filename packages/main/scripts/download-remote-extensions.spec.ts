@@ -70,7 +70,9 @@ beforeEach(() => {
   vi.unstubAllEnvs();
 
   vi.mocked(tmpdir).mockReturnValue(TMP_DIR);
-  (vi.mocked(product).extensions.remote as RemoteExtension[]) = [];
+  vi.mocked(product).extensions = {
+    remote: [],
+  };
 
   vi.mocked(ImageRegistry.prototype.getManifestFromImageName).mockResolvedValue(MANIFEST_MOCK);
   vi.mocked(ImageRegistry.prototype.extractRegistryServerFromImage).mockReturnValue('quay.io');
@@ -499,6 +501,70 @@ describe('getRemoteExtensionFromProductJSON', () => {
     (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
 
     expect(getRemoteExtensionFromProductJSON()).toStrictEqual([REMOTE_INFO_MOCK]);
+  });
+
+  test('malformed extensions in product.json should throw an error', () => {
+    (vi.mocked(product).extensions as unknown) = undefined;
+
+    expect(() => {
+      getRemoteExtensionFromProductJSON();
+    }).toThrowError('malformed product.json: extensions property is not an object');
+  });
+
+  test('array for extension property should throw an error', () => {
+    (vi.mocked(product).extensions as unknown) = [];
+
+    expect(() => {
+      getRemoteExtensionFromProductJSON();
+    }).toThrowError('malformed product.json: object extensions do not have a valid remote array');
+  });
+
+  test('non-array for extension.remote should throw an error', () => {
+    (vi.mocked(product).extensions.remote as unknown) = {};
+
+    expect(() => {
+      getRemoteExtensionFromProductJSON();
+    }).toThrowError('malformed product.json: object extensions do not have a valid remote array');
+  });
+
+  test('empty array in extensions.remote should return itself', () => {
+    vi.mocked(product).extensions.remote = [];
+
+    expect(getRemoteExtensionFromProductJSON()).toHaveLength(0);
+  });
+
+  test('missing oci property in an item in extension.remote should throw an error', () => {
+    vi.mocked(product).extensions.remote = [
+      {
+        occci: '',
+        name: 'foo',
+      } as unknown as RemoteExtension,
+    ];
+
+    expect(() => {
+      getRemoteExtensionFromProductJSON();
+    }).toThrowError('malformed product.json: extension at index 0 must have oci property as a valid string');
+  });
+
+  test('missing name property in an item in extension.remote should throw an error', () => {
+    vi.mocked(product).extensions.remote = [
+      {
+        oci: 'foo',
+        Name: 'bar',
+      } as unknown as RemoteExtension,
+    ];
+
+    expect(() => {
+      getRemoteExtensionFromProductJSON();
+    }).toThrowError('malformed product.json: extension at index 0 must have name property as a valid string');
+  });
+
+  test('undefined item in extension.remote should throw an error', () => {
+    vi.mocked(product).extensions.remote = [undefined as unknown as RemoteExtension];
+
+    expect(() => {
+      getRemoteExtensionFromProductJSON();
+    }).toThrowError('malformed product.json: extension at index 0 is invalid');
   });
 });
 

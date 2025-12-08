@@ -193,9 +193,28 @@ export async function moveSafely(src: string, dest: string): Promise<void> {
 
 export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
   if (!product) return [];
-  if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') return [];
-  if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote))
-    return [];
+  if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') {
+    throw new Error(`malformed product.json: extensions property is not an object`);
+  }
+  if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote)) {
+    throw new Error(`malformed product.json: object extensions do not have a valid remote array`);
+  }
+
+  // validate each items
+  product.extensions.remote.forEach((extension, index) => {
+    if (!extension) {
+      throw new Error(`malformed product.json: extension at index ${index} is invalid`);
+    }
+
+    if (!('name' in extension) || typeof extension.name !== 'string') {
+      throw new Error(`malformed product.json: extension at index ${index} must have name property as a valid string`);
+    }
+
+    if (!('oci' in extension) || typeof extension.oci !== 'string') {
+      throw new Error(`malformed product.json: extension at index ${index} must have oci property as a valid string`);
+    }
+  });
+
   return product.extensions.remote as RemoteExtension[];
 }
 
