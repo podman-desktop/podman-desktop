@@ -3432,7 +3432,8 @@ describe('attachToContainer', () => {
 });
 
 test('createNetwork', async () => {
-  server = setupServer(http.post('http://localhost/networks/create', () => new HttpResponse('', { status: 200 })));
+  const networkId = 'network123456';
+  server = setupServer(http.post('http://localhost/networks/create', () => HttpResponse.json({ Id: networkId })));
   server.listen({ onUnhandledRequest: 'error' });
 
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
@@ -3465,8 +3466,10 @@ test('createNetwork', async () => {
   // set provider
   containerRegistry.addInternalProvider('podman', internalContainerProvider);
 
-  // check that it's calling the right mock method
-  await containerRegistry.createNetwork(providerConnectionInfo, { Name: 'myNetwork' });
+  // check that it returns both Id and engineId
+  const result = await containerRegistry.createNetwork(providerConnectionInfo, { Name: 'myNetwork' });
+  expect(result.Id).toBe(networkId);
+  expect(result.engineId).toBe('podman1');
 });
 
 test('setupConnectionAPI with errors', async () => {

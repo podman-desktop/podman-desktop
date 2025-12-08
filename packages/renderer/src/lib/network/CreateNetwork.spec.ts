@@ -107,7 +107,7 @@ test('Expect all form fields to be present', async () => {
 });
 
 test('Expect createNetwork to be called with correct parameters', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId: 'test' });
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
@@ -169,7 +169,7 @@ test('Expect empty screen when no providers available', async () => {
 });
 
 test('Expect createNetwork to be called with subnet when provided', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId: 'test' });
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
@@ -208,7 +208,7 @@ test('Expect cancel button to navigate to networks page', async () => {
 
 test('Expect automatic routing after successful network creation when network appears in store', async () => {
   const networkId = 'network123';
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId });
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId, engineId: 'test' });
 
   renderCreate();
 
