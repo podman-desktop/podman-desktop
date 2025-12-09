@@ -156,7 +156,7 @@ async function waitForNetworkInStore(networkId: string, engineId: string): Promi
 }
 
 function cancelRoute(): void {
-  router.goto('/networks');
+  handleNavigation({ page: NavigationPage.NETWORKS });
 }
 
 let providerConnections = $derived(

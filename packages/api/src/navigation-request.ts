@@ -53,6 +53,7 @@ export interface NavigationParameters {
   [NavigationPage.CREATE_PROVIDER_CONNECTION]: { provider: string };
   [NavigationPage.PROVIDER_TASK]: { internalId: string; taskId: number | undefined };
   [NavigationPage.EXPERIMENTAL_FEATURES]: never;
+  [NavigationPage.NETWORKS]: never;
   [NavigationPage.NETWORK]: { name: string; engineId: string };
   [NavigationPage.NETWORK_CREATE]: never;
   [NavigationPage.EXTENSIONS_CATALOG]: { searchTerm?: string };

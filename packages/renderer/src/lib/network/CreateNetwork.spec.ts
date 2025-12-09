@@ -41,7 +41,7 @@ beforeEach(() => {
   // Mock breadcrumb for Route components
   mockBreadcrumb();
 
-  // Start on basic tab by default - use just /basic since Route path="/*" creates the context
+  // Navigate to basic tab
   router.goto('/basic');
 });
 
