@@ -192,16 +192,19 @@ export async function moveSafely(src: string, dest: string): Promise<void> {
 }
 
 export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
-  if (!product) return [];
-  if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') {
+  const raw = product as unknown;
+  if (!raw || typeof raw !== 'object') {
+    throw new Error(`malformed product.json: content is not object`);
+  }
+  if (!('extensions' in raw) || !raw.extensions || typeof raw.extensions !== 'object') {
     throw new Error(`malformed product.json: extensions property is not an object`);
   }
-  if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote)) {
+  if (!('remote' in raw.extensions) || !raw.extensions.remote || !Array.isArray(raw.extensions.remote)) {
     throw new Error(`malformed product.json: object extensions do not have a valid remote array`);
   }
 
   // validate each items
-  product.extensions.remote.forEach((extension, index) => {
+  raw.extensions.remote.forEach((extension, index) => {
     if (!extension) {
       throw new Error(`malformed product.json: extension at index ${index} is invalid`);
     }
@@ -215,7 +218,7 @@ export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
     }
   });
 
-  return product.extensions.remote as RemoteExtension[];
+  return raw.extensions.remote as RemoteExtension[];
 }
 
 /**

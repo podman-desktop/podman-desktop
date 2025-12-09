@@ -534,7 +534,7 @@ describe('getRemoteExtensionFromProductJSON', () => {
   });
 
   test('missing oci property in an item in extension.remote should throw an error', () => {
-    vi.mocked(product).extensions.remote = [
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [
       {
         occci: '',
         name: 'foo',
@@ -547,7 +547,7 @@ describe('getRemoteExtensionFromProductJSON', () => {
   });
 
   test('missing name property in an item in extension.remote should throw an error', () => {
-    vi.mocked(product).extensions.remote = [
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [
       {
         oci: 'foo',
         Name: 'bar',
@@ -560,7 +560,7 @@ describe('getRemoteExtensionFromProductJSON', () => {
   });
 
   test('undefined item in extension.remote should throw an error', () => {
-    vi.mocked(product).extensions.remote = [undefined as unknown as RemoteExtension];
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [undefined as unknown as RemoteExtension];
 
     expect(() => {
       getRemoteExtensionFromProductJSON();
