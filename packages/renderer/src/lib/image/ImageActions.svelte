@@ -108,9 +108,17 @@ function saveImage(): void {
 }
 
 async function updateImage(): Promise<void> {
-  await imageUtils.updateImage(image);
-  image.selected = false;
+  image.status = 'UPDATING';
   dispatch('update', image);
+
+  try {
+    await imageUtils.updateImage(image);
+  } catch (error) {
+    await onError(`Error while updating image: ${String(error)}`);
+  } finally {
+    image.selected = false;
+    dispatch('update', image);
+  }
 }
 </script>
 

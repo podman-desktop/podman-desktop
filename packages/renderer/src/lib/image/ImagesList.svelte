@@ -233,6 +233,9 @@ async function updateSelectedImages(): Promise<void> {
     return;
   }
 
+  // Preserve original statuses for rollback on error
+  const originalStatuses = new Map(selectedImages.map(img => [img.id, img.status]));
+
   // mark images for updating
   bulkUpdateInProgress = true;
   selectedImages.forEach(image => (image.status = 'UPDATING'));
@@ -243,8 +246,8 @@ async function updateSelectedImages(): Promise<void> {
       .then(() => imageUtils.updateImage(image))
       .catch((e: unknown) => {
         console.error('error while updating image', e);
-        // Reset status on error to prevent getting stuck in UPDATING state
-        image.status = 'UNUSED';
+        // Restore original status on error
+        image.status = originalStatuses.get(image.id) ?? 'UNUSED';
         images = images;
       });
   }, Promise.resolve());

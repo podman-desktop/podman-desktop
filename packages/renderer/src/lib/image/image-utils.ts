@@ -248,8 +248,8 @@ export class ImageUtils {
   }
 
   updateImage(image: ImageInfoUI): Promise<void> {
-    const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
-    return window.updateImage(image.engineId, imageId);
+    const tag = `${image.name}:${image.tag}`;
+    return window.updateImage(image.engineId, image.id, tag);
   }
 
   getImageInfoUI(
