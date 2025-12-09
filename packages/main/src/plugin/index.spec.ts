@@ -976,4 +976,32 @@ describe('updateImage handler', () => {
       title: `Updating image '${tag}'`,
     });
   });
+
+  test('should treat "Image is already the latest version" as success', async () => {
+    const handle = handlers.get('container-provider-registry:updateImage');
+    expect(handle).not.equal(undefined);
+
+    const engineId = 'engine1';
+    const imageId = 'sha256:abc123';
+    const tag = 'alpine:latest';
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockRejectedValue(
+      new Error('Image is already the latest version'),
+    );
+
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+
+    const result = await handle(undefined, engineId, imageId, tag);
+    // Should not return an error since this is treated as success
+    expect(result).not.toHaveProperty('error');
+
+    expect(createTaskSpy).toHaveBeenCalledWith({
+      title: `Updating image '${tag}'`,
+    });
+
+    // Verify the task was marked as success and name was updated
+    const createdTask = createTaskSpy.mock.results[0]?.value;
+    expect(createdTask.status).toBe('success');
+    expect(createdTask.name).toBe(`Image '${tag}' is already up to date`);
+  });
 });
