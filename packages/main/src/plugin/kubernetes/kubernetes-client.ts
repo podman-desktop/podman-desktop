@@ -270,6 +270,8 @@ export class KubernetesClient {
     const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
       'kubernetes.statesExperimental',
     );
+    this.telemetry.track('kubernetesExperimentalMode', { enabled: statesExperimental });
+
     if (statesExperimental) {
       const manager = new ContextsManagerExperimental();
       this.contextsState = manager;
