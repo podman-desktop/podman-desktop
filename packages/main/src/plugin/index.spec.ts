@@ -37,7 +37,7 @@ import type { TrayMenu } from '../tray-menu.js';
 import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
-import { ContainerProviderRegistry } from './container-registry.js';
+import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
@@ -986,7 +986,7 @@ describe('updateImage handler', () => {
     const tag = 'alpine:latest';
 
     vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockRejectedValue(
-      new Error('Image is already the latest version'),
+      new LatestImageError('Image is already the latest version'),
     );
 
     const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
