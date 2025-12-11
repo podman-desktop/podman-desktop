@@ -86,7 +86,7 @@ export class NetworksPage extends MainPage {
     });
   }
 
-  async createNetwork(name: string, subnet: string): Promise<NetworksPage> {
+  async createNetwork(name: string, subnet: string): Promise<NetworkDetailsPage> {
     return test.step(`Create network: ${name}`, async () => {
       await playExpect(this.createNetworkButton).toBeEnabled();
       await this.createNetworkButton.click();
