@@ -209,14 +209,14 @@ const EXPERIMENTAL_CONFIG: IConfigurationPropertyRecordedSchema = {
 
 test('experimental configuration should be visible if one property has experimental property', async () => {
   configurationProperties.set([EXPERIMENTAL_CONFIG]);
-  const { getByLabelText } = render(PreferencesNavigation, {
+  const { getByRole } = render(PreferencesNavigation, {
     meta: {
       url: '/',
     } as unknown as TinroRouteMeta,
   });
 
   await vi.waitFor(() => {
-    const experimental = getByLabelText('Experimental');
+    const experimental = getByRole('link', { name: 'Experimental' });
     expect(experimental).toBeDefined();
   });
 });

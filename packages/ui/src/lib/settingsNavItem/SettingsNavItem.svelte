@@ -52,7 +52,7 @@ function click(): void {
     class:hover:bg-[var(--pd-secondary-nav-text-hover-bg)]={!selected}
     class:hover:border-[var(--pd-secondary-nav-text-hover-bg)]={!selected}>
     <span
-      class="group-hover:block flex gap-x-4 items-center"
+      class="group-hover:block flex gap-x-2 items-center"
       class:flex-row={iconPosition === 'left'}
       class:flex-row-reverse={iconPosition === 'right'}
       class:capitalize={!child}>
@@ -60,7 +60,7 @@ function click(): void {
         {#if isFontAwesomeIcon(icon)}
           <Icon icon={icon}/>
         {:else}
-          <Icon icon={icon} size=14/>
+          <Icon icon={icon}/>
         {/if}
       {/if}
       <span>{title}</span>
