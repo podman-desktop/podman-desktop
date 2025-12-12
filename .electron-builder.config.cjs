@@ -239,6 +239,7 @@ const config = {
   linux: {
     category: 'Development',
     icon: './buildResources/icon-512x512.png',
+    executableName: product.artifactName,
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {
