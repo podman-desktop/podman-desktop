@@ -1484,6 +1484,7 @@ export class PluginSystem {
         }
         if (target) {
           titleArgs.push(`(${target})`);
+          telemetry.track('build-image-intermediate-target');
         }
 
         // create task
