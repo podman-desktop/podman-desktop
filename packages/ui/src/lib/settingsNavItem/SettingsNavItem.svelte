@@ -3,7 +3,6 @@ import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
 import type { Component } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
-import { isFontAwesomeIcon } from '../utils/icon-utils';
 
 interface Props {
   title: string;
@@ -57,11 +56,7 @@ function click(): void {
       class:flex-row-reverse={iconPosition === 'right'}
       class:capitalize={!child}>
       {#if icon}
-        {#if isFontAwesomeIcon(icon)}
           <Icon icon={icon}/>
-        {:else}
-          <Icon icon={icon}/>
-        {/if}
       {/if}
       <span>{title}</span>
     </span>
