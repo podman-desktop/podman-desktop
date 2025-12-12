@@ -18,7 +18,7 @@
 
 import { join } from 'path';
 import { builtinModules } from 'module';
-import typescript from '@rollup/plugin-typescript';
+import dts from 'unplugin-dts/vite';
 
 const PACKAGE_ROOT = __dirname;
 const PACKAGE_NAME = '@podman-desktop/tests-playwright';
@@ -36,7 +36,11 @@ const config = {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [typescript()],
+  plugins: [
+    dts({
+      insertTypesEntry: true,
+    }),
+  ],
   build: {
     sourcemap: true,
     target: 'esnext',
