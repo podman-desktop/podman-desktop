@@ -237,7 +237,7 @@ let nameColumn = new TableColumn<ImageInfoUI>('Name', {
 
 let envColumn = new TableColumn<ImageInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
-  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
 });
 
 let ageColumn = new TableColumn<ImageInfoUI, Date>('Age', {

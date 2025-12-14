@@ -91,7 +91,7 @@ let driverColumn = new TableColumn<NetworkInfoUI>('Driver', {
 
 let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
-  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
 });
 
 const columns = [

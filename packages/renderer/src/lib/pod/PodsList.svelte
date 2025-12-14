@@ -133,7 +133,7 @@ let nameColumn = new TableColumn<PodInfoUI>('Name', {
 
 let envColumn = new TableColumn<PodInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
-  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
 });
 
 let containersColumn = new TableColumn<PodInfoUI>('Containers', {
