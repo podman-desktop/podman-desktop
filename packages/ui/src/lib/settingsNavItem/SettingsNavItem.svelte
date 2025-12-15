@@ -38,7 +38,7 @@ function click(): void {
   <div
     class="flex w-full pr-1 py-2 justify-between items-center cursor-pointer border-l-[4px]"
     class:pl-3={!child}
-    class:pl-6={child}
+    class:pl-[34px]={child}
     class:leading-none={child}
     class:text-md={!child}
     class:font-medium={!child}
