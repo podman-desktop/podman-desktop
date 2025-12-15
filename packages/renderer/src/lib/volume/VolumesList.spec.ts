@@ -442,7 +442,7 @@ test('Expect to see empty page and no table when no container engine is running'
   expect(noContainerEngine).toBeInTheDocument();
 });
 
-test('Expect environment column comparator to work', async () => {
+test('Expect environment column sorted by engineId', async () => {
   vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
@@ -463,12 +463,25 @@ test('Expect environment column comparator to work', async () => {
         {
           Driver: 'local',
           Labels: {},
-          Mountpoint: '/var/lib/containers/storage/volumes/fedora/_data',
-          Name: '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+          Mountpoint: '/var/lib/containers/storage/volumes/volume1/_data',
+          Name: 'volume-aaa',
           Options: {},
           Scope: 'local',
-          engineName: 'Podman',
-          engineId: 'podman.Podman Machine',
+          engineName: 'name-aaa',
+          engineId: 'engine-zzz',
+          UsageData: { RefCount: 1, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/volume2/_data',
+          Name: 'volume-bbb',
+          Options: {},
+          Scope: 'local',
+          engineName: 'name-zzz',
+          engineId: 'engine-aaa',
           UsageData: { RefCount: 1, Size: -1 },
           containersUsage: [],
           CreatedAt: '',
@@ -495,4 +508,8 @@ test('Expect environment column comparator to work', async () => {
 
   const environment = screen.getByRole('columnheader', { name: 'Environment' });
   await fireEvent.click(environment);
+
+  const cells = screen.getAllByRole('cell', { name: /volume-/ });
+  expect(cells[0]).toHaveTextContent('volume-bbb');
+  expect(cells[1]).toHaveTextContent('volume-aaa');
 });

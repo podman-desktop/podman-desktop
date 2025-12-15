@@ -703,7 +703,7 @@ test('Expect to see empty page and no table when no container engine is running'
   expect(noContainerEngine).toBeInTheDocument();
 });
 
-test('Expect environment column comparator to work', async () => {
+test('Expect environment column sorted by engineId', async () => {
   vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
@@ -725,8 +725,8 @@ test('Expect environment column comparator to work', async () => {
       Created: 1644009612,
       Size: 123,
       Status: 'Running',
-      engineId: 'podman',
-      engineName: 'podman',
+      engineId: 'engine-zzz',
+      engineName: 'name-aaa',
     },
     {
       Id: 'sha256:2345678901234',
@@ -734,8 +734,8 @@ test('Expect environment column comparator to work', async () => {
       Created: 1644009612,
       Size: 123,
       Status: 'Running',
-      engineId: 'docker',
-      engineName: 'docker',
+      engineId: 'engine-aaa',
+      engineName: 'name-zzz',
     },
   ] as unknown as ImageInfo[]);
 
@@ -754,4 +754,8 @@ test('Expect environment column comparator to work', async () => {
 
   const environment = screen.getByRole('columnheader', { name: 'Environment' });
   await fireEvent.click(environment);
+
+  const cells = screen.getAllByRole('cell', { name: /alpine|fedora/ });
+  expect(cells[0]).toHaveTextContent('alpine');
+  expect(cells[1]).toHaveTextContent('fedora');
 });

@@ -608,9 +608,13 @@ test('Expect to see empty page and no table when no container engine is running'
   expect(noContainerEngine).toBeInTheDocument();
 });
 
-test('Expect environment column comparator to work', async () => {
+test('Expect environment column sorted by engineId', async () => {
   getProvidersInfoMock.mockResolvedValue([provider]);
-  listPodsMock.mockResolvedValue([pod1, pod2]);
+
+  const podA = { ...pod1, Name: 'pod-aaa', engineId: 'engine-zzz', engineName: 'name-aaa' };
+  const podB = { ...pod2, Name: 'pod-bbb', engineId: 'engine-aaa', engineName: 'name-zzz' };
+
+  listPodsMock.mockResolvedValue([podA, podB]);
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
@@ -620,4 +624,8 @@ test('Expect environment column comparator to work', async () => {
 
   const environment = screen.getByRole('columnheader', { name: 'Environment' });
   await fireEvent.click(environment);
+
+  const cells = screen.getAllByRole('cell', { name: /pod-/ });
+  expect(cells[0]).toHaveTextContent('pod-bbb');
+  expect(cells[1]).toHaveTextContent('pod-aaa');
 });
