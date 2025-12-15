@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo } from '@podman-desktop/api';
-import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -743,12 +743,10 @@ test('Expect environment column sorted by engineId', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await waitFor(() => {
+    expect(get(imagesInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
 
   await waitRender({});
 

@@ -20,7 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -618,7 +618,10 @@ test('Expect environment column sorted by engineId', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
 
-  await vi.waitUntil(() => get(providerInfos).length === 1 && get(podsInfos).length === 2, { timeout: 5000 });
+  await waitFor(() => {
+    expect(get(providerInfos)).toHaveLength(1);
+    expect(get(podsInfos)).toHaveLength(2);
+  });
 
   render(PodsList);
 
