@@ -441,3 +441,58 @@ test('Expect to see empty page and no table when no container engine is running'
   const noContainerEngine = screen.getByText('No Container Engine');
   expect(noContainerEngine).toBeInTheDocument();
 });
+
+test('Expect environment column comparator to work', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listVolumes).mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/fedora/_data',
+          Name: '0052074a2ade930338c00aea982a90e4243e6cf58ba920eb411c388630b8c967',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Podman',
+          engineId: 'podman.Podman Machine',
+          UsageData: { RefCount: 1, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: '',
+      engineName: '',
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  const volumesEventStoreInfo = volumesEventStore.setup();
+  await volumesEventStoreInfo.fetch();
+
+  await waitFor(() => {
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  const environment = screen.getByRole('columnheader', { name: 'Environment' });
+  await fireEvent.click(environment);
+});

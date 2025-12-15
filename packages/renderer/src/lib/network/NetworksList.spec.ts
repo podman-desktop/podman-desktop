@@ -220,3 +220,9 @@ test('Expect user confirmation for bulk delete when required', async () => {
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await waitFor(() => expect(window.removeNetwork).toHaveBeenCalled());
 });
+
+test('Expect environment column comparator to work', async () => {
+  await init();
+  const environment = screen.getByRole('columnheader', { name: 'Environment' });
+  await fireEvent.click(environment);
+});
