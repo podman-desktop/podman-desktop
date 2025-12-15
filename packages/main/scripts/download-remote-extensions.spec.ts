@@ -40,6 +40,9 @@ import {
   REGISTRY_USER_ARG,
 } from './download-remote-extensions.js';
 
+// Mock process.exit to prevent test from exiting
+vi.stubGlobal('process', { ...process, exit: vi.fn() });
+
 vi.mock(import('node:fs/promises'));
 vi.mock(import('node:fs'));
 vi.mock(import('node:os'));
@@ -538,5 +541,15 @@ describe('main', () => {
       join(TMP_DIR, REMOTE_INFO_MOCK.name, 'extension'),
       join(ABS_DEST_DIR, REMOTE_INFO_MOCK.name),
     );
+  });
+
+  test('should call process.exit(1) when product.json extension download fails', async () => {
+    const downloadError = new Error('Unable to get access');
+    vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockRejectedValue(downloadError);
+    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+
+    await main(['--output', ABS_DEST_DIR]);
+
+    expect(process.exit).toHaveBeenCalledWith(1);
   });
 });
