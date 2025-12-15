@@ -284,7 +284,10 @@ export async function main(args: string[]): Promise<void> {
         extension,
       }),
     ),
-  ).catch(console.error);
+  ).catch((error: unknown) => {
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 // do not start if we are in a VITEST env
