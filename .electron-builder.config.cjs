@@ -83,15 +83,20 @@ async function packageRemoteExtensions() {
   const destination = path.resolve('./extensions-extra');
 
   return new Promise((resolve, reject) => {
-    execFile('node', [downloadScript, `--output=${destination}`], (error, stdout, stderr) => {
-      console.log(stdout);
-      console.log(stderr);
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
+    execFile(
+      'node',
+      [downloadScript, `--output=${destination}`],
+      { maxBuffer: 10 * 1024 * 1024 }, // use 10MB else default size is too small and we get stdout maxBuffer length exceeded
+      (error, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
   });
 }
 
