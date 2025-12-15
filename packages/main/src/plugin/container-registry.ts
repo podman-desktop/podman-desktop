@@ -107,6 +107,13 @@ interface JSONEvent {
   Type?: string;
 }
 
+export class LatestImageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LatestImageError';
+  }
+}
+
 @injectable()
 export class ContainerProviderRegistry {
   private readonly _onEvent = new Emitter<JSONEvent>();
@@ -1317,7 +1324,7 @@ export class ContainerProviderRegistry {
       const updatedImageInfo = await matchingEngine.getImage(tag).inspect();
 
       if (updatedImageInfo.Id === oldImageId) {
-        throw new Error('Image is already the latest version');
+        throw new LatestImageError('Image is already the latest version');
       }
 
       // Only delete the old image if it originally had a single tag

@@ -152,7 +152,7 @@ import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
-import { ContainerProviderRegistry } from './container-registry.js';
+import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
@@ -1242,7 +1242,13 @@ export class PluginSystem {
           await containerProviderRegistry.updateImage(engineId, imageId, tag);
           task.status = 'success';
         } catch (error: unknown) {
-          task.error = `Something went wrong while trying to update image: ${String(error)}`;
+          // "Image is already the latest version" is not a breaking error, treat as success
+          if (error instanceof LatestImageError) {
+            task.name = `Image '${tag}' is already up to date`;
+            task.status = 'success';
+            return;
+          }
+          task.error = String(error);
           task.status = 'failure';
           throw error;
         }

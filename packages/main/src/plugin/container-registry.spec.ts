@@ -35,7 +35,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
-import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import { ContainerProviderRegistry, LatestImageError } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
@@ -6241,9 +6241,7 @@ describe('updateImage', () => {
     vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
     const deleteSpy = vi.spyOn(containerRegistry, 'deleteImage');
 
-    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrowError(
-      'Image is already the latest version',
-    );
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrow(LatestImageError);
     expect(getImageMock).toHaveBeenCalledTimes(2);
     expect(deleteSpy).not.toHaveBeenCalled();
   });
