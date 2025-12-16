@@ -20,15 +20,9 @@
 <p>Podman Desktop 1.24 is now available. <a class="" href="https://podman-desktop.io/downloads">Click here to download it</a>!</p>
 <p>This release brings exciting new features and improvements:</p>
 <ul>
-<li class="">
-<p><strong>Enterprise-managed default registries</strong>: Allow administrators to preconfigure default container registries and optional mirrors for Podman Desktop deployments.</p>
-</li>
-<li class="">
-<p><strong>Remote Podman connections visibility</strong>: Resource lists now include the connection name, clearly indicating the remote container engine each resource is associated with.</p>
-</li>
-<li class="">
-<p><strong>Select build targets in Containerfile</strong>: Choose the specific build stage to build directly from the UI when working with multi-stage Containerfiles.</p>
-</li>
+<li class=""><strong>Enterprise-managed default registries</strong>: Allow administrators to preconfigure default container registries and optional mirrors for Podman Desktop deployments.</li>
+<li class=""><strong>Remote Podman connections visibility</strong>: Resource lists now include the connection name, clearly indicating the remote container engine each resource is associated with.</li>
+<li class=""><strong>Select build targets in Containerfile</strong>: Choose the specific build stage to build directly from the UI when working with multi-stage Containerfiles.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details">Release details<a href="https://podman-desktop.io/blog/podman-desktop-release-1.24#release-details" class="hash-link" aria-label="Direct link to Release details" title="Direct link to Release details" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_tleR" id="enterprise-managed-default-registries-and-mirrors">Enterprise-managed default registries and mirrors<a href="https://podman-desktop.io/blog/podman-desktop-release-1.24#enterprise-managed-default-registries-and-mirrors" class="hash-link" aria-label="Direct link to Enterprise-managed default registries and mirrors" title="Direct link to Enterprise-managed default registries and mirrors" translate="no">​</a></h3>
