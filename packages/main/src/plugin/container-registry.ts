@@ -2853,6 +2853,18 @@ export class ContainerProviderRegistry {
     return infos.filter((item): item is containerDesktopAPI.ContainerEngineInfo => !!item);
   }
 
+  async getNetworkDrivers(engineId: string): Promise<string[]> {
+    const provider = this.internalProviders.get(engineId);
+    if (!provider) {
+      throw new Error('no engine matching this container');
+    }
+    if (!provider.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    const info = await provider.api.info();
+    return info.Plugins?.Network ?? [];
+  }
+
   async containerExist(id: string): Promise<boolean> {
     const containers = await this.listContainers();
     return containers.some(container => container.Id === id);

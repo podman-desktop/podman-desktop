@@ -6329,3 +6329,57 @@ describe('updateImage', () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringMatching(/Could not delete old image.*Deletion failed/));
   });
 });
+
+describe('getNetworkDrivers', () => {
+  test('returns network drivers from info API', async () => {
+    const infoMock = vi.fn().mockResolvedValue({
+      Plugins: {
+        Network: ['bridge', 'macvlan', 'ipvlan'],
+      },
+    });
+
+    const fakeDockerode = {
+      info: infoMock,
+    } as unknown as Dockerode;
+
+    containerRegistry.addInternalProvider('engine1', {
+      name: 'engine1',
+      id: 'engine1',
+      connection: {
+        type: 'podman',
+      },
+      api: fakeDockerode,
+    } as InternalContainerProvider);
+
+    const result = await containerRegistry.getNetworkDrivers('engine1');
+
+    expect(result).toEqual(['bridge', 'macvlan', 'ipvlan']);
+  });
+
+  test('returns empty array when Plugins is undefined', async () => {
+    const infoMock = vi.fn().mockResolvedValue({});
+
+    const fakeDockerode = {
+      info: infoMock,
+    } as unknown as Dockerode;
+
+    containerRegistry.addInternalProvider('engine2', {
+      name: 'engine2',
+      id: 'engine2',
+      connection: {
+        type: 'docker',
+      },
+      api: fakeDockerode,
+    } as InternalContainerProvider);
+
+    const result = await containerRegistry.getNetworkDrivers('engine2');
+
+    expect(result).toEqual([]);
+  });
+
+  test('throws error when engine not found', async () => {
+    await expect(containerRegistry.getNetworkDrivers('nonexistent')).rejects.toThrow(
+      'no engine matching this container',
+    );
+  });
+});
