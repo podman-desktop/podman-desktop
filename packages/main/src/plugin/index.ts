@@ -1242,7 +1242,6 @@ export class PluginSystem {
           await containerProviderRegistry.updateImage(engineId, imageId, tag);
           task.status = 'success';
         } catch (error: unknown) {
-          // "Image is already the latest version" is not a breaking error, treat as success
           if (error instanceof LatestImageError) {
             task.name = `Image '${tag}' is already up to date`;
             task.status = 'success';

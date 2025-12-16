@@ -6142,45 +6142,21 @@ describe('updateImage', () => {
     );
   });
 
-  test('should reject if tag not found on image', async () => {
-    const mockImage = {
-      inspect: vi.fn().mockResolvedValue({ RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:abc'] }),
-    };
-    const engine = {
-      getImage: vi.fn().mockReturnValue(mockImage),
-    };
-    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
-
-    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:wrong')).rejects.toThrowError(
-      `Tag 'nginx:wrong' not found on this image`,
+  test('should report localhost image as already up to date', async () => {
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'localhost/test:latest')).rejects.toThrow(
+      LatestImageError,
     );
   });
 
-  test('should reject images with empty RepoTags', async () => {
-    const mockImage = {
-      inspect: vi.fn().mockResolvedValue({ RepoTags: [] }),
-    };
-    const engine = {
-      getImage: vi.fn().mockReturnValue(mockImage),
-    };
-    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
-
-    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrowError(
-      'Image has no tags and cannot be updated',
+  test('should report localhost:port image as already up to date', async () => {
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'localhost:5000/test:latest')).rejects.toThrow(
+      LatestImageError,
     );
   });
 
-  test('should reject images with no remote registry source', async () => {
-    const mockImage = {
-      inspect: vi.fn().mockResolvedValue({ RepoTags: ['myapp:latest'], RepoDigests: [] }),
-    };
-    const engine = {
-      getImage: vi.fn().mockReturnValue(mockImage),
-    };
-    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
-
-    await expect(containerRegistry.updateImage('engine1', 'imageId', 'myapp:latest')).rejects.toThrowError(
-      'Image has no remote registry source and cannot be updated',
+  test('should report digest-based image as already up to date', async () => {
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx@sha256:abc123def456')).rejects.toThrow(
+      LatestImageError,
     );
   });
 
@@ -6244,20 +6220,6 @@ describe('updateImage', () => {
     await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrow(LatestImageError);
     expect(getImageMock).toHaveBeenCalledTimes(2);
     expect(deleteSpy).not.toHaveBeenCalled();
-  });
-
-  test('should reject images with digest-based tags', async () => {
-    const mockImage = {
-      inspect: vi.fn().mockResolvedValue({ RepoTags: ['nginx@sha256:abc123'], RepoDigests: ['nginx@sha256:abc123'] }),
-    };
-    const engine = {
-      getImage: vi.fn().mockReturnValue(mockImage),
-    };
-    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
-
-    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx@sha256:abc123')).rejects.toThrowError(
-      'Image with digest-based tag is immutable and cannot be updated',
-    );
   });
 
   test('should not delete old image when it originally had multiple RepoTags', async () => {
