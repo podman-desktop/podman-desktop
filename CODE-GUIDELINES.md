@@ -397,3 +397,91 @@ afterEach(() => {
   vi.useRealTimers();
 });
 ```
+
+### Snapshots
+
+Vitest snapshots are a powerful tool to ensure UI components and complex data structures do not change unexpectedly. They are particularly effective for catching regressions in rendered HTML or large objects without writing manual assertions for every property. When a snapshot detects a diff, you can update it using the `-u` param:
+
+#### Updating Snapshots
+
+When a test fails due to an intentional change, you can update the stored snapshots by appending the `-u` (or `--update`) flag to your test command.
+
+#### 1. Standard Snapshots (External Files)
+
+Use standard snapshots for large outputs like rendered HTML. These are stored in a separate **snapshots** directory.
+
+##### Example: Testing Rendered HTML
+
+```ts
+test('multiple container connection should display a dropdown', async () => {
+  providerInfos.set([MULTI_CONNECTIONS]);
+
+  const { getByRole } = render(CreateContainerFromExistingImage);
+  const dropdown = getByRole('button', { name: 'Container Engine' });
+  expect(dropdown).toBeEnabled();
+
+  expect(dropdown).toMatchSnapshot();
+});
+```
+
+**How to update:**
+
+```bash
+cd packages/renderer/
+pnpm test src/lib/container/CreateContainerFromExistingImage.s -u
+```
+
+**Result:** A snapshot file is created or updated at:
+
+`src/lib/container/__snapshots__/CreateContainerFromExistingImage.spec.ts.snap`
+
+#### 2. Inline Snapshots
+
+Inline snapshots are preferred for small data structures. They are written directly back into your test file, making the expected output easier to review during code sessions.
+
+#### Example: Testing an Object
+
+```ts
+test('should parse targets with some special characters', async () => {
+  const info = await containerFileParser.parseContent(`
+    FROM busybox as base
+    ARG TARGETPLATFORM
+    RUN echo $TARGETPLATFORM > /plt
+    FROM --platform=\${TARGETPLATFORM} base AS base-target
+    FROM --platform=$BUILDPLATFORM base AS base-build
+  `);
+  expect(info).toMatchInlineSnapshot(`
+    {
+      "targets": [],
+    }
+  `);
+});
+```
+
+**How to update:**
+
+```bash
+cd packages/main/
+pnpm test:unit src/plugin/containerfile-parser.spec.ts --u
+```
+
+**Result:** Vitest replaces the code in your .spec.ts file with the updated values:
+
+```ts
+expect(info).toMatchInlineSnapshot(`
+  {
+    "targets": [
+      "base",
+      "base-build",
+    ],
+  }
+`);
+```
+
+**Best Practices**
+
+- **Review Before Committing:** Always inspect the diff of a snapshot update. It is easy to accidentally "fix" a test by updating a snapshot that actually contains a bug.
+- **Keep Snapshots Focused:** Avoid snapshotting entire massive objects if you only care about one or two fields; use specific assertions instead to keep tests readable.
+- **Use Inline for Small Data:** If the snapshot is less than 10 lines, prefer `toMatchInlineSnapshot()` for better visibility.
+
+For more details, see the [Vitest snapshot guide](https://vitest.dev/guide/snapshot.html).
