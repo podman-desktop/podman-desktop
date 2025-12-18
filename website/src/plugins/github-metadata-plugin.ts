@@ -40,8 +40,17 @@ export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetad
       const metadata = await githubService.getMetadata();
 
       // Read and parse MAINTAINERS.md to get excluded usernames
-      const maintainersContent = readFileSync(MAINTAINERS_FILE_PATH, 'utf-8');
-      const excludedUsernames = parseMaintainersFromMarkdown(maintainersContent);
+      let excludedUsernames: Set<string>;
+      try {
+        const maintainersContent = readFileSync(MAINTAINERS_FILE_PATH, 'utf-8');
+        excludedUsernames = parseMaintainersFromMarkdown(maintainersContent);
+      } catch (err) {
+        throw new Error(
+          `Failed to read MAINTAINERS.md at ${MAINTAINERS_FILE_PATH}.
+            This file is required to filter out maintainers from the contributors list.
+            Error: ${err instanceof Error ? err.message : err}`,
+        );
+      }
 
       // Fetch latest contributors, excluding maintainers
       // Parameters: excludedUsernames, contributorLimit (5), pagesToFetch (5 = 500 commits)

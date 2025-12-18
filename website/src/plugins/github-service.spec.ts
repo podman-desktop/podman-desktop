@@ -299,7 +299,7 @@ describe('GitHubService', () => {
       }),
     );
 
-    // Exclude maintainers (note: excludeUsernames should be lowercase)
+    // Exclude maintainers (case-insensitive - usernames are normalized internally)
     const excludeUsernames = new Set(['maintainer1', 'maintainer2']);
     const contributors = await service.getLatestContributors(excludeUsernames, 10);
 
@@ -307,5 +307,74 @@ describe('GitHubService', () => {
     expect(contributors[0].login).toBe('communityuser');
     expect(contributors.find(c => c.login.toLowerCase() === 'maintainer1')).toBeUndefined();
     expect(contributors.find(c => c.login.toLowerCase() === 'maintainer2')).toBeUndefined();
+  });
+
+  test('should exclude usernames case-insensitively with mixed-case input', async () => {
+    const commitsUrl = `${url}/commits`;
+    const mockCommits = [
+      {
+        sha: '123',
+        author: {
+          login: 'communityuser',
+          avatar_url: 'https://avatar1.png',
+          html_url: 'https://github.com/communityuser',
+        },
+      },
+      {
+        sha: '456',
+        author: { login: 'JohnDoe', avatar_url: 'https://avatar2.png', html_url: 'https://github.com/JohnDoe' },
+      },
+      {
+        sha: '789',
+        author: { login: 'janedoe', avatar_url: 'https://avatar3.png', html_url: 'https://github.com/janedoe' },
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    // Mixed-case usernames in the exclusion set should still work
+    const excludeUsernames = new Set(['JOHNDOE', 'JaneDoe']);
+    const contributors = await service.getLatestContributors(excludeUsernames, 10);
+
+    expect(contributors).toHaveLength(1);
+    expect(contributors[0].login).toBe('communityuser');
+  });
+
+  test('should handle commits with missing author login', async () => {
+    const commitsUrl = `${url}/commits`;
+    const mockCommits = [
+      {
+        sha: '123',
+        author: {
+          login: 'validuser',
+          avatar_url: 'https://avatar1.png',
+          html_url: 'https://github.com/validuser',
+        },
+      },
+      {
+        sha: '456',
+        author: null, // Author can be null
+      },
+      {
+        sha: '789',
+        author: { avatar_url: 'https://avatar3.png', html_url: 'https://github.com/unknown' }, // Missing login
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    const contributors = await service.getLatestContributors(new Set(), 10);
+
+    // Should only include the valid user, skipping null author and missing login
+    expect(contributors).toHaveLength(1);
+    expect(contributors[0].login).toBe('validuser');
   });
 });

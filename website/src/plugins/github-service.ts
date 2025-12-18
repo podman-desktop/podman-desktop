@@ -141,11 +141,20 @@ export class GitHubService {
     }
   }
 
+  /**
+   * Fetches the latest contributors from the repository.
+   * @param excludeUsernames - Set of usernames to exclude (case-insensitive; usernames will be normalized internally)
+   * @param contributorLimit - Maximum number of contributors to return
+   * @param pagesToFetch - Number of pages of commits to fetch (default: 5)
+   * @returns Array of contributors sorted by commit count
+   */
   public async getLatestContributors(
     excludeUsernames: Set<string>,
     contributorLimit: number,
     pagesToFetch = 5,
   ): Promise<Contributor[]> {
+    // Normalize exclude set to lowercase for case-insensitive comparison
+    const normalizedExcludeUsernames = new Set([...excludeUsernames].map(username => username.toLowerCase()));
     // GitHub API limits to 100 per page, so we fetch multiple pages
     const allCommits: Awaited<ReturnType<typeof this.octokit.rest.repos.listCommits>>['data'] = [];
 
@@ -172,7 +181,7 @@ export class GitHubService {
 
     for (const commit of allCommits) {
       const author = commit.author;
-      if (!author || excludeUsernames.has(author.login.toLowerCase()) || isBot(author.login)) {
+      if (!author?.login || normalizedExcludeUsernames.has(author.login.toLowerCase()) || isBot(author.login)) {
         continue;
       }
 
