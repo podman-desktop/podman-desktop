@@ -18,7 +18,7 @@
 
 import { Octokit } from '@octokit/rest';
 
-import type { GitHubMetadata } from './github-metadata';
+import type { Contributor, GitHubMetadata } from './github-metadata';
 
 export class GitHubService {
   private octokit: Octokit;
@@ -139,5 +139,59 @@ export class GitHubService {
       // Re-throw the error to make the Docusaurus build fail
       throw err;
     }
+  }
+
+  public async getLatestContributors(
+    excludeUsernames: Set<string>,
+    contributorLimit: number,
+    pagesToFetch = 5,
+  ): Promise<Contributor[]> {
+    // GitHub API limits to 100 per page, so we fetch multiple pages
+    const allCommits: Awaited<ReturnType<typeof this.octokit.rest.repos.listCommits>>['data'] = [];
+
+    for (let page = 1; page <= pagesToFetch; page++) {
+      const { data: commits } = await this.octokit.rest.repos.listCommits({
+        owner: this.owner,
+        repo: this.repo,
+        per_page: 100,
+        page,
+      });
+      allCommits.push(...commits);
+
+      // Stop if we got fewer than 100 commits (no more pages)
+      if (commits.length < 100) {
+        break;
+      }
+    }
+
+    // Group commits by author and filter out maintainers and bots
+    const contributorMap = new Map<string, Contributor>();
+
+    // Helper function to check if a username is a bot
+    const isBot = (login: string): boolean => login.endsWith('[bot]');
+
+    for (const commit of allCommits) {
+      const author = commit.author;
+      if (!author || excludeUsernames.has(author.login.toLowerCase()) || isBot(author.login)) {
+        continue;
+      }
+
+      const existing = contributorMap.get(author.login);
+      if (existing) {
+        existing.commitCount++;
+      } else {
+        contributorMap.set(author.login, {
+          login: author.login,
+          avatarUrl: author.avatar_url,
+          profileUrl: author.html_url,
+          commitCount: 1,
+        });
+      }
+    }
+
+    // Sort by commit count and return top N
+    return Array.from(contributorMap.values())
+      .sort((a, b) => b.commitCount - a.commitCount)
+      .slice(0, contributorLimit);
   }
 }

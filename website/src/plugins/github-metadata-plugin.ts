@@ -16,11 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import type { Plugin } from '@docusaurus/types';
 
 import { GITHUB_OWNER, GITHUB_REPOSITORY } from '../../../packages/api/src/repository-infos';
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
+import { parseMaintainersFromMarkdown } from './maintainers-parser';
+
+// Path to MAINTAINERS.md relative to website directory
+const MAINTAINERS_FILE_PATH = resolve(__dirname, '../../../MAINTAINERS.md');
 
 export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetadata>> {
   const githubService = new GitHubService(GITHUB_OWNER, GITHUB_REPOSITORY);
@@ -29,7 +36,22 @@ export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetad
     name: 'docusaurus-plugin-github-metadata',
 
     async loadContent(): Promise<GitHubMetadata> {
-      return githubService.getMetadata();
+      // Get release metadata
+      const metadata = await githubService.getMetadata();
+
+      // Read and parse MAINTAINERS.md to get excluded usernames
+      const maintainersContent = readFileSync(MAINTAINERS_FILE_PATH, 'utf-8');
+      const excludedUsernames = parseMaintainersFromMarkdown(maintainersContent);
+
+      // Fetch latest contributors, excluding maintainers
+      // Parameters: excludedUsernames, contributorLimit (5), pagesToFetch (5 = 500 commits)
+      const latestContributors = await githubService.getLatestContributors(excludedUsernames, 5, 5);
+
+      // Return combined metadata
+      return {
+        ...metadata,
+        latestContributors,
+      };
     },
 
     async contentLoaded({ content, actions }): Promise<void> {
