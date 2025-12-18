@@ -73,13 +73,11 @@ function validate(event: any): void {
 </script>
 
 <SettingsPage title="Proxy Settings">
-  <div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] rounded-md p-3 space-y-2">
-    <!-- if proxy is not enabled, display a toggle -->
-
-    <label for="toggle-proxy" class="flex flex-row items-center mt-1 mb-6 cursor-pointer gap-x-4"
-      >Proxy configuration
+  <div class="flex flex-col bg-[var(--pd-invert-content-card-bg)] rounded-md p-3 space-y-4">
+    <div class="space-y-2">
+      <label for="toggle-proxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
+        >Proxy configuration</label>
       <Dropdown
-        class="text-sm max-w-28"
         id="toggle-proxy"
         onChange={onProxyStateChange}
         value={PROXY_LABELS.get(proxyState)}
@@ -88,60 +86,63 @@ function validate(event: any): void {
           label: label,
         }))}>
       </Dropdown>
-    </label>
+    </div>
 
-      <div class="space-y-2">
-        <label
-          for="httpProxy"
-          class="mb-2 font-medium {proxyState === ProxyState.PROXY_MANUAL
-            ? 'text-[var(--pd-invert-content-card-text)]'
-            : 'text-[var(--pd-content-sub-header)]'}">Web Proxy (HTTP):</label>
-        <Input
-          name="httpProxy"
-          id="httpProxy"
-          disabled={proxyState !== ProxyState.PROXY_MANUAL}
-          bind:value={httpProxy}
-          placeholder="URL of the proxy for http: URLs (eg http://myproxy.domain.com:8080)"
-          required
-          on:input={validate} />
-        {#if httpProxyError}
-          <ErrorMessage error={httpProxyError} />
-        {/if}
-      </div>
-      <div class="space-y-2">
-        <label
-          for="httpsProxy"
-          class="pt-4 mb-2 font-medium {proxyState === ProxyState.PROXY_MANUAL
-            ? 'text-[var(--pd-invert-content-card-text)]'
-            : 'text-[var(--pd-content-sub-header)]'}">Secure Web Proxy (HTTPS):</label>
-        <Input
-          name="httpsProxy"
-          id="httpsProxy"
-          disabled={proxyState !== ProxyState.PROXY_MANUAL}
-          bind:value={httpsProxy}
-          placeholder="URL of the proxy for https: URLs (eg http://myproxy.domain.com:8080)"
-          required
-          on:input={validate} />
-        {#if httpsProxyError}
-          <ErrorMessage error={httpsProxyError} />
-        {/if}
-      </div>
-      <div class="space-y-2">
-        <label
-          for="httpProxy"
-          class="pt-4 mb-2 font-medium {proxyState === ProxyState.PROXY_MANUAL
-            ? 'text-[var(--pd-invert-content-card-text)]'
-            : 'text-[var(--pd-content-sub-header)]'}">Bypass proxy settings for these hosts and domains:</label>
-        <Input
-          name="noProxy"
-          id="noProxy"
-          disabled={proxyState !== ProxyState.PROXY_MANUAL}
-          bind:value={noProxy}
-          placeholder="Example: *.domain.com, 192.168.*.*"
-          required />
-      </div>
-      <div class="my-2 pt-4">
-        <Button on:click={updateProxySettings} class="w-full" title="Update" icon={faPen}>Update</Button>
-      </div>
+    <div class="space-y-2">
+      <label
+        for="httpProxy"
+        class="block font-semibold {proxyState === ProxyState.PROXY_MANUAL
+          ? 'text-[var(--pd-invert-content-card-text)]'
+          : 'text-[var(--pd-content-sub-header)]'}">Web Proxy (HTTP)</label>
+      <Input
+        name="httpProxy"
+        id="httpProxy"
+        disabled={proxyState !== ProxyState.PROXY_MANUAL}
+        bind:value={httpProxy}
+        placeholder="URL of the proxy for http: URLs (eg http://myproxy.domain.com:8080)"
+        required
+        on:input={validate} />
+      {#if httpProxyError}
+        <ErrorMessage error={httpProxyError} />
+      {/if}
+    </div>
+
+    <div class="space-y-2">
+      <label
+        for="httpsProxy"
+        class="block font-semibold {proxyState === ProxyState.PROXY_MANUAL
+          ? 'text-[var(--pd-invert-content-card-text)]'
+          : 'text-[var(--pd-content-sub-header)]'}">Secure Web Proxy (HTTPS)</label>
+      <Input
+        name="httpsProxy"
+        id="httpsProxy"
+        disabled={proxyState !== ProxyState.PROXY_MANUAL}
+        bind:value={httpsProxy}
+        placeholder="URL of the proxy for https: URLs (eg http://myproxy.domain.com:8080)"
+        required
+        on:input={validate} />
+      {#if httpsProxyError}
+        <ErrorMessage error={httpsProxyError} />
+      {/if}
+    </div>
+
+    <div class="space-y-2">
+      <label
+        for="noProxy"
+        class="block font-semibold {proxyState === ProxyState.PROXY_MANUAL
+          ? 'text-[var(--pd-invert-content-card-text)]'
+          : 'text-[var(--pd-content-sub-header)]'}">Bypass proxy settings for these hosts and domains</label>
+      <Input
+        name="noProxy"
+        id="noProxy"
+        disabled={proxyState !== ProxyState.PROXY_MANUAL}
+        bind:value={noProxy}
+        placeholder="Example: *.domain.com, 192.168.*.*"
+        required />
+    </div>
+
+    <div class="pt-2">
+      <Button on:click={updateProxySettings} class="w-full" title="Update" icon={faPen}>Update</Button>
+    </div>
   </div>
 </SettingsPage>
