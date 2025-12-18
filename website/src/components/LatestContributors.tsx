@@ -37,11 +37,11 @@ function ContributorCard({ contributor }: ContributorCardProps): JSX.Element {
       <img
         src={contributor.avatarUrl}
         alt={`${contributor.login}'s avatar`}
-        className="w-15 h-15 rounded-full border border-white group-hover:opacity-90 transition-opacity"
+        className="w-15 h-15 rounded-full border border-charcoal-300 dark:border-white group-hover:opacity-90 transition-opacity"
       />
       <div className="flex flex-col">
         <span className="text-sky-500 font-semibold">{contributor.login}</span>
-        <span className="text-white">
+        <span className="text-charcoal-300 dark:text-white">
           {contributor.commitCount} {contributor.commitCount === 1 ? 'commit' : 'commits'}
         </span>
       </div>
