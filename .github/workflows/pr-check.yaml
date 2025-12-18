@@ -536,6 +536,7 @@ jobs:
         run: |
           (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
           pnpm compile:current --win nsis
+          cat dist/builder-effective-config.yaml -ErrorAction SilentlyContinue
           $runnerArch=$env:RUNNER_ARCH
           $unpackedPath = "dist/win-unpacked"
           if ($runnerArch -eq 'ARM64') {
@@ -621,6 +622,7 @@ jobs:
           autoUpdater.allowPrerelease = true; \
           ' packages/main/src/plugin/updater.ts
           pnpm compile:current --mac dmg
+          cat ./dist/builder-effective-config.yaml || true
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
           # extract the dmg
