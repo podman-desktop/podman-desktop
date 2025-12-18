@@ -263,6 +263,7 @@ const config = {
       width: 540,
       height: 380,
     },
+    publish: undefined,
     contents: [
       {
         x: 410,
@@ -282,10 +283,7 @@ const config = {
     schemes: [product.urlProtocol],
     role: 'Editor',
   },
-  publish: {
-    provider: 'github',
-    timeout: 10000,
-  },
+  publish: undefined,
   /*extraMetadata: {
     version: process.env.VITE_APP_VERSION,
   },*/

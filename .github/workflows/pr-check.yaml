@@ -549,9 +549,9 @@ jobs:
       - name: Manually set testing-prereleases as update target
         run: |
           echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
-          (Get-Content "$Env:PD_DIST_PATH/resources/app-update.yml").Replace('repo: podman-desktop', 'repo: testing-prereleases') | Set-Content "$Env:PD_DIST_PATH/resources/app-update.yml"
+          (Get-Content "$Env:PD_DIST_PATH/resources/app-update.yml" -ErrorAction SilentlyContinue).Replace('repo: podman-desktop', 'repo: testing-prereleases') | Set-Content "$Env:PD_DIST_PATH/resources/app-update.yml" -ErrorAction SilentlyContinue
           echo "Show app-update.yml after replace..."
-          cat "$Env:PD_DIST_PATH/resources/app-update.yml"
+          cat "$Env:PD_DIST_PATH/resources/app-update.yml" -ErrorAction SilentlyContinue
 
       - name: Run E2E Update test
         run: |
@@ -639,8 +639,8 @@ jobs:
       - name: Manually set testing-prereleases as update target
         run: |
           echo "Replace app-update.yml repo to a testing-prerelease"
-          sudo sed -i '' 's/repo: podman-desktop/repo: testing-prereleases/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
-          cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          sudo sed -i '' 's/repo: podman-desktop/repo: testing-prereleases/' "$PD_APP_PATH/Contents/Resources/app-update.yml" || true
+          cat "$PD_APP_PATH/Contents/Resources/app-update.yml" || true
 
       - name: Run E2E Update test
         env:
