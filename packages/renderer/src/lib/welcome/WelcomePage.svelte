@@ -161,7 +161,7 @@ function startOnboardingQueue(): void {
             class="text-lg px-2"
             title="Enable telemetry"><div class="text-base font-medium">Telemetry:</div></Checkbox>
           <div class="w-2/5 text-[var(--pd-content-card-text)]">
-            Help Red Hat improve Podman Desktop by allowing anonymous usage data to be collected.
+            Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.
             <Link
               on:click={async (): Promise<void> => {
                 await window.openExternal('https://developers.redhat.com/article/tool-data-collection');
