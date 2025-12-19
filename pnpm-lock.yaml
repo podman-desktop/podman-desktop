@@ -271,8 +271,8 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       inversify:
-        specifier: ^7.10.6
-        version: 7.10.6(reflect-metadata@0.2.2)
+        specifier: ^7.10.8
+        version: 7.10.8(reflect-metadata@0.2.2)
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
@@ -527,8 +527,8 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1
       inversify:
-        specifier: ^7.10.6
-        version: 7.10.6(reflect-metadata@0.2.2)
+        specifier: ^7.10.8
+        version: 7.10.8(reflect-metadata@0.2.2)
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -3133,13 +3133,13 @@ packages:
   '@inversifyjs/common@1.5.2':
     resolution: {integrity: sha512-WlzR9xGadABS9gtgZQ+luoZ8V6qm4Ii6RQfcfC9Ho2SOlE6ZuemFo7PKJvKI0ikm8cmKbU8hw5UK6E4qovH21w==}
 
-  '@inversifyjs/container@1.14.3':
-    resolution: {integrity: sha512-dt9JwumXFpIQx2hbsCouDLdZ6sVMvkdUcwyM8hugRbXMCxSJ3nDd2pjdE4MGWyfWP/61zDiAXCiff+2jVrhcmw==}
+  '@inversifyjs/container@1.14.5':
+    resolution: {integrity: sha512-fbNiJc66HaY5QUbIDnONNhwusQQSv8xkf9y54WfuG9v2tqPG8wGLSwt1+cwUtRFHjs1RlQnA6eCd2HuLRZ9r0Q==}
     peerDependencies:
       reflect-metadata: ~0.2.2
 
-  '@inversifyjs/core@9.1.1':
-    resolution: {integrity: sha512-3GNF/a889+Z3AxMZGl5LvBaHYIRvn+rm4b6jec3YncyqNRXoLQjUUAleE0AbVUdUl8YntJ5NW+qe5vjbM0wk/w==}
+  '@inversifyjs/core@9.1.2':
+    resolution: {integrity: sha512-8baIvwVUliZ6TeaYI0w8XRMTOX3i3AtANolbH/8TazecALIcpLAaiadKOm2yPguac1uCIUznSglOlG411rBTAQ==}
 
   '@inversifyjs/plugin@0.2.0':
     resolution: {integrity: sha512-R/JAdkTSD819pV1zi0HP54mWHyX+H2m8SxldXRgPQarS3ySV4KPyRdosWcfB8Se0JJZWZLHYiUNiS6JvMWSPjw==}
@@ -7759,8 +7759,8 @@ packages:
   invariant@2.2.4:
     resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
 
-  inversify@7.10.6:
-    resolution: {integrity: sha512-pjJfyS9KS5Q4aIKx2Mc/mPnyxMParygddMY66irM+IIZUv3+Qp9pjEu+rMmUYPxGqaX2QgDIU/pH1t2eb3xodw==}
+  inversify@7.10.8:
+    resolution: {integrity: sha512-NF9t4p1j5BtrJjf1jXRlGCXvixjtdu5UFkmye/3zFrITJbB7KvrkNS1vm8yAm8RW07hst4yxpvXGG3JtrQ365w==}
 
   invert-kv@3.0.1:
     resolution: {integrity: sha512-CYdFeFexxhv/Bcny+Q0BfOV+ltRlJcd4BBZBYFX/O0u4npJrgZtIcjokegtiSMAvlMTJ+Koq0GBCc//3bueQxw==}
@@ -14965,15 +14965,15 @@ snapshots:
 
   '@inversifyjs/common@1.5.2': {}
 
-  '@inversifyjs/container@1.14.3(reflect-metadata@0.2.2)':
+  '@inversifyjs/container@1.14.5(reflect-metadata@0.2.2)':
     dependencies:
       '@inversifyjs/common': 1.5.2
-      '@inversifyjs/core': 9.1.1(reflect-metadata@0.2.2)
+      '@inversifyjs/core': 9.1.2(reflect-metadata@0.2.2)
       '@inversifyjs/plugin': 0.2.0
       '@inversifyjs/reflect-metadata-utils': 1.4.1(reflect-metadata@0.2.2)
       reflect-metadata: 0.2.2
 
-  '@inversifyjs/core@9.1.1(reflect-metadata@0.2.2)':
+  '@inversifyjs/core@9.1.2(reflect-metadata@0.2.2)':
     dependencies:
       '@inversifyjs/common': 1.5.2
       '@inversifyjs/prototype-utils': 0.1.3
@@ -20575,11 +20575,11 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
 
-  inversify@7.10.6(reflect-metadata@0.2.2):
+  inversify@7.10.8(reflect-metadata@0.2.2):
     dependencies:
       '@inversifyjs/common': 1.5.2
-      '@inversifyjs/container': 1.14.3(reflect-metadata@0.2.2)
-      '@inversifyjs/core': 9.1.1(reflect-metadata@0.2.2)
+      '@inversifyjs/container': 1.14.5(reflect-metadata@0.2.2)
+      '@inversifyjs/core': 9.1.2(reflect-metadata@0.2.2)
     transitivePeerDependencies:
       - reflect-metadata
 

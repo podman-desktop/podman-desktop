@@ -178,7 +178,7 @@
     "get-tsconfig": "^4.13.0",
     "globals": "^16.5.0",
     "husky": "^9.1.7",
-    "inversify": "^7.10.6",
+    "inversify": "^7.10.8",
     "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.7",
     "minimist": "^1.2.8",
