@@ -505,7 +505,7 @@ export class ExtensionLoader implements IAsyncDisposable {
 
       // collect all extensions from the pluginDirectory folders
       const analyzedPluginsDirectoryExtensions: AnalyzedExtension[] = (
-        await Promise.all(
+        await Promise.allSettled(
           pluginDirectories.map(folder =>
             this.analyzeExtension({
               extensionPath: folder,
@@ -513,7 +513,12 @@ export class ExtensionLoader implements IAsyncDisposable {
             }),
           ),
         )
-      ).filter(extension => !extension.error);
+      ).reduce((accumulator, result) => {
+        if (result.status === 'fulfilled' && !result.value.error) {
+          accumulator.push(result.value);
+        }
+        return accumulator;
+      }, [] as AnalyzedExtensionWithApi[]);
       analyzedExtensions.push(...analyzedPluginsDirectoryExtensions);
     }
 

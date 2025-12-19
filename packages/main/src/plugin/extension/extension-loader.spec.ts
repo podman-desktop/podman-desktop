@@ -18,6 +18,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { Buffer } from 'node:buffer';
+import type { Dirent } from 'node:fs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -401,6 +403,71 @@ describe('extensionLoader#start', () => {
     expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
     const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
     expect(devFolder?.endsWith('extensions-extra')).toBeTruthy();
+  });
+
+  test('error in one of analyzeExtension should not be dramatic', async () => {
+    const fakeDirectory = '/fake/path/scanning';
+
+    // fake scanning property
+    extensionLoader.setPluginsScanDirectory(fakeDirectory);
+
+    vi.spyOn(extensionLoader, 'readProductionFolders').mockResolvedValue([]);
+    vi.spyOn(extensionLoader, 'readDevelopmentFolders').mockResolvedValue([]);
+
+    const analyzeExtensionMock = vi.spyOn(extensionLoader, 'analyzeExtension');
+    analyzeExtensionMock.mockRejectedValueOnce(new Error('Failed one'));
+    analyzeExtensionMock.mockResolvedValue({
+      id: 'oui',
+      manifest: {
+        name: 'hello',
+      },
+    } as AnalyzedExtensionWithApi);
+
+    const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
+    loadExtensionsMock.mockResolvedValue(undefined);
+
+    vi.mocked(fs.promises.readdir).mockImplementation(async path => {
+      switch (path) {
+        case directories.getPluginsDirectory():
+          return [
+            {
+              name: 'foo',
+              isFile: () => false,
+              isDirectory: () => true,
+            } as unknown as Dirent<Buffer<ArrayBuffer>>,
+            {
+              name: 'bar',
+              isFile: () => false,
+              isDirectory: () => true,
+            } as unknown as Dirent<Buffer<ArrayBuffer>>,
+          ];
+        default:
+          return [];
+      }
+    });
+    vi.mocked(fs.existsSync).mockImplementation(path => {
+      switch (path) {
+        case directories.getPluginsDirectory():
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    await extensionLoader.start();
+
+    expect(analyzeExtensionMock).toHaveBeenCalledTimes(2);
+    expect(analyzeExtensionMock).toHaveBeenCalledWith({
+      extensionPath: path.join(directories.getPluginsDirectory(), 'foo'),
+      removable: true,
+    });
+    expect(analyzeExtensionMock).toHaveBeenCalledWith({
+      extensionPath: path.join(directories.getPluginsDirectory(), 'bar'),
+      removable: true,
+    });
+
+    // only one extension should have been loaded as we rejected one analyzeExtensionMock
+    expect(vi.mocked(loadExtensionsMock).mock.calls[0]?.[0]).toHaveLength(1);
   });
 });
 
