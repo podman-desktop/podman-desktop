@@ -4,8 +4,8 @@ import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { ActionKind, type ItemAction, Items } from './HelpItems';
 import HelpMenu from './HelpMenu.svelte';
 
-let showMenu = false;
-let outsideWindow: HTMLDivElement;
+let showMenu = $state(false);
+let outsideWindow = $state<HTMLDivElement | undefined>();
 window.events?.receive('toggle-help-menu', toggleMenu);
 
 function toggleMenu(): void {
@@ -21,7 +21,7 @@ function handleEscape({ key }: KeyboardEvent): void {
 function onWindowClick(e: Event): void {
   const target = e.target as HTMLElement;
   // Listen to anything **but** the button that has "data-task-button" attribute with a value of "Help"
-  if (target && target.getAttribute('data-task-button') !== 'Help') {
+  if (outsideWindow && target && target.getAttribute('data-task-button') !== 'Help') {
     showMenu = outsideWindow.contains(target);
   }
 }
@@ -36,7 +36,7 @@ async function onClick(action?: ItemAction): Promise<void> {
 }
 </script>
 
-<svelte:window on:keyup={handleEscape} on:click={onWindowClick}/>
+<svelte:window onkeyup={handleEscape} onclick={onWindowClick}/>
 
 <div bind:this={outsideWindow}>
   {#if showMenu}
