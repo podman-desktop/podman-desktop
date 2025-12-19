@@ -24,7 +24,7 @@ onDestroy(() => window.removeEventListener('resize', updateMenuLocation));
   bind:offsetHeight={dropDownHeight}
   bind:offsetWidth={dropDownWidth}
   bind:this={dropDownElement}
-  class="absolute"
+  class="absolute z-30"
   data-testid="help-menu">
   <div
     title="Help Menu Items"
