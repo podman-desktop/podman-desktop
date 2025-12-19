@@ -183,6 +183,7 @@ import { Featured } from './featured/featured.js';
 import type { FeaturedExtension } from './featured/featured-api.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
+import { HelpMenu } from './help-menu/help-menu.js';
 import { IconRegistry } from './icon-registry.js';
 import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
@@ -567,6 +568,10 @@ export class PluginSystem {
     container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
     const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
     statusbarProviders.init();
+
+    container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
+    const helpMenu = container.get<HelpMenu>(HelpMenu);
+    helpMenu.init();
 
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
 
