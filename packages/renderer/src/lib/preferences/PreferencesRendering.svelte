@@ -76,7 +76,7 @@ function updateSearchValue(event: any): void {
     {#snippet header()}
         <SearchInput  title="preferences" class="mt-4" oninput={updateSearchValue} />
       {/snippet}
-    <div class="flex flex-col space-y-5 text-[var(--pd-content-header)]">
+    <div class="flex flex-col space-y-5 text-[var(--pd-content-header)] pb-2">
       {#if matchingRecords.size === 0}
         <div>No Settings Found</div>
       {:else}
