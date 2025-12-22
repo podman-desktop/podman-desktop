@@ -32,10 +32,18 @@ export async function findPodmanInstallations(): Promise<string[]> {
     const installations = new Map<string, { path: string; stats: fs.Stats }>();
     if (extensionApi.env.isWindows) {
       // Windows: Use 'where podman' command
-      commandResult = await extensionApi.process.exec('where', ['podman']);
+      commandResult = await extensionApi.process.exec('where', ['podman'], {
+        env: {
+          PATH: getInstallationPath(),
+        },
+      });
     } else {
       // Unix/macOS: use 'which -a podman' command
-      commandResult = await extensionApi.process.exec('which', ['-a', 'podman']);
+      commandResult = await extensionApi.process.exec('which', ['-a', 'podman'], {
+        env: {
+          PATH: getInstallationPath(),
+        },
+      });
     }
 
     for (let path of commandResult.stdout.split(/\r?\n/)) {
@@ -72,10 +80,10 @@ export async function findPodmanInstallations(): Promise<string[]> {
   }
 }
 
-export function getInstallationPath(): string | undefined {
+export function getInstallationPath(): string {
   const env = process.env;
   if (extensionApi.env.isWindows) {
-    return `c:\\Program Files\\RedHat\\Podman;${env.PATH}`;
+    return `c:\\Users\\axels\\AppData\\Local\\Programs\\Podman;c:\\Program Files\\RedHat\\Podman;${env.PATH}`;
   } else if (extensionApi.env.isMac) {
     if (!env.PATH) {
       return macosExtraPath;
@@ -83,7 +91,7 @@ export function getInstallationPath(): string | undefined {
       return env.PATH.concat(':').concat(macosExtraPath);
     }
   } else {
-    return env.PATH;
+    return env.PATH ?? '';
   }
 }
 
