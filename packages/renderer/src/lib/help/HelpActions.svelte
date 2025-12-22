@@ -1,8 +1,14 @@
 <script lang="ts">
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
-import { ActionKind, type ItemAction, Items } from './HelpItems';
+import { ActionKind, type ItemAction, type ItemInfo } from './HelpItems';
 import HelpMenu from './HelpMenu.svelte';
+
+interface Props {
+  items: readonly ItemInfo[];
+}
+
+const { items }: Props = $props();
 
 let showMenu = $state(false);
 let outsideWindow = $state<HTMLDivElement | undefined>();
@@ -41,7 +47,7 @@ async function onClick(action?: ItemAction): Promise<void> {
 <div bind:this={outsideWindow}>
   {#if showMenu}
     <HelpMenu>
-      {#each Items as item, index (index)}
+      {#each items as item, index (index)}
       <DropdownMenu.Item
         title={item.title}
         tooltip={item.tooltip}

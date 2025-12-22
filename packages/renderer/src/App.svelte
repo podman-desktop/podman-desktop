@@ -6,6 +6,7 @@ import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
+import HelpActionsItems from '/@/lib/help/HelpActionsItems.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
@@ -36,7 +37,6 @@ import DockerExtension from './lib/docker-extension/DockerExtension.svelte';
 import ExtensionDetails from './lib/extensions/ExtensionDetails.svelte';
 import ExtensionList from './lib/extensions/ExtensionList.svelte';
 import SendFeedback from './lib/feedback/SendFeedback.svelte';
-import HelpActions from './lib/help/HelpActions.svelte';
 import BuildImageFromContainerfile from './lib/image/BuildImageFromContainerfile.svelte';
 import ImageDetails from './lib/image/ImageDetails.svelte';
 import ImagesList from './lib/image/ImagesList.svelte';
@@ -406,7 +406,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
       </div>
     </div>
-    <HelpActions/>
+    <HelpActionsItems/>
     <PinActions/>
     <StatusBar />
   </main>

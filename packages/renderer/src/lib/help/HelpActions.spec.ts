@@ -103,7 +103,7 @@ suite('HelpActions component', () => {
         dispose: (): void => {},
       };
     });
-    const ha = render(HelpActions);
+    const ha = render(HelpActions, { items: Items });
     toggleMenuCallback();
     await vi.waitFor(async () => {
       const item = await ha.findByTitle(tooltip ?? title);
