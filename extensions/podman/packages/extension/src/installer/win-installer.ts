@@ -35,6 +35,7 @@ import { inject, injectable, postConstruct } from 'inversify';
 import WinReg from 'winreg';
 
 import { LegacyInstallerCheck } from '/@/checks/windows/legacy-installer-check';
+import { UNINSTALL_LEGACY_INSTALLER_COMMAND } from '/@/constants';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { WinPlatform } from '/@/platforms/win-platform';
 
@@ -46,8 +47,6 @@ import { BaseInstaller } from './base-installer';
 export const UNINSTALL_REGISTRY_KEY = '\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall';
 export const UNINSTALL_REGISTRY_DISPLAY_NAME = 'DisplayName';
 export const UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING = 'QuietUninstallString';
-
-export const UNINSTALL_LEGACY_INSTALLER_COMMAND = 'podman.uninstallLegacyPodmanInstaller';
 
 @injectable()
 export class WinInstaller extends BaseInstaller {

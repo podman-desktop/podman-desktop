@@ -19,11 +19,10 @@ import { promisify } from 'node:util';
 
 import type { CheckResult } from '@podman-desktop/api';
 import { injectable } from 'inversify';
-import type { Registry } from 'winreg';
 import WinReg from 'winreg';
 
 import { BaseCheck } from '/@/checks/base-check';
-import { UNINSTALL_LEGACY_INSTALLER_COMMAND } from '/@/installer/win-installer';
+import { UNINSTALL_LEGACY_INSTALLER_COMMAND } from '/@/constants';
 
 // Registry key / item used by the legacy installer
 export const LEGACY_PODMAN_REGISTRY_KEY = '\\SOFTWARE\\Red Hat\\Podman';
@@ -32,26 +31,24 @@ export const LEGACY_PODMAN_REGISTRY_ITEM_NAME = 'InstallDir';
 @injectable()
 export class LegacyInstallerCheck extends BaseCheck {
   title = 'Legacy Installer';
-  #legacyRegistry: Registry;
 
   constructor() {
     super();
-
-    this.#legacyRegistry = new WinReg({
-      hive: WinReg.HKLM,
-      key: LEGACY_PODMAN_REGISTRY_KEY,
-    });
+    console.log('LegacyInstallerCheck');
   }
 
   async execute(): Promise<CheckResult> {
-    const legacyInstaller = await promisify(this.#legacyRegistry.valueExists).bind(this.#legacyRegistry)(
+    const legacyRegistry = new WinReg({
+      hive: WinReg.HKLM,
+      key: LEGACY_PODMAN_REGISTRY_KEY,
+    });
+
+    const legacyInstaller = await promisify(legacyRegistry.valueExists).bind(legacyRegistry)(
       LEGACY_PODMAN_REGISTRY_ITEM_NAME,
     );
 
     if (legacyInstaller) {
-      const item = await promisify(this.#legacyRegistry.get).bind(this.#legacyRegistry)(
-        LEGACY_PODMAN_REGISTRY_ITEM_NAME,
-      );
+      const item = await promisify(legacyRegistry.get).bind(legacyRegistry)(LEGACY_PODMAN_REGISTRY_ITEM_NAME);
 
       return this.createFailureResult({
         description: `Found an older version of Podman in "${item.value}" that is not compatible with this installer.`,
