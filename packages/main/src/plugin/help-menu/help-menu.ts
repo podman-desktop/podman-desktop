@@ -26,7 +26,7 @@ export class HelpMenu {
 
   init(): void {
     const helpMenuConfiguration: IConfigurationNode = {
-      id: `preferences.experimental.helpMenu`,
+      id: 'preferences.experimental.helpMenu',
       title: 'Experimental (Help menu)',
       type: 'object',
       properties: {
