@@ -2854,15 +2854,14 @@ export class ContainerProviderRegistry {
     return infos.filter((item): item is containerDesktopAPI.ContainerEngineInfo => !!item);
   }
 
-  async getNetworkDrivers(engineId: string): Promise<string[]> {
-    const provider = this.internalProviders.get(engineId);
-    if (!provider) {
-      throw new Error('no engine matching this container');
-    }
-    if (!provider.api) {
+  async getNetworkDrivers(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+  ): Promise<string[]> {
+    const matchingContainerProvider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!matchingContainerProvider?.api) {
       throw new Error('no running provider for the matching container');
     }
-    const info = await provider.api.info();
+    const info = await matchingContainerProvider.api.info();
     return info.Plugins?.Network ?? [];
   }
 

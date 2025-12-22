@@ -6366,16 +6366,27 @@ describe('getNetworkDrivers', () => {
       info: infoMock,
     } as unknown as Dockerode;
 
+    const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'engine1',
+      endpoint: {
+        socketPath: '/engine1.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
     containerRegistry.addInternalProvider('engine1', {
       name: 'engine1',
       id: 'engine1',
       connection: {
         type: 'podman',
+        name: 'engine1',
+        endpoint: {
+          socketPath: '/engine1.socket',
+        },
       },
       api: fakeDockerode,
     } as InternalContainerProvider);
 
-    const result = await containerRegistry.getNetworkDrivers('engine1');
+    const result = await containerRegistry.getNetworkDrivers(providerConnectionInfo);
 
     expect(result).toEqual(['bridge', 'macvlan', 'ipvlan']);
   });
@@ -6387,23 +6398,41 @@ describe('getNetworkDrivers', () => {
       info: infoMock,
     } as unknown as Dockerode;
 
+    const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'engine2',
+      endpoint: {
+        socketPath: '/engine2.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
     containerRegistry.addInternalProvider('engine2', {
       name: 'engine2',
       id: 'engine2',
       connection: {
         type: 'docker',
+        name: 'engine2',
+        endpoint: {
+          socketPath: '/engine2.socket',
+        },
       },
       api: fakeDockerode,
     } as InternalContainerProvider);
 
-    const result = await containerRegistry.getNetworkDrivers('engine2');
+    const result = await containerRegistry.getNetworkDrivers(providerConnectionInfo);
 
     expect(result).toEqual([]);
   });
 
   test('throws error when engine not found', async () => {
-    await expect(containerRegistry.getNetworkDrivers('nonexistent')).rejects.toThrow(
-      'no engine matching this container',
+    const nonexistentConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'nonexistent',
+      endpoint: {
+        socketPath: '/nonexistent.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
+    await expect(containerRegistry.getNetworkDrivers(nonexistentConnectionInfo)).rejects.toThrow(
+      'no running provider for the matching container',
     );
   });
 });

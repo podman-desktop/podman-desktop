@@ -337,6 +337,13 @@ export function initExposure(): void {
   );
 
   contextBridge.exposeInMainWorld(
+    'getNetworkDrivers',
+    async (providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<string[]> => {
+      return ipcInvoke('container-provider-registry:getNetworkDrivers', providerContainerConnectionInfo);
+    },
+  );
+
+  contextBridge.exposeInMainWorld(
     'replicatePodmanContainer',
     async (
       source: { engineId: string; id: string },

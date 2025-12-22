@@ -885,6 +885,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:getNetworkDrivers',
+      async (_listener, providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<string[]> => {
+        return containerProviderRegistry.getNetworkDrivers(providerContainerConnectionInfo);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:listVolumes',
       async (_listener, fetchUsage: boolean): Promise<VolumeListInfo[]> => {
         return containerProviderRegistry.listVolumes(fetchUsage);
