@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import { getAssetsFolder } from '/@/utils/util';
 
 import { WinInstaller } from './win-installer';
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const extensionContext = {
   subscriptions: [],
@@ -41,7 +41,10 @@ const progress = {
 
 const mockTelemetryLogger = {} as TelemetryLogger;
 const mockWinPlatform = {} as WinPlatform;
-const legacyInstaller = {} as PodmanWindowsLegacyInstaller;
+const legacyInstaller = {
+  isInstalled: vi.fn(),
+  uninstall: vi.fn(),
+} as unknown as PodmanWindowsLegacyInstaller;
 
 vi.mock(import('/@/utils/util'), () => ({
   getAssetsFolder: vi.fn(),
@@ -100,4 +103,16 @@ test('expect update on windows to throw error if non zero exit code', async () =
   const result = await installer.update();
   expect(result).toBeFalsy();
   expect(extensionApi.window.showErrorMessage).toHaveBeenCalled();
+});
+
+test('expect update to uninstall legacy installer if detected', async () => {
+  vi.mocked(legacyInstaller.isInstalled).mockResolvedValue(true);
+
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readdirSync).mockReturnValue([]);
+
+  const result = await installer.update();
+  expect(result).toBeTruthy();
+
+  expect(legacyInstaller.uninstall).toHaveBeenCalledOnce();
 });

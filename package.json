@@ -149,8 +149,8 @@
     "@types/getos": "^3.0.4",
     "@types/hosted-git-info": "^3.0.5",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24",
     "@types/minimist": "^1.2.5",
+    "@types/node": "^24",
     "@types/tar": "^6.1.13",
     "@types/tar-fs": "^2.0.4",
     "@types/validator": "^13.15.10",
@@ -194,6 +194,7 @@
   },
   "dependencies": {
     "@docker/extension-api-client-types": "0.4.2",
+    "@expo/sudo-prompt": "^9.3.2",
     "@kubernetes/client-node": "^1.4.0",
     "@segment/analytics-node": "^2.3.0",
     "@types/semver": "^7.7.1",
@@ -219,7 +220,6 @@
     "os-locale": "^6.0.2",
     "semver": "^7.7.3",
     "stream-json": "^1.9.1",
-    "@expo/sudo-prompt": "^9.3.2",
     "tar": "^7.5.2",
     "tar-fs": "^3.1.1",
     "tar-stream": "^3.1.7",
@@ -246,7 +246,10 @@
       "electron-builder-notarize>js-yaml": "^3.14.2",
       "@kubernetes/client-node>js-yaml": "^4.1.1",
       "tmp-promise>tmp": "^0.2.5"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "registry-js"
+    ]
   },
   "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd"
 }

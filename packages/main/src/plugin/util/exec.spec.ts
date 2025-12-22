@@ -18,6 +18,8 @@
 
 import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
+import { homedir, platform } from 'node:os';
+import { delimiter, join } from 'node:path';
 import type { Readable } from 'node:stream';
 
 import * as sudo from '@expo/sudo-prompt';
@@ -577,35 +579,52 @@ describe('getInstallationPath', () => {
     process.env['PATH'] = originalPath;
   });
 
-  test('should return the installation path for Windows', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
-    vi.spyOn(util, 'isMac').mockImplementation(() => false);
-    process.env['PATH'] = '';
+  describe(
+    'windows',
+    {
+      // as the getInstallationPath is using `node:path` and it is platform specific
+      // we cannot assert on non-windows platforms properly
+      skip: platform() !== 'win32',
+    },
+    () => {
+      beforeEach(() => {
+        vi.spyOn(util, 'isWindows').mockImplementation(() => true);
+        vi.spyOn(util, 'isMac').mockImplementation(() => false);
+      });
 
-    const path = getInstallationPath();
+      test('should return the installation paths for Windows', () => {
+        process.env['PATH'] = '';
 
-    expect(path).toBe('c:\\Program Files\\RedHat\\Podman;');
-  });
+        const path = getInstallationPath();
 
-  test('should return the installation path for Windows with pre-filled PATH', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
-    vi.spyOn(util, 'isMac').mockImplementation(() => false);
-    process.env['PATH'] = 'c:\\Local';
+        const parts = path.split(delimiter);
+        expect(parts).toContain(join(homedir(), 'AppData', 'Local', 'Programs', 'Podman'));
+        expect(parts).toContain('c:\\Program Files\\RedHat\\Podman');
+      });
 
-    const path = getInstallationPath();
+      test('should return the installation paths for Windows with pre-filled PATH', () => {
+        process.env['PATH'] = 'c:\\Local';
 
-    expect(path).toBe('c:\\Program Files\\RedHat\\Podman;c:\\Local');
-  });
+        const path = getInstallationPath();
 
-  test('should return the installation path for Windows with defined param', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => true);
-    vi.spyOn(util, 'isMac').mockImplementation(() => false);
-    process.env['PATH'] = 'c:\\Local';
+        const parts = path.split(delimiter);
+        expect(parts).toContain(join(homedir(), 'AppData', 'Local', 'Programs', 'Podman'));
+        expect(parts).toContain('c:\\Program Files\\RedHat\\Podman');
+        expect(parts).toContain('c:\\Local');
+      });
 
-    const path = getInstallationPath('c:\\Directory');
+      test('should return the installation paths for Windows with defined param', () => {
+        process.env['PATH'] = 'c:\\Local';
 
-    expect(path).toBe('c:\\Program Files\\RedHat\\Podman;c:\\Directory');
-  });
+        const path = getInstallationPath('c:\\Directory');
+
+        const parts = path.split(delimiter);
+        expect(parts).toContain(join(homedir(), 'AppData', 'Local', 'Programs', 'Podman'));
+        expect(parts).toContain('c:\\Program Files\\RedHat\\Podman');
+        expect(parts).toContain('c:\\Directory');
+      });
+    },
+  );
 
   test('should return the installation path for macOS', () => {
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);

@@ -33,10 +33,10 @@ const mockedPodman5 = {
       version: 'v5.0.0',
       arch: {
         x64: {
-          fileName: 'podman-installer-windows-amd64.exe',
+          fileName: 'podman-installer-windows-amd64.msi',
         },
         arm64: {
-          fileName: 'podman-installer-windows-arm64.exe',
+          fileName: 'podman-installer-windows-arm64.msi',
         },
       },
     },
@@ -231,13 +231,13 @@ describe('windows platform', () => {
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
       expect.stringContaining(`v${podman5JSON.version}`),
-      expect.stringContaining('podman-installer-windows-amd64.exe'),
-      'podman-installer-windows-amd64.exe',
+      expect.stringContaining('podman-installer-windows-amd64.msi'),
+      'podman-installer-windows-amd64.msi',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
       expect.stringContaining(`v${podman5JSON.version}`),
-      expect.stringContaining('podman-installer-windows-arm64.exe'),
-      'podman-installer-windows-arm64.exe',
+      expect.stringContaining('podman-installer-windows-arm64.msi'),
+      'podman-installer-windows-arm64.msi',
     );
   });
 
@@ -262,16 +262,16 @@ describe('windows platform', () => {
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       1,
       'v5.0.0',
-      'podman-installer-windows-amd64.exe',
-      'podman-installer-windows-amd64.exe',
+      'podman-installer-windows-amd64.msi',
+      'podman-installer-windows-amd64.msi',
     );
 
     // check called with the correct parameters for arm64 installer
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       2,
       'v5.0.0',
-      'podman-installer-windows-arm64.exe',
-      'podman-installer-windows-arm64.exe',
+      'podman-installer-windows-arm64.msi',
+      'podman-installer-windows-arm64.msi',
     );
 
     // check no airgap download

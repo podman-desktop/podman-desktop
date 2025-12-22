@@ -64,7 +64,7 @@ test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@
     await playExpect(podmanCliNotFoundText).toBeVisible();
   });
   test('Podman installer artifacts are present in local assets storage', async ({ runner }) => {
-    const fileFormatRegexp = isWindows ? 'exe' : 'pkg';
+    const fileFormatRegexp = isWindows ? 'msi' : 'pkg';
     // x64 = amd64 for both windows and mac, arm64 = arm64 for win, and aarch64 for mac
     const archPart = process.arch === 'x64' ? 'amd64' : process.arch === 'arm64' ? (isMac ? 'aarch64' : 'arm64') : null;
     playExpect(archPart, { message: `Unsupported architecture: ${process.arch}` }).not.toBeNull();

@@ -62,7 +62,11 @@ export class WinInstaller extends BaseInstaller {
     return this.winPlatform.getPreflightChecks();
   }
 
-  update(): Promise<boolean> {
+  async update(): Promise<boolean> {
+    if (await this.legacyPodmanInstaller.isInstalled()) {
+      await this.legacyPodmanInstaller.uninstall();
+    }
+
     return this.install();
   }
 
@@ -77,7 +81,8 @@ export class WinInstaller extends BaseInstaller {
       try {
         if (fs.existsSync(setupPath)) {
           try {
-            await processAPI.exec(setupPath, ['/install', '/norestart']);
+            progress.report({ message: `Installing ${fileName}` });
+            await processAPI.exec('msiexec', ['/package', setupPath]);
             progress.report({ increment: 80 });
             window.showNotification({ body: 'Podman is successfully installed.' });
           } catch (err) {
