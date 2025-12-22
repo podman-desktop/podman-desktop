@@ -30,7 +30,7 @@ export class HelpMenu {
       title: 'Experimental (Help menu)',
       type: 'object',
       properties: {
-        ['helpMenu.useProductConfig']: {
+        'helpMenu.useProductConfig': {
           description: 'Replace help menu with the one defined in the product',
           type: 'object',
           default: import.meta.env.DEV ? {} : undefined,
