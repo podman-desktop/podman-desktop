@@ -18,7 +18,7 @@
 import { configuration as configurationAPI, Disposable, process as processAPI } from '@podman-desktop/api';
 import { injectable, postConstruct, preDestroy } from 'inversify';
 
-import { getPodmanCli } from '/@/utils/podman-cli';
+import { getInstallationPath, getPodmanCli } from '/@/utils/podman-cli';
 
 export interface InstalledPodman {
   version: string;
@@ -33,7 +33,11 @@ export class PodmanBinary implements Disposable {
    * Given a path to a podman binary, return the version of podman
    */
   protected async getPodmanVersion(path: string): Promise<string> {
-    const { stdout: versionOut } = await processAPI.exec(path, ['--version']);
+    const { stdout: versionOut } = await processAPI.exec(path, ['--version'], {
+      env: {
+        PATH: getInstallationPath() ?? process.env.PATH ?? '',
+      },
+    });
     const versionArr = versionOut.split(' ');
     return versionArr[versionArr.length - 1];
   }
