@@ -27,6 +27,7 @@ import { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
@@ -1003,5 +1004,98 @@ describe('updateImage handler', () => {
     const createdTask = createTaskSpy.mock.results[0]?.value;
     expect(createdTask.status).toBe('success');
     expect(createdTask.name).toBe(`Image '${tag}' is already up to date`);
+  });
+});
+
+describe('container-provider-registry:playKube', () => {
+  type PlayKubeHandler = (
+    _listener: undefined,
+    kubernetesYamlFilePath: string,
+    selectedProvider: ProviderContainerConnectionInfo,
+    options?: {
+      build?: boolean;
+      replace?: boolean;
+    },
+  ) => Promise<{ result: PlayKubeInfo | { error: Error } }>;
+
+  const PLAY_KUBE_INFO_MOCK: PlayKubeInfo = {
+    Pods: [],
+    RmReport: [],
+    Secrets: [],
+    StopReport: [],
+    Volumes: [],
+  };
+
+  const PROVIDER_CONTAINER_CONNECTION_INFO_MOCK: ProviderContainerConnectionInfo = {
+    name: 'Dummy',
+    type: 'podman',
+    connectionType: 'container',
+    displayName: 'Podman',
+    status: 'started',
+    endpoint: {
+      socketPath: '.sock',
+    },
+  };
+
+  test('should call ContainerProviderRegistry#playKube', async () => {
+    const handle: PlayKubeHandler = handlers.get('container-provider-registry:playKube');
+    expect(handle).not.equal(undefined);
+
+    const playKubeSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'playKube');
+    playKubeSpy.mockResolvedValue(PLAY_KUBE_INFO_MOCK);
+
+    // Call the handler
+    const result = await handle(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK, {
+      replace: true,
+    });
+    assert(!('error' in result));
+
+    // validate call
+    expect(result.result).toEqual(PLAY_KUBE_INFO_MOCK);
+    expect(playKubeSpy).toHaveBeenCalledExactlyOnceWith('/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK, {
+      replace: true,
+    });
+  });
+
+  test('should create a task', async () => {
+    const handle: PlayKubeHandler = handlers.get('container-provider-registry:playKube');
+    expect(handle).not.equal(undefined);
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'playKube').mockResolvedValue(PLAY_KUBE_INFO_MOCK);
+
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+
+    await handle(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK);
+
+    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
+      title: 'Podman Play Kube',
+    });
+
+    // Verify the task was marked as success and name was updated
+    const createdTask = createTaskSpy.mock.results[0]?.value;
+    expect(createdTask.status).toBe('success');
+  });
+
+  test('task should be failed if ContainerProviderRegistry#kubePlay throw an error', async () => {
+    const handle: PlayKubeHandler = handlers.get('container-provider-registry:playKube');
+    expect(handle).not.equal(undefined);
+
+    vi.spyOn(ContainerProviderRegistry.prototype, 'playKube').mockRejectedValue(new Error('Dummy Foo'));
+
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+
+    const result = await handle(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK);
+    assert('error' in result);
+    assert(result.error instanceof Error);
+    expect(result?.error?.message).toBe('Dummy Foo');
+
+    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
+      title: 'Podman Play Kube',
+    });
+
+    // Verify the task was marked as success and name was updated
+    const createdTask = createTaskSpy.mock.results[0]?.value;
+    expect(createdTask.status).toBe('failure');
+    expect(createdTask.error).toBe('Error: Dummy Foo');
   });
 });

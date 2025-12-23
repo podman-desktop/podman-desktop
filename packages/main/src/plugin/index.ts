@@ -1051,7 +1051,18 @@ export class PluginSystem {
           replace?: boolean;
         },
       ): Promise<PlayKubeInfo> => {
-        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
+        const task = taskManager.createTask({
+          title: `Podman Play Kube`,
+        });
+        try {
+          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
+          task.status = 'success';
+          return result;
+        } catch (error: unknown) {
+          task.error = String(error);
+          task.status = 'failure';
+          throw error;
+        }
       },
     );
 
