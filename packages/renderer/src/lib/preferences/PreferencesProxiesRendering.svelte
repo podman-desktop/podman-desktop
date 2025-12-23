@@ -4,8 +4,9 @@ import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte
 import { onMount } from 'svelte';
 
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
-import { ProxyState } from '/@api/proxy';
+import { PROXY_CONFIG_KEYS, ProxyState } from '/@api/proxy';
 
+import PreferencesManagedInput from './PreferencesManagedInput.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import { validateProxyAddress } from './Util';
 
@@ -15,6 +16,10 @@ let noProxy = '';
 let proxyState: ProxyState;
 let httpProxyError: string | undefined;
 let httpsProxyError: string | undefined;
+let httpProxyLocked = false;
+let httpsProxyLocked = false;
+let noProxyLocked = false;
+let proxyEnabledLocked = false;
 
 onMount(async () => {
   const proxySettings = await window.getProxySettings();
@@ -22,6 +27,26 @@ onMount(async () => {
   httpsProxy = proxySettings?.httpsProxy ?? '';
   noProxy = proxySettings?.noProxy ?? '';
   proxyState = await window.getProxyState();
+
+  // Check if proxy settings are locked by managed configuration
+  const configProperties = await window.getConfigurationProperties();
+  proxyEnabledLocked = configProperties[PROXY_CONFIG_KEYS.ENABLED]?.locked ?? false;
+  httpProxyLocked = configProperties[PROXY_CONFIG_KEYS.HTTP]?.locked ?? false;
+  httpsProxyLocked = configProperties[PROXY_CONFIG_KEYS.HTTPS]?.locked ?? false;
+  noProxyLocked = configProperties[PROXY_CONFIG_KEYS.NO_PROXY]?.locked ?? false;
+
+  // If locked, ensure we display the managed configuration values
+  // we "retrieve" these values instead of from the proxy settings fetched earlier, as those
+  // do not reflect managed configuration overrides
+  if (httpProxyLocked) {
+    httpProxy = (await window.getConfigurationValue<string>(PROXY_CONFIG_KEYS.HTTP)) ?? httpProxy;
+  }
+  if (httpsProxyLocked) {
+    httpsProxy = (await window.getConfigurationValue<string>(PROXY_CONFIG_KEYS.HTTPS)) ?? httpsProxy;
+  }
+  if (noProxyLocked) {
+    noProxy = (await window.getConfigurationValue<string>(PROXY_CONFIG_KEYS.NO_PROXY)) ?? noProxy;
+  }
 });
 
 function onProxyStateChange(key: unknown): void {
@@ -79,6 +104,7 @@ function validate(event: any): void {
         >Proxy configuration</label>
       <Dropdown
         id="toggle-proxy"
+        disabled={proxyEnabledLocked}
         onChange={onProxyStateChange}
         value={PROXY_LABELS.get(proxyState)}
         options={Array.from(PROXY_LABELS.values()).map((label) => ({
@@ -86,6 +112,9 @@ function validate(event: any): void {
           label: label,
         }))}>
       </Dropdown>
+      {#if proxyEnabledLocked}
+        <PreferencesManagedInput />
+      {/if}
     </div>
 
     <div class="space-y-2">
@@ -97,11 +126,14 @@ function validate(event: any): void {
       <Input
         name="httpProxy"
         id="httpProxy"
-        disabled={proxyState !== ProxyState.PROXY_MANUAL}
+        disabled={proxyState !== ProxyState.PROXY_MANUAL || httpProxyLocked}
         bind:value={httpProxy}
         placeholder="URL of the proxy for http: URLs (eg http://myproxy.domain.com:8080)"
         required
         on:input={validate} />
+      {#if httpProxyLocked}
+        <PreferencesManagedInput />
+      {/if}
       {#if httpProxyError}
         <ErrorMessage error={httpProxyError} />
       {/if}
@@ -116,11 +148,14 @@ function validate(event: any): void {
       <Input
         name="httpsProxy"
         id="httpsProxy"
-        disabled={proxyState !== ProxyState.PROXY_MANUAL}
+        disabled={proxyState !== ProxyState.PROXY_MANUAL || httpsProxyLocked}
         bind:value={httpsProxy}
         placeholder="URL of the proxy for https: URLs (eg http://myproxy.domain.com:8080)"
         required
         on:input={validate} />
+      {#if httpsProxyLocked}
+        <PreferencesManagedInput />
+      {/if}
       {#if httpsProxyError}
         <ErrorMessage error={httpsProxyError} />
       {/if}
@@ -135,10 +170,13 @@ function validate(event: any): void {
       <Input
         name="noProxy"
         id="noProxy"
-        disabled={proxyState !== ProxyState.PROXY_MANUAL}
+        disabled={proxyState !== ProxyState.PROXY_MANUAL || noProxyLocked}
         bind:value={noProxy}
         placeholder="Example: *.domain.com, 192.168.*.*"
         required />
+      {#if noProxyLocked}
+        <PreferencesManagedInput />
+      {/if}
     </div>
 
     <div class="pt-2">
