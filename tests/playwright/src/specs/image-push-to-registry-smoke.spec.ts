@@ -42,9 +42,15 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
 test.afterAll(async ({ runner, page }) => {
   try {
-    await deleteImage(page, helloContainer);
-    await deleteImage(page, fullName);
-    await deleteRegistry(page, 'GitHub');
+    await deleteImage(page, helloContainer).catch((error: unknown) => {
+      console.log('Failed to delete hello container image:', error);
+    });
+    await deleteImage(page, fullName).catch((error: unknown) => {
+      console.log('Failed to delete renamed image:', error);
+    });
+    await deleteRegistry(page, 'GitHub').catch((error: unknown) => {
+      console.log('Failed to delete registry:', error);
+    });
   } finally {
     await runner.close();
   }

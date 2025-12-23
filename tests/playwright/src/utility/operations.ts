@@ -209,24 +209,24 @@ export async function handleConfirmationDialog(
   timeout = 10_000,
   moreThanOneConsecutiveDialogs = false,
 ): Promise<void> {
-  return test.step('Handle confirmation dialog', async () => {
-    // wait for dialog to appear using waitFor
-    const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
-    await waitUntil(async () => await dialog.isVisible(), { timeout: timeout });
-    const button = confirm
-      ? dialog.getByRole('button', { name: confirmationButton })
-      : dialog.getByRole('button', { name: cancelButton });
-    await playExpect(button).toBeEnabled({ timeout: timeout });
-    await button.click();
+  // Note: Intentionally not wrapped in test.step to allow proper try-catch handling
+  // by callers. test.step has special failure semantics that can interfere with
+  // exception handling when this function is used in "try and see" patterns.
+  const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
+  await waitUntil(async () => await dialog.isVisible(), { timeout: timeout });
+  const button = confirm
+    ? dialog.getByRole('button', { name: confirmationButton })
+    : dialog.getByRole('button', { name: cancelButton });
+  await playExpect(button).toBeEnabled({ timeout: timeout });
+  await button.click();
 
-    if (moreThanOneConsecutiveDialogs) {
-      const button = dialog.getByRole('button', { name: 'Done' });
-      await playExpect(button).toBeEnabled({ timeout: timeout });
-      await button.click();
-    }
+  if (moreThanOneConsecutiveDialogs) {
+    const doneButton = dialog.getByRole('button', { name: 'Done' });
+    await playExpect(doneButton).toBeEnabled({ timeout: timeout });
+    await doneButton.click();
+  }
 
-    await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
-  });
+  await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
 }
 
 /**
