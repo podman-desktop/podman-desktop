@@ -65,6 +65,51 @@ async function onButtonClicked(object: Object): Promise<void> {
 {/each}
 ```
 
+### Using async/await in expressions
+
+As of Svelte 5.36+, you can use the `await` keyword directly inside component expressions in three places: at the top level of the component's `<script>`, inside `$derived(...)` declarations, and inside your markup. This enables cleaner code without needing explicit promise handling.
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+async function fetchData(): Promise<Data> {
+  // async logic here
+  return data;
+}
+
+let data = $derived(await fetchData());
+</script>
+
+<p>Data: {data}</p>
+```
+
+🚫 **Instead of:**
+
+```ts
+<script lang="ts">
+async function fetchData(): Promise<Data> {
+  // async logic here
+  return data;
+}
+
+// Without await, this produces a Promise
+let dataPromise = $derived(fetchData());
+</script>
+
+{#await dataPromise}
+  <p>Loading...</p>
+{:then data}
+  <p>Data: {data}</p>
+{:catch error}
+  <p>Error: {error.message}</p>
+{/await}
+```
+
+This is much simpler than managing promises manually and avoids the need for `{#await}` blocks when you just need the final value.
+
+For more details on async patterns in Svelte, see the [Svelte documentation on await expressions](https://svelte.dev/docs/svelte/await-expressions).
+
 ## Unit tests code
 
 ### Use `vi.mocked`, not a generic `myFunctionMock`
