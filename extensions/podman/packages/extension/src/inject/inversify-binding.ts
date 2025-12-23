@@ -20,6 +20,7 @@ import type { ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import { env as envAPI } from '@podman-desktop/api';
 import { Container as InversifyContainer } from 'inversify';
 
+import { LibkrunPodmanVersionCheck } from '/@/checks/macos/libkrun-podman-version-check';
 import { HyperVCheck } from '/@/checks/windows/hyper-v-check';
 import { HyperVInstalledCheck } from '/@/checks/windows/hyper-v-installed-check';
 import { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
@@ -38,6 +39,7 @@ import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { PodmanInstall } from '/@/installer/podman-install';
 import { WinInstaller } from '/@/installer/win-installer';
+import { MacOSPlatform } from '/@/platforms/macos-platform';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
@@ -62,8 +64,13 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(TelemetryLoggerSymbol).toConstantValue(this.#telemetryLogger);
     this.#inversifyContainer.bind(PodmanInstall).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinPlatform).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(MacOSPlatform).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanBinary).toSelf().inSingletonScope();
 
+    // MacOS checks
+    this.#inversifyContainer.bind(LibkrunPodmanVersionCheck).toSelf().inSingletonScope();
+
+    // Windows check
     this.#inversifyContainer.bind(WinBitCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinVersionCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(WinMemoryCheck).toSelf().inSingletonScope();
@@ -76,6 +83,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(HyperVInstalledCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(UserAdminCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanDesktopElevatedCheck).toSelf().inSingletonScope();
+
     this.#inversifyContainer.bind(PodmanProvider).toSelf().inSingletonScope();
 
     if (envAPI.isWindows) {

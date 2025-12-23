@@ -46,6 +46,7 @@ import { PodmanBinaryLocationHelper } from '/@/helpers/podman-binary-location-he
 import { PodmanInfoHelper } from '/@/helpers/podman-info-helper';
 import { QemuHelper } from '/@/helpers/qemu-helper';
 import type { Installer } from '/@/installer/installer';
+import { MacOSPlatform } from '/@/platforms/macos-platform';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
@@ -189,6 +190,9 @@ const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
 } as unknown as WinPlatform;
+const MAC_OS_PLATFORM_MOCK: MacOSPlatform = {
+  isLibkrunSupported: vi.fn(),
+} as unknown as MacOSPlatform;
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
   invalidate: vi.fn(),
@@ -267,6 +271,8 @@ beforeEach(async () => {
         return PODMAN_BINARY_MOCK;
       case PodmanProvider:
         return PODMAN_PROVIDER_MOCK;
+      case MacOSPlatform:
+        return MAC_OS_PLATFORM_MOCK;
     }
     throw new Error(`Unknown identifier ${String(identifier)}`);
   }
@@ -1462,6 +1468,7 @@ test('ensure showNotification is not called during update', async () => {
     {} as unknown as Installer,
     {} as unknown as extensionApi.ProviderCleanup,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
   vi.spyOn(podmanInstall, 'checkForUpdate').mockImplementation((_installedPodman: InstalledPodman | undefined) => {
     return Promise.resolve({
@@ -1519,6 +1526,7 @@ test('should not register update when there are multiple Podman installations', 
     {} as unknown as Installer,
     undefined,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
   const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
 
@@ -1553,6 +1561,7 @@ test('should register update when there is single Podman installation', async ()
     {} as unknown as Installer,
     undefined,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
   const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
 
@@ -1583,6 +1592,7 @@ test('should register update when there are multiple Podman installations but cu
     {} as unknown as Installer,
     undefined,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
   const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
   vi.spyOn(podmanCli, 'getCustomBinaryPath').mockReturnValue('/custom/path/podman');
@@ -1618,6 +1628,7 @@ test('update should be wrapped with withProgress to create a visible task', asyn
     {} as unknown as Installer,
     undefined,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
 
   vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue(['/usr/local/bin/podman']);
@@ -2599,6 +2610,7 @@ test('checkForUpdate func should be called if there is no podman installed', asy
     {} as unknown as Installer,
     {} as unknown as extensionApi.ProviderCleanup,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
 
   vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
@@ -2609,34 +2621,6 @@ test('checkForUpdate func should be called if there is no podman installed', asy
 
   await extension.initCheckAndRegisterUpdate(provider, podmanInstall);
   expect(podmanInstall.checkForUpdate).toBeCalledWith(undefined);
-});
-
-test('isLibkrunSupported should return false with 5.3.0 on intel', async () => {
-  vi.mocked(extensionApi.env).isMac = true;
-  vi.mocked(arch).mockReturnValue('x64');
-  const enabled = extension.isLibkrunSupported('5.3.0');
-  expect(enabled).toBeFalsy();
-});
-
-test('isLibkrunSupported should return true with prelease older than rc1', async () => {
-  vi.mocked(arch).mockReturnValue('arm64');
-  vi.mocked(extensionApi.env).isMac = true;
-  const enabled = extension.isLibkrunSupported('5.2.0-rc2');
-  expect(enabled).toBeTruthy();
-});
-
-test('isLibkrunSupported should return true with 5.2.0 version', async () => {
-  vi.mocked(arch).mockReturnValue('arm64');
-  vi.mocked(extensionApi.env).isMac = true;
-  const enabled = extension.isLibkrunSupported('5.2.0');
-  expect(enabled).toBeTruthy();
-});
-
-test('isLibkrunSupported should return false with previous 5.1.2 version', async () => {
-  vi.mocked(arch).mockReturnValue('arm64');
-  vi.mocked(extensionApi.env).isMac = true;
-  const enabled = extension.isLibkrunSupported('5.1.2');
-  expect(enabled).toBeFalsy();
 });
 
 describe('isPlaybookMachineInitSupported', () => {

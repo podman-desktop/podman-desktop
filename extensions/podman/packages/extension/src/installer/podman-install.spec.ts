@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { MacOSPlatform } from '/@/platforms/macos-platform';
 import type { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
 
 import * as extensionObj from '../extension';
@@ -77,6 +78,9 @@ const PROVIDER_CLEANUP_MOCK = {
 const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
 } as unknown as PodmanBinary;
+const MAC_OS_PLATFORM_MOCK = {
+  isLibkrunSupported: vi.fn(),
+} as unknown as MacOSPlatform;
 
 // mock filesystem
 vi.mock('node:fs');
@@ -123,6 +127,7 @@ beforeEach(() => {
     INSTALLER_MOCK,
     PROVIDER_CLEANUP_MOCK,
     PODMAN_BINARY_MOCK,
+    MAC_OS_PLATFORM_MOCK,
   );
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
