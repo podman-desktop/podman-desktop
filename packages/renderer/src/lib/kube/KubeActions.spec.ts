@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { router } from 'tinro';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import KubeActions from '/@/lib/kube/KubeActions.svelte';
@@ -57,6 +58,7 @@ beforeEach(() => {
 });
 
 test('KubeApplyYAMLButton should redirect to', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto').mockReturnValue(undefined);
   const { getByTitle } = render(KubeActions);
 
   const applyYAMLBtn = getByTitle('Apply YAML');
@@ -64,11 +66,5 @@ test('KubeApplyYAMLButton should redirect to', async () => {
 
   await userEvent.click(applyYAMLBtn);
 
-  await vi.waitFor(() => {
-    expect(window.openDialog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Select a .yaml file to apply',
-      }),
-    );
-  });
+  expect(gotoSpy).toHaveBeenCalledWith('/kubernetes/apply');
 });
