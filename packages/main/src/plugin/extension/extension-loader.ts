@@ -501,7 +501,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       // filter only directories ignoring node_modules directory
       const pluginDirectories = pluginDirEntries
         .filter(entry => entry.isDirectory())
-        .map(directory => this.pluginsDirectory + '/' + directory.name);
+        .map(directory => path.join(this.pluginsDirectory, directory.name));
 
       // collect all extensions from the pluginDirectory folders
       const analyzedPluginsDirectoryExtensions: AnalyzedExtension[] = (
