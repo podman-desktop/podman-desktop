@@ -414,6 +414,56 @@ describe('extractImageDataFromImageName', () => {
     expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
     expect(nameAndTag.name).toBe('myimage');
   });
+
+  test('tag and digest format on library image', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'httpd:2.4@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('index.docker.io');
+    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('library/httpd');
+  });
+
+  test('tag and digest format on namespaced image', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'foo/bar:v1.0.0@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('index.docker.io');
+    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('foo/bar');
+  });
+
+  test('tag and digest format with explicit registry (ghcr.io example)', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'ghcr.io/podman-desktop/pd-extension-quadlet:0.11.0@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    );
+    expect(nameAndTag.registry).toBe('ghcr.io');
+    expect(nameAndTag.registryURL).toBe('https://ghcr.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    expect(nameAndTag.name).toBe('podman-desktop/pd-extension-quadlet');
+  });
+
+  test('tag and digest format with localhost and port', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'localhost:5000/myimage:latest@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('localhost:5000');
+    expect(nameAndTag.registryURL).toBe('https://localhost:5000/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('myimage');
+  });
+
+  test('tag and digest format with multi-level path', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'quay.io/org/team/image:v2.1.0@sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
+    );
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210');
+    expect(nameAndTag.name).toBe('org/team/image');
+  });
 });
 
 test('expect getImageConfigLabels works', async () => {
@@ -504,6 +554,30 @@ test('expect getManifestFromImageName works with digest', async () => {
 
   const manifest = await imageRegistry.getManifestFromImageName(
     `my-podman-desktop-fake-registry.io/my/extension@${digest}`,
+  );
+  expect(manifest).toStrictEqual(imageRegistryManifestJson);
+});
+
+test('expect getManifestFromImageName works with tag and digest', async () => {
+  const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');
+  spyGetAuthInfo.mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+
+  const spyGetToken = vi.spyOn(imageRegistry, 'getToken');
+  spyGetToken.mockResolvedValue('12345');
+
+  const digest = 'sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+
+  const handlers = [
+    http.get(`https://ghcr.io/v2/podman-desktop/pd-extension-quadlet/manifests/${digest}`, () =>
+      HttpResponse.json(imageRegistryManifestJson),
+    ),
+  ];
+  server = setupServer(...handlers);
+  server.listen({ onUnhandledRequest: 'error' });
+
+  // Tag is ignored when digest is present, digest is used for manifest lookup
+  const manifest = await imageRegistry.getManifestFromImageName(
+    `ghcr.io/podman-desktop/pd-extension-quadlet:0.11.0@${digest}`,
   );
   expect(manifest).toStrictEqual(imageRegistryManifestJson);
 });

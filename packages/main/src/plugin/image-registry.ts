@@ -394,14 +394,22 @@ export class ImageRegistry {
     }
 
     // Check if image is referenced by digest (@sha256:hash) instead of tag
+    // Format can be: name:tag, name@sha256:hash, or name:tag@sha256:hash
     let tag = 'latest';
     const atIndex = imageName.indexOf('@');
     const lastSlash = imageName.lastIndexOf('/');
 
     if (atIndex !== -1 && atIndex > lastSlash) {
-      // Image uses digest format: name@sha256:hash
+      // Image uses digest format: name@sha256:hash or name:tag@sha256:hash
+      // The digest is the authoritative reference
       tag = imageName.substring(atIndex + 1);
       imageName = imageName.substring(0, atIndex);
+
+      // Remove any tag that might be present before the @ (e.g., :0.11.0 in name:0.11.0@sha256:...)
+      const lastColon = imageName.lastIndexOf(':');
+      if (lastColon !== -1 && lastColon > lastSlash) {
+        imageName = imageName.substring(0, lastColon);
+      }
     } else {
       // Check for tag format: name:tag
       const lastColon = imageName.lastIndexOf(':');
