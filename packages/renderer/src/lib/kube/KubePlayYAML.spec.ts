@@ -89,11 +89,6 @@ beforeAll(() => {
 beforeEach(() => {
   vi.resetAllMocks();
 
-  vi.mocked(window.matchMedia).mockReturnValue({
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  } as unknown as MediaQueryList);
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);

@@ -39,15 +39,6 @@ beforeAll(() => {
   };
 
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
 });
 
 const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
