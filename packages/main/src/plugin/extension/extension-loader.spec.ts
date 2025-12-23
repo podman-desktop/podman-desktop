@@ -18,8 +18,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { Buffer } from 'node:buffer';
-import type { Dirent } from 'node:fs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -426,7 +424,9 @@ describe('extensionLoader#start', () => {
     const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
     loadExtensionsMock.mockResolvedValue(undefined);
 
-    vi.mocked(fs.promises.readdir).mockImplementation(async path => {
+    vi.mocked(
+      fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent[]>,
+    ).mockImplementation(async path => {
       switch (path) {
         case directories.getPluginsDirectory():
           return [
@@ -434,12 +434,12 @@ describe('extensionLoader#start', () => {
               name: 'foo',
               isFile: () => false,
               isDirectory: () => true,
-            } as unknown as Dirent<Buffer<ArrayBuffer>>,
+            } as unknown as fs.Dirent,
             {
               name: 'bar',
               isFile: () => false,
               isDirectory: () => true,
-            } as unknown as Dirent<Buffer<ArrayBuffer>>,
+            } as unknown as fs.Dirent,
           ];
         default:
           return [];
