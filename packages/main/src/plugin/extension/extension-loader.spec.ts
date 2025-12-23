@@ -225,10 +225,10 @@ const safeStorageRegistry: SafeStorageRegistry = {
 } as unknown as SafeStorageRegistry;
 
 const directories = {
-  getPluginsDirectory: () => '/fake-plugins-directory',
-  getPluginsScanDirectory: () => '/fake-plugins-scanning-directory',
-  getExtensionsStorageDirectory: () => '/fake-extensions-storage-directory',
-  getSafeStorageDirectory: () => '/fake-safe-storage-directory',
+  getPluginsDirectory: () => path.resolve('/fake-plugins-directory'),
+  getPluginsScanDirectory: () => path.resolve('/fake-plugins-scanning-directory'),
+  getExtensionsStorageDirectory: () => path.resolve('/fake-extensions-storage-directory'),
+  getSafeStorageDirectory: () => path.resolve('/fake-safe-storage-directory'),
 } as unknown as Directories;
 
 const exec = new Exec(proxy);
