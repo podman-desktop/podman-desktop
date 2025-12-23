@@ -2,12 +2,112 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://podman-desktop.io/blog</id>
     <title>Podman Desktop Blog</title>
-    <updated>2025-12-04T00:00:00.000Z</updated>
+    <updated>2025-12-22T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://podman-desktop.io/blog"/>
     <subtitle>Podman Desktop Blog</subtitle>
     <icon>https://podman-desktop.io/img/favicon.ico</icon>
     <rights>Copyright © 2025 Podman Desktop</rights>
+    <entry>
+        <title type="html"><![CDATA[The Journey of Podman Desktop in 2025]]></title>
+        <id>https://podman-desktop.io/blog/podman-desktop-2025-journey</id>
+        <link href="https://podman-desktop.io/blog/podman-desktop-2025-journey"/>
+        <updated>2025-12-22T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[The Journey of Podman Desktop in 2025 post CNCF sandbox project.]]></summary>
+        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_tleR" id="a-year-of-growth-and-gratitude">A Year of Growth and Gratitude<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#a-year-of-growth-and-gratitude" class="hash-link" aria-label="Direct link to A Year of Growth and Gratitude" title="Direct link to A Year of Growth and Gratitude" translate="no">​</a></h2>
+<p>Welcome to the journey of <strong>Podman Desktop in 2025</strong>, a year that marked incredible growth, deeper integrations, and continued community collaboration.</p>
+<p>This year Podman Desktop <strong>closed 1,669 issues, merged 2,814 pull requests, and welcomed 28 new contributors</strong>, with even more activity happening across extension repositories.</p>
+<p>It’s been almost a year since Podman Desktop became a <a href="https://www.cncf.io/projects/podman-desktop/" target="_blank" rel="noopener noreferrer" class=""><strong>CNCF Sandbox Project (November 2024)</strong></a> and what a journey it’s been! From passing <a href="https://podman-desktop.io/blog/3-million" target="_blank" rel="noopener noreferrer" class="">**three million downloads**</a> to introducing new extensions, integrations and platform support, the project has seen remarkable progress, driven by passionate contributors and an engaged community.</p>
+<p>This blog takes you through some of the key highlights of <strong>2025</strong>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="a-fresh-start-in-january">A Fresh Start in January<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#a-fresh-start-in-january" class="hash-link" aria-label="Direct link to A Fresh Start in January" title="Direct link to A Fresh Start in January" translate="no">​</a></h2>
+<p>We kicked off the year strong with the <a href="https://podman-desktop.io/blog/podman-desktop-release-1.16" target="_blank" rel="noopener noreferrer" class=""><strong>Podman Desktop 1.16</strong></a> release, setting the tone for an exciting year ahead.</p>
+<p>This release introduced a new <strong>Experimental</strong> section in Settings, giving users visibility into features under active development and linking them directly to community discussions.</p>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="highlights-included">Highlights included:<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#highlights-included" class="hash-link" aria-label="Direct link to Highlights included:" title="Direct link to Highlights included:" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Improved visibility:</strong> Providers moved from the Dashboard to the Status Bar for quicker engine status insights.</li>
+<li class=""><strong>Smarter cleanup:</strong> Ability to prune only untagged images for better system hygiene.</li>
+<li class=""><strong>Log search:</strong> Search directly within container or pod logs from the UI.</li>
+</ul>
+<p>Beyond the core app, the <a href="https://podman-desktop.io/blog/bootc-release-1.6" target="_blank" rel="noopener noreferrer" class=""><strong>BootC extension</strong></a> gained traction, enabling workflows that turn containers into bootable images.</p>
+<p>A great start to a year where the ecosystem began expanding beyond just the main application.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="the-spring-push-march--may">The Spring Push (March – May)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#the-spring-push-march--may" class="hash-link" aria-label="Direct link to The Spring Push (March – May)" title="Direct link to The Spring Push (March – May)" translate="no">​</a></h2>
+<p>Spring brought rapid iteration across releases <a href="https://podman-desktop.io/blog/podman-desktop-release-1.17" target="_blank" rel="noopener noreferrer" class=""><strong>1.17</strong></a>, <a href="https://podman-desktop.io/blog/podman-desktop-release-1.18" target="_blank" rel="noopener noreferrer" class=""><strong>1.18</strong></a>, and <a href="https://podman-desktop.io/blog/podman-desktop-release-1.19" target="_blank" rel="noopener noreferrer" class=""><strong>1.19</strong></a> continuing Podman Desktop’s rhythm of monthly improvements.</p>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="key-highlights">Key highlights:<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#key-highlights" class="hash-link" aria-label="Direct link to Key highlights:" title="Direct link to Key highlights:" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Podman Engine 5.5</strong> shipped, improving reliability and performance.</li>
+<li class=""><strong>Registry mirror configuration</strong> Simplify registry mirroring setup with a dedicated command.</li>
+<li class=""><strong>Smoother kind cluster experience</strong> Spin up a Kubernetes cluster effortlessly, even without a pre-installed kind binary.</li>
+<li class=""><strong>Switching Kubernetes namespace</strong> Switching between Kubernetes namespaces within Podman Desktop is now available.</li>
+<li class=""><strong>Jobs in Kubernetes</strong> You can now see Kubernetes jobs in our growing Kubernetes section of Podman Desktop.</li>
+<li class=""><strong>Experimental status bar providers enhancements</strong> Status bar providers can be pinned and unpinned based on user preferences and the provider status icons have been updated to be easier to understand.</li>
+</ul>
+<p>Along with addition and updates to the extension catalog</p>
+<p>This phase showcased Podman Desktop’s versatility, evolving into a platform for container, Kubernetes, and AI development.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="summer-growth-july--august">Summer Growth (July – August)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#summer-growth-july--august" class="hash-link" aria-label="Direct link to Summer Growth (July – August)" title="Direct link to Summer Growth (July – August)" translate="no">​</a></h2>
+<p>Mid-year releases <a href="https://podman-desktop.io/blog/podman-desktop-release-1.20" target="_blank" rel="noopener noreferrer" class=""><strong>v1.20</strong></a> and <a href="https://podman-desktop.io/blog/podman-desktop-release-1.21" target="_blank" rel="noopener noreferrer" class=""><strong>v1.21</strong></a> focused on usability improvements and developer convenience.</p>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="highlights">Highlights:<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#highlights" class="hash-link" aria-label="Direct link to Highlights:" title="Direct link to Highlights:" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Bulk-run containers:</strong> Start multiple containers at once—perfect for local stack setups.</li>
+<li class=""><strong>Cluster &amp; user switching:</strong> Easier context switching between Kubernetes clusters.</li>
+<li class=""><strong>Extension discoverability:</strong> Search by description, not just name.</li>
+<li class=""><strong>Notification redesign:</strong> Cleaner, more consistent visuals.</li>
+<li class=""><strong>Duplicate installation detection:</strong> Helps users resolve conflicting Podman installs.</li>
+<li class=""><strong>Podman Engine 5.6</strong> integrated.</li>
+</ul>
+<p>These updates reflected increasing maturity, subtle but meaningful refinements that improved everyday workflows.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="broadening-horizons-september">Broadening Horizons (September)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#broadening-horizons-september" class="hash-link" aria-label="Direct link to Broadening Horizons (September)" title="Direct link to Broadening Horizons (September)" translate="no">​</a></h2>
+<p>September was a milestone month!</p>
+<ul>
+<li class="">The Podman Desktop community celebrated<a href="https://podman-desktop.io/blog/3-million" target="_blank" rel="noopener noreferrer" class=""> <strong>3 million downloads</strong></a> 🎉</li>
+<li class="">The new <a href="https://podman-desktop.io/blog/apple-container-extension" target="_blank" rel="noopener noreferrer" class=""><strong>Apple Container Extension</strong></a> was added to the extension catalog, bringing native Apple <a href="https://github.com/apple/container" target="_blank" rel="noopener noreferrer" class=""><code>container</code></a> support to Podman Desktop.</li>
+</ul>
+<p>A month to remember - platform expansion, stability improvements, and community celebration all at once.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="heading-into-fall-october">Heading into Fall (October)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#heading-into-fall-october" class="hash-link" aria-label="Direct link to Heading into Fall (October)" title="Direct link to Heading into Fall (October)" translate="no">​</a></h2>
+<p>October brought <a href="https://podman-desktop.io/blog/hacktoberfest-2025" target="_blank" rel="noopener noreferrer" class=""><strong>Hacktoberfest 2025</strong></a>, along with new contributors and excitement.</p>
+<p><a href="https://podman-desktop.io/blog/podman-desktop-release-1.22" target="_blank" rel="noopener noreferrer" class=""><strong>v1.22</strong></a> launched with user-focused enhancements:</p>
+<ul>
+<li class=""><strong>Explore Features Dashboard</strong> section for newcomers</li>
+<li class=""><strong>Switch</strong> Podman machines between <strong>rootless/rootful</strong> modes (macOS &amp; Windows)</li>
+<li class=""><strong>Apply Kubernetes YAML</strong> files directly without saving locally</li>
+<li class=""><strong>Transparent proxy support</strong></li>
+<li class=""><strong>Native ARM64 installer for Windows</strong></li>
+<li class=""><strong>Wayland display fixes</strong> for better Linux compatibility</li>
+</ul>
+<p>At this point, Podman Desktop was clearly maturing into a cross-platform, enterprise-ready tool.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="smooth-refinements-with-big-upgrades-november">Smooth Refinements with Big Upgrades (November)<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#smooth-refinements-with-big-upgrades-november" class="hash-link" aria-label="Direct link to Smooth Refinements with Big Upgrades (November)" title="Direct link to Smooth Refinements with Big Upgrades (November)" translate="no">​</a></h2>
+<p><a href="https://podman-desktop.io/blog/podman-desktop-release-1.23" target="_blank" rel="noopener noreferrer" class=""><strong>v1.23.1</strong></a> delivered a balanced set of polished and powerful new capabilities:</p>
+<ul>
+<li class=""><strong>New Networks page</strong> for full network visibility and management</li>
+<li class=""><strong>Customizable dashboard &amp; tables</strong> to match personal workflows</li>
+<li class=""><strong>Smarter Search:</strong> lookup by containers, images, pods, and volumes</li>
+<li class=""><strong>Clearer rootless/rootful indicators</strong></li>
+<li class=""><strong>Podman Engine 5.7.0</strong> with key security fixes</li>
+<li class=""><strong>Introduction of Managed configuration</strong> for team onboarding</li>
+<li class=""><strong>Automatic Docker context generation</strong> for each Podman machine</li>
+</ul>
+<p>A clean, steady November release that unlocked more power under the hood.</p>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="-community-milestones">🎉 Community Milestones<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#-community-milestones" class="hash-link" aria-label="Direct link to 🎉 Community Milestones" title="Direct link to 🎉 Community Milestones" translate="no">​</a></h3>
+<ul>
+<li class=""><a href="https://www.star-history.com/#podman-desktop/podman-desktop&amp;rancher-sandbox/rancher-desktop&amp;type=date&amp;legend=top-left" target="_blank" rel="noopener noreferrer" class=""><strong>7,000 Stargazers</strong></a> on GitHub</li>
+<li class=""><a href="https://www.linkedin.com/posts/podman-desktop_podmandesktop-1kfollowers-devcommunity-activity-7399088525339533313-4GiY?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAAKh9F0B-uLEp1HsXcJ8z8X2FxmlT5eV8D8" target="_blank" rel="noopener noreferrer" class=""><strong>1,000+ Followers</strong></a> on LinkedIn</li>
+</ul>
+<p>Both milestones reflect a thriving community and growing trust in Podman Desktop’s direction.</p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="capping-off-the-year-release-124">Capping Off the Year: Release 1.24<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#capping-off-the-year-release-124" class="hash-link" aria-label="Direct link to Capping Off the Year: Release 1.24" title="Direct link to Capping Off the Year: Release 1.24" translate="no">​</a></h2>
+<p>The final release of the year, <a href="https://podman-desktop.io/blog/podman-desktop-release-1.24" target="_blank" rel="noopener noreferrer" class=""><strong>v1.24</strong></a> wrapped up 2025 with UI enhancements and improved extension reliability, setting the foundation for the next phase of project growth.</p>
+<p>These milestones highlight one thing: <strong>Podman Desktop has become a global, fast-growing, community-powered project.</strong></p>
+<h2 class="anchor anchorTargetStickyNavbar_tleR" id="looking-ahead">Looking Ahead<a href="https://podman-desktop.io/blog/podman-desktop-2025-journey#looking-ahead" class="hash-link" aria-label="Direct link to Looking Ahead" title="Direct link to Looking Ahead" translate="no">​</a></h2>
+<p>2025 was a defining year for Podman Desktop - showcasing the strength of open-source collaboration.</p>
+<p>From new features and platform support to crossing 3 million downloads and welcoming new contributors, this year reflected tremendous community momentum.</p>
+<p>As we step into <strong>2026</strong>, we look forward to expanding integrations, growing the extension ecosystem, and making Podman Desktop the most accessible and open developer tool for container and Kubernetes workflows.</p>
+<p>A heartfelt thank you to the <strong>Podman Desktop Team</strong>, contributors, and users worldwide for shaping the project.</p>
+<p>Here’s to more containers, more creativity, and more collaboration ahead! 🚀</p>]]></content>
+        <author>
+            <name>Rujuta Shinde</name>
+            <uri>https://github.com/rujutashinde</uri>
+        </author>
+        <category label="podman-desktop" term="podman-desktop"/>
+        <category label="community" term="community"/>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Podman Desktop 1.24 Release]]></title>
         <id>https://podman-desktop.io/blog/podman-desktop-release-1.24</id>
@@ -3299,266 +3399,5 @@ Fortunately, the Podman Desktop extension Podman Quadlet simplifies this process
         <category label="podman" term="podman"/>
         <category label="quadlet" term="quadlet"/>
         <category label="systemd" term="systemd"/>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Podman Desktop 1.16 Release]]></title>
-        <id>https://podman-desktop.io/blog/podman-desktop-release-1.16</id>
-        <link href="https://podman-desktop.io/blog/podman-desktop-release-1.16"/>
-        <updated>2025-01-28T00:00:00.000Z</updated>
-        <summary type="html"><![CDATA[Podman Desktop 1.16 has been released!]]></summary>
-        <content type="html"><![CDATA[<p>Podman Desktop 1.16 Release! 🎉</p>
-<p><img decoding="async" loading="lazy" alt="podman-desktop-hero-1.16" src="https://podman-desktop.io/assets/images/banner-e6711a645aa05a98352be45953eea5b8.png" width="1216" height="832" class="img_SS3x"></p>
-<p>Podman Desktop 1.16 is now available! <a class="" href="https://podman-desktop.io/downloads">Click here to download it</a>!</p>
-<p>This release brings exciting new features and improvements:</p>
-<ul>
-<li class=""><strong>Experimental Features</strong>: a new "Experimental" section in the Settings provides the list of current experiments, and links to related discussions</li>
-<li class=""><strong>Providers appear in the Status Bar</strong>: Providers are moved from Dashboard to Status Bar, to increase their visibility (experimental feature)</li>
-<li class=""><strong>Prune only untagged images</strong>: Choose to Prune "All untagged images" or "All unused images" when Pruning images</li>
-<li class=""><strong>Search in Container's Logs</strong>: Possibility to search terms in the logs of containers and pods</li>
-<li class=""><strong>Kubernetes: Monitor current context only</strong>: Only the current context is monitored by default</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="release-details-">Release Details 🔍<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#release-details-" class="hash-link" aria-label="Direct link to Release Details 🔍" title="Direct link to Release Details 🔍" translate="no">​</a></h2>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="experimental-features">Experimental Features<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#experimental-features" class="hash-link" aria-label="Direct link to Experimental Features" title="Direct link to Experimental Features" translate="no">​</a></h3>
-<p>Previous versions of Podman Desktop introduced some experimental features, which were activable from the Settings.</p>
-<p>In Podman Desktop v1.16, these Experimental Features are visible in the new "Experimental" section of the Settings,
-and dedicated Discussion pages have been created and can be accessed from this section.</p>
-<img src="https://podman-desktop.io/assets/images/experimental-features-settings-light-204fdd26c1342902a49fbc1231f01067.png" alt="Experimental Features Settings" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/experimental-features-settings-dark-6b59cdb06e235d92add13e2b59f62973.png" alt="Experimental Features Settings" class="themedComponent_siVc themedComponent--dark_yETr">
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="providers-appear-in-the-status-bar">Providers appear in the Status Bar<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#providers-appear-in-the-status-bar" class="hash-link" aria-label="Direct link to Providers appear in the Status Bar" title="Direct link to Providers appear in the Status Bar" translate="no">​</a></h3>
-<p>If you activate the Experimental feature "Statusbar Providers show Providers" (see section above), the providers will
-display their status in the status bar.</p>
-<p>Specifically, providers will display a status if they are providing at least one resource, and indicate with an icon what is the status
-of their resources: running, or stopped.</p>
-<p>In the screenshot below, the Podman provider indicates that the Podman machine is running, and the Kind provider indicates that the Kind cluster is stopped.</p>
-<img src="https://podman-desktop.io/assets/images/provider-status-light-bb1abbf7cd9993c60acc4274453152c0.png" alt="Providers statuses" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/provider-status-dark-74c075b2655605a44928513f38b77d38.png" alt="Providers statuses" class="themedComponent_siVc themedComponent--dark_yETr">
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="prune-only-untagged-images">Prune only untagged images<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#prune-only-untagged-images" class="hash-link" aria-label="Direct link to Prune only untagged images" title="Direct link to Prune only untagged images" translate="no">​</a></h3>
-<p>When clicking the "Prune" button in the Images List page, it is now possible to select which images you want to be pruned, either all unused images, or all untagged images.</p>
-<img src="https://podman-desktop.io/assets/images/prune-images-light-7253a119628b27d279ebd9200acc44ba.png" alt="Prune images dialogbox" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/prune-images-dark-98f9aec4d139389ce1cd89533e89e60e.png" alt="Prune images dialogbox" class="themedComponent_siVc themedComponent--dark_yETr">
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="search-in-containers-logs">Search in Container's Logs<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#search-in-containers-logs" class="hash-link" aria-label="Direct link to Search in Container's Logs" title="Direct link to Search in Container's Logs" translate="no">​</a></h3>
-<p>Logs output by containers can be very long, and you might want to search for a specific term on them. Podman Desktop v1.16 now provides this possibility for Podman containers, and for Kubernetes pods.</p>
-<img src="https://podman-desktop.io/assets/images/logs-light-7e6d77289cba70b75489a369c9021a4e.png" alt="Search term in Logs" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/logs-dark-f042e52bdc9508abd142215ea45a0c19.png" alt="Search term in Logs" class="themedComponent_siVc themedComponent--dark_yETr">
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="kubernetes-monitor-current-context-only">Kubernetes: Monitor current context only<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#kubernetes-monitor-current-context-only" class="hash-link" aria-label="Direct link to Kubernetes: Monitor current context only" title="Direct link to Kubernetes: Monitor current context only" translate="no">​</a></h3>
-<p>Previous versions of Podman Desktop are trying to connect to all Kubernetes contexts found in the kubeconfig file to display how many Pods and Deployments
-exist in each context.</p>
-<p>Many users raise that this is problematic. For example, some users have many contexts defined in their kubeconfig, and connecting to all of them can be considered as spamming by clusters.</p>
-<p>Other users have contexts pointing to clusters hosted by cloud providers, and connecting to these clusters needs a periodic refresh of a token authentication.
-Users (or users tools) generally take care of having a fresh token for the current context, but not necesserally for the other ones. The operation of refreshing the token being, for some configurations, designed for CLI tools and not GUI tools, Podman Desktop fails to indicate to the user that this token should be refreshed, and tries infinitely to connect.</p>
-<p>In Podman Desktop version 1.16, the number of Pods and Deployments are displayed only for the current context, and the user can select manually for which other contexts these numbers should be displayed.</p>
-<img src="https://podman-desktop.io/assets/images/kube-monitoring-light-9471c7a02aaf841ef9fde3fa699d1599.png" alt="Kubernetes contexts" class="themedComponent_siVc themedComponent--light_hHel"><img src="https://podman-desktop.io/assets/images/kube-monitoring-dark-9cec3a72bb34c4e6c7af4d33e25ff702.png" alt="Kubernetes contexts" class="themedComponent_siVc themedComponent--dark_yETr">
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="community-thank-you">Community thank you<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#community-thank-you" class="hash-link" aria-label="Direct link to Community thank you" title="Direct link to Community thank you" translate="no">​</a></h2>
-<p>🎉 We'd like to say a big thank you to everyone who helped to make Podman Desktop even better. In this
-release, we received pull requests from the following people:</p>
-<ul>
-<li class=""><a href="https://github.com/fabricepipart1a" target="_blank" rel="noopener noreferrer" class="">@fabricepipart1a</a> made their first contribution in <a href="https://github.com/podman-desktop/podman-desktop/pull/10689" target="_blank" rel="noopener noreferrer" class="">#10689</a> by adding Amadeus in the ADOPTERS file</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="final-notes">Final notes<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#final-notes" class="hash-link" aria-label="Direct link to Final notes" title="Direct link to Final notes" translate="no">​</a></h2>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="fixed-issues">Fixed issues<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#fixed-issues" class="hash-link" aria-label="Direct link to Fixed issues" title="Direct link to Fixed issues" translate="no">​</a></h3>
-<p>The complete list of issues fixed in this release is available <a href="https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aclosed+milestone%3A1.16.0" target="_blank" rel="noopener noreferrer" class="">here</a>.</p>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="where-to-download">Where to download<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#where-to-download" class="hash-link" aria-label="Direct link to Where to download" title="Direct link to Where to download" translate="no">​</a></h3>
-<p>Get the latest release from the <a class="" href="https://podman-desktop.io/downloads">Downloads</a> section of the website and boost your development journey with Podman Desktop. Additionally, visit the <a href="https://github.com/podman-desktop/podman-desktop" target="_blank" rel="noopener noreferrer" class="">GitHub repository</a> and see how you can help us make Podman Desktop better.</p>
-<h2 class="anchor anchorTargetStickyNavbar_tleR" id="detailed-release-changelog">Detailed release changelog<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#detailed-release-changelog" class="hash-link" aria-label="Direct link to Detailed release changelog" title="Direct link to Detailed release changelog" translate="no">​</a></h2>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="experimental-features-1">Experimental features<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#experimental-features-1" class="hash-link" aria-label="Direct link to Experimental features" title="Direct link to Experimental features" translate="no">​</a></h3>
-<ul>
-<li class="">feat(backend): adding experimental property to configuration schema by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10437" target="_blank" rel="noopener noreferrer" class="">#10437</a></li>
-<li class="">feat: init experimental for preferences items by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10534" target="_blank" rel="noopener noreferrer" class="">#10534</a></li>
-<li class="">feat: experimental section in the settings by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10579" target="_blank" rel="noopener noreferrer" class="">#10579</a></li>
-<li class="">chore: adding docker compatibility experimental link by @axel7083 in <a href="https://github.com/podman-desktop/podman-desktop/pull/10770" target="_blank" rel="noopener noreferrer" class="">#10770</a></li>
-<li class="">chore: adding status bar task to experimental by @axel7083 in <a href="https://github.com/podman-desktop/podman-desktop/pull/10778" target="_blank" rel="noopener noreferrer" class="">#10778</a></li>
-<li class="">feat(ui): using full record id as title in experimental page by @axel7083 in <a href="https://github.com/podman-desktop/podman-desktop/pull/10796" target="_blank" rel="noopener noreferrer" class="">#10796</a></li>
-<li class="">fix: add experimental link to status bar providers by @deboer-tim in <a href="https://github.com/podman-desktop/podman-desktop/pull/10810" target="_blank" rel="noopener noreferrer" class="">#10810</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="logs">Logs<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#logs" class="hash-link" aria-label="Direct link to Logs" title="Direct link to Logs" translate="no">​</a></h3>
-<ul>
-<li class="">feat: adding search controls logs window by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10612" target="_blank" rel="noopener noreferrer" class="">#10612</a></li>
-<li class="">feat: enable search for pod logs by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10666" target="_blank" rel="noopener noreferrer" class="">#10666</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="extension-development-with-production-podman-desktop-work-in-progress">Extension development with production Podman Desktop (work in progress)<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#extension-development-with-production-podman-desktop-work-in-progress" class="hash-link" aria-label="Direct link to Extension development with production Podman Desktop (work in progress)" title="Direct link to Extension development with production Podman Desktop (work in progress)" translate="no">​</a></h3>
-<ul>
-<li class="">feat: introduce a flag to be able to see 'show DevTools' even using production binaries by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10659" target="_blank" rel="noopener noreferrer" class="">#10659</a></li>
-<li class="">chore: add a property to store folders used as extension folders by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10712" target="_blank" rel="noopener noreferrer" class="">#10712</a></li>
-<li class="">chore: add link to /extensions page on /extend by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/10382" target="_blank" rel="noopener noreferrer" class="">#10382</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="kubernetes">Kubernetes<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#kubernetes" class="hash-link" aria-label="Direct link to Kubernetes" title="Direct link to Kubernetes" translate="no">​</a></h3>
-<ul>
-<li class="">feat: run monitoring on current context only by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10335" target="_blank" rel="noopener noreferrer" class="">#10335</a></li>
-<li class="">feat: start monitoring manually on non current contexts by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10345" target="_blank" rel="noopener noreferrer" class="">#10345</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="extension-api">Extension API<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#extension-api" class="hash-link" aria-label="Direct link to Extension API" title="Direct link to Extension API" translate="no">​</a></h3>
-<ul>
-<li class="">feat: add containerImageName in context for dashboard/container contribution by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10262" target="_blank" rel="noopener noreferrer" class="">#10262</a></li>
-<li class="">feat: add containerImageName in context for icons/containersList contribution by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10261" target="_blank" rel="noopener noreferrer" class="">#10261</a></li>
-<li class="">chore: allow to set context values for 'DockerCompatibility' scope by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10515" target="_blank" rel="noopener noreferrer" class="">#10515</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="ui-components">UI Components<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#ui-components" class="hash-link" aria-label="Direct link to UI Components" title="Direct link to UI Components" translate="no">​</a></h3>
-<ul>
-<li class="">feat(ui): adding iconPosition property to settings nav item component by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10672" target="_blank" rel="noopener noreferrer" class="">#10672</a></li>
-<li class="">feat: added option to show svg files in addition to fa icons by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10309" target="_blank" rel="noopener noreferrer" class="">#10309</a></li>
-<li class="">feat: added optional properties to close button by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10374" target="_blank" rel="noopener noreferrer" class="">#10374</a></li>
-<li class="">chore: move carousel component to pd svelte lib by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10583" target="_blank" rel="noopener noreferrer" class="">#10583</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="kubernetes-experimental-mode-work-in-progress">Kubernetes Experimental mode (work in progress)<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#kubernetes-experimental-mode-work-in-progress" class="hash-link" aria-label="Direct link to Kubernetes Experimental mode (work in progress)" title="Direct link to Kubernetes Experimental mode (work in progress)" translate="no">​</a></h3>
-<ul>
-<li class="">feat: dispatch kube resources to frontend by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10425" target="_blank" rel="noopener noreferrer" class="">#10425</a></li>
-<li class="">feat: dispatch permissions to frontend in experimental contexts mode by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10383" target="_blank" rel="noopener noreferrer" class="">#10383</a></li>
-<li class="">feat: dispatch resources count by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10455" target="_blank" rel="noopener noreferrer" class="">#10455</a></li>
-<li class="">feat: experimental health frontend by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10349" target="_blank" rel="noopener noreferrer" class="">#10349</a></li>
-<li class="">feat: informers for Kubernetes experimental by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10174" target="_blank" rel="noopener noreferrer" class="">#10174</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="extensionpodman">Extension/Podman<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#extensionpodman" class="hash-link" aria-label="Direct link to Extension/Podman" title="Direct link to Extension/Podman" translate="no">​</a></h3>
-<ul>
-<li class="">fix(refactor): refactor Powershell 5 interactions in a separate file by @jeffmaury <a href="https://github.com/podman-desktop/podman-desktop/pull/10284" target="_blank" rel="noopener noreferrer" class="">#10284</a></li>
-<li class="">feat: update to podman v5.3.2 by @benoitf in <a href="https://github.com/podman-desktop/podman-desktop/pull/10761" target="_blank" rel="noopener noreferrer" class="">#10761</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="extensiondocker">Extension/Docker<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#extensiondocker" class="hash-link" aria-label="Direct link to Extension/Docker" title="Direct link to Extension/Docker" translate="no">​</a></h3>
-<ul>
-<li class="">chore: move docker cli context select implem from core to docker extension by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10526" target="_blank" rel="noopener noreferrer" class="">#10526</a></li>
-<li class="">chore: use correct contexts if a custom docker config is set by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10555" target="_blank" rel="noopener noreferrer" class="">#10555</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="adopters">Adopters<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#adopters" class="hash-link" aria-label="Direct link to Adopters" title="Direct link to Adopters" translate="no">​</a></h3>
-<ul>
-<li class="">fix: refactor adopters list format by @slemeur <a href="https://github.com/podman-desktop/podman-desktop/pull/10667" target="_blank" rel="noopener noreferrer" class="">#10667</a></li>
-<li class="">docs: Amadeus as adopters by @fabricepipart1a <a href="https://github.com/podman-desktop/podman-desktop/pull/10689" target="_blank" rel="noopener noreferrer" class="">#10689</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="ui">UI<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#ui" class="hash-link" aria-label="Direct link to UI" title="Direct link to UI" translate="no">​</a></h3>
-<ul>
-<li class="">fix(push-manifest): terminal overflow by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10527" target="_blank" rel="noopener noreferrer" class="">#10527</a></li>
-<li class="">fix(tasks-panel): error overflow ellipsis by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10528" target="_blank" rel="noopener noreferrer" class="">#10528</a></li>
-<li class="">fix: add hidden input component in Dropdown for form submissions by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10461" target="_blank" rel="noopener noreferrer" class="">#10461</a></li>
-<li class="">chore(onboarding): update text on welcome page by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10563" target="_blank" rel="noopener noreferrer" class="">#10563</a></li>
-<li class="">chore: add Container providers using ProviderWidget by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10625" target="_blank" rel="noopener noreferrer" class="">#10625</a></li>
-<li class="">chore: add Kubernetes providers to statusbar by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10699" target="_blank" rel="noopener noreferrer" class="">#10699</a></li>
-<li class="">chore: add ProviderWidget component for StatusBar by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/9724" target="_blank" rel="noopener noreferrer" class="">#9724</a></li>
-<li class="">chore: add option for given value in NumberItem by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10355" target="_blank" rel="noopener noreferrer" class="">#10355</a></li>
-<li class="">chore: change order of welcome page to prioritize container engines by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/10562" target="_blank" rel="noopener noreferrer" class="">#10562</a></li>
-<li class="">chore: making icon and title on windows bigger by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10428" target="_blank" rel="noopener noreferrer" class="">#10428</a></li>
-<li class="">chore: remember collapsed state of learning center by @deboer-tim <a href="https://github.com/podman-desktop/podman-desktop/pull/9597" target="_blank" rel="noopener noreferrer" class="">#9597</a></li>
-<li class="">chore: remove error body from connection error message by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10404" target="_blank" rel="noopener noreferrer" class="">#10404</a></li>
-<li class="">chore: show only one error enoent message untill podman machine reconnects by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10239" target="_blank" rel="noopener noreferrer" class="">#10239</a></li>
-<li class="">chore: update styling kubernetes empty page by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/10401" target="_blank" rel="noopener noreferrer" class="">#10401</a></li>
-<li class="">chore: allow to set values for dropdown in DockerCompatibility by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10516" target="_blank" rel="noopener noreferrer" class="">#10516</a></li>
-<li class="">feat: allow to prune only untagged images (and not only unused) by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10400" target="_blank" rel="noopener noreferrer" class="">#10400</a></li>
-<li class="">feat(ui): add close button to hide banners by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10414" target="_blank" rel="noopener noreferrer" class="">#10414</a></li>
-<li class="">feat: additional config value to hide recommended banners by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10322" target="_blank" rel="noopener noreferrer" class="">#10322</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="bug-fixes">Bug fixes<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#bug-fixes" class="hash-link" aria-label="Direct link to Bug fixes" title="Direct link to Bug fixes" translate="no">​</a></h3>
-<ul>
-<li class="">fix(frontend): hide release note image on error by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10510" target="_blank" rel="noopener noreferrer" class="">#10510</a></li>
-<li class="">fix: building image without name should have a correct task title by @jeffmaury <a href="https://github.com/podman-desktop/podman-desktop/pull/10321" target="_blank" rel="noopener noreferrer" class="">#10321</a></li>
-<li class="">fix: check connection with health check by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10457" target="_blank" rel="noopener noreferrer" class="">#10457</a></li>
-<li class="">fix: cleanup log files before starting the app by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10500" target="_blank" rel="noopener noreferrer" class="">#10500</a></li>
-<li class="">fix: copy docker-compose over existing file fails during installation by @dgolovin <a href="https://github.com/podman-desktop/podman-desktop/pull/10313" target="_blank" rel="noopener noreferrer" class="">#10313</a></li>
-<li class="">fix: create task when running push image command by @dgolovin <a href="https://github.com/podman-desktop/podman-desktop/pull/10267" target="_blank" rel="noopener noreferrer" class="">#10267</a></li>
-<li class="">fix: disable build button if no arch is selected by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10686" target="_blank" rel="noopener noreferrer" class="">#10686</a></li>
-<li class="">fix: fire on*DidUpdateContainerConnection events after connection is started ans the api is setup by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10668" target="_blank" rel="noopener noreferrer" class="">#10668</a></li>
-<li class="">fix: flathub publish workflow by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10387" target="_blank" rel="noopener noreferrer" class="">#10387</a></li>
-<li class="">fix: hide legacy tasks manager when user clicks outside of it by @dgolovin <a href="https://github.com/podman-desktop/podman-desktop/pull/10539" target="_blank" rel="noopener noreferrer" class="">#10539</a></li>
-<li class="">fix: margin in settings nav item by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10442" target="_blank" rel="noopener noreferrer" class="">#10442</a></li>
-<li class="">fix: preference rendering item not updating with boolean type by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10580" target="_blank" rel="noopener noreferrer" class="">#10580</a></li>
-<li class="">fix: push modal dialog error processing by @dgolovin <a href="https://github.com/podman-desktop/podman-desktop/pull/10266" target="_blank" rel="noopener noreferrer" class="">#10266</a></li>
-<li class="">fix: handle property the watch mode for extension in development mode by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10623" target="_blank" rel="noopener noreferrer" class="">#10623</a></li>
-<li class="">fix: toggle of help menu by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/10339" target="_blank" rel="noopener noreferrer" class="">#10339</a></li>
-<li class="">fix: update spawn command for ui package by @jeffmaury <a href="https://github.com/podman-desktop/podman-desktop/pull/10548" target="_blank" rel="noopener noreferrer" class="">#10548</a></li>
-<li class="">fix: kube health store is inactive in non experimental mode by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10415" target="_blank" rel="noopener noreferrer" class="">#10415</a></li>
-<li class="">fix: use option property to ensure options is treated as state by @deboer-tim <a href="https://github.com/podman-desktop/podman-desktop/pull/9953" target="_blank" rel="noopener noreferrer" class="">#9953</a></li>
-<li class="">chore: fix the method signature for pruneAllImages of Podman by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10388" target="_blank" rel="noopener noreferrer" class="">#10388</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="tests">Tests<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#tests" class="hash-link" aria-label="Direct link to Tests" title="Direct link to Tests" translate="no">​</a></h3>
-<ul>
-<li class="">chore(ci): add Mac Update E2E job into PR check and e2e-main workflows by @odockal <a href="https://github.com/podman-desktop/podman-desktop/pull/10384" target="_blank" rel="noopener noreferrer" class="">#10384</a></li>
-<li class="">chore(ci): add mac-update-e2e-test job into e2e-main workflow by @odockal <a href="https://github.com/podman-desktop/podman-desktop/pull/10402" target="_blank" rel="noopener noreferrer" class="">#10402</a></li>
-<li class="">chore(test): introduce a parent class that encapsulates the shared functionality of all cluster creation pages by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10373" target="_blank" rel="noopener noreferrer" class="">#10373</a></li>
-<li class="">chore(test): Automation of Kubernetes e2e tests by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10320" target="_blank" rel="noopener noreferrer" class="">#10320</a></li>
-<li class="">chore(test): Parameterize the timeout for resource connection action by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10691" target="_blank" rel="noopener noreferrer" class="">#10691</a></li>
-<li class="">chore(test): e2e test for autodetect of compose up by @cbr7 <a href="https://github.com/podman-desktop/podman-desktop/pull/10658" target="_blank" rel="noopener noreferrer" class="">#10658</a></li>
-<li class="">chore(test): extract cluster-related operations to a dedicated utility file by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10390" target="_blank" rel="noopener noreferrer" class="">#10390</a></li>
-<li class="">chore(test): fix flaky kind cluster restart test by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10421" target="_blank" rel="noopener noreferrer" class="">#10421</a></li>
-<li class="">chore(test): fix flaky volume delete behaviour by @cbr7 <a href="https://github.com/podman-desktop/podman-desktop/pull/10347" target="_blank" rel="noopener noreferrer" class="">#10347</a></li>
-<li class="">chore(test): handle cli tool confirmation dialog by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10532" target="_blank" rel="noopener noreferrer" class="">#10532</a></li>
-<li class="">chore(test): increase timeout for extension installation from OCI image by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10351" target="_blank" rel="noopener noreferrer" class="">#10351</a></li>
-<li class="">chore(test): wait more time for image availbility by @cbr7 <a href="https://github.com/podman-desktop/podman-desktop/pull/10645" target="_blank" rel="noopener noreferrer" class="">#10645</a></li>
-<li class="">chore(tests): adjust sandbox name in e2e tests after catalog update by @odockal <a href="https://github.com/podman-desktop/podman-desktop/pull/10576" target="_blank" rel="noopener noreferrer" class="">#10576</a></li>
-<li class="">test(PullImage): adding tests to ensure reactivity by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10733" target="_blank" rel="noopener noreferrer" class="">#10733</a></li>
-<li class="">test(front): adding unit tests for PodDetailsLogs by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10662" target="_blank" rel="noopener noreferrer" class="">#10662</a></li>
-<li class="">test(ui): adding unit tests for TerminalWindows by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10531" target="_blank" rel="noopener noreferrer" class="">#10531</a></li>
-<li class="">test: kind details operations by @amisskii <a href="https://github.com/podman-desktop/podman-desktop/pull/10710" target="_blank" rel="noopener noreferrer" class="">#10710</a></li>
-<li class="">fix(ci): remove duplicated pnpm install steps in e2e jobs by @odockal <a href="https://github.com/podman-desktop/podman-desktop/pull/10422" target="_blank" rel="noopener noreferrer" class="">#10422</a></li>
-<li class="">fix: container details terminal flaky test on macos by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10407" target="_blank" rel="noopener noreferrer" class="">#10407</a></li>
-<li class="">fix: do not use window as any by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10635" target="_blank" rel="noopener noreferrer" class="">#10635</a></li>
-<li class="">chore: generate all the mocks of exposed methods during the setup of vitest by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10426" target="_blank" rel="noopener noreferrer" class="">#10426</a></li>
-<li class="">chore: handle more cases where methods can be mocked by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10424" target="_blank" rel="noopener noreferrer" class="">#10424</a></li>
-<li class="">chore: add missing mocking method by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10423" target="_blank" rel="noopener noreferrer" class="">#10423</a></li>
-<li class="">chore: add nsis target for testing daily builds on windows by @odockal <a href="https://github.com/podman-desktop/podman-desktop/pull/10684" target="_blank" rel="noopener noreferrer" class="">#10684</a></li>
-<li class="">chore: update title of the extension by @benoitf in <a href="https://github.com/podman-desktop/podman-desktop/pull/10765" target="_blank" rel="noopener noreferrer" class="">#10765</a></li>
-<li class="">chore(test): simplify pull image test by @axel7083 in <a href="https://github.com/podman-desktop/podman-desktop/pull/10798" target="_blank" rel="noopener noreferrer" class="">#10798</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="refactoring">Refactoring<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#refactoring" class="hash-link" aria-label="Direct link to Refactoring" title="Direct link to Refactoring" translate="no">​</a></h3>
-<ul>
-<li class="">refactor(configuration): moving shared constants to <code>packages/api</code> by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10344" target="_blank" rel="noopener noreferrer" class="">#10344</a></li>
-<li class="">refactor(podman): replace isMac with extension api by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10417" target="_blank" rel="noopener noreferrer" class="">#10417</a></li>
-<li class="">refactor(podman-extension): uses api env.isLinux by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10403" target="_blank" rel="noopener noreferrer" class="">#10403</a></li>
-<li class="">refactor(ui): preferences navigation component by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10346" target="_blank" rel="noopener noreferrer" class="">#10346</a></li>
-<li class="">refactor: cleanup unused kubernetes client code by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10458" target="_blank" rel="noopener noreferrer" class="">#10458</a></li>
-<li class="">refactor: migrate TerminalWindow to svelte5 by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10728" target="_blank" rel="noopener noreferrer" class="">#10728</a></li>
-<li class="">refactor: migrate typeahead to svelte5 by @axel7083 <a href="https://github.com/podman-desktop/podman-desktop/pull/10727" target="_blank" rel="noopener noreferrer" class="">#10727</a></li>
-<li class="">refactor: remove search function work from Typeahead component by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10737" target="_blank" rel="noopener noreferrer" class="">#10737</a></li>
-<li class="">chore: convert PreferencesRenderingItemFormat to svelte 5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10495" target="_blank" rel="noopener noreferrer" class="">#10495</a></li>
-<li class="">chore: migrate AuditMessageBox to svelte5 rune by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10493" target="_blank" rel="noopener noreferrer" class="">#10493</a></li>
-<li class="">chore: migrate ContributionActions to svelte5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10491" target="_blank" rel="noopener noreferrer" class="">#10491</a></li>
-<li class="">chore: migrate ExtensionDetailsReadme to svelte 5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10492" target="_blank" rel="noopener noreferrer" class="">#10492</a></li>
-<li class="">chore: migrate ListItemButtonIcon to svelte 5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10490" target="_blank" rel="noopener noreferrer" class="">#10490</a></li>
-<li class="">chore: migrate LoadingIconButton to svelte 5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10489" target="_blank" rel="noopener noreferrer" class="">#10489</a></li>
-<li class="">chore: migrate PreferencesRendering to svelte 5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10496" target="_blank" rel="noopener noreferrer" class="">#10496</a></li>
-<li class="">chore: migrate ProviderResultPage (and ImageDetailsCheck) components to svelte 5 by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10446" target="_blank" rel="noopener noreferrer" class="">#10446</a></li>
-<li class="">chore: move PodsList to svelte5 runes mode by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10459" target="_blank" rel="noopener noreferrer" class="">#10459</a></li>
-<li class="">chore: update PreferencesRenderingItem to svelte5 runes by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10494" target="_blank" rel="noopener noreferrer" class="">#10494</a></li>
-<li class="">fix: enable the '@typescript-eslint/no-explicit-any' rule by @jeffmaury <a href="https://github.com/podman-desktop/podman-desktop/pull/10172" target="_blank" rel="noopener noreferrer" class="">#10172</a></li>
-<li class="">fix: remove disablement of no explicit any rule in compose extension by @dgolovin <a href="https://github.com/podman-desktop/podman-desktop/pull/10613" target="_blank" rel="noopener noreferrer" class="">#10613</a></li>
-<li class="">chore: add esnext so can use private # variables by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10529" target="_blank" rel="noopener noreferrer" class="">#10529</a></li>
-<li class="">chore: enable the @typescript-eslint/explicit-function-return-type for renderer part by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10705" target="_blank" rel="noopener noreferrer" class="">#10705</a></li>
-<li class="">chore: move extension loader settings to api package by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10671" target="_blank" rel="noopener noreferrer" class="">#10671</a></li>
-<li class="">chore: move extension-* files to a subfolder extension by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10661" target="_blank" rel="noopener noreferrer" class="">#10661</a></li>
-<li class="">chore: move extension-updater and extension-catalog as subfolders of the new extension folder by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10664" target="_blank" rel="noopener noreferrer" class="">#10664</a></li>
-<li class="">chore: update @kubernetes/client-node to v1.0.0 by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10436" target="_blank" rel="noopener noreferrer" class="">#10436</a></li>
-<li class="">chore: do not declare kubernetes-client module as external by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10439" target="_blank" rel="noopener noreferrer" class="">#10439</a></li>
-<li class="">chore: removed unused dependency by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10509" target="_blank" rel="noopener noreferrer" class="">#10509</a></li>
-<li class="">refactor: extract analyzeExtension to a dedicated class by @benoitf in <a href="https://github.com/podman-desktop/podman-desktop/pull/10742" target="_blank" rel="noopener noreferrer" class="">#10742</a></li>
-<li class="">refactor: deployments list uses svelte 5 by @feloy in <a href="https://github.com/podman-desktop/podman-desktop/pull/10760" target="_blank" rel="noopener noreferrer" class="">#10760</a></li>
-<li class="">chore: remove no-explicit-any by @benoitf in <a href="https://github.com/podman-desktop/podman-desktop/pull/10749" target="_blank" rel="noopener noreferrer" class="">#10749</a></li>
-<li class="">chore: cleanup @typescript-eslint/no-explicit-any by @benoitf in <a href="https://github.com/podman-desktop/podman-desktop/pull/10779" target="_blank" rel="noopener noreferrer" class="">#10779</a></li>
-</ul>
-<h3 class="anchor anchorTargetStickyNavbar_tleR" id="doc">Doc<a href="https://podman-desktop.io/blog/podman-desktop-release-1.16#doc" class="hash-link" aria-label="Direct link to Doc" title="Direct link to Doc" translate="no">​</a></h3>
-<ul>
-<li class="">docs(website): added a troubleshooting section by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10296" target="_blank" rel="noopener noreferrer" class="">#10296</a></li>
-<li class="">docs(website): added documentation about applying a yaml manifest by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10324" target="_blank" rel="noopener noreferrer" class="">#10324</a></li>
-<li class="">docs(website): added documentation for the port forwarding feature by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/9844" target="_blank" rel="noopener noreferrer" class="">#9844</a></li>
-<li class="">docs(website): added procedures to view the container logs and access… by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10441" target="_blank" rel="noopener noreferrer" class="">#10441</a></li>
-<li class="">docs(website): edited the troubleshooting section by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10413" target="_blank" rel="noopener noreferrer" class="">#10413</a></li>
-<li class="">docs(website): removed outdated icons by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10575" target="_blank" rel="noopener noreferrer" class="">#10575</a></li>
-<li class="">docs(website): updated outdated procedures in the kind category of th… by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10577" target="_blank" rel="noopener noreferrer" class="">#10577</a></li>
-<li class="">docs(website): updated outdated procedures in the minikube category o… by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10688" target="_blank" rel="noopener noreferrer" class="">#10688</a></li>
-<li class="">docs(website): updated the outdated procedures in the containers cate… by @shipsing <a href="https://github.com/podman-desktop/podman-desktop/pull/10540" target="_blank" rel="noopener noreferrer" class="">#10540</a></li>
-<li class="">docs: add Linux documentation for Docker Compatibility by @afbjorklund <a href="https://github.com/podman-desktop/podman-desktop/pull/10481" target="_blank" rel="noopener noreferrer" class="">#10481</a></li>
-<li class="">docs: add blog cncf projects with podman desktop by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/9743" target="_blank" rel="noopener noreferrer" class="">#9743</a></li>
-<li class="">docs: add bootc extension release 1.6.0 blog post by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/10547" target="_blank" rel="noopener noreferrer" class="">#10547</a></li>
-<li class="">docs: fix release notes 1.15 by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10408" target="_blank" rel="noopener noreferrer" class="">#10408</a></li>
-<li class="">docs: improve /extensions page with more info &amp; architecture by @cdrage <a href="https://github.com/podman-desktop/podman-desktop/pull/10337" target="_blank" rel="noopener noreferrer" class="">#10337</a></li>
-<li class="">docs: in code guidelines, use vi.mocked by @feloy <a href="https://github.com/podman-desktop/podman-desktop/pull/10353" target="_blank" rel="noopener noreferrer" class="">#10353</a></li>
-<li class="">fix(docs): adds horizontal padding to front page by @gastoner <a href="https://github.com/podman-desktop/podman-desktop/pull/10622" target="_blank" rel="noopener noreferrer" class="">#10622</a></li>
-<li class="">fix: update podman remote status command in documentation by @slemeur <a href="https://github.com/podman-desktop/podman-desktop/pull/10474" target="_blank" rel="noopener noreferrer" class="">#10474</a></li>
-<li class="">fix: use prettier for formatting markdown by @afbjorklund <a href="https://github.com/podman-desktop/podman-desktop/pull/10486" target="_blank" rel="noopener noreferrer" class="">#10486</a></li>
-<li class="">fix: update the markdownlint targets by @afbjorklund <a href="https://github.com/podman-desktop/podman-desktop/pull/10487" target="_blank" rel="noopener noreferrer" class="">#10487</a></li>
-<li class="">chore: change GitHub podman desktop links in website to podman-desktop org by @SoniaSandler <a href="https://github.com/podman-desktop/podman-desktop/pull/10340" target="_blank" rel="noopener noreferrer" class="">#10340</a></li>
-<li class="">chore: fix format in md files by @benoitf <a href="https://github.com/podman-desktop/podman-desktop/pull/10524" target="_blank" rel="noopener noreferrer" class="">#10524</a></li>
-<li class="">docs: adding remark to containerEngine#listInfos by @axel7083 in <a href="https://github.com/podman-desktop/podman-desktop/pull/10781" target="_blank" rel="noopener noreferrer" class="">#10781</a></li>
-<li class="">docs(website): testcontainers blog post by @gastoner in <a href="https://github.com/podman-desktop/podman-desktop/pull/10440" target="_blank" rel="noopener noreferrer" class="">#10440</a></li>
-<li class="">docs(website): added a reference section and removed duplicate proced… by @shipsing in <a href="https://github.com/podman-desktop/podman-desktop/pull/10740" target="_blank" rel="noopener noreferrer" class="">#10740</a></li>
-</ul>]]></content>
-        <author>
-            <name>Philippe Martin</name>
-            <uri>https://github.com/feloy</uri>
-        </author>
-        <category label="podman-desktop" term="podman-desktop"/>
-        <category label="release" term="release"/>
-        <category label="podman" term="podman"/>
-        <category label="kubernetes" term="kubernetes"/>
     </entry>
 </feed>
