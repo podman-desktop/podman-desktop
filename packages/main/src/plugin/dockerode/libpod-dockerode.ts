@@ -355,7 +355,7 @@ export interface LibPod {
   generateKube(names: string[]): Promise<string>;
   playKube(
     file: string | NodeJS.ReadableStream,
-    options?: { build?: boolean; replace?: boolean },
+    options?: { build?: boolean; replace?: boolean; abortSignal?: AbortSignal },
   ): Promise<PlayKubeInfo>;
   pruneAllImages(dangling: boolean): Promise<void>;
   podmanInfo(): Promise<Info>;
@@ -805,7 +805,7 @@ export class LibpodDockerode {
     // add playKube
     prototypeOfDockerode.playKube = function (
       file: string | NodeJS.ReadableStream,
-      options?: { build?: boolean; replace?: boolean },
+      options?: { build?: boolean; replace?: boolean; abortSignal?: AbortSignal },
     ): Promise<PlayKubeInfo> {
       const queries: string[] = [];
       if (options?.replace === true) {
@@ -817,6 +817,7 @@ export class LibpodDockerode {
         path: `/v4.2.0/libpod/play/kube?${queries.join('&')}?`,
         method: 'POST',
         file: file,
+        abortSignal: options?.abortSignal,
         statusCodes: {
           200: true,
           204: true,
