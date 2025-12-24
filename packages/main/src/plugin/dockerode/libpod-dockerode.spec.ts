@@ -505,11 +505,7 @@ describe('kube play', () => {
     const abortController = new AbortController();
 
     const { promise } = Promise.withResolvers<ResponseResolverReturnType<undefined>>();
-    server = setupServer(
-      http.post('http://localhost/v4.2.0/libpod/play/kube', async () => {
-        return promise; // never resolving promise
-      }),
-    );
+    vi.mocked(postHandler).mockReturnValue(promise);
     const api = new Dockerode({ protocol: 'http', host: 'localhost' });
 
     const playKubePromise: Promise<PlayKubeInfo> = (api as unknown as LibPod).playKube(file, {
