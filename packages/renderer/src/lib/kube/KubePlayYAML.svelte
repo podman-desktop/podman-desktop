@@ -40,6 +40,7 @@ let hasInvalidFields = $derived.by(() => {
 let playKubeResultRaw: string | undefined = $state(undefined);
 let playKubeResultJSON: unknown | undefined = $state(undefined);
 let playKubeResult: { Pods?: unknown[] } | undefined = $state(undefined);
+let cancellableTokenId: number | undefined = $state(undefined);
 
 let providerConnections: ProviderContainerConnectionInfo[] = $derived(
   $providerInfos
@@ -75,6 +76,12 @@ function removeEmptyOrNull(obj: object): object {
   return obj;
 }
 
+async function cancel(): Promise<void> {
+  if (cancellableTokenId === undefined) return;
+
+  return window.cancelToken(cancellableTokenId);
+}
+
 async function playKubeFile(): Promise<void> {
   runStarted = true;
   runFinished = false;
@@ -95,9 +102,12 @@ async function playKubeFile(): Promise<void> {
 
     if (yamlFilePath && selectedProviderConnection) {
       try {
+        cancellableTokenId = await window.getCancellableTokenSource();
+
         const result = await window.playKube(yamlFilePath, $state.snapshot(selectedProviderConnection), {
           build: $state.snapshot(kubeBuild),
           replace: $state.snapshot(kubeReplace),
+          cancellableTokenId: $state.snapshot(cancellableTokenId),
         });
 
         // remove the null values from the result
@@ -298,14 +308,23 @@ function toggle(choice: 'podman' | 'custom'): void {
       </div>
 
       {#if !runFinished}
-        <Button
-          on:click={playKubeFile}
-          disabled={hasInvalidFields || runStarted}
-          class="w-full"
-          inProgress={runStarted}
-          icon={KubePlayIcon}>
-          {userChoice === 'custom' ? 'Play Custom YAML' : 'Play'}
-        </Button>
+        {#if !runStarted}
+          <Button
+            on:click={playKubeFile}
+            disabled={hasInvalidFields || runStarted}
+            class="w-full"
+            inProgress={runStarted}
+            icon={KubePlayIcon}>
+            {userChoice === 'custom' ? 'Play Custom YAML' : 'Play'}
+          </Button>
+        {:else}
+          <Button
+            onclick={cancel}
+            title="Cancel"
+            class="w-full">
+            Cancel
+          </Button>
+        {/if}
       {/if}
       {#if runStarted}
         <div class="text-[var(--pd-content-card-text)] text-sm">
