@@ -136,7 +136,7 @@ async function pullImage(): Promise<void> {
   lineNumberPerId.clear();
   lineIndex = 0;
   await tick();
-  logsPull?.reset();
+  logsPull?.clear();
 
   // reset error
   pullError = '';
