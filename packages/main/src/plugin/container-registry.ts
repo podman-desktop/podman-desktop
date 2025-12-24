@@ -2610,6 +2610,7 @@ export class ContainerProviderRegistry {
     options?: {
       build?: boolean;
       replace?: boolean;
+      abortSignal?: AbortSignal;
     },
   ): Promise<PlayKubeInfo> {
     const telemetryOptions: Record<string, unknown> = {

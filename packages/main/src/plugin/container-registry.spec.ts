@@ -6123,6 +6123,30 @@ describe('kube play', () => {
 
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
   });
+
+  test('abortSignal should be passed down to libpod', async () => {
+    const ABORT_SIGNAL = new AbortController().signal;
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    vi.mocked(KubePlayContext.prototype.getBuildContexts).mockReturnValue([]); // mock no contexts
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      {
+        abortSignal: ABORT_SIGNAL,
+      },
+    );
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
+      abortSignal: ABORT_SIGNAL,
+    });
+  });
 });
 
 const originalConsoleWarn = console.warn;
