@@ -514,8 +514,10 @@ export class ExtensionLoader implements IAsyncDisposable {
           ),
         )
       ).reduce((accumulator, result) => {
-        if (result.status === 'fulfilled' && !result.value.error) {
+        if (result.status === 'fulfilled') {
           accumulator.push(result.value);
+        } else {
+          console.error('Something went wrong while trying to analyse an extension:', result.reason);
         }
         return accumulator;
       }, [] as AnalyzedExtensionWithApi[]);
