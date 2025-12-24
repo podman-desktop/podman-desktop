@@ -1049,13 +1049,25 @@ export class PluginSystem {
         options?: {
           build?: boolean;
           replace?: boolean;
+          cancellableTokenId?: number;
         },
       ): Promise<PlayKubeInfo> => {
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          options?.cancellableTokenId,
+        );
+
         const task = taskManager.createTask({
           title: `Podman Play Kube`,
+          cancellable: options?.cancellableTokenId !== undefined,
+          cancellationTokenSourceId: options?.cancellableTokenId,
         });
+
         try {
-          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
+          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, {
+            ...options,
+            abortSignal: abortController?.signal,
+          });
           task.status = 'success';
           return result;
         } catch (error: unknown) {

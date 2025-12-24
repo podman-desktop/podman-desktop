@@ -404,6 +404,7 @@ export function initExposure(): void {
       options?: {
         build?: boolean;
         replace?: boolean;
+        cancellableTokenId?: number;
       },
     ): Promise<PlayKubeInfo> => {
       return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider, options);
