@@ -28,6 +28,12 @@ import { onboardingList } from '/@/stores/onboarding';
 import { ContextUI } from '../context/context';
 import Onboarding from './Onboarding.svelte';
 
+vi.mock('/@product.json', () => ({
+  default: {
+    name: 'Podman Desktop',
+  },
+}));
+
 async function waitRender(customProperties: object): Promise<void> {
   render(Onboarding, { ...customProperties });
   await tick();

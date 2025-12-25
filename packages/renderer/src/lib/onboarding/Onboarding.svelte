@@ -38,6 +38,7 @@ import { lastPage } from '/@/stores/breadcrumb';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import type { OnboardingInfo, OnboardingStepItem } from '/@api/onboarding';
+import product from '/@product.json';
 
 import type { ContextUI } from '../context/context';
 import { ContextKeyExpr } from '../context/contextKey';
@@ -342,7 +343,7 @@ $: globalOnboarding = global;
           {/if}
           <div class="flex flex-col">
             {#if globalOnboarding}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">Get started with Podman Desktop</div>
+              <div class="text-lg font-bold text-[var(--pd-content-header)]">Get started with {product.name}</div>
             {:else}
               <div class="text-lg font-bold text-[var(--pd-content-header)]">
                 {replaceContextKeyPlaceholders(
