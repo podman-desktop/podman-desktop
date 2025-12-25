@@ -1278,37 +1278,22 @@ export class ContainerProviderRegistry {
   async updateImage(engineId: string, imageId: string, tag: string): Promise<void> {
     let telemetryOptions = {};
     try {
-      // get image info to validate the image can be updated
-      const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
-
-      // validate the image has tags
-      const repoTags = imageInfo.RepoTags;
-      if (!repoTags?.length) {
-        throw new Error('Image has no tags and cannot be updated');
+      // return early if the image is a localhost image
+      if (tag.startsWith('localhost/') || tag.startsWith('localhost:')) {
+        throw new LatestImageError('Localhost image is already the latest version');
       }
 
-      // validate the provided tag exists on this image
-      if (!repoTags.includes(tag)) {
-        throw new Error(`Tag '${tag}' not found on this image`);
-      }
-
-      // check if image has a remote registry source (RepoDigests is populated when pulled from a registry)
-      if (!imageInfo.RepoDigests?.length) {
-        throw new Error('Image has no remote registry source and cannot be updated');
-      }
-
-      // store whether the image originally had a single tag
-      const hadSingleTag = repoTags.length === 1;
-
-      // check if this is an immutable tag (contains a SHA digest)
+      // return early if the tag is immutable (digest-based)
       if (tag.includes('@sha256:')) {
-        throw new Error('Image with digest-based tag is immutable and cannot be updated');
+        throw new LatestImageError('Immutable tag is already the latest version');
       }
 
-      // store the current image ID to compare after pull
+      // get image info to compare after pull
+      const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
+      const hadSingleTag = imageInfo.RepoTags?.length === 1;
       const oldImageId = imageInfo.Id;
 
-      // pull the latest build of the image
+      // pull the latest version - engine will return appropriate errors
       const authconfig = this.imageRegistry.getAuthconfigForImage(tag);
       const matchingEngine = this.getMatchingEngine(engineId);
       const pullStream = await matchingEngine.pull(tag, { authconfig });
@@ -1327,7 +1312,7 @@ export class ContainerProviderRegistry {
         throw new LatestImageError('Image is already the latest version');
       }
 
-      // Only delete the old image if it originally had a single tag
+      // only delete the old image if it originally had a single tag
       if (hadSingleTag) {
         try {
           await this.deleteImage(engineId, oldImageId);
