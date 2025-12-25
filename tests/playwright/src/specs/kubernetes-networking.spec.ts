@@ -120,7 +120,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
+test.describe.serial('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
   test.describe
     .serial('Ingress routing workflow verification', () => {
       test('Check Ingress controller pods status', async ({ page }) => {
@@ -139,15 +139,17 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
           80_000,
         );
       });
-      test('Create and verify a running Kubernetes service', async ({ page }) => {
-        await createKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME, SERVICE_YAML_PATH);
-        await checkKubernetesResourceState(
-          page,
-          KubernetesResources.Services,
-          SERVICE_NAME,
-          KubernetesResourceState.Running,
-          10_000,
-        );
+      test.describe(() => {
+        test('Create and verify a running Kubernetes service', async ({ page }) => {
+          await createKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME, SERVICE_YAML_PATH);
+          await checkKubernetesResourceState(
+            page,
+            KubernetesResources.Services,
+            SERVICE_NAME,
+            KubernetesResourceState.Running,
+            10_000,
+          );
+        });
       });
       test('Create and verify a running Kubernetes ingress', async ({ page }) => {
         await createKubernetesResource(page, KubernetesResources.IngeressesRoutes, INGRESS_NAME, INGRESS_YAML_PATH);
