@@ -501,11 +501,11 @@ export class ExtensionLoader implements IAsyncDisposable {
       // filter only directories ignoring node_modules directory
       const pluginDirectories = pluginDirEntries
         .filter(entry => entry.isDirectory())
-        .map(directory => this.pluginsDirectory + '/' + directory.name);
+        .map(directory => path.join(this.pluginsDirectory, directory.name));
 
       // collect all extensions from the pluginDirectory folders
       const analyzedPluginsDirectoryExtensions: AnalyzedExtension[] = (
-        await Promise.all(
+        await Promise.allSettled(
           pluginDirectories.map(folder =>
             this.analyzeExtension({
               extensionPath: folder,
@@ -513,7 +513,14 @@ export class ExtensionLoader implements IAsyncDisposable {
             }),
           ),
         )
-      ).filter(extension => !extension.error);
+      ).reduce((accumulator, result) => {
+        if (result.status === 'fulfilled') {
+          accumulator.push(result.value);
+        } else {
+          console.error('Something went wrong while trying to analyse an extension:', result.reason);
+        }
+        return accumulator;
+      }, [] as AnalyzedExtensionWithApi[]);
       analyzedExtensions.push(...analyzedPluginsDirectoryExtensions);
     }
 

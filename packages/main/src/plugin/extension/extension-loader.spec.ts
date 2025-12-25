@@ -223,10 +223,10 @@ const safeStorageRegistry: SafeStorageRegistry = {
 } as unknown as SafeStorageRegistry;
 
 const directories = {
-  getPluginsDirectory: () => '/fake-plugins-directory',
-  getPluginsScanDirectory: () => '/fake-plugins-scanning-directory',
-  getExtensionsStorageDirectory: () => '/fake-extensions-storage-directory',
-  getSafeStorageDirectory: () => '/fake-safe-storage-directory',
+  getPluginsDirectory: () => path.resolve('/fake-plugins-directory'),
+  getPluginsScanDirectory: () => path.resolve('/fake-plugins-scanning-directory'),
+  getExtensionsStorageDirectory: () => path.resolve('/fake-extensions-storage-directory'),
+  getSafeStorageDirectory: () => path.resolve('/fake-safe-storage-directory'),
 } as unknown as Directories;
 
 const exec = new Exec(proxy);
@@ -401,6 +401,73 @@ describe('extensionLoader#start', () => {
     expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
     const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
     expect(devFolder?.endsWith('extensions-extra')).toBeTruthy();
+  });
+
+  test('error in one of analyzeExtension should not be dramatic', async () => {
+    const fakeDirectory = '/fake/path/scanning';
+
+    // fake scanning property
+    extensionLoader.setPluginsScanDirectory(fakeDirectory);
+
+    vi.spyOn(extensionLoader, 'readProductionFolders').mockResolvedValue([]);
+    vi.spyOn(extensionLoader, 'readDevelopmentFolders').mockResolvedValue([]);
+
+    const analyzeExtensionMock = vi.spyOn(extensionLoader, 'analyzeExtension');
+    analyzeExtensionMock.mockRejectedValueOnce(new Error('Failed one'));
+    analyzeExtensionMock.mockResolvedValue({
+      id: 'oui',
+      manifest: {
+        name: 'hello',
+      },
+    } as AnalyzedExtensionWithApi);
+
+    const loadExtensionsMock = vi.spyOn(extensionLoader, 'loadExtensions');
+    loadExtensionsMock.mockResolvedValue(undefined);
+
+    vi.mocked(
+      fs.promises.readdir as (path: string, options?: { withFileTypes: true }) => Promise<fs.Dirent[]>,
+    ).mockImplementation(async path => {
+      switch (path) {
+        case directories.getPluginsDirectory():
+          return [
+            {
+              name: 'foo',
+              isFile: () => false,
+              isDirectory: () => true,
+            } as unknown as fs.Dirent,
+            {
+              name: 'bar',
+              isFile: () => false,
+              isDirectory: () => true,
+            } as unknown as fs.Dirent,
+          ];
+        default:
+          return [];
+      }
+    });
+    vi.mocked(fs.existsSync).mockImplementation(path => {
+      switch (path) {
+        case directories.getPluginsDirectory():
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    await extensionLoader.start();
+
+    expect(analyzeExtensionMock).toHaveBeenCalledTimes(2);
+    expect(analyzeExtensionMock).toHaveBeenCalledWith({
+      extensionPath: path.join(directories.getPluginsDirectory(), 'foo'),
+      removable: true,
+    });
+    expect(analyzeExtensionMock).toHaveBeenCalledWith({
+      extensionPath: path.join(directories.getPluginsDirectory(), 'bar'),
+      removable: true,
+    });
+
+    // only one extension should have been loaded as we rejected one analyzeExtensionMock
+    expect(vi.mocked(loadExtensionsMock).mock.calls[0]?.[0]).toHaveLength(1);
   });
 });
 
