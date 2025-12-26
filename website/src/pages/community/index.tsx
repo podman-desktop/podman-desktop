@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CommunityBanner from '@site/src/components/CommunityBanner';
 import GradientButton from '@site/src/components/GradientButton';
 import GradientIcon from '@site/src/components/GradientIcon';
+import LatestContributors from '@site/src/components/LatestContributors';
 import TailWindThemeSelector from '@site/src/components/TailWindThemeSelector';
 import Layout from '@theme/Layout';
 import React from 'react';
@@ -147,6 +148,11 @@ export default function Home(): JSX.Element {
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="mb-16 text-center">
+          <h2 className="text-3xl font-bold mb-6">Latest Contributors</h2>
+          <LatestContributors />
         </section>
 
         <section id="community-events" className="mb-16 text-center">

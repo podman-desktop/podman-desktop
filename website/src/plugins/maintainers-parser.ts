@@ -16,37 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface Contributor {
-  login: string;
-  avatarUrl: string;
-  profileUrl: string;
-  commitCount: number;
-}
+/**
+ * Parses MAINTAINERS.md to extract GitHub usernames.
+ * Expected format: | Name | @username | Employer |
+ */
 
-export interface GitHubMetadata {
-  stargazersCount: number;
-  latestContributors?: Contributor[];
-  latestRelease: {
-    version: string;
-    linux: {
-      flatpak: string;
-      amd64: string;
-      arm64: string;
-    };
-    macos: {
-      universal: string;
-      x64: string;
-      arm64: string;
-      airgapsetupX64: string;
-      airgapsetupArm64: string;
-    };
-    windows: {
-      binaryX64: string;
-      binaryArm64: string;
-      setupX64: string;
-      setupArm64: string;
-      airgapsetupX64: string;
-      airgapsetupArm64: string;
-    };
-  };
+export function parseMaintainersFromMarkdown(content: string): Set<string> {
+  const maintainers = new Set<string>();
+
+  // Match GitHub usernames in format @username
+  const usernamePattern = /@([a-zA-Z0-9_-]+)/g;
+  const matches = content.matchAll(usernamePattern);
+
+  for (const match of matches) {
+    maintainers.add(match[1].toLowerCase());
+  }
+
+  return maintainers;
 }
