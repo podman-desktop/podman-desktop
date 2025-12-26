@@ -19,11 +19,11 @@
 import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from '/@/plugin/api.js';
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { NavigationRequest } from '/@api/navigation-request.js';
 

@@ -21,11 +21,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { ContributionManager } from '../contribution-manager.js';
 import type { ProviderRegistry } from '../provider-registry.js';

@@ -21,7 +21,7 @@ import * as fs from 'node:fs';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import {
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,

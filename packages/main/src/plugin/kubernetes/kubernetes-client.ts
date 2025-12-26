@@ -74,6 +74,7 @@ import { parseAllDocuments } from 'yaml';
 
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
@@ -86,7 +87,6 @@ import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-trou
 import type { V1Route } from '/@api/openshift-types.js';
 
 import kubernetesImage from '../../assets/kubernetes.statesExperimental.webp';
-import { ApiSenderType } from '../api.js';
 import { Emitter } from '../events/emitter.js';
 import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';

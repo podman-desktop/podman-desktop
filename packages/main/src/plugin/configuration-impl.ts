@@ -18,6 +18,7 @@
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
@@ -25,7 +26,6 @@ import {
 } from '/@api/configuration/constants.js';
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
-import type { ApiSenderType } from './api.js';
 import { LockedKeys } from './lock-configuration.js';
 
 /**

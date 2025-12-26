@@ -16,23 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { inject, injectable } from 'inversify';
+import type { IDisposable } from '../disposable.js';
 
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-
-import { ColorRegistry } from './color-registry.js';
-import { ConfigurationRegistry } from './configuration-registry.js';
-
-/**
- * ColorRegistry is used by storybook to inject colors into the frontend with a script.
- * but tsx does not support decorators, so provide the injectable stuff in a separated object.
- */
-@injectable()
-export class InjectableColorRegistry extends ColorRegistry {
-  constructor(
-    @inject(ApiSenderType) apiSender: ApiSenderType,
-    @inject(ConfigurationRegistry) configurationRegistry: ConfigurationRegistry,
-  ) {
-    super(apiSender, configurationRegistry);
-  }
-}
+export const ApiSenderType = Symbol.for('ApiSenderType');
+export type ApiSenderType = {
+  send: (channel: string, data?: unknown) => void;
+  receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;
+};

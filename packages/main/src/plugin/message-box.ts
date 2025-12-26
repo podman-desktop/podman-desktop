@@ -17,9 +17,8 @@
  ***********************************************************************/
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
-
-import { ApiSenderType } from './api.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
