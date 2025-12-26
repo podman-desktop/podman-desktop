@@ -23,8 +23,8 @@ import { get } from 'svelte/store';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
 
-import type { FeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
 import FeaturedExtensions from './FeaturedExtensions.svelte';
 
 // fake the window.events object

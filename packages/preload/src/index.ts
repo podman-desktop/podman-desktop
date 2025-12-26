@@ -71,6 +71,7 @@ import type { ExploreFeature } from '/@api/explore-feature';
 import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
 import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
@@ -129,7 +130,6 @@ import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
-import type { FeaturedExtension } from '../../main/src/plugin/featured/featured-api';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;

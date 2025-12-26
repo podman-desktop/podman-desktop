@@ -18,7 +18,8 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type { FeaturedExtension } from '../../../main/src/plugin/featured/featured-api';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
+
 import { EventStore } from './event-store';
 
 const windowEvents = [
