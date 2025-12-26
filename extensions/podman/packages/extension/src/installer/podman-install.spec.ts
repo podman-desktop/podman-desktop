@@ -21,13 +21,13 @@ import * as fs from 'node:fs';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import * as extensionObj from '/@/extension';
+import { releaseNotes } from '/@/podman5.json';
 import type { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import type { PodmanInfo } from '/@/utils/podman-info';
+import * as utils from '/@/utils/util';
 
-import * as extensionObj from '../extension';
-import { releaseNotes } from '../podman5.json';
-import { getBundledPodmanVersion } from '../utils/podman-bundled';
-import type { PodmanInfo } from '../utils/podman-info';
-import * as utils from '../utils/util';
 import type { Installer } from './installer';
 import type { UpdateCheck } from './podman-install';
 import { PodmanInstall } from './podman-install';

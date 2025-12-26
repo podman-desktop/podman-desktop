@@ -22,9 +22,10 @@ import type { InstallCheck, RunError } from '@podman-desktop/api';
 import { process as processAPI, ProgressLocation, window } from '@podman-desktop/api';
 import { injectable } from 'inversify';
 
-import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '../checks/macos-checks';
-import { getBundledPodmanVersion } from '../utils/podman-bundled';
-import { getAssetsFolder } from '../utils/util';
+import { MacCPUCheck, MacMemoryCheck, MacPodmanInstallCheck, MacVersionCheck } from '/@/checks/macos-checks';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getAssetsFolder } from '/@/utils/util';
+
 import { BaseInstaller } from './base-installer';
 
 @injectable()

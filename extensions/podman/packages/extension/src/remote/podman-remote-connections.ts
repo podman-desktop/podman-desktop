@@ -22,7 +22,8 @@ import { join } from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { getPodmanCli } from '../utils/podman-cli';
+import { getPodmanCli } from '/@/utils/podman-cli';
+
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
 interface ConnectionListFormatJson {
