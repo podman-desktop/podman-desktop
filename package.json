@@ -241,7 +241,8 @@
       "vite>esbuild": "^0.25.0",
       "node-forge": "^1.3.3",
       "config-file-ts>glob": "^10.5.0",
-      "compression>on-headers": "^1.1.0"
+      "compression>on-headers": "^1.1.0",
+      "tmp-promise>tmp": "^0.2.5"
     }
   },
   "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd"
