@@ -68,6 +68,7 @@ import type { IDisposable } from '/@api/disposable';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
 import type { DocumentationInfo } from '/@api/documentation-info';
 import type { ExploreFeature } from '/@api/explore-feature';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
@@ -128,7 +129,6 @@ import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
-import type { CatalogExtension } from '../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import type { FeaturedExtension } from '../../main/src/plugin/featured/featured-api';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 

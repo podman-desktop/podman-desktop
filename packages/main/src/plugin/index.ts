@@ -84,6 +84,7 @@ import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
 import type { IDisposable } from '/@api/disposable.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
 import type { DocumentationInfo } from '/@api/documentation-info.js';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
@@ -175,7 +176,6 @@ import { ExperimentalConfigurationManager } from './experimental-configuration-m
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
-import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';

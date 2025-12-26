@@ -19,9 +19,9 @@
 import { inject, injectable } from 'inversify';
 
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
-import type { CatalogFetchableExtension } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
+import type { CatalogFetchableExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
 
 import featuredJSONFile from '../../../../../featured.json' with { type: 'json' };
 
