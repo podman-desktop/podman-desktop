@@ -522,6 +522,9 @@ importers:
       '@podman-desktop/api':
         specifier: workspace:*
         version: link:../../../../packages/extension-api
+      '@podman-desktop/podman-extension-api':
+        specifier: workspace:*
+        version: link:../api
       async-mutex:
         specifier: ^0.5.0
         version: 0.5.0
