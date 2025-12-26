@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,26 @@
  * limitations under the License.
  *
  * SPDX-License-Identifier: Apache-2.0
- ***********************************************************************/
-import type { KubernetesGeneratorSelector } from '../kubernetes/kube-generator-registry.js';
+ ********************************************************************/
 
 export interface KubernetesGeneratorInfo {
   id: string;
   name: string;
   types: KubernetesGeneratorSelector;
   default: boolean;
+}
+
+export type KubernetesGeneratorArgument = {
+  engineId: string;
+  containers?: string[];
+  pods?: string[];
+  compose?: string[];
+};
+
+export type KubernetesGeneratorSelector = KubernetesGeneratorType | ReadonlyArray<KubernetesGeneratorType>;
+
+export type KubernetesGeneratorType = 'Compose' | 'Pod' | 'Container';
+
+export interface GenerateKubeResult {
+  yaml: string;
 }
