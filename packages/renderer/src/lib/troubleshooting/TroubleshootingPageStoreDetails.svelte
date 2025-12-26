@@ -4,9 +4,8 @@ import { Button } from '@podman-desktop/ui-svelte';
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import type { EventStoreInfo } from '/@/stores/event-store';
-
-import Dialog from '../dialogs/Dialog.svelte';
 
 interface Props {
   closeCallback: () => void;

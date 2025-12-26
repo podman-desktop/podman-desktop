@@ -19,9 +19,8 @@
 import type { Component } from 'svelte';
 
 import CronJobIcon from '/@/lib/images/CronJobIcon.svelte';
-
-import { kubernetesCurrentContextCronJobs } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextCronJobs } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

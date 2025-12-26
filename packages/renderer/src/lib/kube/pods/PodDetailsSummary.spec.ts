@@ -32,7 +32,8 @@ import type {
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import * as eventsTable from '../details/EventsTable.svelte';
+import * as eventsTable from '/@/lib/kube/details/EventsTable.svelte';
+
 import PodDetailsSummary from './PodDetailsSummary.svelte';
 
 vi.mock('/@/stores/kubernetes-contexts-state');

@@ -21,11 +21,11 @@ import { readable, writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 import { type ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
-import * as kubeContextStore from '../kubernetes-contexts-state';
 import { createNavigationKubernetesGroup } from './navigation-registry-kubernetes.svelte';
 
 vi.mock('../kubernetes-contexts-state', async () => {

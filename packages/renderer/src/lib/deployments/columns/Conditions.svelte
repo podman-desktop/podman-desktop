@@ -11,8 +11,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import Label from '../../ui/Label.svelte';
-import type { DeploymentCondition } from '../DeploymentUI';
+import type { DeploymentCondition } from '/@/lib/deployments/DeploymentUI';
+import Label from '/@/lib/ui/Label.svelte';
+
 import type { Props } from './props';
 
 let { object }: Props = $props();

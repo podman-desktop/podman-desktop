@@ -18,9 +18,9 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { networksListInfo } from '/@/stores/networks';
 import type { NetworkInspectInfo } from '/@api/network-info';
 
-import { networksListInfo } from '../networks';
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 
 beforeEach(() => {

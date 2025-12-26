@@ -23,9 +23,9 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { assert, expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import * as preferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesVmConnectionRendering from './PreferencesVmConnectionRendering.svelte';
 import type { IConnectionRestart } from './Util';

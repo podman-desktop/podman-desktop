@@ -19,7 +19,7 @@
  * It allows to create a spinner to be associated to another object ('owner') so the spinner state is changed based on its owner behavior
  * E.g if a button (owner) is clicked and the action start executing we can enabled the spinner
  */
-import { type MicromarkSpinner } from '../micromark-utils';
+import { type MicromarkSpinner } from '/@/lib/markdown/micromark-utils';
 
 let spinnerCount = 0;
 const spinners = new Map<string, MicromarkSpinner>();

@@ -2,9 +2,10 @@
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import { isDark } from '/@/stores/appearance';
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+
 import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
-import { isDark } from '../../stores/appearance';
-import { onDidChangeConfiguration } from '../../stores/configurationProperties';
 
 let isDarkUnsubscribe: Unsubscriber;
 let isDarkTheme = false;

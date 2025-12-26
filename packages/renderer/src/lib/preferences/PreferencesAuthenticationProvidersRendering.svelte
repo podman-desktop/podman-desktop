@@ -8,11 +8,11 @@ import {
 import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
+import KeyIcon from '/@/lib/images/KeyIcon.svelte';
+import { authenticationProviders } from '/@/stores/authenticationProviders';
 
-import { authenticationProviders } from '../../stores/authenticationProviders';
-import IconImage from '../appearance/IconImage.svelte';
-import KeyIcon from '../images/KeyIcon.svelte';
 import SettingsPage from './SettingsPage.svelte';
 </script>
 

@@ -6,10 +6,11 @@ import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
-import { ansi256Colours, colourizedANSIContainerName } from '../editor/editor-utils';
-import { isMultiplexedLog } from '../stream/stream-utils';
-import NoLogIcon from '../ui/NoLogIcon.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
+import { ansi256Colours, colourizedANSIContainerName } from '/@/lib/editor/editor-utils';
+import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+
 import type { PodInfoUI } from './PodInfoUI';
 
 export let pod: PodInfoUI;

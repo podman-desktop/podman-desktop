@@ -5,17 +5,17 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import type { EventUI } from '/@/lib/events/EventUI';
+import NodeIcon from '/@/lib/images/NodeIcon.svelte';
+import KubeEditYAML from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { kubernetesCurrentContextEvents, kubernetesCurrentContextNodes } from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable.js';
 
-import Route from '../../Route.svelte';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import type { EventUI } from '../events/EventUI';
-import NodeIcon from '../images/NodeIcon.svelte';
-import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { NodeUtils } from './node-utils';
 import NodeDetailsSummary from './NodeDetailsSummary.svelte';
 import type { NodeUI } from './NodeUI';

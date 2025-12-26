@@ -1,5 +1,6 @@
 <script lang="ts">
-import SettingsPage from '../SettingsPage.svelte';
+import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
+
 import PreferencesDockerCompatibilityContributions from './PreferencesDockerCompatibilityContributions.svelte';
 import PreferencesDockerCompatibilitySocketMappingStatus from './PreferencesDockerCompatibilitySocketMappingStatus.svelte';
 </script>

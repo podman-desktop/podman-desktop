@@ -22,7 +22,8 @@ import type { ManifestInspectInfo } from '@podman-desktop/api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import ImageIcon from '../images/ImageIcon.svelte';
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+
 import ImageDetailsSummary from './ImageDetailsSummary.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 

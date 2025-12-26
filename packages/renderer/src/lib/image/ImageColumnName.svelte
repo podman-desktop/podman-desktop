@@ -1,8 +1,8 @@
 <script lang="ts">
+import Badge from '/@/lib/ui/Badge.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
 
-import Badge from '../ui/Badge.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {

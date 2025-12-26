@@ -6,11 +6,11 @@ import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
+import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import type { ProviderContainerConnectionInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
-import { getTerminalTheme } from '../terminal/terminal-theme';
-import NoLogIcon from '../ui/NoLogIcon.svelte';
 import { writeToTerminal } from './Util';
 
 export let providerInternalId: string | undefined = undefined;

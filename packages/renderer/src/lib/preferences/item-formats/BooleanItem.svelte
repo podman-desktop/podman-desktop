@@ -1,7 +1,6 @@
 <script lang="ts">
+import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-
-import SlideToggle from '../../ui/SlideToggle.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let checked = false;

@@ -34,13 +34,13 @@ import type { Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { lastPage } from '/@/stores/breadcrumb';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import type { OnboardingInfo, OnboardingStepItem } from '/@api/onboarding';
 
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
 import {
   type ActiveOnboardingStep,
   cleanSetup,

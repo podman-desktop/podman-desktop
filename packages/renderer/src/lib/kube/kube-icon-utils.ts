@@ -18,15 +18,15 @@
 
 import type { Component } from 'svelte';
 
-import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
-import CronJobIcon from '../images/CronJobIcon.svelte';
-import DeploymentIcon from '../images/DeploymentIcon.svelte';
-import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
-import JobIcon from '../images/JobIcon.svelte';
-import NodeIcon from '../images/NodeIcon.svelte';
-import PodIcon from '../images/PodIcon.svelte';
-import PvcIcon from '../images/PVCIcon.svelte';
-import ServiceIcon from '../images/ServiceIcon.svelte';
+import ConfigMapSecretIcon from '/@/lib/images/ConfigMapSecretIcon.svelte';
+import CronJobIcon from '/@/lib/images/CronJobIcon.svelte';
+import DeploymentIcon from '/@/lib/images/DeploymentIcon.svelte';
+import IngressRouteIcon from '/@/lib/images/IngressRouteIcon.svelte';
+import JobIcon from '/@/lib/images/JobIcon.svelte';
+import NodeIcon from '/@/lib/images/NodeIcon.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import PvcIcon from '/@/lib/images/PVCIcon.svelte';
+import ServiceIcon from '/@/lib/images/ServiceIcon.svelte';
 
 export const icon: Record<string, Component> = {
   Node: NodeIcon,

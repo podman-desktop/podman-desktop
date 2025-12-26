@@ -3,10 +3,10 @@ import { faCircleArrowDown, faCircleArrowUp, faCircleXmark, faTrash } from '@for
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 import type { CliToolInfo } from '/@api/cli-tool-info';
 
-import Markdown from '../markdown/Markdown.svelte';
-import LoadingIconButton from '../ui/LoadingIconButton.svelte';
 import {
   type ConnectionCallback,
   eventCollect,

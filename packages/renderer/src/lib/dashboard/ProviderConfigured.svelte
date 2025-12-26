@@ -2,9 +2,9 @@
 import { Button, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import Steps from '/@/lib/ui/Steps.svelte';
 import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
-import Steps from '../ui/Steps.svelte';
 import PreflightChecks from './PreflightChecks.svelte';
 import ProviderCard from './ProviderCard.svelte';
 import {

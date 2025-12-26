@@ -5,14 +5,13 @@ import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { networksListInfo } from '/@/stores/networks';
+import { providerInfos } from '/@/stores/providers';
 import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-
-import { networksListInfo } from '../../stores/networks';
-import { providerInfos } from '../../stores/providers';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
 
 let networkInfo: NetworkCreateFormInfo = $state({
   networkName: '',

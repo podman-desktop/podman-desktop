@@ -3,12 +3,12 @@ import { Button, Checkbox, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 import type { OnboardingInfo } from '/@api/onboarding';
 
-import IconImage from '../appearance/IconImage.svelte';
-import DesktopIcon from '../images/DesktopIcon.svelte';
 import bgImage from './background.png';
 import { WelcomeUtils } from './welcome-utils';
 

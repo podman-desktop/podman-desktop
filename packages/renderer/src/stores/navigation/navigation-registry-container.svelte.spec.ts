@@ -18,9 +18,9 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { containersInfos } from '/@/stores/containers';
 import type { ContainerInfo } from '/@api/container-info';
 
-import { containersInfos } from '../containers';
 import { createNavigationContainerEntry } from './navigation-registry-container.svelte';
 
 beforeEach(() => {

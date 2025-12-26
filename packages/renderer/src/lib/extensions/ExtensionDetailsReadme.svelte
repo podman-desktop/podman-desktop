@@ -2,7 +2,7 @@
 import { faFileText } from '@fortawesome/free-solid-svg-icons';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 
-import Markdown from '../markdown/Markdown.svelte';
+import Markdown from '/@/lib/markdown/Markdown.svelte';
 
 interface Props {
   readme: { content?: string; uri?: string };

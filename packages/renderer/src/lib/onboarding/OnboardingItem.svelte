@@ -2,16 +2,16 @@
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import type { ContextUI } from '/@/lib/context/context';
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
+import { isTargetScope } from '/@/lib/preferences/Util';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { OnboardingStepItem } from '/@api/onboarding';
 
-import type { ContextUI } from '../context/context';
-import Markdown from '../markdown/Markdown.svelte';
-import PreferencesRenderingItem from '../preferences/PreferencesRenderingItem.svelte';
-import { isTargetScope } from '../preferences/Util';
 import { replaceContextKeyPlaceholders, replaceContextKeyPlaceHoldersByRegex } from './onboarding-utils';
 
 export let extension: string;

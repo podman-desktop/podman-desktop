@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { listenResourcePermitted } from '../kube/resource-permission';
+import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
+
 import PVCEmptyScreen from './PVCEmptyScreen.svelte';
 
 const mocks = vi.hoisted(() => ({

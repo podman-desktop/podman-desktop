@@ -21,9 +21,9 @@ import '@testing-library/jest-dom/vitest';
 import { render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import type { NetworkInspectInfo } from '/@api/network-info';
 
-import MonacoEditor from '../editor/MonacoEditor.svelte';
 import NetworkDetailsInspect from './NetworkDetailsInspect.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 

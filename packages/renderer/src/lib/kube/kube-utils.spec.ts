@@ -18,7 +18,8 @@
 
 import { expect, test } from 'vitest';
 
-import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '/@/lib/objects/KubernetesObjectUI';
+
 import { isNamespaced } from './kube-utils';
 
 const node: KubernetesObjectUI = {

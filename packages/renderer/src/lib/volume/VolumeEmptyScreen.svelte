@@ -1,7 +1,7 @@
 <script lang="ts">
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 
-import VolumeIcon from '../images/VolumeIcon.svelte';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 
 const commandLine = 'podman volume create myFirstVolume';
 </script>

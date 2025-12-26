@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { ConfigMapSecretUI } from '../ConfigMapSecretUI';
+import type { ConfigMapSecretUI } from '/@/lib/configmaps-secrets/ConfigMapSecretUI';
+
 import Actions from './Actions.svelte';
 
 test('Expect action buttons', async () => {

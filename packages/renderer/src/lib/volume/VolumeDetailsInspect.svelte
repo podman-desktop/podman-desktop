@@ -1,9 +1,9 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import type { VolumeInspectInfo } from '/@api/volume-info';
 
-import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
 export let volume: VolumeInfoUI;

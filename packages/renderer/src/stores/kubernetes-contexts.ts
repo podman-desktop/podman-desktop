@@ -18,9 +18,9 @@
 
 import { type Writable, writable } from 'svelte/store';
 
+import { addIconToContexts } from '/@/lib/kube/KubeContextUI';
 import type { KubeContext } from '/@api/kubernetes-context';
 
-import { addIconToContexts } from '../lib/kube/KubeContextUI';
 import { EventStore } from './event-store';
 
 const windowEvents: string[] = ['extensions-started', 'kubernetes-context-update'];
