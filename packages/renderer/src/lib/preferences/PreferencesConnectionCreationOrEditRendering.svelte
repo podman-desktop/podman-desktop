@@ -82,6 +82,8 @@ let errorMessage: string | undefined = $state();
 let formEl: HTMLFormElement | undefined = $state();
 let connectionAuditResult: AuditResult | undefined = $state();
 let logsTerminal: Terminal | undefined = $state();
+let initialLoadComplete = $state(false);
+let providerInfosInitialized = $state(false);
 
 let existingFormData: { [key: string]: unknown } | undefined;
 let operationFailed = false;
@@ -105,6 +107,23 @@ $effect(() => {
     } finally {
       reconnectedUI = true;
     }
+  }
+});
+
+// Re-audit connection when provider status changes
+$effect(() => {
+  // Skip the first call when initializing
+  if (!providerInfosInitialized) {
+    providerInfosInitialized = true;
+    return;
+  }
+
+  // Only re-audit if initial load is complete, configuration is initialized, and we're not currently in progress
+  if (initialLoadComplete && !inProgress && !operationStarted && configurationKeys.length > 0) {
+    window
+      .auditConnectionParameters(providerInfo.internalId, buildAuditData())
+      .then(auditResult => updateAuditState(auditResult))
+      .catch(() => console.error('unable to re-audit connection'));
   }
 });
 
@@ -157,6 +176,7 @@ onMount(async () => {
     }
   }
   pageIsLoading = false;
+  initialLoadComplete = true;
 });
 
 onDestroy(() => {
@@ -217,6 +237,29 @@ async function loadConnectionParams(): Promise<void> {
   }
 }
 
+function buildAuditData(): AuditRequestItems {
+  const data: { [key: string]: unknown } = {};
+
+  if (existingFormData) {
+    Object.assign(data, existingFormData);
+    return data as AuditRequestItems;
+  }
+
+  for (const field of configurationKeys) {
+    if (field.id) {
+      const value = configurationValues.get(field.id);
+      data[field.id] = value?.value ?? field.default;
+    }
+  }
+
+  return data as AuditRequestItems;
+}
+
+function updateAuditState(auditResult: AuditResult): void {
+  isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
+  connectionAuditResult = auditResult;
+}
+
 function handleInvalidComponent(): void {
   isValid = false;
 }
@@ -247,8 +290,10 @@ async function handleValidComponent(): Promise<void> {
 
   try {
     const auditResult = await window.auditConnectionParameters(providerInfo.internalId, data as AuditRequestItems);
-    isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
-    connectionAuditResult = auditResult;
+    if (auditResult) {
+      isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
+      connectionAuditResult = auditResult;
+    }
   } catch (err: unknown) {
     if (err instanceof Error) {
       console.warn(err.message);
