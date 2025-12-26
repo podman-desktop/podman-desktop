@@ -30,8 +30,8 @@ const mocks = vi.hoisted(() => ({
   getCurrentKubeContextState: vi.fn(),
 }));
 
-vi.mock('../kube/resource-permission');
-vi.mock('../../stores/kubernetes-contexts-state', () => ({
+vi.mock(import('/@/lib/kube/resource-permission'));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), () => ({
   kubernetesCurrentContextState: {
     subscribe: mocks.subscribeMock,
   },

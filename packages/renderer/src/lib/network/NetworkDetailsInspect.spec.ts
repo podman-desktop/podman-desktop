@@ -67,7 +67,7 @@ const network: NetworkInspectInfo = {
   },
 };
 
-vi.mock(import('../editor/MonacoEditor.svelte'));
+vi.mock(import('/@/lib/editor/MonacoEditor.svelte'));
 
 beforeEach(() => {
   vi.mocked(window.inspectNetwork).mockResolvedValue(network);

@@ -25,7 +25,7 @@ import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
 
 import DeploymentEmptyScreen from './DeploymentEmptyScreen.svelte';
 
-vi.mock('../kube/resource-permission');
+vi.mock(import('/@/lib/kube/resource-permission'));
 
 test('Expect deployment empty screen', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));

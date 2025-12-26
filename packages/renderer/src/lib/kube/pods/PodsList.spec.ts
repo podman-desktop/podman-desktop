@@ -29,8 +29,8 @@ import type { IDisposable } from '/@api/disposable.js';
 
 import PodsList from './PodsList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
-vi.mock('../resources-listen');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
+vi.mock(import('/@/lib/kube/resources-listen'));
 
 beforeEach(() => {
   vi.resetAllMocks();

@@ -28,7 +28,7 @@ import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
 import { createNavigationKubernetesGroup } from './navigation-registry-kubernetes.svelte';
 
-vi.mock('../kubernetes-contexts-state', async () => {
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
 vi.mock('/@/stores/kubernetes-no-current-context');

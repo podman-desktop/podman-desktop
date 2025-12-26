@@ -30,9 +30,9 @@ import type { IDisposable } from '/@api/disposable.js';
 
 import DeploymentsList from './DeploymentsList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
-vi.mock('/@/lib/kube/resources-listen');
-vi.mock('../kube/resource-permission');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
+vi.mock(import('/@/lib/kube/resources-listen'));
+vi.mock(import('/@/lib/kube/resource-permission'));
 
 beforeEach(() => {
   vi.resetAllMocks();
