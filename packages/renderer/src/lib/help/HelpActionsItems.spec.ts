@@ -44,7 +44,7 @@ describe('HelpActionsItems component', () => {
   });
 
   test('by default is not visible', () => {
-    const ha = render(HelpActionsItems);
+    const ha = render(HelpActionsItems, { items: Items });
     const items = ha.queryAllByTitle(Items[0].title);
     expect(items).toHaveLength(0);
   });
@@ -56,7 +56,7 @@ describe('HelpActionsItems component', () => {
         dispose: (): void => {},
       };
     });
-    const ha = render(HelpActionsItems);
+    const ha = render(HelpActionsItems, { items: Items });
 
     toggleMenuCallback();
 
@@ -76,7 +76,7 @@ describe('HelpActionsItems component', () => {
   });
 
   test('create a span that has data-task-button=Help attribute, spy on and make sure that it is only called once each click', async () => {
-    render(HelpActionsItems);
+    render(HelpActionsItems, { items: Items });
 
     // Create data-task-button=Help to simulate the status bar icon / button
     const span = document.createElement('span');
