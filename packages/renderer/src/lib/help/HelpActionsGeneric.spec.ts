@@ -19,14 +19,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
-import { beforeAll, beforeEach, expect, suite, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import HelpActionsGeneric from './HelpActionsGeneric.svelte';
 import { Items } from './HelpItems';
 
 let toggleMenuCallback: () => void;
 
-suite('HelpActionsGeneric component', () => {
+describe('HelpActionsGeneric component', () => {
   beforeAll(() => {
     (window.events as unknown) = {
       receive: vi.fn(),
