@@ -10,7 +10,13 @@ interface Props {
   iconSize?: IconSize;
 }
 
-let { icon, loadingWidthClass = 'w-6', loadingHeightClass = 'h-6', loading = false, iconSize = undefined }: Props = $props();
+let {
+  icon,
+  loadingWidthClass = 'w-6',
+  loadingHeightClass = 'h-6',
+  loading = false,
+  iconSize = undefined,
+}: Props = $props();
 </script>
 
 <div>
