@@ -33,9 +33,9 @@ import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import validator from 'validator';
 
+import { isMac, isWindows } from '/@/util.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
 
-import { isMac, isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { Certificates } from './certificates.js';
 import { Emitter } from './events/emitter.js';

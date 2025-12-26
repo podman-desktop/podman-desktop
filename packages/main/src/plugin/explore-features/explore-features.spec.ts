@@ -22,17 +22,17 @@ import path from 'node:path';
 import type { Configuration } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import type { Context } from '/@/plugin/context/context.js';
+import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
+import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import type { ContainerInfo } from '/@api/container-info.js';
 import type { ExploreFeature } from '/@api/explore-feature.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info.js';
 
-import type { ConfigurationRegistry } from '../configuration-registry.js';
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { ExtensionLoader } from '../extension/extension-loader.js';
-import type { KubernetesClient } from '../kubernetes/kubernetes-client.js';
-import type { ProviderRegistry } from '../provider-registry.js';
 import { ExploreFeatures } from './explore-features.js';
 
 vi.mock('electron', async () => {

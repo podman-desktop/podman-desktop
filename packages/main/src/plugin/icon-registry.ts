@@ -21,10 +21,10 @@ import { join } from 'node:path';
 import { inject, injectable } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import { isWindows } from '/@/util.js';
 import type { FontDefinition } from '/@api/font-info.js';
 import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
 
-import { isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 
 @injectable()

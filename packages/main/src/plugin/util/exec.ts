@@ -22,8 +22,8 @@ import { spawn } from 'node:child_process';
 import type { RunError, RunOptions, RunResult } from '@podman-desktop/api';
 import * as sudo from 'sudo-prompt';
 
-import { isLinux, isMac, isWindows } from '../../util.js';
-import type { Proxy } from '../proxy.js';
+import type { Proxy } from '/@/plugin/proxy.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 
 export const macosExtraPath = '/opt/podman/bin:/usr/local/bin:/opt/homebrew/bin:/opt/local/bin';
 

@@ -18,9 +18,8 @@
 
 import { inject, injectable } from 'inversify';
 
+import statusbarImage from '/@/assets/statusbarProviders.showProviders.webp';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-
-import statusbarImage from '../../assets/statusbarProviders.showProviders.webp';
 
 @injectable()
 export class StatusbarProvidersInit {

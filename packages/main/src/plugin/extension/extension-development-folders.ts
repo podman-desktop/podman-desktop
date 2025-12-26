@@ -21,12 +21,12 @@ import { resolve } from 'node:path';
 
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@/plugin/api.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-development-folders-info.js';
 
-import { ApiSenderType } from '../api.js';
 import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 
 // Handle the registration / track of all development folders used when developing extensions

@@ -19,7 +19,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import wincaAPI from 'win-ca/api';
 
-import { isWindows } from '../util.js';
+import { isWindows } from '/@/util.js';
+
 import { Certificates } from './certificates.js';
 
 let certificate: Certificates;

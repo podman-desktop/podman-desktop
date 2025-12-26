@@ -18,11 +18,11 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 
-import type { ApiSenderType } from '../api.js';
 import { TaskManager } from './task-manager.js';
 
 const apiSenderSendMock = vi.fn();

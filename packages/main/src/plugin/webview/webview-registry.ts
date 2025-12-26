@@ -27,9 +27,9 @@ import { inject, injectable } from 'inversify';
 
 import { ApiSenderType } from '/@/plugin/api.js';
 import { Uri } from '/@/plugin/types/uri.js';
+import { getFreePort } from '/@/plugin/util/port.js';
 import type { WebviewInfo, WebviewSimpleInfo } from '/@api/webview-info.js';
 
-import { getFreePort } from '../util/port.js';
 import { DevToolsManager } from './devtools-manager.js';
 import { WebviewImpl } from './webview-impl.js';
 import { WebviewPanelImpl } from './webview-panel-impl.js';

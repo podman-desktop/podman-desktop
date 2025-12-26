@@ -24,7 +24,7 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from '../api.js';
+import { ApiSenderType } from '/@/plugin/api.js';
 
 @injectable()
 export class InputQuickPickRegistry {

@@ -18,12 +18,13 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { CancellationTokenSource } from '../cancellation-token.js';
-import type { CancellationTokenRegistry } from '../cancellation-token-registry.js';
-import type { LoggerWithEnd } from '../index.js';
-import { TaskImpl } from '../tasks/task-impl.js';
-import type { TaskManager } from '../tasks/task-manager.js';
-import type { Task } from '../tasks/tasks.js';
+import { CancellationTokenSource } from '/@/plugin/cancellation-token.js';
+import type { CancellationTokenRegistry } from '/@/plugin/cancellation-token-registry.js';
+import type { LoggerWithEnd } from '/@/plugin/index.js';
+import { TaskImpl } from '/@/plugin/tasks/task-impl.js';
+import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
+import type { Task } from '/@/plugin/tasks/tasks.js';
+
 import type { TaskOptions } from './task-connection-utils.js';
 import { TaskConnectionUtils } from './task-connection-utils.js';
 

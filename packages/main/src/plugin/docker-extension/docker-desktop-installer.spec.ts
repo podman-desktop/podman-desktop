@@ -20,7 +20,8 @@ import { cp, readFile, writeFile } from 'node:fs/promises';
 
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ContributionManager, DockerExtensionMetadata } from '../contribution-manager.js';
+import type { ContributionManager, DockerExtensionMetadata } from '/@/plugin/contribution-manager.js';
+
 import { DockerDesktopInstaller } from './docker-desktop-installer.js';
 
 let dockerDesktopInstaller: TestDockerDesktopInstaller;

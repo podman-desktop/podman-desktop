@@ -20,11 +20,11 @@ import type * as extensionApi from '@podman-desktop/api';
 import { formatCss, parse } from 'culori';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import { isWindows } from '/@/util.js';
 import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
-import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';

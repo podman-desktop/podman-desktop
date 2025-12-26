@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { Context } from '../context/context.js';
+import type { Context } from '/@/plugin/context/context.js';
 
 export type ContextKeyValue =
   | undefined

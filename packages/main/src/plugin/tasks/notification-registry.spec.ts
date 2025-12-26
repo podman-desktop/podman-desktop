@@ -18,8 +18,9 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '../api.js';
-import { Disposable } from '../types/disposable.js';
+import type { ApiSenderType } from '/@/plugin/api.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
+
 import { NotificationRegistry } from './notification-registry.js';
 import type { TaskManager } from './task-manager.js';
 

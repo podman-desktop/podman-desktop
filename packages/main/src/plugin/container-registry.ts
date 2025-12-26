@@ -36,6 +36,7 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { isWindows } from '/@/util.js';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -63,7 +64,6 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 import type { PullEvent } from '/@api/pull-event.js';
 import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 
-import { isWindows } from '../util.js';
 import { ApiSenderType } from './api.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type {

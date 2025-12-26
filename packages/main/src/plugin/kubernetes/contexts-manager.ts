@@ -54,12 +54,12 @@ import {
   NetworkingV1Api,
 } from '@kubernetes/client-node';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
 import { secondaryResources } from '/@api/kubernetes-contexts-states.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
-import type { ApiSenderType } from '../api.js';
 import { Backoff } from './backoff.js';
 import {
   backoffInitialValue,

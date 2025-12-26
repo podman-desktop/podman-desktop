@@ -30,11 +30,11 @@ import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } 
 import type { PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
+import type { TrayMenu } from '/@/tray-menu.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 
-import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
-import type { TrayMenu } from '../tray-menu.js';
 import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';

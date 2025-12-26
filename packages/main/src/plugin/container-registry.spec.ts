@@ -40,12 +40,12 @@ import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import * as util from '/@/util.js';
 import type { ContainerCreateOptions, HostConfig } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ImageInfo } from '/@api/image-info.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 
-import * as util from '../util.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { ContainerCreateOptions as PodmanContainerCreateOptions, LibPod } from './dockerode/libpod-dockerode.js';

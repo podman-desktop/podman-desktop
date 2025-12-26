@@ -24,7 +24,8 @@ import * as tls from 'node:tls';
 import { injectable } from 'inversify';
 import wincaAPI from 'win-ca/api';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
+
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 /**

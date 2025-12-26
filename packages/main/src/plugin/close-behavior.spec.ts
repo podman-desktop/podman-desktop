@@ -18,8 +18,8 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@/plugin/api.js';
+import * as util from '/@/util.js';
 
-import * as util from '../util.js';
 import { CloseBehavior } from './close-behavior.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';

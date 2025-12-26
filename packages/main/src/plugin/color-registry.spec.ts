@@ -24,12 +24,12 @@ import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
+import * as util from '/@/util.js';
 import type { ColorDefinition } from '/@api/color-info.js';
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
-import * as util from '../util.js';
 import { ColorRegistry } from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 

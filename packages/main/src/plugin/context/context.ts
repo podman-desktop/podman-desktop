@@ -23,8 +23,8 @@
 
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from '../api.js';
-import type { IContext } from '../api/context-info.js';
+import { ApiSenderType } from '/@/plugin/api.js';
+import type { IContext } from '/@/plugin/api/context-info.js';
 
 @injectable()
 export class Context implements IContext {

@@ -47,18 +47,18 @@ import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
+import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
+import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { Uri } from '/@/plugin/types/uri.js';
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { type ForwardConfig, type ForwardOptions, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
-import type { ApiSenderType } from '../api.js';
-import { Emitter } from '../events/emitter.js';
-import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
-import { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
-import { Uri } from '../types/uri.js';
 import type { PodCreationSource, ScalableControllerType } from './kubernetes-client.js';
 import { KubernetesClient } from './kubernetes-client.js';
 import { ResizableTerminalWriter } from './kubernetes-exec-transmitter.js';

@@ -22,17 +22,17 @@ import * as path from 'node:path';
 import type { IpcMain, IpcMainEvent } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import type { Directories } from '/@/plugin/directories.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { CatalogFetchableExtension } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import type { ImageRegistry } from '/@/plugin/image-registry.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { ContributionManager } from '../contribution-manager.js';
-import type { Directories } from '../directories.js';
-import type { ImageRegistry } from '../image-registry.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
 import { ExtensionInstaller } from './extension-installer.js';
 
 let extensionInstaller: ExtensionInstaller;

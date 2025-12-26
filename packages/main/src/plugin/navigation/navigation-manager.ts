@@ -24,12 +24,11 @@ import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
+import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { NavigationRequest } from '/@api/navigation-request.js';
-
-import { ProviderRegistry } from '../provider-registry.js';
-import { Disposable } from '../types/disposable.js';
-import { WebviewRegistry } from '../webview/webview-registry.js';
 
 export interface NavigationRoute {
   routeId: string;

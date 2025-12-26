@@ -34,6 +34,7 @@ import { afterEach, beforeEach, describe, expect, type MockedFunction, test, vi 
 
 import type { ApiSenderType } from '/@/plugin/api.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import {
@@ -43,8 +44,6 @@ import {
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { type ForwardConfig, type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
-
-import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 
 const apiSender: ApiSenderType = {} as unknown as ApiSenderType;
 const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;

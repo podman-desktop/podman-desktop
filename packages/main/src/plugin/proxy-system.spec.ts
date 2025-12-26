@@ -24,8 +24,7 @@ import WinReg from 'winreg';
 import type { Proxy } from '/@/plugin/proxy.js';
 import { getProxySettingsFromSystem } from '/@/plugin/proxy-system.js';
 import { Exec } from '/@/plugin/util/exec.js';
-
-import * as util from '../util.js';
+import * as util from '/@/util.js';
 
 vi.mock(import('winreg'));
 

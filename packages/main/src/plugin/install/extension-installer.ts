@@ -25,16 +25,18 @@ import type { IpcMainEvent } from 'electron';
 import { inject, injectable } from 'inversify';
 import * as tarFs from 'tar-fs';
 
+import { ApiSenderType, IPCMainOn } from '/@/plugin/api.js';
+import { ContributionManager } from '/@/plugin/contribution-manager.js';
 import { Directories } from '/@/plugin/directories.js';
+import {
+  DockerDesktopContribution,
+  DockerDesktopInstaller,
+} from '/@/plugin/docker-extension/docker-desktop-installer.js';
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-
-import { ApiSenderType, IPCMainOn } from '../api.js';
-import { ContributionManager } from '../contribution-manager.js';
-import { DockerDesktopContribution, DockerDesktopInstaller } from '../docker-extension/docker-desktop-installer.js';
-import { ImageRegistry } from '../image-registry.js';
-import { Telemetry } from '../telemetry/telemetry.js';
+import { ImageRegistry } from '/@/plugin/image-registry.js';
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 @injectable()
 export class ExtensionInstaller {

@@ -18,6 +18,7 @@
 
 import type { Informer, KubernetesObject } from '@kubernetes/client-node';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
 import type {
   CheckingState,
   ContextGeneralState,
@@ -26,7 +27,6 @@ import type {
 } from '/@api/kubernetes-contexts-states.js';
 import { NO_CURRENT_CONTEXT_ERROR, secondaryResources } from '/@api/kubernetes-contexts-states.js';
 
-import type { ApiSenderType } from '../api.js';
 import { dispatchTimeout } from './contexts-constants.js';
 
 export interface CancellableInformer {

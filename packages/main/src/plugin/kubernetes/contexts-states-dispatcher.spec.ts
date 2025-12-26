@@ -18,10 +18,10 @@
 
 import { expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
 import type { IDisposable } from '/@api/disposable.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import type { ContextPermissionResult } from './context-permissions-checker.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';

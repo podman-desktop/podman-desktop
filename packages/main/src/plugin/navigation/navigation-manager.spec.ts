@@ -19,17 +19,17 @@
 import type { ProviderContainerConnection } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { ContributionManager } from '../contribution-manager.js';
-import type { ProviderRegistry } from '../provider-registry.js';
-import type { WebviewRegistry } from '../webview/webview-registry.js';
 import { NavigationManager } from './navigation-manager.js';
 
 let navigationManager: TestNavigationManager;

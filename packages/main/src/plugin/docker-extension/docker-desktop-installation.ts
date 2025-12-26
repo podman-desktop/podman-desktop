@@ -29,12 +29,11 @@ import type { Method, OptionsOfTextResponseBody } from 'got';
 import got, { RequestError } from 'got';
 import * as tarFs from 'tar-fs';
 
+import type { ApiSenderType } from '/@/plugin/api.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import type { Directories } from '/@/plugin/directories.js';
 import type { PullEvent } from '/@api/pull-event.js';
-
-import type { ApiSenderType } from '../api.js';
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { ContributionManager } from '../contribution-manager.js';
-import type { Directories } from '../directories.js';
 
 export class DockerDesktopInstallation {
   constructor(
