@@ -39,13 +39,6 @@ vi.mock('./appearance-util', () => {
 
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
 });
 
 beforeEach(() => {

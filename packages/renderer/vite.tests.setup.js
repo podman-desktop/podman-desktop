@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,23 @@ import { readFileSync } from 'node:fs';
 import 'vitest-canvas-mock';
 import typescript from 'typescript';
 import { EventStore } from './src/stores/event-store';
+import { vi } from 'vitest';
 
-global.window.matchMedia = vi.fn();
+/**
+ * Mock matchMedia
+ * @param query {string} the media query to match
+ * @returns {MediaQueryList} the media query list
+ */
+global.window.matchMedia = query => ({
+  matches: false,
+  media: query,
+  onchange: vi.fn(),
+  addListener: vi.fn(),
+  removeListener: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+});
 
 // read the given path and extract the method names from the Window interface
 function extractWindowMethods(filePath) {

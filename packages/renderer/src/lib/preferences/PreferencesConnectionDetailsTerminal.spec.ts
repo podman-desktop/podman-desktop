@@ -61,12 +61,6 @@ beforeEach(() => {
     receiveEndCallback: {
       value: receiveEndCallbackMock,
     },
-    matchMedia: {
-      value: () => ({
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      }),
-    },
   });
 });
 

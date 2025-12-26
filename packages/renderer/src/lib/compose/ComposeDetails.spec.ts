@@ -42,11 +42,6 @@ beforeAll(() => {
       func();
     },
   };
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => ({
-      addListener: vi.fn(),
-    }),
-  });
   mockBreadcrumb();
 });
 

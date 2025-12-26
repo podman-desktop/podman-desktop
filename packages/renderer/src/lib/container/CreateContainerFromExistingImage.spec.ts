@@ -129,15 +129,6 @@ beforeEach(() => {
     return undefined;
   });
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
 
   providerInfos.set([providerInfo]);
 });

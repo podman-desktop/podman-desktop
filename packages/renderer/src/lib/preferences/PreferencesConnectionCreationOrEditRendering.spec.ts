@@ -76,16 +76,6 @@ beforeAll(() => {
   (window as any).auditConnectionParameters = vi.fn();
   (window as any).telemetryTrack = vi.fn();
   (window as any).openDialog = vi.fn();
-
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
 });
 
 function mockCallback(
