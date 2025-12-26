@@ -28,7 +28,7 @@ import type { HyperVRunningCheck } from './hyper-v-running-check';
 import type { UserAdminCheck } from './user-admin-check';
 
 vi.mock(import('@podman-desktop/api'));
-vi.mock(import('../../utils/powershell'), () => ({
+vi.mock(import('/@/utils/powershell'), () => ({
   getPowerShellClient: vi.fn(),
 }));
 

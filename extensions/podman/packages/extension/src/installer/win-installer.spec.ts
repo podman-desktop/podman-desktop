@@ -41,7 +41,7 @@ const progress = {
 const mockTelemetryLogger = {} as TelemetryLogger;
 const mockWinPlatform = {} as WinPlatform;
 
-vi.mock(import('./../utils/util'), () => ({
+vi.mock(import('/@/utils/util'), () => ({
   getAssetsFolder: vi.fn(),
 }));
 
