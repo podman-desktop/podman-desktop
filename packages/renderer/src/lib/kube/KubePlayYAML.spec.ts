@@ -157,6 +157,86 @@ test('error: When pressing the Play button, expect us to show the errors to the 
   expect(error).toBeInTheDocument();
 });
 
+describe('cancel', () => {
+  test('expect cancel button not to be visible by default', async () => {
+    // Render the component
+    setup();
+    const { queryByRole } = render(KubePlayYAML, {});
+
+    const cancelBtn = queryByRole('button', { name: 'Cancel' });
+    expect(cancelBtn).toBeNull();
+  });
+
+  test('expect cancel button to be visible while playKube is running', async () => {
+    const { promise, resolve } = Promise.withResolvers<PlayKubeInfo>();
+    vi.mocked(window.playKube).mockReturnValue(promise);
+
+    // Render the component
+    setup();
+    const { getByRole, getByLabelText, queryByRole } = render(KubePlayYAML, {});
+
+    // Simulate selecting a file
+    const fileInput = getByRole('textbox', { name: 'Kubernetes YAML file' });
+    expect(fileInput).toBeInTheDocument();
+
+    const browseButton = getByLabelText('browse');
+    expect(browseButton).toBeInTheDocument();
+    await userEvent.click(browseButton);
+
+    // Simulate clicking the "Play" button
+    const playButton = getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
+    await userEvent.click(playButton);
+
+    const cancelBtn = await vi.waitFor(() => {
+      return getByRole('button', { name: 'Cancel' });
+    });
+    expect(cancelBtn).toBeInTheDocument();
+
+    // resolve window.playKube
+    resolve(mockedErroredPlayKubeInfo);
+
+    await vi.waitFor(() => {
+      const cancelBtn = queryByRole('button', { name: 'Cancel' });
+      expect(cancelBtn).toBeNull();
+    });
+  });
+
+  test('cancel action should call window#cancelToken', async () => {
+    const CANCELLABLE_TOKEN_ID: number = 55;
+    vi.mocked(window.getCancellableTokenSource).mockResolvedValue(CANCELLABLE_TOKEN_ID);
+
+    const { promise } = Promise.withResolvers<PlayKubeInfo>();
+    vi.mocked(window.playKube).mockReturnValue(promise);
+
+    // Render the component
+    setup();
+    const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+
+    // Simulate selecting a file
+    const fileInput = getByRole('textbox', { name: 'Kubernetes YAML file' });
+    expect(fileInput).toBeInTheDocument();
+
+    const browseButton = getByLabelText('browse');
+    expect(browseButton).toBeInTheDocument();
+    await userEvent.click(browseButton);
+
+    // Simulate clicking the "Play" button
+    const playButton = getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
+    await userEvent.click(playButton);
+
+    const cancelBtn = await vi.waitFor(() => {
+      return getByRole('button', { name: 'Cancel' });
+    });
+    await userEvent.click(cancelBtn);
+
+    await vi.waitFor(() => {
+      expect(window.cancelToken).toHaveBeenCalledExactlyOnceWith(CANCELLABLE_TOKEN_ID);
+    });
+  });
+});
+
 test('expect done button is there at the end and redirects to pods', async () => {
   vi.mocked(window.playKube).mockResolvedValue({
     Pods: [],
