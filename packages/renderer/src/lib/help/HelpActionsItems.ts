@@ -21,12 +21,12 @@ import '@testing-library/jest-dom/vitest';
 import { render } from '@testing-library/svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import HelpActionsGeneric from './HelpActionsGeneric.svelte';
+import HelpActionsItems from './HelpActionsItems.svelte';
 import { Items } from './HelpItems';
 
 let toggleMenuCallback: () => void;
 
-describe('HelpActionsGeneric component', () => {
+describe('HelpActionsItems component', () => {
   beforeAll(() => {
     (window.events as unknown) = {
       receive: vi.fn(),
@@ -44,7 +44,7 @@ describe('HelpActionsGeneric component', () => {
   });
 
   test('by default is not visible', () => {
-    const ha = render(HelpActionsGeneric);
+    const ha = render(HelpActionsItems);
     const items = ha.queryAllByTitle(Items[0].title);
     expect(items).toHaveLength(0);
   });
@@ -56,7 +56,7 @@ describe('HelpActionsGeneric component', () => {
         dispose: (): void => {},
       };
     });
-    const ha = render(HelpActionsGeneric);
+    const ha = render(HelpActionsItems);
 
     toggleMenuCallback();
 
@@ -76,7 +76,7 @@ describe('HelpActionsGeneric component', () => {
   });
 
   test('create a span that has data-task-button=Help attribute, spy on and make sure that it is only called once each click', async () => {
-    render(HelpActionsGeneric);
+    render(HelpActionsItems);
 
     // Create data-task-button=Help to simulate the status bar icon / button
     const span = document.createElement('span');
@@ -103,7 +103,7 @@ describe('HelpActionsGeneric component', () => {
         dispose: (): void => {},
       };
     });
-    const ha = render(HelpActionsGeneric, { items: Items });
+    const ha = render(HelpActionsItems, { items: Items });
     toggleMenuCallback();
     await vi.waitFor(async () => {
       const item = await ha.findByTitle(tooltip ?? title);
