@@ -11,6 +11,9 @@ interface Props {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7e7363962a7 (chore: fixed linter)
 let {
   icon,
   loadingWidthClass = 'w-6',
@@ -18,9 +21,12 @@ let {
   loading = false,
   iconSize = undefined,
 }: Props = $props();
+<<<<<<< HEAD
 =======
 let { icon, loadingWidthClass = 'w-6', loadingHeightClass = 'h-6', loading = false, iconSize = undefined }: Props = $props();
 >>>>>>> 3d6f8e545dc (refactor: migrated LoadingIcon component to svelte5)
+=======
+>>>>>>> 7e7363962a7 (chore: fixed linter)
 </script>
 
 <div>
