@@ -176,11 +176,13 @@ const config = {
   ],
   portable: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
+    publish: undefined,
   },
   nsis: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-setup-\${arch}.\${ext}`,
     oneClick: false,
     include: 'buildResources/installer.nsh',
+    publish: undefined,
   },
   win: {
     target: [
@@ -193,6 +195,7 @@ const config = {
         arch: ['x64', 'arm64'],
       },
     ],
+    publish: undefined,
     /**
      * Use Azure Keyvault to sign the Windows binaries (using Digicert timestamp server and not Azure Trusted Signing).
      */
@@ -256,6 +259,7 @@ const config = {
       target: 'default',
       arch: macosArches,
     },
+    publish: undefined,
   },
   dmg: {
     background: 'buildResources/dmg-background@2x.png',
@@ -263,6 +267,7 @@ const config = {
       width: 540,
       height: 380,
     },
+    publish: undefined,
     contents: [
       {
         x: 410,
@@ -276,16 +281,14 @@ const config = {
         type: 'file',
       },
     ],
+    writeUpdateInfo: false,
   },
   protocols: {
     name: product.name,
     schemes: [product.urlProtocol],
     role: 'Editor',
   },
-  publish: {
-    provider: 'github',
-    timeout: 10000,
-  },
+  publish: undefined,
   /*extraMetadata: {
     version: process.env.VITE_APP_VERSION,
   },*/
