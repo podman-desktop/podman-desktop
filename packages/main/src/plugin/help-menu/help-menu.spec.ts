@@ -17,9 +17,12 @@
  ***********************************************************************/
 import { expect, test, vi } from 'vitest';
 
+import type { IPCHandle } from '/@/plugin/api.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 
 import { HelpMenu } from './help-menu.js';
+
+const ipcHandle = vi.fn() as IPCHandle;
 
 const registerConfigurationsMock = vi.fn();
 const configurationRegistryMock = {
@@ -29,7 +32,7 @@ const configurationRegistryMock = {
 const productConfigPropertyName = 'helpMenu.useProductConfig';
 test('should register a configuration', async () => {
   vi.stubEnv('DEV', true);
-  const helpMenu = new HelpMenu(configurationRegistryMock);
+  const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
   helpMenu.init();
 
   expect(configurationRegistryMock.registerConfigurations).toBeCalled();
@@ -50,11 +53,18 @@ test('should register a configuration', async () => {
 test('Undefined should be default if not in dev env', () => {
   vi.resetAllMocks();
   vi.stubEnv('DEV', false);
-  const helpMenu = new HelpMenu(configurationRegistryMock);
+  const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
   helpMenu.init();
 
   expect(configurationRegistryMock.registerConfigurations).toBeCalled();
   const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
 
   expect(configurationNode?.properties?.[productConfigPropertyName]?.default).toBe(undefined);
+});
+
+test('should get the items', async () => {
+  const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
+  helpMenu.init();
+
+  expect(helpMenu.getItems()).toStrictEqual([]);
 });

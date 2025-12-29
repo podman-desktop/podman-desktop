@@ -18,11 +18,17 @@
 
 import { inject, injectable } from 'inversify';
 
+import { IPCHandle } from '/@/plugin/api.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { ItemInfo } from '/@api/help-menu.js';
 
 @injectable()
 export class HelpMenu {
-  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
+  constructor(
+    @inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry,
+    @inject(IPCHandle)
+    private readonly ipcHandle: IPCHandle,
+  ) {}
 
   init(): void {
     const helpMenuConfiguration: IConfigurationNode = {
@@ -40,5 +46,13 @@ export class HelpMenu {
     };
 
     this.configurationRegistry.registerConfigurations([helpMenuConfiguration]);
+
+    this.ipcHandle('help-menu:getItems', async (): Promise<ItemInfo[]> => {
+      return this.getItems();
+    });
+  }
+
+  getItems(): ItemInfo[] {
+    return [];
   }
 }

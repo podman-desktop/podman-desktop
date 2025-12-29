@@ -74,6 +74,7 @@ import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development
 import type { ExtensionInfo } from '/@api/extension-info';
 import type { FeaturedExtension } from '/@api/featured/featured-api';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
+import type { ItemInfo } from '/@api/help-menu';
 import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
@@ -2625,6 +2626,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('containerfileGetInfo', async (path: string): Promise<ContainerfileInfo> => {
     return ipcInvoke('containerfile:getInfo', path);
+  });
+
+  contextBridge.exposeInMainWorld('helpMenuGetItems', async (): Promise<ItemInfo[]> => {
+    return ipcInvoke('help-menu:getItems');
   });
 
   contextBridge.exposeInMainWorld('contextCollectAllValues', async (): Promise<Record<string, unknown>> => {
