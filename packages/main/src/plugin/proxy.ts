@@ -103,7 +103,7 @@ export class Proxy {
           maximum: 2,
           minimum: 0,
           placeholder: 'System(0)/Manual(1)/Disabled(2)',
-          default: 0,
+          default: 2,
           hidden: true,
         },
       },
