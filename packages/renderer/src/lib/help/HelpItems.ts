@@ -16,16 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { faDiscord, faSlack } from '@fortawesome/free-brands-svg-icons';
-import { faComment } from '@fortawesome/free-regular-svg-icons';
-import {
-  faExclamationTriangle,
-  faExternalLinkAlt,
-  faLightbulb,
-  faListUl,
-  type IconDefinition,
-} from '@fortawesome/free-solid-svg-icons';
-
 import { homepage, repository } from '../../../../../package.json';
 
 export enum ActionKind {
@@ -41,7 +31,7 @@ export interface ItemAction {
 export interface ItemInfo {
   title: string;
   tooltip?: string;
-  icon: IconDefinition;
+  icon: string;
   enabled: boolean;
   action?: ItemAction;
 }
@@ -49,7 +39,7 @@ export interface ItemInfo {
 export const Items: readonly ItemInfo[] = [
   {
     title: 'Getting Started',
-    icon: faExternalLinkAlt,
+    icon: 'fas fa-external-link-alt',
     enabled: true,
     action: {
       kind: ActionKind.LINK,
@@ -58,7 +48,7 @@ export const Items: readonly ItemInfo[] = [
   },
   {
     title: 'Troubleshooting',
-    icon: faLightbulb,
+    icon: 'fas fa-lightbulb',
     enabled: true,
     action: {
       kind: ActionKind.COMMAND,
@@ -67,7 +57,7 @@ export const Items: readonly ItemInfo[] = [
   },
   {
     title: 'Report a Bug',
-    icon: faExclamationTriangle,
+    icon: 'fas fa-exclamation-triangle',
     enabled: true,
     action: {
       kind: ActionKind.LINK,
@@ -76,7 +66,7 @@ export const Items: readonly ItemInfo[] = [
   },
   {
     title: 'Share Your Feedback',
-    icon: faComment,
+    icon: 'far fa-comment',
     enabled: true,
     action: {
       kind: ActionKind.COMMAND,
@@ -85,13 +75,13 @@ export const Items: readonly ItemInfo[] = [
   },
   {
     title: 'Community',
-    icon: faListUl,
+    icon: 'fas fa-list-ul',
     enabled: false,
   },
   {
     title: '#podman-desktop',
     tooltip: 'Join Discord #podman-desktop channel',
-    icon: faDiscord,
+    icon: 'fab fa-discord',
     enabled: true,
     action: {
       kind: ActionKind.LINK,
@@ -101,7 +91,7 @@ export const Items: readonly ItemInfo[] = [
   {
     title: '#podman-desktop',
     tooltip: 'Join Slack #podman-desktop channel',
-    icon: faSlack,
+    icon: 'fab fa-slack',
     enabled: true,
     action: {
       kind: ActionKind.LINK,
