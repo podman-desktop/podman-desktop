@@ -169,7 +169,7 @@
     "@tsconfig/svelte": "^5.0.6",
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "eslint-plugin-svelte": "^3.13.1",
-    "jsdom": "^27.3.0",
+    "jsdom": "^27.4.0",
     "svelte": "5.46.1",
     "svelte-check": "^4.3.5",
     "svelte-eslint-parser": "^1.4.1",
