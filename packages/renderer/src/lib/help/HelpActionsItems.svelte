@@ -1,7 +1,8 @@
 <script lang="ts">
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
-import { ActionKind, type ItemAction, type ItemInfo } from './HelpItems';
+import { ActionKind, type ItemAction, type ItemInfo } from '/@api/help-menu';
+
 import HelpMenu from './HelpMenu.svelte';
 
 interface Props {

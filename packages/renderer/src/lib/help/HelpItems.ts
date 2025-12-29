@@ -16,25 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ActionKind, type ItemInfo } from '/@api/help-menu';
+
 import { homepage, repository } from '../../../../../package.json';
-
-export enum ActionKind {
-  LINK,
-  COMMAND,
-}
-
-export interface ItemAction {
-  kind: ActionKind;
-  parameter: string;
-}
-
-export interface ItemInfo {
-  title: string;
-  tooltip?: string;
-  icon: string;
-  enabled: boolean;
-  action?: ItemAction;
-}
 
 export const Items: readonly ItemInfo[] = [
   {
