@@ -44,12 +44,6 @@ describe('HelpActions component', () => {
   });
 
   test.each(Items)('contains item with $title', async ({ title, tooltip }) => {
-    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
-      toggleMenuCallback = callback;
-      return {
-        dispose: (): void => {},
-      };
-    });
     const ha = render(HelpActions);
     toggleMenuCallback();
     await vi.waitFor(async () => {

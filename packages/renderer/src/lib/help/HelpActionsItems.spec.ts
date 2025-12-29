@@ -50,12 +50,6 @@ describe('HelpActionsItems component', () => {
   });
 
   test('simulate clicking outside the menu closes it', async () => {
-    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
-      toggleMenuCallback = callback;
-      return {
-        dispose: (): void => {},
-      };
-    });
     const ha = render(HelpActionsItems, { items: Items });
 
     toggleMenuCallback();
@@ -97,12 +91,6 @@ describe('HelpActionsItems component', () => {
   });
 
   test.each(Items)('contains item with $title', async ({ title, tooltip }) => {
-    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
-      toggleMenuCallback = callback;
-      return {
-        dispose: (): void => {},
-      };
-    });
     const ha = render(HelpActionsItems, { items: Items });
     toggleMenuCallback();
     await vi.waitFor(async () => {
