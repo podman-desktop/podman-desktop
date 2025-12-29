@@ -1,9 +1,9 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 
-import MonacoEditor from '../editor/MonacoEditor.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 export let container: ContainerInfoUI;

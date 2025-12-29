@@ -27,9 +27,9 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import PreferencesKubernetesConnectionRendering from './PreferencesKubernetesConnectionRendering.svelte';
 
 test('Expect that removing the connection is going back to the previous page', async () => {

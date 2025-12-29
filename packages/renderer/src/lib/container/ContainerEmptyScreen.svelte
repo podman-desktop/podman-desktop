@@ -2,7 +2,7 @@
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
-import { providerInfos } from '../../stores/providers';
+import { providerInfos } from '/@/stores/providers';
 
 export let runningOnly: boolean;
 export let stoppedOnly: boolean;

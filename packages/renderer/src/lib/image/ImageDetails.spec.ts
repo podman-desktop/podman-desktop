@@ -23,6 +23,14 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import {
+  IMAGE_DETAILS_VIEW_BADGES,
+  IMAGE_DETAILS_VIEW_ICONS,
+  IMAGE_LIST_VIEW_BADGES,
+  IMAGE_LIST_VIEW_ICONS,
+  IMAGE_VIEW_BADGES,
+  IMAGE_VIEW_ICONS,
+} from '/@/lib/view/views';
 import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
@@ -31,14 +39,6 @@ import { viewsContributions } from '/@/stores/views';
 import type { ContainerInfo } from '/@api/container-info';
 import type { ImageInfo } from '/@api/image-info';
 
-import {
-  IMAGE_DETAILS_VIEW_BADGES,
-  IMAGE_DETAILS_VIEW_ICONS,
-  IMAGE_LIST_VIEW_BADGES,
-  IMAGE_LIST_VIEW_ICONS,
-  IMAGE_VIEW_BADGES,
-  IMAGE_VIEW_ICONS,
-} from '../view/views';
 import ImageDetails from './ImageDetails.svelte';
 
 const listImagesMock = vi.fn();

@@ -3,8 +3,8 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
 export let volume: VolumeInfoUI;

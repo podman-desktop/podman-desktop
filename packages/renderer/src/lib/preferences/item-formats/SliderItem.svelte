@@ -1,7 +1,6 @@
 <script lang="ts">
+import { uncertainStringToNumber } from '/@/lib/preferences/Util';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
-
-import { uncertainStringToNumber } from '../Util';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number;

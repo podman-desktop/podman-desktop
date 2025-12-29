@@ -30,6 +30,8 @@ import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
 import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import imageRegistryConfigJson from '../../tests/resources/data/plugin/image-registry-config.json' with {
   type: 'json',
 };
@@ -42,7 +44,6 @@ import imageRegistryManifestZstdJson from '../../tests/resources/data/plugin/ima
 import imageRegistryManifestMultiArchJson from '../../tests/resources/data/plugin/image-registry-manifest-multi-arch-index.json' with {
   type: 'json',
 };
-import type { ApiSenderType } from './api.js';
 import type { Certificates } from './certificates.js';
 import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';

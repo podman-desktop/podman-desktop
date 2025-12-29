@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import DeploymentIcon from '/@/lib/images/DeploymentIcon.svelte';
-
-import { kubernetesCurrentContextDeployments } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextDeployments } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

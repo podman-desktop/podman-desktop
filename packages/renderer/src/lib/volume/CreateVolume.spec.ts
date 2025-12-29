@@ -24,9 +24,9 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import CreateVolume from './CreateVolume.svelte';
 
 const createVolumeMock = vi.fn();

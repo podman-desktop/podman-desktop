@@ -21,10 +21,11 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
-import { listenResourcePermitted } from '../kube/resource-permission';
+import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
+
 import ConfigMapSecretEmptyScreen from './ConfigMapSecretEmptyScreen.svelte';
 
-vi.mock('../kube/resource-permission');
+vi.mock(import('/@/lib/kube/resource-permission'));
 
 test('Expect configmap empty screen', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));

@@ -20,7 +20,8 @@
  */
 import type { CompileContext } from 'micromark-util-types';
 
-import type { Command, ExpandableSectionProps } from '../micromark-utils';
+import type { Command, ExpandableSectionProps } from '/@/lib/markdown/micromark-utils';
+
 import {
   createExpandableSection,
   hideExpandableToggleByRef,

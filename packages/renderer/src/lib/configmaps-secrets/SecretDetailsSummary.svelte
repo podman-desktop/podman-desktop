@@ -3,9 +3,8 @@ import type { V1Secret } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
-
-import KubeObjectMetaArtifact from '../kube/details/KubeObjectMetaArtifact.svelte';
-import KubeSecretArtifact from '../kube/details/KubeSecretArtifact.svelte';
+import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
+import KubeSecretArtifact from '/@/lib/kube/details/KubeSecretArtifact.svelte';
 
 export let secret: V1Secret | undefined;
 export let kubeError: string | undefined = undefined;

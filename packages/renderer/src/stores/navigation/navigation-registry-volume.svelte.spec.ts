@@ -18,9 +18,9 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { volumeListInfos } from '/@/stores/volumes';
 import type { VolumeListInfo } from '/@api/volume-info';
 
-import { volumeListInfos } from '../volumes';
 import { createNavigationVolumeEntry } from './navigation-registry-volume.svelte';
 
 beforeEach(() => {

@@ -29,7 +29,8 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from './api.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
 

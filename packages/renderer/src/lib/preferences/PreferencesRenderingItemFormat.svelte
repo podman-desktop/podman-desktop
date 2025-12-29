@@ -2,6 +2,7 @@
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
+import Markdown from '/@/lib/markdown/Markdown.svelte';
 import BooleanItem from '/@/lib/preferences/item-formats/BooleanItem.svelte';
 import EnumItem from '/@/lib/preferences/item-formats/EnumItem.svelte';
 import FileItem from '/@/lib/preferences/item-formats/FileItem.svelte';
@@ -11,7 +12,6 @@ import StringItem from '/@/lib/preferences/item-formats/StringItem.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import Markdown from '../markdown/Markdown.svelte';
 import PasswordStringItem from './item-formats/PasswordStringItem.svelte';
 import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';
 

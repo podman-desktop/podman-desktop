@@ -19,9 +19,9 @@
 import { nativeTheme } from 'electron';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 
-import { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;

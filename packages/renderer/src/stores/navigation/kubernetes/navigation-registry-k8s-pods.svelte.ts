@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import PodIcon from '/@/lib/images/PodIcon.svelte';
-
-import { kubernetesCurrentContextPods } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextPods } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

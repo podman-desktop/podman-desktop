@@ -3,7 +3,7 @@ import { faFileLines, faScroll } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
-import { Uri } from '../uri/Uri';
+import { Uri } from '/@/lib/uri/Uri';
 
 let logs = $state<string[]>([]);
 

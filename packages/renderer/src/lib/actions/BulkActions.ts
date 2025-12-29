@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { withConfirmation } from '../dialogs/messagebox-utils';
+import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 
 export function withBulkConfirmation(callback: () => unknown, text: string): void {
   window

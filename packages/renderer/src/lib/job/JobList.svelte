@@ -2,12 +2,12 @@
 import { TableColumn, TableDurationColumn, TableRow } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import JobIcon from '/@/lib/images/JobIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
 import { jobSearchPattern, kubernetesCurrentContextJobsFiltered } from '/@/stores/kubernetes-contexts-state';
 
-import JobIcon from '../images/JobIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import ActionsColumn from './columns/Actions.svelte';
 import CompletionsColumn from './columns/Completions.svelte';
 import ConditionsColumn from './columns/Conditions.svelte';

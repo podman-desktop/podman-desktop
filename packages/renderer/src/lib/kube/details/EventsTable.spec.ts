@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import type { EventUI } from '../../events/EventUI';
+import type { EventUI } from '/@/lib/events/EventUI';
+
 import EventsTable from './EventsTable.svelte';
 
 beforeEach(() => {

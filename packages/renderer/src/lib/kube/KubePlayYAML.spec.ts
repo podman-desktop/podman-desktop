@@ -24,10 +24,10 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import type { PlayKubeInfo } from '../../../../main/src/plugin/dockerode/libpod-dockerode';
-import { providerInfos } from '../../stores/providers';
 import KubePlayYAML from './KubePlayYAML.svelte';
 
 const mockedErroredPlayKubeInfo: PlayKubeInfo = {

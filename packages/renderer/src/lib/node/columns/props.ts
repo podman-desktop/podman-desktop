@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NodeUI } from '../NodeUI';
+import type { NodeUI } from '/@/lib/node/NodeUI';
 
 export interface Props {
   object: NodeUI;

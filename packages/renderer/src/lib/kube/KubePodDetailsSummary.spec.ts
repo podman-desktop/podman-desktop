@@ -32,7 +32,8 @@ import type {
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
-import * as eventsTable from '../kube/details/EventsTable.svelte';
+import * as eventsTable from '/@/lib/kube/details/EventsTable.svelte';
+
 import KubePodDetailsSummary from './KubePodDetailsSummary.svelte';
 
 const fakePod: V1Pod = {

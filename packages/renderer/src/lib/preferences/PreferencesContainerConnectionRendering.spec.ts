@@ -28,9 +28,9 @@ import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import PreferencesContainerConnectionRendering from './PreferencesContainerConnectionRendering.svelte';
 
 const EMPTY_PROVIDER_MOCK: ProviderInfo = {

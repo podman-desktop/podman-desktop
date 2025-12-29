@@ -1,9 +1,8 @@
 <script lang="ts">
+import NodeIcon from '/@/lib/images/NodeIcon.svelte';
+import KubernetesEmptyScreen from '/@/lib/kube/KubernetesEmptyScreen.svelte';
 import { kubernetesCurrentContextState } from '/@/stores/kubernetes-contexts-state';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
-
-import NodeIcon from '../images/NodeIcon.svelte';
-import KubernetesEmptyScreen from '../kube/KubernetesEmptyScreen.svelte';
 
 // If the current context is CONNECTED and we are on this empty screen
 // say that you may not have permission to view the nodes on your cluster.

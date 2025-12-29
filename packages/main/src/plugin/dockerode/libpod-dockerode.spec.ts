@@ -25,12 +25,12 @@ import path from 'node:path';
 
 import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
-import type { DefaultBodyType, HttpResponseResolver, PathParams } from 'msw';
+import type { DefaultBodyType, HttpResponseResolver, PathParams, ResponseResolverReturnType } from 'msw';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
+import type { DockerodeInternals, LibPod, PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
 import type { PodmanListImagesOptions } from '/@api/image-info.js';
 
@@ -499,5 +499,23 @@ describe('kube play', () => {
 
     const parsed = new URL(request.url);
     expect(parsed.searchParams.get('replace')).toEqual('true');
+  });
+
+  test('abort signal should cancel the request', async () => {
+    const abortController = new AbortController();
+
+    const { promise } = Promise.withResolvers<ResponseResolverReturnType<undefined>>();
+    vi.mocked(postHandler).mockReturnValue(promise);
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+    const playKubePromise: Promise<PlayKubeInfo> = (api as unknown as LibPod).playKube(file, {
+      abortSignal: abortController.signal,
+    });
+
+    abortController.abort();
+
+    await expect(() => {
+      return playKubePromise;
+    }).rejects.toThrowError('The operation was aborted');
   });
 });

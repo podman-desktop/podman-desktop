@@ -23,9 +23,9 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import { type PodCreation, podCreationHolder } from '/@/stores/creation-from-containers-store';
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import PodCreateFromContainers from './PodCreateFromContainers.svelte';
 
 const providerInfo: ProviderInfo = {

@@ -33,9 +33,9 @@ import { inject, injectable } from 'inversify';
 
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { WinPlatform } from '/@/platforms/win-platform';
+import podman5Json from '/@/podman5.json';
+import { getAssetsFolder } from '/@/utils/util';
 
-import podman5Json from '../podman5.json';
-import { getAssetsFolder } from '../utils/util';
 import { BaseInstaller } from './base-installer';
 
 @injectable()

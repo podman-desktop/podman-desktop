@@ -18,7 +18,8 @@
 
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from './api.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import { ColorRegistry } from './color-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 

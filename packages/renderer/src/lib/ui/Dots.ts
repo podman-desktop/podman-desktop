@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { PodInfoContainerUI } from '../pod/PodInfoUI';
+import type { PodInfoContainerUI } from '/@/lib/pod/PodInfoUI';
 
 const allStatuses = ['running', 'created', 'paused', 'waiting', 'degraded', 'exited', 'stopped', 'terminated', 'dead'];
 

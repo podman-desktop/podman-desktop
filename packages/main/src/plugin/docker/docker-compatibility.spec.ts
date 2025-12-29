@@ -22,11 +22,11 @@ import { promises } from 'node:fs';
 import type { ProviderContainerConnection } from '@podman-desktop/api';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
 import type { ProviderInfo } from '/@api/provider-info.js';
 
 import * as util from '../../util.js';
-import type { ApiSenderType } from '../api.js';
 import { ConfigurationRegistry } from '../configuration-registry.js';
 import type { DefaultConfiguration } from '../default-configuration.js';
 import type { Directories } from '../directories.js';

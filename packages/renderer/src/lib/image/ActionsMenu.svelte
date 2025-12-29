@@ -2,7 +2,7 @@
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
 
-import FlatMenu from '../ui/FlatMenu.svelte';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 
 interface Props {
   dropdownMenu?: boolean;

@@ -5,9 +5,9 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import EngineFormPage from '/@/lib/ui//EngineFormPage.svelte';
+import { Uri } from '/@/lib/uri/Uri';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 
-import { Uri } from '../uri/Uri';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 let imagesToSave = $state<ImageInfoUI[]>([]);

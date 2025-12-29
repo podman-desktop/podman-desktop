@@ -22,7 +22,8 @@ import type { CoreV1Event, V1Deployment } from '@kubernetes/client-node';
 import { render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import * as eventsTable from '../kube/details/EventsTable.svelte';
+import * as eventsTable from '/@/lib/kube/details/EventsTable.svelte';
+
 import DeploymentDetailsSummary from './DeploymentDetailsSummary.svelte';
 import type { DeploymentUI } from './DeploymentUI';
 

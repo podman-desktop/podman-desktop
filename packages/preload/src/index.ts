@@ -43,6 +43,7 @@ import type {
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { contextBridge, ipcRenderer } from 'electron';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type';
 import type { CliToolInfo } from '/@api/cli-tool-info';
 import type { ColorInfo } from '/@api/color-info';
 import type { CommandInfo } from '/@api/command-info';
@@ -68,8 +69,10 @@ import type { IDisposable } from '/@api/disposable';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
 import type { DocumentationInfo } from '/@api/documentation-info';
 import type { ExploreFeature } from '/@api/explore-feature';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
 import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
@@ -79,6 +82,12 @@ import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry';
+import type {
+  GenerateKubeResult,
+  KubernetesGeneratorArgument,
+  KubernetesGeneratorInfo,
+  KubernetesGeneratorSelector,
+} from '/@api/kubernetes/kubernetes-generator-api';
 import type { KubeContext } from '/@api/kubernetes-context';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
@@ -87,6 +96,7 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
+import type { Guide } from '/@api/learning-center/guide';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { Menu } from '/@api/menu.js';
 import { NavigationPage } from '/@api/navigation-page';
@@ -114,22 +124,12 @@ import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
 
 import type { ListOrganizerItem } from '../../api/src/list-organizer';
-import type { ApiSenderType } from '../../main/src/plugin/api';
 import type { ContextInfo } from '../../main/src/plugin/api/context-info';
-import type { KubernetesGeneratorInfo } from '../../main/src/plugin/api/KubernetesGeneratorInfo';
 import type { AuthenticationProviderInfo } from '../../main/src/plugin/authentication';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
-import type { CatalogExtension } from '../../main/src/plugin/extension/catalog/extensions-catalog-api';
-import type { FeaturedExtension } from '../../main/src/plugin/featured/featured-api';
-import type {
-  GenerateKubeResult,
-  KubernetesGeneratorArgument,
-  KubernetesGeneratorSelector,
-} from '../../main/src/plugin/kubernetes/kube-generator-registry';
-import type { Guide } from '../../main/src/plugin/learning-center/learning-center-api';
 import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
@@ -404,6 +404,7 @@ export function initExposure(): void {
       options?: {
         build?: boolean;
         replace?: boolean;
+        cancellableTokenId?: number;
       },
     ): Promise<PlayKubeInfo> => {
       return ipcInvoke('container-provider-registry:playKube', relativeContainerfilePath, selectedProvider, options);

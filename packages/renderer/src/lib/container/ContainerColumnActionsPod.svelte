@@ -1,5 +1,6 @@
 <script lang="ts">
-import PodActions from '../pod/PodActions.svelte';
+import PodActions from '/@/lib/pod/PodActions.svelte';
+
 import type { ContainerGroupInfoUI } from './ContainerInfoUI';
 
 export let object: ContainerGroupInfoUI;

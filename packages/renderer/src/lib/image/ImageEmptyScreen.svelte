@@ -1,9 +1,8 @@
 <script lang="ts">
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { providerInfos } from '/@/stores/providers';
-
-import ImageIcon from '../images/ImageIcon.svelte';
 
 let selectedProviderConnection = $derived(
   $providerInfos

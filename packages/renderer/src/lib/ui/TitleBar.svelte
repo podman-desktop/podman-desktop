@@ -1,9 +1,10 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
-import CommandPalette from '../dialogs/CommandPalette.svelte';
-import DesktopIcon from '../images/DesktopIcon.svelte';
-import WindowControlButtons from '../window-control-buttons/ControlButtons.svelte';
+import CommandPalette from '/@/lib/dialogs/CommandPalette.svelte';
+import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
+import WindowControlButtons from '/@/lib/window-control-buttons/ControlButtons.svelte';
+
 import SearchButton from './SearchButton.svelte';
 
 let platform: string = $state('');

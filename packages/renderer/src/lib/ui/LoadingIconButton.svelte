@@ -2,7 +2,8 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 
-import type { ILoadingStatus } from '../preferences/Util';
+import type { ILoadingStatus } from '/@/lib/preferences/Util';
+
 import LoadingIcon from './LoadingIcon.svelte';
 import { capitalize } from './Util';
 

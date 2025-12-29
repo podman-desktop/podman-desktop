@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI } from '/@/lib/objects/KubernetesObjectUI';
 
 // Condition for the job
 export type JobCondition = 'unknown' | 'completed' | 'failed' | 'running' | 'pending';

@@ -4,18 +4,17 @@ import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
+import KubePlayIcon from '/@/lib/kube/KubePlayIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import FileInput from '/@/lib/ui/FileInput.svelte';
+import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { providerInfos } from '/@/stores/providers';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-
-import { providerInfos } from '../../stores/providers';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
-import KubePlayIcon from '../kube/KubePlayIcon.svelte';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import FileInput from '../ui/FileInput.svelte';
-import WarningMessage from '../ui/WarningMessage.svelte';
 
 let runStarted = $state(false);
 let runFinished = $state(false);

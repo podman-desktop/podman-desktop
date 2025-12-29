@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
-import * as podman5JSON from '../podman5.json';
+import * as podman5JSON from '/@/podman5.json';
 
 export function getBundledPodmanVersion(): string {
   return podman5JSON.version;

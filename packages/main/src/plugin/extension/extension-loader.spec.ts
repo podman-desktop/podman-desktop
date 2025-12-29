@@ -30,6 +30,7 @@ import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
@@ -41,7 +42,6 @@ import type { WebviewInfo } from '/@api/webview-info.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { getBase64Image } from '../../util.js';
-import type { ApiSenderType } from '../api.js';
 import type { AuthenticationImpl } from '../authentication.js';
 import type { CliToolRegistry } from '../cli-tool-registry.js';
 import type { ColorRegistry } from '../color-registry.js';

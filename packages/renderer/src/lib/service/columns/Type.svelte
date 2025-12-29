@@ -8,7 +8,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Fa } from 'svelte-fa';
 
-import Label from '../../ui/Label.svelte';
+import Label from '/@/lib/ui/Label.svelte';
+
 import type { Props } from './props';
 
 let { object }: Props = $props();

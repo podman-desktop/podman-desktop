@@ -2,9 +2,8 @@
 import type { V1Secret } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
+import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
-
-import Subtitle from '../../details/DetailsSubtitle.svelte';
 
 export let artifact: V1Secret | undefined;
 </script>
