@@ -485,6 +485,48 @@ suite('cli module', () => {
       // the onDidCliToolsChange should have been fired twice (creation, deletion)
       expect(cliToolsUpdateNumbers).equals(2);
     });
+
+    test('onDidCliToolsChange should be fired when version is updated', async () => {
+      const cliToolsChangeListener = vi.fn();
+      cliToolRegistry.onDidCliToolsChange(cliToolsChangeListener);
+
+      const options: CliToolOptions = {
+        name: 'tool-name',
+        displayName: 'tool-display-name',
+        markdownDescription: 'markdown description',
+        images: {},
+      };
+      const newCliTool = cliToolRegistry.createCliTool(extensionInfo, options);
+      // should have fired once for creation
+      expect(cliToolsChangeListener).toHaveBeenCalledOnce();
+
+      (newCliTool as CliToolImpl).updateVersion({ version: '1.2.3' });
+
+      // should have fired again for update
+      expect(cliToolsChangeListener).toHaveBeenCalledTimes(2);
+      expect(apiSender.send).toBeCalledWith('cli-tool-change', newCliTool.id);
+    });
+
+    test('onDidCliToolsChange should be fired when tool is uninstalled', async () => {
+      const cliToolsChangeListener = vi.fn();
+      cliToolRegistry.onDidCliToolsChange(cliToolsChangeListener);
+
+      const options: CliToolOptions = {
+        name: 'tool-name',
+        displayName: 'tool-display-name',
+        markdownDescription: 'markdown description',
+        images: {},
+      };
+      const newCliTool = cliToolRegistry.createCliTool(extensionInfo, options);
+      // should have fired once for creation
+      expect(cliToolsChangeListener).toHaveBeenCalledOnce();
+
+      (newCliTool as CliToolImpl).uninstall();
+
+      // should have fired again for uninstall
+      expect(cliToolsChangeListener).toHaveBeenCalledTimes(2);
+      expect(apiSender.send).toBeCalledWith('cli-tool-change', newCliTool.id);
+    });
   });
 
   test('check conversion from cliTool to cliToolInfo is performed well', async () => {

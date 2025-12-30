@@ -51,8 +51,14 @@ export class CliToolRegistry {
     this.cliTools.set(cliTool.id, cliTool);
     this.apiSender.send('cli-tool-create');
     this._onDidCliToolsChange.fire();
-    cliTool.onDidUpdateVersion(() => this.apiSender.send('cli-tool-change', cliTool.id));
-    cliTool.onDidUninstall(() => this.apiSender.send('cli-tool-change', cliTool.id));
+    cliTool.onDidUpdateVersion(() => {
+      this._onDidCliToolsChange.fire();
+      this.apiSender.send('cli-tool-change', cliTool.id);
+    });
+    cliTool.onDidUninstall(() => {
+      this._onDidCliToolsChange.fire();
+      this.apiSender.send('cli-tool-change', cliTool.id);
+    });
     return cliTool;
   }
 
