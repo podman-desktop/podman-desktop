@@ -34,6 +34,7 @@ describe('HelpActionsExperimental component', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(window.helpMenuGetItems).mockResolvedValue([]);
     vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
       toggleMenuCallback = callback;
       return {
@@ -44,6 +45,7 @@ describe('HelpActionsExperimental component', () => {
 
   test('contains item with $title', async () => {
     const { findByTitle } = render(HelpActionsExperimental);
+    await vi.waitFor(() => expect(toggleMenuCallback).toBeDefined());
     toggleMenuCallback();
     await vi.waitFor(async () => {
       const items = await findByTitle('Help Menu Items');
