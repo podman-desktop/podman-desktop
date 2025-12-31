@@ -22,7 +22,7 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 
 import { HelpMenu } from './help-menu.js';
 
-const ipcHandle = vi.fn() as IPCHandle;
+const ipcHandle: IPCHandle = vi.fn();
 
 const registerConfigurationsMock = vi.fn();
 const configurationRegistryMock = {
