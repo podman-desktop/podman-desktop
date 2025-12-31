@@ -19,8 +19,8 @@
 import type { App as ElectronApp } from 'electron';
 
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
+import { product } from '/@/product.js';
 import { isWindows } from '/@/util.js';
-import product from '/@product.json' with { type: 'json' };
 
 /**
  * Configures the application as the default protocol client for handling {@link product.urlProtocol} (e.g. 'podman-desktop') protocol links.

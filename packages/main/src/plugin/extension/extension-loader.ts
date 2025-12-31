@@ -32,6 +32,7 @@ import {
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import { product } from '/@/product.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IAsyncDisposable } from '/@api/async-disposable.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
@@ -41,7 +42,6 @@ import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import { PodInfo } from '/@api/pod-info.js';
 import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
-import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';

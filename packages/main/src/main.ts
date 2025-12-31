@@ -20,10 +20,10 @@ import type { App as ElectronApp, BrowserWindow } from 'electron';
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
+import { product } from '/@/product.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { IDisposable } from '/@api/disposable.js';
-import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';
 

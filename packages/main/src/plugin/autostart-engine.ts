@@ -18,9 +18,9 @@
 
 import { inject, injectable } from 'inversify';
 
+import { product } from '/@/product.js';
 import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import product from '/@product.json' with { type: 'json' };
 
 import { ProviderRegistry } from './provider-registry.js';
 import { Disposable } from './types/disposable.js';

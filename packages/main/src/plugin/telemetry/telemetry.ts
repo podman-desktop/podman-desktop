@@ -35,10 +35,10 @@ import * as osLocale from 'os-locale';
 
 import { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { product } from '/@/product.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
-import product from '/@product.json' with { type: 'json' };
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
 import { stoppedExtensions } from '../../util.js';

@@ -24,14 +24,13 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ImageRegistry } from '/@/plugin/image-registry.js';
-import product from '/@product.json' with { type: 'json' };
+import { product } from '/@/product.js';
 
 import type { RemoteExtension } from './download-remote-extensions.js';
 import {
   DIGEST_FILENAME,
   downloadExtension,
   findAuthEnvironment,
-  getRemoteExtensionFromProductJSON,
   main,
   NAME_ARG,
   OCI_ARG,
@@ -47,7 +46,6 @@ vi.mock(import('node:fs/promises'));
 vi.mock(import('node:fs'));
 vi.mock(import('node:os'));
 vi.mock(import('/@/plugin/image-registry.js'));
-vi.mock(import('/@product.json'));
 
 const TMP_DIR = 'tmp-dir';
 const ABS_DEST_DIR = '/dest-dir';
@@ -499,81 +497,9 @@ describe('parseArgs', () => {
   });
 });
 
-describe('getRemoteExtensionFromProductJSON', () => {
-  test('expect to read product.json#extensions#remote', () => {
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
-
-    expect(getRemoteExtensionFromProductJSON()).toStrictEqual([REMOTE_INFO_MOCK]);
-  });
-
-  test('malformed extensions in product.json should throw an error', () => {
-    (vi.mocked(product).extensions as unknown) = undefined;
-
-    expect(() => {
-      getRemoteExtensionFromProductJSON();
-    }).toThrowError('malformed product.json: extensions property is not an object');
-  });
-
-  test('array for extension property should throw an error', () => {
-    (vi.mocked(product).extensions as unknown) = [];
-
-    expect(() => {
-      getRemoteExtensionFromProductJSON();
-    }).toThrowError('malformed product.json: object extensions do not have a valid remote array');
-  });
-
-  test('non-array for extension.remote should throw an error', () => {
-    (vi.mocked(product).extensions.remote as unknown) = {};
-
-    expect(() => {
-      getRemoteExtensionFromProductJSON();
-    }).toThrowError('malformed product.json: object extensions do not have a valid remote array');
-  });
-
-  test('empty array in extensions.remote should return itself', () => {
-    vi.mocked(product).extensions.remote = [];
-
-    expect(getRemoteExtensionFromProductJSON()).toHaveLength(0);
-  });
-
-  test('missing oci property in an item in extension.remote should throw an error', () => {
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [
-      {
-        occci: '',
-        name: 'foo',
-      } as unknown as RemoteExtension,
-    ];
-
-    expect(() => {
-      getRemoteExtensionFromProductJSON();
-    }).toThrowError('malformed product.json: extension at index 0 must have oci property as a valid string');
-  });
-
-  test('missing name property in an item in extension.remote should throw an error', () => {
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [
-      {
-        oci: 'foo',
-        Name: 'bar',
-      } as unknown as RemoteExtension,
-    ];
-
-    expect(() => {
-      getRemoteExtensionFromProductJSON();
-    }).toThrowError('malformed product.json: extension at index 0 must have name property as a valid string');
-  });
-
-  test('undefined item in extension.remote should throw an error', () => {
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [undefined as unknown as RemoteExtension];
-
-    expect(() => {
-      getRemoteExtensionFromProductJSON();
-    }).toThrowError('malformed product.json: extension at index 0 is invalid');
-  });
-});
-
 describe('main', () => {
   test(`cli args should be preferred to product.json`, async () => {
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+    vi.mocked(product).extensions.remote = [REMOTE_INFO_MOCK];
 
     await main([
       '--output',
@@ -599,7 +525,7 @@ describe('main', () => {
   });
 
   test('--output argument should be used as destination', async () => {
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+    vi.mocked(product).extensions.remote = [REMOTE_INFO_MOCK];
 
     await main(['--output', ABS_DEST_DIR]);
 
@@ -612,7 +538,7 @@ describe('main', () => {
   test('should call process.exit(1) when product.json extension download fails', async () => {
     const downloadError = new Error('Unable to get access');
     vi.mocked(ImageRegistry.prototype.downloadAndExtractImage).mockRejectedValue(downloadError);
-    (vi.mocked(product).extensions.remote as RemoteExtension[]) = [REMOTE_INFO_MOCK];
+    vi.mocked(product).extensions.remote = [REMOTE_INFO_MOCK];
 
     await main(['--output', ABS_DEST_DIR]);
 

@@ -21,7 +21,7 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
-import product from '/@product.json' with { type: 'json' };
+import { product } from '/@/product.js';
 
 import type { Directories } from './directories.js';
 

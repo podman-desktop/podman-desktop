@@ -18,8 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"],
-      "/@api/*": ["../api/src/*"],
-      "/@product.json": ["../../product.json"]
+      "/@api/*": ["../api/src/*"]
     }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts", "../../types/**/*.d.ts", "../api/src/**/*.ts"]

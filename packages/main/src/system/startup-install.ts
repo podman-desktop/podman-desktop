@@ -18,8 +18,8 @@
 
 import * as os from 'node:os';
 
+import { product } from '/@/product.js';
 import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import product from '/@product.json' with { type: 'json' };
 
 import { MacosStartup } from './macos-startup.js';
 import { WindowsStartup } from './windows-startup.js';

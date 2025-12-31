@@ -29,8 +29,8 @@ import type { Certificates } from '/@/plugin/certificates.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { product } from '/@/product.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import product from '/@product.json' with { type: 'json' };
 
 /**
  * We create _dummy_ classes for the constructor of ImageRegistry
@@ -191,36 +191,6 @@ export async function moveSafely(src: string, dest: string): Promise<void> {
   }
 }
 
-export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
-  const raw = product as unknown;
-  if (!raw || typeof raw !== 'object') {
-    throw new Error(`malformed product.json: content is not object`);
-  }
-  if (!('extensions' in raw) || !raw.extensions || typeof raw.extensions !== 'object') {
-    throw new Error(`malformed product.json: extensions property is not an object`);
-  }
-  if (!('remote' in raw.extensions) || !raw.extensions.remote || !Array.isArray(raw.extensions.remote)) {
-    throw new Error(`malformed product.json: object extensions do not have a valid remote array`);
-  }
-
-  // validate each items
-  raw.extensions.remote.forEach((extension, index) => {
-    if (!extension) {
-      throw new Error(`malformed product.json: extension at index ${index} is invalid`);
-    }
-
-    if (!('name' in extension) || typeof extension.name !== 'string') {
-      throw new Error(`malformed product.json: extension at index ${index} must have name property as a valid string`);
-    }
-
-    if (!('oci' in extension) || typeof extension.oci !== 'string') {
-      throw new Error(`malformed product.json: extension at index ${index} must have oci property as a valid string`);
-    }
-  });
-
-  return raw.extensions.remote as RemoteExtension[];
-}
-
 /**
  * Parsing the args provided
  * the `--output` is mandatory and should be an absolute path
@@ -299,7 +269,7 @@ export async function main(args: string[]): Promise<void> {
 
   // otherwise fallback to bundled product.json
   await Promise.all(
-    getRemoteExtensionFromProductJSON().map(extension =>
+    product.extensions.remote.map(extension =>
       downloadExtension({
         destination: output,
         auth,

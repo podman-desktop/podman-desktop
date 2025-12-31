@@ -18,8 +18,8 @@
 
 import { inject, injectable } from 'inversify';
 
+import { product } from '/@/product.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import product from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class OpenDevToolsInit {

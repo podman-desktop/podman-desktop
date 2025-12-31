@@ -22,8 +22,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { product } from '/@/product.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
-import product from '/@product.json' with { type: 'json' };
 
 import type { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
