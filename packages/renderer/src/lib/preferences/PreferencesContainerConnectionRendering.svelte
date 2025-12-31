@@ -61,7 +61,7 @@ onMount(async () => {
       return;
     }
     const containerConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
-    if (containerConnectionName && (!connectionStatus || connectionStatus.status !== connectionInfo.status)) {
+    if (containerConnectionName && connectionStatus?.status !== connectionInfo.status) {
       if (loggerHandlerKey !== undefined) {
         connectionStatus = {
           inProgress: true,

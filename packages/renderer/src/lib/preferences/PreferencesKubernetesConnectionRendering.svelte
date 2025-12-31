@@ -61,7 +61,7 @@ onMount(async () => {
     }
     connectionName = connectionInfo.name;
     const kubernetesConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
-    if (kubernetesConnectionName && (!connectionStatus || connectionStatus.status !== connectionInfo.status)) {
+    if (kubernetesConnectionName && connectionStatus?.status !== connectionInfo.status) {
       if (loggerHandlerKey !== undefined) {
         connectionStatus = {
           inProgress: true,

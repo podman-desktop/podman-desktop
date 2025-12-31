@@ -46,7 +46,7 @@ onMount(async () => {
       return;
     }
     const vmConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
-    if (vmConnectionName && (!connectionStatus || connectionStatus.status !== connectionInfo.status)) {
+    if (vmConnectionName && connectionStatus?.status !== connectionInfo.status) {
       if (loggerHandlerKey !== undefined) {
         connectionStatus = {
           inProgress: true,
