@@ -20,7 +20,8 @@ import { inject, injectable } from 'inversify';
 
 import { IPCHandle } from '/@/plugin/api.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { ItemInfo } from '/@api/help-menu.js';
+import { ActionKind, ItemInfo } from '/@api/help-menu.js';
+import product from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class HelpMenu {
@@ -53,6 +54,21 @@ export class HelpMenu {
   }
 
   getItems(): ItemInfo[] {
-    return [];
+    return product.helpMenu.items.map(item => {
+      const { action, ...tempItem } = item;
+      const itemInfo: ItemInfo = tempItem;
+      if (action?.command) {
+        itemInfo.action = {
+          kind: ActionKind.COMMAND,
+          parameter: action.command,
+        };
+      } else if (action?.link) {
+        itemInfo.action = {
+          kind: ActionKind.LINK,
+          parameter: action.link,
+        };
+      }
+      return itemInfo;
+    });
   }
 }

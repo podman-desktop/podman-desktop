@@ -66,5 +66,67 @@ test('should get the items', async () => {
   const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
   helpMenu.init();
 
-  expect(helpMenu.getItems()).toStrictEqual([]);
+  expect(helpMenu.getItems()).toStrictEqual([
+    {
+      action: {
+        kind: 'Link',
+        parameter: 'https://www.podman-desktop.io/docs/intro',
+      },
+      enabled: true,
+      icon: 'fas fa-external-link-alt',
+      title: 'Getting Started',
+    },
+    {
+      action: {
+        kind: 'Command',
+        parameter: 'troubleshooting',
+      },
+      enabled: true,
+      icon: 'fas fa-lightbulb',
+      title: 'Troubleshooting',
+    },
+    {
+      action: {
+        kind: 'Link',
+        parameter: 'https://github.com/podman-desktop/podman-desktop/issues/new/choose',
+      },
+      enabled: true,
+      icon: 'fas fa-exclamation-triangle',
+      title: 'Report a Bug',
+    },
+    {
+      action: {
+        kind: 'Command',
+        parameter: 'feedback',
+      },
+      enabled: true,
+      icon: 'far fa-comment',
+      title: 'Share Your Feedback',
+    },
+    {
+      enabled: false,
+      icon: 'fas fa-list-ul',
+      title: 'Community',
+    },
+    {
+      action: {
+        kind: 'Link',
+        parameter: 'https://discord.com/invite/x5GzFF6QH4',
+      },
+      enabled: true,
+      icon: 'fab fa-discord',
+      title: '#podman-desktop',
+      tooltip: 'Join Discord #podman-desktop channel',
+    },
+    {
+      action: {
+        kind: 'Link',
+        parameter: 'https://slack.k8s.io',
+      },
+      enabled: true,
+      icon: 'fab fa-slack',
+      title: '#podman-desktop',
+      tooltip: 'Join Slack #podman-desktop channel',
+    },
+  ]);
 });

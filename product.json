@@ -19,5 +19,64 @@
   },
   "extensions": {
     "remote": []
+  },
+  "helpMenu": {
+    "items": [
+      {
+        "title": "Getting Started",
+        "icon": "fas fa-external-link-alt",
+        "enabled": true,
+        "action": {
+          "link": "https://www.podman-desktop.io/docs/intro"
+        }
+      },
+      {
+        "title": "Troubleshooting",
+        "icon": "fas fa-lightbulb",
+        "enabled": true,
+        "action": {
+          "command": "troubleshooting"
+        }
+      },
+      {
+        "title": "Report a Bug",
+        "icon": "fas fa-exclamation-triangle",
+        "enabled": true,
+        "action": {
+          "link": "https://github.com/podman-desktop/podman-desktop/issues/new/choose"
+        }
+      },
+      {
+        "title": "Share Your Feedback",
+        "icon": "far fa-comment",
+        "enabled": true,
+        "action": {
+          "command": "feedback"
+        }
+      },
+      {
+        "title": "Community",
+        "icon": "fas fa-list-ul",
+        "enabled": false
+      },
+      {
+        "title": "#podman-desktop",
+        "tooltip": "Join Discord #podman-desktop channel",
+        "icon": "fab fa-discord",
+        "enabled": true,
+        "action": {
+          "link": "https://discord.com/invite/x5GzFF6QH4"
+        }
+      },
+      {
+        "title": "#podman-desktop",
+        "tooltip": "Join Slack #podman-desktop channel",
+        "icon": "fab fa-slack",
+        "enabled": true,
+        "action": {
+          "link": "https://slack.k8s.io"
+        }
+      }
+    ]
   }
 }
