@@ -31,7 +31,6 @@ import {
 } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import { isAsyncFunction } from '/@/plugin/util/async.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IAsyncDisposable } from '/@api/async-disposable.js';
@@ -98,7 +97,7 @@ import { ExtensionWatcher } from './extension-watcher.js';
 
 export interface ActivatedExtension {
   id: string;
-  deactivateFunction?: () => Promise<void>;
+  deactivateFunction?: () => unknown;
   exports: unknown;
   extensionContext: containerDesktopAPI.ExtensionContext;
   packageJSON: unknown;
@@ -1730,14 +1729,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       extensionUri,
       secrets,
     };
-    let deactivateFunction: (() => Promise<void>) | undefined = undefined;
-    if (
-      extensionMain &&
-      'deactivate' in extensionMain &&
-      typeof extensionMain?.['deactivate'] === 'function' &&
-      isAsyncFunction(extensionMain?.['deactivate'])
-    ) {
-      deactivateFunction = extensionMain['deactivate'] as () => Promise<void>;
+    let deactivateFunction: (() => unknown) | undefined = undefined;
+    if (extensionMain && 'deactivate' in extensionMain && typeof extensionMain?.['deactivate'] === 'function') {
+      deactivateFunction = extensionMain['deactivate'] as () => unknown;
     }
 
     const telemetryOptions: Record<string, unknown> = {
