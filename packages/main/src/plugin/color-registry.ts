@@ -26,7 +26,8 @@ import tailwindColorPalette from '../../../../tailwind-color-palette.json' with 
 import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
-import { ColorBuilder } from './color-builder.js';
+import { colorDefinitionBuilder } from './color-builder.js';
+import { colorPaletteHelper } from './color-palette-helper.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
@@ -151,11 +152,22 @@ export class ColorRegistry {
 
   /**
    * Register a color using a built color definition that includes the id.
-   * This is a convenience method for use with the this.color() builder.
+   * Use colorDefinitionBuilder() for fluent color definition creation.
    *
    * @example
    * this.registerColorDefinition(
-   *   this.color('my-color').withLight('#ffffff', 0.5).withDark('#000000', 0.8).build()
+   *   colorDefinitionBuilder('my-color')
+   *     .withLight(colorPaletteHelper('#ffffff'))
+   *     .withDark(colorPaletteHelper('#000000'))
+   *     .build()
+   * );
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   colorDefinitionBuilder('transparent-color')
+   *     .withLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
+   *     .withDark(colorPaletteHelper('#000000').withAlpha(0.8))
+   *     .build()
    * );
    *
    * @param definition - The color definition with id, light, and dark values
@@ -165,27 +177,6 @@ export class ColorRegistry {
       light: definition.light,
       dark: definition.dark,
     });
-  }
-
-  /**
-   * Create a ColorBuilder for fluent color definition creation.
-   * Call build() on the result and pass it to registerColorDefinition().
-   *
-   * @example
-   * this.registerColorDefinition(
-   *   this.color('my-color').withLight('#ffffff').withDark('#000000').build()
-   * );
-   *
-   * @example
-   * this.registerColorDefinition(
-   *   this.color('transparent-color').withLight('#ffffff', 0.5).withDark('#000000', 0.8).build()
-   * );
-   *
-   * @param colorId - The unique color identifier
-   * @returns A ColorBuilder instance for method chaining
-   */
-  protected color(colorId: string): ColorBuilder {
-    return new ColorBuilder(colorId);
   }
 
   // check if the given theme is dark
@@ -957,7 +948,12 @@ export class ColorRegistry {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColorDefinition(this.color(`${link}-hover-bg`).withLight(black, 0.13).withDark(white, 0.13).build());
+    this.registerColorDefinition(
+      colorDefinitionBuilder(`${link}-hover-bg`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.13))
+        .withDark(colorPaletteHelper(white).withAlpha(0.13))
+        .build(),
+    );
   }
 
   // button
@@ -1045,14 +1041,20 @@ export class ColorRegistry {
       light: black,
     });
     this.registerColorDefinition(
-      this.color(`${button}close-hover-bg`).withLight(black, 0.13).withDark(white, 0.13).build(),
+      colorDefinitionBuilder(`${button}close-hover-bg`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.13))
+        .withDark(colorPaletteHelper(white).withAlpha(0.13))
+        .build(),
     );
     this.registerColor(`${button}link-text`, {
       dark: purple[400],
       light: purple[700],
     });
     this.registerColorDefinition(
-      this.color(`${button}link-hover-bg`).withLight(black, 0.13).withDark(white, 0.13).build(),
+      colorDefinitionBuilder(`${button}link-hover-bg`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.13))
+        .withDark(colorPaletteHelper(white).withAlpha(0.13))
+        .build(),
     );
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
@@ -1588,7 +1590,10 @@ export class ColorRegistry {
 
   protected initCommon(): void {
     this.registerColorDefinition(
-      this.color('item-disabled').withLight(stone[600], 0.4).withDark(stone[300], 0.4).build(),
+      colorDefinitionBuilder('item-disabled')
+        .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
+        .withDark(colorPaletteHelper(stone[300]).withAlpha(0.4))
+        .build(),
     );
   }
 }

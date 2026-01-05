@@ -18,7 +18,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyAlpha, ColorBuilder, ColorDefinitionBuilder, colorDefinitionBuilder } from './color-builder.js';
+import { applyAlpha, ColorDefinitionBuilder, colorDefinitionBuilder } from './color-builder.js';
 import { ColorPaletteHelper, colorPaletteHelper } from './color-palette-helper.js';
 
 describe('ColorPaletteHelper', () => {
@@ -242,120 +242,5 @@ describe('applyAlpha', () => {
 
   test('should throw error for invalid color string', () => {
     expect(() => applyAlpha('not-a-color', 0.5)).toThrow('Failed to parse color not-a-color');
-  });
-});
-
-describe('ColorBuilder', () => {
-  test('should create with colorId', () => {
-    const builder = new ColorBuilder('my-color');
-
-    expect(builder).toBeInstanceOf(ColorBuilder);
-  });
-
-  test('should build color definition with light and dark colors', () => {
-    const result = new ColorBuilder('test-color').withLight('#ffffff').withDark('#000000').build();
-
-    expect(result.id).toBe('test-color');
-    expect(result.light).toBe('#ffffff');
-    expect(result.dark).toBe('#000000');
-  });
-
-  test('should build color definition with alpha values', () => {
-    const result = new ColorBuilder('transparent-color').withLight('#ffffff', 0.5).withDark('#000000', 0.8).build();
-
-    expect(result.id).toBe('transparent-color');
-    expect(result.light).toMatch(/0\.5/);
-    expect(result.dark).toMatch(/0\.8/);
-  });
-
-  test('should throw error when light color is missing', () => {
-    const builder = new ColorBuilder('incomplete-color').withDark('#000000');
-
-    expect(() => builder.build()).toThrow('Color definition for incomplete-color is incomplete.');
-  });
-
-  test('should throw error when dark color is missing', () => {
-    const builder = new ColorBuilder('incomplete-color').withLight('#ffffff');
-
-    expect(() => builder.build()).toThrow('Color definition for incomplete-color is incomplete.');
-  });
-
-  test('should throw error when both colors are missing', () => {
-    const builder = new ColorBuilder('empty-color');
-
-    expect(() => builder.build()).toThrow('Color definition for empty-color is incomplete.');
-  });
-
-  test('should support method chaining', () => {
-    const builder = new ColorBuilder('chain-test');
-    const afterLight = builder.withLight('#fff');
-    const afterDark = afterLight.withDark('#000');
-
-    expect(afterLight).toBe(builder);
-    expect(afterDark).toBe(builder);
-  });
-
-  test('should handle alpha value of 0 in withLight', () => {
-    const result = new ColorBuilder('zero-alpha').withLight('#ffffff', 0).withDark('#000000').build();
-
-    expect(result.light).toBeDefined();
-  });
-
-  test('should handle alpha value of 1 in withLight', () => {
-    const result = new ColorBuilder('one-alpha').withLight('#ffffff', 1).withDark('#000000').build();
-
-    expect(result.light).toBe('#ffffff');
-  });
-
-  test('should handle alpha value of 0 in withDark', () => {
-    const result = new ColorBuilder('zero-alpha').withLight('#ffffff').withDark('#000000', 0).build();
-
-    expect(result.dark).toBeDefined();
-  });
-
-  test('should handle alpha value of 1 in withDark', () => {
-    const result = new ColorBuilder('one-alpha').withLight('#ffffff').withDark('#000000', 1).build();
-
-    expect(result.dark).toBe('#000000');
-  });
-
-  test('should throw error for alpha value below 0 in withLight', () => {
-    const builder = new ColorBuilder('invalid-alpha');
-
-    expect(() => builder.withLight('#ffffff', -0.1)).toThrow('Alpha value must be between 0 and 1, got -0.1');
-  });
-
-  test('should throw error for alpha value above 1 in withLight', () => {
-    const builder = new ColorBuilder('invalid-alpha');
-
-    expect(() => builder.withLight('#ffffff', 1.5)).toThrow('Alpha value must be between 0 and 1, got 1.5');
-  });
-
-  test('should throw error for alpha value below 0 in withDark', () => {
-    const builder = new ColorBuilder('invalid-alpha');
-
-    expect(() => builder.withDark('#000000', -0.1)).toThrow('Alpha value must be between 0 and 1, got -0.1');
-  });
-
-  test('should throw error for alpha value above 1 in withDark', () => {
-    const builder = new ColorBuilder('invalid-alpha');
-
-    expect(() => builder.withDark('#000000', 1.5)).toThrow('Alpha value must be between 0 and 1, got 1.5');
-  });
-
-  test('should handle hex colors correctly', () => {
-    const result = new ColorBuilder('hex-color').withLight('#f9fafb').withDark('#0f0f11').build();
-
-    expect(result.id).toBe('hex-color');
-    expect(result.light).toBe('#f9fafb');
-    expect(result.dark).toBe('#0f0f11');
-  });
-
-  test('should handle rgb colors correctly', () => {
-    const result = new ColorBuilder('rgb-color').withLight('rgb(255, 255, 255)').withDark('rgb(0, 0, 0)').build();
-
-    expect(result.id).toBe('rgb-color');
-    expect(result.light).toBe('rgb(255, 255, 255)');
-    expect(result.dark).toBe('rgb(0, 0, 0)');
   });
 });
