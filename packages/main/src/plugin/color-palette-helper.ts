@@ -24,7 +24,7 @@
  * colorPalette('#ff0000').withAlpha(0.5)
  *
  * @example
- * colorDefinition('my-color')
+ * colorDefinitionBuilder('my-color')
  *   .withLight(colorPalette(white).withAlpha(0.5))
  *   .withDark(colorPalette(black).withAlpha(0.8))
  *   .build()

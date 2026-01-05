@@ -18,7 +18,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyAlpha, ColorBuilder, colorDefinition, ColorDefinitionBuilder } from './color-builder.js';
+import { applyAlpha, ColorBuilder, ColorDefinitionBuilder, colorDefinitionBuilder } from './color-builder.js';
 import { colorPalette, ColorPaletteHelper } from './color-palette-helper.js';
 
 describe('ColorPaletteHelper', () => {
@@ -175,15 +175,15 @@ describe('ColorDefinitionBuilder', () => {
   });
 });
 
-describe('colorDefinition', () => {
+describe('colorDefinitionBuilder', () => {
   test('should create ColorDefinitionBuilder instance', () => {
-    const builder = colorDefinition('my-color');
+    const builder = colorDefinitionBuilder('my-color');
 
     expect(builder).toBeInstanceOf(ColorDefinitionBuilder);
   });
 
   test('should support full fluent API', () => {
-    const result = colorDefinition('fluent-color')
+    const result = colorDefinitionBuilder('fluent-color')
       .withLight(colorPalette('#ffffff'))
       .withDark(colorPalette('#000000'))
       .build();
@@ -194,7 +194,7 @@ describe('colorDefinition', () => {
   });
 
   test('should work with colorPalette for alpha colors', () => {
-    const result = colorDefinition('alpha-color')
+    const result = colorDefinitionBuilder('alpha-color')
       .withLight(colorPalette('#fff').withAlpha(0.4))
       .withDark(colorPalette('#000').withAlpha(0.6))
       .build();

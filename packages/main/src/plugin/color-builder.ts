@@ -28,13 +28,13 @@ import type { ColorPaletteHelper } from './color-palette-helper.js';
  * Does not register colors directly - call build() to get the color definition object.
  *
  * @example
- * const def = colorDefinition('my-color')
+ * const def = colorDefinitionBuilder('my-color')
  *   .withLight(colorPalette('#ffffff'))
  *   .withDark(colorPalette('#000000'))
  *   .build();
  *
  * @example
- * const def = colorDefinition('my-transparent-color')
+ * const def = colorDefinitionBuilder('my-transparent-color')
  *   .withLight(colorPalette(white).withAlpha(0.5))
  *   .withDark(colorPalette(black).withAlpha(0.8))
  *   .build();
@@ -102,7 +102,7 @@ export class ColorDefinitionBuilder {
  * @param id - The color ID
  * @returns A ColorDefinitionBuilder instance
  */
-export function colorDefinition(id: string): ColorDefinitionBuilder {
+export function colorDefinitionBuilder(id: string): ColorDefinitionBuilder {
   return new ColorDefinitionBuilder(id);
 }
 
