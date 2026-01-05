@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ import * as podman5JSON from '/@/podman5.json';
 import { MachineJSON } from '/@/types';
 import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
 import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
-import { getPodmanCli } from '/@/utils/podman-cli';
 import type { PodmanInfo } from '/@/utils/podman-info';
 import { PodmanInfoImpl } from '/@/utils/podman-info';
+import { execPodman } from '/@/utils/util';
 
 import { Installer } from './installer';
 
@@ -169,7 +169,7 @@ export class PodmanInstall {
       if (answer === 'Yes') {
         for (const machine of machinesRunning) {
           try {
-            await extensionApi.process.exec(getPodmanCli(), ['machine', 'stop', machine.Name]);
+            await execPodman(['machine', 'stop', machine.Name]);
           } catch (error) {
             console.error('Error while stopping machine', error);
           }
