@@ -2,7 +2,7 @@
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
-import LoadingIcon from '../ui/LoadingIcon.svelte';
+import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
 
 export let extension: {
   id: string;

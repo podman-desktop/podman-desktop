@@ -131,7 +131,6 @@ Kubernetes questions & development:
 [![Mastodon](https://img.shields.io/badge/mastodon-6364ff?style=for-the-badge&logo=mastodon&logoColor=white)](https://fosstodon.org/@podmandesktop)
 [![Bluesky](https://img.shields.io/badge/bluesky-1283FE.svg?style=for-the-badge&logo=Bluesky&logoColor=white)](https://bsky.app/profile/podman-desktop.io)
 
-
 ### Adopters
 
 Check out the [list of companies](./ADOPTERS.md) already using Podman Desktop.
@@ -142,7 +141,7 @@ This project uses the [Containers Community Code of Conduct](https://github.com/
 
 ## Testing
 
-[![Covered by Argos Visual Testing](https://argos-ci.com/badge-large.svg)](https://app.argos-ci.com/containers/podman-desktop/reference)
+[![Covered by Argos Visual Testing](https://argos-ci.com/badge-large.svg)](https://app.argos-ci.com/containers/podman-desktop-website)
 
 ## License
 

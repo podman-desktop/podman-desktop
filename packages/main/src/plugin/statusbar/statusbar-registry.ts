@@ -18,10 +18,9 @@
 
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IDisposable } from '/@api/disposable.js';
 import { STATUS_BAR_UPDATED_EVENT_NAME, type StatusBarEntry, type StatusBarEntryDescriptor } from '/@api/status-bar.js';
-
-import { ApiSenderType } from '../api.js';
 
 @injectable()
 export class StatusBarRegistry implements IDisposable {

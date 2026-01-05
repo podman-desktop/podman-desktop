@@ -25,11 +25,11 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ImageFilesExtensionInfo, ImageFilesInfo } from '/@api/image-files-info.js';
 import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 
-import { ApiSenderType } from './api.js';
 import { Context } from './context/context.js';
 import { toImageFilesystemLayerUIs } from './image-details-files.js';
 import { ImageFilesImpl } from './image-files-impl.js';

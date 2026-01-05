@@ -4,17 +4,17 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
+import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
+import { providerInfos } from '/@/stores/providers';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
-import IconImage from '../appearance/IconImage.svelte';
-import ConnectionErrorInfoButton from '../ui/ConnectionErrorInfoButton.svelte';
-import ConnectionStatus from '../ui/ConnectionStatus.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionDetailsTerminal from './PreferencesConnectionDetailsTerminal.svelte';
@@ -46,7 +46,7 @@ onMount(async () => {
       return;
     }
     const vmConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
-    if (vmConnectionName && (!connectionStatus || connectionStatus.status !== connectionInfo.status)) {
+    if (vmConnectionName && connectionStatus?.status !== connectionInfo.status) {
       if (loggerHandlerKey !== undefined) {
         connectionStatus = {
           inProgress: true,

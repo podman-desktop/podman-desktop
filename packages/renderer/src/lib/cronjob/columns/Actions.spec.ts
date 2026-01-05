@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { CronJobUI } from '../CronJobUI';
+import type { CronJobUI } from '/@/lib/cronjob/CronJobUI';
+
 import Actions from './Actions.svelte';
 
 test('Expect cronjob buttons', async () => {

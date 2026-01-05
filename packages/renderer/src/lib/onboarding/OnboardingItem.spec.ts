@@ -20,12 +20,12 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
+import { ContextUI } from '/@/lib/context/context';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
 import type { OnboardingStepItem } from '/@api/onboarding';
 
-import { ContextUI } from '../context/context';
 import OnboardingItem from './OnboardingItem.svelte';
 
 test('Expect button html when passing a button tag in markdown', async () => {

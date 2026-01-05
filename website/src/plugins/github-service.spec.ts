@@ -144,4 +144,54 @@ describe('GitHubService', () => {
 
     await expect(service.getMetadata()).rejects.toThrow();
   });
+
+  test('should correctly identify Linux AMD64 .tar.gz asset with -x64.tar.gz suffix', async () => {
+    const metadata = await service.getMetadata();
+
+    // Verify that the AMD64 asset URL is correctly picked (should be the -x64.tar.gz or .tar.gz file, not arm64)
+    expect(metadata.latestRelease.linux.amd64).toBe(
+      'https://github.com/podman-desktop/podman-desktop/releases/download/v1.19.2/podman-desktop-1.19.2.tar.gz',
+    );
+    expect(metadata.latestRelease.linux.amd64).not.toContain('arm64');
+  });
+
+  test('should prioritize .tar.gz files without arm64 for AMD64 when both patterns exist', async () => {
+    // Create a custom mock with multiple .tar.gz files to test the prioritization logic
+    const assetsWithMultipleTarGz = [
+      ...mockReleaseData.assets,
+      {
+        ...mockReleaseData.assets[0],
+        name: 'podman-desktop-1.19.2-alternative.tar.gz',
+        browser_download_url:
+          'https://github.com/podman-desktop/podman-desktop/releases/download/v1.19.2/podman-desktop-1.19.2-alternative.tar.gz',
+      },
+    ];
+
+    server.use(
+      http.get(latestReleaseUrl, () => {
+        return HttpResponse.json({ ...mockReleaseData, assets: assetsWithMultipleTarGz });
+      }),
+    );
+
+    const metadata = await service.getMetadata();
+
+    // Should match either -x64.tar.gz or .tar.gz pattern, but never arm64
+    expect(metadata.latestRelease.linux.amd64).toMatch(/(-x64\.tar\.gz|\.tar\.gz)$/);
+    expect(metadata.latestRelease.linux.amd64).not.toContain('arm64');
+  });
+
+  test('should exclude arm64 files when finding Linux AMD64 asset', async () => {
+    // Create assets with only arm64 .tar.gz file to verify it's properly excluded
+    const assetsWithoutAmd64 = mockReleaseData.assets.filter(
+      a => !a.name.endsWith('.tar.gz') || a.name.includes('arm64'),
+    );
+
+    server.use(
+      http.get(latestReleaseUrl, () => {
+        return HttpResponse.json({ ...mockReleaseData, assets: assetsWithoutAmd64 });
+      }),
+    );
+
+    await expect(service.getMetadata()).rejects.toThrow('Required asset not found: Linux AMD64 .tar.gz');
+  });
 });

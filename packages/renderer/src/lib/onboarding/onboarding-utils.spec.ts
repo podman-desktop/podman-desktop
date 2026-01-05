@@ -19,10 +19,10 @@ import '@testing-library/jest-dom/vitest';
 
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr, type ContextKeyExpression } from '/@/lib/context/contextKey';
 import type { OnboardingInfo, OnboardingStep } from '/@api/onboarding';
 
-import { ContextUI } from '../context/context';
-import { ContextKeyExpr, type ContextKeyExpression } from '../context/contextKey';
 import {
   type ActiveOnboardingStep,
   cleanSetup,

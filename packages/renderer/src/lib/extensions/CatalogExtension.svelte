@@ -4,7 +4,8 @@ import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
-import FeaturedExtensionDownload from '../featured/FeaturedExtensionDownload.svelte';
+import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
+
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 
 export let catalogExtensionUI: CatalogExtensionInfoUI;

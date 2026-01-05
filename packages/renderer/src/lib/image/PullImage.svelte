@@ -8,17 +8,17 @@ import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
+import Typeahead from '/@/lib/ui/Typeahead.svelte';
+import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
+import { providerInfos } from '/@/stores/providers';
 import type { ImageSearchOptions } from '/@api/image-registry';
 import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import type { PullEvent } from '/@api/pull-event';
 
-import { providerInfos } from '../../stores/providers';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
-import type { TypeaheadItem } from '../ui/Typeahead';
-import Typeahead from '../ui/Typeahead.svelte';
-import WarningMessage from '../ui/WarningMessage.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 const DOCKER_PREFIX = 'docker.io';
@@ -136,7 +136,7 @@ async function pullImage(): Promise<void> {
   lineNumberPerId.clear();
   lineIndex = 0;
   await tick();
-  logsPull?.reset();
+  logsPull?.clear();
 
   // reset error
   pullError = '';

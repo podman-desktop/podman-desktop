@@ -18,7 +18,8 @@
 
 import { expect, test, vi } from 'vitest';
 
-import type { KubernetesGeneratorSelector } from './kube-generator-registry.js';
+import type { KubernetesGeneratorSelector } from '/@api/kubernetes/kubernetes-generator-api.js';
+
 import { KubeGeneratorRegistry } from './kube-generator-registry.js';
 
 test('Creating KubeGeneratorRegistry and getting KubeGeneratorsInfos', async () => {

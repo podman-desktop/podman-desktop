@@ -28,11 +28,11 @@ export class StatusbarProvidersInit {
 
   init(): void {
     const statusbarProvidersConfiguration: IConfigurationNode = {
-      id: `preferences.experimental.statusbarProviders`,
+      id: 'preferences.experimental.statusbarProviders',
       title: 'Experimental (Status Bar Providers)',
       type: 'object',
       properties: {
-        [`statusbarProviders.showProviders`]: {
+        'statusbarProviders.showProviders': {
           description: 'Show providers in the status bar',
           type: 'object',
           default: import.meta.env.DEV ? {} : undefined,

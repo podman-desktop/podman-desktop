@@ -3,7 +3,7 @@ import { DetailsPage } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
-import { currentPage, lastPage } from '../../stores/breadcrumb';
+import { currentPage, lastPage } from '/@/stores/breadcrumb';
 
 interface Props {
   title: string;

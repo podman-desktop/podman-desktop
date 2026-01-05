@@ -4,8 +4,9 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
+
 import type { LogType } from '../../../../preload/src';
-import NoLogIcon from '../ui/NoLogIcon.svelte';
 
 let logs: {
   logType: LogType;

@@ -9,7 +9,8 @@ import {
 import { type Component, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
-import WebAssemblyIcon from '../images/WebAssemblyIcon.svelte';
+import WebAssemblyIcon from '/@/lib/images/WebAssemblyIcon.svelte';
+
 import BuildImageFromContainerfileCard from './BuildImageFromContainerfileCard.svelte';
 
 interface Props {

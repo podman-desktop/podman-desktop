@@ -17,23 +17,14 @@
  ***********************************************************************/
 import { injectable } from 'inversify';
 
-import type { KubernetesGeneratorInfo } from '../api/KubernetesGeneratorInfo.js';
+import type {
+  GenerateKubeResult,
+  KubernetesGeneratorArgument,
+  KubernetesGeneratorInfo,
+  KubernetesGeneratorSelector,
+} from '/@api/kubernetes/kubernetes-generator-api.js';
+
 import { Disposable } from '../types/disposable.js';
-
-export type KubernetesGeneratorType = 'Compose' | 'Pod' | 'Container';
-
-export type KubernetesGeneratorSelector = KubernetesGeneratorType | ReadonlyArray<KubernetesGeneratorType>;
-
-export interface GenerateKubeResult {
-  yaml: string;
-}
-
-export type KubernetesGeneratorArgument = {
-  engineId: string;
-  containers?: string[];
-  pods?: string[];
-  compose?: string[];
-};
 
 export interface KubernetesGeneratorProvider {
   readonly name: string;

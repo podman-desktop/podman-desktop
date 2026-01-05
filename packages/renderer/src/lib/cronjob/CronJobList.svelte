@@ -2,13 +2,13 @@
 import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import CronJobIcon from '/@/lib/images/CronJobIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
+import { capitalize } from '/@/lib/ui/Util';
 import { cronJobSearchPattern, kubernetesCurrentContextCronJobsFiltered } from '/@/stores/kubernetes-contexts-state';
 
-import CronJobIcon from '../images/CronJobIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
-import { capitalize } from '../ui/Util';
 import ActionsColumn from './columns/Actions.svelte';
 import { CronJobUtils } from './cronjob-utils';
 import CronJobEmptyScreen from './CronJobEmptyScreen.svelte';

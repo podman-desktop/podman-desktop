@@ -25,8 +25,8 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 
-import type { CatalogExtension } from '../../../../main/src/plugin/extension/catalog/extensions-catalog-api';
 import ExtensionDetails from './ExtensionDetails.svelte';
 
 beforeEach(() => {

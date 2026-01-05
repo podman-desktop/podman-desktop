@@ -39,7 +39,7 @@ vi.mock('node:os', async () => {
     homedir: vi.fn().mockReturnValue('fake-homedir'),
   };
 });
-vi.mock('../extension');
+vi.mock(import('/@/extension'));
 
 beforeEach(() => {
   vi.restoreAllMocks();

@@ -17,9 +17,11 @@
  ***********************************************************************/
 
 import ConfigMapSecretIcon from '/@/lib/images/ConfigMapSecretIcon.svelte';
-
-import { kubernetesCurrentContextConfigMaps, kubernetesCurrentContextSecrets } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import {
+  kubernetesCurrentContextConfigMaps,
+  kubernetesCurrentContextSecrets,
+} from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let configmapsCount = 0;
 let secretsCount = 0;

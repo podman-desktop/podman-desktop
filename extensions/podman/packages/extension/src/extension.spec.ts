@@ -706,7 +706,7 @@ test.each([
   { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
 ])('verify create on mac from settings on %s', async ({ architecture, expectedProvider }) => {
   vi.mocked(extensionApi.env).isMac = true;
-  vi.mocked(arch).mockReturnValue(architecture);
+  vi.mocked(arch).mockReturnValue(architecture as NodeJS.Architecture);
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
     version: '5.4.0',
   });
@@ -748,7 +748,7 @@ test.each([
   { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
 ])('verify create on mac from dashboard on %s', async ({ architecture, expectedProvider }) => {
   vi.mocked(extensionApi.env).isMac = true;
-  vi.mocked(arch).mockReturnValue(architecture);
+  vi.mocked(arch).mockReturnValue(architecture as NodeJS.Architecture);
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
     version: '5.4.0',
   });
@@ -2648,7 +2648,7 @@ describe('isPlaybookMachineInitSupported', () => {
   });
 
   test('isPlaybookMachineInitSupported should return true with 5.4.0 version on Windows/amd', async () => {
-    vi.mocked(arch).mockReturnValue('amd64');
+    vi.mocked(arch).mockReturnValue('amd64' as NodeJS.Architecture);
     vi.mocked(extensionApi.env).isWindows = true;
     const enabled = extension.isPlaybookMachineInitSupported('5.4.0');
     expect(enabled).toBeTruthy();

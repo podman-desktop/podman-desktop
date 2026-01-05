@@ -1,7 +1,8 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 
-import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
+import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
+
 import FormPage from './FormPage.svelte';
 
 interface Props {

@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { listenResourcePermitted } from '../kube/resource-permission';
+import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
+
 import NodeEmptyScreen from './NodeEmptyScreen.svelte';
 
 const mocks = vi.hoisted(() => ({
@@ -29,8 +30,8 @@ const mocks = vi.hoisted(() => ({
   getCurrentKubeContextState: vi.fn(),
 }));
 
-vi.mock('../kube/resource-permission');
-vi.mock('../../stores/kubernetes-contexts-state', () => ({
+vi.mock(import('/@/lib/kube/resource-permission'));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), () => ({
   kubernetesCurrentContextState: {
     subscribe: mocks.subscribeMock,
   },

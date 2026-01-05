@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Button } from '@podman-desktop/ui-svelte';
 
-import type { Guide } from '../../../../main/src/plugin/learning-center/learning-center-api';
+import type { Guide } from '/@api/learning-center/guide';
 
 interface Props {
   guide: Guide;

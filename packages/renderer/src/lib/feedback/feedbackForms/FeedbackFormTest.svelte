@@ -1,5 +1,5 @@
 <script lang="ts">
-import FeedbackForm from '../FeedbackForm.svelte';
+import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 </script>
   
   <FeedbackForm>

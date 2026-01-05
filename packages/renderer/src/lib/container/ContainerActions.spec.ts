@@ -23,9 +23,9 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 
-import { ContextUI } from '../context/context';
 import ContainerActions from './ContainerActions.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 

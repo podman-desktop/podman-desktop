@@ -4,13 +4,12 @@ import { Button, Link } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
+import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
-
-import { providerInfos } from '../../stores/providers';
-import IconImage from '../appearance/IconImage.svelte';
-import EmbeddableCatalogExtensionList from '../extensions/EmbeddableCatalogExtensionList.svelte';
-import KubeIcon from '../images/KubeIcon.svelte';
-import Markdown from '../markdown/Markdown.svelte';
 
 const kubernetesExternalDocs = 'https://podman-desktop.io/docs/kubernetes';
 

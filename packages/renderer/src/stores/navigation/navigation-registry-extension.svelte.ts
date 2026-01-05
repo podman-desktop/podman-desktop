@@ -18,12 +18,12 @@
 
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
 
+import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
+import { contributions } from '/@/stores/contribs';
+import { webviews } from '/@/stores/webviews';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { WebviewInfo } from '/@api/webview-info';
 
-import ExtensionIcon from '../../lib/images/ExtensionIcon.svelte';
-import { contributions } from '../contribs';
-import { webviews } from '../webviews';
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 export function createNavigationExtensionEntry(): NavigationRegistryEntry {

@@ -23,14 +23,14 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import * as resourcesListen from '/@/lib/kube/resources-listen';
 import * as states from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable.js';
 
-import * as resourcesListen from '../resources-listen';
 import PodsList from './PodsList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
-vi.mock('../resources-listen');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
+vi.mock(import('/@/lib/kube/resources-listen'));
 
 beforeEach(() => {
   vi.resetAllMocks();

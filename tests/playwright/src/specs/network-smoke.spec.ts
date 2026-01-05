@@ -57,8 +57,11 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
     let networksPage = await navigationBar.openNetworks();
     await playExpect(networksPage.heading).toBeVisible();
 
-    networksPage = await networksPage.createNetwork(testNetworkName, testNetworkSubnet);
-    await playExpect(networksPage.heading).toBeVisible({ timeout: 30_000 });
+    const networkDetails = await networksPage.createNetwork(testNetworkName, testNetworkSubnet);
+    await playExpect(networkDetails.heading).toBeVisible({ timeout: 30_000 });
+
+    networksPage = await navigationBar.openNetworks();
+    await playExpect(networksPage.heading).toBeVisible();
 
     await playExpect
       .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {
@@ -86,26 +89,17 @@ test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
   });
 
   test('Delete network from details page and verify it was removed', async ({ navigationBar }) => {
-    let networksPage = await navigationBar.openNetworks();
+    const networksPage = await navigationBar.openNetworks();
     await playExpect(networksPage.heading).toBeVisible();
 
-    networksPage = await networksPage.createNetwork(testNetworkName, testNetworkSubnet);
-    await playExpect(networksPage.heading).toBeVisible({ timeout: 30_000 });
+    const networkDetails = await networksPage.createNetwork(testNetworkName, testNetworkSubnet);
+    await playExpect(networkDetails.heading).toBeVisible({ timeout: 30_000 });
+
+    const updatedNetworksPage = await networkDetails.deleteNetwork();
+    await playExpect(updatedNetworksPage.heading).toBeVisible();
 
     await playExpect
-      .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {
-        timeout: 30_000,
-      })
-      .toBeTruthy();
-
-    const networkDetails = await networksPage.openNetworkDetails(testNetworkName);
-    await playExpect(networkDetails.heading).toBeVisible();
-
-    networksPage = await networkDetails.deleteNetwork();
-    await playExpect(networksPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await networksPage.getNetworkRowByName(testNetworkName), {
+      .poll(async () => await updatedNetworksPage.getNetworkRowByName(testNetworkName), {
         timeout: 30_000,
       })
       .toBeFalsy();

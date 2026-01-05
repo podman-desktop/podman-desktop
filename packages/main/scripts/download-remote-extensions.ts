@@ -25,11 +25,11 @@ import { isAbsolute, join } from 'node:path';
 
 import minimist from 'minimist';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import product from '/@product.json' with { type: 'json' };
 
 /**
@@ -37,8 +37,12 @@ import product from '/@product.json' with { type: 'json' };
  * We do not use those classes when calling ImageRegistry#downloadAndExtractImage as the internal logic
  * uses different node_modules; those classes are needed for other things the class is doing
  */
-const dummyApiSenderType = {} as unknown as ApiSenderType;
-const dummyTelemetry = {} as unknown as Telemetry;
+const dummyApiSenderType = {
+  send: (): void => {},
+} as unknown as ApiSenderType;
+const dummyTelemetry = {
+  track: (): void => {},
+} as unknown as Telemetry;
 const dummyCertificate = {
   getAllCertificates: (): undefined => undefined,
 } as unknown as Certificates;
@@ -55,8 +59,21 @@ export interface RemoteExtension {
 
 export const OCI_ARG = 'oci';
 export const NAME_ARG = 'name';
+export const REGISTRY_USER_ARG = 'registry-user';
+export const REGISTRY_SECRET_ARG = 'registry-secret';
 
 export const DIGEST_FILENAME = '.digest';
+
+export interface RegistryAuth {
+  username: string;
+  secret: string;
+}
+
+export interface DownloadOptions {
+  destination: string;
+  extension: RemoteExtension;
+  auth?: RegistryAuth;
+}
 
 async function findExtensionDigest(extension: string): Promise<string | undefined> {
   try {
@@ -66,23 +83,62 @@ async function findExtensionDigest(extension: string): Promise<string | undefine
   }
 }
 
-export async function downloadExtension(destination: string, info: RemoteExtension): Promise<void> {
+export function findAuthEnvironment(registry: string): RegistryAuth | undefined {
+  const prefix = `AUTH_${registry.replace(/[^a-zA-Z]/g, '_').toUpperCase()}`;
+  const usernameKey = `${prefix}_USER`;
+  const secretKey = `${prefix}_SECRET`;
+  console.debug(`Lookup environment variable ${usernameKey} & ${secretKey}`);
+
+  const usernameValue = process.env[usernameKey];
+  const secretValue = process.env[secretKey];
+
+  // if both undefined => ignore
+  if (!usernameValue && !secretValue) return undefined;
+
+  // if only one is defined => raise error
+  if (!usernameValue || !secretValue) {
+    throw new Error(`if one of ${usernameKey} and ${secretKey} is specified, both need to be defined.`);
+  }
+
+  return {
+    username: usernameValue,
+    secret: secretValue,
+  };
+}
+
+export async function downloadExtension(options: DownloadOptions): Promise<void> {
   const imageRegistry = new ImageRegistry(dummyApiSenderType, dummyTelemetry, dummyCertificate, dummyProxy);
 
+  const registry = imageRegistry.extractRegistryServerFromImage(options.extension.oci);
+  if (!registry) throw new Error(`cannot determine registry for image ${options.extension.oci}`);
+
+  const auth = options.auth ?? findAuthEnvironment(registry);
+
+  if (auth) {
+    console.debug(`Configuring registry ${registry}`);
+
+    imageRegistry.registerRegistry({
+      source: 'scripts',
+      serverUrl: registry,
+      username: auth.username,
+      secret: auth.secret,
+    });
+  }
+
   // tmp folder
-  const tmpFolderPath = join(tmpdir(), info.name);
+  const tmpFolderPath = join(tmpdir(), options.extension.name);
 
-  const finalPath = join(destination, info.name);
+  const finalPath = join(options.destination, options.extension.name);
 
-  const { config } = await imageRegistry.getManifestFromImageName(info.oci);
+  const { config } = await imageRegistry.getManifestFromImageName(options.extension.oci);
   if (!config) {
     throw new Error(
-      `extension ${info.name} has malformed content: the OCI image manifest should contains a "config" field`,
+      `extension ${options.extension.name} has malformed content: the OCI image manifest should contains a "config" field`,
     );
   }
   if (!config.digest) {
     throw new Error(
-      `extension ${info.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
+      `extension ${options.extension.name} has malformed content: the OCI image manifest should contains a "config.digest" field`,
     );
   }
 
@@ -90,24 +146,24 @@ export async function downloadExtension(destination: string, info: RemoteExtensi
   if (existsSync(finalPath)) {
     const existingDigest = await findExtensionDigest(finalPath);
     if (existingDigest === config.digest) {
-      console.log(`cache hit for ${info.name} ${config.digest.substring(0, 18)}`);
+      console.log(`cache hit for ${options.extension.name} ${config.digest.substring(0, 18)}`);
       return;
     } else {
-      console.log(`invalid digest for ${info.name}, cleanup ${finalPath}`);
+      console.log(`invalid digest for ${options.extension.name}, cleanup ${finalPath}`);
       await rm(finalPath, { recursive: true });
     }
   }
 
-  await imageRegistry.downloadAndExtractImage(info.oci, tmpFolderPath, console.log);
+  await imageRegistry.downloadAndExtractImage(options.extension.oci, tmpFolderPath, console.log);
 
   if (!existsSync(join(tmpFolderPath, 'extension', 'package.json'))) {
     throw new Error(
-      `extension ${info.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
+      `extension ${options.extension.name} has malformed content: the OCI image should contains a "package.json" file in the extension folder`,
     );
   }
 
   // ensure the destination directory exists
-  await mkdir(destination, { recursive: true });
+  await mkdir(options.destination, { recursive: true });
 
   // rename tmp to destination
   await moveSafely(join(tmpFolderPath, 'extension'), finalPath);
@@ -136,11 +192,33 @@ export async function moveSafely(src: string, dest: string): Promise<void> {
 }
 
 export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
-  if (!product) return [];
-  if (!('extensions' in product) || !product.extensions || typeof product.extensions !== 'object') return [];
-  if (!('remote' in product.extensions) || !product.extensions.remote || !Array.isArray(product.extensions.remote))
-    return [];
-  return product.extensions.remote as RemoteExtension[];
+  const raw = product as unknown;
+  if (!raw || typeof raw !== 'object') {
+    throw new Error(`malformed product.json: content is not object`);
+  }
+  if (!('extensions' in raw) || !raw.extensions || typeof raw.extensions !== 'object') {
+    throw new Error(`malformed product.json: extensions property is not an object`);
+  }
+  if (!('remote' in raw.extensions) || !raw.extensions.remote || !Array.isArray(raw.extensions.remote)) {
+    throw new Error(`malformed product.json: object extensions do not have a valid remote array`);
+  }
+
+  // validate each items
+  raw.extensions.remote.forEach((extension, index) => {
+    if (!extension) {
+      throw new Error(`malformed product.json: extension at index ${index} is invalid`);
+    }
+
+    if (!('name' in extension) || typeof extension.name !== 'string') {
+      throw new Error(`malformed product.json: extension at index ${index} must have name property as a valid string`);
+    }
+
+    if (!('oci' in extension) || typeof extension.oci !== 'string') {
+      throw new Error(`malformed product.json: extension at index ${index} must have oci property as a valid string`);
+    }
+  });
+
+  return raw.extensions.remote as RemoteExtension[];
 }
 
 /**
@@ -148,7 +226,7 @@ export function getRemoteExtensionFromProductJSON(): RemoteExtension[] {
  * the `--output` is mandatory and should be an absolute path
  * the `--oci` and `--name` are optional but should be both defined if specified
  */
-export function parseArgs(args: string[]): { output: string; extension?: RemoteExtension } {
+export function parseArgs(args: string[]): { output: string; extension?: RemoteExtension; auth?: RegistryAuth } {
   const parsed = minimist(args);
 
   const output: string | undefined = parsed['output'];
@@ -156,44 +234,82 @@ export function parseArgs(args: string[]): { output: string; extension?: RemoteE
 
   if (!isAbsolute(output)) throw new Error('the output should be an absolute directory');
 
+  // Access the --oci & --name properties
   const oci = parsed[OCI_ARG];
   const name = parsed[NAME_ARG];
 
-  // if --oci and --name are not provided, return the output directory as the extension directory
-  if (!oci && !name) {
-    return { output };
+  // Parse the --oci & --name args if provided
+  let extension: RemoteExtension | undefined;
+  if (oci || name) {
+    if (!oci || !name) {
+      throw new Error(`when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`);
+    }
+
+    if (Array.isArray(oci) || Array.isArray(name)) {
+      throw new Error(`when specifying --${OCI_ARG} and --${NAME_ARG}, only one is allowed`);
+    }
+
+    if (typeof oci !== 'string' || typeof name !== 'string') {
+      throw new Error(`when specifying --${OCI_ARG} and --${NAME_ARG}, should be valid strings`);
+    }
+    extension = { oci, name };
   }
 
-  if (!oci || !name) {
-    throw new Error(`when specifying --${OCI_ARG} or --${NAME_ARG}, both should be provided as valid string`);
-  }
+  // access the --registry-user & --registry-secret args
+  const user = parsed[REGISTRY_USER_ARG];
+  const secret = parsed[REGISTRY_SECRET_ARG];
 
-  if (Array.isArray(oci) || Array.isArray(name)) {
-    throw new Error(`when specifying --${OCI_ARG} and --${NAME_ARG}, only one is allowed`);
-  }
+  let auth: RegistryAuth | undefined;
+  if (user || secret) {
+    if (!user || !secret) {
+      throw new Error(
+        `when specifying --${REGISTRY_USER_ARG} or --${REGISTRY_SECRET_ARG}, both should be provided as valid string`,
+      );
+    }
 
-  if (typeof oci !== 'string' || typeof name !== 'string') {
-    throw new Error(`when specifying --${OCI_ARG} and --${NAME_ARG}, should be valid strings`);
+    if (Array.isArray(user) || Array.isArray(secret)) {
+      throw new Error(`when specifying --${REGISTRY_USER_ARG} and --${REGISTRY_SECRET_ARG}, only one is allowed`);
+    }
+
+    if (typeof user !== 'string' || typeof secret !== 'string') {
+      throw new Error(`when specifying --${REGISTRY_USER_ARG} and --${REGISTRY_SECRET_ARG}, should be valid strings`);
+    }
+
+    auth = { username: user, secret: secret };
   }
 
   return {
     output,
-    extension: { oci, name },
+    extension: extension,
+    auth: auth,
   };
 }
 
 export async function main(args: string[]): Promise<void> {
-  const { output, extension } = parseArgs(args);
+  const { output, auth, extension } = parseArgs(args);
 
   // if an extension has been provided through CLI download it directly
   if (extension) {
-    return downloadExtension(output, extension);
+    return downloadExtension({
+      destination: output,
+      auth,
+      extension,
+    });
   }
 
   // otherwise fallback to bundled product.json
-  await Promise.all(getRemoteExtensionFromProductJSON().map(downloadExtension.bind(undefined, output))).catch(
-    console.error,
-  );
+  await Promise.all(
+    getRemoteExtensionFromProductJSON().map(extension =>
+      downloadExtension({
+        destination: output,
+        auth,
+        extension,
+      }),
+    ),
+  ).catch((error: unknown) => {
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 // do not start if we are in a VITEST env

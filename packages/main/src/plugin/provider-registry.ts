@@ -58,6 +58,7 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { Event } from '/@api/event.js';
 import type {
   LifecycleMethod,
@@ -70,7 +71,6 @@ import type {
   ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
 
-import { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
 import { ContainerProviderRegistry } from './container-registry.js';
 import { Emitter } from './events/emitter.js';

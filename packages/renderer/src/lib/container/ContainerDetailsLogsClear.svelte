@@ -4,9 +4,9 @@ import type { Terminal } from '@xterm/xterm';
 import { SvelteDate } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 
+import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
-import { isMultiplexedLog } from '../stream/stream-utils';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 const { terminal, container }: { terminal: Terminal; container: ContainerInfoUI } = $props();

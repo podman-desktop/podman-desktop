@@ -24,6 +24,7 @@ import * as path from 'node:path';
 
 import type { ContainerEngineInfo, RunError } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
+import type { PodmanExtensionApi, PodmanRunOptions } from '@podman-desktop/podman-extension-api';
 import { Mutex } from 'async-mutex';
 import { compareVersions } from 'compare-versions';
 
@@ -50,7 +51,6 @@ import type { ConnectionJSON, MachineInfo, MachineJSON, MachineJSONListOutput, M
 import type { InstalledPodman } from '/@/utils/podman-binary';
 import { PodmanBinary } from '/@/utils/podman-binary';
 
-import type { PodmanExtensionApi, PodmanRunOptions } from '../../api/src/podman-extension-api';
 import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';

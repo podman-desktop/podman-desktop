@@ -1,13 +1,13 @@
 <script lang="ts">
 import { Link } from '@podman-desktop/ui-svelte';
 
+import DetailsCell from '/@/lib/details/DetailsCell.svelte';
+import DetailsSubtitle from '/@/lib/details/DetailsSubtitle.svelte';
+import DetailsTable from '/@/lib/details/DetailsTable.svelte';
+import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
 import { handleNavigation } from '/@/navigation';
 import { NavigationPage } from '/@api/navigation-page';
 
-import DetailsCell from '../details/DetailsCell.svelte';
-import DetailsSubtitle from '../details/DetailsSubtitle.svelte';
-import DetailsTable from '../details/DetailsTable.svelte';
-import DetailsTitle from '../details/DetailsTitle.svelte';
 import type { PodInfoContainerUI, PodInfoUI } from './PodInfoUI';
 
 export let pod: PodInfoUI | undefined;

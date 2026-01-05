@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { IConnectionStatus } from '../preferences/Util';
+import type { IConnectionStatus } from '/@/lib/preferences/Util';
 
 export let status: IConnectionStatus | undefined;
 

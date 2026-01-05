@@ -19,8 +19,7 @@
 import type * as extensionApi from '@podman-desktop/api';
 
 import type { InstalledPodman } from '/@/utils/podman-binary';
-
-import { getCustomBinaryPath, getInstallationPath } from '../utils/podman-cli';
+import { getCustomBinaryPath, getInstallationPath } from '/@/utils/podman-cli';
 
 export function getDetectionChecks(installedPodman?: InstalledPodman): extensionApi.ProviderDetectionCheck[] {
   const detectionChecks: extensionApi.ProviderDetectionCheck[] = [];

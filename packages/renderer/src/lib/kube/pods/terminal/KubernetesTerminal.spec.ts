@@ -43,13 +43,6 @@ beforeAll(() => {
   Object.defineProperty(window, 'kubernetesExec', { value: kubernetesExecMock });
   Object.defineProperty(window, 'kubernetesExecResize', { value: kubernetesExecResizeMock });
   Object.defineProperty(window, 'kubernetesExecSend', { value: vi.fn().mockResolvedValue(undefined) });
-
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-    }),
-  });
 });
 
 test('Test should render the terminal and being able to reconnect', async () => {

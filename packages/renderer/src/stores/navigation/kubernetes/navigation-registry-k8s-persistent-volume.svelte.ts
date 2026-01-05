@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import PvcIcon from '/@/lib/images/PVCIcon.svelte';
-
-import { kubernetesCurrentContextPersistentVolumeClaims } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextPersistentVolumeClaims } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

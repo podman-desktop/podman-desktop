@@ -18,8 +18,8 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
 import { DocumentationService } from '/@/plugin/documentation/documentation-service.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 const originalConsoleError = console.error;
 

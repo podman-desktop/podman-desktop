@@ -4,9 +4,10 @@ import { Link } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
-import DetailsCell from '../details/DetailsCell.svelte';
-import DetailsTable from '../details/DetailsTable.svelte';
-import DetailsTitle from '../details/DetailsTitle.svelte';
+import DetailsCell from '/@/lib/details/DetailsCell.svelte';
+import DetailsTable from '/@/lib/details/DetailsTable.svelte';
+import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
+
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 export let container: ContainerInfoUI;
