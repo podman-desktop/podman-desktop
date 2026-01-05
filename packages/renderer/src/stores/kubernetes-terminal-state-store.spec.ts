@@ -34,13 +34,6 @@ beforeAll(() => {
   });
   Object.defineProperty(window, 'kubernetesExec', { value: kubernetesExecMock });
   Object.defineProperty(window, 'kubernetesExecResize', { value: vi.fn() });
-
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-    }),
-  });
 });
 
 test('Test should check saved terminal state after destroying terminal window', async () => {

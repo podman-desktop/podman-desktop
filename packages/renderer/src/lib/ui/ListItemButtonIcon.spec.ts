@@ -22,9 +22,9 @@ import { faCircleCheck, faRocket } from '@fortawesome/free-solid-svg-icons';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
+import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 
-import { ContextUI } from '../context/context';
 import ListItemButtonIcon from './ListItemButtonIcon.svelte';
 
 test('Expect the dropDownMenuItem to have classes that display a disabled object if the disabled when clause is evaluated to true', async () => {

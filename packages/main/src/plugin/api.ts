@@ -18,14 +18,6 @@
 
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 
-import type { IDisposable } from '/@api/disposable.js';
-
-export const ApiSenderType = Symbol.for('ApiSenderType');
-export type ApiSenderType = {
-  send: (channel: string, data?: unknown) => void;
-  receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;
-};
-
 export const IPCHandle = Symbol.for('IPCHandle');
 export type IPCHandle = (
   channel: string,

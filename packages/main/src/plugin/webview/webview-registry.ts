@@ -25,8 +25,8 @@ import type { Application } from 'express';
 import express from 'express';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from '/@/plugin/api.js';
 import { Uri } from '/@/plugin/types/uri.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { WebviewInfo, WebviewSimpleInfo } from '/@api/webview-info.js';
 
 import { getFreePort } from '../util/port.js';

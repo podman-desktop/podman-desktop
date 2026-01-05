@@ -20,7 +20,8 @@ import humanizeDuration from 'humanize-duration';
 import type { Component } from 'svelte';
 import type { Writable } from 'svelte/store';
 
-import DesktopIcon from '../lib/images/DesktopIcon.svelte';
+import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
+
 import { addStore, updateStore } from './event-store-manager';
 
 // 1.5 SECOND for DEBOUNCE and 5s for THROTTLE

@@ -67,4 +67,8 @@ updates:
           - "typedoc"
           - "typedoc-plugin-markdown"
           - "docusaurus-plugin-typedoc"
+      xterm:
+        applies-to: version-updates
+        patterns:
+          - "@xterm/*"
 

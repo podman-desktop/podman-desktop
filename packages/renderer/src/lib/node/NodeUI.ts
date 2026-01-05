@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesObjectUI } from '/@/lib/objects/KubernetesObjectUI';
 
 export interface NodeUI extends KubernetesObjectUI {
   uid: string;

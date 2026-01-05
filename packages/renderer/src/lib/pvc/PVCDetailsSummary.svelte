@@ -3,10 +3,9 @@ import type { V1PersistentVolumeClaim } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
-
-import KubeObjectMetaArtifact from '../kube/details/KubeObjectMetaArtifact.svelte';
-import KubePVCArtifact from '../kube/details/KubePVCArtifact.svelte';
-import KubePVCStatusArtifact from '../kube/details/KubePVCStatusArtifact.svelte';
+import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
+import KubePVCArtifact from '/@/lib/kube/details/KubePVCArtifact.svelte';
+import KubePVCStatusArtifact from '/@/lib/kube/details/KubePVCStatusArtifact.svelte';
 
 export let pvc: V1PersistentVolumeClaim | undefined;
 export let kubeError: string | undefined = undefined;

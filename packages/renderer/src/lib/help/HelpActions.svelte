@@ -1,55 +1,7 @@
 <script lang="ts">
-import { DropdownMenu } from '@podman-desktop/ui-svelte';
+import { Items } from '/@/lib/help/HelpItems';
 
-import { ActionKind, type ItemAction, Items } from './HelpItems';
-import HelpMenu from './HelpMenu.svelte';
-
-let showMenu = false;
-let outsideWindow: HTMLDivElement;
-window.events?.receive('toggle-help-menu', toggleMenu);
-
-function toggleMenu(): void {
-  showMenu = !showMenu;
-}
-
-function handleEscape({ key }: KeyboardEvent): void {
-  if (key === 'Escape') {
-    showMenu = false;
-  }
-}
-
-function onWindowClick(e: Event): void {
-  const target = e.target as HTMLElement;
-  // Listen to anything **but** the button that has "data-task-button" attribute with a value of "Help"
-  if (target && target.getAttribute('data-task-button') !== 'Help') {
-    showMenu = outsideWindow.contains(target);
-  }
-}
-
-async function onClick(action?: ItemAction): Promise<void> {
-  toggleMenu();
-  if (action?.kind === ActionKind.LINK) {
-    await window.openExternal(action.parameter).catch(console.error);
-  } else if (action?.kind === ActionKind.COMMAND) {
-    await window.executeCommand(action.parameter).catch(console.error);
-  }
-}
+import HelpActionsItems from './HelpActionsItems.svelte';
 </script>
 
-<svelte:window on:keyup={handleEscape} on:click={onWindowClick}/>
-
-<div bind:this={outsideWindow}>
-  {#if showMenu}
-    <HelpMenu>
-      {#each Items as item, index (index)}
-      <DropdownMenu.Item
-        title={item.title}
-        tooltip={item.tooltip}
-        icon={item.icon}
-        enabled={item.enabled}
-        onClick={(): Promise<void> => onClick(item.action)}
-      />
-      {/each}
-    </HelpMenu>
-  {/if}
-</div>
+<HelpActionsItems items={Items}/>

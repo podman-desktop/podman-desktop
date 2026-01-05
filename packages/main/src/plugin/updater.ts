@@ -37,10 +37,10 @@ import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { isLinux, isWindows } from '/@/util.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 
 import rootPackage from '../../../../package.json' with { type: 'json' };
-import { ApiSenderType } from './api.js';
 import { TaskManager } from './tasks/task-manager.js';
 
 /**

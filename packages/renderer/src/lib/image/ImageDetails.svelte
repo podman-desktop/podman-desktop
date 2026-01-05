@@ -3,24 +3,24 @@ import type { ImageInfo } from '@podman-desktop/api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
-import { containersInfos } from '/@/stores/containers';
-import { context } from '/@/stores/context';
-import { imageCheckerProviders } from '/@/stores/image-checker-providers';
-import { imageFilesProviders } from '/@/stores/image-files-providers';
-import { viewsContributions } from '/@/stores/views';
-import type { ViewInfoUI } from '/@api/view-info';
-
-import Route from '../../Route.svelte';
-import { imagesInfos } from '../../stores/images';
-import Badge from '../ui/Badge.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
+import Badge from '/@/lib/ui/Badge.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import {
   IMAGE_DETAILS_VIEW_BADGES,
   IMAGE_DETAILS_VIEW_ICONS,
   IMAGE_VIEW_BADGES,
   IMAGE_VIEW_ICONS,
-} from '../view/views';
+} from '/@/lib/view/views';
+import Route from '/@/Route.svelte';
+import { containersInfos } from '/@/stores/containers';
+import { context } from '/@/stores/context';
+import { imageCheckerProviders } from '/@/stores/image-checker-providers';
+import { imageFilesProviders } from '/@/stores/image-files-providers';
+import { imagesInfos } from '/@/stores/images';
+import { viewsContributions } from '/@/stores/views';
+import type { ViewInfoUI } from '/@api/view-info';
+
 import { ImageUtils } from './image-utils';
 import ImageActions from './ImageActions.svelte';
 import ImageDetailsCheck from './ImageDetailsCheck.svelte';

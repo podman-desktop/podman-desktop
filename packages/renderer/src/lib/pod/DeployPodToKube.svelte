@@ -6,13 +6,12 @@ import * as jsYaml from 'js-yaml';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import { ensureRestrictedSecurityContext } from '/@/lib/pod/pod-utils';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import type { V1Route } from '/@api/openshift-types';
-
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import WarningMessage from '../ui/WarningMessage.svelte';
 
 export let resourceId: string;
 export let engineId: string;

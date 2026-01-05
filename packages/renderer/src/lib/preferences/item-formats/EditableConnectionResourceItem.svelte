@@ -1,9 +1,9 @@
 <script lang="ts">
 import { filesize } from 'filesize';
 
+import { getNormalizedDefaultNumberValue } from '/@/lib/preferences/Util';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
-import { getNormalizedDefaultNumberValue } from '../Util';
 import EditableItem from './EditableItem.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;

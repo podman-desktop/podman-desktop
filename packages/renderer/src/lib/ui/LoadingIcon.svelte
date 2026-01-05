@@ -1,16 +1,28 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { Fa, type IconSize } from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+import type { Component } from 'svelte';
+import type { IconSize } from 'svelte-fa';
 
-export let icon: IconDefinition;
-export let loadingWidthClass: string = 'w-6';
-export let loadingHeightClass: string = 'h-6';
-export let loading = false;
-export let iconSize: IconSize | undefined = undefined;
+interface Props {
+  icon: IconDefinition | Component | string;
+  loadingWidthClass?: string;
+  loadingHeightClass?: string;
+  loading?: boolean;
+  iconSize?: IconSize;
+}
+
+let {
+  icon,
+  loadingWidthClass = 'w-6',
+  loadingHeightClass = 'h-6',
+  loading = false,
+  iconSize = undefined,
+}: Props = $props();
 </script>
 
 <div>
-  <Fa size={iconSize} icon={icon} />
+  <Icon size={iconSize} icon={icon} />
   <div
     aria-label="spinner"
     class="{loading

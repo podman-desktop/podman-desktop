@@ -3,12 +3,11 @@ import type { V1Ingress } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
+import KubeIngressArtifact from '/@/lib/kube/details/KubeIngressArtifact.svelte';
+import KubeIngressStatusArtifact from '/@/lib/kube/details/KubeIngressStatusArtifact.svelte';
+import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
+import OpenshiftRouteArtifact from '/@/lib/kube/details/OpenshiftRouteArtifact.svelte';
 import type { V1Route } from '/@api/openshift-types';
-
-import KubeIngressArtifact from '../kube/details/KubeIngressArtifact.svelte';
-import KubeIngressStatusArtifact from '../kube/details/KubeIngressStatusArtifact.svelte';
-import KubeObjectMetaArtifact from '../kube/details/KubeObjectMetaArtifact.svelte';
-import OpenshiftRouteArtifact from '../kube/details/OpenshiftRouteArtifact.svelte';
 
 export let ingressRoute: V1Ingress | V1Route | undefined;
 export let kubeError: string | undefined = undefined;

@@ -3,8 +3,7 @@ import type { V1CronJobSpec } from '@kubernetes/client-node';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
-
-import { capitalize } from '../../ui/Util';
+import { capitalize } from '/@/lib/ui/Util';
 
 interface Props {
   artifact?: V1CronJobSpec;

@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import ServiceIcon from '/@/lib/images/ServiceIcon.svelte';
-
-import { kubernetesCurrentContextServices } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextServices } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

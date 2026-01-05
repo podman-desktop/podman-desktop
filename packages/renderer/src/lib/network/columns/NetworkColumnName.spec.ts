@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { NetworkInfoUI } from '../NetworkInfoUI';
+import type { NetworkInfoUI } from '/@/lib/network/NetworkInfoUI';
+
 import NetworkColumnName from './NetworkColumnName.svelte';
 
 const network: NetworkInfoUI = {

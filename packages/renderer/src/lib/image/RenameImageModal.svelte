@@ -3,7 +3,8 @@ import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
+
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {

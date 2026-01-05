@@ -26,9 +26,9 @@ import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { ContributionManager } from '../contribution-manager.js';
 import type { Directories } from '../directories.js';

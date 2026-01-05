@@ -1,5 +1,6 @@
 <script lang="ts">
-import ComposeActions from '../compose/ComposeActions.svelte';
+import ComposeActions from '/@/lib/compose/ComposeActions.svelte';
+
 import type { ContainerGroupInfoUI } from './ContainerInfoUI';
 
 export let object: ContainerGroupInfoUI;

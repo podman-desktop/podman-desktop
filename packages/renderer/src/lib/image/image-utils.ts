@@ -22,6 +22,10 @@ import { filesize } from 'filesize';
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import ManifestIcon from '/@/lib/images/ManifestIcon.svelte';
 import type { ContainerInfo } from '/@api/container-info';
 import type { ImageInfo } from '/@api/image-info';
 import {
@@ -31,10 +35,6 @@ import {
   type ViewInfoUI,
 } from '/@api/view-info';
 
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
-import ImageIcon from '../images/ImageIcon.svelte';
-import ManifestIcon from '../images/ManifestIcon.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 export class ImageUtils {

@@ -18,7 +18,8 @@
 
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
-import { containersInfos } from '../containers';
+import { containersInfos } from '/@/stores/containers';
+
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 let count = $state(0);

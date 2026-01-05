@@ -23,17 +23,13 @@ import * as extensionApi from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 import { inject, injectable, optional } from 'inversify';
 
+import { getDetectionChecks } from '/@/checks/detection-checks';
 import {
   PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
   ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
   START_NOW_MACHINE_INIT_SUPPORTED_KEY,
   USER_MODE_NETWORKING_SUPPORTED_KEY,
 } from '/@/constants';
-import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
-import { MachineJSON } from '/@/types';
-import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
-
-import { getDetectionChecks } from '../checks/detection-checks';
 import {
   calcPodmanMachineSetting,
   getJSONMachineList,
@@ -41,12 +37,16 @@ import {
   isRootfulMachineInitSupported,
   isStartNowAtMachineInitSupported,
   isUserModeNetworkingSupported,
-} from '../extension';
-import * as podman5JSON from '../podman5.json';
-import { getBundledPodmanVersion } from '../utils/podman-bundled';
-import { getPodmanCli } from '../utils/podman-cli';
-import type { PodmanInfo } from '../utils/podman-info';
-import { PodmanInfoImpl } from '../utils/podman-info';
+} from '/@/extension';
+import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
+import * as podman5JSON from '/@/podman5.json';
+import { MachineJSON } from '/@/types';
+import { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import { getPodmanCli } from '/@/utils/podman-cli';
+import type { PodmanInfo } from '/@/utils/podman-info';
+import { PodmanInfoImpl } from '/@/utils/podman-info';
+
 import { Installer } from './installer';
 
 export interface UpdateCheck {

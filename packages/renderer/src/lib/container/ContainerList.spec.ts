@@ -26,11 +26,11 @@ import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { containersInfos } from '/@/stores/containers';
+import { providerInfos } from '/@/stores/providers';
 import type { ContainerInfo } from '/@api/container-info';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { containersInfos } from '../../stores/containers';
-import { providerInfos } from '../../stores/providers';
 import ContainerList from './ContainerList.svelte';
 
 beforeEach(() => {

@@ -16,11 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-const exec = require('child_process').exec;
+const { exec, execFile } = require('child_process');
 const Arch = require('builder-util').Arch;
 const path = require('path');
 const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
 const product = require('./product.json');
+const fs = require('node:fs');
+
 if (process.env.VITE_APP_VERSION === undefined) {
   const now = new Date();
   process.env.VITE_APP_VERSION = `${now.getUTCFullYear() - 2000}.${now.getUTCMonth() + 1}.${now.getUTCDate()}-${
@@ -66,6 +68,39 @@ async function addElectronFuses(context) {
 }
 
 /**
+ * This function will start the script that will bundle the extensions#remote from the `product.json`
+ * to the extensions-extra folder
+ *
+ * @remarks it should be called in the beforePack to populate the folder extensions-extra before electron builder pack them
+ */
+async function packageRemoteExtensions() {
+  const downloadScript = path.join('packages', 'main', 'dist', 'download-remote-extensions.cjs');
+  if (!fs.existsSync(downloadScript)) {
+    console.warn(`${downloadScript} not found, skipping remote extension download`);
+    return;
+  }
+
+  const destination = path.resolve('./extensions-extra');
+
+  return new Promise((resolve, reject) => {
+    execFile(
+      'node',
+      [downloadScript, `--output=${destination}`],
+      { maxBuffer: 10 * 1024 * 1024 }, // use 10MB else default size is too small and we get stdout maxBuffer length exceeded
+      (error, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+}
+
+/**
  * @type {import('electron-builder').Configuration}
  * @see https://www.electron.build/configuration/configuration
  */
@@ -82,6 +117,9 @@ const config = {
     const DEFAULT_ASSETS = [];
     const PODMAN_EXTENSION_ASSETS = 'extensions/podman/packages/extension/assets';
     context.packager.config.extraResources = DEFAULT_ASSETS;
+
+    // download & package remote extensions
+    await packageRemoteExtensions();
 
     // include product.json
     context.packager.config.extraResources.push({
@@ -130,7 +168,12 @@ const config = {
   afterPack: async context => {
     await addElectronFuses(context);
   },
-  files: ['packages/**/dist/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
+  files: [
+    'packages/**/dist/**',
+    'extensions-extra/**',
+    'extensions/**/builtin/*.cdix/**',
+    'packages/main/src/assets/**',
+  ],
   portable: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
   },
@@ -201,6 +244,8 @@ const config = {
   linux: {
     category: 'Development',
     icon: './buildResources/icon-512x512.png',
+    executableName: product.artifactName,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {

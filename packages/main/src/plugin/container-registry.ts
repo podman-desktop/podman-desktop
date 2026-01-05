@@ -36,6 +36,7 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -64,7 +65,6 @@ import type { PullEvent } from '/@api/pull-event.js';
 import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 
 import { isWindows } from '../util.js';
-import { ApiSenderType } from './api.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type {
   ContainerCreateMountOption,
@@ -105,6 +105,13 @@ interface JSONEvent {
   status: string;
   id: string;
   Type?: string;
+}
+
+export class LatestImageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LatestImageError';
+  }
 }
 
 @injectable()
@@ -790,9 +797,12 @@ export class ContainerProviderRegistry {
   ): Promise<NetworkCreateResult> {
     let telemetryOptions = {};
     try {
-      const matchingEngine = this.getMatchingEngineFromConnection(providerContainerConnectionInfo);
-      const network = await matchingEngine.createNetwork(options);
-      return { Id: network.id };
+      const matchingContainerProvider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+      if (!matchingContainerProvider?.api) {
+        throw new Error('no running provider for the matching container');
+      }
+      const network = await matchingContainerProvider.api.createNetwork(options);
+      return { Id: network.id, engineId: matchingContainerProvider.id };
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
@@ -1263,6 +1273,75 @@ export class ContainerProviderRegistry {
 
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
+  }
+
+  async updateImage(engineId: string, imageId: string, tag: string): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      // get image info to validate the image can be updated
+      const imageInfo = await this.getMatchingImage(engineId, imageId).inspect();
+
+      // validate the image has tags
+      const repoTags = imageInfo.RepoTags;
+      if (!repoTags?.length) {
+        throw new Error('Image has no tags and cannot be updated');
+      }
+
+      // validate the provided tag exists on this image
+      if (!repoTags.includes(tag)) {
+        throw new Error(`Tag '${tag}' not found on this image`);
+      }
+
+      // check if image has a remote registry source (RepoDigests is populated when pulled from a registry)
+      if (!imageInfo.RepoDigests?.length) {
+        throw new Error('Image has no remote registry source and cannot be updated');
+      }
+
+      // store whether the image originally had a single tag
+      const hadSingleTag = repoTags.length === 1;
+
+      // check if this is an immutable tag (contains a SHA digest)
+      if (tag.includes('@sha256:')) {
+        throw new Error('Image with digest-based tag is immutable and cannot be updated');
+      }
+
+      // store the current image ID to compare after pull
+      const oldImageId = imageInfo.Id;
+
+      // pull the latest build of the image
+      const authconfig = this.imageRegistry.getAuthconfigForImage(tag);
+      const matchingEngine = this.getMatchingEngine(engineId);
+      const pullStream = await matchingEngine.pull(tag, { authconfig });
+
+      await new Promise<void>((resolve, reject) => {
+        matchingEngine.modem.followProgress(pullStream, (err: Error | null) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
+
+      // check if the image was actually updated
+      const updatedImageInfo = await matchingEngine.getImage(tag).inspect();
+
+      if (updatedImageInfo.Id === oldImageId) {
+        throw new LatestImageError('Image is already the latest version');
+      }
+
+      // Only delete the old image if it originally had a single tag
+      if (hadSingleTag) {
+        try {
+          await this.deleteImage(engineId, oldImageId);
+        } catch (error: unknown) {
+          console.warn(`Could not delete old image ${oldImageId}: ${error}`);
+          // Don't fail the update if we can't delete the old image
+        }
+      }
+    } catch (error: unknown) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('updateImage', { imageName: this.getImageHash(imageId), ...telemetryOptions });
+    }
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {
@@ -2531,6 +2610,7 @@ export class ContainerProviderRegistry {
     options?: {
       build?: boolean;
       replace?: boolean;
+      abortSignal?: AbortSignal;
     },
   ): Promise<PlayKubeInfo> {
     const telemetryOptions: Record<string, unknown> = {
@@ -2772,6 +2852,17 @@ export class ContainerProviderRegistry {
       }),
     );
     return infos.filter((item): item is containerDesktopAPI.ContainerEngineInfo => !!item);
+  }
+
+  async getNetworkDrivers(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+  ): Promise<string[]> {
+    const matchingContainerProvider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!matchingContainerProvider?.api) {
+      throw new Error('no running provider for the matching container');
+    }
+    const info = await matchingContainerProvider.api.info();
+    return info.Plugins?.Network ?? [];
   }
 
   async containerExist(id: string): Promise<boolean> {

@@ -1,3 +1,4 @@
+engineStrict: true
 packages:
   - 'packages/*'
   - 'extensions/*'

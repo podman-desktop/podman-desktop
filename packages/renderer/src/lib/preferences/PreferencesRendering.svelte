@@ -3,11 +3,11 @@ import { SearchInput } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
 
+import type { ContextUI } from '/@/lib/context/context';
+import Route from '/@/Route.svelte';
 import { context } from '/@/stores/context';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import Route from '../../Route.svelte';
-import type { ContextUI } from '../context/context';
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import { isDefaultScope, isPropertyValidInContext } from './Util';
@@ -76,7 +76,7 @@ function updateSearchValue(event: any): void {
     {#snippet header()}
         <SearchInput  title="preferences" class="mt-4" oninput={updateSearchValue} />
       {/snippet}
-    <div class="flex flex-col space-y-5 text-[var(--pd-content-header)]">
+    <div class="flex flex-col space-y-5 text-[var(--pd-content-header)] pb-2">
       {#if matchingRecords.size === 0}
         <div>No Settings Found</div>
       {:else}

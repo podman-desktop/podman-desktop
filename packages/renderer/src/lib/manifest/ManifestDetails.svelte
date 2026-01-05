@@ -4,19 +4,18 @@ import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ImageUtils } from '/@/lib/image/image-utils';
+import ImageDetailsSummary from '/@/lib/image/ImageDetailsSummary.svelte';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
+import ManifestIcon from '/@/lib/images/ManifestIcon.svelte';
+import Badge from '/@/lib/ui/Badge.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
+import { imagesInfos } from '/@/stores/images';
 import type { ViewInfoUI } from '/@api/view-info';
-
-import Route from '../../Route.svelte';
-import { imagesInfos } from '../../stores/images';
-import type { ContextUI } from '../context/context';
-import { ImageUtils } from '../image/image-utils';
-import ImageDetailsSummary from '../image/ImageDetailsSummary.svelte';
-import type { ImageInfoUI } from '../image/ImageInfoUI';
-import ManifestIcon from '../images/ManifestIcon.svelte';
-import Badge from '../ui/Badge.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 
 interface Props {
   imageID: string;

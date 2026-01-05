@@ -26,8 +26,9 @@ import { commands, env, window } from '@podman-desktop/api';
 import mustache from 'mustache';
 import * as toml from 'smol-toml';
 
-import { getJSONMachineList } from '../extension';
-import { execPodman } from '../utils/util';
+import { getJSONMachineList } from '/@/extension';
+import { execPodman } from '/@/utils/util';
+
 import { DefaultRegistryLoader } from './default-registry-loader';
 import playbookRegistryConfFileTemplate from './playbook-setup-registry-conf-file.mustache?raw';
 

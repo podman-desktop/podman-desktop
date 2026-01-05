@@ -28,14 +28,14 @@ import TabItem from '@theme/TabItem';
 <TabItem value="mac" label="macOS">
 
 ```
-~/.local/share/podman-desktop/configuration/settings.json
+~/.local/share/containers/podman-desktop/configuration/settings.json
 ```
 
 </TabItem>
 <TabItem value="linux" label="Linux">
 
 ```
-~/.local/share/podman-desktop/configuration/settings.json
+~/.local/share/containers/podman-desktop/configuration/settings.json
 ```
 
 </TabItem>

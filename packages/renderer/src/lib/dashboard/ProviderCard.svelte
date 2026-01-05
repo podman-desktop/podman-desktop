@@ -1,8 +1,8 @@
 <script lang="ts">
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import ProviderStatus from '/@/lib/ui/ProviderStatus.svelte';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import IconImage from '../appearance/IconImage.svelte';
-import ProviderStatus from '../ui/ProviderStatus.svelte';
 import ProviderLinks from './ProviderLinks.svelte';
 
 export let provider: ProviderInfo;

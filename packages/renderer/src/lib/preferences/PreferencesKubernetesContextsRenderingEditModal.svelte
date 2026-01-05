@@ -4,10 +4,9 @@ import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import type { KubeContext } from '/@api/kubernetes-context';
-
-import Dialog from '../dialogs/Dialog.svelte';
 
 interface Props {
   detailed?: boolean;

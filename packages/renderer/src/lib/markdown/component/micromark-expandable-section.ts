@@ -20,7 +20,7 @@
  */
 import type { CompileContext } from 'micromark-util-types';
 
-import type { ExpandableSection, ExpandableSectionProps } from '../micromark-utils';
+import type { ExpandableSection, ExpandableSectionProps } from '/@/lib/markdown/micromark-utils';
 
 let expandableCount = 0;
 const expandables = new Map<string, ExpandableSection>();

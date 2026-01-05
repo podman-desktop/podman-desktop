@@ -115,7 +115,7 @@ export class Telemetry {
       properties: {
         [TelemetrySettings.SectionName + '.' + TelemetrySettings.Enabled]: {
           markdownDescription:
-            'Help improve Podman Desktop by allowing anonymous usage data to be sent to Red Hat. Read our [Privacy statement](https://developers.redhat.com/article/tool-data-collection)',
+            'Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data. Read our [privacy statement](https://developers.redhat.com/article/tool-data-collection)',
           type: 'boolean',
           default: true,
         },

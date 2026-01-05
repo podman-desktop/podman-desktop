@@ -6,11 +6,11 @@ import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 
-import FlatMenu from '../ui/FlatMenu.svelte';
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
 export let compose: ComposeInfoUI;

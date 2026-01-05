@@ -17,13 +17,12 @@
  ***********************************************************************/
 
 import IngressRouteIcon from '/@/lib/images/IngressRouteIcon.svelte';
-
 import {
   kubernetesCurrentContextIngresses,
   kubernetesCurrentContextNodes,
   kubernetesCurrentContextRoutes,
-} from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+} from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let ingressesCount = 0;
 let routesCount = 0;

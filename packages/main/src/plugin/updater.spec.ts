@@ -34,8 +34,8 @@ import { Disposable } from '/@/plugin/types/disposable.js';
 import { Updater } from '/@/plugin/updater.js';
 import * as util from '/@/util.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
-import type { ApiSenderType } from './api.js';
 import type { TaskManager } from './tasks/task-manager.js';
 
 vi.mock('electron', () => ({

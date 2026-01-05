@@ -23,11 +23,11 @@ import { NotificationImpl } from '/@/plugin/tasks/notification-impl.js';
 import type { NotificationTask } from '/@/plugin/tasks/notifications.js';
 import { TaskImpl } from '/@/plugin/tasks/task-impl.js';
 import type { Task, TaskAction, TaskUpdateEvent } from '/@/plugin/tasks/tasks.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { NotificationTaskInfo, TaskInfo } from '/@api/taskInfo.js';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
-import { ApiSenderType } from '../api.js';
 import { CommandRegistry } from '../command-registry.js';
 import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
 

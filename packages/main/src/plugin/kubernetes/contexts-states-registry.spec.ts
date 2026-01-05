@@ -17,7 +17,8 @@
  ***********************************************************************/
 import { describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '../api.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import { ContextsStatesRegistry, isSecondaryResourceName } from './contexts-states-registry.js';
 
 const apiSenderSendMock = vi.fn();

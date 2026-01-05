@@ -37,13 +37,6 @@ beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
   Object.defineProperty(window, 'attachContainer', { value: attachContainerMock });
   Object.defineProperty(window, 'attachContainerSend', { value: vi.fn() });
-
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-    }),
-  });
 });
 
 test('expect being able to attach terminal ', async () => {

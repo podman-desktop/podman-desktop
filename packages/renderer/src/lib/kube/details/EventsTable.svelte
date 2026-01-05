@@ -2,7 +2,7 @@
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
-import type { EventUI } from '../../events/EventUI';
+import type { EventUI } from '/@/lib/events/EventUI';
 
 interface EventWithAge extends EventUI {
   age: string;

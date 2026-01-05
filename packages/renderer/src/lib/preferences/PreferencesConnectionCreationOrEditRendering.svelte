@@ -10,6 +10,9 @@ import { get, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+import AuditMessageBox from '/@/lib/ui/AuditMessageBox.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import { context } from '/@/stores/context';
 /* eslint-enable import/no-duplicates */
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
@@ -20,9 +23,6 @@ import type {
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
 
-import Markdown from '../markdown/Markdown.svelte';
-import AuditMessageBox from '../ui/AuditMessageBox.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
 import EditableConnectionResourceItem from './item-formats/EditableConnectionResourceItem.svelte';
 import {
   clearCreateTask,

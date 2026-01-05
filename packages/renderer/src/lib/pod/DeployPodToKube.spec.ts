@@ -32,7 +32,7 @@ import type { V1Route } from '/@api/openshift-types';
 
 import DeployPodToKube from './DeployPodToKube.svelte';
 
-vi.mock(import('../editor/MonacoEditor.svelte'));
+vi.mock(import('/@/lib/editor/MonacoEditor.svelte'));
 
 // mock the router
 vi.mock('tinro', () => {

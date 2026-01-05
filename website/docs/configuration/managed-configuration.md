@@ -36,7 +36,7 @@ This allows administrators to pre-configure settings for new users while respect
 Settings listed in `locked.json` are enforced on every read and cannot be changed by the user:
 
 - The value is always read from `default-settings.json`, ignoring the user's `settings.json`
-- The setting appears displays a lock icon in the UI
+- The setting displays a lock icon in the UI
 - User changes to locked keys are ignored
 
 Use locked settings when you need to enforce compliance, such as proxy servers or telemetry policies.
@@ -146,7 +146,7 @@ The administrator creates a managed defaults file with corporate settings:
 <Tabs groupId="operating-systems">
 <TabItem value="linux" label="Linux">
 
-```json title="/usr/share/containers/podman-desktop/default-settings.json"
+```json title="/usr/share/podman-desktop/default-settings.json"
 {
   "proxy.http": "http://corp-proxy.example.com:8080",
   "telemetry.enabled": false
@@ -183,7 +183,7 @@ The administrator creates a locked configuration file to enforce these settings:
 <Tabs groupId="operating-systems">
 <TabItem value="linux" label="Linux">
 
-```json title="/usr/share/containers/podman-desktop/locked.json"
+```json title="/usr/share/podman-desktop/locked.json"
 {
   "locked": ["proxy.http", "telemetry.enabled"]
 }

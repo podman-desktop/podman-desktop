@@ -1,5 +1,6 @@
 <script lang="ts">
-import PVCActions from '../PVCActions.svelte';
+import PVCActions from '/@/lib/pvc/PVCActions.svelte';
+
 import type { Props } from './props';
 
 let { object }: Props = $props();

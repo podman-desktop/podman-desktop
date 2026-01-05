@@ -19,9 +19,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
 
-import type { CatalogExtension } from '../../../../main/src/plugin/extension/catalog/extensions-catalog-api';
-import type { FeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
 import { ExtensionsUtils } from './extensions-utils';
 
 let extensionsUtils: ExtensionsUtils;

@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Execute pnpm
@@ -52,6 +52,6 @@ jobs:
         run: pnpm test:unit:coverage
 
       - name: publish codecov report
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

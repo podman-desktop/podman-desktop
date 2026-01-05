@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ConfigMapSecretUI } from '../ConfigMapSecretUI';
+import type { ConfigMapSecretUI } from '/@/lib/configmaps-secrets/ConfigMapSecretUI';
 
 export interface Props {
   object: ConfigMapSecretUI;
