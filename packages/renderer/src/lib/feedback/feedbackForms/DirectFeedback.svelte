@@ -9,12 +9,11 @@ import {
   faStar,
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
-import type { DirectFeedbackCategory, FeedbackMessages, FeedbackProperties } from '/@api/feedback';
+import type { DirectFeedbackCategory, FeedbackProperties } from '/@api/feedback';
 
 interface Props {
   onCloseForm: (confirmation: boolean) => void;
@@ -24,7 +23,7 @@ interface Props {
 
 // feedback of the user
 let smileyRating = $state(0);
-let feedbackMessages = $state<FeedbackMessages | undefined>(undefined);
+let feedbackMessagesPromise = $derived(window.getFeedbackMessages());
 let tellUsWhyFeedback = $state('');
 let contactInformation = $state('');
 let hasFeedback = $derived(
@@ -35,10 +34,6 @@ let hasFeedback = $derived(
 let { onCloseForm, contentChange, category }: Props = $props();
 
 $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contactInformation)));
-
-onMount(async () => {
-  feedbackMessages = await window.getFeedbackMessages();
-});
 
 function selectSmiley(item: number): void {
   smileyRating = item;
@@ -67,7 +62,7 @@ async function sendFeedback(): Promise<void> {
   // 3. Display confirmation dialog
   await window.showMessageBox({
     title: 'Thanks for your feedback',
-    message: feedbackMessages?.thankYouMessage ?? '',
+    message: (await feedbackMessagesPromise).thankYouMessage,
     type: 'info',
     buttons: ['OK'],
   });
@@ -80,6 +75,7 @@ async function openGitHub(): Promise<void> {
 }
 </script>
 
+{#await feedbackMessagesPromise then feedbackMessages}
 <FeedbackForm>
   <svelte:fragment slot="content">
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
@@ -165,3 +161,4 @@ async function openGitHub(): Promise<void> {
     >Send feedback</Button>
   </svelte:fragment>
 </FeedbackForm>
+{/await}
