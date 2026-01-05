@@ -29,7 +29,7 @@ importers:
         specifier: 0.4.2
         version: 0.4.2
       '@expo/sudo-prompt':
-        specifier: 9.3.2
+        specifier: ^9.3.2
         version: 9.3.2
       '@kubernetes/client-node':
         specifier: ^1.4.0
