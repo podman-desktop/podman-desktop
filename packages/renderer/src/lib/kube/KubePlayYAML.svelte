@@ -256,7 +256,7 @@ function toggle(choice: 'podman' | 'custom'): void {
 
         <button
           class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-          aria-label="Create file from scratch"
+          aria-label="Create a file from scratch"
           aria-pressed={userChoice === 'custom' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'custom'}
@@ -272,7 +272,7 @@ function toggle(choice: 'podman' | 'custom'): void {
               class="pl-2"
               class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
               class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
-              Create file from scratch
+              Create a file from scratch
             </div>
           </div>
         </button>
@@ -282,7 +282,7 @@ function toggle(choice: 'podman' | 'custom'): void {
       {#if userChoice === 'custom'}
         <div class="space-y-3">
           <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
-            Custom Kubernetes YAML Content
+            Custom Kubernetes YAML content
           </label>
           <div id="custom-yaml-editor" class="h-[400px] border">
             <MonacoEditor
@@ -315,7 +315,7 @@ function toggle(choice: 'podman' | 'custom'): void {
             class="w-full"
             inProgress={runStarted}
             icon={KubePlayIcon}>
-            {userChoice === 'custom' ? 'Play Custom YAML' : 'Play'}
+            {userChoice === 'custom' ? 'Play custom YAML' : 'Play'}
           </Button>
         {:else}
           <Button
@@ -328,7 +328,7 @@ function toggle(choice: 'podman' | 'custom'): void {
       {/if}
       {#if runStarted}
         <div class="text-[var(--pd-content-card-text)] text-sm">
-          Please wait during the Play Kube and do not change screen. This process may take a few minutes to complete...
+          Please do not change screens while Play Kube executes. This process may take a few minutes to complete...
         </div>
       {/if}
 
