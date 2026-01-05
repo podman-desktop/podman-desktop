@@ -29,6 +29,10 @@
       "types": "./dist/api-sender/api-sender-type.d.ts",
       "default": "./dist/api-sender/api-sender-type.js"
     },
+    "./appearance": {
+      "types": "./dist/appearance/appearance-settings.d.ts",
+      "default": "./dist/appearance/appearance-settings.js"
+    },
     "./authentication": {
       "types": "./dist/authentication/authentication.d.ts",
       "default": "./dist/authentication/authentication.js"

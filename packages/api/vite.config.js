@@ -53,6 +53,7 @@ const config = {
       entry: {
         index: 'src/index.ts',
         'api-sender/api-sender-type': 'src/api-sender/api-sender-type.ts',
+        'appearance/appearance-settings': 'src/appearance/appearance-settings.ts',
         'authentication/authentication': 'src/authentication/authentication.ts',
         'configuration/index': 'src/configuration/index.ts',
         'context/index': 'src/context/index.ts',

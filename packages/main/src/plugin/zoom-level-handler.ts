@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@
  ***********************************************************************/
 
 import type { IDisposable } from '@podman-desktop/core-api';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import type { BrowserWindow } from 'electron';
-
-import { AppearanceSettings } from './appearance-settings.js';
 
 export class ZoomLevelHandler {
   #browserWindow: BrowserWindow;

@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject } from '@kubernetes/client-node';
 import type { ContextGeneralState, ContributionInfo, ForwardConfig } from '@podman-desktop/core-api';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { readable } from 'svelte/store';
@@ -28,7 +29,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
-import { AppearanceSettings } from '../../main/src/plugin/appearance-settings';
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';

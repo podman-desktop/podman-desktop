@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
  ***********************************************************************/
 
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { nativeTheme } from 'electron';
 import { inject, injectable } from 'inversify';
-
-import { AppearanceSettings } from './appearance-settings.js';
 
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;
 const SEARCHBAR_FULL_KEY = `titleBar.${AppearanceSettings.SearchBar}`;

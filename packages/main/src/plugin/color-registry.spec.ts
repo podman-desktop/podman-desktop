@@ -18,11 +18,11 @@
 
 import type { ColorDefinition, RawThemeContribution } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';

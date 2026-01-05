@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import type {
   IConfigurationChangeEvent,
   IConfigurationPropertyRecordedSchema,
@@ -25,7 +26,6 @@ import type {
 import type { BrowserWindow } from 'electron';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import { AppearanceSettings } from './appearance-settings.js';
 import { Emitter } from './events/emitter.js';
 import { ZoomLevelHandler } from './zoom-level-handler.js';
 
