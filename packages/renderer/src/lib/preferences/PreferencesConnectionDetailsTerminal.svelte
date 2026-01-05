@@ -13,8 +13,7 @@ import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import { getExistingTerminal, registerTerminal } from '/@/stores/provider-terminal-store';
 import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
-
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 interface ProviderDetailsTerminalProps {
   provider: ProviderInfo;

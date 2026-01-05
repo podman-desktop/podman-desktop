@@ -10,8 +10,8 @@ import { router } from 'tinro';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { getExistingTerminal, registerTerminal } from '/@/stores/container-terminal-store';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
 import NoLogIcon from '../ui/NoLogIcon.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
