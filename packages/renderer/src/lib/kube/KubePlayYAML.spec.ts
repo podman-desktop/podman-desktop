@@ -283,12 +283,12 @@ test('expect workflow selection boxes have the correct selection borders', async
   setup();
   render(KubePlayYAML, {});
 
-  const customOption = screen.getByText('Create file from scratch');
+  const customOption = screen.getByText('Create a file from scratch');
   expect(customOption).toBeInTheDocument();
   expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border-selected)]');
   expect(customOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border)]');
 
-  // now switch selection to Create file from scratch
+  // now switch selection to Create a file from scratch
   await userEvent.click(customOption);
 
   expect(customOption.parentElement?.parentElement).toHaveClass('border-[var(--pd-content-card-border-selected)]');
@@ -373,28 +373,28 @@ describe('Custom YAML mode', () => {
     render(KubePlayYAML, {});
 
     // Initially, Monaco editor should not be visible
-    expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Custom Kubernetes YAML content')).not.toBeInTheDocument();
 
-    // Click on "Create file from scratch" option
-    const customOption = screen.getByText('Create file from scratch');
+    // Click on "Create a file from scratch" option
+    const customOption = screen.getByText('Create a file from scratch');
     await userEvent.click(customOption);
 
     // Now Monaco editor should be visible
-    expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
+    expect(screen.getByText('Custom Kubernetes YAML content')).toBeInTheDocument();
   });
 
   test('play button is disabled when no content provided', async () => {
     setup();
     render(KubePlayYAML, {});
 
-    const customOption = screen.getByText('Create file from scratch');
+    const customOption = screen.getByText('Create a file from scratch');
     await userEvent.click(customOption);
 
-    const playButton = screen.getByRole('button', { name: 'Play Custom YAML' });
+    const playButton = screen.getByRole('button', { name: 'Play custom YAML' });
     expect(playButton).toBeDisabled();
   });
 
-  test('button text changes to "Play Custom YAML"', async () => {
+  test('button text changes to "Play custom YAML"', async () => {
     setup();
     render(KubePlayYAML, {});
 
@@ -402,11 +402,11 @@ describe('Custom YAML mode', () => {
     expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
 
     // Switch to custom mode
-    const customOption = screen.getByText('Create file from scratch');
+    const customOption = screen.getByText('Create a file from scratch');
     await userEvent.click(customOption);
 
     // Button text should change
-    expect(screen.getByRole('button', { name: 'Play Custom YAML' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play custom YAML' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
   });
 
@@ -415,14 +415,14 @@ describe('Custom YAML mode', () => {
     render(KubePlayYAML, {});
 
     // Switch to custom mode
-    const customOption = screen.getByText('Create file from scratch');
+    const customOption = screen.getByText('Create a file from scratch');
     await userEvent.click(customOption);
 
     // Monaco editor should be visible
-    expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
+    expect(screen.getByText('Custom Kubernetes YAML content')).toBeInTheDocument();
 
     // Monaco editor should be hidden again
-    expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Custom Kubernetes YAML content')).not.toBeInTheDocument();
   });
 });
 
@@ -453,7 +453,7 @@ test('file mode: does not attempt temp file cleanup', async () => {
   expect(window.removeTempFile).not.toHaveBeenCalled();
 });
 
-test('custom YAML mode: button text changes to "Play Custom YAML"', async () => {
+test('custom YAML mode: button text changes to "Play custom YAML"', async () => {
   setup();
   render(KubePlayYAML, {});
 
@@ -461,11 +461,11 @@ test('custom YAML mode: button text changes to "Play Custom YAML"', async () => 
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
 
   // Switch to custom mode
-  const customOption = screen.getByText('Create file from scratch');
+  const customOption = screen.getByText('Create a file from scratch');
   await userEvent.click(customOption);
 
   // Button text should change
-  expect(screen.getByRole('button', { name: 'Play Custom YAML' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Play custom YAML' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
 });
 
@@ -474,14 +474,14 @@ test('switching between modes clears custom content', async () => {
   render(KubePlayYAML, {});
 
   // Switch to custom mode
-  const customOption = screen.getByText('Create file from scratch');
+  const customOption = screen.getByText('Create a file from scratch');
   await userEvent.click(customOption);
 
   // Monaco editor should be visible
-  expect(screen.getByText('Custom Kubernetes YAML Content')).toBeInTheDocument();
+  expect(screen.getByText('Custom Kubernetes YAML content')).toBeInTheDocument();
 
   // Monaco editor should be hidden again
-  expect(screen.queryByLabelText('Custom Kubernetes YAML Content')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Custom Kubernetes YAML content')).not.toBeInTheDocument();
 });
 
 test('validation: play button disabled when no file selected in file mode', async () => {
