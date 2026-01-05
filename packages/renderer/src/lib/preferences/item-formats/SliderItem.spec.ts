@@ -46,3 +46,21 @@ test('Ensure HTMLInputElement', async () => {
 
   expect(input instanceof HTMLInputElement).toBe(true);
 });
+
+test('Expect slider to be disabled when record.readonly is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 4,
+    maximum: 34,
+    readonly: true,
+  };
+
+  render(SliderItem, { record, value: 15 });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect(input).toBeDisabled();
+});
