@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { PodInfoContainerUI } from '../pod/PodInfoUI';
+import type { PodInfoContainerUI } from '/@/lib/pod/PodInfoUI';
+
 import { organizeContainers } from './Dots';
 import StatusDot from './StatusDot.svelte';
 import { capitalize } from './Util';

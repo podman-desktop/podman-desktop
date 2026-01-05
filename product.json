@@ -2,5 +2,22 @@
   "name": "Podman Desktop",
   "appId": "io.podman_desktop.PodmanDesktop",
   "artifactName": "podman-desktop",
-  "urlProtocol": "podman-desktop"
+  "urlProtocol": "podman-desktop",
+  "paths": {
+    "config": "containers/podman-desktop",
+    "managed": {
+      "macOS": "/Library/Application Support/io.podman_desktop.PodmanDesktop",
+      "windows": "%PROGRAMDATA%\\Podman Desktop",
+      "linux": "/usr/share/podman-desktop"
+    }
+  },
+  "telemetry": {
+    "key": "Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy"
+  },
+  "catalog": {
+    "default": "https://registry.podman-desktop.io/api/extensions.json"
+  },
+  "extensions": {
+    "remote": []
+  }
 }

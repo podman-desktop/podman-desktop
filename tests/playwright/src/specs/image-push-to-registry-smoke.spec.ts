@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ImagesPage } from '../model/pages/images-page';
-import { RegistriesPage } from '../model/pages/registries-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { canTestRegistry, setupRegistry } from '../setupFiles/setup-registry';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteImage, deleteRegistry } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ImagesPage } from '/@/model/pages/images-page';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteImage, deleteRegistry } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'quay.io/podman/hello';
 let registryUrl: string;
@@ -42,9 +42,15 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
 test.afterAll(async ({ runner, page }) => {
   try {
-    await deleteImage(page, helloContainer);
-    await deleteImage(page, fullName);
-    await deleteRegistry(page, 'GitHub');
+    await deleteImage(page, helloContainer).catch((error: unknown) => {
+      console.log('Failed to delete hello container image:', error);
+    });
+    await deleteImage(page, fullName).catch((error: unknown) => {
+      console.log('Failed to delete renamed image:', error);
+    });
+    await deleteRegistry(page, 'GitHub').catch((error: unknown) => {
+      console.log('Failed to delete registry:', error);
+    });
   } finally {
     await runner.close();
   }

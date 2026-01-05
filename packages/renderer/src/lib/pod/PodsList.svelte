@@ -12,16 +12,17 @@ import {
 } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
+import Prune from '/@/lib/engine/Prune.svelte';
+import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import { filtered, podsInfos, searchPattern } from '/@/stores/pods';
+import { providerInfos } from '/@/stores/providers';
 import type { PodInfo } from '/@api/pod-info';
 
-import { filtered, podsInfos, searchPattern } from '../../stores/pods';
-import { providerInfos } from '../../stores/providers';
-import { withBulkConfirmation } from '../actions/BulkActions';
-import type { EngineInfoUI } from '../engine/EngineInfoUI';
-import Prune from '../engine/Prune.svelte';
-import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
-import PodIcon from '../images/PodIcon.svelte';
-import PodmanKubePlay from '../kube/PodmanKubePlay.svelte';
 import { PodUtils } from './pod-utils';
 import PodColumnActions from './PodColumnActions.svelte';
 import PodColumnContainers from './PodColumnContainers.svelte';
@@ -130,6 +131,11 @@ let nameColumn = new TableColumn<PodInfoUI>('Name', {
   comparator: (a, b): number => a.name.localeCompare(b.name),
 });
 
+let envColumn = new TableColumn<PodInfoUI>('Environment', {
+  renderer: ContainerEngineEnvironmentColumn,
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
+});
+
 let containersColumn = new TableColumn<PodInfoUI>('Containers', {
   renderer: PodColumnContainers,
   comparator: (a, b): number => a.containers.length - b.containers.length,
@@ -148,6 +154,7 @@ let ageColumn = new TableColumn<PodInfoUI, Date | undefined>('Age', {
 const columns = [
   statusColumn,
   nameColumn,
+  envColumn,
   containersColumn,
   ageColumn,
   new TableColumn<PodInfoUI>('Actions', { align: 'right', width: '150px', renderer: PodColumnActions, overflow: true }),

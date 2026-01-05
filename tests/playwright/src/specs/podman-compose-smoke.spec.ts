@@ -19,14 +19,14 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import { ResourceCliCardPage } from '../model/pages/resource-cli-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, runComposeUpFromCLI } from '../utility/operations';
-import { isCI, isLinux, isMac } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import { ResourceCliCardPage } from '/@/model/pages/resource-cli-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteContainer, deleteImage, runComposeUpFromCLI } from '/@/utility/operations';
+import { isCI, isLinux, isMac } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const RESOURCE_NAME: string = 'Compose';
 const __filename = fileURLToPath(import.meta.url);

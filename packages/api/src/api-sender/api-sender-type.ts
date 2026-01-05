@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { KubernetesGeneratorSelector } from '../kubernetes/kube-generator-registry.js';
 
-export interface KubernetesGeneratorInfo {
-  id: string;
-  name: string;
-  types: KubernetesGeneratorSelector;
-  default: boolean;
-}
+import type { IDisposable } from '../disposable.js';
+
+export const ApiSenderType = Symbol.for('ApiSenderType');
+export type ApiSenderType = {
+  send: (channel: string, data?: unknown) => void;
+  receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;
+};

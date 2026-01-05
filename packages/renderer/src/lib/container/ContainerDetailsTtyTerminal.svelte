@@ -5,8 +5,9 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
 
-import NoLogIcon from '../ui/NoLogIcon.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 export let container: ContainerInfoUI;

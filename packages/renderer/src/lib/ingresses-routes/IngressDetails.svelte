@@ -5,17 +5,17 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import IngressRouteIcon from '/@/lib/images/IngressRouteIcon.svelte';
+import KubeEditYAML from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import StateChange from '/@/lib/ui/StateChange.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { kubernetesCurrentContextIngresses } from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable';
 
-import Route from '../../Route.svelte';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
-import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import StateChange from '../ui/StateChange.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { IngressRouteUtils } from './ingress-route-utils';
 import IngressRouteActions from './IngressRouteActions.svelte';
 import ServiceDetailsSummary from './IngressRouteDetailsSummary.svelte';

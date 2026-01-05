@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ContainerState, VolumeState } from '../model/core/states';
-import type { ContainerInteractiveParams } from '../model/core/types';
-import { ContainerDetailsPage } from '../model/pages/container-details-page';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '../utility/operations';
-import { isWindows } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ContainerState, VolumeState } from '/@/model/core/states';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '/@/utility/operations';
+import { isWindows } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const imageToPull = 'quay.io/centos-bootc/bootc-image-builder';
 const imageTag = 'latest';

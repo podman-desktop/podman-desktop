@@ -16,12 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { RegistriesPage } from '../model/pages/registries-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { canTestRegistry, setupRegistry } from '../setupFiles/setup-registry';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteImage, deleteRegistry } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteImage, deleteRegistry } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 let registryUrl: string;
 let registryUsername: string;
@@ -91,7 +91,7 @@ test.describe.serial('Pulling image from authenticated registry workflow verific
     test('Image pulling from authenticated registry verification', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
 
-      const fullImageTitle = imageUrl.concat(':' + imageTag);
+      const fullImageTitle = imageUrl.concat(`:${imageTag}`);
       const pullImagePage = await imagesPage.openPullImage();
       const updatedImages = await pullImagePage.pullImage(fullImageTitle);
 

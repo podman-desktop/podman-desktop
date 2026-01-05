@@ -18,9 +18,9 @@
 
 import { expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { DropdownType } from '/@api/dialog.js';
 
-import type { ApiSenderType } from './api.js';
 import { MessageBox } from './message-box.js';
 
 test('Should return first item if button clicked is the first', async () => {

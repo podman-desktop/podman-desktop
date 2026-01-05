@@ -19,12 +19,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ContainerState, ExtensionState, ResourceElementState } from '../model/core/states';
-import type { ContainerInteractiveParams } from '../model/core/types';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { canRunKindTests } from '../setupFiles/setup-kind';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ContainerState, ExtensionState, ResourceElementState } from '/@/model/core/states';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { canRunKindTests } from '/@/setupFiles/setup-kind';
 import {
   checkClusterResources,
   createKindCluster,
@@ -32,11 +32,11 @@ import {
   deleteClusterFromDetails,
   resourceConnectionAction,
   resourceConnectionActionDetails,
-} from '../utility/cluster-operations';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deployContainerToCluster } from '../utility/kubernetes';
-import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+} from '/@/utility/cluster-operations';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deployContainerToCluster } from '/@/utility/kubernetes';
+import { deleteContainer, deleteImage, ensureCliInstalled } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const RESOURCE_NAME: string = 'kind';
 const EXTENSION_LABEL: string = 'podman-desktop.kind';

@@ -5,11 +5,11 @@ import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { mount, onDestroy, onMount } from 'svelte';
 
+import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
-import { isMultiplexedLog } from '../stream/stream-utils';
-import NoLogIcon from '../ui/NoLogIcon.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
 import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 

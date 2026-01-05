@@ -1,7 +1,8 @@
 <script lang="ts">
 import { router } from 'tinro';
 
-import Dots from '../ui/Dots.svelte';
+import Dots from '/@/lib/ui/Dots.svelte';
+
 import type { PodInfoUI } from './PodInfoUI';
 
 export let object: PodInfoUI;

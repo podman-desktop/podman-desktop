@@ -19,13 +19,13 @@
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '/@api/configuration/constants.js';
 
-import type { ApiSenderType } from './api.js';
 import { ConfigurationImpl } from './configuration-impl.js';
 
 let configurationImpl: TestConfigurationImpl;

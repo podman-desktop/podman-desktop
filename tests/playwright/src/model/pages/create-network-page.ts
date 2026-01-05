@@ -20,6 +20,7 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { BasePage } from './base-page';
+import { NetworkDetailsPage } from './network-details-page';
 import { NetworksPage } from './networks-page';
 
 export class CreateNetworkPage extends BasePage {
@@ -38,7 +39,7 @@ export class CreateNetworkPage extends BasePage {
     this.cancelButton = this.page.getByRole('button', { name: 'Cancel' });
   }
 
-  async createNetwork(name: string, subnet: string): Promise<NetworksPage> {
+  async createNetwork(name: string, subnet: string): Promise<NetworkDetailsPage> {
     return test.step(`Create network ${name} with subnet ${subnet}`, async () => {
       await playExpect(this.networkNameBox).toBeVisible();
       await this.networkNameBox.clear();
@@ -54,7 +55,7 @@ export class CreateNetworkPage extends BasePage {
 
       await playExpect(this.createButton).toBeEnabled();
       await this.createButton.click();
-      return new NetworksPage(this.page);
+      return new NetworkDetailsPage(this.page, name);
     });
   }
 

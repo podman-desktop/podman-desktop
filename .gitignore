@@ -14,3 +14,4 @@ dist
 /storybook/storybook-static/
 yarn.lock
 extensions/podman/assets/
+extensions-extra/

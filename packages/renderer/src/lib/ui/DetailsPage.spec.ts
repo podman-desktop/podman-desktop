@@ -24,7 +24,8 @@ import type { TinroBreadcrumb } from 'tinro';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { currentPage, lastPage } from '../../stores/breadcrumb';
+import { currentPage, lastPage } from '/@/stores/breadcrumb';
+
 import DetailsPage from './DetailsPage.svelte';
 import DetailsPageTest from './DetailsPageTest.svelte';
 

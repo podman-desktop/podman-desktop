@@ -24,7 +24,8 @@ import { render, screen } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { registriesInfos } from '../../stores/registries';
+import { registriesInfos } from '/@/stores/registries';
+
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
 
 describe('PreferencesRegistriesEditing', () => {

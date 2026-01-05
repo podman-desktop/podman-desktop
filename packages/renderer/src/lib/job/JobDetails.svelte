@@ -5,17 +5,17 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import JobIcon from '/@/lib/images/JobIcon.svelte';
+import KubeEditYAML from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import StateChange from '/@/lib/ui/StateChange.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { kubernetesCurrentContextJobs } from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable';
 
-import Route from '../../Route.svelte';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import JobIcon from '../images/JobIcon.svelte';
-import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import StateChange from '../ui/StateChange.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { JobUtils } from './job-utils';
 import JobActions from './JobActions.svelte';
 import JobDetailsSummary from './JobDetailsSummary.svelte';

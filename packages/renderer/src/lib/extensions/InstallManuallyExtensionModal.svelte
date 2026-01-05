@@ -3,7 +3,7 @@ import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
 
 interface Props {
   closeCallback: () => void;

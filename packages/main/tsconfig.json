@@ -22,5 +22,5 @@
       "/@product.json": ["../../product.json"]
     }
   },
-  "include": ["src/**/*.ts", "../../types/**/*.d.ts", "../api/src/**/*.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "../../types/**/*.d.ts", "../api/src/**/*.ts"]
 }

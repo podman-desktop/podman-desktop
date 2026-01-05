@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { type Writable, writable } from 'svelte/store';
+import { derived } from 'svelte/store';
 
 import type { ProviderInfo } from '/@api/provider-info';
 
@@ -78,3 +79,29 @@ export async function fetchProviders(): Promise<ProviderInfo[]> {
   });
   return result;
 }
+
+/**
+ * Counting the container connection per type is a small but
+ * expensive iterative operation, creating a derived readable to avoid
+ * recomputing it each time we need it.
+ */
+export const containerConnectionCount = derived([providerInfos], ([$providerInfos]) => {
+  return $providerInfos.reduce(
+    (acc, provider) => {
+      provider.containerConnections.forEach(connection => {
+        if (connection.status === 'stopped') return;
+
+        switch (connection.type) {
+          case 'podman':
+            acc['podman'] = acc['podman'] + 1;
+            break;
+          case 'docker':
+            acc['docker'] = acc['docker'] + 1;
+            break;
+        }
+      });
+      return acc;
+    },
+    { podman: 0, docker: 0 } as Record<'podman' | 'docker', number>,
+  );
+});

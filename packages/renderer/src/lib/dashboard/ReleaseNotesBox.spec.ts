@@ -24,8 +24,8 @@ import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import { updateAvailable } from '/@/stores/update-store';
 
-import { updateAvailable } from '../../stores/update-store';
 import ReleaseNotesBox from './ReleaseNotesBox.svelte';
 
 const podmanDesktopUpdateAvailableMock = vi.fn();

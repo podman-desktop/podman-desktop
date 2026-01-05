@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import PodIcon from '../../lib/images/PodIcon.svelte';
-import { podsInfos } from '../pods';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import { podsInfos } from '/@/stores/pods';
+
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 let count = $state(0);

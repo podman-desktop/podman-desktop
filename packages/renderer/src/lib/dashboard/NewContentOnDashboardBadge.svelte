@@ -2,10 +2,9 @@
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import NewContentBadge from '/@/lib/ui/NewContentBadge.svelte';
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
-
-import NewContentBadge from '../ui/NewContentBadge.svelte';
 
 let providersId: string[] = [];
 let notificationCount: number = 0;

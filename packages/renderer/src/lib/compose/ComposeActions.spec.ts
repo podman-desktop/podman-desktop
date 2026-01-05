@@ -22,7 +22,8 @@ import { within } from '@testing-library/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, beforeEach, expect, type Mock, test, vi } from 'vitest';
 
-import type { ContainerInfoUI } from '../container/ContainerInfoUI';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+
 import ComposeActions from './ComposeActions.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 

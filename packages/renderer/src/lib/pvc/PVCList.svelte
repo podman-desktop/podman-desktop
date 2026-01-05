@@ -2,15 +2,15 @@
 import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import PVCIcon from '/@/lib/images/PVCIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
 import {
   kubernetesCurrentContextPersistentVolumeClaimsFiltered,
   persistentVolumeClaimSearchPattern,
 } from '/@/stores/kubernetes-contexts-state';
 
-import PVCIcon from '../images/PVCIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import ActionsColumn from './columns/Actions.svelte';
 import ModeColumn from './columns/Mode.svelte';
 import { PVCUtils } from './pvc-utils';

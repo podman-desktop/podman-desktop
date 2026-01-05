@@ -1,5 +1,6 @@
 <script lang="ts">
-import { ContainerGroupInfoTypeUI } from '../container/ContainerInfoUI';
+import { ContainerGroupInfoTypeUI } from '/@/lib/container/ContainerInfoUI';
+
 import Label from './Label.svelte';
 import ProviderInfoCircle from './ProviderInfoCircle.svelte';
 
@@ -30,6 +31,6 @@ function getProviderName(providerName: string): ProviderNameType {
 }
 </script>
 
-<Label tip={provider === 'Kubernetes' ? context : ''} name={provider} capitalize>
+<Label containerClass="w-full" tip={provider === 'Kubernetes' ? context : ''} name={provider} capitalize>
   <ProviderInfoCircle type={providerName} />
 </Label>

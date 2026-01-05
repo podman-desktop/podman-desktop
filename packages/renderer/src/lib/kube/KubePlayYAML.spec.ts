@@ -24,10 +24,10 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import type { PlayKubeInfo } from '../../../../main/src/plugin/dockerode/libpod-dockerode';
-import { providerInfos } from '../../stores/providers';
 import KubePlayYAML from './KubePlayYAML.svelte';
 
 const mockedErroredPlayKubeInfo: PlayKubeInfo = {
@@ -89,11 +89,6 @@ beforeAll(() => {
 beforeEach(() => {
   vi.resetAllMocks();
 
-  vi.mocked(window.matchMedia).mockReturnValue({
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  } as unknown as MediaQueryList);
   vi.mocked(window.openDialog).mockResolvedValue(['Containerfile']);
   vi.mocked(window.telemetryPage).mockResolvedValue(undefined);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
@@ -155,6 +150,86 @@ test('error: When pressing the Play button, expect us to show the errors to the 
   // Expect the following error to be in in the document.
   const error = screen.getByText('The following pods were created but failed to start: error 1, error 2');
   expect(error).toBeInTheDocument();
+});
+
+describe('cancel', () => {
+  test('expect cancel button not to be visible by default', async () => {
+    // Render the component
+    setup();
+    const { queryByRole } = render(KubePlayYAML, {});
+
+    const cancelBtn = queryByRole('button', { name: 'Cancel' });
+    expect(cancelBtn).toBeNull();
+  });
+
+  test('expect cancel button to be visible while playKube is running', async () => {
+    const { promise, resolve } = Promise.withResolvers<PlayKubeInfo>();
+    vi.mocked(window.playKube).mockReturnValue(promise);
+
+    // Render the component
+    setup();
+    const { getByRole, getByLabelText, queryByRole } = render(KubePlayYAML, {});
+
+    // Simulate selecting a file
+    const fileInput = getByRole('textbox', { name: 'Kubernetes YAML file' });
+    expect(fileInput).toBeInTheDocument();
+
+    const browseButton = getByLabelText('browse');
+    expect(browseButton).toBeInTheDocument();
+    await userEvent.click(browseButton);
+
+    // Simulate clicking the "Play" button
+    const playButton = getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
+    await userEvent.click(playButton);
+
+    const cancelBtn = await vi.waitFor(() => {
+      return getByRole('button', { name: 'Cancel' });
+    });
+    expect(cancelBtn).toBeInTheDocument();
+
+    // resolve window.playKube
+    resolve(mockedErroredPlayKubeInfo);
+
+    await vi.waitFor(() => {
+      const cancelBtn = queryByRole('button', { name: 'Cancel' });
+      expect(cancelBtn).toBeNull();
+    });
+  });
+
+  test('cancel action should call window#cancelToken', async () => {
+    const CANCELLABLE_TOKEN_ID: number = 55;
+    vi.mocked(window.getCancellableTokenSource).mockResolvedValue(CANCELLABLE_TOKEN_ID);
+
+    const { promise } = Promise.withResolvers<PlayKubeInfo>();
+    vi.mocked(window.playKube).mockReturnValue(promise);
+
+    // Render the component
+    setup();
+    const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+
+    // Simulate selecting a file
+    const fileInput = getByRole('textbox', { name: 'Kubernetes YAML file' });
+    expect(fileInput).toBeInTheDocument();
+
+    const browseButton = getByLabelText('browse');
+    expect(browseButton).toBeInTheDocument();
+    await userEvent.click(browseButton);
+
+    // Simulate clicking the "Play" button
+    const playButton = getByRole('button', { name: 'Play' });
+    expect(playButton).toBeInTheDocument();
+    await userEvent.click(playButton);
+
+    const cancelBtn = await vi.waitFor(() => {
+      return getByRole('button', { name: 'Cancel' });
+    });
+    await userEvent.click(cancelBtn);
+
+    await vi.waitFor(() => {
+      expect(window.cancelToken).toHaveBeenCalledExactlyOnceWith(CANCELLABLE_TOKEN_ID);
+    });
+  });
 });
 
 test('expect done button is there at the end and redirects to pods', async () => {
@@ -220,13 +295,26 @@ test('expect workflow selection boxes have the correct selection borders', async
   expect(customOption.parentElement?.parentElement).not.toHaveClass('border-[var(--pd-content-card-border)]');
 });
 
-describe('Build options', () => {
-  test('checkbox should be disabled by default', async () => {
+describe('Options', () => {
+  test('build checkbox should be disabled by default', async () => {
     setup();
     const { getByRole } = render(KubePlayYAML, {});
 
     const checkbox = await vi.waitFor(() => {
       const element = getByRole('checkbox', { name: 'Enable build' });
+      expect(element).toBeInstanceOf(HTMLInputElement);
+      return element;
+    });
+
+    expect(checkbox).not.toBeChecked();
+  });
+
+  test('replace checkbox should be disabled by default', async () => {
+    setup();
+    const { getByRole } = render(KubePlayYAML, {});
+
+    const checkbox = await vi.waitFor(() => {
+      const element = getByRole('checkbox', { name: 'Replace' });
       expect(element).toBeInstanceOf(HTMLInputElement);
       return element;
     });
@@ -253,6 +341,28 @@ describe('Build options', () => {
       'Containerfile',
       expect.anything(),
       expect.objectContaining({ build: true }),
+    );
+  });
+
+  test('enabled replace option propagates to playKube call', async () => {
+    setup();
+    const { getByRole, getByLabelText } = render(KubePlayYAML, {});
+
+    // Enable replace
+    const checkbox = getByRole('checkbox', { name: 'Replace' });
+    await userEvent.click(checkbox);
+
+    // Select file and play
+    const browseButton = getByLabelText('browse');
+    await userEvent.click(browseButton);
+
+    const playButton = screen.getByRole('button', { name: 'Play' });
+    await userEvent.click(playButton);
+
+    expect(window.playKube).toHaveBeenCalledWith(
+      'Containerfile',
+      expect.anything(),
+      expect.objectContaining({ replace: true }),
     );
   });
 });

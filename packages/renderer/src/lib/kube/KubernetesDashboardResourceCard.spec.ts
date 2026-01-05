@@ -22,7 +22,8 @@ import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { expect, test } from 'vitest';
 
-import NodeIcon from '../images/NodeIcon.svelte';
+import NodeIcon from '/@/lib/images/NodeIcon.svelte';
+
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
 
 test('Verify basic card format when resource permitted', async () => {

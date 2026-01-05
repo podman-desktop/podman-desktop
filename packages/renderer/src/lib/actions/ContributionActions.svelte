@@ -8,10 +8,9 @@ import { removeNonSerializableProperties } from '/@/lib/actions/ActionUtils';
 import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { transformObjectToContext } from '/@/lib/context/ContextUtils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { context as storeContext } from '/@/stores/context';
 import type { Menu } from '/@api/menu.js';
-
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 
 interface Props {
   args: unknown[];

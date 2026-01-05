@@ -1,7 +1,6 @@
 <script lang="ts">
 import { openDetailsNetwork } from '/@/lib/network/network-utils';
-
-import type { NetworkInfoUI } from '../NetworkInfoUI';
+import type { NetworkInfoUI } from '/@/lib/network/NetworkInfoUI';
 
 interface Props {
   object: NetworkInfoUI;

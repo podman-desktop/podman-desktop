@@ -19,16 +19,16 @@ import type { CheckResult } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { PodmanDesktopElevatedCheck } from '/@/checks/windows/podman-desktop-elevated-check';
+import type { PowerShellClient } from '/@/utils/powershell';
+import { getPowerShellClient } from '/@/utils/powershell';
 
-import type { PowerShellClient } from '../../utils/powershell';
-import { getPowerShellClient } from '../../utils/powershell';
 import { HyperVCheck } from './hyper-v-check';
 import type { HyperVInstalledCheck } from './hyper-v-installed-check';
 import type { HyperVRunningCheck } from './hyper-v-running-check';
 import type { UserAdminCheck } from './user-admin-check';
 
 vi.mock(import('@podman-desktop/api'));
-vi.mock(import('../../utils/powershell'), () => ({
+vi.mock(import('/@/utils/powershell'), () => ({
   getPowerShellClient: vi.fn(),
 }));
 

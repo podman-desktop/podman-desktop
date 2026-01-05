@@ -1,9 +1,8 @@
 <script lang="ts">
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 
+import PodIcon from '/@/lib/images/PodIcon.svelte';
 import { providerInfos } from '/@/stores/providers';
-
-import PodIcon from '../images/PodIcon.svelte';
 
 const myFirstPod = 'my-first-pod';
 const helloImage = 'quay.io/podman/hello:latest';

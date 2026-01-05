@@ -21,14 +21,12 @@ import got from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from '/@/plugin/api.js';
 import { Certificates } from '/@/plugin/certificates.js';
-import type {
-  CatalogExtension,
-  CatalogFetchableExtension,
-} from '/@/plugin/extension/catalog/extensions-catalog-api.js';
 import { Proxy } from '/@/plugin/proxy.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { CatalogExtension, CatalogFetchableExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
 
@@ -37,7 +35,7 @@ import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';
  */
 @injectable()
 export class ExtensionsCatalog {
-  public static readonly DEFAULT_EXTENSIONS_URL = 'https://registry.podman-desktop.io/api/extensions.json';
+  public static readonly DEFAULT_EXTENSIONS_URL = product.catalog.default;
 
   private lastFetchTime = 0;
   private cachedCatalog: InternalCatalogJSON | undefined;

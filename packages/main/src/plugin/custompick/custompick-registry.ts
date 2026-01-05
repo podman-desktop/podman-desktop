@@ -18,9 +18,9 @@
 import type { CustomPick, CustomPickItem } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IDisposable } from '/@api/disposable.js';
 
-import { ApiSenderType } from '../api.js';
 import { CustomPickImpl } from './custompick-impl.js';
 
 @injectable()

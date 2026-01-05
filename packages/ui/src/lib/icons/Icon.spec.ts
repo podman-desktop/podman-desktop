@@ -107,6 +107,14 @@ describe('class icon', () => {
     const img = getByTitle('test title');
     expect(img).toBeInTheDocument();
   });
+
+  test('brand icon should be created', () => {
+    render(Icon, { icon: 'fab fa-discord' });
+
+    const img = screen.getByRole('img', { hidden: true });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveClass('fab fa-discord');
+  });
 });
 
 describe('component icon', () => {

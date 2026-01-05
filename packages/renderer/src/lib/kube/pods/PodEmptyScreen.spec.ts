@@ -21,10 +21,11 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
-import { listenResourcePermitted } from '../resource-permission';
+import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
+
 import PodEmptyScreen from './PodEmptyScreen.svelte';
 
-vi.mock('../resource-permission');
+vi.mock(import('/@/lib/kube/resource-permission'));
 
 test('Expect pod empty screen', async () => {
   vi.mocked(listenResourcePermitted).mockImplementation(vi.fn((_, callback) => callback(true)));

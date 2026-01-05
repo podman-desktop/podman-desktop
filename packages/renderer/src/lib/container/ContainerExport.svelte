@@ -4,12 +4,12 @@ import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import { ContainerUtils } from '/@/lib/container/container-utils';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import { Uri } from '/@/lib/uri/Uri';
 import { handleNavigation } from '/@/navigation';
 import { containersInfos } from '/@/stores/containers';
 import { NavigationPage } from '/@api/navigation-page';
 
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import { Uri } from '../uri/Uri';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 export let containerID: string;

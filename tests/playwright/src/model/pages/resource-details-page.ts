@@ -18,8 +18,8 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import type { ResourceElementActions } from '../core/operations';
-import { DetailsPage } from './details-page';
+import type { ResourceElementActions } from '/@/model/core/operations';
+import { DetailsPage } from '/@/model/pages/details-page';
 
 export class ResourceDetailsPage extends DetailsPage {
   readonly resourceStatus: Locator;
@@ -29,10 +29,7 @@ export class ResourceDetailsPage extends DetailsPage {
     this.resourceStatus = this.header.getByLabel('Connection Status Label');
   }
 
-  public async performConnectionActionDetails(
-    operation: ResourceElementActions,
-    timeout: number = 25_000,
-  ): Promise<void> {
+  public async performConnectionActionDetails(operation: ResourceElementActions, timeout = 25_000): Promise<void> {
     return test.step(`Perform connection action '${operation}' on resource element '${this.resourceName}' from details page`, async () => {
       const button = this.controlActions.getByRole('button', {
         name: operation,

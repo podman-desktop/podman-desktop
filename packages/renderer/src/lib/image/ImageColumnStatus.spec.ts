@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ImageIcon from '../images/ImageIcon.svelte';
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+
 import ImageColumnStatus from './ImageColumnStatus.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 

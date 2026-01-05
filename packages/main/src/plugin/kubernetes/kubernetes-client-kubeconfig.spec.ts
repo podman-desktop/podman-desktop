@@ -19,7 +19,8 @@
 import type { Cluster, Context, KubeConfig, User } from '@kubernetes/client-node';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '../api.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';

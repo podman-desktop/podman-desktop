@@ -1,5 +1,6 @@
 <script lang="ts">
-import Dots from '../../ui/Dots.svelte';
+import Dots from '/@/lib/ui/Dots.svelte';
+
 import type { PodUI } from './PodUI';
 
 interface Props {

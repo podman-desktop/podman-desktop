@@ -6,7 +6,8 @@ import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import Fa from 'svelte-fa';
 
-import Markdown from '../markdown/Markdown.svelte';
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+
 import type { CustomPickOptions } from './quickpick-input';
 
 let id = -1;

@@ -22,8 +22,8 @@ import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { ExtensionContextSymbol } from '/@/inject/symbols';
+import { normalizeWSLOutput } from '/@/utils/util';
 
-import { normalizeWSLOutput } from '../../utils/util';
 import { UserAdminCheck } from './user-admin-check';
 
 @injectable()

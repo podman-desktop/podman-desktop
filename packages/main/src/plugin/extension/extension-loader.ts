@@ -32,6 +32,7 @@ import {
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IAsyncDisposable } from '/@api/async-disposable.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
@@ -40,10 +41,10 @@ import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import { PodInfo } from '/@api/pod-info.js';
 import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
 import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
-import { ApiSenderType } from '../api.js';
 import { AuthenticationImpl } from '../authentication.js';
 import { CancellationTokenSource } from '../cancellation-token.js';
 import { Certificates } from '../certificates.js';
@@ -90,7 +91,7 @@ import { Uri } from '../types/uri.js';
 import { Exec } from '../util/exec.js';
 import { getFreePort } from '../util/port.js';
 import { ViewRegistry } from '../view-registry.js';
-import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
+import { type AnalyzedExtension, ExtensionAnalyzer, ExtensionAnalyzerOptions } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import { ExtensionWatcher } from './extension-watcher.js';
 
@@ -312,7 +313,10 @@ export class ExtensionLoader implements IAsyncDisposable {
     // eslint-disable-next-line sonarjs/no-unsafe-unzip
     admZip.extractAllTo(unpackedDirectory, true);
 
-    const extension = await this.analyzeExtension(unpackedDirectory, true);
+    const extension = await this.analyzeExtension({
+      extensionPath: unpackedDirectory,
+      removable: true,
+    });
     if (!extension.error) {
       await this.loadExtension(extension);
       this.apiSender.send('extension-started', {});
@@ -448,11 +452,16 @@ export class ExtensionLoader implements IAsyncDisposable {
       fs.mkdirSync(this.extensionsStorageDirectory);
     }
 
-    let folders;
+    let folders: string[];
     // scan all extensions that we can find from the extensions folder
     if (import.meta.env.PROD) {
-      // in production mode, use the extensions locally
-      folders = await this.readProductionFolders(path.join(__dirname, '../../../extensions'));
+      // in production mode, use the extensions & extensions-extra locally
+      const promises = await Promise.all([
+        this.readProductionFolders(path.join(__dirname, '../../../extensions')),
+        this.readDevelopmentFolders(path.join(__dirname, '../../../extensions-extra')),
+      ]);
+
+      folders = promises.flat();
     } else {
       // in development mode, use the extensions locally
       folders = await this.readDevelopmentFolders(path.join(__dirname, '../../../extensions'));
@@ -462,12 +471,27 @@ export class ExtensionLoader implements IAsyncDisposable {
     const analyzedExtensions: AnalyzedExtension[] = [];
 
     const analyzedFoldersExtension = (
-      await Promise.all(folders.map(folder => this.analyzeExtension(folder, false)))
+      await Promise.all(
+        folders.map(folder =>
+          this.analyzeExtension({
+            extensionPath: folder,
+            removable: false,
+          }),
+        ),
+      )
     ).filter(extension => !extension.error);
     analyzedExtensions.push(...analyzedFoldersExtension);
 
     const analyzedExternalExtensions = (
-      await Promise.all(externalExtensions.map(folder => this.analyzeExtension(folder, false, true)))
+      await Promise.all(
+        externalExtensions.map(folder =>
+          this.analyzeExtension({
+            extensionPath: folder,
+            removable: false,
+            devMode: true,
+          }),
+        ),
+      )
     ).filter(extension => !extension.error);
     analyzedExtensions.push(...analyzedExternalExtensions);
 
@@ -477,12 +501,26 @@ export class ExtensionLoader implements IAsyncDisposable {
       // filter only directories ignoring node_modules directory
       const pluginDirectories = pluginDirEntries
         .filter(entry => entry.isDirectory())
-        .map(directory => this.pluginsDirectory + '/' + directory.name);
+        .map(directory => path.join(this.pluginsDirectory, directory.name));
 
       // collect all extensions from the pluginDirectory folders
       const analyzedPluginsDirectoryExtensions: AnalyzedExtension[] = (
-        await Promise.all(pluginDirectories.map(folder => this.analyzeExtension(folder, true)))
-      ).filter(extension => !extension.error);
+        await Promise.allSettled(
+          pluginDirectories.map(folder =>
+            this.analyzeExtension({
+              extensionPath: folder,
+              removable: true,
+            }),
+          ),
+        )
+      ).reduce((accumulator, result) => {
+        if (result.status === 'fulfilled') {
+          accumulator.push(result.value);
+        } else {
+          console.error('Something went wrong while trying to analyse an extension:', result.reason);
+        }
+        return accumulator;
+      }, [] as AnalyzedExtensionWithApi[]);
       analyzedExtensions.push(...analyzedPluginsDirectoryExtensions);
     }
 
@@ -503,7 +541,11 @@ export class ExtensionLoader implements IAsyncDisposable {
   protected async loadDevelopmentFolderExtensions(analyzedExtensions: AnalyzedExtension[]): Promise<void> {
     for (const folder of this.extensionDevelopmentFolder.getDevelopmentFolders()) {
       if (fs.existsSync(folder.path)) {
-        const analyzedExtension = await this.analyzeExtension(folder.path, false, true);
+        const analyzedExtension = await this.analyzeExtension({
+          extensionPath: folder.path,
+          removable: false,
+          devMode: true,
+        });
         if (!analyzedExtension.error) {
           analyzedExtensions.push(analyzedExtension);
         } else {
@@ -603,6 +645,9 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async readDevelopmentFolders(folderPath: string): Promise<string[]> {
+    // only readdir on existing folder
+    if (!fs.existsSync(folderPath)) return [];
+
     const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
     // filter only directories ignoring node_modules directory
     return entries
@@ -631,6 +676,9 @@ export class ExtensionLoader implements IAsyncDisposable {
   }
 
   async readProductionFolders(folderPath: string): Promise<string[]> {
+    // only readdir on existing folder
+    if (!fs.existsSync(folderPath)) return [];
+
     const entries = await fs.promises.readdir(folderPath, { withFileTypes: true });
     return entries
       .filter(entry => entry.isDirectory() && entry.name !== 'node_modules')
@@ -686,7 +734,11 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     // reload the extension
     try {
-      const updatedExtension = await this.analyzeExtension(extension.path, removable);
+      const updatedExtension = await this.analyzeExtension({
+        extensionPath: extension.path,
+        removable,
+        devMode: extension.devMode,
+      });
 
       if (!updatedExtension.error) {
         await this.loadExtension(updatedExtension, true);
@@ -814,12 +866,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     }
   }
 
-  async analyzeExtension(
-    extensionPath: string,
-    removable: boolean,
-    devMode: boolean = false,
-  ): Promise<AnalyzedExtensionWithApi> {
-    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(extensionPath, removable, devMode);
+  async analyzeExtension(options: ExtensionAnalyzerOptions): Promise<AnalyzedExtensionWithApi> {
+    const analyzedExtension = await this.extensionAnalyzer.analyzeExtension(options);
 
     const api = this.createApi(analyzedExtension);
 
@@ -1377,6 +1425,9 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const telemetry = this.telemetry;
     const env: typeof containerDesktopAPI.env = {
+      get appName() {
+        return product.name;
+      },
       get isMac() {
         return isMac();
       },
@@ -1826,7 +1877,11 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const extension = this.analyzedExtensions.get(extensionId);
     if (extension) {
-      const analyzedExtension = await this.analyzeExtension(extension.path, extension.removable, extension.devMode);
+      const analyzedExtension = await this.analyzeExtension({
+        extensionPath: extension.path,
+        removable: extension.removable,
+        devMode: extension.devMode,
+      });
 
       if (!analyzedExtension.error) {
         await this.loadExtension(analyzedExtension, true);

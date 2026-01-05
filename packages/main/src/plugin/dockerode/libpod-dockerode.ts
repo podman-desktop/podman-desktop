@@ -353,7 +353,10 @@ export interface LibPod {
   resolveShortnameImage(shortname: string): Promise<{ Names: string[] }>;
   restartPod(podId: string): Promise<void>;
   generateKube(names: string[]): Promise<string>;
-  playKube(file: string | NodeJS.ReadableStream, options?: { build?: boolean }): Promise<PlayKubeInfo>;
+  playKube(
+    file: string | NodeJS.ReadableStream,
+    options?: { build?: boolean; replace?: boolean; abortSignal?: AbortSignal },
+  ): Promise<PlayKubeInfo>;
   pruneAllImages(dangling: boolean): Promise<void>;
   podmanInfo(): Promise<Info>;
   getImages(options: GetImagesOptions): Promise<NodeJS.ReadableStream>;
@@ -802,12 +805,19 @@ export class LibpodDockerode {
     // add playKube
     prototypeOfDockerode.playKube = function (
       file: string | NodeJS.ReadableStream,
-      options?: { build?: boolean },
+      options?: { build?: boolean; replace?: boolean; abortSignal?: AbortSignal },
     ): Promise<PlayKubeInfo> {
+      const queries: string[] = [];
+      if (options?.replace === true) {
+        queries.push(`replace=true`);
+      }
+
       const optsf = {
-        path: '/v4.2.0/libpod/play/kube',
+        // N.B: last ? will be cut by the modem dial call
+        path: `/v4.2.0/libpod/play/kube?${queries.join('&')}?`,
         method: 'POST',
         file: file,
+        abortSignal: options?.abortSignal,
         statusCodes: {
           200: true,
           204: true,

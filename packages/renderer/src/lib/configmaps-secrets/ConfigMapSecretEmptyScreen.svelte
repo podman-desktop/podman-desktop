@@ -1,6 +1,6 @@
 <script lang="ts">
-import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
-import KubernetesEmptyScreen from '../kube/KubernetesEmptyScreen.svelte';
+import ConfigMapSecretIcon from '/@/lib/images/ConfigMapSecretIcon.svelte';
+import KubernetesEmptyScreen from '/@/lib/kube/KubernetesEmptyScreen.svelte';
 </script>
 
 <KubernetesEmptyScreen

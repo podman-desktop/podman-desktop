@@ -20,9 +20,9 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Notification } from 'electron';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
 
-import { ApiSenderType } from '../api.js';
 import { Disposable } from '../types/disposable.js';
 import { TaskManager } from './task-manager.js';
 

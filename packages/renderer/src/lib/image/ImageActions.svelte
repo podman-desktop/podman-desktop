@@ -4,15 +4,15 @@ import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import { ContextUI } from '/@/lib/context/context';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { context } from '/@/stores/context';
+import { runImageInfo } from '/@/stores/run-image-store';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 
-import { runImageInfo } from '../../stores/run-image-store';
-import { ContextUI } from '../context/context';
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import ActionsWrapper from './ActionsMenu.svelte';
 import { ImageUtils } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';

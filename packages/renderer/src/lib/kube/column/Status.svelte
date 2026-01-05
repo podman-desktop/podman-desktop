@@ -3,8 +3,8 @@ import { StatusIcon } from '@podman-desktop/ui-svelte';
 import { type Component } from 'svelte';
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import { icon } from '/@/lib/kube/kube-icon-utils';
 
-import { icon } from '../kube-icon-utils';
 import type { Props } from './props';
 
 let { object }: Props = $props();

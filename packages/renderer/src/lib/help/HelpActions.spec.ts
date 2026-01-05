@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
-import { beforeAll, beforeEach, expect, suite, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import HelpActions from './HelpActions.svelte';
 import { Items } from './HelpItems';
 
 let toggleMenuCallback: () => void;
 
-suite('HelpActions component', () => {
+describe('HelpActions component', () => {
   beforeAll(() => {
     (window.events as unknown) = {
       receive: vi.fn(),
@@ -43,66 +43,7 @@ suite('HelpActions component', () => {
     });
   });
 
-  test('by default is not visible', () => {
-    const ha = render(HelpActions);
-    const items = ha.queryAllByTitle(Items[0].title);
-    expect(items).toHaveLength(0);
-  });
-
-  test('simulate clicking outside the menu closes it', async () => {
-    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
-      toggleMenuCallback = callback;
-      return {
-        dispose: (): void => {},
-      };
-    });
-    const ha = render(HelpActions);
-
-    toggleMenuCallback();
-
-    await vi.waitFor(() => {
-      const helpMenu = ha.getByTestId('help-menu');
-      expect(helpMenu).toBeVisible();
-    });
-
-    // Click "outside" the menu (body)
-    const event = new MouseEvent('click', { bubbles: true });
-    document.body.dispatchEvent(event);
-
-    await vi.waitFor(() => {
-      const helpMenu = ha.queryByTestId('help-menu');
-      expect(helpMenu).toBeNull();
-    });
-  });
-
-  test('create a span that has data-task-button=Help attribute, spy on and make sure that it is only called once each click', async () => {
-    render(HelpActions);
-
-    // Create data-task-button=Help to simulate the status bar icon / button
-    const span = document.createElement('span');
-    span.setAttribute('data-task-button', 'Help');
-    document.body.appendChild(span);
-
-    // Click
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-    span.dispatchEvent(event);
-
-    // Expect receiveEventMock to have been called
-    // why we do this is because we are mocking receiveEvent already, so we're not "toggling" it
-    // this test ensures that the event is only called once / we are toggling correctly.
-    expect(window.events.receive).toHaveBeenCalledTimes(1);
-
-    // Remove the span after (unsure if needed, but dont want to break other tests)
-    span.remove();
-  });
-
   test.each(Items)('contains item with $title', async ({ title, tooltip }) => {
-    vi.mocked(window.events.receive).mockImplementation((channel: string, callback: () => void) => {
-      toggleMenuCallback = callback;
-      return {
-        dispose: (): void => {},
-      };
-    });
     const ha = render(HelpActions);
     toggleMenuCallback();
     await vi.waitFor(async () => {

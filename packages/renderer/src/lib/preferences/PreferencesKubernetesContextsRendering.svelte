@@ -6,17 +6,17 @@ import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import { clearKubeUIContextErrors, setKubeUIContextError } from '/@/lib/kube/KubeContextUI';
+import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { kubernetesContextsHealths } from '/@/stores/kubernetes-context-health';
 import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
+import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import { kubernetesContextsCheckingStateDelayed, kubernetesContextsState } from '/@/stores/kubernetes-contexts-state';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 import type { KubeContext } from '/@api/kubernetes-context';
 import type { SelectedResourceName } from '/@api/kubernetes-contexts-states';
 
-import { kubernetesContexts } from '../../stores/kubernetes-contexts';
-import { clearKubeUIContextErrors, setKubeUIContextError } from '../kube/KubeContextUI';
-import EngineIcon from '../ui/EngineIcon.svelte';
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
 import SettingsPage from './SettingsPage.svelte';
 

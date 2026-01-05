@@ -2,7 +2,7 @@
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import IconImage from '../appearance/IconImage.svelte';
+import IconImage from '/@/lib/appearance/IconImage.svelte';
 
 export let extension: { icon?: string | { light: string; dark: string }; name: string; state: string };
 

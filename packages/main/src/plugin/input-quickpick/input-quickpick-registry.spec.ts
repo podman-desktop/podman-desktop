@@ -17,7 +17,8 @@
  ***********************************************************************/
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '../api.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import { InputQuickPickRegistry } from './input-quickpick-registry.js';
 
 let inputQuickPickRegistry: InputQuickPickRegistry;

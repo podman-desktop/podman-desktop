@@ -2,10 +2,10 @@
 import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
 
+import Route from '/@/Route.svelte';
 import { webviews } from '/@/stores/webviews';
 import type { WebviewInfo } from '/@api/webview-info';
 
-import Route from '../../Route.svelte';
 import { webviewLifecycle } from './webview-directive';
 
 // webview id

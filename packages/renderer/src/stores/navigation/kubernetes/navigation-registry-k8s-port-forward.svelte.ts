@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import NodeIcon from '/@/lib/images/KeyIcon.svelte';
-
-import { kubernetesCurrentContextPortForwards } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

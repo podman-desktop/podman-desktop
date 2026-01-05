@@ -49,15 +49,10 @@ import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
-import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
+import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
-import type {
-  GenerateKubeResult,
-  KubernetesGeneratorArgument,
-  KubernetesGeneratorSelector,
-} from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
@@ -66,6 +61,7 @@ import type { ExtensionBanner, RecommendedRegistry } from '/@/plugin/recommendat
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -90,8 +86,10 @@ import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
 import type { IDisposable } from '/@api/disposable.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
 import type { DocumentationInfo } from '/@api/documentation-info.js';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
+import type { FeaturedExtension } from '/@api/featured/featured-api.js';
 import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
@@ -101,6 +99,12 @@ import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
+import type {
+  GenerateKubeResult,
+  KubernetesGeneratorArgument,
+  KubernetesGeneratorInfo,
+  KubernetesGeneratorSelector,
+} from '/@api/kubernetes/kubernetes-generator-api.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
@@ -137,7 +141,6 @@ import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
-import { ApiSenderType, IPCHandle, IPCMainOn } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -152,7 +155,7 @@ import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
-import { ContainerProviderRegistry } from './container-registry.js';
+import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
@@ -175,14 +178,13 @@ import { ExperimentalConfigurationManager } from './experimental-configuration-m
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
-import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
-import type { FeaturedExtension } from './featured/featured-api.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
+import { HelpMenu } from './help-menu/help-menu.js';
 import { IconRegistry } from './icon-registry.js';
 import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
@@ -201,6 +203,7 @@ import { OpenDevToolsInit } from './open-devtools-init.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { Proxy } from './proxy.js';
 import { RecommendationsRegistry } from './recommendations/recommendations-registry.js';
+import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
@@ -567,6 +570,10 @@ export class PluginSystem {
     const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
     statusbarProviders.init();
 
+    container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
+    const helpMenu = container.get<HelpMenu>(HelpMenu);
+    helpMenu.init();
+
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
 
     // Don't show the tray icon options on Mac
@@ -687,6 +694,11 @@ export class PluginSystem {
     container.bind<EditorInit>(EditorInit).toSelf().inSingletonScope();
     const editorInit = container.get<EditorInit>(EditorInit);
     editorInit.init();
+
+    // init registry configuration
+    container.bind<RegistryInit>(RegistryInit).toSelf().inSingletonScope();
+    const registryInit = container.get<RegistryInit>(RegistryInit);
+    registryInit.init();
 
     // init welcome configuration
     container.bind<WelcomeInit>(WelcomeInit).toSelf().inSingletonScope();
@@ -873,6 +885,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:getNetworkDrivers',
+      async (_listener, providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<string[]> => {
+        return containerProviderRegistry.getNetworkDrivers(providerContainerConnectionInfo);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:listVolumes',
       async (_listener, fetchUsage: boolean): Promise<VolumeListInfo[]> => {
         return containerProviderRegistry.listVolumes(fetchUsage);
@@ -1037,9 +1055,33 @@ export class PluginSystem {
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
+          replace?: boolean;
+          cancellableTokenId?: number;
         },
       ): Promise<PlayKubeInfo> => {
-        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          options?.cancellableTokenId,
+        );
+
+        const task = taskManager.createTask({
+          title: `Podman Play Kube`,
+          cancellable: options?.cancellableTokenId !== undefined,
+          cancellationTokenSourceId: options?.cancellableTokenId,
+        });
+
+        try {
+          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, {
+            ...options,
+            abortSignal: abortController?.signal,
+          });
+          task.status = 'success';
+          return result;
+        } catch (error: unknown) {
+          task.error = String(error);
+          task.status = 'failure';
+          throw error;
+        }
       },
     );
 
@@ -1224,6 +1266,30 @@ export class PluginSystem {
         );
       },
     );
+
+    this.ipcHandle(
+      'container-provider-registry:updateImage',
+      async (_listener, engineId: string, imageId: string, tag: string): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Updating image '${tag}'`,
+        });
+        try {
+          await containerProviderRegistry.updateImage(engineId, imageId, tag);
+          task.status = 'success';
+        } catch (error: unknown) {
+          // "Image is already the latest version" is not a breaking error, treat as success
+          if (error instanceof LatestImageError) {
+            task.name = `Image '${tag}' is already up to date`;
+            task.status = 'success';
+            return;
+          }
+          task.error = String(error);
+          task.status = 'failure';
+          throw error;
+        }
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:pushImage',
       async (_listener, engine: string, imageId: string, callbackId: number): Promise<void> => {
@@ -1459,6 +1525,7 @@ export class PluginSystem {
         }
         if (target) {
           titleArgs.push(`(${target})`);
+          telemetry.track('build-image-intermediate-target');
         }
 
         // create task

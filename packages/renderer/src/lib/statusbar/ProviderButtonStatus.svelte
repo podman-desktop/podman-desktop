@@ -1,5 +1,6 @@
 <script lang="ts">
-import IconImage from '../appearance/IconImage.svelte';
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+
 import arrowUp from './status-icons/arrow-up.svg';
 
 interface Props {

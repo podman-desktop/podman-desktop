@@ -13,6 +13,11 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { type Component, onMount, tick } from 'svelte';
 import { router } from 'tinro';
 
+import ArrowDownIcon from '/@/lib/images/ArrowDownIcon.svelte';
+import ArrowUpIcon from '/@/lib/images/ArrowUpIcon.svelte';
+import EnterIcon from '/@/lib/images/EnterIcon.svelte';
+import NotFoundIcon from '/@/lib/images/NotFoundIcon.svelte';
+import { isPropertyValidInContext } from '/@/lib/preferences/Util';
 import { handleNavigation } from '/@/navigation';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
@@ -29,11 +34,6 @@ import { NavigationPage } from '/@api/navigation-page';
 import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
-import ArrowDownIcon from '../images/ArrowDownIcon.svelte';
-import ArrowUpIcon from '../images/ArrowUpIcon.svelte';
-import EnterIcon from '../images/EnterIcon.svelte';
-import NotFoundIcon from '../images/NotFoundIcon.svelte';
-import { isPropertyValidInContext } from '../preferences/Util';
 import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 import TextHighLight from './TextHighLight.svelte';
 

@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { SelectableExtensionDevelopmentFolderInfoUI } from '../development-folder-info-ui';
+import type { SelectableExtensionDevelopmentFolderInfoUI } from '/@/lib/extensions/dev-mode/development-folder-info-ui';
+
 import ActionUntrack from './ActionUntrack.svelte';
 
 beforeEach(() => {
