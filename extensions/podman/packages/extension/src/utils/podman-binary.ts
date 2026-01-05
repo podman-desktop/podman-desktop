@@ -15,10 +15,10 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { configuration as configurationAPI, Disposable, process as processAPI } from '@podman-desktop/api';
+import { configuration as configurationAPI, Disposable } from '@podman-desktop/api';
 import { injectable, postConstruct, preDestroy } from 'inversify';
 
-import { getPodmanCli } from '/@/utils/podman-cli';
+import { execPodman } from '/@/utils/util';
 
 export interface InstalledPodman {
   version: string;
@@ -32,8 +32,8 @@ export class PodmanBinary implements Disposable {
   /**
    * Given a path to a podman binary, return the version of podman
    */
-  protected async getPodmanVersion(path: string): Promise<string> {
-    const { stdout: versionOut } = await processAPI.exec(path, ['--version']);
+  protected async getPodmanVersion(): Promise<string> {
+    const { stdout: versionOut } = await execPodman(['--version']);
     const versionArr = versionOut.split(' ');
     return versionArr[versionArr.length - 1];
   }
@@ -49,9 +49,9 @@ export class PodmanBinary implements Disposable {
     if (this.#cli) {
       return this.#cli;
     }
-    const path = getPodmanCli();
+
     try {
-      const version = await this.getPodmanVersion(path);
+      const version = await this.getPodmanVersion();
       this.#cli = {
         version,
       };
