@@ -80,6 +80,7 @@ function assertNumericValueIsValid(value: number): boolean {
       bind:value={recordValue}
       on:keypress={onNumberInputKeyPress}
       on:input={onInput}
+      disabled={!!record.readonly}
       aria-label={record.description} />
   </Tooltip>
 </div>
