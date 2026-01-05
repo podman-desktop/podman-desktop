@@ -18,7 +18,8 @@
 
 import type { Locator, Page } from '@playwright/test';
 
-import type { KubernetesResources } from '../core/types';
+import type { KubernetesResources } from '/@/model/core/types';
+
 import { KubernetesDashboardPage } from './kubernetes-dashboard-page';
 import { KubernetesResourcePage } from './kubernetes-resource-page';
 

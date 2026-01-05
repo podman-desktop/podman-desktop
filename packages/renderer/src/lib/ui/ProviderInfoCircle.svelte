@@ -8,4 +8,4 @@ let { type }: Props = $props();
 let color = $derived(providerColors[type ?? 'unknown']);
 </script>
 
-<div aria-label="Provider info circle" class="w-2 h-2 {color} rounded-full"></div>
+<div aria-label="Provider info circle" class="min-w-2 min-h-2 {color} rounded-full"></div>

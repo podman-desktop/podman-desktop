@@ -19,9 +19,10 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { waitUntil, waitWhile } from '../../utility/wait';
-import { VolumeState } from '../core/states';
+import { VolumeState } from '/@/model/core/states';
+import { handleConfirmationDialog } from '/@/utility/operations';
+import { waitUntil, waitWhile } from '/@/utility/wait';
+
 import { CreateVolumePage } from './create-volume-page';
 import { MainPage } from './main-page';
 import { VolumeDetailsPage } from './volume-details-page';

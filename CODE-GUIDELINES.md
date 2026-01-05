@@ -19,6 +19,52 @@ import { WinPlatform } from './win-platform';
 import type { WSL2Check } from '../checks/windows/wsl2-check';
 ```
 
+### Svelte
+
+On templates of Svelte components, avoid using inline code and arrow functions. Instead, call a function defined in the script part of the component.
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+async function onButtonClicked(): Promise<void> {
+  // the code here
+}
+</script>
+
+<button on:click={onButtonClicked}>
+```
+
+🚫 **Instead of:**
+
+```ts
+<button on:click={(): Promise<void> => { /* the code here */ }}>
+```
+
+If values have to be passed from the template to the function, use the `bind` method on the function to pass the parameter.
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+async function onButtonClicked(object: Object): Promise<void> {
+  // the code here
+}
+</script>
+
+{#each objects as object (object.id)}
+  <button on:click={onButtonClicked.bind(undefined, object)}>
+{/each}
+```
+
+🚫 **Instead of:**
+
+```ts
+{#each objects as object (object.id)}
+  <button on:click={(): Promise<void> => onButtonClicked(object)}>
+{/each}
+```
+
 ## Unit tests code
 
 ### Use `vi.mocked`, not a generic `myFunctionMock`

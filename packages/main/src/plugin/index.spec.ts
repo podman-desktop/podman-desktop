@@ -21,15 +21,16 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type { PullEvent } from '@podman-desktop/api';
-import type { WebContents } from 'electron';
+import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
-import type { ProviderInfo } from '/@api/provider-info.js';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
@@ -48,7 +49,7 @@ import { NavigationManager } from './navigation/navigation-manager.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { TaskImpl } from './tasks/task-impl.js';
 import { TaskManager } from './tasks/task-manager.js';
-import type { Task } from './tasks/tasks.js';
+import type { Task, TaskAction } from './tasks/tasks.js';
 import { Disposable } from './types/disposable.js';
 import { HttpServer } from './webview/webview-registry.js';
 
@@ -812,5 +813,123 @@ describe('Log race condition fix', () => {
       logger.error('test');
       logger.onEnd();
     }).not.toThrow();
+  });
+});
+
+describe('container-provider-registry:buildImage', () => {
+  type BuildImageHandler = (
+    _listener: IpcMainInvokeEvent,
+    containerBuildContextDirectory: string,
+    relativeContainerfilePath: string,
+    imageName: string | undefined,
+    platform: string,
+    selectedProvider: ProviderContainerConnectionInfo,
+    onDataCallbacksBuildImageId: number,
+    cancellableTokenId?: number,
+    buildargs?: { [key: string]: string },
+    taskId?: number,
+    target?: string,
+  ) => Promise<unknown>;
+
+  let handle: BuildImageHandler;
+  let createTaskSpy: Mock;
+
+  beforeEach(() => {
+    handle = handlers.get('container-provider-registry:buildImage');
+    expect(handle).not.equal(undefined);
+
+    createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+  });
+
+  test('handler should create a task', async () => {
+    expect(createTaskSpy).not.toHaveBeenCalled();
+
+    await handle(
+      {} as unknown as IpcMainInvokeEvent,
+      'containerBuildContextDirectory',
+      'relativeContainerfilePath',
+      'imageName',
+      'platform',
+      {} as ProviderContainerConnectionInfo,
+      1,
+    );
+
+    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        title: expect.any(String),
+        action: {
+          name: 'Go to task >',
+          execute: expect.any(Function),
+        },
+      }),
+    );
+  });
+
+  test('task created should have appropriate title', async () => {
+    await handle(
+      {} as unknown as IpcMainInvokeEvent,
+      'containerBuildContextDirectory',
+      'relativeContainerfilePath',
+      'imageName',
+      'platform',
+      {} as ProviderContainerConnectionInfo,
+      1,
+    );
+
+    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        title: 'Building image imageName',
+      }),
+    );
+  });
+
+  test('build image with target options should specify it in the task title', async () => {
+    await handle(
+      {} as unknown as IpcMainInvokeEvent,
+      'containerBuildContextDirectory',
+      'relativeContainerfilePath',
+      'imageName',
+      'platform',
+      {} as ProviderContainerConnectionInfo,
+      1,
+      undefined,
+      undefined,
+      undefined,
+      'dummy-target',
+    );
+
+    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        title: 'Building image imageName (dummy-target)',
+      }),
+    );
+  });
+
+  test('task created should have correct action', async () => {
+    const navigateToImageBuildMock = vi.spyOn(NavigationManager.prototype, 'navigateToImageBuild');
+
+    await handle(
+      {} as unknown as IpcMainInvokeEvent,
+      'containerBuildContextDirectory',
+      'relativeContainerfilePath',
+      'imageName',
+      'platform',
+      {} as ProviderContainerConnectionInfo,
+      1,
+      undefined,
+      undefined,
+      55, // taskId
+    );
+
+    expect(navigateToImageBuildMock).not.toHaveBeenCalled();
+
+    const action: TaskAction | undefined = createTaskSpy.mock.calls[0]?.[0]?.action;
+    assert(action, 'task action should be defined');
+
+    action.execute({} as Task);
+
+    await vi.waitFor(() => {
+      expect(navigateToImageBuildMock).toHaveBeenCalledExactlyOnceWith(55);
+    });
   });
 });

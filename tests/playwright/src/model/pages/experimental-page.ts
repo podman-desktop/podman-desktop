@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
-import type { Locator, Page } from 'playwright';
 
 import { SettingsPage } from './settings-page';
 

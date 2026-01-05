@@ -19,12 +19,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ImageState, PodState } from '../model/core/states';
-import { PodmanKubePlayOptions } from '../model/core/types';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteImage, deletePod } from '../utility/operations';
-import { isCI, isLinux } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ImageState, PodState } from '/@/model/core/states';
+import { PodmanKubePlayOptions } from '/@/model/core/types';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteImage, deletePod } from '/@/utility/operations';
+import { isCI, isLinux } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const POD_NAME_FROM_SCRATCH: string = 'podman-kube-play-test';
 const POD_NAME_BUILD_OPTION: string = 'podman-kube-play-build-test';
@@ -105,6 +105,8 @@ test.describe.serial('Podman Kube Play Yaml - with Build flag', { tag: '@smoke' 
     }
   });
   test('Create pod and verify it is running', async ({ navigationBar }) => {
+    test.setTimeout(180_000);
+
     const podsPage = await navigationBar.openPods();
     await playExpect(podsPage.heading).toBeVisible();
     const podmanKubePlayPage = await podsPage.openPodmanKubePlay();

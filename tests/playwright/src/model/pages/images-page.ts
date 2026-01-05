@@ -19,9 +19,10 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { waitUntil, waitWhile } from '../../utility/wait';
-import type { ContainerInteractiveParams } from '../core/types';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { handleConfirmationDialog } from '/@/utility/operations';
+import { waitUntil, waitWhile } from '/@/utility/wait';
+
 import { BuildImagePage } from './build-image-page';
 import type { ContainersPage } from './containers-page';
 import { ImageDetailsPage } from './image-details-page';
@@ -71,7 +72,7 @@ export class ImagesPage extends MainPage {
     });
   }
 
-  async renameImage(oldname: string, newname: string, newtag: string = ''): Promise<ImagesPage> {
+  async renameImage(oldname: string, newname: string, newtag = ''): Promise<ImagesPage> {
     return test.step(`Rename ${oldname} to ${newname}`, async () => {
       const imageDetailsPage = await this.openImageDetails(oldname);
       await playExpect(imageDetailsPage.heading).toContainText(oldname);
@@ -121,7 +122,7 @@ export class ImagesPage extends MainPage {
   }
 
   async openBuildImage(): Promise<BuildImagePage> {
-    return test.step(`Open build image page`, async () => {
+    return test.step('Open build image page', async () => {
       await this.buildImageButton.click();
       return new BuildImagePage(this.page);
     });
@@ -243,6 +244,26 @@ export class ImagesPage extends MainPage {
     await playExpect(deleteManifestButton).toBeEnabled();
     await deleteManifestButton.click();
     await handleConfirmationDialog(this.page);
+  }
+
+  async pushManifest(manifestName: string): Promise<void> {
+    return test.step(`Push manifest: ${manifestName}`, async () => {
+      const manifest = await this.getImageRowByName(manifestName);
+      if (!manifest) {
+        throw new Error(`Manifest with name "${manifestName}" not found`);
+      }
+
+      const kebabMenuButton = manifest.getByRole('button', { name: 'kebab menu', exact: true });
+      await playExpect(kebabMenuButton).toBeVisible();
+      await kebabMenuButton.click();
+
+      // Push Manifest button has role='none', so we use getByTitle instead of getByRole
+      const pushManifestButton = manifest.getByTitle('Push Manifest');
+      await playExpect(pushManifestButton).toBeVisible();
+      await pushManifestButton.click();
+
+      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', 120_000, true);
+    });
   }
 
   async getAllImageBadges(name: string): Promise<string[]> {

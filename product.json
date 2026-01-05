@@ -1,0 +1,15 @@
+{
+  "name": "Podman Desktop",
+  "appId": "io.podman_desktop.PodmanDesktop",
+  "artifactName": "podman-desktop",
+  "urlProtocol": "podman-desktop",
+  "telemetry": {
+    "key": "Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy"
+  },
+  "catalog": {
+    "default": "https://registry.podman-desktop.io/api/extensions.json"
+  },
+  "extensions": {
+    "remote": []
+  }
+}

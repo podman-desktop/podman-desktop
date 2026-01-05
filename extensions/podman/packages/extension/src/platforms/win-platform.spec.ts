@@ -18,7 +18,7 @@
 
 import type { CheckResult, ExtensionContext, TelemetryLogger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { HyperVCheck } from '/@/checks/windows/hyper-v-check';
 import type { HyperVPodmanVersionCheck } from '/@/checks/windows/hyper-v-podman-version-check';
@@ -123,4 +123,27 @@ test('isWSLEnabled should return true if all WSL checks succeed', async () => {
   const wslEnabled = await winPlatform.isWSLEnabled();
 
   expect(wslEnabled).toBeTruthy();
+});
+
+describe('calcPipeName', () => {
+  test('calcPipeName should prepend "podman-" if machine name does not start with "podman"', () => {
+    const machineName = 'my-machine';
+    const expectedPipeName = '//./pipe/podman-my-machine';
+    const result = winPlatform.calcPipeName(machineName);
+    expect(result).toBe(expectedPipeName);
+  });
+
+  test('calcPipeName should not prepend "podman-" if machine name already starts with "podman"', () => {
+    const machineName = 'podman-machine';
+    const expectedPipeName = '//./pipe/podman-machine';
+    const result = winPlatform.calcPipeName(machineName);
+    expect(result).toBe(expectedPipeName);
+  });
+
+  test('calcPipeName should handle machine name that is just "podman"', () => {
+    const machineName = 'podman';
+    const expectedPipeName = '//./pipe/podman';
+    const result = winPlatform.calcPipeName(machineName);
+    expect(result).toBe(expectedPipeName);
+  });
 });

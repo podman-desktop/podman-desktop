@@ -58,13 +58,13 @@ jobs:
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         if: github.event_name == 'push'
 
       - name: Set the default provider type variable
@@ -75,7 +75,9 @@ jobs:
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
-        uses: redhat-actions/podman-install@16601a3a718acf7d6986140459092a2f5b941a03
+        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
@@ -85,7 +87,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: 22
           cache: 'pnpm'

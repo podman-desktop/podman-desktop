@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { RunnerOptions } from '../runner/runner-options';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { RunnerOptions } from '/@/runner/runner-options';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'welcome-podman-desktop' }) });
 test.beforeAll(async ({ runner }) => {

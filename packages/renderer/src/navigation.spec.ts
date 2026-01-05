@@ -291,6 +291,11 @@ test(`Test navigationHandle for ${NavigationPage.NETWORK}`, () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/networks/network1/engineId1/summary');
 });
 
+test(`Test navigationHandle for ${NavigationPage.NETWORK_CREATE}`, () => {
+  handleNavigation({ page: NavigationPage.NETWORK_CREATE });
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/networks/create');
+});
+
 test(`Test navigationHandle for ${NavigationPage.EXTENSIONS_CATALOG}`, () => {
   handleNavigation({
     page: NavigationPage.EXTENSIONS_CATALOG,

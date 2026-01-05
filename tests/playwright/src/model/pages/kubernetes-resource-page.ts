@@ -18,7 +18,8 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { KubernetesResourceAttributes, KubernetesResources } from '../core/types';
+import { KubernetesResourceAttributes, KubernetesResources } from '/@/model/core/types';
+
 import { KubernetesResourceDetailsPage } from './kubernetes-resource-details-page';
 import { MainPage } from './main-page';
 
@@ -32,7 +33,7 @@ export class KubernetesResourcePage extends MainPage {
     });
   }
 
-  async fetchKubernetesResource(resourceName: string, timeout: number = 15_000): Promise<Locator> {
+  async fetchKubernetesResource(resourceName: string, timeout = 15_000): Promise<Locator> {
     try {
       await playExpect.poll(async () => this.getRowByName(resourceName, false), { timeout: timeout }).toBeTruthy();
     } catch {
@@ -56,7 +57,7 @@ export class KubernetesResourcePage extends MainPage {
     return test.step(`Open ${resourceType}: ${resourceName} details`, async () => {
       const resourceRow = await this.fetchKubernetesResource(resourceName, timeout);
 
-      let resourceRowName;
+      let resourceRowName: Locator;
       if (resourceType === KubernetesResources.Nodes) {
         resourceRowName = resourceRow.getByRole('cell').nth(2);
       } else {

@@ -18,17 +18,17 @@
 
 import type { Page } from '@playwright/test';
 
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import { ComposeLocalInstallPage } from '../model/pages/compose-onboarding/compose-local-install-page';
-import { ComposeOnboardingPage } from '../model/pages/compose-onboarding/compose-onboarding-page';
-import { ComposeVersionPage } from '../model/pages/compose-onboarding/compose-version-page';
-import { ComposeWideInstallPage } from '../model/pages/compose-onboarding/compose-wide-install-page';
-import { ResourceCliCardPage } from '../model/pages/resource-cli-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import type { NavigationBar } from '../model/workbench/navigation';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { isCI, isLinux } from '../utility/platform';
+import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import { ComposeLocalInstallPage } from '/@/model/pages/compose-onboarding/compose-local-install-page';
+import { ComposeOnboardingPage } from '/@/model/pages/compose-onboarding/compose-onboarding-page';
+import { ComposeVersionPage } from '/@/model/pages/compose-onboarding/compose-version-page';
+import { ComposeWideInstallPage } from '/@/model/pages/compose-onboarding/compose-wide-install-page';
+import { ResourceCliCardPage } from '/@/model/pages/resource-cli-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import type { NavigationBar } from '/@/model/workbench/navigation';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isCI, isLinux } from '/@/utility/platform';
 
 const RESOURCE_NAME: string = 'Compose';
 let cliToolsPage: CLIToolsPage;

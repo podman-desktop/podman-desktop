@@ -19,13 +19,12 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { DropdownComponent } from '/@/model/components/dropdown-component';
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
+import { matchesProviderVariant, PodmanVirtualizationProviderVariants } from '/@/model/core/types';
+import { BasePage } from '/@/model/pages/base-page';
 import { isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider } from '/@/utility/provider';
-
-import { DropdownComponent } from '../../components/dropdown-component';
-import type { PodmanVirtualizationProviders } from '../../core/types';
-import { matchesProviderVariant, PodmanVirtualizationProviderVariants } from '../../core/types';
-import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
   readonly podmanMachineConfiguration: Locator;

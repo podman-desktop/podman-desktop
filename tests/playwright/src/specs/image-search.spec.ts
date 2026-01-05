@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect as playExpect, test } from '../utility/fixtures';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const imageToSearch = 'ghcr.io/linuxcontainers/alpine';
 const httpdImage = 'docker.io/httpd';

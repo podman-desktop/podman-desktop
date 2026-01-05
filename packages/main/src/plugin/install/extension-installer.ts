@@ -22,31 +22,41 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import type { IpcMainEvent } from 'electron';
-import { ipcMain } from 'electron';
+import { inject, injectable } from 'inversify';
 import * as tarFs from 'tar-fs';
 
-import type { Directories } from '/@/plugin/directories.js';
-import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+import { Directories } from '/@/plugin/directories.js';
+import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
-import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { ContributionManager } from '../contribution-manager.js';
+import { ApiSenderType, IPCMainOn } from '../api.js';
+import { ContributionManager } from '../contribution-manager.js';
 import { DockerDesktopContribution, DockerDesktopInstaller } from '../docker-extension/docker-desktop-installer.js';
-import type { ImageRegistry } from '../image-registry.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
+import { ImageRegistry } from '../image-registry.js';
+import { Telemetry } from '../telemetry/telemetry.js';
 
+@injectable()
 export class ExtensionInstaller {
   #dockerDesktopInstaller: DockerDesktopInstaller;
 
   constructor(
+    @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(ExtensionLoader)
     private extensionLoader: ExtensionLoader,
+    @inject(ImageRegistry)
     private imageRegistry: ImageRegistry,
+    @inject(ExtensionsCatalog)
     private extensionCatalog: ExtensionsCatalog,
+    @inject(Telemetry)
     private telemetry: Telemetry,
+    @inject(Directories)
     private directories: Directories,
+    @inject(ContributionManager)
     contributionManager: ContributionManager,
+    @inject(IPCMainOn)
+    private readonly ipcMainOn: IPCMainOn,
   ) {
     this.#dockerDesktopInstaller = new DockerDesktopInstaller(contributionManager);
   }
@@ -209,7 +219,10 @@ export class ExtensionInstaller {
     if (isPDExtension) {
       let analyzedExtension: AnalyzedExtension | undefined;
       try {
-        analyzedExtension = await this.extensionLoader.analyzeExtension(finalFolderPath, true);
+        analyzedExtension = await this.extensionLoader.analyzeExtension({
+          extensionPath: finalFolderPath,
+          removable: true,
+        });
       } catch (error) {
         sendError('Error while analyzing extension: ' + error);
       }
@@ -350,7 +363,7 @@ export class ExtensionInstaller {
   }
 
   async init(): Promise<void> {
-    ipcMain.on(
+    this.ipcMainOn(
       'extension-installer:install-from-image',
       (event: IpcMainEvent, imageName: string, logCallbackId: number, catalogExtensionId?: string): void => {
         const telemetryData: {

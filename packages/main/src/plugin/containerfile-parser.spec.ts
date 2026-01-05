@@ -92,6 +92,19 @@ describe('Should parse info from container files', () => {
     });
   });
 
+  test('should parse targets with some special characters', async () => {
+    const info = await containerFileParser.parseContent(`
+      FROM busybox as base
+      ARG TARGETPLATFORM
+      RUN echo $TARGETPLATFORM > /plt
+      FROM --platform=\${TARGETPLATFORM} base AS base-target
+      FROM --platform=$BUILDPLATFORM base AS base-build
+    `);
+    expect(info).toEqual({
+      targets: ['base', 'base-target', 'base-build'],
+    });
+  });
+
   test('should throw error if file does not exist', async () => {
     await expect(containerFileParser.parseContainerFile('/tmp/nonexistent-Containerfile')).rejects.toThrow(
       'ENOENT: no such file or directory',

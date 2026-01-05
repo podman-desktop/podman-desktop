@@ -6,7 +6,7 @@
   "private": true,
   "devDependencies": {
     "@podman-desktop/webview-api": "workspace:*",
-    "electron": "39.2.3",
+    "electron": "39.2.5",
     "vitest": "^4.0.10"
   }
 }

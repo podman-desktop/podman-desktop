@@ -36,8 +36,27 @@ To verify that your managed configuration is being loaded correctly:
 3. Look for messages in the console like:
    ```
    [Managed-by]: Loaded managed ...
+   [Managed-by]: Applied default settings for: setting.key1, setting.key2
    ```
 4. If you don't see these messages, the configuration files may not be in the correct location or may have syntax errors.
+
+:::note
+
+The "Applied default settings" message only appears when settings are copied from `default-settings.json` to the user's `settings.json`. This occurs once per setting when it doesn't already exist in the user's configuration.
+
+:::
+
+## Verifying if a value is locked by the managed-by configuration
+
+To verify in the GUI if a value is locked by your managed-by configuration:
+
+1. Open Podman Desktop.
+2. Go to **Settings > Preferences**.
+3. Find your managed-by value:
+
+![Managed by label](img/managed-by-label.png)
+
+4. Confirm that it has the **Managed** label applied.
 
 ## File permission issues
 

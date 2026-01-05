@@ -129,7 +129,11 @@ export class ExtensionDevelopmentFolders {
     }
 
     // before adding the path, check it's a valid extension path
-    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension(path, false, true);
+    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension({
+      extensionPath: path,
+      removable: false,
+      devMode: true,
+    });
     // if there is an error, abort
     if (analyzedExtension.error) {
       throw new Error(analyzedExtension.error);

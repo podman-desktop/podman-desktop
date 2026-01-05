@@ -190,7 +190,7 @@ Full Changelog is available at https://github.com/containers/podman-desktop/rele
 
 An example of a previous post: https://www.reddit.com/r/podman/comments/10moat6/a_new_version_of_podman_desktop_is_out_v0110/
 
-1. Click create post on the [Podman subreddit](https://www.reddit.com/r/podman/).
+1. Click create post on the [Podman Desktop subreddit](https://www.reddit.com/r/podmandesktop/).
 2. Title it: `A new version of Podman Desktop is out: v0.12.0`
 3. Copy over release notes (markdown works on Reddit)
 

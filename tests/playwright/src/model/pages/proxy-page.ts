@@ -18,9 +18,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
+import { ProxyTypes } from '/@/model/core/types';
 import { handleConfirmationDialog } from '/@/utility/operations';
 
-import { ProxyTypes } from '../core/types';
 import { SettingsPage } from './settings-page';
 
 export class ProxyPage extends SettingsPage {

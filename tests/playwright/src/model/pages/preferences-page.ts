@@ -36,11 +36,14 @@ export class PreferencesPage extends SettingsPage {
   async selectKubeFile(pathToKube: string): Promise<void> {
     return test.step('Select Kube File', async () => {
       if (!pathToKube) {
-        throw Error(`Path to Kube config file is incorrect or not provided!`);
+        throw Error('Path to Kube config file is incorrect or not provided!');
       }
       playExpect(this.kubePathInput).toBeDefined();
       await this.kubePathInput.clear();
+      await playExpect(this.kubePathInput).toHaveValue('');
+
       await this.kubePathInput.fill(pathToKube);
+      await playExpect(this.kubePathInput).toHaveValue(pathToKube);
     });
   }
 }

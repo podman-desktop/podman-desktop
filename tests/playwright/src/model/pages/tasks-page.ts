@@ -16,28 +16,70 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { BasePage } from './base-page';
 
 export class TasksPage extends BasePage {
+  readonly tasksManagerWindow: Locator;
+  readonly header: Locator;
   readonly heading: Locator;
-  readonly taskList: Locator;
   readonly clearAllButton: Locator;
+  readonly closeButton: Locator;
+  readonly tasksSearchBar: Locator;
+  readonly tasksSearchInput: Locator;
+  readonly tasksSearchClearButton: Locator;
+  readonly allTasksButton: Locator;
+  readonly inProgressTasksButton: Locator;
+  readonly successTasksButton: Locator;
+  readonly failureTasksButton: Locator;
+  readonly cancelledTasksButton: Locator;
+  readonly content: Locator;
+  readonly noTasksPlaceholder: Locator;
+  readonly taskListHeader: Locator;
+  readonly selectAllTasksCheckbox: Locator;
+  readonly sortByName: Locator;
+  readonly sortByProgress: Locator;
+  readonly sortByAge: Locator;
+  readonly taskList: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole('heading', {
-      name: 'Tasks',
-    });
-    this.taskList = page.getByRole('rowgroup').nth(1);
-    this.clearAllButton = page.getByRole('button', { name: 'Clear All' });
+    this.tasksManagerWindow = page.getByRole('region', { name: 'Tasks' });
+    this.header = this.tasksManagerWindow.getByRole('region', { name: 'header' });
+    this.heading = this.header.getByText('Tasks');
+    this.clearAllButton = this.header.getByRole('button', { name: 'Clear all' });
+    this.closeButton = this.header.getByRole('button', { name: 'Close' });
+    this.tasksSearchBar = this.tasksManagerWindow.getByRole('region', { name: 'search' });
+    this.tasksSearchInput = this.tasksSearchBar.getByLabel('search Tasks');
+    this.tasksSearchClearButton = this.tasksSearchBar.getByRole('button', { name: 'clear' });
+    this.allTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'All' });
+    this.inProgressTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'In-Progress' });
+    this.successTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Success' });
+    this.failureTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Failure' });
+    this.cancelledTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Cancelled' });
+    this.content = this.tasksManagerWindow.getByRole('region', { name: 'content' });
+    this.noTasksPlaceholder = this.content.getByRole('table', { name: 'No active tasks' });
+    this.taskListHeader = this.content.getByRole('rowgroup').nth(0);
+    this.selectAllTasksCheckbox = this.taskListHeader.getByRole('checkbox', { name: 'Toggle all' });
+    this.sortByName = this.taskListHeader.getByRole('columnheader', { name: 'Name' });
+    this.sortByProgress = this.taskListHeader.getByRole('columnheader', { name: 'Progress' });
+    this.sortByAge = this.taskListHeader.getByRole('columnheader', { name: 'Age' });
+    this.taskList = this.content.getByRole('rowgroup').nth(1);
+  }
+
+  async showAllTasks(): Promise<void> {
+    await playExpect(this.tasksManagerWindow).toBeVisible();
+    await playExpect(this.allTasksButton).toBeVisible();
+    await this.allTasksButton.click();
+    await playExpect(this.taskList).toBeVisible();
   }
 
   async cancelLatestTask(): Promise<void> {
-    const cancelButton = this.taskList.getByRole('button').and(this.taskList.getByLabel('Cancel task')).first();
+    const cancelButton = this.taskList.getByRole('button', { name: 'Cancel task' }).first();
     await playExpect(cancelButton).toBeEnabled();
     await cancelButton.click();
     await handleConfirmationDialog(this.page);
@@ -51,5 +93,37 @@ export class TasksPage extends BasePage {
   async clearAllTasks(): Promise<void> {
     await playExpect(this.clearAllButton).toBeEnabled({ timeout: 10_000 });
     await this.clearAllButton.click();
+  }
+
+  async awaitTaskCompletion(taskName: string, status: string = 'completed', timeout: number = 60_000): Promise<void> {
+    const taskRow = this.getTaskRowByName(taskName);
+    const taskStatus = taskRow.getByRole('status');
+
+    await playExpect(taskRow).toBeVisible();
+    await playExpect(taskStatus).toBeVisible();
+    await playExpect(taskStatus).toContainText(status, { timeout: timeout });
+  }
+
+  async navigateToTask(taskName: string): Promise<void> {
+    const taskRow = this.getTaskRowByName(taskName);
+    const taskLink = taskRow.getByRole('button', { name: 'View action' });
+
+    await playExpect(taskRow).toBeVisible();
+    await playExpect(taskLink).toBeVisible();
+    await taskLink.click();
+  }
+
+  async removeTaskFromList(taskName: string): Promise<void> {
+    const taskRow = this.getTaskRowByName(taskName);
+    const deleteTaskButton = taskRow.getByRole('button', { name: 'Archive/delete completed task' });
+
+    await playExpect(taskRow).toBeVisible();
+    await playExpect(deleteTaskButton).toBeVisible();
+    await deleteTaskButton.click();
+    await playExpect(taskRow).not.toBeVisible();
+  }
+
+  private getTaskRowByName(taskName: string): Locator {
+    return this.taskList.getByRole('row', { name: taskName });
   }
 }

@@ -44,7 +44,7 @@ import type {
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
-import type { WebContents } from 'electron';
+import type { IpcMainEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
@@ -137,7 +137,7 @@ import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
-import { ApiSenderType, IPCHandle } from './api.js';
+import { ApiSenderType, IPCHandle, IPCMainOn } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -201,6 +201,7 @@ import { OpenDevToolsInit } from './open-devtools-init.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { Proxy } from './proxy.js';
 import { RecommendationsRegistry } from './recommendations/recommendations-registry.js';
+import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
@@ -283,6 +284,11 @@ export class PluginSystem {
         return error instanceof Error ? { error } : { error: { message: error } };
       }
     });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ipcMainOn(channel: string, listener: (event: IpcMainEvent, ...args: any[]) => void): void {
+    ipcMain.on(channel, listener);
   }
 
   // Create an Error to access stack trace
@@ -475,6 +481,7 @@ export class PluginSystem {
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
     container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
+    container.bind<IPCMainOn>(IPCMainOn).toConstantValue(this.ipcMainOn);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
     const directoryStrategy = new DirectoryStrategy();
@@ -681,6 +688,11 @@ export class PluginSystem {
     container.bind<EditorInit>(EditorInit).toSelf().inSingletonScope();
     const editorInit = container.get<EditorInit>(EditorInit);
     editorInit.init();
+
+    // init registry configuration
+    container.bind<RegistryInit>(RegistryInit).toSelf().inSingletonScope();
+    const registryInit = container.get<RegistryInit>(RegistryInit);
+    registryInit.init();
 
     // init welcome configuration
     container.bind<WelcomeInit>(WelcomeInit).toSelf().inSingletonScope();
@@ -1031,6 +1043,7 @@ export class PluginSystem {
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
+          replace?: boolean;
         },
       ): Promise<PlayKubeInfo> => {
         return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
@@ -1447,9 +1460,17 @@ export class PluginSystem {
         taskId?: number,
         target?: string,
       ): Promise<unknown> => {
+        const titleArgs = ['Building image'];
+        if (imageName) {
+          titleArgs.push(imageName);
+        }
+        if (target) {
+          titleArgs.push(`(${target})`);
+        }
+
         // create task
         const task = taskManager.createTask({
-          title: `Building image ${imageName ?? ''}`,
+          title: titleArgs.join(' '),
           action: {
             name: 'Go to task >',
             execute: () => {
@@ -3243,15 +3264,8 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
-    const extensionInstaller = new ExtensionInstaller(
-      apiSender,
-      this.extensionLoader,
-      imageRegistry,
-      extensionsCatalog,
-      telemetry,
-      directories,
-      contributionManager,
-    );
+    container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
+    const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();
 
     // launch the updater

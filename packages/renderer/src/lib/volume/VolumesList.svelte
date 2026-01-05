@@ -15,6 +15,8 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+
 import { providerInfos } from '../../stores/providers';
 import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '../../stores/volumes';
 import { withBulkConfirmation } from '../actions/BulkActions';
@@ -24,7 +26,6 @@ import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.
 import VolumeIcon from '../images/VolumeIcon.svelte';
 import { VolumeUtils } from './volume-utils';
 import VolumeColumnActions from './VolumeColumnActions.svelte';
-import VolumeColumnEnvironment from './VolumeColumnEnvironment.svelte';
 import VolumeColumnName from './VolumeColumnName.svelte';
 import VolumeColumnStatus from './VolumeColumnStatus.svelte';
 import VolumeEmptyScreen from './VolumeEmptyScreen.svelte';
@@ -142,7 +143,7 @@ let nameColumn = new TableColumn<VolumeInfoUI>('Name', {
 });
 
 let envColumn = new TableColumn<VolumeInfoUI>('Environment', {
-  renderer: VolumeColumnEnvironment,
+  renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
 });
 

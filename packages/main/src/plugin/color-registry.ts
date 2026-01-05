@@ -23,12 +23,15 @@ import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.j
 import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
 import type { RawThemeContribution } from '/@api/theme-info.js';
 
-import colorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
+import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
+
+const { amber, black, charcoal, dustypurple, fuschia, gray, green, purple, red, sky, stone, white, transparent } =
+  tailwindColorPalette;
 
 export class ColorRegistry {
   #apiSender: ApiSenderType;
@@ -265,15 +268,15 @@ export class ColorRegistry {
 
     // Global default colors
     this.registerColor(`${def}text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
   }
 
   protected initNotificationDot(): void {
     this.registerColor('notification-dot', {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
   }
 
@@ -282,62 +285,62 @@ export class ColorRegistry {
 
     // Global navbar
     this.registerColor(`${glNav}bg`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[100],
+      dark: charcoal[600],
+      light: gray[100],
     });
     this.registerColor(`${glNav}bg-border`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[300],
+      dark: charcoal[500],
+      light: gray[300],
     });
     this.registerColor(`${glNav}icon`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[200],
+      dark: gray[600],
+      light: charcoal[200],
     });
     this.registerColor(`${glNav}icon-hover`, {
-      dark: colorPalette.white,
-      light: colorPalette.purple[800],
+      dark: white,
+      light: purple[800],
     });
     this.registerColor(`${glNav}icon-hover-bg`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[300],
+      dark: purple[700],
+      light: purple[300],
     });
     this.registerColor(`${glNav}icon-inset-bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[300],
+      dark: charcoal[800],
+      light: gray[300],
     });
     this.registerColor(`${glNav}icon-selected`, {
-      dark: colorPalette.white,
-      light: colorPalette.purple[800],
+      dark: white,
+      light: purple[800],
     });
     this.registerColor(`${glNav}icon-selected-bg`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[300],
+      dark: charcoal[500],
+      light: gray[300],
     });
     this.registerColor(`${glNav}icon-selected-highlight`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
   }
 
   protected initTitlebar(): void {
     this.registerColor('titlebar-bg', {
-      dark: isWindows() ? '#202020' : colorPalette.charcoal[900],
-      light: colorPalette.gray[50],
+      dark: isWindows() ? '#202020' : charcoal[900],
+      light: gray[50],
     });
 
     this.registerColor('titlebar-text', {
-      dark: colorPalette.white,
-      light: colorPalette.purple[900],
+      dark: white,
+      light: purple[900],
     });
 
     this.registerColor('titlebar-icon', {
-      dark: colorPalette.white,
-      light: colorPalette.purple[900],
+      dark: white,
+      light: purple[900],
     });
 
     this.registerColor('titlebar-hover-bg', {
-      dark: colorPalette.charcoal[300],
-      light: colorPalette.gray[300],
+      dark: charcoal[300],
+      light: gray[300],
     });
 
     this.registerColor('titlebar-windows-hover-exit-bg', {
@@ -355,256 +358,256 @@ export class ColorRegistry {
     const sNav = 'secondary-nav-';
 
     this.registerColor(`${sNav}bg`, {
-      dark: colorPalette.charcoal[700],
-      light: colorPalette.gray[100],
+      dark: charcoal[700],
+      light: gray[100],
     });
 
     this.registerColor(`${sNav}header-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
 
     this.registerColor(`${sNav}text`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.charcoal[700],
+      dark: gray[300],
+      light: charcoal[700],
     });
 
     this.registerColor(`${sNav}text-hover`, {
-      dark: colorPalette.white,
-      light: colorPalette.purple[800],
+      dark: white,
+      light: purple[800],
     });
 
     this.registerColor(`${sNav}text-hover-bg`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[300],
+      dark: purple[700],
+      light: purple[300],
     });
 
     this.registerColor(`${sNav}text-selected`, {
-      dark: colorPalette.white,
-      light: colorPalette.black,
+      dark: white,
+      light: black,
     });
 
     this.registerColor(`${sNav}selected-bg`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[300],
+      dark: charcoal[500],
+      light: gray[300],
     });
 
     this.registerColor(`${sNav}selected-highlight`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
 
     this.registerColor(`${sNav}expander`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[700],
+      dark: white,
+      light: charcoal[700],
     });
   }
 
   protected initCardContent(): void {
     this.registerColor(`card-bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[300],
+      dark: charcoal[800],
+      light: gray[300],
     });
 
     this.registerColor(`card-header-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
 
     this.registerColor(`card-text`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.charcoal[700],
+      dark: gray[300],
+      light: charcoal[700],
     });
   }
 
   protected initInvertContent(): void {
     const invCt = 'invert-content-';
     this.registerColor(`${invCt}bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[25],
+      dark: charcoal[800],
+      light: gray[25],
     });
 
     this.registerColor(`${invCt}header-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
 
     this.registerColor(`${invCt}header2-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
 
     this.registerColor(`${invCt}card-bg`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[100],
+      dark: charcoal[600],
+      light: gray[100],
     });
 
     this.registerColor(`${invCt}card-header-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
 
     this.registerColor(`${invCt}card-text`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.charcoal[700],
+      dark: gray[300],
+      light: charcoal[700],
     });
 
     this.registerColor(`${invCt}button-active`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
 
     this.registerColor(`${invCt}button-inactive`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.charcoal[50],
+      dark: charcoal[50],
+      light: charcoal[50],
     });
 
     this.registerColor(`${invCt}info-icon`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
   }
 
   protected initContent(): void {
     const ct = 'content-';
     this.registerColor(`${ct}breadcrumb`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.purple[900],
+      dark: gray[600],
+      light: purple[900],
     });
 
     this.registerColor(`${ct}breadcrumb-2`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[600],
+      dark: purple[400],
+      light: purple[600],
     });
 
     this.registerColor(`${ct}header`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
 
     this.registerColor(`${ct}text`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.gray[900],
+      dark: gray[700],
+      light: gray[900],
     });
 
     this.registerColor(`${ct}sub-header`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.purple[900],
+      dark: gray[900],
+      light: purple[900],
     });
 
     this.registerColor(`${ct}header-icon`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.purple[700],
+      dark: gray[600],
+      light: purple[700],
     });
 
     this.registerColor(`${ct}card-header-text`, {
-      dark: colorPalette.gray[100],
-      light: colorPalette.purple[900],
+      dark: gray[100],
+      light: purple[900],
     });
 
     this.registerColor(`${ct}card-bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[25],
+      dark: charcoal[800],
+      light: gray[25],
     });
 
     this.registerColor(`${ct}card-hover-bg`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[300],
+      dark: charcoal[500],
+      light: gray[300],
     });
 
     this.registerColor(`${ct}card-selected-bg`, {
-      dark: colorPalette.charcoal[400],
-      light: colorPalette.purple[100],
+      dark: charcoal[400],
+      light: purple[100],
     });
 
     this.registerColor(`${ct}card-text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.purple[900],
+      dark: gray[400],
+      light: purple[900],
     });
 
     this.registerColor(`${ct}card-title`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[900],
+      dark: gray[400],
+      light: charcoal[900],
     });
 
     this.registerColor(`${ct}card-light-title`, {
-      dark: colorPalette.gray[800],
-      light: colorPalette.purple[900],
+      dark: gray[800],
+      light: purple[900],
     });
 
     this.registerColor(`${ct}card-inset-bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.dustypurple[200],
+      dark: charcoal[900],
+      light: dustypurple[200],
     });
 
     this.registerColor(`${ct}card-hover-inset-bg`, {
-      dark: colorPalette.charcoal[700],
-      light: colorPalette.dustypurple[300],
+      dark: charcoal[700],
+      light: dustypurple[300],
     });
 
     this.registerColor(`${ct}bg`, {
-      dark: colorPalette.charcoal[700],
-      light: colorPalette.gray[100],
+      dark: charcoal[700],
+      light: gray[100],
     });
 
     this.registerColor(`${ct}card-icon`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.purple[900],
+      dark: gray[400],
+      light: purple[900],
     });
 
     this.registerColor(`${ct}divider`, {
-      dark: colorPalette.charcoal[400],
-      light: colorPalette.gray[700],
+      dark: charcoal[400],
+      light: gray[700],
     });
 
     this.registerColor(`${ct}card-carousel-card-bg`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[100],
+      dark: charcoal[600],
+      light: gray[100],
     });
 
     this.registerColor(`${ct}card-carousel-card-hover-bg`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[200],
+      dark: charcoal[500],
+      light: gray[200],
     });
 
     this.registerColor(`${ct}card-carousel-card-header-text`, {
-      dark: colorPalette.gray[100],
-      light: colorPalette.charcoal[900],
+      dark: gray[100],
+      light: charcoal[900],
     });
 
     this.registerColor(`${ct}card-carousel-card-text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[500],
+      dark: gray[400],
+      light: charcoal[500],
     });
 
     this.registerColor(`${ct}card-carousel-nav`, {
-      dark: colorPalette.gray[800],
-      light: colorPalette.gray[300],
+      dark: gray[800],
+      light: gray[300],
     });
 
     this.registerColor(`${ct}card-carousel-hover-nav`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.gray[500],
+      dark: gray[600],
+      light: gray[500],
     });
 
     this.registerColor(`${ct}card-carousel-disabled-nav`, {
-      dark: colorPalette.charcoal[700],
-      light: colorPalette.gray[200],
+      dark: charcoal[700],
+      light: gray[200],
     });
 
     this.registerColor(`${ct}card-border`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[200],
+      dark: charcoal[800],
+      light: gray[200],
     });
 
     this.registerColor(`${ct}card-border-selected`, {
-      dark: colorPalette.dustypurple[700],
-      light: colorPalette.purple[600],
+      dark: dustypurple[700],
+      light: purple[600],
     });
 
     this.registerColor(`${ct}table-border`, {
-      dark: colorPalette.charcoal[400],
-      light: colorPalette.gray[300],
+      dark: charcoal[400],
+      light: gray[300],
     });
   }
 
@@ -613,72 +616,72 @@ export class ColorRegistry {
     const sNav = 'input-field-';
 
     this.registerColor(`${sNav}bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${sNav}focused-bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.gray[100],
+      dark: charcoal[900],
+      light: gray[100],
     });
     this.registerColor(`${sNav}disabled-bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${sNav}hover-bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${sNav}focused-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
     this.registerColor(`${sNav}error-text`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[500],
+      dark: red[500],
+      light: red[500],
     });
     this.registerColor(`${sNav}disabled-text`, {
-      dark: colorPalette.charcoal[100],
-      light: colorPalette.gray[700],
+      dark: charcoal[100],
+      light: gray[700],
     });
     this.registerColor(`${sNav}hover-text`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[200],
+      dark: gray[700],
+      light: charcoal[200],
     });
     this.registerColor(`${sNav}placeholder-text`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[200],
+      dark: gray[700],
+      light: charcoal[200],
     });
     this.registerColor(`${sNav}stroke`, {
-      dark: colorPalette.charcoal[400],
-      light: colorPalette.gray[700],
+      dark: charcoal[400],
+      light: gray[700],
     });
     this.registerColor(`${sNav}hover-stroke`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[500],
+      dark: purple[400],
+      light: purple[500],
     });
     this.registerColor(`${sNav}stroke-error`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[500],
+      dark: red[500],
+      light: red[500],
     });
     this.registerColor(`${sNav}stroke-readonly`, {
-      dark: colorPalette.charcoal[100],
-      light: colorPalette.charcoal[100],
+      dark: charcoal[100],
+      light: charcoal[100],
     });
     this.registerColor(`${sNav}icon`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[200],
+      dark: gray[700],
+      light: charcoal[200],
     });
     this.registerColor(`${sNav}focused-icon`, {
-      dark: colorPalette.gray[500],
-      light: colorPalette.purple[600],
+      dark: gray[500],
+      light: purple[600],
     });
     this.registerColor(`${sNav}disabled-icon`, {
-      dark: colorPalette.charcoal[100],
-      light: colorPalette.gray[700],
+      dark: charcoal[100],
+      light: gray[700],
     });
     this.registerColor(`${sNav}hover-icon`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.purple[600],
+      dark: gray[700],
+      light: purple[600],
     });
   }
 
@@ -687,32 +690,32 @@ export class ColorRegistry {
     const sNav = 'input-checkbox-';
 
     this.registerColor(`${sNav}disabled`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[200],
+      dark: gray[700],
+      light: charcoal[200],
     });
     this.registerColor(`${sNav}indeterminate`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[900],
+      dark: purple[500],
+      light: purple[900],
     });
     this.registerColor(`${sNav}focused-indeterminate`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[700],
+      dark: purple[400],
+      light: purple[700],
     });
     this.registerColor(`${sNav}checked`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[900],
+      dark: purple[500],
+      light: purple[900],
     });
     this.registerColor(`${sNav}focused-checked`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[700],
+      dark: purple[400],
+      light: purple[700],
     });
     this.registerColor(`${sNav}unchecked`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.purple[900],
+      dark: gray[400],
+      light: purple[900],
     });
     this.registerColor(`${sNav}focused-unchecked`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[700],
+      dark: purple[400],
+      light: purple[700],
     });
   }
 
@@ -721,52 +724,52 @@ export class ColorRegistry {
     const sNav = 'input-toggle-';
 
     this.registerColor(`${sNav}off-bg`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.gray[900],
+      dark: gray[900],
+      light: gray[900],
     });
     this.registerColor(`${sNav}off-focused-bg`, {
-      dark: colorPalette.gray[800],
-      light: colorPalette.gray[800],
+      dark: gray[800],
+      light: gray[800],
     });
     this.registerColor(`${sNav}on-bg`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
     this.registerColor(`${sNav}on-focused-bg`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[500],
+      dark: purple[400],
+      light: purple[500],
     });
     this.registerColor(`${sNav}switch`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
     this.registerColor(`${sNav}focused-switch`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
     this.registerColor(`${sNav}on-text`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.charcoal[700],
+      dark: gray[300],
+      light: charcoal[700],
     });
     this.registerColor(`${sNav}off-text`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.charcoal[700],
+      dark: gray[300],
+      light: charcoal[700],
     });
     this.registerColor(`${sNav}disabled-text`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[200],
+      dark: gray[700],
+      light: charcoal[200],
     });
     this.registerColor(`${sNav}off-disabled-bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.gray[900],
+      dark: charcoal[900],
+      light: gray[900],
     });
     this.registerColor(`${sNav}on-disabled-bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.gray[900],
+      dark: charcoal[900],
+      light: gray[900],
     });
     this.registerColor(`${sNav}disabled-switch`, {
-      dark: colorPalette.gray[200],
-      light: colorPalette.gray[200],
+      dark: gray[200],
+      light: gray[200],
     });
   }
 
@@ -774,98 +777,98 @@ export class ColorRegistry {
     const tab = 'table-';
     // color of columns names
     this.registerColor(`${tab}header-text`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[200],
+      dark: gray[600],
+      light: charcoal[200],
     });
     // color of up/down arrows when column is not the ordered one
     this.registerColor(`${tab}header-unsorted`, {
-      dark: colorPalette.charcoal[200],
-      light: colorPalette.charcoal[300],
+      dark: charcoal[200],
+      light: charcoal[300],
     });
 
     // color for most text in tables
     this.registerColor(`${tab}body-text`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[100],
+      dark: gray[700],
+      light: charcoal[100],
     });
     // color for the text in the main column of the table (generally Name)
     this.registerColor(`${tab}body-text-highlight`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.charcoal[700],
+      dark: gray[300],
+      light: charcoal[700],
     });
     // color for the text in second line of main column, in secondary color (generally IDs)
     this.registerColor(`${tab}body-text-sub-secondary`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[700],
+      dark: purple[400],
+      light: purple[700],
     });
     // color for highlighted text in second line of main column
     this.registerColor(`${tab}body-text-sub-highlight`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[200],
+      dark: gray[400],
+      light: charcoal[200],
     });
   }
 
   protected initDetails(): void {
     const details = 'details-';
     this.registerColor(`${details}body-text`, {
-      dark: colorPalette.gray[200],
-      light: colorPalette.charcoal[500],
+      dark: gray[200],
+      light: charcoal[500],
     });
     this.registerColor(`${details}empty-icon`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[200],
+      dark: gray[600],
+      light: charcoal[200],
     });
     this.registerColor(`${details}empty-header`, {
-      dark: colorPalette.gray[200],
-      light: colorPalette.charcoal[500],
+      dark: gray[200],
+      light: charcoal[500],
     });
     this.registerColor(`${details}empty-sub-header`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[500],
+      dark: gray[600],
+      light: charcoal[500],
     });
     this.registerColor(`${details}empty-cmdline-bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.gray[200],
+      dark: charcoal[900],
+      light: gray[200],
     });
     this.registerColor(`${details}empty-cmdline-text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[700],
+      dark: gray[400],
+      light: charcoal[700],
     });
     this.registerColor(`${details}bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.gray[50],
+      dark: charcoal[900],
+      light: gray[50],
     });
     this.registerColor(`${details}card-bg`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[300],
+      dark: charcoal[600],
+      light: gray[300],
     });
     this.registerColor(`${details}card-header`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.charcoal[300],
+      dark: gray[700],
+      light: charcoal[300],
     });
     this.registerColor(`${details}card-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
   }
 
   protected initTab(): void {
     const tab = 'tab-';
     this.registerColor(`${tab}text`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[200],
+      dark: gray[600],
+      light: charcoal[200],
     });
     this.registerColor(`${tab}text-highlight`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[300],
+      dark: white,
+      light: charcoal[300],
     });
     this.registerColor(`${tab}highlight`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
     this.registerColor(`${tab}hover`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[500],
+      dark: purple[400],
+      light: purple[500],
     });
   }
 
@@ -874,36 +877,36 @@ export class ColorRegistry {
     const modal = 'modal-';
 
     this.registerColor(`${modal}fade`, {
-      dark: colorPalette.black,
-      light: colorPalette.white,
+      dark: black,
+      light: white,
     });
     this.registerColor(`${modal}text`, {
-      dark: colorPalette.gray[500],
-      light: colorPalette.charcoal[300],
+      dark: gray[500],
+      light: charcoal[300],
     });
     this.registerColor(`${modal}text-hover`, {
-      dark: colorPalette.gray[300],
-      light: colorPalette.purple[800],
+      dark: gray[300],
+      light: purple[800],
     });
     this.registerColor(`${modal}bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[50],
+      dark: charcoal[800],
+      light: gray[50],
     });
     this.registerColor(`${modal}border`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[500],
+      dark: charcoal[500],
+      light: gray[500],
     });
     this.registerColor(`${modal}header-bg`, {
-      dark: colorPalette.black,
-      light: colorPalette.gray[100],
+      dark: black,
+      light: gray[100],
     });
     this.registerColor(`${modal}header-text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.purple[500],
+      dark: gray[400],
+      light: purple[500],
     });
     this.registerColor(`${modal}header-divider`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[300],
+      dark: purple[700],
+      light: purple[300],
     });
   }
 
@@ -912,12 +915,12 @@ export class ColorRegistry {
     const link = 'link';
 
     this.registerColor(`${link}`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[700],
+      dark: purple[400],
+      light: purple[700],
     });
     this.registerColor(`${link}-hover-bg`, {
-      dark: colorPalette.white + '2',
-      light: colorPalette.black + '2',
+      dark: white + '2',
+      light: black + '2',
     });
   }
 
@@ -926,100 +929,100 @@ export class ColorRegistry {
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[600],
+      dark: purple[600],
+      light: purple[600],
     });
     this.registerColor(`${button}primary-hover-bg`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
     this.registerColor(`${button}secondary`, {
-      dark: colorPalette.gray[200],
-      light: colorPalette.purple[600],
+      dark: gray[200],
+      light: purple[600],
     });
     this.registerColor(`${button}secondary-hover`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
     this.registerColor(`${button}text`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
     this.registerColor(`${button}disabled`, {
-      dark: colorPalette.charcoal[300],
-      light: colorPalette.gray[600],
+      dark: charcoal[300],
+      light: gray[600],
     });
     this.registerColor(`${button}disabled-text`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.gray[900],
+      dark: charcoal[50],
+      light: gray[900],
     });
     this.registerColor(`${button}danger-border`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[700],
+      dark: red[500],
+      light: red[700],
     });
     this.registerColor(`${button}danger-bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${button}danger-text`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[700],
+      dark: red[500],
+      light: red[700],
     });
     this.registerColor(`${button}danger-hover-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
     this.registerColor(`${button}danger-hover-bg`, {
-      dark: colorPalette.red[600],
-      light: colorPalette.red[600],
+      dark: red[600],
+      light: red[600],
     });
     this.registerColor(`${button}danger-disabled-border`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.gray[900],
+      dark: charcoal[50],
+      light: gray[900],
     });
     this.registerColor(`${button}danger-disabled-text`, {
-      dark: colorPalette.charcoal[50],
-      light: colorPalette.gray[900],
+      dark: charcoal[50],
+      light: gray[900],
     });
     this.registerColor(`${button}danger-disabled-bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${button}tab-border`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${button}tab-border-selected`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
     this.registerColor(`${button}tab-hover-border`, {
-      dark: colorPalette.charcoal[100],
-      light: colorPalette.gray[600],
+      dark: charcoal[100],
+      light: gray[600],
     });
     this.registerColor(`${button}tab-text`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.charcoal[200],
+      dark: gray[600],
+      light: charcoal[200],
     });
     this.registerColor(`${button}tab-text-selected`, {
-      dark: colorPalette.white,
-      light: colorPalette.black,
+      dark: white,
+      light: black,
     });
     this.registerColor(`${button}close-hover-bg`, {
-      dark: colorPalette.white + '2',
-      light: colorPalette.black + '2',
+      dark: white + '2',
+      light: black + '2',
     });
     this.registerColor(`${button}link-text`, {
-      dark: colorPalette.purple[400],
-      light: colorPalette.purple[700],
+      dark: purple[400],
+      light: purple[700],
     });
     this.registerColor(`${button}link-hover-bg`, {
-      dark: colorPalette.white + '2',
-      light: colorPalette.black + '2',
+      dark: white + '2',
+      light: black + '2',
     });
     this.registerColor(`${button}help-link-text`, {
-      dark: colorPalette.gray[100],
-      light: colorPalette.charcoal[900],
+      dark: gray[100],
+      light: charcoal[900],
     });
   }
 
@@ -1027,61 +1030,61 @@ export class ColorRegistry {
     const ab = 'action-button-';
 
     this.registerColor(`${ab}text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[500],
+      dark: gray[400],
+      light: charcoal[500],
     });
     this.registerColor(`${ab}bg`, {
-      dark: colorPalette.charcoal[900],
-      light: colorPalette.gray[400],
+      dark: charcoal[900],
+      light: gray[400],
     });
     this.registerColor(`${ab}hover-bg`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[50],
+      dark: charcoal[600],
+      light: gray[50],
     });
     this.registerColor(`${ab}hover-text`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[500],
+      dark: purple[600],
+      light: purple[500],
     });
 
     this.registerColor(`${ab}primary-text`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[600],
+      dark: purple[600],
+      light: purple[600],
     });
     this.registerColor(`${ab}primary-hover-text`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
 
     this.registerColor(`${ab}disabled-text`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.gray[900],
+      dark: gray[900],
+      light: gray[900],
     });
 
     this.registerColor(`${ab}details-text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[900],
+      dark: gray[400],
+      light: charcoal[900],
     });
     this.registerColor(`${ab}details-bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[50],
+      dark: charcoal[800],
+      light: gray[50],
     });
     this.registerColor(`${ab}details-hover-text`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[500],
+      dark: purple[600],
+      light: purple[500],
     });
 
     this.registerColor(`${ab}details-disabled-text`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.gray[900],
+      dark: gray[900],
+      light: gray[900],
     });
     this.registerColor(`${ab}details-disabled-bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[50],
+      dark: charcoal[800],
+      light: gray[50],
     });
 
     this.registerColor(`${ab}spinner`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
   }
 
@@ -1090,16 +1093,16 @@ export class ColorRegistry {
     const tooltip = 'tooltip-';
 
     this.registerColor(`${tooltip}bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[50],
+      dark: charcoal[800],
+      light: gray[50],
     });
     this.registerColor(`${tooltip}text`, {
-      dark: colorPalette.white,
-      light: colorPalette.black,
+      dark: white,
+      light: black,
     });
     this.registerColor(`${tooltip}border`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.gray[500],
+      dark: charcoal[500],
+      light: gray[500],
     });
   }
 
@@ -1110,59 +1113,59 @@ export class ColorRegistry {
     const input = 'input-';
 
     this.registerColor(`${dropdown}bg`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[100],
+      dark: charcoal[600],
+      light: gray[100],
     });
     this.registerColor(`${select}bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[300],
+      dark: charcoal[800],
+      light: gray[300],
     });
     this.registerColor(`${dropdown}ring`, {
-      dark: colorPalette.purple[900],
-      light: colorPalette.gray[500],
+      dark: purple[900],
+      light: gray[500],
     });
     this.registerColor(`${dropdown}hover-ring`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[300],
+      dark: purple[700],
+      light: purple[300],
     });
     this.registerColor(`${dropdown}divider`, {
-      dark: colorPalette.charcoal[600],
-      light: colorPalette.gray[100],
+      dark: charcoal[600],
+      light: gray[100],
     });
 
     this.registerColor(`${dropdown}item-text`, {
-      dark: colorPalette.gray[400],
-      light: colorPalette.charcoal[600],
+      dark: gray[400],
+      light: charcoal[600],
     });
     this.registerColor(`${dropdown}item-hover-bg`, {
-      dark: colorPalette.black,
-      light: colorPalette.gray[300],
+      dark: black,
+      light: gray[300],
     });
     this.registerColor(`${dropdown}item-hover-text`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
 
     this.registerColor(`${dropdown}disabled-item-text`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.charcoal[100],
+      dark: gray[900],
+      light: charcoal[100],
     });
     this.registerColor(`${dropdown}disabled-item-bg`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.gray[200],
+      dark: charcoal[800],
+      light: gray[200],
     });
 
     this.registerColor(`${modal}${dropdown}highlight`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[300],
+      dark: purple[600],
+      light: purple[300],
     });
     this.registerColor(`${modal}${dropdown}text`, {
-      dark: colorPalette.white,
-      light: colorPalette.charcoal[900],
+      dark: white,
+      light: charcoal[900],
     });
     this.registerColor(`${input}${select}hover-text`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.charcoal[200],
+      dark: gray[900],
+      light: charcoal[200],
     });
   }
 
@@ -1171,48 +1174,48 @@ export class ColorRegistry {
     const label = 'label-';
 
     this.registerColor(`${label}bg`, {
-      dark: colorPalette.charcoal[500],
-      light: colorPalette.purple[200],
+      dark: charcoal[500],
+      light: purple[200],
     });
     this.registerColor(`${label}text`, {
-      dark: colorPalette.gray[500],
-      light: colorPalette.charcoal[300],
+      dark: gray[500],
+      light: charcoal[300],
     });
 
     this.registerColor(`${label}primary-bg`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[300],
+      dark: purple[700],
+      light: purple[300],
     });
     this.registerColor(`${label}primary-text`, {
-      dark: colorPalette.purple[300],
-      light: colorPalette.purple[700],
+      dark: purple[300],
+      light: purple[700],
     });
 
     this.registerColor(`${label}secondary-bg`, {
-      dark: colorPalette.sky[900],
-      light: colorPalette.sky[200],
+      dark: sky[900],
+      light: sky[200],
     });
     this.registerColor(`${label}secondary-text`, {
-      dark: colorPalette.sky[200],
-      light: colorPalette.sky[900],
+      dark: sky[200],
+      light: sky[900],
     });
 
     this.registerColor(`${label}tertiary-bg`, {
-      dark: colorPalette.green[900],
-      light: colorPalette.green[200],
+      dark: green[900],
+      light: green[200],
     });
     this.registerColor(`${label}tertiary-text`, {
-      dark: colorPalette.green[200],
-      light: colorPalette.green[900],
+      dark: green[200],
+      light: green[900],
     });
 
     this.registerColor(`${label}quaternary-bg`, {
-      dark: colorPalette.amber[800],
-      light: colorPalette.amber[100],
+      dark: amber[800],
+      light: amber[100],
     });
     this.registerColor(`${label}quaternary-text`, {
-      dark: colorPalette.amber[400],
-      light: colorPalette.amber[900],
+      dark: amber[400],
+      light: amber[900],
     });
   }
 
@@ -1221,125 +1224,125 @@ export class ColorRegistry {
 
     // Podman & Kubernetes
     this.registerColor(`${status}running`, {
-      dark: colorPalette.green[500],
-      light: colorPalette.green[600],
+      dark: green[500],
+      light: green[600],
     });
     // Kubernetes only
     this.registerColor(`${status}terminated`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[700],
+      dark: red[500],
+      light: red[700],
     });
     this.registerColor(`${status}waiting`, {
-      dark: colorPalette.amber[600],
-      light: colorPalette.amber[600],
+      dark: amber[600],
+      light: amber[600],
     });
     // Podman only
     this.registerColor(`${status}starting`, {
-      dark: colorPalette.green[500],
-      light: colorPalette.green[600],
+      dark: green[500],
+      light: green[600],
     });
     // Stopped & Exited are the same color / same thing in the eyes of statuses
     this.registerColor(`${status}stopped`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.charcoal[200],
+      dark: gray[900],
+      light: charcoal[200],
     });
     this.registerColor(`${status}exited`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.charcoal[200],
+      dark: gray[900],
+      light: charcoal[200],
     });
     this.registerColor(`${status}not-running`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.gray[900],
+      dark: gray[700],
+      light: gray[900],
     });
     // "Warning"
     this.registerColor(`${status}paused`, {
-      dark: colorPalette.amber[600],
-      light: colorPalette.amber[600],
+      dark: amber[600],
+      light: amber[600],
     });
     this.registerColor(`${status}degraded`, {
-      dark: colorPalette.amber[700],
-      light: colorPalette.amber[700],
+      dark: amber[700],
+      light: amber[700],
     });
     // Others
     this.registerColor(`${status}created`, {
-      dark: colorPalette.green[300],
-      light: colorPalette.green[300],
+      dark: green[300],
+      light: green[300],
     });
     this.registerColor(`${status}dead`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[700],
+      dark: red[500],
+      light: red[700],
     });
     // If we don't know the status, use gray
     this.registerColor(`${status}unknown`, {
-      dark: colorPalette.gray[100],
-      light: colorPalette.gray[400],
+      dark: gray[100],
+      light: gray[400],
     });
     // Connections / login
     this.registerColor(`${status}connected`, {
-      dark: colorPalette.green[600],
-      light: colorPalette.green[600],
+      dark: green[600],
+      light: green[600],
     });
     this.registerColor(`${status}disconnected`, {
-      dark: colorPalette.gray[500],
-      light: colorPalette.gray[800],
+      dark: gray[500],
+      light: gray[800],
     });
     // Scaled / updated, use blue as it's a 'neutral' color
     // to indicate that it's informative but not a problem
     this.registerColor(`${status}updated`, {
-      dark: colorPalette.sky[500],
-      light: colorPalette.sky[500],
+      dark: sky[500],
+      light: sky[500],
     });
     this.registerColor(`${status}ready`, {
-      dark: colorPalette.gray[900],
-      light: colorPalette.gray[100],
+      dark: gray[900],
+      light: gray[100],
     });
 
     // contrast color for the other status colors,
     // e.g. to use in status icons
     this.registerColor(`${status}contrast`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
   }
 
   protected initStatusBar(): void {
     const statusbar = 'statusbar-';
     this.registerColor(`${statusbar}bg`, {
-      dark: colorPalette.purple[900],
-      light: colorPalette.purple[900],
+      dark: purple[900],
+      light: purple[900],
     });
 
     this.registerColor(`${statusbar}hover-bg`, {
-      dark: colorPalette.purple[800],
-      light: colorPalette.purple[800],
+      dark: purple[800],
+      light: purple[800],
     });
 
     this.registerColor(`${statusbar}text`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
   }
 
   protected initOnboarding(): void {
     const onboarding = 'onboarding-';
     this.registerColor(`${onboarding}active-dot-bg`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[700],
+      dark: purple[700],
+      light: purple[700],
     });
 
     this.registerColor(`${onboarding}active-dot-border`, {
-      dark: colorPalette.purple[700],
-      light: colorPalette.purple[700],
+      dark: purple[700],
+      light: purple[700],
     });
 
     this.registerColor(`${onboarding}inactive-dot-bg`, {
-      dark: colorPalette.transparent,
-      light: colorPalette.transparent,
+      dark: transparent,
+      light: transparent,
     });
 
     this.registerColor(`${onboarding}inactive-dot-border`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.gray[700],
+      dark: gray[700],
+      light: gray[700],
     });
   }
 
@@ -1349,31 +1352,31 @@ export class ColorRegistry {
 
     // general error and warning states
     this.registerColor(`${state}success`, {
-      dark: colorPalette.green[500],
-      light: colorPalette.green[600],
+      dark: green[500],
+      light: green[600],
     });
     this.registerColor(`${state}warning`, {
-      dark: colorPalette.amber[500],
-      light: colorPalette.amber[600],
+      dark: amber[500],
+      light: amber[600],
     });
     this.registerColor(`${state}error`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[600],
+      dark: red[500],
+      light: red[600],
     });
     this.registerColor(`${state}info`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
 
     // additional severity levels
     this.registerColor(`${severity}low`, {
-      dark: colorPalette.gray[500],
-      light: colorPalette.gray[500],
+      dark: gray[500],
+      light: gray[500],
     });
 
     this.registerColor(`${severity}medium`, {
-      dark: colorPalette.gray[800],
-      light: colorPalette.gray[800],
+      dark: gray[800],
+      light: gray[800],
     });
   }
 
@@ -1381,20 +1384,20 @@ export class ColorRegistry {
   protected initFiles(): void {
     const fc = 'files-';
     this.registerColor(`${fc}hidden`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[500],
+      dark: red[500],
+      light: red[500],
     });
     this.registerColor(`${fc}directory`, {
-      dark: colorPalette.sky[500],
-      light: colorPalette.sky[500],
+      dark: sky[500],
+      light: sky[500],
     });
     this.registerColor(`${fc}symlink`, {
-      dark: colorPalette.sky[300],
-      light: colorPalette.sky[300],
+      dark: sky[300],
+      light: sky[300],
     });
     this.registerColor(`${fc}executable`, {
-      dark: colorPalette.green[500],
-      light: colorPalette.green[500],
+      dark: green[500],
+      light: green[500],
     });
   }
 
@@ -1403,155 +1406,155 @@ export class ColorRegistry {
     const terminal = 'terminal-';
 
     this.registerColor(`${terminal}foreground`, {
-      dark: colorPalette.white,
-      light: colorPalette.black,
+      dark: white,
+      light: black,
     });
 
     this.registerColor(`${terminal}background`, {
-      dark: colorPalette.black,
-      light: colorPalette.white,
+      dark: black,
+      light: white,
     });
 
     this.registerColor(`${terminal}cursor`, {
-      dark: colorPalette.white,
-      light: colorPalette.black,
+      dark: white,
+      light: black,
     });
 
     this.registerColor(`${terminal}selectionBackground`, {
-      dark: colorPalette.white,
-      light: colorPalette.black,
+      dark: white,
+      light: black,
     });
 
     this.registerColor(`${terminal}selectionForeground`, {
-      dark: colorPalette.black,
-      light: colorPalette.white,
+      dark: black,
+      light: white,
     });
 
     this.registerColor(`${terminal}ansiBlack`, {
-      dark: colorPalette.black,
-      light: colorPalette.black,
+      dark: black,
+      light: black,
     });
     this.registerColor(`${terminal}ansiRed`, {
-      dark: colorPalette.red[500],
-      light: colorPalette.red[500],
+      dark: red[500],
+      light: red[500],
     });
     this.registerColor(`${terminal}ansiGreen`, {
-      dark: colorPalette.green[500],
-      light: colorPalette.green[500],
+      dark: green[500],
+      light: green[500],
     });
     this.registerColor(`${terminal}ansiYellow`, {
-      dark: colorPalette.amber[500],
-      light: colorPalette.amber[500],
+      dark: amber[500],
+      light: amber[500],
     });
     this.registerColor(`${terminal}ansiBlue`, {
-      dark: colorPalette.sky[500],
-      light: colorPalette.sky[500],
+      dark: sky[500],
+      light: sky[500],
     });
     this.registerColor(`${terminal}ansiMagenta`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
     this.registerColor(`${terminal}ansiCyan`, {
-      dark: colorPalette.sky[500],
-      light: colorPalette.sky[500],
+      dark: sky[500],
+      light: sky[500],
     });
     this.registerColor(`${terminal}ansiWhite`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
     this.registerColor(`${terminal}ansiBrightBlack`, {
-      dark: colorPalette.gray[500],
-      light: colorPalette.gray[500],
+      dark: gray[500],
+      light: gray[500],
     });
     this.registerColor(`${terminal}ansiBrightRed`, {
-      dark: colorPalette.red[600],
-      light: colorPalette.red[600],
+      dark: red[600],
+      light: red[600],
     });
     this.registerColor(`${terminal}ansiBrightGreen`, {
-      dark: colorPalette.green[600],
-      light: colorPalette.green[600],
+      dark: green[600],
+      light: green[600],
     });
     this.registerColor(`${terminal}ansiBrightYellow`, {
-      dark: colorPalette.amber[600],
-      light: colorPalette.amber[600],
+      dark: amber[600],
+      light: amber[600],
     });
     this.registerColor(`${terminal}ansiBrightBlue`, {
-      dark: colorPalette.sky[600],
-      light: colorPalette.sky[600],
+      dark: sky[600],
+      light: sky[600],
     });
     this.registerColor(`${terminal}ansiBrightMagenta`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[600],
+      dark: purple[600],
+      light: purple[600],
     });
     this.registerColor(`${terminal}ansiBrightCyan`, {
-      dark: colorPalette.sky[600],
-      light: colorPalette.sky[600],
+      dark: sky[600],
+      light: sky[600],
     });
     this.registerColor(`${terminal}ansiBrightWhite`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
   }
 
   protected initProgressBar(): void {
     const pb = 'progressBar-';
     this.registerColor(`${pb}bg`, {
-      dark: colorPalette.gray[700],
-      light: colorPalette.gray[700],
+      dark: gray[700],
+      light: gray[700],
     });
     this.registerColor(`${pb}in-progress-bg`, {
-      dark: colorPalette.purple[600],
-      light: colorPalette.purple[600],
+      dark: purple[600],
+      light: purple[600],
     });
     this.registerColor(`${pb}text`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[600],
+      dark: purple[500],
+      light: purple[600],
     });
   }
 
   protected initBadge(): void {
     const badge = 'badge-';
     this.registerColor(`${badge}builtin-extension-bg`, {
-      dark: colorPalette.sky[200],
-      light: colorPalette.sky[200],
+      dark: sky[200],
+      light: sky[200],
     });
     this.registerColor(`${badge}text`, {
-      dark: colorPalette.charcoal[800],
-      light: colorPalette.charcoal[800],
+      dark: charcoal[800],
+      light: charcoal[800],
     });
     this.registerColor(`${badge}dd-extension-bg`, {
-      dark: colorPalette.sky[600],
-      light: colorPalette.sky[600],
+      dark: sky[600],
+      light: sky[600],
     });
     this.registerColor(`${badge}devmode-extension-bg`, {
-      dark: colorPalette.dustypurple[600],
-      light: colorPalette.dustypurple[600],
+      dark: dustypurple[600],
+      light: dustypurple[600],
     });
     this.registerColor(`${badge}dd-extension-text`, {
-      dark: colorPalette.white,
-      light: colorPalette.white,
+      dark: white,
+      light: white,
     });
     this.registerColor(`${badge}sky`, {
-      dark: colorPalette.sky[500],
-      light: colorPalette.sky[500],
+      dark: sky[500],
+      light: sky[500],
     });
     this.registerColor(`${badge}purple`, {
-      dark: colorPalette.purple[500],
-      light: colorPalette.purple[500],
+      dark: purple[500],
+      light: purple[500],
     });
     this.registerColor(`${badge}fuschia`, {
-      dark: colorPalette.fuschia[600],
-      light: colorPalette.fuschia[600],
+      dark: fuschia[600],
+      light: fuschia[600],
     });
     this.registerColor(`${badge}gray`, {
-      dark: colorPalette.gray[600],
-      light: colorPalette.gray[600],
+      dark: gray[600],
+      light: gray[600],
     });
   }
 
   protected initCommon(): void {
-    const darkParsed = parse(colorPalette.stone[300]);
-    const lightParsed = parse(colorPalette.stone[600]);
+    const darkParsed = parse(stone[300]);
+    const lightParsed = parse(stone[600]);
 
     if (!darkParsed || !lightParsed) {
       throw new Error('Failed to parse stone palette colors');

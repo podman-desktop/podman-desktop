@@ -422,7 +422,8 @@ export class ImageRegistry {
       valid = true;
     } else if (slashes.length > 2 && slashes[0]) {
       registry = slashes[0];
-      name = `${slashes[1]}/${slashes[2]}`;
+      // join all remaining parts as the image name
+      name = slashes.slice(1).join('/');
       valid = true;
     }
     if (!valid) {
@@ -435,6 +436,21 @@ export class ImageRegistry {
       name,
       tag,
     };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getManifestFromImageName(imageName: string): Promise<any> {
+    const imageData = this.extractImageDataFromImageName(imageName);
+
+    // grab auth info from the registry
+    const authInfo = await this.getAuthInfo(imageData.registry);
+    const token = await this.getToken(authInfo, imageData);
+    if (authInfo.scheme.toLowerCase() !== 'bearer') {
+      throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
+    }
+
+    // now, grab manifest for the given image URL
+    return await this.getManifest(imageData, token);
   }
 
   // Fetch the image Labels from the registry for a given image URL

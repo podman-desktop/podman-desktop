@@ -309,7 +309,7 @@ async function doUpdateMachines(
         } else if (extensionApi.env.isLinux) {
           socketPath = calcLinuxSocketPath(machineName);
         } else if (extensionApi.env.isWindows) {
-          socketPath = calcWinPipeName(machineName);
+          socketPath = winPlatform.calcPipeName(machineName);
         }
       }
       const podmanMachineInfo = podmanMachinesInfo.get(machineName);
@@ -536,11 +536,6 @@ function calcLinuxSocketPath(machineName: string): string {
     socketPath = path.resolve(podmanMachineSocketsDirectory, 'qemu', 'podman.sock');
   }
   return socketPath;
-}
-
-function calcWinPipeName(machineName: string): string {
-  const name = machineName.startsWith('podman') ? machineName : 'podman-' + machineName;
-  return `//./pipe/${name}`;
 }
 
 function getLinuxSocketPath(): string {

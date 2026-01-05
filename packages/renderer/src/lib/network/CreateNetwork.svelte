@@ -1,10 +1,10 @@
 <script lang="ts">
-import { faNetworkWired } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
@@ -118,7 +118,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
   title="Create a Network"
   showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
   {#snippet icon()}
-    <Icon icon={faNetworkWired} class="fa-2x" />
+    <Icon icon={NetworkIcon} class="2x" />
   {/snippet}
   {#snippet content()}
     <div class="space-y-6">
@@ -163,7 +163,6 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           disabled={hasInvalidFields || createNetworkInProgress}
           inProgress={createNetworkInProgress}
           class="w-full"
-          icon={faNetworkWired}
           onclick={createNetwork}>
           Create
         </Button>

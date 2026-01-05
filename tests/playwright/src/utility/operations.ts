@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,21 @@ import * as os from 'node:os';
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ResourceElementState } from '../model/core/states';
-import type { PodmanVirtualizationProviders } from '../model/core/types';
-import { matchesProviderVariant, PodmanMachinePrivileges } from '../model/core/types';
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import { ExperimentalPage } from '../model/pages/experimental-page';
-import { PreferencesPage } from '../model/pages/preferences-page';
-import { RegistriesPage } from '../model/pages/registries-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { VolumeDetailsPage } from '../model/pages/volume-details-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { isLinux, isMac, isWindows } from './platform';
-import { waitUntil, waitWhile } from './wait';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementState } from '/@/model/core/states';
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
+import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
+import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import { ExperimentalPage } from '/@/model/pages/experimental-page';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { VolumeDetailsPage } from '/@/model/pages/volume-details-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
+import { waitUntil, waitWhile } from '/@/utility/wait';
 
 /**
  * Stop and delete container defined by its name
@@ -168,6 +168,37 @@ export async function deletePod(page: Page, name: string, timeout = 50_000): Pro
   });
 }
 
+/**
+ * Delete network defined by its name
+ * @param page playwright's page object
+ * @param name name of network to be removed
+ */
+export async function deleteNetwork(page: Page, name: string): Promise<void> {
+  return test.step(`Delete network with name ${name}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const networksPage = await navigationBar.openNetworks();
+    await playExpect(networksPage.heading).toBeVisible({ timeout: 10_000 });
+    const networkExists = await networksPage.networkExists(name);
+
+    if (!networkExists) {
+      console.log(`network '${name}' does not exist, skipping...`);
+    } else {
+      await networksPage.deleteNetwork(name);
+
+      try {
+        console.log('Waiting for network to get deleted ...');
+        await playExpect
+          .poll(async () => await networksPage.getNetworkRowByName(name), { timeout: 30_000 })
+          .toBeFalsy();
+      } catch (error) {
+        if (!(error as Error).message.includes('Page is empty')) {
+          throw Error(`Error waiting for network '${name}' to get removed, ${error}`);
+        }
+      }
+    }
+  });
+}
+
 // Handles dialog that has accessible name `dialogTitle` and either confirms or rejects it.
 export async function handleConfirmationDialog(
   page: Page,
@@ -195,6 +226,63 @@ export async function handleConfirmationDialog(
     }
 
     await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
+  });
+}
+
+/**
+ * Handles the Edit Network dialog by filling DNS server fields and clicking Cancel or Update button.
+ * @param page playwright's page object
+ * @param networkName name of the network being edited
+ * @param options optional configuration for DNS servers and action
+ */
+export async function handleEditNetworkDialog(
+  page: Page,
+  networkName: string,
+  options?: {
+    dnsServersToAdd?: string;
+    dnsServersToRemove?: string;
+    action?: 'Cancel' | 'Update';
+  },
+): Promise<void> {
+  return test.step(`Handle Edit Network dialog for: ${networkName}`, async () => {
+    const dialogTitle = `Edit Network ${networkName}`;
+    const editDialog = page.getByRole('dialog', { name: dialogTitle });
+    await playExpect(editDialog).toBeVisible();
+
+    // Get the two input fields (both have placeholder "8.8.8.8 1.1.1.1")
+    const inputFields = editDialog.getByPlaceholder('8.8.8.8 1.1.1.1');
+    const dnsServersToAddInput = inputFields.nth(0);
+    const dnsServersToRemoveInput = inputFields.nth(1);
+
+    const cancelButton = editDialog.getByRole('button', { name: 'Cancel', exact: true });
+    const updateButton = editDialog.getByRole('button', { name: 'Update', exact: true });
+
+    if (options?.dnsServersToAdd !== undefined) {
+      await dnsServersToAddInput.clear();
+      await playExpect(dnsServersToAddInput).toHaveValue('');
+
+      await dnsServersToAddInput.fill(options.dnsServersToAdd);
+      await playExpect(dnsServersToAddInput).toHaveValue(options.dnsServersToAdd);
+    }
+
+    if (options?.dnsServersToRemove !== undefined) {
+      await dnsServersToRemoveInput.clear();
+      await playExpect(dnsServersToRemoveInput).toHaveValue('');
+
+      await dnsServersToRemoveInput.fill(options.dnsServersToRemove);
+      await playExpect(dnsServersToRemoveInput).toHaveValue(options.dnsServersToRemove);
+    }
+
+    const action = options?.action ?? 'Update';
+    if (action === 'Cancel') {
+      await playExpect(cancelButton).toBeEnabled();
+      await cancelButton.click();
+    } else {
+      await playExpect(updateButton).toBeEnabled();
+      await updateButton.click();
+    }
+
+    await playExpect(editDialog).not.toBeVisible();
   });
 }
 
@@ -592,4 +680,80 @@ export async function verifyMachinePrivileges(
       ignoreCase: true,
     });
   });
+}
+
+/**
+ * Parses a version string into an array of numeric components.
+ * Handles versions like "5.7.0", "5.7", "6.0", "5.4.1"
+ * @param version - Version string to parse
+ * @returns Array of numeric version components [major, minor, patch]
+ */
+function parseVersion(version: string): number[] {
+  return version.split('.').map(part => Number.parseInt(part, 10));
+}
+
+/**
+ * Compares two version arrays to determine if the first is >= the second.
+ * @param current - Current version components array
+ * @param reference - Reference version components array
+ * @returns true if current >= reference
+ */
+function compareVersions(current: number[], reference: number[]): boolean {
+  console.log(`Current podman CLI version: ${current.join('.')}`);
+  console.log(`Reference podman CLI version: ${reference.join('.')}`);
+
+  const maxLength = Math.max(current.length, reference.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const currentPart = current[i] ?? 0;
+    const referencePart = reference[i] ?? 0;
+
+    if (currentPart > referencePart) {
+      return true;
+    }
+    if (currentPart < referencePart) {
+      return false;
+    }
+  }
+
+  return true; // versions are equal
+}
+
+/**
+ * Gets the current Podman CLI version by running `podman -v`.
+ * @returns The version string (e.g., "5.7.0")
+ * @throws Error if the version cannot be determined
+ */
+export function getPodmanCliVersion(): string {
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    const output = execSync('podman -v').toString().trim();
+    // Output format: "podman version 5.7.0"
+    const versionRegex = /podman version (\d+(?:\.\d+)*)/i;
+    const match = versionRegex.exec(output);
+    if (!match?.[1]) {
+      throw new Error(`Unable to parse Podman version from output: ${output}`);
+    }
+    return match[1];
+  } catch (error) {
+    throw new Error(`Failed to get Podman CLI version: ${error}`);
+  }
+}
+
+/**
+ * Checks if the installed Podman CLI version is equal to or greater than the reference version.
+ * @param referenceVersion - The minimum required version (e.g., "5.7.0", "5.7", "6.0")
+ * @returns true if the installed version is >= the reference version, false if podman is not available or version cannot be determined
+ */
+export function isPodmanCliVersionAtLeast(referenceVersion: string): boolean {
+  try {
+    const currentVersion = getPodmanCliVersion();
+    const currentVersionArray = parseVersion(currentVersion);
+    const referenceVersionArray = parseVersion(referenceVersion);
+
+    return compareVersions(currentVersionArray, referenceVersionArray);
+  } catch {
+    // If podman is not available or version cannot be determined, return false
+    return false;
+  }
 }

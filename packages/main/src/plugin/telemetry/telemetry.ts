@@ -38,6 +38,7 @@ import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
+import product from '/@product.json' with { type: 'json' };
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
 import { stoppedExtensions } from '../../util.js';
@@ -68,7 +69,7 @@ export type EventType =
 export class Telemetry {
   public static readonly DEFAULT_DELAY_AGGREGATE = 10_000; // 10 seconds
 
-  private static readonly SEGMENT_KEY = 'Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy';
+  private static readonly SEGMENT_KEY = product.telemetry.key;
 
   private cachedTelemetrySettings: TelemetryRule[] | undefined;
   private regexp: Map<string, RegExp> = new Map();

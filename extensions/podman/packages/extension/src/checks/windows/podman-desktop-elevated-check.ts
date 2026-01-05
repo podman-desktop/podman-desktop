@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CheckResult, TelemetryLogger } from '@podman-desktop/api';
+import { env } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
@@ -24,7 +25,7 @@ import { getPowerShellClient } from '/@/utils/powershell';
 
 @injectable()
 export class PodmanDesktopElevatedCheck extends MemoizedBaseCheck {
-  title = 'Podman Desktop Elevated';
+  title = `${env.appName} Elevated`;
 
   constructor(
     @inject(TelemetryLoggerSymbol)
@@ -37,7 +38,7 @@ export class PodmanDesktopElevatedCheck extends MemoizedBaseCheck {
     const client = await getPowerShellClient(this.telemetryLogger);
     if (!(await client.isRunningElevated())) {
       return this.createFailureResult({
-        description: 'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
+        description: `You must run ${env.appName} with administrative rights to run Hyper-V Podman machines.`,
       });
     }
     return this.createSuccessfulResult();

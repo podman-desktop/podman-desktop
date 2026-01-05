@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IpcMainInvokeEvent } from 'electron';
+import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 
 import type { IDisposable } from '/@api/disposable.js';
 
@@ -31,4 +31,11 @@ export type IPCHandle = (
   channel: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any,
+) => void;
+
+export const IPCMainOn = Symbol.for('IPCMainOn');
+export type IPCMainOn = (
+  channel: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listener: (event: IpcMainEvent, ...args: any[]) => void,
 ) => void;

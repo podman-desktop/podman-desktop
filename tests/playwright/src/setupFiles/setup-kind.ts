@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { isLinux, isMac, isWindows } from '../utility/platform';
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
 
 export function setupKind(): boolean[] {
   const rootfulMode = process.env.ROOTFUL_MODE === 'true'; // undefined or "false" => false

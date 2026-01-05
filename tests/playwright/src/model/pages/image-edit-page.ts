@@ -48,10 +48,10 @@ export class ImageEditPage extends BasePage {
     this.alertDialog = page.getByLabel('Error Message Content');
   }
 
-  async renameImage(name: string, tag: string = ''): Promise<ImagesPage> {
+  async renameImage(name: string, tag = ''): Promise<ImagesPage> {
     return test.step('Rename image', async () => {
       if (!name) {
-        throw Error(`Provide name is invalid!`);
+        throw Error('Provide name is invalid!');
       }
 
       await playExpect(this.saveButton).toBeVisible();

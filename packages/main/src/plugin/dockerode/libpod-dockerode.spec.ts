@@ -18,16 +18,17 @@
 
 /* eslint-disable no-null/no-null */
 
-import { rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import type { RequestOptions } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
+import type { DefaultBodyType, HttpResponseResolver, PathParams } from 'msw';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
-import { afterEach, beforeAll, expect, test } from 'vitest';
+import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
@@ -447,4 +448,56 @@ test('Check update network', async () => {
 
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
   await (api as unknown as LibPod).updateNetwork('network1', ['1.1.1.1'], []);
+});
+
+describe('kube play', () => {
+  let tmpDirectory: string;
+  beforeAll(async () => {
+    tmpDirectory = await mkdtemp(path.join(tmpdir(), 'unit-test-'));
+  });
+
+  const FAKE_YAML = 'Dummy content';
+
+  let postHandler: HttpResponseResolver<PathParams, DefaultBodyType, undefined>;
+  let libPod: LibPod;
+  let file: string;
+  beforeEach(async () => {
+    file = path.join(tmpDirectory, 'test.yaml');
+    await writeFile(file, FAKE_YAML);
+
+    postHandler = vi.fn();
+    vi.mocked(postHandler).mockResolvedValue(HttpResponse.json({}, { status: 204 }));
+
+    server = setupServer(http.post('http://localhost/v4.2.0/libpod/play/kube', postHandler));
+    server.listen({ onUnhandledRequest: 'error' });
+
+    const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+    libPod = api as unknown as LibPod;
+  });
+
+  afterAll(async () => {
+    await rm(tmpDirectory, { recursive: true });
+  });
+
+  test('file content should be sent in the body', async () => {
+    vi.mocked(postHandler).mockImplementation(async info => {
+      expect(await info.request.text()).toEqual(FAKE_YAML);
+      return HttpResponse.json({}, { status: 204 });
+    });
+
+    await libPod.playKube(file);
+
+    expect(postHandler).toHaveBeenCalledOnce();
+  });
+
+  test('replace option should be added to query parameters', async () => {
+    await libPod.playKube(file, { replace: true });
+
+    expect(postHandler).toHaveBeenCalledOnce();
+    const request = vi.mocked(postHandler).mock.calls[0]?.[0]?.request;
+    assert(request);
+
+    const parsed = new URL(request.url);
+    expect(parsed.searchParams.get('replace')).toEqual('true');
+  });
 });

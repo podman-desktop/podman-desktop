@@ -27,7 +27,7 @@ import * as extensionApi from '@podman-desktop/api';
 import { Disposable } from '@podman-desktop/api';
 import type { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -171,6 +171,12 @@ vi.mock('./compatibility-mode', async () => {
   return {
     getSocketCompatibility: vi.fn(),
   };
+});
+
+vi.mock(import('./configuration/registry-configuration'), async () => {
+  const RegistryConfigurationImpl = vi.fn();
+  RegistryConfigurationImpl.prototype.init = vi.fn(() => []);
+  return { RegistryConfigurationImpl };
 });
 
 const PODMAN_INSTALL_MOCK: PodmanInstall = {
@@ -2498,6 +2504,40 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
 
     // check called with true
     expect(extensionApi.context.setValue).toBeCalledWith('unsupportedMachineRemoved', 'ok', 'onboarding');
+  });
+});
+
+describe('socketCompatibilityMode command', () => {
+  test('check telemetry sent when error on check disguised podman Mac', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    await extension.activate(getContextMock());
+
+    const socketCommand = 'podman.socketCompatibilityMode';
+
+    // check command is called
+    expect(extensionApi.commands.registerCommand).toHaveBeenCalledWith(socketCommand, expect.any(Function));
+
+    const func = vi
+      .mocked(extensionApi.commands.registerCommand)
+      .mock.calls.find(([command]) => command === socketCommand)?.[1];
+
+    assert(func, `${socketCommand} should have been registered`);
+
+    const error = new Error('test error');
+
+    vi.mocked(isDisguisedPodman).mockRejectedValue(error);
+
+    expect(isDisguisedPodman).not.toBeCalled();
+
+    // call the function
+    await func();
+
+    expect(isDisguisedPodman).toBeCalled();
+
+    expect(telemetryLogger.logError).toBeCalledWith('checkIfSocketDisguisedFailed', expect.objectContaining({ error }));
+    expect(telemetryLogger.logUsage).not.toBeCalled();
   });
 });
 

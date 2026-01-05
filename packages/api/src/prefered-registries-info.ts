@@ -16,32 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import '@testing-library/jest-dom/vitest';
-
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
-
-import type { NetworkInfoUI } from '../NetworkInfoUI';
-import NetworkColumnEnvironment from './NetworkColumnEnvironment.svelte';
-
-const network: NetworkInfoUI = {
-  engineId: 'engine1',
-  engineName: 'Engine 1',
-  engineType: 'podman',
-  name: 'Network 1',
-  id: '123456789012345',
-  created: '',
-  shortId: '123456789012',
-  driver: '',
-  selected: false,
-  status: 'UNUSED',
-  containers: [],
-  ipv6_enabled: false,
-};
-
-test('Expect simple column styling', async () => {
-  render(NetworkColumnEnvironment, { object: network });
-
-  const text = screen.getByText(network.engineName);
-  expect(text).toBeInTheDocument();
-});
+export enum PreferredRegistriesSettings {
+  SectionName = 'registries',
+  Preferred = 'preferred',
+}

@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { PreferencesPage } from '../model/pages/preferences-page';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const preferencesTestString = 'this text should persist through page change';
 
@@ -32,8 +32,6 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Preferences text persistence validation', () => {
-    test.describe.configure({ timeout: 60_000 });
-
     test('Check preferences text persistence', async ({ page, navigationBar }) => {
       //Open Settings/Preferences page
       const settingsBar = await navigationBar.openSettings();

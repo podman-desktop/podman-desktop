@@ -13,6 +13,7 @@ import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import moment from 'moment';
 import { router } from 'tinro';
 
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import { handleNavigation } from '/@/navigation';
 import type { ContainerInfo } from '/@api/container-info';
 import { NavigationPage } from '/@api/navigation-page';
@@ -33,7 +34,6 @@ import { PodUtils } from '../pod/pod-utils';
 import { CONTAINER_LIST_VIEW } from '../view/views';
 import { ContainerUtils } from './container-utils';
 import ContainerColumnActions from './ContainerColumnActions.svelte';
-import ContainerColumnEnvironment from './ContainerColumnEnvironment.svelte';
 import ContainerColumnImage from './ContainerColumnImage.svelte';
 import ContainerColumnName from './ContainerColumnName.svelte';
 import ContainerColumnStatus from './ContainerColumnStatus.svelte';
@@ -317,7 +317,7 @@ let nameColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Name',
 });
 
 let envColumn = new TableColumn<ContainerInfoUI | ContainerGroupInfoUI>('Environment', {
-  renderer: ContainerColumnEnvironment,
+  renderer: ContainerEngineEnvironmentColumn,
   comparator: (a, b): number => (a.engineName ?? '').localeCompare(b.engineName ?? ''),
 });
 

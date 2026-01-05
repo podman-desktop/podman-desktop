@@ -20,7 +20,6 @@ import { rmSync } from 'node:fs';
 import * as path from 'node:path';
 
 import type { IpcMain, IpcMainEvent } from 'electron';
-import { ipcMain } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
@@ -82,12 +81,8 @@ const directories = {
 } as unknown as Directories;
 
 const contributionManager = {} as unknown as ContributionManager;
+const ipcMainOnMock = vi.fn();
 
-vi.mock(import('electron'), () => ({
-  ipcMain: {
-    on: vi.fn().mockReturnThis(),
-  } as unknown as IpcMain,
-}));
 vi.mock(import('node:fs'));
 vi.mock(import('./../docker-extension/docker-desktop-installer.js'));
 
@@ -105,6 +100,7 @@ beforeEach(() => {
     telemetryMock,
     directories,
     contributionManager,
+    ipcMainOnMock,
   );
 });
 
@@ -246,7 +242,7 @@ test('should report error', async () => {
   const spyInstaller = vi.spyOn(extensionInstaller, 'installFromImage');
   spyInstaller.mockRejectedValueOnce(new Error('fake error'));
 
-  vi.mocked(ipcMain.on).mockImplementation(
+  vi.mocked(ipcMainOnMock).mockImplementation(
     (_channel: string, listener: (event: IpcMainEvent, ...args: unknown[]) => void) => {
       // let's call the callback
       listener({ reply: replyMethodMock } as unknown as IpcMainEvent, imageToPull, 0);

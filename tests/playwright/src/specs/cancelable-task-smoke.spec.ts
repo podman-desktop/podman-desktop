@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { TaskState } from '../model/core/states';
-import { CommandPalette } from '../model/pages/command-palette';
-import { ExperimentalPage } from '../model/pages/experimental-page';
-import { TasksPage } from '../model/pages/tasks-page';
-import { StatusBar } from '../model/workbench/status-bar';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { TaskState } from '/@/model/core/states';
+import { CommandPalette } from '/@/model/pages/command-palette';
+import { ExperimentalPage } from '/@/model/pages/experimental-page';
+import { TasksPage } from '/@/model/pages/tasks-page';
+import { StatusBar } from '/@/model/workbench/status-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const longRunningTaskName = 'quay.io/fbenoit/long-task-example:v1.0';
 const taskName = 'Dummy Long Task';
