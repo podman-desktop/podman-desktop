@@ -30,6 +30,8 @@ import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
+import { ColorBuilder } from './color-builder.js';
+import { colorPaletteHelper } from './color-palette-helper.js';
 import { ColorRegistry } from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 
@@ -57,6 +59,10 @@ class TestColorRegistry extends ColorRegistry {
 
   override registerColorDefinition(definition: ColorDefinitionWithId): void {
     super.registerColorDefinition(definition);
+  }
+
+  override color(colorId: string): ColorBuilder {
+    return super.color(colorId);
   }
 
   override initTitlebar(): void {
@@ -772,5 +778,114 @@ describe('registerColorDefinition', () => {
         dark: '#bbb',
       }),
     ).toThrow('Color duplicate-color already registered');
+  });
+});
+
+describe('color() fluent API', () => {
+  test('returns a ColorBuilder instance', () => {
+    const builder = colorRegistry.color('fluent-test');
+    expect(builder).toBeInstanceOf(ColorBuilder);
+  });
+
+  test('registers color when build() is called and passed to registerColorDefinition', () => {
+    const spyOnNotifyUpdate = vi.spyOn(colorRegistry, 'notifyUpdate');
+    spyOnNotifyUpdate.mockReturnValue(undefined);
+
+    colorRegistry.registerColorDefinition(
+      colorRegistry
+        .color('fluent-color')
+        .withLight(colorPaletteHelper('#ffffff'))
+        .withDark(colorPaletteHelper('#000000'))
+        .build(),
+    );
+
+    // Verify color was registered
+    const lightColors = colorRegistry.listColors('light');
+    const darkColors = colorRegistry.listColors('dark');
+
+    const lightColor = lightColors.find(c => c.id === 'fluent-color');
+    const darkColor = darkColors.find(c => c.id === 'fluent-color');
+
+    expect(lightColor).toBeDefined();
+    expect(darkColor).toBeDefined();
+  });
+
+  test('registers color with alpha when opacity is specified', () => {
+    const spyOnNotifyUpdate = vi.spyOn(colorRegistry, 'notifyUpdate');
+    spyOnNotifyUpdate.mockReturnValue(undefined);
+
+    colorRegistry.registerColorDefinition(
+      colorRegistry
+        .color('fluent-alpha-color')
+        .withLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
+        .withDark(colorPaletteHelper('#000000').withAlpha(0.8))
+        .build(),
+    );
+
+    // Verify color was registered with alpha
+    const lightColors = colorRegistry.listColors('light');
+    const darkColors = colorRegistry.listColors('dark');
+
+    const lightColor = lightColors.find(c => c.id === 'fluent-alpha-color');
+    const darkColor = darkColors.find(c => c.id === 'fluent-alpha-color');
+
+    expect(lightColor).toBeDefined();
+    expect(darkColor).toBeDefined();
+    // Verify alpha is embedded in the color value (culori uses color(srgb ... / alpha) format)
+    expect(lightColor?.value).toMatch(/\/ 0\.5\)?$/);
+    expect(darkColor?.value).toMatch(/\/ 0\.8\)?$/);
+  });
+
+  test('does not register until build() is called and passed to registerColorDefinition', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+
+    // Only set colors but don't call build() or register
+    colorRegistry
+      .color('partial-color')
+      .withLight(colorPaletteHelper('#ffffff'))
+      .withDark(colorPaletteHelper('#000000'));
+
+    // Should not have registered since build() was not called and passed to register
+    expect(spyOnRegisterColor).not.toHaveBeenCalled();
+  });
+
+  test('supports reverse order (dark first, then light)', () => {
+    const spyOnNotifyUpdate = vi.spyOn(colorRegistry, 'notifyUpdate');
+    spyOnNotifyUpdate.mockReturnValue(undefined);
+
+    colorRegistry.registerColorDefinition(
+      colorRegistry
+        .color('reverse-order-color')
+        .withDark(colorPaletteHelper('#000000'))
+        .withLight(colorPaletteHelper('#ffffff'))
+        .build(),
+    );
+
+    // Verify color was registered
+    const lightColors = colorRegistry.listColors('light');
+    const lightColor = lightColors.find(c => c.id === 'reverse-order-color');
+
+    expect(lightColor).toBeDefined();
+  });
+
+  test('build throws error when light color is missing', () => {
+    const builder = colorRegistry.color('incomplete-color').withDark(colorPaletteHelper('#000000'));
+
+    expect(() => builder.build()).toThrow('Color definition for incomplete-color is incomplete.');
+  });
+
+  test('build throws error when dark color is missing', () => {
+    const builder = colorRegistry.color('incomplete-color').withLight(colorPaletteHelper('#ffffff'));
+
+    expect(() => builder.build()).toThrow('Color definition for incomplete-color is incomplete.');
+  });
+
+  test('build throws error for invalid color string', () => {
+    const builder = colorRegistry
+      .color('invalid-color')
+      .withLight(colorPaletteHelper('not-a-color').withAlpha(0.5))
+      .withDark(colorPaletteHelper('#000000'));
+
+    expect(() => builder.build()).toThrow('Failed to parse color not-a-color');
   });
 });

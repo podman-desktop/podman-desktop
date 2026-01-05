@@ -26,7 +26,7 @@ import tailwindColorPalette from '../../../../tailwind-color-palette.json' with 
 import { isWindows } from '../util.js';
 import type { ApiSenderType } from './api.js';
 import { AppearanceSettings } from './appearance-settings.js';
-import { colorDefinitionBuilder } from './color-builder.js';
+import { ColorBuilder } from './color-builder.js';
 import { colorPaletteHelper } from './color-palette-helper.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
@@ -152,11 +152,11 @@ export class ColorRegistry {
 
   /**
    * Register a color using a built color definition that includes the id.
-   * Use colorDefinitionBuilder() for fluent color definition creation.
+   * Use this.color() for fluent color definition creation.
    *
    * @example
    * this.registerColorDefinition(
-   *   colorDefinitionBuilder('my-color')
+   *   this.color('my-color')
    *     .withLight(colorPaletteHelper('#ffffff'))
    *     .withDark(colorPaletteHelper('#000000'))
    *     .build()
@@ -164,7 +164,7 @@ export class ColorRegistry {
    *
    * @example
    * this.registerColorDefinition(
-   *   colorDefinitionBuilder('transparent-color')
+   *   this.color('transparent-color')
    *     .withLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
    *     .withDark(colorPaletteHelper('#000000').withAlpha(0.8))
    *     .build()
@@ -177,6 +177,34 @@ export class ColorRegistry {
       light: definition.light,
       dark: definition.dark,
     });
+  }
+
+  /**
+   * Create a ColorBuilder for fluent color definition creation.
+   * Call build() on the result and pass it to registerColorDefinition().
+   * Use colorPaletteHelper() to wrap colors with optional alpha values.
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('my-color')
+   *     .withLight(colorPaletteHelper('#ffffff'))
+   *     .withDark(colorPaletteHelper('#000000'))
+   *     .build()
+   * );
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('transparent-color')
+   *     .withLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
+   *     .withDark(colorPaletteHelper('#000000').withAlpha(0.8))
+   *     .build()
+   * );
+   *
+   * @param colorId - The unique color identifier
+   * @returns A ColorBuilder instance for method chaining
+   */
+  protected color(colorId: string): ColorBuilder {
+    return new ColorBuilder(colorId);
   }
 
   // check if the given theme is dark
@@ -949,7 +977,7 @@ export class ColorRegistry {
       light: purple[700],
     });
     this.registerColorDefinition(
-      colorDefinitionBuilder(`${link}-hover-bg`)
+      this.color(`${link}-hover-bg`)
         .withLight(colorPaletteHelper(black).withAlpha(0.13))
         .withDark(colorPaletteHelper(white).withAlpha(0.13))
         .build(),
@@ -1041,7 +1069,7 @@ export class ColorRegistry {
       light: black,
     });
     this.registerColorDefinition(
-      colorDefinitionBuilder(`${button}close-hover-bg`)
+      this.color(`${button}close-hover-bg`)
         .withLight(colorPaletteHelper(black).withAlpha(0.13))
         .withDark(colorPaletteHelper(white).withAlpha(0.13))
         .build(),
@@ -1051,7 +1079,7 @@ export class ColorRegistry {
       light: purple[700],
     });
     this.registerColorDefinition(
-      colorDefinitionBuilder(`${button}link-hover-bg`)
+      this.color(`${button}link-hover-bg`)
         .withLight(colorPaletteHelper(black).withAlpha(0.13))
         .withDark(colorPaletteHelper(white).withAlpha(0.13))
         .build(),
@@ -1590,7 +1618,7 @@ export class ColorRegistry {
 
   protected initCommon(): void {
     this.registerColorDefinition(
-      colorDefinitionBuilder('item-disabled')
+      this.color('item-disabled')
         .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
         .withDark(colorPaletteHelper(stone[300]).withAlpha(0.4))
         .build(),
