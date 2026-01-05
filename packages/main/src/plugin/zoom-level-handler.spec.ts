@@ -20,13 +20,13 @@ import type { Configuration } from '@podman-desktop/api';
 import type { BrowserWindow } from 'electron';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
+import { AppearanceSettings } from '/@api/appearance/appearance-settings.js';
 import type {
   IConfigurationChangeEvent,
   IConfigurationPropertyRecordedSchema,
   IConfigurationRegistry,
 } from '/@api/configuration/models.js';
 
-import { AppearanceSettings } from './appearance-settings.js';
 import { Emitter } from './events/emitter.js';
 import { ZoomLevelHandler } from './zoom-level-handler.js';
 

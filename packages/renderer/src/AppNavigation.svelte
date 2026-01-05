@@ -5,9 +5,9 @@ import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
 import { NavigationPage } from '/@api/navigation-page';
 
-import { AppearanceSettings } from '../../main/src/plugin/appearance-settings';
 import AuthActions from './lib/authentication/AuthActions.svelte';
 import { CommandRegistry } from './lib/CommandRegistry';
 import NewContentOnDashboardBadge from './lib/dashboard/NewContentOnDashboardBadge.svelte';

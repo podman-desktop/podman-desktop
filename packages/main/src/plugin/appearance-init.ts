@@ -20,9 +20,8 @@ import { nativeTheme } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-
-import { AppearanceSettings } from './appearance-settings.js';
 
 const APPEARANCE_FULL_KEY = `${AppearanceSettings.SectionName}.${AppearanceSettings.Appearance}`;
 const SEARCHBAR_FULL_KEY = `titleBar.${AppearanceSettings.SearchBar}`;

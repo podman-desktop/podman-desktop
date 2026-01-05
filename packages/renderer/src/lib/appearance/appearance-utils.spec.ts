@@ -19,8 +19,8 @@
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
 
-import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
 import { AppearanceUtil } from './appearance-util';
 
 const appearanceUtil: AppearanceUtil = new AppearanceUtil();

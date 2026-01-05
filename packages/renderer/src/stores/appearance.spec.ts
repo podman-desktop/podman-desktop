@@ -19,7 +19,8 @@
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { AppearanceSettings } from '../../../main/src/plugin/appearance-settings';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
+
 import { isDark } from './appearance';
 import { configurationProperties } from './configurationProperties';
 
