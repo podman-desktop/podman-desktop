@@ -19,6 +19,7 @@
 import * as os from 'node:os';
 
 import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { MacosStartup } from './macos-startup.js';
 import { WindowsStartup } from './windows-startup.js';
@@ -68,7 +69,7 @@ export class StartupInstall {
       type: 'object',
       properties: {
         ['preferences.login.start']: {
-          description: 'Start Podman Desktop when you log in',
+          description: `Start ${product.name} when you log in`,
           type: 'boolean',
           default: true,
         },
@@ -80,7 +81,7 @@ export class StartupInstall {
       type: 'object',
       properties: {
         ['preferences.login.minimize']: {
-          description: 'Minimize Podman Desktop when you log in',
+          description: `Minimize ${product.name} when you log in`,
           type: 'boolean',
           default: false,
         },

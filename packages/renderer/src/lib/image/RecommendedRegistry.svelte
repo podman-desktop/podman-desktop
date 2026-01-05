@@ -1,11 +1,10 @@
 <script lang="ts">
 import { Button } from '@podman-desktop/ui-svelte';
 
+import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
 import { handleNavigation } from '/@/navigation';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 import { NavigationPage } from '/@api/navigation-page';
-
-import FeaturedExtensionDownload from '../featured/FeaturedExtensionDownload.svelte';
 
 interface Props {
   imageError?: string;

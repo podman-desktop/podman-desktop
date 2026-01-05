@@ -25,13 +25,13 @@ import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+import { containersInfos } from '/@/stores/containers';
+import { providerInfos } from '/@/stores/providers';
 import type { ContainerInfo } from '/@api/container-info';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import { type ProviderInfo } from '/@api/provider-info';
 
-import { mockBreadcrumb } from '../../stores/breadcrumb.spec';
-import { containersInfos } from '../../stores/containers';
-import { providerInfos } from '../../stores/providers';
 import ComposeDetails from './ComposeDetails.svelte';
 
 vi.mock(import('@xterm/xterm'));
@@ -42,11 +42,6 @@ beforeAll(() => {
       func();
     },
   };
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => ({
-      addListener: vi.fn(),
-    }),
-  });
   mockBreadcrumb();
 });
 

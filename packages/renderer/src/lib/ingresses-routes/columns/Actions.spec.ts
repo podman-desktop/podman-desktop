@@ -21,8 +21,9 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { IngressUI } from '../IngressUI';
-import type { RouteUI } from '../RouteUI';
+import type { IngressUI } from '/@/lib/ingresses-routes/IngressUI';
+import type { RouteUI } from '/@/lib/ingresses-routes/RouteUI';
+
 import Actions from './Actions.svelte';
 
 test('Expect action buttons with ingress object', async () => {

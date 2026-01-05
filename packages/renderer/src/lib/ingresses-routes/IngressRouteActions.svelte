@@ -1,8 +1,9 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
-import { withConfirmation } from '../dialogs/messagebox-utils';
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
+import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
+
 import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';
 import type { RouteUI } from './RouteUI';

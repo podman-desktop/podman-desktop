@@ -1,16 +1,17 @@
 <script lang="ts">
-import { faNetworkWired } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import { handleNavigation } from '/@/navigation';
+import { networksListInfo } from '/@/stores/networks';
+import { providerInfos } from '/@/stores/providers';
 import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
+import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-
-import { networksListInfo } from '../../stores/networks';
-import { providerInfos } from '../../stores/providers';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
 
 let networkInfo: NetworkCreateFormInfo = $state({
   networkName: '',
@@ -54,15 +55,20 @@ async function createNetwork(): Promise<void> {
 
     const result = await window.createNetwork($state.snapshot(networkInfo.selectedProvider), networkOptions);
 
-    if (!result.Id) {
-      throw new Error('Network creation failed: No network ID returned');
+    if (!result.Id || !result.engineId) {
+      throw new Error('Network creation failed: Missing network ID or engine ID');
     }
 
-    // Wait for the network store to be updated with the new network
-    await waitForNetworkInStore(result.Id, networkInfo.networkName);
+    await waitForNetworkInStore(result.Id, result.engineId);
 
-    // Route back to networks list
-    router.goto('/networks');
+    // Route to the network details page
+    handleNavigation({
+      page: NavigationPage.NETWORK,
+      parameters: {
+        name: networkInfo.networkName,
+        engineId: result.engineId,
+      },
+    });
   } catch (error: unknown) {
     createError = error instanceof Error ? error.message : String(error);
     console.error('Error creating network:', error);
@@ -70,22 +76,19 @@ async function createNetwork(): Promise<void> {
     createNetworkInProgress = false;
   }
 }
+
 /**
- * Wait for the network to be created and added to the store
- * This is a temporary function to wait for network creation before routing back to the networks list
- * Eventually we will want to route back to the network details page
+ * Wait for the network to appear in the store before navigating.
  */
-async function waitForNetworkInStore(networkId: string, networkName: string): Promise<void> {
+async function waitForNetworkInStore(networkId: string, engineId: string): Promise<void> {
   return new Promise<void>(resolve => {
-    // Set a timeout to avoid waiting indefinitely
     const timeout = setTimeout(() => {
       unsubscribe();
       resolve();
-    }, 10000); // 10 second timeout
+    }, 10000);
 
     const unsubscribe = networksListInfo.subscribe(networks => {
-      // Check both ID and name to handle cases where Docker and Podman might have overlapping IDs
-      if (networks.some(network => network.Id === networkId && network.Name === networkName)) {
+      if (networks.some(network => network.Id === networkId && network.engineId === engineId)) {
         clearTimeout(timeout);
         unsubscribe();
         resolve();
@@ -118,7 +121,7 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
   title="Create a Network"
   showEmptyScreen={providerConnections.length === 0 && !createNetworkInProgress}>
   {#snippet icon()}
-    <Icon icon={faNetworkWired} class="fa-2x" />
+    <Icon icon={NetworkIcon} class="2x" />
   {/snippet}
   {#snippet content()}
     <div class="space-y-6">
@@ -163,7 +166,6 @@ let hasInvalidFields = $derived(!networkInfo.networkName || !networkInfo.selecte
           disabled={hasInvalidFields || createNetworkInProgress}
           inProgress={createNetworkInProgress}
           class="w-full"
-          icon={faNetworkWired}
           onclick={createNetwork}>
           Create
         </Button>

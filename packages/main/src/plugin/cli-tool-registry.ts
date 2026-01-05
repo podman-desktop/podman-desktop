@@ -27,10 +27,10 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { CliToolExtensionInfo, CliToolInfo } from '/@api/cli-tool-info.js';
 import type { Event } from '/@api/event.js';
 
-import { ApiSenderType } from './api.js';
 import { CliToolImpl } from './cli-tool-impl.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';

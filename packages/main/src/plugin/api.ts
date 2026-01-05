@@ -16,19 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IpcMainInvokeEvent } from 'electron';
-
-import type { IDisposable } from '/@api/disposable.js';
-
-export const ApiSenderType = Symbol.for('ApiSenderType');
-export type ApiSenderType = {
-  send: (channel: string, data?: unknown) => void;
-  receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;
-};
+import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 
 export const IPCHandle = Symbol.for('IPCHandle');
 export type IPCHandle = (
   channel: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any,
+) => void;
+
+export const IPCMainOn = Symbol.for('IPCMainOn');
+export type IPCMainOn = (
+  channel: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listener: (event: IpcMainEvent, ...args: any[]) => void,
 ) => void;

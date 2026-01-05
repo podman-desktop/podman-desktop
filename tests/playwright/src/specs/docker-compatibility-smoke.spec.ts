@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ResourceElementState } from '../model/core/states';
-import { DockerCompatibilityPage } from '../model/pages/docker-compatibility-page';
-import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { createPodmanMachineFromCLI, setDockerCompatibilityFeature } from '../utility/operations';
-import { isWindows } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ResourceElementState } from '/@/model/core/states';
+import { DockerCompatibilityPage } from '/@/model/pages/docker-compatibility-page';
+import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { createPodmanMachineFromCLI, setDockerCompatibilityFeature } from '/@/utility/operations';
+import { isWindows } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const defaultMachine = 'Podman Machine';
 

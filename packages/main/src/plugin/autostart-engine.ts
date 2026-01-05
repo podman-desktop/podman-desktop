@@ -20,6 +20,7 @@ import { inject, injectable } from 'inversify';
 
 import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { ProviderRegistry } from './provider-registry.js';
 import { Disposable } from './types/disposable.js';
@@ -53,7 +54,7 @@ export class AutostartEngine {
       },
       properties: {
         [`preferences.${extensionId}.engine.autostart`]: {
-          description: `Autostart ${extensionDisplayName} engine when launching Podman Desktop`,
+          description: `Autostart ${extensionDisplayName} engine when launching ${product.name}`,
           type: 'boolean',
           default: true,
           scope: [CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE],

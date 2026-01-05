@@ -1,7 +1,7 @@
 <script lang="ts">
 import SimpleColumn from '@podman-desktop/ui-svelte/TableSimpleColumn';
 
-import type { NetworkInfoUI } from '../NetworkInfoUI';
+import type { NetworkInfoUI } from '/@/lib/network/NetworkInfoUI';
 
 interface Props {
   object: NetworkInfoUI;

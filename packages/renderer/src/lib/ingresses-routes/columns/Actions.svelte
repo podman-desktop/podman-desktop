@@ -1,5 +1,6 @@
 <script lang="ts">
-import IngressRouteActions from '../IngressRouteActions.svelte';
+import IngressRouteActions from '/@/lib/ingresses-routes/IngressRouteActions.svelte';
+
 import type { Props } from './props';
 
 let { object }: Props = $props();

@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ContainerState, ImageState } from '../model/core/states';
-import type { ContainerInteractiveParams } from '../model/core/types';
-import { ContainersPage } from '../model/pages/containers-page';
-import { ImageDetailsPage } from '../model/pages/image-details-page';
-import type { ImagesPage } from '../model/pages/images-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage } from '../utility/operations';
-import { waitForPodmanMachineStartup, waitWhile } from '../utility/wait';
+import { ContainerState, ImageState } from '/@/model/core/states';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { ContainersPage } from '/@/model/pages/containers-page';
+import { ImageDetailsPage } from '/@/model/pages/image-details-page';
+import type { ImagesPage } from '/@/model/pages/images-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteContainer, deleteImage } from '/@/utility/operations';
+import { waitForPodmanMachineStartup, waitWhile } from '/@/utility/wait';
 
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';

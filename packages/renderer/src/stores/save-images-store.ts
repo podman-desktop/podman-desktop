@@ -19,7 +19,7 @@
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
-import type { ImageInfoUI } from '../lib/image/ImageInfoUI';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 
 /**
  * Defines the store used to define the images to save.

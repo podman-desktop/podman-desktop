@@ -107,7 +107,7 @@ test('Expect all form fields to be present', async () => {
 });
 
 test('Expect createNetwork to be called with correct parameters', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId: 'engine1' });
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
@@ -169,7 +169,7 @@ test('Expect empty screen when no providers available', async () => {
 });
 
 test('Expect createNetwork to be called with subnet when provided', async () => {
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123' });
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId: 'engine1' });
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
@@ -206,9 +206,10 @@ test('Expect cancel button to navigate to networks page', async () => {
   expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
 });
 
-test('Expect automatic routing after successful network creation when network appears in store', async () => {
+test('Expect automatic routing to network details after successful network creation', async () => {
   const networkId = 'network123';
-  vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId });
+  const engineId = 'engine1';
+  vi.mocked(window.createNetwork).mockResolvedValue({ Id: networkId, engineId });
 
   renderCreate();
 
@@ -220,12 +221,13 @@ test('Expect automatic routing after successful network creation when network ap
 
   // Simulate network appearing in store after creation with both matching ID and Name
   setTimeout(() => {
-    networksListInfo.set([{ Id: networkId, Name: 'my-test-network' } as NetworkInspectInfo]);
+    networksListInfo.set([{ Id: networkId, Name: 'my-test-network', engineId } as NetworkInspectInfo]);
   }, 100);
 
   await waitFor(
     () => {
-      expect(mockRouter.router.goto).toHaveBeenCalledWith('/networks');
+      // Should route to the network details page
+      expect(mockRouter.router.goto).toHaveBeenCalledWith(`/networks/my-test-network/${engineId}/summary`);
     },
     { timeout: 3000 },
   );

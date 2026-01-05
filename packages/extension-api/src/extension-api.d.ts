@@ -3779,6 +3779,7 @@ declare module '@podman-desktop/api' {
 
   export interface NetworkCreateResult {
     Id: string;
+    engineId: string;
   }
 
   /**
@@ -4401,6 +4402,11 @@ declare module '@podman-desktop/api' {
    * Namespace describing the environment Podman Desktop runs in.
    */
   export namespace env {
+    /**
+     * The name of the application. (e.g., 'Podman Desktop')
+     */
+    export const appName: string;
+
     /**
      * Flag indicating whether we are running on macOS (Mac OS X) operating system.
      *

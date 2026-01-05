@@ -2,8 +2,8 @@
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 import UpdateNetworkDialog from './UpdateNetworkDialog.svelte';
 

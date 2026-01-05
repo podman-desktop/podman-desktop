@@ -6,8 +6,9 @@ import { onMount, tick } from 'svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
-import Dialog from '../dialogs/Dialog.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {

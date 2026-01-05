@@ -19,9 +19,8 @@
 import type { Component } from 'svelte';
 
 import JobIcon from '/@/lib/images/JobIcon.svelte';
-
-import { kubernetesCurrentContextJobs } from '../../kubernetes-contexts-state';
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import { kubernetesCurrentContextJobs } from '/@/stores/kubernetes-contexts-state';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let count = $state(0);
 

@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { ServiceUI } from '../ServiceUI';
+import type { ServiceUI } from '/@/lib/service/ServiceUI';
+
 import Type from './Type.svelte';
 
 const service: ServiceUI = {

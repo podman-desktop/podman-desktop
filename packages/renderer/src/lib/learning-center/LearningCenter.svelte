@@ -3,8 +3,8 @@ import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import type { Guide } from '/@api/learning-center/guide';
 
-import type { Guide } from '../../../../main/src/plugin/learning-center/learning-center-api';
 import GuideCard from './GuideCard.svelte';
 
 let guides: Guide[] = $state([]);

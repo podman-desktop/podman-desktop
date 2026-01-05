@@ -42,6 +42,7 @@ import type {
 } from '@podman-desktop/api';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type {
   CheckStatus,
   PreflightChecksCallback,
@@ -50,7 +51,6 @@ import type {
   ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
 
-import type { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { LifecycleContextImpl } from './lifecycle-context.js';

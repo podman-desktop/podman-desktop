@@ -43,7 +43,7 @@ export class PodmanKubePlayPage extends BasePage {
     this.selectYamlButton = page.getByRole('button', {
       name: 'Podman Container Engine Runtime',
     });
-    this.createYamlFromScratchButton = page.getByRole('button', { name: 'Create file from scratch' });
+    this.createYamlFromScratchButton = page.getByRole('button', { name: 'Create a file from scratch' });
     this.customYamlEditor = page.locator('#custom-yaml-editor');
     this.playButton = page.getByRole('button', { name: 'Play' });
     this.doneButton = page.getByRole('button', { name: 'Done' });

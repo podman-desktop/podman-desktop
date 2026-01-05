@@ -8,10 +8,10 @@ import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { getExistingTerminal, registerTerminal } from '/@/stores/container-terminal-store';
 
 import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
-import { getTerminalTheme } from '../terminal/terminal-theme';
 import NoLogIcon from '../ui/NoLogIcon.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 

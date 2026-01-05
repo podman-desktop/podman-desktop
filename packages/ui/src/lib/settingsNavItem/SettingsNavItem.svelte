@@ -3,7 +3,6 @@ import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
 import type { Component } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
-import { isFontAwesomeIcon } from '../utils/icon-utils';
 
 interface Props {
   title: string;
@@ -39,7 +38,7 @@ function click(): void {
   <div
     class="flex w-full pr-1 py-2 justify-between items-center cursor-pointer border-l-[4px]"
     class:pl-3={!child}
-    class:pl-6={child}
+    class:pl-[34px]={child}
     class:leading-none={child}
     class:text-md={!child}
     class:font-medium={!child}
@@ -52,16 +51,12 @@ function click(): void {
     class:hover:bg-[var(--pd-secondary-nav-text-hover-bg)]={!selected}
     class:hover:border-[var(--pd-secondary-nav-text-hover-bg)]={!selected}>
     <span
-      class="group-hover:block flex gap-x-4 items-center"
+      class="group-hover:block flex gap-x-2 items-center"
       class:flex-row={iconPosition === 'left'}
       class:flex-row-reverse={iconPosition === 'right'}
       class:capitalize={!child}>
       {#if icon}
-        {#if isFontAwesomeIcon(icon)}
           <Icon icon={icon}/>
-        {:else}
-          <Icon icon={icon} size=14/>
-        {/if}
       {/if}
       <span>{title}</span>
     </span>

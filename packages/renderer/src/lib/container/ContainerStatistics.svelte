@@ -1,9 +1,9 @@
 <script lang="ts">
 import { onDestroy, onMount } from 'svelte';
 
+import Donut from '/@/lib/donut/Donut.svelte';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 
-import Donut from '../donut/Donut.svelte';
 import { ContainerUtils } from './container-utils';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 

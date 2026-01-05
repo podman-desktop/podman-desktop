@@ -8,10 +8,9 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
-
-import EngineFormPage from '../ui/EngineFormPage.svelte';
 
 let archivesToLoad = $state<string[]>([]);
 let loadError = $state<string>('');

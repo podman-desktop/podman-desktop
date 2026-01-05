@@ -4,23 +4,23 @@ import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
+import KubePlayIcon from '/@/lib/kube/KubePlayIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import FileInput from '/@/lib/ui/FileInput.svelte';
+import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { providerInfos } from '/@/stores/providers';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-
-import { providerInfos } from '../../stores/providers';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
-import KubePlayIcon from '../kube/KubePlayIcon.svelte';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import FileInput from '../ui/FileInput.svelte';
-import WarningMessage from '../ui/WarningMessage.svelte';
 
 let runStarted = $state(false);
 let runFinished = $state(false);
 let runError = $state('');
 let kubeBuild: boolean = $state(false);
+let kubeReplace: boolean = $state(false);
 let runWarning = $state('');
 let kubernetesYamlFilePath: string | undefined = $state(undefined);
 let customYamlContent: string = $state('');
@@ -40,6 +40,7 @@ let hasInvalidFields = $derived.by(() => {
 let playKubeResultRaw: string | undefined = $state(undefined);
 let playKubeResultJSON: unknown | undefined = $state(undefined);
 let playKubeResult: { Pods?: unknown[] } | undefined = $state(undefined);
+let cancellableTokenId: number | undefined = $state(undefined);
 
 let providerConnections: ProviderContainerConnectionInfo[] = $derived(
   $providerInfos
@@ -75,6 +76,12 @@ function removeEmptyOrNull(obj: object): object {
   return obj;
 }
 
+async function cancel(): Promise<void> {
+  if (cancellableTokenId === undefined) return;
+
+  return window.cancelToken(cancellableTokenId);
+}
+
 async function playKubeFile(): Promise<void> {
   runStarted = true;
   runFinished = false;
@@ -95,8 +102,12 @@ async function playKubeFile(): Promise<void> {
 
     if (yamlFilePath && selectedProviderConnection) {
       try {
+        cancellableTokenId = await window.getCancellableTokenSource();
+
         const result = await window.playKube(yamlFilePath, $state.snapshot(selectedProviderConnection), {
-          build: kubeBuild,
+          build: $state.snapshot(kubeBuild),
+          replace: $state.snapshot(kubeReplace),
+          cancellableTokenId: $state.snapshot(cancellableTokenId),
         });
 
         // remove the null values from the result
@@ -245,7 +256,7 @@ function toggle(choice: 'podman' | 'custom'): void {
 
         <button
           class="border-2 rounded-md p-5 cursor-pointer bg-[var(--pd-content-card-inset-bg)]"
-          aria-label="Create file from scratch"
+          aria-label="Create a file from scratch"
           aria-pressed={userChoice === 'custom' ? 'true' : 'false'}
           class:border-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
           class:border-[var(--pd-content-card-border)]={userChoice !== 'custom'}
@@ -261,7 +272,7 @@ function toggle(choice: 'podman' | 'custom'): void {
               class="pl-2"
               class:text-[var(--pd-content-card-text)]={userChoice === 'custom'}
               class:text-[var(--pd-input-field-disabled-text)]={userChoice !== 'custom'}>
-              Create file from scratch
+              Create a file from scratch
             </div>
           </div>
         </button>
@@ -271,7 +282,7 @@ function toggle(choice: 'podman' | 'custom'): void {
       {#if userChoice === 'custom'}
         <div class="space-y-3">
           <label for="custom-yaml-editor" class="block text-base font-bold text-[var(--pd-content-card-header-text)]">
-            Custom Kubernetes YAML Content
+            Custom Kubernetes YAML content
           </label>
           <div id="custom-yaml-editor" class="h-[400px] border">
             <MonacoEditor
@@ -284,26 +295,40 @@ function toggle(choice: 'podman' | 'custom'): void {
         </div>
       {/if}
 
-      <div >
-        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Build options</div>
-        <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
-          <div>Enable build</div>
-        </Checkbox>
+      <div class="flex flex-col gap-y-2">
+        <div class="text-base font-bold text-[var(--pd-content-card-header-text)]">Options</div>
+        <div class="flex flex-row gap-x-2">
+          <Checkbox class="mx-1 my-auto" title="Enable build" bind:checked={kubeBuild} >
+            <div>Enable build</div>
+          </Checkbox>
+          <Checkbox class="mx-1 my-auto" title="Replace" bind:checked={kubeReplace} >
+            <div>Replace</div>
+          </Checkbox>
+        </div>
       </div>
 
       {#if !runFinished}
-        <Button
-          on:click={playKubeFile}
-          disabled={hasInvalidFields || runStarted}
-          class="w-full"
-          inProgress={runStarted}
-          icon={KubePlayIcon}>
-          {userChoice === 'custom' ? 'Play Custom YAML' : 'Play'}
-        </Button>
+        {#if !runStarted}
+          <Button
+            on:click={playKubeFile}
+            disabled={hasInvalidFields || runStarted}
+            class="w-full"
+            inProgress={runStarted}
+            icon={KubePlayIcon}>
+            {userChoice === 'custom' ? 'Play custom YAML' : 'Play'}
+          </Button>
+        {:else}
+          <Button
+            onclick={cancel}
+            title="Cancel"
+            class="w-full">
+            Cancel
+          </Button>
+        {/if}
       {/if}
       {#if runStarted}
         <div class="text-[var(--pd-content-card-text)] text-sm">
-          Please wait during the Play Kube and do not change screen. This process may take a few minutes to complete...
+          Please do not change screens while Play Kube executes. This process may take a few minutes to complete...
         </div>
       {/if}
 

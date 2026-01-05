@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { V1Pod } from '@kubernetes/client-node';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import * as jsYaml from 'js-yaml';
@@ -31,7 +32,7 @@ import type { V1Route } from '/@api/openshift-types';
 
 import DeployPodToKube from './DeployPodToKube.svelte';
 
-vi.mock(import('../editor/MonacoEditor.svelte'));
+vi.mock(import('/@/lib/editor/MonacoEditor.svelte'));
 
 // mock the router
 vi.mock('tinro', () => {
@@ -532,4 +533,49 @@ test('Done button should go back to previous page', async () => {
   lastPage.set({ name: 'perious page', path: '/last' });
   await fireEvent.click(doneButton);
   expect(router.goto).toHaveBeenCalledWith(`/last`);
+});
+
+test('ImagePullBackOff error should be reported', async () => {
+  await waitRender({});
+  const createButton = screen.getByRole('button', { name: 'Deploy' });
+  expect(createButton).toBeInTheDocument();
+  expect(createButton).toBeEnabled();
+
+  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
+    metadata: { name: 'my-pod', namespace: 'default' },
+  });
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
+    metadata: { name: 'my-pod', namespace: 'default' },
+    status: {
+      containerStatuses: [
+        {
+          state: {
+            waiting: {
+              reason: 'ImagePullBackOff',
+            },
+          },
+        },
+      ],
+    },
+  } as unknown as V1Pod);
+
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  await fireEvent.click(createButton);
+  await vi.runAllTimersAsync();
+
+  await waitFor(() => {
+    // The error is reported to the telemetry and to the user
+    expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
+      errorMessage: 'ImagePullBackOff',
+    });
+    expect(screen.getByLabelText('Deploy Error Message')).toHaveTextContent(
+      'ImagePullBackOff error, please check that the image is accessible from the Kubernetes cluster',
+    );
+  });
+  await vi.waitFor(() => {
+    // The deploy button is displayed again, meaning that the deploy process has been aborted
+    const deployButton = screen.getByRole('button', { name: 'Deploy' });
+    expect(deployButton).toBeVisible();
+    expect(deployButton).toBeEnabled();
+  });
 });

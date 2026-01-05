@@ -22,21 +22,21 @@ import * as os from 'node:os';
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ResourceElementState } from '../model/core/states';
-import type { PodmanVirtualizationProviders } from '../model/core/types';
-import { matchesProviderVariant, PodmanMachinePrivileges } from '../model/core/types';
-import { CLIToolsPage } from '../model/pages/cli-tools-page';
-import { ExperimentalPage } from '../model/pages/experimental-page';
-import { PreferencesPage } from '../model/pages/preferences-page';
-import { RegistriesPage } from '../model/pages/registries-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { VolumeDetailsPage } from '../model/pages/volume-details-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { isLinux, isMac, isWindows } from './platform';
-import { waitUntil, waitWhile } from './wait';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementState } from '/@/model/core/states';
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
+import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
+import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import { ExperimentalPage } from '/@/model/pages/experimental-page';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { VolumeDetailsPage } from '/@/model/pages/volume-details-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
+import { waitUntil, waitWhile } from '/@/utility/wait';
 
 /**
  * Stop and delete container defined by its name
@@ -209,24 +209,24 @@ export async function handleConfirmationDialog(
   timeout = 10_000,
   moreThanOneConsecutiveDialogs = false,
 ): Promise<void> {
-  return test.step('Handle confirmation dialog', async () => {
-    // wait for dialog to appear using waitFor
-    const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
-    await waitUntil(async () => await dialog.isVisible(), { timeout: timeout });
-    const button = confirm
-      ? dialog.getByRole('button', { name: confirmationButton })
-      : dialog.getByRole('button', { name: cancelButton });
-    await playExpect(button).toBeEnabled({ timeout: timeout });
-    await button.click();
+  // Note: Intentionally not wrapped in test.step to allow proper try-catch handling
+  // by callers. test.step has special failure semantics that can interfere with
+  // exception handling when this function is used in "try and see" patterns.
+  const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
+  await waitUntil(async () => await dialog.isVisible(), { timeout: timeout });
+  const button = confirm
+    ? dialog.getByRole('button', { name: confirmationButton })
+    : dialog.getByRole('button', { name: cancelButton });
+  await playExpect(button).toBeEnabled({ timeout: timeout });
+  await button.click();
 
-    if (moreThanOneConsecutiveDialogs) {
-      const button = dialog.getByRole('button', { name: 'Done' });
-      await playExpect(button).toBeEnabled({ timeout: timeout });
-      await button.click();
-    }
+  if (moreThanOneConsecutiveDialogs) {
+    const doneButton = dialog.getByRole('button', { name: 'Done' });
+    await playExpect(doneButton).toBeEnabled({ timeout: timeout });
+    await doneButton.click();
+  }
 
-    await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
-  });
+  await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
 }
 
 /**
@@ -680,4 +680,80 @@ export async function verifyMachinePrivileges(
       ignoreCase: true,
     });
   });
+}
+
+/**
+ * Parses a version string into an array of numeric components.
+ * Handles versions like "5.7.0", "5.7", "6.0", "5.4.1"
+ * @param version - Version string to parse
+ * @returns Array of numeric version components [major, minor, patch]
+ */
+function parseVersion(version: string): number[] {
+  return version.split('.').map(part => Number.parseInt(part, 10));
+}
+
+/**
+ * Compares two version arrays to determine if the first is >= the second.
+ * @param current - Current version components array
+ * @param reference - Reference version components array
+ * @returns true if current >= reference
+ */
+function compareVersions(current: number[], reference: number[]): boolean {
+  console.log(`Current podman CLI version: ${current.join('.')}`);
+  console.log(`Reference podman CLI version: ${reference.join('.')}`);
+
+  const maxLength = Math.max(current.length, reference.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const currentPart = current[i] ?? 0;
+    const referencePart = reference[i] ?? 0;
+
+    if (currentPart > referencePart) {
+      return true;
+    }
+    if (currentPart < referencePart) {
+      return false;
+    }
+  }
+
+  return true; // versions are equal
+}
+
+/**
+ * Gets the current Podman CLI version by running `podman -v`.
+ * @returns The version string (e.g., "5.7.0")
+ * @throws Error if the version cannot be determined
+ */
+export function getPodmanCliVersion(): string {
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    const output = execSync('podman -v').toString().trim();
+    // Output format: "podman version 5.7.0"
+    const versionRegex = /podman version (\d+(?:\.\d+)*)/i;
+    const match = versionRegex.exec(output);
+    if (!match?.[1]) {
+      throw new Error(`Unable to parse Podman version from output: ${output}`);
+    }
+    return match[1];
+  } catch (error) {
+    throw new Error(`Failed to get Podman CLI version: ${error}`);
+  }
+}
+
+/**
+ * Checks if the installed Podman CLI version is equal to or greater than the reference version.
+ * @param referenceVersion - The minimum required version (e.g., "5.7.0", "5.7", "6.0")
+ * @returns true if the installed version is >= the reference version, false if podman is not available or version cannot be determined
+ */
+export function isPodmanCliVersionAtLeast(referenceVersion: string): boolean {
+  try {
+    const currentVersion = getPodmanCliVersion();
+    const currentVersionArray = parseVersion(currentVersion);
+    const referenceVersionArray = parseVersion(referenceVersion);
+
+    return compareVersions(currentVersionArray, referenceVersionArray);
+  } catch {
+    // If podman is not available or version cannot be determined, return false
+    return false;
+  }
 }

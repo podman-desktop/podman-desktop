@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { RegistriesPage } from '../model/pages/registries-page';
-import { canTestRegistry, setupRegistry } from '../setupFiles/setup-registry';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 let registryUrl: string;
 let registryUsername: string;
@@ -74,7 +74,7 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
     await registryPage.cancelDialogButton.click();
 
     await registryPage.createRegistry(registryUrl, 'invalidName', 'invalidPswd');
-    const credsErrorMsg = page.getByLabel('Error Message Content');
+    const credsErrorMsg = page.getByRole('dialog', { name: 'Add Registry' }).getByLabel('Error Message Content');
     await playExpect(credsErrorMsg).toBeVisible({ timeout: 30_000 });
     await playExpect(credsErrorMsg).toContainText('Wrong Username or Password', { ignoreCase: true });
     await playExpect(registryPage.cancelDialogButton).toBeEnabled();

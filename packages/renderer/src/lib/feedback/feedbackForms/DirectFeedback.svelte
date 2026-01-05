@@ -12,9 +12,8 @@ import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
+import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import type { DirectFeedbackCategory, FeedbackProperties } from '/@api/feedback';
-
-import WarningMessage from '../../ui/WarningMessage.svelte';
 
 interface Props {
   onCloseForm: (confirmation: boolean) => void;

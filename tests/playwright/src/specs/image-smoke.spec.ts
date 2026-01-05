@@ -19,12 +19,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ArchitectureType } from '../model/core/platforms';
-import { ImageState } from '../model/core/states';
-import { ImageDetailsPage } from '../model/pages/image-details-page';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { untagImagesFromPodman } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ArchitectureType } from '/@/model/core/platforms';
+import { ImageState } from '/@/model/core/states';
+import { ImageDetailsPage } from '/@/model/pages/image-details-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { untagImagesFromPodman } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'quay.io/podman/hello';
 const imageList = ['quay.io/podman/image1', 'quay.io/podman/image2'];

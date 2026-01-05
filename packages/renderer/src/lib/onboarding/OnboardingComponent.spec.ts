@@ -79,16 +79,6 @@ beforeAll(() => {
   Object.defineProperty(window, 'getCancellableTokenSource', { value: vi.fn() });
   Object.defineProperty(window, 'auditConnectionParameters', { value: vi.fn() });
   Object.defineProperty(window, 'telemetryTrack', { value: vi.fn() });
-
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
 });
 
 test('Expect to find PreferencesConnectionCreationRendering component if step includes "create" component', async () => {

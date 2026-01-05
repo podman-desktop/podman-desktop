@@ -4,11 +4,15 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
+import { configurationProperties } from '/@/stores/configurationProperties';
+import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 
-import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
-import IconImage from '../appearance/IconImage.svelte';
-import Dialog from '../dialogs/Dialog.svelte';
+import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';
 
 // contains the original instances of registries when user clicks on `Edit password` menu item
@@ -44,6 +48,13 @@ const newRegistryRequest = $state<containerDesktopAPI.Registry>({
   username: '',
   secret: '',
 });
+
+// Preferred registries configuration property
+let preferredRegistriesProperty: IConfigurationPropertyRecordedSchema | undefined = $derived(
+  $configurationProperties.find(
+    prop => prop.id === `${PreferredRegistriesSettings.SectionName}.${PreferredRegistriesSettings.Preferred}`,
+  ),
+);
 
 onMount(async () => {
   let providerSourceNames = await window.getImageRegistryProviderNames();
@@ -240,6 +251,14 @@ async function removeExistingRegistry(registry: containerDesktopAPI.Registry): P
       </Button>
     </div>
   {/snippet}
+
+  <!-- Preferred Registries section start -->
+  {#if preferredRegistriesProperty}
+    <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md mb-4">
+      <PreferencesRenderingItem record={preferredRegistriesProperty} />
+    </div>
+  {/if}
+  <!-- Preferred Registries section end -->
 
   <div class="container bg-[var(--pd-invert-content-card-bg)] rounded-md p-3">
     <!-- Registries table start -->

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const enum ArchitectureType {
+export enum ArchitectureType {
   Default = 'default',
   AMD64 = 'amd64',
   ARM64 = 'arm64',

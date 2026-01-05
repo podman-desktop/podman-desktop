@@ -5,9 +5,9 @@ import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
+import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { type ButtonsType, type DropdownType, type IconButtonType } from '/@api/dialog';
 
-import Markdown from '../markdown/Markdown.svelte';
 import Dialog from './Dialog.svelte';
 import type { MessageBoxOptions } from './messagebox-input';
 

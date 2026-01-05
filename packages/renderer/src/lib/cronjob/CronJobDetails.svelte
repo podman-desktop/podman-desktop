@@ -5,17 +5,17 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import CronJobIcon from '/@/lib/images/CronJobIcon.svelte';
+import KubeEditYAML from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import StateChange from '/@/lib/ui/StateChange.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { kubernetesCurrentContextCronJobs } from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable';
 
-import Route from '../../Route.svelte';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import CronJobIcon from '../images/CronJobIcon.svelte';
-import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import StateChange from '../ui/StateChange.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { CronJobUtils } from './cronjob-utils';
 import CronJobActions from './CronJobActions.svelte';
 import CronJobDetailsSummary from './CronJobDetailsSummary.svelte';

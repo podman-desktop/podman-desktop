@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containerTerminals } from '/@/stores/container-terminal-store';
 
@@ -28,10 +28,6 @@ import ContainerDetailsTerminal from './ContainerDetailsTerminal.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 let shellInContainerMock = vi.fn();
-
-beforeAll(() => {
-  Object.defineProperty(window, 'matchMedia', { value: vi.fn() });
-});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -42,10 +38,6 @@ beforeEach(() => {
     return undefined;
   });
   shellInContainerMock = vi.mocked(window.shellInContainer);
-  vi.mocked(window.matchMedia).mockReturnValue({
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-  } as unknown as MediaQueryList);
 
   // reset terminals
   containerTerminals.set([]);

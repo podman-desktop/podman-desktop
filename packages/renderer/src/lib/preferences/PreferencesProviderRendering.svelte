@@ -5,14 +5,14 @@ import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import FormPage from '/@/lib/ui/FormPage.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+import Route from '/@/Route.svelte';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import Route from '../../Route.svelte';
-import FormPage from '../ui/FormPage.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
 import PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 import { writeToTerminal } from './Util';
 

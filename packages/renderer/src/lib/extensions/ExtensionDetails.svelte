@@ -2,14 +2,14 @@
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 import { derived, type Readable } from 'svelte/store';
 
+import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
 import extensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import ExtensionIcon from '/@/lib/preferences/ExtensionIcon.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import ExtensionStatus from '/@/lib/ui/ExtensionStatus.svelte';
 import { combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 
-import FeaturedExtensionDownload from '../featured/FeaturedExtensionDownload.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import ExtensionStatus from '../ui/ExtensionStatus.svelte';
 import type { ExtensionDetailsUI } from './extension-details-ui';
 import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsError from './ExtensionDetailsError.svelte';

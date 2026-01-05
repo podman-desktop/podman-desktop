@@ -3,9 +3,11 @@ import { Buffer } from 'buffer';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
 import PreferencesConnectionCreationRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
+import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type {
   ProviderContainerConnectionInfo,
@@ -13,8 +15,6 @@ import type {
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
-import IconImage from '../appearance/IconImage.svelte';
 import { isContainerConnection } from './Util';
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];

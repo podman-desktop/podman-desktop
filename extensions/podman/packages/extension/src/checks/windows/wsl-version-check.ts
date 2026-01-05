@@ -21,8 +21,7 @@ import { compare } from 'compare-versions';
 import { injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
-
-import { WslHelper } from '../../helpers/wsl-helper';
+import { WslHelper } from '/@/helpers/wsl-helper';
 
 @injectable()
 export class WSLVersionCheck extends MemoizedBaseCheck {

@@ -4,17 +4,16 @@ import { Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber, type Writable } from 'svelte/store';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import type { ContextUI } from '/@/lib/context/context';
+import Markdown from '/@/lib/markdown/Markdown.svelte';
+import { isPropertyValidInContext } from '/@/lib/preferences/Util';
 /* eslint-enable import/no-duplicates */
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { extensionInfos } from '/@/stores/extensions';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { ExtensionInfo } from '/@api/extension-info';
-
-import IconImage from '../../appearance/IconImage.svelte';
-import type { ContextUI } from '../../context/context';
-import Markdown from '../../markdown/Markdown.svelte';
-import { isPropertyValidInContext } from '../Util';
 
 const DOCKER_COMPAT_SCOPE = 'DockerCompatibility';
 

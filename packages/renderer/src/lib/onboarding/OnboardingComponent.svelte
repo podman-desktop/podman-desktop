@@ -3,13 +3,12 @@ import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
+import PreferencesConnectionCreationOrEditRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type { OnboardingEmbeddedComponentType } from '/@api/onboarding';
 import type { ProviderInfo } from '/@api/provider-info';
-
-import PreferencesConnectionCreationOrEditRendering from '../preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 
 export let component: OnboardingEmbeddedComponentType;
 export let extensionId: string;

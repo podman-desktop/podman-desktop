@@ -18,8 +18,9 @@
 
 import { type Writable, writable } from 'svelte/store';
 
+import KeyIcon from '/@/lib/images/KeyIcon.svelte';
+
 import type { AuthenticationProviderInfo } from '../../../main/src/plugin/authentication';
-import KeyIcon from '../lib/images/KeyIcon.svelte';
 import { EventStore } from './event-store';
 
 const windowEvents = ['authentication-provider-update'];

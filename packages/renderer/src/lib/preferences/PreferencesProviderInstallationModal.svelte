@@ -3,9 +3,8 @@ import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { Button, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
 import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
-
-import IconImage from '../appearance/IconImage.svelte';
 
 interface Props {
   providerToBeInstalled: { provider: ProviderInfo; displayName: string };

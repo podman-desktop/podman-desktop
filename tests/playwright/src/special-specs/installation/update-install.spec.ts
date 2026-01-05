@@ -23,12 +23,12 @@ import path from 'node:path';
 import type { Locator } from '@playwright/test';
 
 import { extensionsExternalList, podmanExtension } from '/@/model/core/extensions';
-
-import { ExtensionCardPage, ExtensionCatalogCardPage } from '../..';
-import type { StatusBar } from '../../model/workbench/status-bar';
-import { expect as playExpect, test } from '../../utility/fixtures';
-import { handleConfirmationDialog } from '../../utility/operations';
-import { isLinux, isMac, isWindows } from '../../utility/platform';
+import { ExtensionCardPage } from '/@/model/pages/extension-card-page';
+import { ExtensionCatalogCardPage } from '/@/model/pages/extension-catalog-card-page';
+import type { StatusBar } from '/@/model/workbench/status-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { handleConfirmationDialog } from '/@/utility/operations';
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
 
 const installExtensions = process.env.INSTALLATION_TYPE === 'custom-extensions' ? true : false;
 const activeExtensionStatus = 'ACTIVE';

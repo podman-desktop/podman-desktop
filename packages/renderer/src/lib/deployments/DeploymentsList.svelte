@@ -2,15 +2,15 @@
 import { TableColumn, TableDurationColumn, TableRow } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import DeploymentIcon from '/@/lib/images/DeploymentIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
 import {
   deploymentSearchPattern,
   kubernetesCurrentContextDeploymentsFiltered,
 } from '/@/stores/kubernetes-contexts-state';
 
-import DeploymentIcon from '../images/DeploymentIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import ActionsColumn from './columns/Actions.svelte';
 import ConditionsColumn from './columns/Conditions.svelte';
 import PodsColumn from './columns/Pods.svelte';

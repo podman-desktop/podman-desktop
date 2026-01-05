@@ -3,12 +3,11 @@ import type { V1Node } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
-
-import type { EventUI } from '../events/EventUI';
-import KubeEventsArtifact from '../kube/details/KubeEventsArtifact.svelte';
-import KubeNodeArtifact from '../kube/details/KubeNodeArtifact.svelte';
-import KubeNodeStatusArtifact from '../kube/details/KubeNodeStatusArtifact.svelte';
-import KubeObjectMetaArtifact from '../kube/details/KubeObjectMetaArtifact.svelte';
+import type { EventUI } from '/@/lib/events/EventUI';
+import KubeEventsArtifact from '/@/lib/kube/details/KubeEventsArtifact.svelte';
+import KubeNodeArtifact from '/@/lib/kube/details/KubeNodeArtifact.svelte';
+import KubeNodeStatusArtifact from '/@/lib/kube/details/KubeNodeStatusArtifact.svelte';
+import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 
 export let node: V1Node | undefined;
 export let kubeError: string | undefined = undefined;

@@ -15,15 +15,15 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
+import Prune from '/@/lib/engine/Prune.svelte';
+import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import { providerInfos } from '/@/stores/providers';
+import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '/@/stores/volumes';
 
-import { providerInfos } from '../../stores/providers';
-import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '../../stores/volumes';
-import { withBulkConfirmation } from '../actions/BulkActions';
-import type { EngineInfoUI } from '../engine/EngineInfoUI';
-import Prune from '../engine/Prune.svelte';
-import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
-import VolumeIcon from '../images/VolumeIcon.svelte';
 import { VolumeUtils } from './volume-utils';
 import VolumeColumnActions from './VolumeColumnActions.svelte';
 import VolumeColumnName from './VolumeColumnName.svelte';
@@ -144,7 +144,7 @@ let nameColumn = new TableColumn<VolumeInfoUI>('Name', {
 
 let envColumn = new TableColumn<VolumeInfoUI>('Environment', {
   renderer: ContainerEngineEnvironmentColumn,
-  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
 });
 
 let ageColumn = new TableColumn<VolumeInfoUI, Date>('Age', {

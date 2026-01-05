@@ -5,22 +5,21 @@ import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } fro
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import { ContainerUtils } from '/@/lib/container/container-utils';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { splitSpacesHandlingDoubleQuotes } from '/@/lib/string/string';
 import { array2String } from '/@/lib/string/string.js';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import FileInput from '/@/lib/ui/FileInput.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
+import Route from '/@/Route.svelte';
+import { containersInfos } from '/@/stores/containers';
+import { runImageInfo } from '/@/stores/run-image-store';
 import type { ContainerCreateOptions, DeviceMapping, HostConfig, HostConfigPortBinding } from '/@api/container-info';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import { NavigationPage } from '/@api/navigation-page';
 import type { NetworkInspectInfo } from '/@api/network-info';
-
-import Route from '../../Route.svelte';
-import { containersInfos } from '../../stores/containers';
-import { runImageInfo } from '../../stores/run-image-store';
-import { ContainerUtils } from '../container/container-utils';
-import type { ContainerInfoUI } from '../container/ContainerInfoUI';
-import { splitSpacesHandlingDoubleQuotes } from '../string/string';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import FileInput from '../ui/FileInput.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 
 interface PortInfo {
   port: string;

@@ -32,14 +32,14 @@ import type { Headers, PackOptions } from 'tar-fs';
 import * as tarstream from 'tar-stream';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
-import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import { ContainerProviderRegistry, LatestImageError } from '/@/plugin/container-registry.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ContainerCreateOptions, HostConfig } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ImageInfo } from '/@api/image-info.js';
@@ -3432,7 +3432,8 @@ describe('attachToContainer', () => {
 });
 
 test('createNetwork', async () => {
-  server = setupServer(http.post('http://localhost/networks/create', () => new HttpResponse('', { status: 200 })));
+  const networkId = 'network123456';
+  server = setupServer(http.post('http://localhost/networks/create', () => HttpResponse.json({ Id: networkId })));
   server.listen({ onUnhandledRequest: 'error' });
 
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
@@ -3465,8 +3466,10 @@ test('createNetwork', async () => {
   // set provider
   containerRegistry.addInternalProvider('podman', internalContainerProvider);
 
-  // check that it's calling the right mock method
-  await containerRegistry.createNetwork(providerConnectionInfo, { Name: 'myNetwork' });
+  // check that it returns both Id and engineId
+  const result = await containerRegistry.createNetwork(providerConnectionInfo, { Name: 'myNetwork' });
+  expect(result.Id).toBe(networkId);
+  expect(result.engineId).toBe('podman1');
 });
 
 test('setupConnectionAPI with errors', async () => {
@@ -6058,6 +6061,10 @@ describe('kube play', () => {
     ApiVersion: '1.41',
   } as unknown as Dockerode.DockerVersion;
 
+  const KUBE_PLAY_OPT = {
+    replace: true,
+  };
+
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -6086,12 +6093,16 @@ describe('kube play', () => {
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
-    await containerRegistry.playKube('dummy-file', {
-      name: PODMAN_PROVIDER.name,
-      endpoint: PODMAN_PROVIDER.connection.endpoint,
-    } as unknown as ProviderContainerConnectionInfo);
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
   });
 
   test('KubePlayContext returning zero build contexts should play kube with file', async () => {
@@ -6101,11 +6112,327 @@ describe('kube play', () => {
     // set provider
     containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
 
-    await containerRegistry.playKube('dummy-file', {
-      name: PODMAN_PROVIDER.name,
-      endpoint: PODMAN_PROVIDER.connection.endpoint,
-    } as unknown as ProviderContainerConnectionInfo);
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      KUBE_PLAY_OPT,
+    );
 
-    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file');
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
+  });
+
+  test('abortSignal should be passed down to libpod', async () => {
+    const ABORT_SIGNAL = new AbortController().signal;
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    vi.mocked(KubePlayContext.prototype.getBuildContexts).mockReturnValue([]); // mock no contexts
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      {
+        abortSignal: ABORT_SIGNAL,
+      },
+    );
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
+      abortSignal: ABORT_SIGNAL,
+    });
+  });
+});
+
+const originalConsoleWarn = console.warn;
+
+describe('updateImage', () => {
+  beforeEach(() => {
+    console.warn = vi.fn();
+  });
+
+  afterEach(() => {
+    console.warn = originalConsoleWarn;
+  });
+
+  test('should reject if no provider', async () => {
+    await expect(containerRegistry.updateImage('dummy', 'imageId', 'nginx:latest')).rejects.toThrowError(
+      'no engine matching this engine',
+    );
+  });
+
+  test('should reject if tag not found on image', async () => {
+    const mockImage = {
+      inspect: vi.fn().mockResolvedValue({ RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:abc'] }),
+    };
+    const engine = {
+      getImage: vi.fn().mockReturnValue(mockImage),
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:wrong')).rejects.toThrowError(
+      `Tag 'nginx:wrong' not found on this image`,
+    );
+  });
+
+  test('should reject images with empty RepoTags', async () => {
+    const mockImage = {
+      inspect: vi.fn().mockResolvedValue({ RepoTags: [] }),
+    };
+    const engine = {
+      getImage: vi.fn().mockReturnValue(mockImage),
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrowError(
+      'Image has no tags and cannot be updated',
+    );
+  });
+
+  test('should reject images with no remote registry source', async () => {
+    const mockImage = {
+      inspect: vi.fn().mockResolvedValue({ RepoTags: ['myapp:latest'], RepoDigests: [] }),
+    };
+    const engine = {
+      getImage: vi.fn().mockReturnValue(mockImage),
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'myapp:latest')).rejects.toThrowError(
+      'Image has no remote registry source and cannot be updated',
+    );
+  });
+
+  test('should pull new image and delete old image successfully when new version available', async () => {
+    const oldImageId = 'sha256:old123';
+    const newImageId = 'sha256:new456';
+    const mockOldImage = {
+      inspect: vi
+        .fn()
+        .mockResolvedValue({ Id: oldImageId, RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:abc'] }),
+    };
+    const mockNewImage = {
+      inspect: vi
+        .fn()
+        .mockResolvedValue({ Id: newImageId, RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:def'] }),
+    };
+    const mockPullStream = { on: vi.fn() };
+    const getImageMock = vi.fn().mockImplementation((nameOrId: string) => {
+      // First call is with imageId (old image), second call is with repoTag (new image after pull)
+      return nameOrId === 'imageId' ? mockOldImage : mockNewImage;
+    });
+    const engine = {
+      getImage: getImageMock,
+      pull: vi.fn().mockResolvedValue(mockPullStream),
+      modem: {
+        followProgress: vi.fn((_stream, onFinished) => onFinished(null)),
+      },
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    vi.spyOn(containerRegistry, 'deleteImage').mockResolvedValue(undefined);
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest');
+    expect(result).toBeUndefined();
+    expect(engine.pull).toHaveBeenCalledWith('nginx:latest', expect.any(Object));
+    expect(getImageMock).toHaveBeenCalledTimes(2);
+    expect(getImageMock).toHaveBeenCalledWith('imageId');
+    expect(getImageMock).toHaveBeenCalledWith('nginx:latest');
+    expect(containerRegistry.deleteImage).toHaveBeenCalledOnce();
+    expect(containerRegistry.deleteImage).toHaveBeenCalledWith('engine1', oldImageId);
+  });
+
+  test('should reject if image is already latest version', async () => {
+    const imageId = 'sha256:abc123';
+    const mockImage = {
+      inspect: vi
+        .fn()
+        .mockResolvedValue({ Id: imageId, RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:abc'] }),
+    };
+    const mockPullStream = { on: vi.fn() };
+    const getImageMock = vi.fn().mockReturnValue(mockImage);
+    const engine = {
+      getImage: getImageMock,
+      pull: vi.fn().mockResolvedValue(mockPullStream),
+      modem: {
+        followProgress: vi.fn((_stream, onFinished) => onFinished(null)),
+      },
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    const deleteSpy = vi.spyOn(containerRegistry, 'deleteImage');
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest')).rejects.toThrow(LatestImageError);
+    expect(getImageMock).toHaveBeenCalledTimes(2);
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+
+  test('should reject images with digest-based tags', async () => {
+    const mockImage = {
+      inspect: vi.fn().mockResolvedValue({ RepoTags: ['nginx@sha256:abc123'], RepoDigests: ['nginx@sha256:abc123'] }),
+    };
+    const engine = {
+      getImage: vi.fn().mockReturnValue(mockImage),
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+
+    await expect(containerRegistry.updateImage('engine1', 'imageId', 'nginx@sha256:abc123')).rejects.toThrowError(
+      'Image with digest-based tag is immutable and cannot be updated',
+    );
+  });
+
+  test('should not delete old image when it originally had multiple RepoTags', async () => {
+    const oldImageId = 'sha256:old123';
+    const newImageId = 'sha256:new456';
+    const mockOldImage = {
+      inspect: vi.fn().mockResolvedValue({
+        Id: oldImageId,
+        RepoTags: ['nginx:latest', 'nginx:1.0'],
+        RepoDigests: ['nginx@sha256:abc'],
+      }),
+    };
+    const mockNewImage = {
+      inspect: vi
+        .fn()
+        .mockResolvedValue({ Id: newImageId, RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:def'] }),
+    };
+    const mockPullStream = { on: vi.fn() };
+    const getImageMock = vi.fn().mockImplementation((nameOrId: string) => {
+      // First call is with imageId (old image), second call is with repoTag (new image after pull)
+      return nameOrId === 'imageId' ? mockOldImage : mockNewImage;
+    });
+    const engine = {
+      getImage: getImageMock,
+      pull: vi.fn().mockResolvedValue(mockPullStream),
+      modem: {
+        followProgress: vi.fn((_stream, onFinished) => onFinished(null)),
+      },
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    const deleteSpy = vi.spyOn(containerRegistry, 'deleteImage');
+
+    await containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest');
+    expect(getImageMock).toHaveBeenCalledTimes(2);
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+
+  test('should warn but not fail if deletion of old image fails', async () => {
+    const oldImageId = 'sha256:old123';
+    const newImageId = 'sha256:new456';
+    const mockOldImage = {
+      inspect: vi
+        .fn()
+        .mockResolvedValue({ Id: oldImageId, RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:abc'] }),
+    };
+    const mockNewImage = {
+      inspect: vi
+        .fn()
+        .mockResolvedValue({ Id: newImageId, RepoTags: ['nginx:latest'], RepoDigests: ['nginx@sha256:def'] }),
+    };
+    const mockPullStream = { on: vi.fn() };
+    const getImageMock = vi.fn().mockImplementation((nameOrId: string) => {
+      // First call is with imageId (old image), second call is with repoTag (new image after pull)
+      return nameOrId === 'imageId' ? mockOldImage : mockNewImage;
+    });
+    const engine = {
+      getImage: getImageMock,
+      pull: vi.fn().mockResolvedValue(mockPullStream),
+      modem: {
+        followProgress: vi.fn((_stream, onFinished) => onFinished(null)),
+      },
+    };
+    vi.spyOn(containerRegistry, 'getMatchingEngine').mockReturnValue(engine as unknown as Dockerode);
+    vi.spyOn(containerRegistry, 'deleteImage').mockRejectedValue(new Error('Deletion failed'));
+
+    const result = await containerRegistry.updateImage('engine1', 'imageId', 'nginx:latest');
+    expect(result).toBeUndefined();
+    expect(getImageMock).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenCalledWith(expect.stringMatching(/Could not delete old image.*Deletion failed/));
+  });
+});
+
+describe('getNetworkDrivers', () => {
+  test('returns network drivers from info API', async () => {
+    const infoMock = vi.fn().mockResolvedValue({
+      Plugins: {
+        Network: ['bridge', 'macvlan', 'ipvlan'],
+      },
+    });
+
+    const fakeDockerode = {
+      info: infoMock,
+    } as unknown as Dockerode;
+
+    const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'engine1',
+      endpoint: {
+        socketPath: '/engine1.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
+    containerRegistry.addInternalProvider('engine1', {
+      name: 'engine1',
+      id: 'engine1',
+      connection: {
+        type: 'podman',
+        name: 'engine1',
+        endpoint: {
+          socketPath: '/engine1.socket',
+        },
+      },
+      api: fakeDockerode,
+    } as InternalContainerProvider);
+
+    const result = await containerRegistry.getNetworkDrivers(providerConnectionInfo);
+
+    expect(result).toEqual(['bridge', 'macvlan', 'ipvlan']);
+  });
+
+  test('returns empty array when Plugins is undefined', async () => {
+    const infoMock = vi.fn().mockResolvedValue({});
+
+    const fakeDockerode = {
+      info: infoMock,
+    } as unknown as Dockerode;
+
+    const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'engine2',
+      endpoint: {
+        socketPath: '/engine2.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
+    containerRegistry.addInternalProvider('engine2', {
+      name: 'engine2',
+      id: 'engine2',
+      connection: {
+        type: 'docker',
+        name: 'engine2',
+        endpoint: {
+          socketPath: '/engine2.socket',
+        },
+      },
+      api: fakeDockerode,
+    } as InternalContainerProvider);
+
+    const result = await containerRegistry.getNetworkDrivers(providerConnectionInfo);
+
+    expect(result).toEqual([]);
+  });
+
+  test('throws error when engine not found', async () => {
+    const nonexistentConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'nonexistent',
+      endpoint: {
+        socketPath: '/nonexistent.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
+    await expect(containerRegistry.getNetworkDrivers(nonexistentConnectionInfo)).rejects.toThrow(
+      'no running provider for the matching container',
+    );
   });
 });

@@ -20,10 +20,10 @@ import * as kubeclient from '@kubernetes/client-node';
 import { KubeConfig, makeInformer } from '@kubernetes/client-node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { CheckingState, ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ContextsInformersRegistry } from './contexts-informers-registry.js';
 import { ContextsManager } from './contexts-manager.js';
 import type { ContextsStatesRegistry } from './contexts-states-registry.js';

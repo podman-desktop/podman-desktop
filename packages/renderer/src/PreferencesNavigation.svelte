@@ -1,9 +1,17 @@
 <script lang="ts">
-import { faFlask } from '@fortawesome/free-solid-svg-icons';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
+import type { Component } from 'svelte';
 import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
+import AuthenticationIcon from '/@/lib/images/AuthenticationIcon.svelte';
+import CLIToolsIcon from '/@/lib/images/CLIToolsIcon.svelte';
+import ExperimentalIcon from '/@/lib/images/ExperimentalIcon.svelte';
+import KubernetesIcon from '/@/lib/images/KubernetesIcon.svelte';
+import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
+import ProxyIcon from '/@/lib/images/ProxyIcon.svelte';
+import RegistriesIcon from '/@/lib/images/RegistriesIcon.svelte';
+import ResourcesIcon from '/@/lib/images/ResourcesIcon.svelte';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
 
@@ -18,6 +26,13 @@ interface NavItem {
   title: string;
 }
 
+interface SettingsNavItemConfig {
+  title: string;
+  href: string;
+  visible?: boolean;
+  icon?: Component;
+}
+
 let { meta }: Props = $props();
 
 let dockerCompatibilityEnabled = $state(false);
@@ -25,6 +40,20 @@ let configProperties: Map<string, NavItem[]> = $state(new Map<string, NavItem[]>
 let sectionExpanded: { [key: string]: boolean } = $state({});
 
 let experimentalSection: boolean = $state(false);
+
+let settingsNavigationItems = $derived<SettingsNavItemConfig[]>([
+  { title: 'Resources', href: '/preferences/resources', visible: true, icon: ResourcesIcon },
+  { title: 'Proxy', href: '/preferences/proxies', visible: true, icon: ProxyIcon },
+  {
+    title: 'Docker Compatibility',
+    href: '/preferences/docker-compatibility',
+    visible: dockerCompatibilityEnabled,
+  },
+  { title: 'Registries', href: '/preferences/registries', visible: true, icon: RegistriesIcon },
+  { title: 'Authentication', href: '/preferences/authentication-providers', visible: true, icon: AuthenticationIcon },
+  { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true, icon: CLIToolsIcon },
+  { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true, icon: KubernetesIcon },
+]);
 
 function updateDockerCompatibility(): void {
   window
@@ -87,16 +116,20 @@ onMount(() => {
     </div>
   </div>
   <div class="h-full overflow-y-auto" style="margin-bottom:auto">
-    {#each [{ title: 'Resources', href: '/preferences/resources', visible: true }, { title: 'Proxy', href: '/preferences/proxies', visible: true }, { title: 'Docker Compatibility', href: '/preferences/docker-compatibility', visible: dockerCompatibilityEnabled }, { title: 'Registries', href: '/preferences/registries', visible: true }, { title: 'Authentication', href: '/preferences/authentication-providers', visible: true }, { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true }, { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true }] as navItem, index (index)}
+    {#each settingsNavigationItems as navItem, index (index)}
       {#if navItem.visible}
-        <SettingsNavItem title={navItem.title} href={navItem.href} selected={meta.url === navItem.href} />
+        <SettingsNavItem 
+          title={navItem.title} 
+          href={navItem.href} 
+          icon={navItem.icon}
+          selected={meta.url === navItem.href} 
+        />
       {/if}
     {/each}
 
     {#if experimentalSection}
       <SettingsNavItem
-        icon={faFlask}
-        iconPosition="right"
+        icon={ExperimentalIcon}
         title="Experimental"
         href="/preferences/experimental"
         selected={meta.url === '/preferences/experimental'}
@@ -108,6 +141,7 @@ onMount(() => {
       <SettingsNavItem
         title={configSection}
         href="/preferences/default/{configSection}"
+        icon={PreferencesIcon}
         section={configItems.length > 0}
         selected={meta.url === `/preferences/default/${configSection}`}
         bind:expanded={sectionExpanded[configSection]} />

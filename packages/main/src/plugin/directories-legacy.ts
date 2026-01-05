@@ -22,13 +22,10 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
+import product from '/@product.json' with { type: 'json' };
+
 import { isLinux, isMac, isWindows } from '../util.js';
 import type { Directories } from './directories.js';
-import {
-  SYSTEM_DEFAULTS_FOLDER_LINUX,
-  SYSTEM_DEFAULTS_FOLDER_MACOS,
-  SYSTEM_DEFAULTS_FOLDER_WINDOWS,
-} from './managed-by-constants.js';
 
 /**
  * Directory provider that uses the traditional/legacy directory structure
@@ -37,7 +34,7 @@ import {
  */
 @injectable()
 export class LegacyDirectories implements Directories {
-  static readonly XDG_DATA_DIRECTORY = `.local${path.sep}share${path.sep}containers${path.sep}podman-desktop`;
+  static readonly XDG_DATA_DIRECTORY = `.local${path.sep}share${path.sep}${product.paths.config}`;
   static readonly PODMAN_DESKTOP_HOME_DIR = 'PODMAN_DESKTOP_HOME_DIR';
 
   private readonly configurationDirectory: string;
@@ -100,14 +97,15 @@ export class LegacyDirectories implements Directories {
 
   getManagedDefaultsDirectory(): string {
     if (isMac()) {
-      return SYSTEM_DEFAULTS_FOLDER_MACOS;
+      return product.paths.managed.macOS;
     } else if (isWindows()) {
       const programData = process.env['PROGRAMDATA'] ?? 'C:\\ProgramData';
-      return path.join(programData, SYSTEM_DEFAULTS_FOLDER_WINDOWS);
+      // replace %PROGRAMDATA% in the path
+      return product.paths.managed.windows.replace('%PROGRAMDATA%', programData);
     } else if (isLinux()) {
-      return SYSTEM_DEFAULTS_FOLDER_LINUX;
+      return product.paths.managed.linux;
     }
     // Fallback to Linux-style path
-    return SYSTEM_DEFAULTS_FOLDER_LINUX;
+    return product.paths.managed.linux;
   }
 }
