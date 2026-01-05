@@ -38,6 +38,11 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getFeedbackMessages).mockResolvedValue({
+    experienceLabel: 'How was your experience with Podman Desktop',
+    thankYouMessage: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
+    gitHubStarsMessage: 'Like Podman Desktop? Give us a star on GitHub',
+  });
 });
 
 test('Expect that the button is disabled when loading the page', () => {

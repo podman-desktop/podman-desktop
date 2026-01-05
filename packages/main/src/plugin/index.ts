@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,7 +90,7 @@ import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalo
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { FeaturedExtension } from '/@api/featured/featured-api.js';
-import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
+import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
@@ -3016,6 +3016,10 @@ export class PluginSystem {
 
     this.ipcHandle('feedback:GitHubPreview', async (_listener, properties: GitHubIssue): Promise<void> => {
       return feedback.openGitHubIssue(properties);
+    });
+
+    this.ipcHandle('feedback:getFeedbackMessages', async (): Promise<FeedbackMessages> => {
+      return feedback.getFeedbackMessages();
     });
 
     this.ipcHandle('cancellableTokenSource:create', async (): Promise<number> => {

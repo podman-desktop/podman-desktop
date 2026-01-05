@@ -9,11 +9,12 @@ import {
   faStar,
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
-import type { DirectFeedbackCategory, FeedbackProperties } from '/@api/feedback';
+import type { DirectFeedbackCategory, FeedbackMessages, FeedbackProperties } from '/@api/feedback';
 
 interface Props {
   onCloseForm: (confirmation: boolean) => void;
@@ -23,6 +24,7 @@ interface Props {
 
 // feedback of the user
 let smileyRating = $state(0);
+let feedbackMessages = $state<FeedbackMessages | undefined>(undefined);
 let tellUsWhyFeedback = $state('');
 let contactInformation = $state('');
 let hasFeedback = $derived(
@@ -33,6 +35,10 @@ let hasFeedback = $derived(
 let { onCloseForm, contentChange, category }: Props = $props();
 
 $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contactInformation)));
+
+onMount(async () => {
+  feedbackMessages = await window.getFeedbackMessages();
+});
 
 function selectSmiley(item: number): void {
   smileyRating = item;
@@ -61,7 +67,7 @@ async function sendFeedback(): Promise<void> {
   // 3. Display confirmation dialog
   await window.showMessageBox({
     title: 'Thanks for your feedback',
-    message: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
+    message: feedbackMessages?.thankYouMessage ?? '',
     type: 'info',
     buttons: ['OK'],
   });
@@ -77,7 +83,7 @@ async function openGitHub(): Promise<void> {
 <FeedbackForm>
   <svelte:fragment slot="content">
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
-      >How was your experience with Podman Desktop?</label>
+      >{feedbackMessages?.experienceLabel}</label>
     <div class="flex space-x-4">
       <button aria-label="very-sad-smiley" onclick={(): void => selectSmiley(1)}>
         <Fa
@@ -146,7 +152,7 @@ async function openGitHub(): Promise<void> {
     {:else if smileyRating > 2}
       <div class="text-[var(--pd-modal-text)] p-1 flex flex-row items-center text-xs">
         <Fa size="1.125x" class="cursor-pointer" icon={faQuestionCircle} />
-        <span aria-label="Like Podman Desktop? Give us a star on GitHub" class="flex items-center">
+        <span aria-label="{feedbackMessages?.gitHubStarsMessage}" class="flex items-center">
           <Fa class="px-1 text-[var(--pd-invert-content-info-icon)]" icon={faHeart} />{smileyRating === 3 ? 'Like' : 'Love'} It? Give us a <Fa
             class="px-1 text-[var(--pd-state-warning)]"
             icon={faStar} />on <Link aria-label="GitHub" on:click={openGitHub}>GitHub</Link>
