@@ -29,14 +29,14 @@ import type { ColorPaletteHelper } from './color-palette-helper.js';
  *
  * @example
  * const def = colorDefinitionBuilder('my-color')
- *   .withLight(colorPalette('#ffffff'))
- *   .withDark(colorPalette('#000000'))
+ *   .withLight(colorPaletteHelper('#ffffff'))
+ *   .withDark(colorPaletteHelper('#000000'))
  *   .build();
  *
  * @example
  * const def = colorDefinitionBuilder('my-transparent-color')
- *   .withLight(colorPalette(white).withAlpha(0.5))
- *   .withDark(colorPalette(black).withAlpha(0.8))
+ *   .withLight(colorPaletteHelper(white).withAlpha(0.5))
+ *   .withDark(colorPaletteHelper(black).withAlpha(0.8))
  *   .build();
  */
 export class ColorDefinitionBuilder {

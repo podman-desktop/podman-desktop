@@ -21,12 +21,12 @@
  * Provides a fluent interface for specifying colors with transparency.
  *
  * @example
- * colorPalette('#ff0000').withAlpha(0.5)
+ * colorPaletteHelper('#ff0000').withAlpha(0.5)
  *
  * @example
  * colorDefinitionBuilder('my-color')
- *   .withLight(colorPalette(white).withAlpha(0.5))
- *   .withDark(colorPalette(black).withAlpha(0.8))
+ *   .withLight(colorPaletteHelper(white).withAlpha(0.5))
+ *   .withDark(colorPaletteHelper(black).withAlpha(0.8))
  *   .build()
  */
 export class ColorPaletteHelper {
@@ -75,6 +75,6 @@ export class ColorPaletteHelper {
  * @param color - The color value
  * @returns A ColorPaletteHelper instance
  */
-export function colorPalette(color: string): ColorPaletteHelper {
+export function colorPaletteHelper(color: string): ColorPaletteHelper {
   return new ColorPaletteHelper(color);
 }
