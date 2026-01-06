@@ -37,7 +37,7 @@ export class FeedbackHandler {
     return productJSONFile ? productJSONFile.name : 'Podman Desktop';
   }
 
-  async getFeedbackMessages(): Promise<FeedbackMessages> {
+  getFeedbackMessages(): FeedbackMessages {
     const productName = this.getProductName();
     return {
       experienceLabel: `How was your experience with ${productName}`,
