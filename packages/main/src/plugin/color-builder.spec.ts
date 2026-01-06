@@ -31,21 +31,19 @@ describe('applyAlpha', () => {
   test('should apply alpha to hex color', () => {
     const result = applyAlpha('#ff0000', 0.5);
 
-    expect(result).toBeDefined();
-    expect(result).toMatch(/0\.5/);
+    expect(result).toBe('color(srgb 1 0 0 / 0.5)');
   });
 
   test('should apply alpha to rgb color', () => {
     const result = applyAlpha('rgb(255, 0, 0)', 0.7);
 
-    expect(result).toBeDefined();
-    expect(result).toMatch(/0\.7/);
+    expect(result).toBe('color(srgb 1 0 0 / 0.7)');
   });
 
   test('should handle alpha value of 0', () => {
     const result = applyAlpha('#ff0000', 0);
 
-    expect(result).toBeDefined();
+    expect(result).toBe('color(srgb 1 0 0 / 0)');
   });
 
   test('should throw error for alpha value below 0', () => {
@@ -86,8 +84,8 @@ describe('ColorBuilder', () => {
       .build();
 
     expect(result.id).toBe('transparent-color');
-    expect(result.light).toMatch(/0\.5/);
-    expect(result.dark).toMatch(/0\.8/);
+    expect(result.light).toBe('color(srgb 1 1 1 / 0.5)');
+    expect(result.dark).toBe('color(srgb 0 0 0 / 0.8)');
   });
 
   test('should throw error when light color is missing', () => {
