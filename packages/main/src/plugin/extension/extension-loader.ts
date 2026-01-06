@@ -25,6 +25,7 @@ import { app, clipboard as electronClipboard } from 'electron';
 import { inject, injectable, preDestroy } from 'inversify';
 
 import { ColorRegistry } from '/@/plugin/color-registry.js';
+import { getApiVersion } from '/@/plugin/extension/utils.js';
 import {
   KubeGeneratorRegistry,
   type KubernetesGeneratorProvider,
@@ -1623,13 +1624,6 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const version = app.getVersion();
 
-    let apiVersion: string;
-    if ('apiVersion' in product && typeof product['apiVersion'] === 'string') {
-      apiVersion = product['apiVersion'];
-    } else {
-      apiVersion = version;
-    }
-
     return <typeof containerDesktopAPI>{
       // Types
       Disposable: Disposable,
@@ -1638,7 +1632,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       CancellationTokenSource: CancellationTokenSource,
       TelemetryTrustedValue: TelemetryTrustedValue,
       version,
-      apiVersion: apiVersion,
+      apiVersion: getApiVersion(),
       commands,
       env,
       process,

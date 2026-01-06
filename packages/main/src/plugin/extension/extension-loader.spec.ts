@@ -27,6 +27,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import { getApiVersion } from '/@/plugin/extension/utils.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
@@ -309,6 +310,8 @@ const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesk
   } as AnalyzedExtension;
   return extensionLoader.createApi(analyzedExtension);
 };
+
+vi.mock(import('./utils.js'));
 
 vi.mock('electron', () => {
   return {
@@ -1859,26 +1862,13 @@ test('check version', async () => {
 });
 
 describe('apiVersion', () => {
-  const APP_VERSION_MOCK = '1.2.3.4';
+  const APP_VERSION_MOCK = '1.2.3';
 
-  beforeEach(() => {
-    // mock electron.app.getVersion
-    vi.mocked(app.getVersion).mockReturnValue(APP_VERSION_MOCK);
-  });
-
-  test('expect apiVersion to equal to version when product.json omit apiVersion', async () => {
+  test('expect apiVersion to be the return value of getApiVersion', async () => {
+    vi.mocked(getApiVersion).mockReturnValue(APP_VERSION_MOCK);
     const api = createApi();
 
-    expect(api.version).toEqual(APP_VERSION_MOCK);
     expect(api.apiVersion).toEqual(APP_VERSION_MOCK);
-  });
-
-  test('expect apiVersion to equal to apiVersion from product.json when it specify it', async () => {
-    (product as unknown as { apiVersion: string }).apiVersion = '5.5.5';
-    const api = createApi();
-
-    expect(api.version).toEqual(APP_VERSION_MOCK);
-    expect(api.apiVersion).toEqual('5.5.5');
   });
 });
 
