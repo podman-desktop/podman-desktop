@@ -1042,7 +1042,7 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const imageRegistry = this.imageRegistry;
     const registry: typeof containerDesktopAPI.registry = {
-      registerRegistry: (registry: containerDesktopAPI.Registry): Disposable => {
+      registerRegistry: (registry: containerDesktopAPI.Registry): Promise<Disposable> => {
         return imageRegistry.registerRegistry(registry);
       },
 
