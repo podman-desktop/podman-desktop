@@ -448,12 +448,12 @@ $effect(() => {
       <div
         id={provider.id}
         bind:this={providerElementMap[provider.id]}
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
+        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 flex"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup">
+        <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)]">
           <!-- left col - provider icon/name + "create new" button -->
-          <div class="min-w-[170px] max-w-[200px]">
+          <div class="min-w-[170px] max-w-[200px] pr-5 py-2">
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
@@ -478,7 +478,7 @@ $effect(() => {
         </div>
         <!-- providers columns -->
         <div
-          class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2 text-[var(--pd-invert-content-card-text)]"
+          class="grow flex flex-wrap text-[var(--pd-invert-content-card-text)]"
           role="region"
           aria-label="Provider Connections">
           <PreferencesConnectionsEmptyRendering
@@ -487,7 +487,7 @@ $effect(() => {
           {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
             {@const rootfulInfo = getRootfulDisplayInfo(provider, container)}
-            <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
+            <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={container.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
                   <button
@@ -607,7 +607,7 @@ $effect(() => {
             </div>
           {/each}
           {#each provider.kubernetesConnections as kubeConnection, index (index)}
-            <div class="px-5 py-2 w-[240px]" role="region" aria-label={kubeConnection.name}>
+            <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={kubeConnection.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
                   <button
@@ -645,7 +645,7 @@ $effect(() => {
             </div>
           {/each}
           {#each provider.vmConnections as vmConnection, index (index)}
-          <div class="px-5 py-2 w-[240px]" role="region" aria-label={vmConnection.name}>
+          <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={vmConnection.name}>
             <div class="float-right">
               <Tooltip bottom tip="{provider.name} details">
                 <button
