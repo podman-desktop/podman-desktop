@@ -18,9 +18,8 @@
 
 import { formatCss, parse } from 'culori';
 
-import type { ColorDefinition } from '/@api/color-info.js';
-
 import type { ColorPaletteHelper } from './color-palette-helper.js';
+import type { ColorDefinitionWithId } from './color-registry.js';
 
 /**
  * Apply alpha to a color string and return the formatted CSS color.
@@ -107,7 +106,7 @@ export class ColorBuilder {
    * @returns The color definition with id, light, and dark values
    * @throws Error if light or dark color is not set
    */
-  build(): ColorDefinition & { id: string } {
+  build(): ColorDefinitionWithId {
     if (!this.#lightColor || !this.#darkColor) {
       throw new Error(`Color definition for ${this.#colorId} is incomplete.`);
     }
