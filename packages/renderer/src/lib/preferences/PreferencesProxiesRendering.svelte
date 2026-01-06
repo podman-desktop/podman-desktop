@@ -118,11 +118,9 @@ function validate(event: any): void {
     </div>
 
     <div class="space-y-2">
-      <label
-        for="httpProxy"
-        class="block font-semibold {proxyState === ProxyState.PROXY_MANUAL
-          ? 'text-[var(--pd-invert-content-card-text)]'
-          : 'text-[var(--pd-content-sub-header)]'}">Web Proxy (HTTP)</label>
+      <label for="httpProxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
+        >Web Proxy (HTTP)</label
+      >
       <Input
         name="httpProxy"
         id="httpProxy"
@@ -140,11 +138,9 @@ function validate(event: any): void {
     </div>
 
     <div class="space-y-2">
-      <label
-        for="httpsProxy"
-        class="block font-semibold {proxyState === ProxyState.PROXY_MANUAL
-          ? 'text-[var(--pd-invert-content-card-text)]'
-          : 'text-[var(--pd-content-sub-header)]'}">Secure Web Proxy (HTTPS)</label>
+      <label for="httpsProxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
+        >Secure Web Proxy (HTTPS)</label
+      >
       <Input
         name="httpsProxy"
         id="httpsProxy"
@@ -162,11 +158,9 @@ function validate(event: any): void {
     </div>
 
     <div class="space-y-2">
-      <label
-        for="noProxy"
-        class="block font-semibold {proxyState === ProxyState.PROXY_MANUAL
-          ? 'text-[var(--pd-invert-content-card-text)]'
-          : 'text-[var(--pd-content-sub-header)]'}">Bypass proxy settings for these hosts and domains</label>
+      <label for="noProxy" class="block font-semibold text-[var(--pd-invert-content-card-text)]"
+        >Bypass proxy settings for these hosts and domains</label
+      >
       <Input
         name="noProxy"
         id="noProxy"
