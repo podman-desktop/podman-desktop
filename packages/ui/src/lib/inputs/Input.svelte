@@ -90,7 +90,9 @@ async function onClear(): Promise<void> {
       bind:this={element}
       oninput={oninput}
       onkeypress={onkeypress}
-      class="w-full px-0.5 outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] overflow-hidden {inputClass}"
+      class="w-full px-0.5 outline-0 bg-[var(--pd-input-field-bg)] overflow-hidden {inputClass}"
+      class:placeholder:text-[color:var(--pd-input-field-placeholder-text)]={!disabled}
+      class:placeholder:text-[color:var(--pd-input-field-disabled-text)]={disabled}
       class:text-[color:var(--pd-input-field-focused-text)]={!disabled}
       class:text-[color:var(--pd-input-field-disabled-text)]={disabled}
       class:group-hover:bg-[var(--pd-input-field-hover-bg)]={enabled}
