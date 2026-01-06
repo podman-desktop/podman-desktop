@@ -23,7 +23,6 @@ interface Props {
 
 // feedback of the user
 let smileyRating = $state(0);
-let feedbackMessagesPromise = $derived(window.getFeedbackMessages());
 let tellUsWhyFeedback = $state('');
 let contactInformation = $state('');
 let hasFeedback = $derived(
@@ -38,6 +37,8 @@ $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contact
 function selectSmiley(item: number): void {
   smileyRating = item;
 }
+
+let feedbackMessages = $derived(await window.getFeedbackMessages());
 
 async function sendFeedback(): Promise<void> {
   const properties: FeedbackProperties = {
@@ -62,7 +63,7 @@ async function sendFeedback(): Promise<void> {
   // 3. Display confirmation dialog
   await window.showMessageBox({
     title: 'Thanks for your feedback',
-    message: (await feedbackMessagesPromise).thankYouMessage,
+    message: feedbackMessages?.thankYouMessage ?? '',
     type: 'info',
     buttons: ['OK'],
   });
@@ -75,7 +76,6 @@ async function openGitHub(): Promise<void> {
 }
 </script>
 
-{#await feedbackMessagesPromise then feedbackMessages}
 <FeedbackForm>
   <svelte:fragment slot="content">
     <label for="smiley" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
@@ -161,4 +161,3 @@ async function openGitHub(): Promise<void> {
     >Send feedback</Button>
   </svelte:fragment>
 </FeedbackForm>
-{/await}

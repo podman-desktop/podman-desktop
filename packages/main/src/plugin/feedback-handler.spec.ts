@@ -90,9 +90,9 @@ function containSearchParams(url: string | undefined, params: Record<string, str
 }
 
 describe('getFeedbackMessages', () => {
-  test('should return feedback messages with default product name', () => {
+  test('should return feedback messages with default product name', async () => {
     const feedbackHandler = new FeedbackHandler(extensionLoaderMock);
-    const messages = feedbackHandler.getFeedbackMessages();
+    const messages = await feedbackHandler.getFeedbackMessages();
 
     expect(messages.experienceLabel).toBe('How was your experience with Podman Desktop');
     expect(messages.thankYouMessage).toBe(
@@ -101,11 +101,11 @@ describe('getFeedbackMessages', () => {
     expect(messages.gitHubStarsMessage).toBe('Like Podman Desktop? Give us a star on GitHub');
   });
 
-  test('should return feedback messages with custom product name', () => {
+  test('should return feedback messages with custom product name', async () => {
     vi.mocked(productJSONFile).name = 'Custom Product';
 
     const feedbackHandler = new FeedbackHandler(extensionLoaderMock);
-    const messages = feedbackHandler.getFeedbackMessages();
+    const messages = await feedbackHandler.getFeedbackMessages();
 
     expect(messages.experienceLabel).toBe('How was your experience with Custom Product');
     expect(messages.thankYouMessage).toBe(
