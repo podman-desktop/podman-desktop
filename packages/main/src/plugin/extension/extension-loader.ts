@@ -25,7 +25,7 @@ import { app, clipboard as electronClipboard } from 'electron';
 import { inject, injectable, preDestroy } from 'inversify';
 
 import { ColorRegistry } from '/@/plugin/color-registry.js';
-import { getApiVersion } from '/@/plugin/extension/utils.js';
+import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import {
   KubeGeneratorRegistry,
   type KubernetesGeneratorProvider,
@@ -218,6 +218,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private extensionDevelopmentFolder: ExtensionDevelopmentFolders,
     @inject(ExtensionAnalyzer)
     private extensionAnalyzer: ExtensionAnalyzer,
+    @inject(ExtensionApiVersion)
+    private extensionApiVersion: ExtensionApiVersion,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -1632,7 +1634,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       CancellationTokenSource: CancellationTokenSource,
       TelemetryTrustedValue: TelemetryTrustedValue,
       version,
-      apiVersion: getApiVersion(),
+      apiVersion: this.extensionApiVersion.getApiVersion(),
       commands,
       env,
       process,

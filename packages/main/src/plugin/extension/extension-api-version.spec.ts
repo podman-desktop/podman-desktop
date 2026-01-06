@@ -19,7 +19,7 @@ import type { App } from 'electron';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getApiVersion } from '/@/plugin/extension/utils.js';
+import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import product from '/@product.json' with { type: 'json' };
 
 const APP_VERSION_MOCK = '1.2.3';
@@ -42,7 +42,7 @@ beforeEach(() => {
   vi.mocked(app.getVersion).mockReturnValue(APP_VERSION_MOCK);
 });
 
-describe('getApiVersion', () => {
+describe('ExtensionApiVersion#getApiVersion', () => {
   interface TestCase {
     name: string;
     apiVersion: string | undefined;
@@ -78,7 +78,8 @@ describe('getApiVersion', () => {
   ])('$name', ({ apiVersion, expected }) => {
     vi.mocked(product as PartialProductJson).apiVersion = apiVersion;
 
-    const result = getApiVersion();
+    const extensionApiVersion = new ExtensionApiVersion();
+    const result = extensionApiVersion.getApiVersion();
     expect(result).toEqual(expected);
   });
 });
