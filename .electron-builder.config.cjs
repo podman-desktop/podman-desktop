@@ -169,11 +169,7 @@ const config = {
   afterPack: async context => {
     await addElectronFuses(context);
   },
-  files: [
-    'packages/**/dist/**',
-    'extensions/**/builtin/*.cdix/**',
-    'packages/main/src/assets/**',
-  ],
+  files: ['packages/**/dist/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
   portable: {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
   },
