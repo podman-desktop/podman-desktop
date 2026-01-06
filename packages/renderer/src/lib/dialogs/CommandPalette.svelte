@@ -52,6 +52,7 @@ interface Props {
 interface SearchOption {
   text: string;
   shortCut?: string[];
+  helperText?: string;
 }
 
 type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo;
@@ -75,10 +76,10 @@ let isMac: boolean = $state(false);
 let modifierC: string = $derived(isMac ? '⌘' : 'Ctrl+');
 let modifierS: string = $derived(isMac ? '⇧' : 'Shift+');
 let searchOptions: SearchOption[] = $derived([
-  { text: 'All', shortCut: [`${modifierC}${modifierS}P`] },
-  { text: 'Commands', shortCut: [`${F1}`, '>'] },
-  { text: 'Documentation', shortCut: [`${modifierC}K`] },
-  { text: 'Go to', shortCut: [`${modifierC}F`] },
+  { text: 'All', shortCut: [`${modifierC}${modifierS}P`], helperText: 'Search Podman Desktop or use > for commands' },
+  { text: 'Commands', shortCut: [`${F1}`, '>'], helperText: 'Search and execute commands' },
+  { text: 'Documentation', shortCut: [`${modifierC}K`], helperText: 'Search documentation and tutorials' },
+  { text: 'Go to', shortCut: [`${modifierC}F`], helperText: 'Search images, containers, pods, and other resources' },
 ]);
 let searchOptionsSelectedIndex: number = $state(0);
 
@@ -91,6 +92,7 @@ let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
 let goToItems: GoToInfo[] = $derived(
   createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
 );
+let helperText = $derived(searchOptions[searchOptionsSelectedIndex].helperText);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
@@ -421,6 +423,7 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
             clearable={true}
             on:input={onInputChange}
             on:action={onAction}
+            placeholder={helperText}
             class="px-1 w-full text-[var(--pd-input-field-focused-text)] bg-[var(--pd-input-field-focused-bg)] border border-[var(--pd-input-field-stroke)] focus:outline-hidden" >
             {#snippet left()}
               <Icon icon={searchIcon} class="pr-1"/>

@@ -544,5 +544,28 @@ describe('Command Palette', () => {
     expect(commandsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(docsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+
+    // Test that placeholder text is correct for each tab
+    expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop or use > for commands');
+
+    // Click Commands tab and verify placeholder changes
+    await userEvent.click(commandsTab);
+    await tick();
+    expect(input).toHaveAttribute('placeholder', 'Search and execute commands');
+
+    // Click Documentation tab and verify placeholder changes
+    await userEvent.click(docsTab);
+    await tick();
+    expect(input).toHaveAttribute('placeholder', 'Search documentation and tutorials');
+
+    // Click Go to tab and verify placeholder changes
+    await userEvent.click(gotoTab);
+    await tick();
+    expect(input).toHaveAttribute('placeholder', 'Search images, containers, pods, and other resources');
+
+    // Click All tab and verify placeholder changes back
+    await userEvent.click(allTab);
+    await tick();
+    expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop or use > for commands');
   });
 });
