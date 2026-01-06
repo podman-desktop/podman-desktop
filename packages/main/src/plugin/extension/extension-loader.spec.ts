@@ -332,6 +332,8 @@ const readdirMock = vi.mocked(
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
+  vi.resetAllMocks();
+
   extensionLoader = new TestExtensionLoader(
     commandRegistry,
     menuRegistry,
@@ -788,6 +790,8 @@ test('Verify enable extension updates configuration', async () => {
 });
 
 test('Verify stopping extension disables it', async () => {
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+
   const id = 'extension.no.foo';
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: () => [],
@@ -798,6 +802,8 @@ test('Verify stopping extension disables it', async () => {
 });
 
 test('Verify starting extension enables it', async () => {
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+
   const id = 'extension.no.foo';
 
   configurationRegistryGetConfigurationMock.mockReturnValue({
