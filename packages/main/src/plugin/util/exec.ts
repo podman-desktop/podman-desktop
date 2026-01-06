@@ -19,8 +19,8 @@
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
 
+import * as sudo from '@expo/sudo-prompt';
 import type { RunError, RunOptions, RunResult } from '@podman-desktop/api';
-import * as sudo from 'sudo-prompt';
 
 import { isLinux, isMac, isWindows } from '../../util.js';
 import type { Proxy } from '../proxy.js';

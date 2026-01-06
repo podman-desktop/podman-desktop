@@ -27,7 +27,7 @@ const IconComponent = icon;
     <!-- fas fa- and far fa- and fab fa- for Font awesome icons -->
     <!-- -icon for extension icons e.g. 'kind-icon' -->
     {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-') || icon.startsWith('fab fa-') || icon.endsWith('-icon')}
-        <i class={`${icon} ${size} ${className}`} {role} {title}></i>
+        <span class={`${icon} ${size} ${className}`} {role} {title}></span>
     {:else if icon.startsWith('data:image/')}
         <img src={icon} alt={title ?? ''} {title} {role} class={className} style={typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : ''} />
     {/if}

@@ -20,7 +20,7 @@ import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_pr
 import { spawn } from 'node:child_process';
 import type { Readable } from 'node:stream';
 
-import * as sudo from 'sudo-prompt';
+import * as sudo from '@expo/sudo-prompt';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -29,7 +29,7 @@ import type { Proxy } from '../proxy.js';
 import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
 
 // Mock sudo-prompt exec to resolve everytime.
-vi.mock('sudo-prompt', async () => {
+vi.mock(import('@expo/sudo-prompt'), async () => {
   return {
     exec: vi.fn(),
   };
