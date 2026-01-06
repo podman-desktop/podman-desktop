@@ -458,7 +458,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       // in production mode, use the extensions & extensions-extra locally
       const promises = await Promise.all([
         this.readProductionFolders(path.join(__dirname, '../../../extensions')),
-        this.readDevelopmentFolders(path.join(__dirname, '../../../extensions-extra')),
+        this.readDevelopmentFolders(path.join(process.resourcesPath, 'extensions-extra')),
       ]);
 
       folders = promises.flat();

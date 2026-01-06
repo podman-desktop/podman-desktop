@@ -73,7 +73,7 @@ async function addElectronFuses(context) {
  *
  * @remarks it should be called in the beforePack to populate the folder extensions-extra before electron builder pack them
  */
-async function packageRemoteExtensions() {
+async function packageRemoteExtensions(context) {
   const downloadScript = path.join('packages', 'main', 'dist', 'download-remote-extensions.cjs');
   if (!fs.existsSync(downloadScript)) {
     console.warn(`${downloadScript} not found, skipping remote extension download`);
@@ -82,7 +82,7 @@ async function packageRemoteExtensions() {
 
   const destination = path.resolve('./extensions-extra');
 
-  return new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     execFile(
       'node',
       [downloadScript, `--output=${destination}`],
@@ -98,6 +98,7 @@ async function packageRemoteExtensions() {
       },
     );
   });
+  context.packager.config.extraResources.push('./extensions-extra/**');
 }
 
 /**
@@ -119,7 +120,7 @@ const config = {
     context.packager.config.extraResources = DEFAULT_ASSETS;
 
     // download & package remote extensions
-    await packageRemoteExtensions();
+    await packageRemoteExtensions(context);
 
     // include product.json
     context.packager.config.extraResources.push({
@@ -170,7 +171,6 @@ const config = {
   },
   files: [
     'packages/**/dist/**',
-    'extensions-extra/**',
     'extensions/**/builtin/*.cdix/**',
     'packages/main/src/assets/**',
   ],
