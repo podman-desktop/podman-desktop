@@ -844,14 +844,14 @@ describe('expect checkCredentials', async () => {
     );
   });
 
-  test('should add a registry and return a Disposable when registering a registry', () => {
+  test('should add a registry and return a Disposable when registering a registry', async () => {
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
       username: 'a-username',
       secret: 'pass',
     };
-    const res1 = imageRegistry.registerRegistry(reg1);
+    const res1 = await imageRegistry.registerRegistry(reg1);
     expectTypeOf(res1).toMatchTypeOf({} as Disposable);
     // Make a non-readonly copy, as readonly arrays are not supported by toBeArray
     const newRegistries: Registry[] = [...imageRegistry.getRegistries()];
@@ -860,21 +860,21 @@ describe('expect checkCredentials', async () => {
     expect(newRegistries.length).toBe(1);
   });
 
-  test('should not duplicate a registry, and return a Disposable, when registering a registry twice', () => {
+  test('should not duplicate a registry, and return a Disposable, when registering a registry twice', async () => {
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
       username: 'a-username',
       secret: 'pass',
     };
-    const res1 = imageRegistry.registerRegistry(reg1);
+    const res1 = await imageRegistry.registerRegistry(reg1);
     expectTypeOf(res1).toMatchTypeOf({} as Disposable);
     const registries1: Registry[] = [...imageRegistry.getRegistries()];
     expect(registries1).toBeDefined();
     expectTypeOf(registries1).toBeArray();
     expect(registries1.length).toBe(1);
 
-    const res2 = imageRegistry.registerRegistry(reg1);
+    const res2 = await imageRegistry.registerRegistry(reg1);
     expectTypeOf(res2).toMatchTypeOf({} as Disposable);
     const registries2: Registry[] = [...imageRegistry.getRegistries()];
     expect(registries2).toBeDefined();
@@ -1116,7 +1116,7 @@ test('getManifestFromUrl returns the expected manifest with docker manifest v2',
 });
 
 test('getAuthconfigForServer returns the expected authconfig', async () => {
-  imageRegistry.registerRegistry({
+  await imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
     secret: 'my-secret',
@@ -1131,7 +1131,7 @@ test('getAuthconfigForServer returns the expected authconfig', async () => {
 });
 
 test('getAuthconfigForServer returns docker.io authconfig when server is index.docker.io', async () => {
-  imageRegistry.registerRegistry({
+  await imageRegistry.registerRegistry({
     serverUrl: 'docker.io',
     username: 'foo',
     secret: 'my-secret',
@@ -1146,7 +1146,7 @@ test('getAuthconfigForServer returns docker.io authconfig when server is index.d
 });
 
 test('getToken with registry auth', async () => {
-  imageRegistry.registerRegistry({
+  await imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
     secret: 'my-secret',

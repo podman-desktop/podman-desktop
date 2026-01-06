@@ -1188,7 +1188,7 @@ declare module '@podman-desktop/api' {
     export function registerRegistryProvider(registryProvider: RegistryProvider): Disposable;
 
     // expose a registry from a source
-    export function registerRegistry(registry: Registry): Disposable;
+    export function registerRegistry(registry: Registry): Promise<Disposable>;
 
     // remove registry from a source
     export function unregisterRegistry(registry: Registry): void;

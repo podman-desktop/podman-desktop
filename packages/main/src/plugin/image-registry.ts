@@ -161,7 +161,7 @@ export class ImageRegistry {
     return crypto.createHash('sha512').update(registry.serverUrl).digest('hex');
   }
 
-  registerRegistry(registry: containerDesktopAPI.Registry): Disposable {
+  async registerRegistry(registry: containerDesktopAPI.Registry): Promise<Disposable> {
     const found = this.registries.find(
       reg =>
         reg.source === registry.source && reg.serverUrl === registry.serverUrl && reg.username === registry.username,
@@ -171,16 +171,22 @@ export class ImageRegistry {
       console.log('Registry already registered, skipping registration');
       return Disposable.noop();
     }
-    this.registries = [...this.registries, registry];
-    this.telemetryService.track('registerRegistry', {
-      serverUrl: this.getRegistryHash(registry),
-      total: this.registries.length,
-    });
-    this.apiSender.send('registry-register', registry);
-    this._onDidRegisterRegistry.fire(Object.freeze({ ...registry }));
-    return Disposable.create(() => {
-      this.unregisterRegistry(registry);
-    });
+    try {
+      await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure);
+      this.registries = [...this.registries, registry];
+      this.telemetryService.track('registerRegistry', {
+        serverUrl: this.getRegistryHash(registry),
+        total: this.registries.length,
+      });
+      this.apiSender.send('registry-register', registry);
+      this._onDidRegisterRegistry.fire(Object.freeze({ ...registry }));
+      return Disposable.create(() => {
+        this.unregisterRegistry(registry);
+      });
+    } catch (err: unknown) {
+      console.log(`Error while checking registry ${registry.serverUrl}, skipping`);
+      return Disposable.noop();
+    }
   }
 
   suggestRegistry(registry: containerDesktopAPI.RegistrySuggestedProvider): Disposable {
