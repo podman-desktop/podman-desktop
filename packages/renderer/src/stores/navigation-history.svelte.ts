@@ -21,6 +21,11 @@ import { router } from 'tinro';
 
 import { navigationRegistry } from '/@/stores/navigation/navigation-registry';
 
+export const BACK = 'back';
+export const FORWARD = 'forward';
+
+export type Direction = typeof BACK | typeof FORWARD;
+
 /**
  * Navigation history store
  *
@@ -36,6 +41,28 @@ export const navigationHistory = $state<{
 });
 
 let isNavigatingHistory = false;
+
+// Convert URL to display name
+function urlToDisplayName(url: string): string {
+  const path = url.split('?')[0];
+  const parts = path.split('/').filter(Boolean);
+
+  if (parts.length === 0) return 'Dashboard';
+
+  const mainPart = parts[0];
+  let name = mainPart.charAt(0).toUpperCase() + mainPart.slice(1);
+
+  if (parts.length > 1 && parts[1]) {
+    const detail = parts[1];
+    if (detail.length > 12) {
+      name += `: ${detail.substring(0, 12)}...`;
+    } else {
+      name += `: ${detail}`;
+    }
+  }
+
+  return name;
+}
 
 // Core navigation function
 function navigateToIndex(index: number): boolean {
@@ -72,6 +99,35 @@ export function goForward(): void {
 function isSubmenuBaseRoute(url: string): boolean {
   const registry = get(navigationRegistry);
   return registry.some(entry => entry.type === 'submenu' && entry.link === url);
+}
+
+export function goToHistoryIndex(index: number): void {
+  navigateToIndex(index);
+}
+
+// Get history entries for a direction
+function getEntries(direction: Direction): { index: number; name: string }[] {
+  const entries: { index: number; name: string }[] = [];
+
+  const start = direction === BACK ? navigationHistory.index - 1 : navigationHistory.index + 1;
+  const condition = (i: number): boolean => (direction === BACK ? i >= 0 : i < navigationHistory.stack.length);
+  const step = direction === BACK ? -1 : 1;
+
+  for (let i = start; condition(i); i += step) {
+    const url = navigationHistory.stack[i];
+    if (url) {
+      entries.push({ index: i, name: urlToDisplayName(url) });
+    }
+  }
+  return entries;
+}
+
+export function getBackEntries(): { index: number; name: string }[] {
+  return getEntries(BACK);
+}
+
+export function getForwardEntries(): { index: number; name: string }[] {
+  return getEntries(FORWARD);
 }
 
 // Initialize router subscription
