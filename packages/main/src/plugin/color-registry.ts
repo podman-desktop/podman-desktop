@@ -34,6 +34,8 @@ import { Disposable } from './types/disposable.js';
 const { amber, black, charcoal, dustypurple, fuschia, gray, green, purple, red, sky, stone, white, transparent } =
   tailwindColorPalette;
 
+export type ColorDefinitionWithId = ColorDefinition & { id: string };
+
 export class ColorRegistry {
   #apiSender: ApiSenderType;
   #configurationRegistry: ConfigurationRegistry;
@@ -172,7 +174,7 @@ export class ColorRegistry {
    *
    * @param definition - The color definition with id, light, and dark values
    */
-  protected registerColorDefinition(definition: ColorDefinition & { id: string }): void {
+  protected registerColorDefinition(definition: ColorDefinitionWithId): void {
     this.registerColor(definition.id, {
       light: definition.light,
       dark: definition.dark,

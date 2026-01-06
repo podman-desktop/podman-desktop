@@ -32,10 +32,8 @@ import tailwindColorPalette from '../../../../tailwind-color-palette.json' with 
 import * as util from '../util.js';
 import { ColorBuilder } from './color-builder.js';
 import { colorPaletteHelper } from './color-palette-helper.js';
-import { ColorRegistry } from './color-registry.js';
+import { type ColorDefinitionWithId, ColorRegistry } from './color-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
-
-type ColorDefinitionWithId = ColorDefinition & { id: string };
 
 class TestColorRegistry extends ColorRegistry {
   override notifyUpdate(): void {
