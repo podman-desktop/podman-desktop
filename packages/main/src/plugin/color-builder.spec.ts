@@ -19,71 +19,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { applyAlpha, ColorBuilder } from './color-builder.js';
-import { ColorPaletteHelper, colorPaletteHelper } from './color-palette-helper.js';
-
-describe('ColorPaletteHelper', () => {
-  test('should create with default alpha of 1', () => {
-    const helper = new ColorPaletteHelper('#ff0000');
-
-    expect(helper.color).toBe('#ff0000');
-    expect(helper.alpha).toBe(1);
-  });
-
-  test('should set alpha with withAlpha()', () => {
-    const helper = new ColorPaletteHelper('#ff0000').withAlpha(0.5);
-
-    expect(helper.color).toBe('#ff0000');
-    expect(helper.alpha).toBe(0.5);
-  });
-
-  test('should support method chaining', () => {
-    const helper = new ColorPaletteHelper('#00ff00');
-    const result = helper.withAlpha(0.3);
-
-    expect(result).toBe(helper);
-  });
-
-  test('should handle alpha value of 0', () => {
-    const helper = new ColorPaletteHelper('#0000ff').withAlpha(0);
-
-    expect(helper.alpha).toBe(0);
-  });
-
-  test('should handle alpha value of 1', () => {
-    const helper = new ColorPaletteHelper('#0000ff').withAlpha(1);
-
-    expect(helper.alpha).toBe(1);
-  });
-
-  test('should throw error for alpha value below 0', () => {
-    const helper = new ColorPaletteHelper('#0000ff');
-
-    expect(() => helper.withAlpha(-0.1)).toThrow('Alpha value must be between 0 and 1, got -0.1');
-  });
-
-  test('should throw error for alpha value above 1', () => {
-    const helper = new ColorPaletteHelper('#0000ff');
-
-    expect(() => helper.withAlpha(1.5)).toThrow('Alpha value must be between 0 and 1, got 1.5');
-  });
-});
-
-describe('colorPaletteHelper', () => {
-  test('should create ColorPaletteHelper instance', () => {
-    const helper = colorPaletteHelper('#ff0000');
-
-    expect(helper).toBeInstanceOf(ColorPaletteHelper);
-    expect(helper.color).toBe('#ff0000');
-    expect(helper.alpha).toBe(1);
-  });
-
-  test('should support chaining with withAlpha()', () => {
-    const helper = colorPaletteHelper('#ff0000').withAlpha(0.7);
-
-    expect(helper.color).toBe('#ff0000');
-    expect(helper.alpha).toBe(0.7);
-  });
-});
+import { colorPaletteHelper } from './color-palette-helper.js';
 
 describe('applyAlpha', () => {
   test('should return original color when alpha is 1', () => {
