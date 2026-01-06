@@ -1858,6 +1858,30 @@ test('check version', async () => {
   expect(readPodmanVersion).toBe(fakeVersion);
 });
 
+describe('apiVersion', () => {
+  const APP_VERSION_MOCK = '1.2.3.4';
+
+  beforeEach(() => {
+    // mock electron.app.getVersion
+    vi.mocked(app.getVersion).mockReturnValue(APP_VERSION_MOCK);
+  });
+
+  test('expect apiVersion to equal to version when product.json omit apiVersion', async () => {
+    const api = createApi();
+
+    expect(api.version).toEqual(APP_VERSION_MOCK);
+    expect(api.apiVersion).toEqual(APP_VERSION_MOCK);
+  });
+
+  test('expect apiVersion to equal to apiVersion from product.json when it specify it', async () => {
+    (product as unknown as { apiVersion: string }).apiVersion = '5.5.5';
+    const api = createApi();
+
+    expect(api.version).toEqual(APP_VERSION_MOCK);
+    expect(api.apiVersion).toEqual('5.5.5');
+  });
+});
+
 test('listPods', async () => {
   const listPodsSpy = vi.spyOn(containerProviderRegistry, 'listPods');
 

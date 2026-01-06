@@ -1623,6 +1623,13 @@ export class ExtensionLoader implements IAsyncDisposable {
 
     const version = app.getVersion();
 
+    let apiVersion: string;
+    if ('apiVersion' in product && typeof product['apiVersion'] === 'string') {
+      apiVersion = product['apiVersion'];
+    } else {
+      apiVersion = version;
+    }
+
     return <typeof containerDesktopAPI>{
       // Types
       Disposable: Disposable,
@@ -1631,6 +1638,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       CancellationTokenSource: CancellationTokenSource,
       TelemetryTrustedValue: TelemetryTrustedValue,
       version,
+      apiVersion: apiVersion,
       commands,
       env,
       process,
