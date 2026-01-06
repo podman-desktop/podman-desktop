@@ -20,11 +20,16 @@ import { writable } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
-import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
-import * as navigationRegistry from '/@/stores/navigation/navigation-registry';
-
-import { goBack, goForward, navigationHistory } from './navigation-history.svelte';
+import {
+  getBackEntries,
+  getForwardEntries,
+  goBack,
+  goForward,
+  goToHistoryIndex,
+  navigationHistory,
+} from '/@/stores/navigation-history.svelte';
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let routerSubscribeCallback = vi.hoisted(() => {
   return vi.fn() as unknown as (navigation: TinroRoute) => void;
@@ -164,5 +169,98 @@ describe('router navigation events', () => {
     expect(navigationHistory.stack).not.toContain('/index.html');
     expect(navigationHistory.stack).toContain('/');
     expect(navigationHistory.index).toBe(0);
+  });
+});
+
+describe('goToHistoryIndex', () => {
+  test('should not navigate to invalid negative index', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    goToHistoryIndex(-1);
+
+    expect(router.goto).not.toHaveBeenCalled();
+  });
+
+  test('should not navigate to index beyond stack', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    goToHistoryIndex(5);
+
+    expect(router.goto).not.toHaveBeenCalled();
+  });
+
+  test('should not navigate to current index', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    goToHistoryIndex(0);
+
+    expect(router.goto).not.toHaveBeenCalled();
+  });
+
+  test('should navigate to valid index', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 2;
+
+    goToHistoryIndex(0);
+
+    expect(navigationHistory.index).toBe(0);
+    expect(router.goto).toHaveBeenCalledWith('/containers');
+  });
+});
+
+describe('getBackEntries', () => {
+  test('should return empty array when no history', () => {
+    const entries = getBackEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return empty array when at first entry', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    const entries = getBackEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return previous entries in reverse order with computed names', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 2;
+
+    const entries = getBackEntries();
+
+    expect(entries).toEqual([
+      { index: 1, name: 'Images' },
+      { index: 0, name: 'Containers' },
+    ]);
+  });
+});
+
+describe('getForwardEntries', () => {
+  test('should return empty array when no history', () => {
+    const entries = getForwardEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return empty array when at last entry', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return forward entries in order with computed names', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+
+    expect(entries).toEqual([
+      { index: 1, name: 'Images' },
+      { index: 2, name: 'Pods' },
+    ]);
   });
 });
