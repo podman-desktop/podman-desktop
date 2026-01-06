@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,18 +34,21 @@ beforeAll(() => {
   Object.defineProperty(window, 'sendFeedback', {
     value: vi.fn(),
   });
+  Object.defineProperty(window, 'getFeedbackMessages', {
+    value: vi.fn(),
+  });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.getFeedbackMessages).mockResolvedValue({
+  vi.mocked(window.getFeedbackMessages).mockReturnValue({
     experienceLabel: 'How was your experience with Podman Desktop',
     thankYouMessage: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
     gitHubStarsMessage: 'Like Podman Desktop? Give us a star on GitHub',
   });
 });
 
-test('Expect that the button is disabled when loading the page', () => {
+test('Expect that the button is disabled when loading the page', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
   const button = screen.getByRole('button', { name: 'Send feedback' });
   expect(button).toBeInTheDocument();
