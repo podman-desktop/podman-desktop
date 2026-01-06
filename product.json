@@ -1,4 +1,5 @@
 {
+  "_comment": "This file is used to define product specific properties. Do not import it directly in renderer package. Only main package should import it.",
   "name": "Podman Desktop",
   "appId": "io.podman_desktop.PodmanDesktop",
   "artifactName": "podman-desktop",
