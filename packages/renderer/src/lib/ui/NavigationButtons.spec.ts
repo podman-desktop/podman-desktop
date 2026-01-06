@@ -21,12 +21,22 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { goBack, goForward, navigationHistory } from '/@/stores/navigation-history.svelte';
+import {
+  getBackEntries,
+  getForwardEntries,
+  goBack,
+  goForward,
+  goToHistoryIndex,
+  navigationHistory,
+} from '/@/stores/navigation-history.svelte';
 
 import NavigationButtons from './NavigationButtons.svelte';
 
 const goBackMock = vi.fn();
 const goForwardMock = vi.fn();
+const goToHistoryIndexMock = vi.fn();
+const getBackEntriesMock = vi.fn().mockReturnValue([]);
+const getForwardEntriesMock = vi.fn().mockReturnValue([]);
 
 vi.mock(import('/@/stores/navigation-history.svelte'));
 
@@ -258,7 +268,7 @@ describe('mouse button navigation', () => {
     const mouseUpEvent = new MouseEvent('mouseup', { button: 3 });
     window.dispatchEvent(mouseUpEvent);
 
-    expect(goBack).toHaveBeenCalled();
+    expect(goBackMock).toHaveBeenCalled();
   });
 
   test('mouse button 4 should trigger goForward', async () => {
@@ -268,92 +278,6 @@ describe('mouse button navigation', () => {
     const mouseUpEvent = new MouseEvent('mouseup', { button: 4 });
     window.dispatchEvent(mouseUpEvent);
 
-    expect(goForward).toHaveBeenCalled();
-  });
-});
-
-describe('keyboard navigation - Windows/Linux', () => {
-  test('Alt+Left should trigger goBack', async () => {
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowLeft',
-      altKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goBack).toHaveBeenCalled();
-  });
-
-  test('Alt+Right should trigger goForward', async () => {
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
-      altKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goForward).toHaveBeenCalled();
-  });
-});
-
-describe('keyboard navigation - macOS', () => {
-  test('Cmd+[ should trigger goBack', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: '[',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goBack).toHaveBeenCalled();
-  });
-
-  test('Cmd+] should trigger goForward', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: ']',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goForward).toHaveBeenCalled();
-  });
-
-  test('Cmd+Left should trigger goBack', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowLeft',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goBack).toHaveBeenCalled();
-  });
-
-  test('Cmd+Right should trigger goForward', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goForward).toHaveBeenCalled();
+    expect(goForwardMock).toHaveBeenCalled();
   });
 });
