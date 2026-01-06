@@ -769,7 +769,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
 test('Verify disable extension updates configuration', async () => {
   const ids = ['extension.foo'];
 
-  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
   extensionLoader.setDisabledExtensionIds(ids);
 
   expect(configurationRegistryUpdateConfigurationMock).toHaveBeenCalledWith('extensions.disabled', ids);
@@ -783,14 +783,14 @@ test('Verify enable extension updates configuration', async () => {
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: () => before,
   });
-  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
   extensionLoader.ensureExtensionIsEnabled(id);
 
   expect(configurationRegistryUpdateConfigurationMock).toHaveBeenCalledWith('extensions.disabled', after);
 });
 
 test('Verify stopping extension disables it', async () => {
-  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
 
   const id = 'extension.no.foo';
   configurationRegistryGetConfigurationMock.mockReturnValue({
@@ -802,7 +802,7 @@ test('Verify stopping extension disables it', async () => {
 });
 
 test('Verify starting extension enables it', async () => {
-  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
 
   const id = 'extension.no.foo';
 
