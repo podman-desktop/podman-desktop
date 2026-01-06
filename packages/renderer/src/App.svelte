@@ -189,7 +189,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/images/:id/:engineId" breadcrumb="Images" let:meta navigationHint="root">
           <ImagesList searchTerm={meta.params.id} imageEngineId={meta.params.engineId} />
         </Route>
-        <Route path="/networks/create" breadcrumb="Create Network">
+        <Route path="/networks/create/*" breadcrumb="Create Network">
           <CreateNetwork />
         </Route>
         <Route
