@@ -42,6 +42,13 @@ describe('ColorPaletteHelper', () => {
     expect(result).toBe(helper);
   });
 
+  test('should overwrite alpha with successive withAlpha() calls', () => {
+    const helper = new ColorPaletteHelper('#ff0000').withAlpha(0.3).withAlpha(0.7);
+
+    expect(helper.alpha).toBe(0.7);
+    expect(helper.color).toBe('#ff0000');
+  });
+
   test('should handle alpha value of 0', () => {
     const helper = new ColorPaletteHelper('#0000ff').withAlpha(0);
 
