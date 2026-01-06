@@ -44,7 +44,7 @@ export class ColorPaletteHelper {
    * @throws Error if alpha is not between 0 and 1
    */
   withAlpha(alpha: number): this {
-    if (alpha < 0 || alpha > 1) {
+    if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) {
       throw new Error(`Alpha value must be between 0 and 1, got ${alpha}`);
     }
 

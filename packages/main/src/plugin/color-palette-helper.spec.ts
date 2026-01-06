@@ -72,6 +72,18 @@ describe('ColorPaletteHelper', () => {
 
     expect(() => helper.withAlpha(1.5)).toThrow('Alpha value must be between 0 and 1, got 1.5');
   });
+
+  test('should throw error for NaN alpha value', () => {
+    const helper = new ColorPaletteHelper('#0000ff');
+
+    expect(() => helper.withAlpha(Number.NaN)).toThrow('Alpha value must be between 0 and 1');
+  });
+
+  test('should throw error for Infinity alpha value', () => {
+    const helper = new ColorPaletteHelper('#0000ff');
+
+    expect(() => helper.withAlpha(Number.POSITIVE_INFINITY)).toThrow('Alpha value must be between 0 and 1');
+  });
 });
 
 describe('colorPaletteHelper', () => {

@@ -30,7 +30,7 @@ import type { ColorDefinitionWithId } from './color-registry.js';
  * @throws Error if the color cannot be parsed or formatted
  */
 export function applyAlpha(color: string, alphaValue: number): string {
-  if (alphaValue < 0 || alphaValue > 1) {
+  if (!Number.isFinite(alphaValue) || alphaValue < 0 || alphaValue > 1) {
     throw new Error(`Alpha value must be between 0 and 1, got ${alphaValue}`);
   }
 
