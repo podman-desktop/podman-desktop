@@ -2747,9 +2747,7 @@ export class ContainerProviderRegistry {
         if (options?.pull) {
           buildOptions.pull = options.pull;
         }
-        console.log('>>>>>>>>> building image');
         streamingPromise = await matchingContainerProviderApi.buildImage(tarStream, buildOptions);
-        console.log('>>>>>>>>> image built');
       } catch (error: unknown) {
         console.log('error in buildImage', error);
         const errorMessage = error instanceof Error ? error.message : '' + error;

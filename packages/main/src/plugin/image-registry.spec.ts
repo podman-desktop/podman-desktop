@@ -28,7 +28,7 @@ import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
-import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
@@ -76,12 +76,9 @@ const apiSender: ApiSenderType = {
   send(_channel: string, _data?: any): void {},
 } as ApiSenderType;
 
-beforeAll(async () => {
-  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
-});
-
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
 });
 
 afterEach(() => {
@@ -845,6 +842,9 @@ describe('expect checkCredentials', async () => {
   });
 
   test('should add a registry and return a Disposable when registering a registry', async () => {
+    const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+    spyCheckCredentials.mockResolvedValue(undefined);
+
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
@@ -861,6 +861,9 @@ describe('expect checkCredentials', async () => {
   });
 
   test('should not duplicate a registry, and return a Disposable, when registering a registry twice', async () => {
+    const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+    spyCheckCredentials.mockResolvedValue(undefined);
+
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
@@ -881,6 +884,30 @@ describe('expect checkCredentials', async () => {
     expectTypeOf(registries2).toBeArray();
     expect(registries2.length).toBe(1);
   });
+});
+
+test('should not register a registry with credential or info that does not work', async () => {
+  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+  spyCheckCredentials.mockRejectedValue(new Error('something went wrong'));
+
+  const registries: Registry[] = [...imageRegistry.getRegistries()];
+  expect(registries).toBeDefined();
+  expectTypeOf(registries).toBeArray();
+  expect(registries.length).toBe(0);
+
+  const reg1: Registry = {
+    source: 'a-source',
+    serverUrl: 'an-url',
+    username: 'a-username',
+    secret: 'pass',
+  };
+
+  await imageRegistry.registerRegistry(reg1);
+
+  const registries2: Registry[] = [...imageRegistry.getRegistries()];
+  expect(registries2).toBeDefined();
+  expectTypeOf(registries2).toBeArray();
+  expect(registries2.length).toBe(0);
 });
 
 test('findBestManifest returns the expected manifest', () => {
@@ -1116,6 +1143,9 @@ test('getManifestFromUrl returns the expected manifest with docker manifest v2',
 });
 
 test('getAuthconfigForServer returns the expected authconfig', async () => {
+  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+  spyCheckCredentials.mockResolvedValue(undefined);
+
   await imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
@@ -1131,6 +1161,9 @@ test('getAuthconfigForServer returns the expected authconfig', async () => {
 });
 
 test('getAuthconfigForServer returns docker.io authconfig when server is index.docker.io', async () => {
+  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+  spyCheckCredentials.mockResolvedValue(undefined);
+
   await imageRegistry.registerRegistry({
     serverUrl: 'docker.io',
     username: 'foo',
@@ -1146,6 +1179,9 @@ test('getAuthconfigForServer returns docker.io authconfig when server is index.d
 });
 
 test('getToken with registry auth', async () => {
+  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+  spyCheckCredentials.mockResolvedValue(undefined);
+
   await imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
