@@ -72,7 +72,7 @@ function formatExpirationDate(date: Date | undefined): string {
 
 let nameColumn = new TableColumn<CertificateInfoUI, string>('Certificate Name', {
   width: '2fr',
-  renderMapping: (cert): string => cert.issuer ?? 'Unknown',
+  renderMapping: (cert): string => cert.subject ?? 'Unknown',
   renderer: CertificateColumnSimple,
   comparator: (a, b): number => getDisplayName(a).localeCompare(getDisplayName(b)),
 });
