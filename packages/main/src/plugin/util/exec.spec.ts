@@ -342,7 +342,7 @@ describe('exec', () => {
 
   test('should run the command with privileges on macOS', async () => {
     const command = 'echo';
-    const args = ['Hello, World!'];
+    const args = ['Hello, "World"!'];
 
     (util.isMac as Mock).mockReturnValue(true);
 
@@ -368,7 +368,7 @@ describe('exec', () => {
       'osascript',
       expect.arrayContaining([
         '-e',
-        'do shell script "echo \\"Hello, World!\\"" with prompt "Podman Desktop requires admin privileges " with administrator privileges',
+        'do shell script "echo Hello,\\\\ \\\\\\"World\\\\\\"!" with prompt "Podman Desktop requires admin privileges " with administrator privileges',
       ]),
       expect.anything(),
     );

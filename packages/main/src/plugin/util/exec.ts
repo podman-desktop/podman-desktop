@@ -123,11 +123,14 @@ export class Exec {
           sudo.exec(sudoCommand, sudoOptions, callback);
         });
       } else if (isMac()) {
-        const quotedArgs = (args ?? []).map(arg => `\\"${arg}\\"`);
-        const shellScript = `${command} ${quotedArgs.join(' ')}`;
+        const escapedArgs = (args ?? []).map(arg =>
+          arg.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/ /g, '\\ '),
+        );
+        const shellScript = `${command} ${escapedArgs.join(' ')}`;
+        const escapedShellScript = shellScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         args = [
           '-e',
-          `do shell script "${shellScript}" with prompt "Podman Desktop requires admin privileges " with administrator privileges`,
+          `do shell script "${escapedShellScript}" with prompt "Podman Desktop requires admin privileges " with administrator privileges`,
         ];
         command = 'osascript';
       } else if (isLinux()) {
