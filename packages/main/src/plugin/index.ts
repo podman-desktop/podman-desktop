@@ -3322,14 +3322,8 @@ export class PluginSystem {
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();
 
-    // launch the updater
-    const extensionsUpdater = new ExtensionsUpdater(
-      extensionsCatalog,
-      this.extensionLoader,
-      configurationRegistry,
-      extensionInstaller,
-      telemetry,
-    );
+    container.bind<ExtensionsUpdater>(ExtensionsUpdater).toSelf().inSingletonScope();
+    const extensionsUpdater = container.get(ExtensionsUpdater);
 
     await contributionManager.init();
 
