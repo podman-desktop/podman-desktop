@@ -33,12 +33,8 @@ export class FeedbackHandler {
     this.#systemInfo = getSystemInfo();
   }
 
-  protected getProductName(): string {
-    return productJSONFile ? productJSONFile.name : 'Podman Desktop';
-  }
-
   getFeedbackMessages(): FeedbackMessages {
-    const productName = this.getProductName();
+    const productName = productJSONFile.name;
     return {
       experienceLabel: `How was your experience with ${productName}`,
       thankYouMessage: `Your input is valuable in helping us better understand and tailor ${productName}.`,
