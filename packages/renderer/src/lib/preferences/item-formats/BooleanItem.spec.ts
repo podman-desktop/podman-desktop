@@ -95,3 +95,19 @@ test('Expect to see checkbox not checked if default is false', async () => {
   expect(button).toBeInTheDocument();
   expect(button).not.toBeChecked();
 });
+
+test('Expect to see the checkbox disabled when locked is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema & { default: boolean } = {
+    title: 'my boolean property',
+    id: 'myid',
+    parentId: '',
+    type: 'boolean',
+    default: true,
+    locked: true,
+  };
+  render(BooleanItem, { record, checked: record.default });
+  const button = screen.getByRole('checkbox');
+  expect(button).toBeInTheDocument();
+  expect(button).toBeChecked();
+  expect(button).toBeDisabled();
+});
