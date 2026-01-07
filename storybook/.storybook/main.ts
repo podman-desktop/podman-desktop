@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,15 @@
  ***********************************************************************/
 
 import type { StorybookConfig } from '@storybook/svelte-vite';
-import { join, dirname } from 'node:path';
-
-/**
- * This function is used to resolve the absolute path of a package.
- * It is needed in projects that use Yarn PnP or are set up within a monorepo.
- */
-function getAbsolutePath(value: string): any {
-  return dirname(require.resolve(join(value, 'package.json')));
-}
 
 const config: StorybookConfig = {
   stories: ['../src/stories/**/*.mdx', '../src/stories/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
-  addons: [
-    // Do not use getAbsolutePath
-    getAbsolutePath('@storybook/addon-links'),
-    '@storybook/addon-svelte-csf',
-    getAbsolutePath('@storybook/addon-docs'),
-  ],
+  addons: ['@storybook/addon-links', '@storybook/addon-svelte-csf', '@storybook/addon-docs'],
   typescript: {
     check: true,
   },
   framework: {
-    name: getAbsolutePath('@storybook/svelte-vite'),
+    name: '@storybook/svelte-vite',
     options: {},
   },
   docs: {},
