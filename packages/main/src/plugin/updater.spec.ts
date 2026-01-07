@@ -19,7 +19,7 @@
 import type { IncomingMessage } from 'node:http';
 
 import type { Configuration } from '@podman-desktop/api';
-import { app, shell } from 'electron';
+import { app, net, shell } from 'electron';
 import { type AppUpdater, autoUpdater, type UpdateCheckResult, type UpdateDownloadedEvent } from 'electron-updater';
 import type { AppUpdaterEvents } from 'electron-updater/out/AppUpdater.js';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -46,6 +46,9 @@ vi.mock('electron', () => ({
   },
   shell: {
     openExternal: vi.fn(),
+  },
+  net: {
+    isOnline: vi.fn(),
   },
 }));
 
@@ -151,6 +154,35 @@ beforeEach(() => {
 
 test('expect env PROD to be truthy', () => {
   expect(import.meta.env.PROD).toBeTruthy();
+});
+
+test('expect to check for updates when env AIRGAP_DOWNLOAD is not set', () => {
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+  updater.init();
+  expect(autoUpdater.checkForUpdates).toHaveBeenCalled();
+});
+
+test.each(['windows', 'macos'])('expect to not check for updates when is airgap build on $platform', platform => {
+  vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+  vi.mocked(isMac).mockReturnValue(platform === 'macos');
+  vi.mocked(net.isOnline).mockReturnValue(false);
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+  updater.init();
+  expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled();
 });
 
 test('expect init to provide a disposable', () => {

@@ -18,7 +18,7 @@
 
 import * as https from 'node:https';
 
-import { app, shell } from 'electron';
+import { app, net, shell } from 'electron';
 import {
   autoUpdater,
   type ProgressInfo,
@@ -36,7 +36,7 @@ import { MessageBox } from '/@/plugin/message-box.js';
 import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import { isLinux, isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 
@@ -56,6 +56,7 @@ export class Updater {
   #updateCheckResult: UpdateCheckResult | undefined;
 
   #downloadTask: Task | undefined;
+  #isAirgapBuild: boolean;
 
   constructor(
     @inject(MessageBox)
@@ -75,6 +76,7 @@ export class Updater {
     this.#updateInProgress = false;
     this.#updateAlreadyDownloaded = false;
     this.#updateCheckResult = undefined;
+    this.#isAirgapBuild = !net.isOnline();
   }
 
   public async openReleaseNotes(version: string): Promise<void> {
@@ -458,7 +460,8 @@ export class Updater {
     this.registerDefaultCommands();
 
     // Only check on production builds for Windows and macOS users
-    if (!import.meta.env.PROD || isLinux()) {
+    // Skip update checks if is airgap build on Windows or macOS
+    if (!import.meta.env.PROD || isLinux() || ((isMac() || isWindows()) && this.#isAirgapBuild)) {
       this.defaultVersionEntry();
       return Disposable.noop();
     }
