@@ -23,7 +23,7 @@ function onInput(event: Event): void {
   name={record.id}
   placeholder={record.placeholder}
   value={value}
-  readonly={!!record.readonly}
+  readonly={!!record.readonly || !!record.locked}
   id="input-standard-{record.id}"
   aria-invalid={invalidEntry}
   aria-label={record.description} />
