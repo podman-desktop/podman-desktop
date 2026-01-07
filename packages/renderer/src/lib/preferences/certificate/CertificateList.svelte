@@ -72,23 +72,23 @@ function formatExpirationDate(date: Date | undefined): string {
 
 let nameColumn = new TableColumn<CertificateInfoUI, string>('Certificate Name', {
   width: '2fr',
-  renderMapping: (cert): string => cert.issuer || 'Unknown',
+  renderMapping: (cert): string => cert.issuer ?? 'Unknown',
   renderer: CertificateColumnSimple,
   comparator: (a, b): number => getDisplayName(a).localeCompare(getDisplayName(b)),
 });
 
 let issuerColumn = new TableColumn<CertificateInfoUI, string>('Issuer', {
   width: '2fr',
-  renderMapping: (cert): string => cert.issuer || 'Unknown',
+  renderMapping: (cert): string => cert.issuer ?? 'Unknown',
   renderer: CertificateColumnSimple,
   comparator: (a, b): number => getIssuerDisplayName(a).localeCompare(getIssuerDisplayName(b)),
 });
 
 let serialColumn = new TableColumn<CertificateInfoUI, string>('Serial Number', {
   width: '1fr',
-  renderMapping: (cert): string => cert.serialNumber || 'Unknown',
+  renderMapping: (cert): string => cert.serialNumber ?? 'Unknown',
   renderer: CertificateColumnSimple,
-  comparator: (a, b): number => (a.serialNumber || '').localeCompare(b.serialNumber || ''),
+  comparator: (a, b): number => (a.serialNumber ?? '').localeCompare(b.serialNumber ?? ''),
 });
 
 let expiresColumn = new TableColumn<CertificateInfoUI, string>('Expires On', {
