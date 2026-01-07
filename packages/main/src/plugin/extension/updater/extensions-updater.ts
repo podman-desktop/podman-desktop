@@ -17,11 +17,11 @@
  ***********************************************************************/
 
 import { compareVersions } from 'compare-versions';
-import { app } from 'electron';
 import { inject, injectable } from 'inversify';
 import { coerce, satisfies } from 'semver';
 
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
 import { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
@@ -47,6 +47,8 @@ export class ExtensionsUpdater {
     private extensionInstaller: ExtensionInstaller,
     @inject(Telemetry)
     private telemetry: Telemetry,
+    @inject(ExtensionApiVersion)
+    private extensionApiVersion: ExtensionApiVersion,
   ) {}
 
   async init(): Promise<void> {
@@ -146,7 +148,7 @@ export class ExtensionsUpdater {
 
         // if found compare versions
         const installedVersion = installedExtension.version;
-        const appVersion = app.getVersion();
+        const appVersion = this.extensionApiVersion.getApiVersion();
 
         // coerce the podman desktop Version
         const currentPodmanDesktopVersion = coerce(appVersion);
