@@ -34,12 +34,6 @@ beforeAll(() => {
   Object.defineProperty(window, 'sendFeedback', {
     value: vi.fn(),
   });
-  Object.defineProperty(window, 'getFeedbackMessages', {
-    value: vi.fn(),
-  });
-  Object.defineProperty(window, 'showMessageBox', {
-    value: vi.fn(),
-  });
 });
 
 beforeEach(() => {
