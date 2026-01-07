@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,9 @@ import * as tls from 'node:tls';
 import { injectable } from 'inversify';
 import wincaAPI from 'win-ca/api';
 
-import type { CertificateInfo, CertificateSource } from '../../../api/src/certificate-info.js';
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
+import type { CertificateInfo, CertificateSource } from '/@api/certificate-info.js';
+
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 /**

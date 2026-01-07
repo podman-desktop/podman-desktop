@@ -63,6 +63,7 @@ import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -139,7 +140,6 @@ import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import type { CertificateInfo } from '../../../api/src/certificate-info.js';
 import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
