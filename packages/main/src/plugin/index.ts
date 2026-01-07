@@ -134,6 +134,7 @@ import type { PullEvent } from '/@api/pull-event.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
+import type { TelemetryMessages } from '/@api/telemetry.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
@@ -3040,6 +3041,10 @@ export class PluginSystem {
       if (!tokenSource?.token.isCancellationRequested) {
         tokenSource?.dispose(true);
       }
+    });
+
+    this.ipcHandle('telemetry:getTelemetryMessages', async (): Promise<TelemetryMessages> => {
+      return telemetry.getTelemetryMessages();
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

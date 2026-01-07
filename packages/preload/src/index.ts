@@ -120,6 +120,7 @@ import type { PullEvent } from '/@api/pull-event';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar';
 import type { PinOption } from '/@api/status-bar/pin-option';
+import type { TelemetryMessages } from '/@api/telemetry';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
@@ -2427,6 +2428,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('getFeedbackMessages', async (): Promise<FeedbackMessages> => {
     return ipcInvoke('feedback:getFeedbackMessages');
+  });
+
+  contextBridge.exposeInMainWorld('getTelemetryMessages', async (): Promise<TelemetryMessages> => {
+    return ipcInvoke('telemetry:getTelemetryMessages');
   });
 
   contextBridge.exposeInMainWorld('telemetryTrack', async (event: string, eventProperties?: unknown): Promise<void> => {
