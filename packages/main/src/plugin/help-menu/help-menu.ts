@@ -55,20 +55,27 @@ export class HelpMenu {
 
   getItems(): ItemInfo[] {
     return product.helpMenu.items.map(item => {
-      const { action, ...tempItem } = item;
-      const itemInfo: ItemInfo = tempItem;
-      if (action?.command) {
-        itemInfo.action = {
-          kind: ActionKind.COMMAND,
-          parameter: action.command,
+      const baseItem = { icon: item.icon, title: item.title, tooltip: item.tooltip };
+      if (item.command) {
+        return {
+          ...baseItem,
+          action: {
+            kind: ActionKind.COMMAND,
+            parameter: item.command,
+          },
+          enabled: true,
         };
-      } else if (action?.link) {
-        itemInfo.action = {
-          kind: ActionKind.LINK,
-          parameter: action.link,
+      } else if (item.link) {
+        return {
+          ...baseItem,
+          action: {
+            kind: ActionKind.LINK,
+            parameter: item.link,
+          },
+          enabled: true,
         };
       }
-      return itemInfo;
+      return { ...baseItem, enabled: false };
     });
   }
 }
