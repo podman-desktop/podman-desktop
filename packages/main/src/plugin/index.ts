@@ -139,6 +139,7 @@ import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
+import type { CertificateInfo } from '../../../api/src/certificate-info.js';
 import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
@@ -2417,6 +2418,10 @@ export class PluginSystem {
 
     this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
       return proxy.getState();
+    });
+
+    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
+      return certificates.getAllCertificateInfos();
     });
 
     this.ipcHandle(
