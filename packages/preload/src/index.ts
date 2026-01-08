@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalo
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
 import type { ExtensionInfo } from '/@api/extension-info';
 import type { FeaturedExtension } from '/@api/featured/featured-api';
-import type { FeedbackProperties, GitHubIssue } from '/@api/feedback';
+import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback';
 import type { ItemInfo } from '/@api/help-menu';
 import type { HistoryInfo } from '/@api/history-info';
 import type { IconInfo } from '/@api/icon-info';
@@ -120,6 +120,7 @@ import type { PullEvent } from '/@api/pull-event';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar';
 import type { PinOption } from '/@api/status-bar/pin-option';
+import type { TelemetryMessages } from '/@api/telemetry';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
@@ -2423,6 +2424,14 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('previewOnGitHub', async (feedback: GitHubIssue): Promise<void> => {
     return ipcInvoke('feedback:GitHubPreview', feedback);
+  });
+
+  contextBridge.exposeInMainWorld('getFeedbackMessages', async (): Promise<FeedbackMessages> => {
+    return ipcInvoke('feedback:getFeedbackMessages');
+  });
+
+  contextBridge.exposeInMainWorld('getTelemetryMessages', async (): Promise<TelemetryMessages> => {
+    return ipcInvoke('telemetry:getTelemetryMessages');
   });
 
   contextBridge.exposeInMainWorld('telemetryTrack', async (event: string, eventProperties?: unknown): Promise<void> => {

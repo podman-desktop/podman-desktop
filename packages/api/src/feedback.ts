@@ -34,3 +34,9 @@ export interface GitHubIssue {
   includeSystemInfo?: boolean;
   includeExtensionInfo?: boolean;
 }
+
+export interface FeedbackMessages {
+  experienceLabel: string;
+  thankYouMessage: string;
+  gitHubStarsMessage: string;
+}

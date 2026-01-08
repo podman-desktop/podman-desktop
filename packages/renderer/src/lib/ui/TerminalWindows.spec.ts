@@ -25,8 +25,7 @@ import { writable } from 'svelte/store';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
-
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-fit'));

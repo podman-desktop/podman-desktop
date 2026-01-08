@@ -46,6 +46,7 @@ function onValidation(newValue: number, validationError?: string): void {
     step={record.step}
     type={record.type === 'integer' ? 'integer' : 'number'}
     maximum={record.maximum && typeof record.maximum === 'number' ? record.maximum : undefined}
+    disabled={!!record.readonly}
     showError={false}>
   </NumberInput>
 </Tooltip>

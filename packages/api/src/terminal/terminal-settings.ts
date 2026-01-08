@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2026 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { StorybookConfig } from '@storybook/svelte-vite';
-
-const config: StorybookConfig = {
-  stories: ['../src/stories/**/*.mdx', '../src/stories/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
-  addons: ['@storybook/addon-links', '@storybook/addon-svelte-csf', '@storybook/addon-docs'],
-  typescript: {
-    check: true,
-  },
-  framework: {
-    name: '@storybook/svelte-vite',
-    options: {},
-  },
-  docs: {},
-};
-
-export default config;
+export enum TerminalSettings {
+  SectionName = 'terminal',
+  FontSize = 'integrated.fontSize',
+  LineHeight = 'integrated.lineHeight',
+  Scrollback = 'integrated.scrollback',
+}

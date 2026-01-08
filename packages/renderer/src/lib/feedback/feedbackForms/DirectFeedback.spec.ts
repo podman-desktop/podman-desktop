@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,18 +38,23 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getFeedbackMessages).mockResolvedValue({
+    experienceLabel: 'How was your experience with Podman Desktop',
+    thankYouMessage: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
+    gitHubStarsMessage: 'Like Podman Desktop? Give us a star on GitHub',
+  });
 });
 
-test('Expect that the button is disabled when loading the page', () => {
+test('Expect that the button is disabled when loading the page', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
-  const button = screen.getByRole('button', { name: 'Send feedback' });
+  const button = await screen.findByRole('button', { name: 'Send feedback' });
   expect(button).toBeInTheDocument();
   expect(button).toBeDisabled();
 });
 
 test('Expect that the button is enabled after clicking on a smiley', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
-  const button = screen.getByRole('button', { name: 'Send feedback' });
+  const button = await screen.findByRole('button', { name: 'Send feedback' });
 
   // expect to have indication why the button is disabled
   expect(screen.getByText('Please select an experience smiley')).toBeInTheDocument();
@@ -67,7 +72,7 @@ test('Expect that the button is enabled after clicking on a smiley', async () =>
 
 test('Expect very sad smiley errors without feedback', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
-  const button = screen.getByRole('button', { name: 'Send feedback' });
+  const button = await screen.findByRole('button', { name: 'Send feedback' });
   expect(button).toBeDisabled();
 
   // expect to have indication why the button is disabled
@@ -95,7 +100,7 @@ test('Expect very sad smiley errors without feedback', async () => {
 
 test('Expect sad smiley warns without feedback', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
-  const button = screen.getByRole('button', { name: 'Send feedback' });
+  const button = await screen.findByRole('button', { name: 'Send feedback' });
   expect(button).toBeDisabled();
 
   // expect to have indication why the button is disabled
@@ -121,34 +126,34 @@ test('Expect sad smiley warns without feedback', async () => {
 });
 
 test('Expect message for very-happy-smiley to use love', async () => {
-  const { getByRole, getByLabelText } = render(DirectFeedback, {
+  const { findByRole, findByLabelText } = render(DirectFeedback, {
     category: 'developers',
     contentChange: vi.fn(),
     onCloseForm: vi.fn(),
   });
 
   // click on a smiley
-  const smiley = getByRole('button', { name: 'very-happy-smiley' });
+  const smiley = await findByRole('button', { name: 'very-happy-smiley' });
   await fireEvent.click(smiley);
 
   // and the GitHub star text is visible
-  const region = getByLabelText('Like Podman Desktop? Give us a star on GitHub');
+  const region = await findByLabelText('Like Podman Desktop? Give us a star on GitHub');
   expect(region.textContent).toBe('Love It? Give us a on GitHub');
 });
 
 test('Expect message for happy-smiley to use like', async () => {
-  const { getByRole, getByLabelText } = render(DirectFeedback, {
+  const { findByRole, findByLabelText } = render(DirectFeedback, {
     category: 'developers',
     contentChange: vi.fn(),
     onCloseForm: vi.fn(),
   });
 
   // click on a smiley
-  const smiley = getByRole('button', { name: 'happy-smiley' });
+  const smiley = await findByRole('button', { name: 'happy-smiley' });
   await fireEvent.click(smiley);
 
   // and the GitHub star text is visible
-  const region = getByLabelText('Like Podman Desktop? Give us a star on GitHub');
+  const region = await findByLabelText('Like Podman Desktop? Give us a star on GitHub');
   expect(region.textContent).toBe('Like It? Give us a on GitHub');
 });
 
@@ -156,11 +161,11 @@ test('Expect GitHub dialog visible when very-happy-smiley selected', async () =>
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
 
   // click on a smiley
-  const smiley = screen.getByRole('button', { name: 'very-happy-smiley' });
+  const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
   await fireEvent.click(smiley);
 
   // and the GitHub star text is visible
-  expect(screen.getByLabelText('Like Podman Desktop? Give us a star on GitHub')).toBeInTheDocument();
+  expect(await screen.findByLabelText('Like Podman Desktop? Give us a star on GitHub')).toBeInTheDocument();
 
   const link = screen.getByRole('link', { name: 'GitHub' });
   await fireEvent.click(link);
@@ -176,7 +181,7 @@ test('Expect category to be sent', async () => {
   render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: closeMock });
 
   // click on a smiley
-  const smiley = screen.getByRole('button', { name: 'very-happy-smiley' });
+  const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
   await fireEvent.click(smiley);
 
   // click on submit button
@@ -209,7 +214,7 @@ test('Expect design category to be sent when design category is used', async () 
   render(DirectFeedback, { category: 'design', contentChange: vi.fn(), onCloseForm: closeMock });
 
   // click on a smiley
-  const smiley = screen.getByRole('button', { name: 'very-happy-smiley' });
+  const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
   await fireEvent.click(smiley);
 
   // click on submit button

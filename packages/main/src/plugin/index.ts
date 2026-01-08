@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import { Container } from 'inversify';
 
 import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
+import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
@@ -90,7 +91,7 @@ import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalo
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { FeaturedExtension } from '/@api/featured/featured-api.js';
-import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
+import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
@@ -133,6 +134,7 @@ import type { PullEvent } from '/@api/pull-event.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
+import type { TelemetryMessages } from '/@api/telemetry.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
@@ -752,6 +754,8 @@ export class PluginSystem {
     pinRegistry.init();
 
     container.bind<ProgressImpl>(ProgressImpl).toSelf().inSingletonScope();
+
+    container.bind<ExtensionApiVersion>(ExtensionApiVersion).toSelf().inSingletonScope();
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
     this.extensionLoader = container.get<ExtensionLoader>(ExtensionLoader);
@@ -3024,6 +3028,10 @@ export class PluginSystem {
       return feedback.openGitHubIssue(properties);
     });
 
+    this.ipcHandle('feedback:getFeedbackMessages', async (): Promise<FeedbackMessages> => {
+      return feedback.getFeedbackMessages();
+    });
+
     this.ipcHandle('cancellableTokenSource:create', async (): Promise<number> => {
       return cancellationTokenRegistry.createCancellationTokenSource();
     });
@@ -3033,6 +3041,10 @@ export class PluginSystem {
       if (!tokenSource?.token.isCancellationRequested) {
         tokenSource?.dispose(true);
       }
+    });
+
+    this.ipcHandle('telemetry:getTelemetryMessages', async (): Promise<TelemetryMessages> => {
+      return telemetry.getTelemetryMessages();
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3328,14 +3340,8 @@ export class PluginSystem {
     const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();
 
-    // launch the updater
-    const extensionsUpdater = new ExtensionsUpdater(
-      extensionsCatalog,
-      this.extensionLoader,
-      configurationRegistry,
-      extensionInstaller,
-      telemetry,
-    );
+    container.bind<ExtensionsUpdater>(ExtensionsUpdater).toSelf().inSingletonScope();
+    const extensionsUpdater = container.get(ExtensionsUpdater);
 
     await contributionManager.init();
 

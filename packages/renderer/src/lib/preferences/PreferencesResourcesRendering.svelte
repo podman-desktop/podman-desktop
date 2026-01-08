@@ -465,6 +465,10 @@ $effect(() => {
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
+              {#if provider.version}
+                <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 break-words"
+                  >v{provider.version}</span>
+              {/if}
             </div>
             <ProviderActionButtons
               provider={provider}
@@ -598,10 +602,6 @@ $effect(() => {
                 {/snippet}
               </PreferencesConnectionActions>
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
-                <div aria-label="Connection Version">
-                  {provider.name}
-                  {provider.version ? `v${provider.version}` : ''}
-                </div>
                 <div aria-label="Connection Type">{container.vmType ? capitalize(container.vmType.name) : ''}</div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import Fa from 'svelte-fa';
@@ -89,7 +89,7 @@ onMount(async () => {
           aria-label="{connectionInfo.provider.name} details"
           type="button"
           onclick={(): void => router.goto(connectionInfo.link)}>
-          <Fa icon={faArrowUpRightFromSquare} />
+          <Fa icon={faCircleInfo} />
         </button>
       </Tooltip>
     </div>

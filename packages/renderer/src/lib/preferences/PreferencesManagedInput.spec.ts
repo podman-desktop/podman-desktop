@@ -18,37 +18,25 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
-import PreferencesManagedLabel from '/@/lib/preferences/PreferencesManagedLabel.svelte';
+import PreferencesManagedInput from '/@/lib/preferences/PreferencesManagedInput.svelte';
 
-test('should display the managed label text after rendering', async () => {
-  const { getByText } = render(PreferencesManagedLabel);
+test('should display the managed by organization text after rendering', async () => {
+  const { getByText } = render(PreferencesManagedInput);
 
   await vi.waitFor(() => {
-    const element = getByText('Managed');
+    const element = getByText('Managed by your organization');
     expect(element).toBeInTheDocument();
   });
 });
 
-test('simple test to see if the svg (icon) renders', async () => {
-  const { container } = render(PreferencesManagedLabel);
+test('should render the lock icon', async () => {
+  const { container } = render(PreferencesManagedInput);
 
   await vi.waitFor(() => {
     const svgElement = container.querySelector('svg');
     expect(svgElement).toBeInTheDocument();
-  });
-});
-
-test('should have This setting is managed by your organization tooltip', async () => {
-  const { getByText, getByTestId } = render(PreferencesManagedLabel);
-
-  await vi.waitFor(async () => {
-    const tooltipTrigger = getByTestId('tooltip-trigger');
-    await fireEvent.mouseEnter(tooltipTrigger);
-
-    const element = getByText('This setting is managed by your organization.');
-    expect(element).toBeInTheDocument();
   });
 });
