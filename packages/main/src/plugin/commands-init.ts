@@ -124,35 +124,6 @@ export class CommandsInit implements IDisposable {
         }
       }),
     );
-
-    // Navigation history commands
-    this.#disposables.push(
-      commandRegistry.registerCommand('navigation.goBack', () => {
-        this.getApiSender().send('navigation-go-back', '');
-      }),
-    );
-
-    this.#disposables.push(
-      commandRegistry.registerCommand('navigation.goForward', () => {
-        this.getApiSender().send('navigation-go-forward', '');
-      }),
-    );
-
-    // Register navigation commands in command palette
-    this.#disposables.push(
-      commandRegistry.registerCommandPalette(
-        {
-          command: 'navigation.goBack',
-          title: 'Go Back',
-          category: 'Navigation',
-        },
-        {
-          command: 'navigation.goForward',
-          title: 'Go Forward',
-          category: 'Navigation',
-        },
-      ),
-    );
   }
 
   dispose(): void {

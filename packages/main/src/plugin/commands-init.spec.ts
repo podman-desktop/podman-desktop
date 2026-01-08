@@ -29,7 +29,6 @@ import type { TaskManager } from './tasks/task-manager.js';
 const commandRegistryMock = {
   registerCommand: vi.fn(),
   executeCommand: vi.fn(),
-  registerCommandPalette: vi.fn(),
 } as unknown as CommandRegistry;
 
 const taskManagerMock = {
@@ -111,20 +110,5 @@ describe('CommandsInit', () => {
 
   test('should register the openExternal command', () => {
     expect(commandRegistryMock.registerCommand).toBeCalledWith('openExternal', expect.anything());
-  });
-
-  test('should register the navigation.goBack command', () => {
-    expect(commandRegistryMock.registerCommand).toBeCalledWith('navigation.goBack', expect.anything());
-  });
-
-  test('should register the navigation.goForward command', () => {
-    expect(commandRegistryMock.registerCommand).toBeCalledWith('navigation.goForward', expect.anything());
-  });
-
-  test('should register navigation commands in command palette', () => {
-    expect(commandRegistryMock.registerCommandPalette).toBeCalledWith(
-      expect.objectContaining({ command: 'navigation.goBack', title: 'Go Back', category: 'Navigation' }),
-      expect.objectContaining({ command: 'navigation.goForward', title: 'Go Forward', category: 'Navigation' }),
-    );
   });
 });
