@@ -1082,8 +1082,7 @@ export class ProviderRegistry {
           return this.getMatchingVmConnectionFromProvider(internalProviderId, info);
         default: {
           // Exhaustiveness check - TypeScript will error if we miss a case
-          const _exhaustiveCheck: never = info;
-          throw new Error(`Unknown connection type: ${JSON.stringify(_exhaustiveCheck)}`);
+          throw new Error(`Unknown connection type: ${JSON.stringify(info)}`);
         }
       }
     }
