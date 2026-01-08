@@ -25,6 +25,7 @@ import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { GitHubIssue } from '/@api/feedback.js';
+import productJSONFile from '/@product.json' with { type: 'json' };
 
 import { FeedbackHandler } from './feedback-handler.js';
 
@@ -44,6 +45,8 @@ vi.mock('node:os', () => ({
   homedir: vi.fn(() => '/home/user'),
   release: vi.fn(),
 }));
+
+vi.mock(import('/@product.json'));
 
 const extensionLoaderMock: ExtensionLoader = {
   listExtensions: vi.fn(),
@@ -85,6 +88,32 @@ function containSearchParams(url: string | undefined, params: Record<string, str
     expect(search.get(key), `expected ${search.get(key)} to be ${value}`).toBe(value);
   });
 }
+
+describe('getFeedbackMessages', () => {
+  test('should return feedback messages with default product name', () => {
+    const feedbackHandler = new FeedbackHandler(extensionLoaderMock);
+    const messages = feedbackHandler.getFeedbackMessages();
+
+    expect(messages.experienceLabel).toBe('How was your experience with Podman Desktop');
+    expect(messages.thankYouMessage).toBe(
+      'Your input is valuable in helping us better understand and tailor Podman Desktop.',
+    );
+    expect(messages.gitHubStarsMessage).toBe('Like Podman Desktop? Give us a star on GitHub');
+  });
+
+  test('should return feedback messages with custom product name', () => {
+    vi.mocked(productJSONFile).name = 'Custom Product';
+
+    const feedbackHandler = new FeedbackHandler(extensionLoaderMock);
+    const messages = feedbackHandler.getFeedbackMessages();
+
+    expect(messages.experienceLabel).toBe('How was your experience with Custom Product');
+    expect(messages.thankYouMessage).toBe(
+      'Your input is valuable in helping us better understand and tailor Custom Product.',
+    );
+    expect(messages.gitHubStarsMessage).toBe('Like Custom Product? Give us a star on GitHub');
+  });
+});
 
 describe('openGitHubIssue', () => {
   test('Expect openExternal to be called with queryParams and bug report template', async () => {

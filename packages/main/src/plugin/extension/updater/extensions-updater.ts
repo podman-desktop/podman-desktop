@@ -18,26 +18,34 @@
 
 import { compareVersions } from 'compare-versions';
 import { app } from 'electron';
+import { inject, injectable } from 'inversify';
 import { coerce, satisfies } from 'semver';
 
-import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
-import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
-import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
-import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import type { IConfigurationNode } from '/@api/configuration/models.js';
+import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ExtensionUpdateInfo } from '/@api/extension-info.js';
 
+@injectable()
 export class ExtensionsUpdater {
   static readonly CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 12; // 12 hours
 
   private intervalChecker: NodeJS.Timeout | undefined;
 
   constructor(
+    @inject(ExtensionsCatalog)
     private extensionCatalog: ExtensionsCatalog,
+    @inject(ExtensionLoader)
     private extensionLoader: ExtensionLoader,
+    @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
+    @inject(ExtensionInstaller)
     private extensionInstaller: ExtensionInstaller,
+    @inject(Telemetry)
     private telemetry: Telemetry,
   ) {}
 

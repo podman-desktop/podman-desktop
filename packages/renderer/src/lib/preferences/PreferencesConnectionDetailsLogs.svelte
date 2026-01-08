@@ -9,8 +9,8 @@ import { onDestroy, onMount } from 'svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import type { ProviderContainerConnectionInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
 import { writeToTerminal } from './Util';
 
 export let providerInternalId: string | undefined = undefined;

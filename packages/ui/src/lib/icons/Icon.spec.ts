@@ -81,6 +81,7 @@ describe('class icon', () => {
     const img = screen.getByRole('img', { hidden: true });
     expect(img).toBeInTheDocument();
     expect(img).toHaveClass('fas fa-icon');
+    expect(img.nodeName).toBe('SPAN');
   });
 
   test('icon should reflect prefered fa-{number}x size', () => {

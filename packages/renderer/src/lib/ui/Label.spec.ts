@@ -18,8 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import * as uiPackage from '@podman-desktop/ui-svelte';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import LabelSpec from './LabelSpec.svelte';
 
@@ -81,4 +82,27 @@ test('Expect capitalization', async () => {
   const label = screen.getByText('label');
   expect(label).toBeInTheDocument();
   expect(label).toHaveClass('capitalize');
+});
+
+test.each([
+  { top: true },
+  { bottom: true },
+  { right: true },
+  { left: true },
+  { topLeft: true },
+  { topRight: true },
+  { bottomLeft: true },
+  { bottomRight: true },
+])('Expect tooltip to have custom position %s', async position => {
+  const tooltipSpy = vi.spyOn(uiPackage, 'Tooltip');
+  render(LabelSpec, {
+    name: 'label',
+    tip: 'tooltip 1',
+    ...position,
+  });
+
+  expect(tooltipSpy).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({ tip: 'tooltip 1', ...position }),
+  );
 });

@@ -178,14 +178,15 @@ describe('update checks', () => {
   test('stopPodmanMachinesIfAnyBeforeUpdating with one machine running', async () => {
     await extensionObj.initInversify(extensionContext, mockTelemetryLogger);
 
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
-
     // return empty machine list
     vi.spyOn(utils, 'execPodman').mockResolvedValueOnce({
       stdout: JSON.stringify([{ Name: 'test', Running: true, VMType: 'libkrun' }]),
     } as unknown as extensionApi.RunResult);
+
+    // return podman version
+    vi.spyOn(utils, 'execPodman').mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as extensionApi.RunResult);
 
     // mock user response
     vi.spyOn(extensionApi.window, 'showInformationMessage').mockResolvedValue('Yes');
@@ -196,11 +197,7 @@ describe('update checks', () => {
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
 
     // check we called the stop command
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(expect.stringContaining('podman'), [
-      'machine',
-      'stop',
-      'test',
-    ]);
+    expect(utils.execPodman).toHaveBeenCalledWith(['machine', 'stop', 'test']);
   });
 
   test('wipeAllDataBeforeUpdatingToV5 with podman 4.9 -> 5.0', async () => {

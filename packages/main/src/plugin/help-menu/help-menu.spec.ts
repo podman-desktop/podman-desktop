@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
 import { expect, test, vi } from 'vitest';
 
 import type { IPCHandle } from '/@/plugin/api.js';
@@ -66,5 +67,23 @@ test('should get the items', async () => {
   const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
   helpMenu.init();
 
-  expect(helpMenu.getItems()).toStrictEqual([]);
+  const items = helpMenu.getItems();
+
+  expect(items).not.toHaveLength(0);
+
+  items.forEach(item => {
+    expect(item.enabled).toBeDefined();
+    expect(item.enabled).toBeTypeOf('boolean');
+    if (item.action) {
+      expect(item.action.kind).toBeDefined();
+      expect(item.action.kind).toBeTypeOf('number');
+
+      expect(item.action.parameter).toBeDefined();
+      expect(item.action.parameter).toBeTypeOf('string');
+    }
+    expect(item.icon).toBeDefined();
+    expect(item.icon).toBeTypeOf('string');
+    expect(item.title).toBeDefined();
+    expect(item.title).toBeTypeOf('string');
+  });
 });

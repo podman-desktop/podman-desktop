@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_pr
 import { spawn } from 'node:child_process';
 import type { Readable } from 'node:stream';
 
-import * as sudo from 'sudo-prompt';
+import * as sudo from '@expo/sudo-prompt';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -29,7 +29,7 @@ import type { Proxy } from '../proxy.js';
 import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
 
 // Mock sudo-prompt exec to resolve everytime.
-vi.mock('sudo-prompt', async () => {
+vi.mock(import('@expo/sudo-prompt'), async () => {
   return {
     exec: vi.fn(),
   };
@@ -342,7 +342,7 @@ describe('exec', () => {
 
   test('should run the command with privileges on macOS', async () => {
     const command = 'echo';
-    const args = ['Hello, World!'];
+    const args = ['Hello, "World"!'];
 
     (util.isMac as Mock).mockReturnValue(true);
 
@@ -368,7 +368,7 @@ describe('exec', () => {
       'osascript',
       expect.arrayContaining([
         '-e',
-        'do shell script "echo Hello, World!" with prompt "Podman Desktop requires admin privileges " with administrator privileges',
+        'do shell script "echo Hello,\\\\ \\\\\\"World\\\\\\"!" with prompt "Podman Desktop requires admin privileges " with administrator privileges',
       ]),
       expect.anything(),
     );

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
+import type { TelemetryMessages } from '/@api/telemetry';
 
 import WelcomePage from './WelcomePage.svelte';
 
@@ -75,9 +76,54 @@ test('Expect that telemetry UI is hidden when telemetry has already been prompte
 });
 
 test('Expect that telemetry UI is visible when necessary', async () => {
+  vi.mocked(window.getTelemetryMessages).mockResolvedValue({ acceptMessage: 'Help improve the product' });
   await waitRender({ showWelcome: true, showTelemetry: true });
   const checkbox = screen.getByRole('checkbox', { name: 'Enable telemetry' });
   expect(checkbox).toBeInTheDocument();
+});
+
+test('Expect that telemetry messages is visible', async () => {
+  const telem: TelemetryMessages = {
+    acceptMessage: 'Help improve the product',
+  };
+  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
+
+  await waitRender({ showWelcome: true, showTelemetry: true });
+
+  const accept = screen.getByText(telem.acceptMessage);
+  expect(accept).toBeInTheDocument();
+});
+
+test('Expect that telemetry link opens url', async () => {
+  const telem: TelemetryMessages = {
+    acceptMessage: 'Help improve the product',
+    infoLink: 'Click here',
+    infoURL: 'privacy-url',
+  };
+  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
+
+  await waitRender({ showWelcome: true, showTelemetry: true });
+  const accept = screen.getByText(telem.acceptMessage);
+  expect(accept).toBeInTheDocument();
+
+  const infoLink = screen.getByText(telem.infoLink ?? '');
+  expect(infoLink).toBeInTheDocument();
+
+  await fireEvent.click(infoLink);
+  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.infoURL));
+});
+
+test('Expect that telemetry link is missing when url is not provided', async () => {
+  const telem = {
+    acceptMessage: 'Help improve the product',
+    infoLink: 'Click here',
+  } as TelemetryMessages;
+  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
+
+  await waitRender({ showWelcome: true, showTelemetry: true });
+
+  const infoLink = screen.queryByText(telem.infoLink ?? '');
+  expect(infoLink).not.toBeInTheDocument();
 });
 
 test('Expect welcome screen to show three checked onboarding providers', async () => {
