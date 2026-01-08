@@ -141,8 +141,9 @@ describe('hover tracking', () => {
       onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
-    const podsItem = screen.getByText('Pods');
-    await fireEvent.mouseEnter(podsItem.closest('button')!);
+    // The outer div has role="button"
+    const podsItem = screen.getByRole('button', { name: /Pods/i });
+    await fireEvent.mouseEnter(podsItem);
 
     expect(onSetHoveredIndexMock).toHaveBeenCalledWith(2);
   });
@@ -157,8 +158,9 @@ describe('hover tracking', () => {
       onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
-    const podsItem = screen.getByText('Pods');
-    await fireEvent.mouseLeave(podsItem.closest('button')!);
+    // The outer div has role="button"
+    const podsItem = screen.getByRole('button', { name: /Pods/i });
+    await fireEvent.mouseLeave(podsItem);
 
     expect(onSetHoveredIndexMock).toHaveBeenCalledWith(undefined);
   });
