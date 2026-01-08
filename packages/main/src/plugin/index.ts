@@ -735,6 +735,7 @@ export class PluginSystem {
     commandsInit.init();
 
     const navigationManager = container.get<NavigationManager>(NavigationManager);
+    navigationManager.init();
     navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
 
     container.bind<ExtensionAnalyzer>(ExtensionAnalyzer).toSelf().inSingletonScope();

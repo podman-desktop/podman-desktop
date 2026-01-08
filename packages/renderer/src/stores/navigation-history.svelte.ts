@@ -101,3 +101,12 @@ router.subscribe(navigation => {
     }
   }
 });
+
+// Listen for navigation commands from command palette
+window.events?.receive('navigation-go-back', () => {
+  goBack();
+});
+
+window.events?.receive('navigation-go-forward', () => {
+  goForward();
+});
