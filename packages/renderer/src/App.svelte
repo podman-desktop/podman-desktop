@@ -6,6 +6,7 @@ import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
+import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
@@ -86,7 +87,6 @@ import Webview from './lib/webview/Webview.svelte';
 import WelcomePage from './lib/welcome/WelcomePage.svelte';
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import Route from './Route.svelte';
-import { lastSubmenuPages } from './stores/breadcrumb';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
@@ -271,10 +271,8 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             <KubernetesDashboard />
           </Route>
         {:else}
-          <!-- Redirect /kubernetes to dashboard if we end up on /kubernetes without a context error
-           we use router.goto to preserve the navbar remembering the navigation location. -->
-          <Route path="/kubernetes" breadcrumb="Kubernetes" navigationHint="root">
-            {router.goto($lastSubmenuPages['Kubernetes'] === '/kubernetes' ? '/kubernetes/dashboard' : ($lastSubmenuPages['Kubernetes'] ?? '/kubernetes/dashboard'))}
+         <Route path="/kubernetes" breadcrumb="Kubernetes" navigationHint="root">
+            <KubernetesRoot />
           </Route>
           <Route path="/kubernetes/dashboard" breadcrumb="Dashboard" navigationHint="root">
             <KubernetesDashboard />
