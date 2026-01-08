@@ -1,9 +1,20 @@
 <script lang="ts">
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowRight, faBackward, faForward } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 
-import { goBack, goForward, navigationHistory } from '/@/stores/navigation-history.svelte';
+import HistoryDropdown from '/@/lib/ui/HistoryDropdown.svelte';
+import {
+  BACK,
+  type Direction,
+  FORWARD,
+  getBackEntries,
+  getForwardEntries,
+  goBack,
+  goForward,
+  goToHistoryIndex,
+  navigationHistory,
+} from '/@/stores/navigation-history.svelte';
 
 interface Props {
   class: string;
@@ -16,14 +27,87 @@ let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.le
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
 let timeout: NodeJS.Timeout | undefined = $state(undefined);
 
-// Mouse button navigation (button 3 = back, button 4 = forward)
 function handleGlobalMouseUp(event: MouseEvent): void {
+  // Handle mouse buttons 3/4 for back/forward
   if (event.button === 3) {
     event.preventDefault();
     goBack();
+    return;
   } else if (event.button === 4) {
     event.preventDefault();
     goForward();
+    return;
+  }
+
+  // Handle left button release for long-press dropdown selection
+  if (event.button === 0 && isLongPressing) {
+    if (showDropdown && hoveredEntryIndex !== undefined) {
+      selectEntry(hoveredEntryIndex);
+    }
+    isLongPressing = false;
+  }
+}
+
+function handleMouseDown(event: MouseEvent, direction: Direction): void {
+  if (event.button !== 0) return;
+
+  isLongPressing = true;
+
+  longPressTimer = setTimeout(() => {
+    const entries = direction === BACK ? getBackEntries() : getForwardEntries();
+    if (entries.length > 0) {
+      dropdownEntries = entries;
+      showDropdown = direction;
+    }
+  }, LONG_PRESS_DELAY);
+}
+
+function handleClick(direction: Direction): void {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = undefined;
+  }
+
+  // Only navigate if dropdown isn't showing (short click)
+  if (!showDropdown) {
+    if (direction === BACK) {
+      goBack();
+    } else {
+      goForward();
+    }
+  }
+
+  isLongPressing = false;
+}
+
+function handleMouseLeave(): void {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = undefined;
+  }
+  if (!showDropdown) {
+    isLongPressing = false;
+  }
+}
+
+function selectEntry(index: number): void {
+  window.telemetryTrack('navigation.historySelect', { direction: showDropdown }).catch(console.error);
+  showDropdown = undefined;
+  dropdownEntries = [];
+  hoveredEntryIndex = undefined;
+  goToHistoryIndex(index);
+}
+
+function closeDropdown(): void {
+  showDropdown = undefined;
+  dropdownEntries = [];
+  hoveredEntryIndex = undefined;
+}
+
+function handleClickOutside(event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.history-dropdown')) {
+    closeDropdown();
   }
 }
 
@@ -85,16 +169,18 @@ function handleKeyDown(e: KeyboardEvent): void {
 }
 
 onMount(() => {
-  window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('mouseup', handleGlobalMouseUp);
   window.addEventListener('wheel', handleWheel);
 
   return (): void => {
-    window.removeEventListener('keydown', handleKeyDown);
     window.removeEventListener('mouseup', handleGlobalMouseUp);
     window.removeEventListener('wheel', handleWheel);
   };
 });
+
+function setHoveredEntryIndex(index: number | undefined): void {
+  hoveredEntryIndex = index;
+}
 </script>
 
 <div
@@ -102,20 +188,40 @@ onMount(() => {
     style="-webkit-app-region: none;">
     <div class="relative">
     <button
-        class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
-        title="Back (hold for history)"
-        onclick={goBack}
-        disabled={!canGoBack}>
-        <Icon icon={faArrowLeft} />
+      class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
+      title="Back (hold for history)"
+      onmousedown={(e: MouseEvent): void => handleMouseDown(e, BACK)}
+      onclick={(): void => handleClick(BACK)}
+      onmouseleave={handleMouseLeave}
+      disabled={!canGoBack}>
+      <Icon icon={faArrowLeft} />
     </button>
-    </div>
-    <div class="relative">
+    <HistoryDropdown
+      show={showDropdown === BACK}
+      entries={dropdownEntries}
+      icon={faBackward}
+      {hoveredEntryIndex}
+      {isLongPressing}
+      onSelectEntry={selectEntry}
+      onSetHoveredIndex={setHoveredEntryIndex} />
+  </div>
+  <div class="relative">
     <button
-        class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
-        title="Forward (hold for history)"
-        onclick={goForward}
-        disabled={!canGoForward}>
-        <Icon icon={faArrowRight} />
+      class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
+      title="Forward (hold for history)"
+      onmousedown={(e: MouseEvent): void => handleMouseDown(e, FORWARD)}
+      onclick={(): void => handleClick(FORWARD)}
+      onmouseleave={handleMouseLeave}
+      disabled={!canGoForward}>
+      <Icon icon={faArrowRight} />
     </button>
-    </div>
+    <HistoryDropdown
+      show={showDropdown === FORWARD}
+      entries={dropdownEntries}
+      icon={faForward}
+      {hoveredEntryIndex}
+      {isLongPressing}
+      onSelectEntry={selectEntry}
+      onSetHoveredIndex={setHoveredEntryIndex} />
+  </div>
 </div>
