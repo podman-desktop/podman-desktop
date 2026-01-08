@@ -879,6 +879,9 @@ importers:
       '@storybook/addon-svelte-csf':
         specifier: 5.0.9
         version: 5.0.9(@storybook/svelte@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(svelte@5.46.1))(@sveltejs/vite-plugin-svelte@6.2.3(svelte@5.46.1)(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(svelte@5.46.1)(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@storybook/addon-themes':
+        specifier: ^10.1.11
+        version: 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))
       '@storybook/svelte-vite':
         specifier: ^10.1.11
         version: 10.1.11(@sveltejs/vite-plugin-svelte@6.2.3(svelte@5.46.1)(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)))(esbuild@0.25.12)(msw@2.12.7(@types/node@25.0.3)(typescript@5.9.3))(rollup@4.55.1)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(svelte@5.46.1)(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.96.1(esbuild@0.25.12))
@@ -3661,6 +3664,11 @@ packages:
       storybook: ^0.0.0-0 || ^8.2.0 || ^9.0.0 || ^9.1.0-0 || ^10.0.0-0
       svelte: ^5.0.0
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
+
+  '@storybook/addon-themes@10.1.11':
+    resolution: {integrity: sha512-tUX5C1ms+W4GFK8UBWd3Fq4irkLc3h092BqW90tZghcoOmGY/sfKR+PlcLhoaTs/kkHQSSHPrz8HSFR1AXVbHA==}
+    peerDependencies:
+      storybook: ^10.1.11
 
   '@storybook/builder-vite@10.1.11':
     resolution: {integrity: sha512-MMD09Ap7FyzDfWG961pkIMv/w684XXe1bBEi+wCEpHxvrgAd3j3A9w/Rqp9Am2uRDPCEdi1QgSzS3SGW3aGThQ==}
@@ -15549,6 +15557,11 @@ snapshots:
       zimmerframe: 1.1.4
     transitivePeerDependencies:
       - babel-plugin-macros
+
+  '@storybook/addon-themes@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))':
+    dependencies:
+      storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
+      ts-dedent: 2.2.0
 
   '@storybook/builder-vite@10.1.11(esbuild@0.25.12)(msw@2.12.7(@types/node@25.0.3)(typescript@5.9.3))(rollup@4.55.1)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.96.1(esbuild@0.25.12))':
     dependencies:
