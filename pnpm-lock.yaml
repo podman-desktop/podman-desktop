@@ -29,6 +29,11 @@ patchedDependencies:
     hash: b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d
     path: patches/dmg-builder.patch
 
+patchedDependencies:
+  docker-modem:
+    hash: 5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e
+    path: patches/docker-modem.patch
+
 importers:
 
   .:
@@ -19013,7 +19018,7 @@ snapshots:
     dependencies:
       '@leichtgewicht/ip-codec': 2.0.5
 
-  docker-modem@5.0.6:
+  docker-modem@5.0.6(patch_hash=5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e):
     dependencies:
       debug: 4.4.3
       readable-stream: 3.6.2
@@ -19027,7 +19032,7 @@ snapshots:
       '@balena/dockerignore': 1.0.2
       '@grpc/grpc-js': 1.14.0
       '@grpc/proto-loader': 0.7.15
-      docker-modem: 5.0.6
+      docker-modem: 5.0.6(patch_hash=5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e)
       protobufjs: 7.5.4
       tar-fs: 2.1.4
       uuid: 10.0.0
