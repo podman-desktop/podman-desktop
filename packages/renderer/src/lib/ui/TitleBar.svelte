@@ -3,6 +3,7 @@ import { onMount } from 'svelte';
 
 import CommandPalette from '/@/lib/dialogs/CommandPalette.svelte';
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
+import NavigationButtons from '/@/lib/ui/NavigationButtons.svelte';
 import WindowControlButtons from '/@/lib/window-control-buttons/ControlButtons.svelte';
 
 import SearchButton from './SearchButton.svelte';
@@ -40,6 +41,7 @@ function closeCommandPalette(): void {
       {#if  platform === 'win32'}
         <div class="text-left text-base leading-3 text-[color:var(--pd-titlebar-text)]">{title}</div>
       {/if}
+      <NavigationButtons />
     </div>
 
     <!-- center -->
