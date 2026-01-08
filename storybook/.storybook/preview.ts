@@ -81,6 +81,17 @@ const preview: Preview = {
         return createElement(DocsContainer, currentProps);
       },
     },
+    a11y: {
+      config: {
+        rules: [
+          {
+            // Disable region rule for component stories as they are isolated components
+            id: 'region',
+            enabled: false,
+          },
+        ],
+      },
+    },
   },
 };
 

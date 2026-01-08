@@ -20,7 +20,7 @@ import type { StorybookConfig } from '@storybook/svelte-vite';
 
 const config: StorybookConfig = {
   stories: ['../src/stories/**/*.mdx', '../src/stories/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
-  addons: ['@storybook/addon-links', '@storybook/addon-svelte-csf', '@storybook/addon-docs'],
+  addons: ['@storybook/addon-a11y', '@storybook/addon-links', '@storybook/addon-svelte-csf', '@storybook/addon-docs'],
   typescript: {
     check: true,
   },

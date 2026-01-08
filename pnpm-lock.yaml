@@ -870,6 +870,9 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4(svelte@5.46.1)
     devDependencies:
+      '@storybook/addon-a11y':
+        specifier: ^10.1.11
+        version: 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))
       '@storybook/addon-docs':
         specifier: ^10.1.11
         version: 10.1.11(@types/react@18.3.12)(esbuild@0.25.12)(rollup@4.55.1)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.96.1(esbuild@0.25.12))
@@ -3639,6 +3642,11 @@ packages:
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
+  '@storybook/addon-a11y@10.1.11':
+    resolution: {integrity: sha512-3sr6HmcDgW1+TQAV9QtWBE3HlGyfFXVZY3RECTNLNH6fRC+rYQCItisvQIVxQpyftLSQ8EAMN9JQzs495MjWNg==}
+    peerDependencies:
+      storybook: ^10.1.11
+
   '@storybook/addon-docs@10.1.11':
     resolution: {integrity: sha512-Jwm291Fhim2eVcZIVlkG1B2skb0ZI9oru6nqMbJxceQZlvZmcIa4oxvS1oaMTKw2DJnCv97gLm57P/YvRZ8eUg==}
     peerDependencies:
@@ -5064,6 +5072,10 @@ packages:
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
+
+  axe-core@4.11.1:
+    resolution: {integrity: sha512-BASOg+YwO2C+346x3LZOeoovTIoTrRqEsqMa6fmfAV0P+U9mFr9NsyOEpiYvFjbc64NMrSswhV50WdXzdb/Z5A==}
+    engines: {node: '>=4'}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -15509,6 +15521,12 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
+  '@storybook/addon-a11y@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      axe-core: 4.11.1
+      storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
+
   '@storybook/addon-docs@10.1.11(@types/react@18.3.12)(esbuild@0.25.12)(rollup@4.55.1)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.7.4)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(vite@7.3.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.96.1(esbuild@0.25.12))':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@18.3.12)(react@18.2.0)
@@ -17248,6 +17266,8 @@ snapshots:
   available-typed-arrays@1.0.7:
     dependencies:
       possible-typed-array-names: 1.1.0
+
+  axe-core@4.11.1: {}
 
   axobject-query@4.1.0: {}
 
