@@ -58,7 +58,7 @@ describe('button states', () => {
     });
   });
 
-  test('back button should be enabled when can go back', async () => {
+  test('back button should be enabled when can go back', () => {
     navigationHistory.stack = ['/containers', '/images'];
     navigationHistory.index = 1;
 
@@ -70,7 +70,7 @@ describe('button states', () => {
     });
   });
 
-  test('forward button should be enabled when can go forward', async () => {
+  test('forward button should be enabled when can go forward', () => {
     navigationHistory.stack = ['/containers', '/images'];
     navigationHistory.index = 0;
 
