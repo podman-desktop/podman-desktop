@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { Context } from '../context/context.js';
 
-export interface ContextInfo {
-  readonly id: number;
-  readonly parent?: Context;
-  readonly extension?: string;
+export type ContextKeyValue =
+  | undefined
+  | boolean
+  | number
+  | string
+  | Array<undefined | boolean | number | string>
+  | Record<string, undefined | boolean | number | string>;
+
+export interface IContext {
+  getValue<T extends ContextKeyValue = ContextKeyValue>(key: string): T | undefined;
 }
