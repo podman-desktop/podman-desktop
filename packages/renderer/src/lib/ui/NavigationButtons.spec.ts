@@ -25,41 +25,32 @@ import { goBack, goForward, navigationHistory } from '/@/stores/navigation-histo
 
 import NavigationButtons from './NavigationButtons.svelte';
 
-const goBackMock = vi.fn();
-const goForwardMock = vi.fn();
-
 vi.mock(import('/@/stores/navigation-history.svelte'));
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.useFakeTimers({ shouldAdvanceTime: true });
-
-  vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
-  vi.mocked(window.getOsPlatform).mockResolvedValue('linux');
 
   // Reset navigation history state
   vi.mocked(navigationHistory).stack = [];
   vi.mocked(navigationHistory).index = -1;
-  vi.mocked(goBack).mockImplementation(goBackMock);
-  vi.mocked(goForward).mockImplementation(goForwardMock);
 });
 
 describe('button states', () => {
-  test('back button should be disabled when no history', async () => {
+  test('back button should be disabled when no history', () => {
     render(NavigationButtons);
 
     const backButton = screen.getByTitle('Back (hold for history)');
     expect(backButton).toBeDisabled();
   });
 
-  test('forward button should be disabled when no history', async () => {
+  test('forward button should be disabled when no history', () => {
     render(NavigationButtons);
 
     const forwardButton = screen.getByTitle('Forward (hold for history)');
     expect(forwardButton).toBeDisabled();
   });
 
-  test('back button should be enabled when can go back', async () => {
+  test('back button should be enabled when can go back', () => {
     navigationHistory.stack = ['/containers', '/images'];
     navigationHistory.index = 1;
 
@@ -69,7 +60,7 @@ describe('button states', () => {
     expect(backButton).toBeEnabled();
   });
 
-  test('forward button should be enabled when can go forward', async () => {
+  test('forward button should be enabled when can go forward', () => {
     navigationHistory.stack = ['/containers', '/images'];
     navigationHistory.index = 0;
 
@@ -88,12 +79,9 @@ describe('click navigation', () => {
     render(NavigationButtons);
 
     const backButton = screen.getByTitle('Back (hold for history)');
+    await fireEvent.click(backButton);
 
-    // Simulate mousedown then mouseup (short click)
-    await fireEvent.mouseDown(backButton, { button: 0 });
-    await fireEvent.mouseUp(backButton);
-
-    expect(goBackMock).toHaveBeenCalled();
+    expect(goBack).toHaveBeenCalled();
   });
 
   test('clicking forward button should call goForward', async () => {
@@ -103,11 +91,8 @@ describe('click navigation', () => {
     render(NavigationButtons);
 
     const forwardButton = screen.getByTitle('Forward (hold for history)');
+    await fireEvent.click(forwardButton);
 
-    // Simulate mousedown then mouseup (short click)
-    await fireEvent.mouseDown(forwardButton, { button: 0 });
-    await fireEvent.mouseUp(forwardButton);
-
-    expect(goForwardMock).toHaveBeenCalled();
+    expect(goForward).toHaveBeenCalled();
   });
 });
