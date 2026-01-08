@@ -14,6 +14,7 @@ let { class: className = '' }: Props = $props();
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
 let isMac = $state(false);
+let swipeCooldown = $state(false);
 
 // Mouse button navigation (button 3 = back, button 4 = forward)
 function handleGlobalMouseUp(event: MouseEvent): void {
@@ -26,18 +27,42 @@ function handleGlobalMouseUp(event: MouseEvent): void {
   }
 }
 
+// Trackpad swipe navigation
+function handleWheel(e: WheelEvent): void {
+  if (swipeCooldown) return;
+
+  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+    const SWIPE_THRESHOLD = 30;
+
+    if (e.deltaX < -SWIPE_THRESHOLD) {
+      if (canGoBack) {
+        goBack();
+        triggerSwipeCooldown();
+      }
+    } else if (e.deltaX > SWIPE_THRESHOLD) {
+      if (canGoForward) {
+        goForward();
+        triggerSwipeCooldown();
+      }
+    }
+  }
+}
+
+function triggerSwipeCooldown(): void {
+  swipeCooldown = true;
+  setTimeout(() => {
+    swipeCooldown = false;
+  }, 800);
+}
+
 // Keyboard shortcuts for navigation
-// macOS: Cmd+[ or Cmd+Left (back), Cmd+] or Cmd+Right (forward)
-// Windows/Linux: Alt+Left (back), Alt+Right (forward)
 function handleKeyDown(e: KeyboardEvent): void {
-  // Don't intercept shortcuts when typing in input fields
   const target = e.target as HTMLElement;
   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
     return;
   }
 
   if (isMac) {
-    // macOS: Cmd+[ or Cmd+Left (back), Cmd+] or Cmd+Right (forward)
     if (e.metaKey) {
       if (e.key === '[' || e.key === 'ArrowLeft') {
         e.preventDefault();
@@ -48,7 +73,6 @@ function handleKeyDown(e: KeyboardEvent): void {
       }
     }
   } else {
-    // Windows/Linux: Alt+Left and Alt+Right
     if (e.altKey) {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
@@ -69,9 +93,12 @@ onMount(async () => {
 onMount(() => {
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('mouseup', handleGlobalMouseUp);
+  window.addEventListener('wheel', handleWheel);
+
   return (): void => {
     window.removeEventListener('keydown', handleKeyDown);
     window.removeEventListener('mouseup', handleGlobalMouseUp);
+    window.removeEventListener('wheel', handleWheel);
   };
 });
 </script>

@@ -214,3 +214,31 @@ describe('keyboard navigation - macOS', () => {
     expect(goForward).toHaveBeenCalled();
   });
 });
+
+describe('trackpad swipe navigation', () => {
+  test('swipe right (negative deltaX) should trigger goBack', async () => {
+    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.index = 1;
+
+    render(NavigationButtons);
+    await tick();
+
+    const wheelEvent = new WheelEvent('wheel', { deltaX: -50, deltaY: 0 });
+    window.dispatchEvent(wheelEvent);
+
+    expect(goBack).toHaveBeenCalled();
+  });
+
+  test('swipe left (positive deltaX) should trigger goForward', async () => {
+    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.index = 0;
+
+    render(NavigationButtons);
+    await tick();
+
+    const wheelEvent = new WheelEvent('wheel', { deltaX: 50, deltaY: 0 });
+    window.dispatchEvent(wheelEvent);
+
+    expect(goForward).toHaveBeenCalled();
+  });
+});
