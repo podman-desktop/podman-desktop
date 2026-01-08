@@ -4,3 +4,31 @@
 html {
   @apply text-base;
 }
+
+body.light {
+  background-color: var(--pd-content-bg, #f6f6f6);
+  color: var(--pd-default-text, #0f0f11);
+}
+
+body.dark {
+  background-color: var(--pd-content-bg, #222222);
+  color: var(--pd-default-text, #fff);
+}
+
+/* Docs page story preview containers */
+body.light .docs-story {
+  background-color: var(--pd-content-bg, #f6f6f6);
+}
+
+body.dark .docs-story {
+  background-color: var(--pd-content-bg, #222222);
+}
+
+/* Storybook's canvas background */
+body.light .sb-show-main {
+  background-color: var(--pd-content-bg, #f6f6f6);
+}
+
+body.dark .sb-show-main {
+  background-color: var(--pd-content-bg, #222222);
+}
