@@ -272,8 +272,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           </Route>
         {:else}
           <!-- Redirect /kubernetes to dashboard if we end up on /kubernetes without a context error
-           we use router.goto to preserve the navbar remembering the navigation location.
-           TODO: Remove after https://github.com/containers/podman-desktop/issues/8825 is implemented -->
+           we use router.goto to preserve the navbar remembering the navigation location. -->
           <Route path="/kubernetes" breadcrumb="Kubernetes" navigationHint="root">
             {router.goto($lastSubmenuPages['Kubernetes'] === '/kubernetes' ? '/kubernetes/dashboard' : ($lastSubmenuPages['Kubernetes'] ?? '/kubernetes/dashboard'))}
           </Route>
