@@ -41,13 +41,7 @@ function closeCommandPalette(): void {
       {#if  platform === 'win32'}
         <div class="text-left text-base leading-3 text-[color:var(--pd-titlebar-text)]">{title}</div>
       {/if}
-      {#if platform === 'darwin'}
-        <div class="pl-20">
-          <NavigationButtons />
-        </div>
-      {:else}
-        <NavigationButtons />
-      {/if}
+      <NavigationButtons class={platform === 'darwin' ? 'pl-20' : ''}/>
     </div>
 
     <!-- center -->

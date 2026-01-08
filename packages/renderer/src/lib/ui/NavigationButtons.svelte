@@ -4,12 +4,18 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import { goBack, goForward, navigationHistory } from '/@/stores/navigation-history.svelte';
 
+interface Props {
+  class: string;
+}
+
+let { class: className = '' }: Props = $props();
+
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
 </script>
 
 <div
-    class="flex items-center gap-1 text-[color:var(--pd-global-nav-icon)]"
+    class="flex items-center gap-1 text-[color:var(--pd-global-nav-icon)] {className}"
     style="-webkit-app-region: none;">
     <div class="relative">
     <button
