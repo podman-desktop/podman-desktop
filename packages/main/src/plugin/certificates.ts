@@ -26,7 +26,7 @@ import { injectable } from 'inversify';
 import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '/@/util.js';
-import type { CertificateInfo, CertificateSource } from '/@api/certificate-info.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
 
 import { spawnWithPromise } from './util/spawn-promise.js';
 
@@ -167,10 +167,9 @@ export class Certificates {
   /**
    * Parse a PEM-encoded certificate and extract its information.
    * @param pem The PEM-encoded certificate string.
-   * @param source The source from which the certificate was retrieved.
    * @returns The parsed certificate information.
    */
-  parseCertificate(pem: string, source: CertificateSource = 'system'): CertificateInfo {
+  parseCertificate(pem: string): CertificateInfo {
     try {
       const cert = new crypto.X509Certificate(pem);
 
@@ -221,7 +220,6 @@ export class Certificates {
         isCA: cert.ca,
         subjectAltName: cert.subjectAltName,
         keyUsage: cert.keyUsage,
-        source,
         pem,
       };
     } catch (error) {
@@ -237,7 +235,6 @@ export class Certificates {
         fingerprint256: '',
         fingerprint: '',
         isCA: false,
-        source,
         pem,
       };
     }
@@ -248,17 +245,6 @@ export class Certificates {
    * @returns An array of parsed certificate information.
    */
   getAllCertificateInfos(): CertificateInfo[] {
-    const source = this.getCurrentPlatformSource();
-    return this.allCertificates.map(pem => this.parseCertificate(pem, source));
-  }
-
-  /**
-   * Determine the certificate source based on the current platform.
-   */
-  private getCurrentPlatformSource(): CertificateSource {
-    if (isMac() || isWindows() || isLinux()) {
-      return 'system';
-    }
-    return 'bundled';
+    return this.allCertificates.map(pem => this.parseCertificate(pem));
   }
 }

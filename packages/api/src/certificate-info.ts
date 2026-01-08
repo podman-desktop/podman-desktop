@@ -87,18 +87,7 @@ export interface CertificateInfo {
   keyUsage?: string[];
 
   /**
-   * The source/origin of the certificate.
-   * Indicates where the certificate was retrieved from.
-   */
-  source: CertificateSource;
-
-  /**
    * The raw PEM-encoded certificate string.
    */
   pem: string;
 }
-
-/**
- * Indicates the source from which a certificate was retrieved.
- */
-export type CertificateSource = 'system' | 'user' | 'bundled' | 'custom';
