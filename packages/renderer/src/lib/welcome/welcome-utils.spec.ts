@@ -20,7 +20,8 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { WelcomeSettings } from '../../../../main/src/plugin/welcome/welcome-settings';
+import { WelcomeSettings } from '/@api/welcome/welcome-settings';
+
 import { WelcomeUtils } from './welcome-utils';
 
 let welcomeUtils: WelcomeUtils;
