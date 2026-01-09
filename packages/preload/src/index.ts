@@ -117,6 +117,7 @@ import type {
 } from '/@api/provider-info';
 import type { ProxyState } from '/@api/proxy';
 import type { PullEvent } from '/@api/pull-event';
+import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar';
 import type { PinOption } from '/@api/status-bar/pin-option';
@@ -132,7 +133,6 @@ import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
 } from '../../main/src/plugin/dockerode/libpod-dockerode';
-import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;
