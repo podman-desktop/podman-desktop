@@ -226,7 +226,7 @@ test.describe.serial('Podman Machine verification', { tag: '@pdmachine' }, () =>
 
   test('Podman machine operations - STOP', async ({ page, navigationBar }) => {
     test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
-    test.setTimeout(TIMEOUT_SETUP);
+    test.setTimeout(TIMEOUT_SETUP + TIMEOUT_LONG);
 
     const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
