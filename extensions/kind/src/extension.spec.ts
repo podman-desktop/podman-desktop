@@ -50,6 +50,8 @@ const PROVIDER_MOCK: podmanDesktopApi.Provider = {
   onDidUpdateVersion: vi.fn(),
   updateVersion: vi.fn(),
   registerUpdate: vi.fn(),
+  updateStatus: vi.fn(),
+  updateWarnings: vi.fn(),
 } as unknown as podmanDesktopApi.Provider;
 
 beforeEach(() => {
@@ -72,6 +74,7 @@ beforeEach(() => {
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
   vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
+  vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -91,25 +94,26 @@ function activate(options?: Partial<extensionApi.ExtensionContext>): Promise<voi
 }
 
 test('check we received notifications ', async () => {
-  const onDidUpdateContainerConnectionMock = vi.fn();
-  vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(
-    onDidUpdateContainerConnectionMock,
-  );
-
-  const listContainersMock = vi.fn();
-  podmanDesktopApi.containerEngine.listContainers = listContainersMock;
-  listContainersMock.mockResolvedValue([]);
-
-  let callbackCalled = false;
-  onDidUpdateContainerConnectionMock.mockImplementation((callback: () => void) => {
-    callback();
-    callbackCalled = true;
+  vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+    path: 'kind',
+    version: '0.0.1',
   });
 
-  const fakeProvider = {} as unknown as podmanDesktopApi.Provider;
-  extension.refreshKindClustersOnProviderConnectionUpdate(fakeProvider);
-  expect(callbackCalled).toBeTruthy();
-  expect(listContainersMock).toBeCalledTimes(1);
+  let callback: (e: unknown) => Promise<void>;
+
+  vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(cb => {
+    callback = cb as (e: unknown) => Promise<void>;
+    return { dispose: vi.fn() };
+  });
+
+  vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
+
+  await activate();
+
+  expect(callback!).toBeDefined();
+  await callback!({});
+
+  expect(podmanDesktopApi.containerEngine.listContainers).toHaveBeenCalled();
 });
 
 describe('cli tool', () => {
@@ -209,6 +213,8 @@ test('Ensuring a progress task is created when calling kind.image.move command',
     setKubernetesProviderConnectionFactory: vi.fn(),
     onDidUpdateVersion: vi.fn(),
     updateVersion: vi.fn(),
+    updateStatus: vi.fn(),
+    updateWarnings: vi.fn(),
   }));
 
   const listContainersMock = vi.fn();
@@ -234,6 +240,8 @@ test('Ensuring a progress task is created when calling kind.image.move command',
 
   // ensure the command has been registered
   expect(commandRegistry['kind.image.move']).toBeDefined();
+
+  contextSetValueMock.mockClear();
 
   // simulate a call to the command
   await commandRegistry['kind.image.move']({ id: 'id', image: 'hello:world', engineId: '1' });
@@ -555,5 +563,128 @@ describe('provider#update', () => {
 
     await vi.mocked(PROVIDER_MOCK.registerUpdate).mock.calls[0][0].update({} as unknown as podmanDesktopApi.Logger);
     expect(disposeMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Container provider availability checks', () => {
+  const PROVIDER_STATUS = {
+    READY: 'ready',
+    CONFIGURED: 'configured',
+  };
+
+  const CONNECTION_STATUS = {
+    STARTED: 'started',
+    STOPPED: 'stopped',
+  };
+
+  function createMockConnection(status: string): extensionApi.ProviderContainerConnection {
+    return {
+      connection: {
+        status: () => status,
+        name: 'Podman',
+        type: 'podman',
+      },
+      providerId: 'podman',
+    } as extensionApi.ProviderContainerConnection;
+  }
+
+  function expectProviderState(providerStatus: string, shouldHaveWarning: boolean): void {
+    expect(PROVIDER_MOCK.updateStatus).toHaveBeenCalledWith(providerStatus);
+    if (shouldHaveWarning) {
+      expect(PROVIDER_MOCK.updateWarnings).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'Container Engine Required',
+          }),
+        ]),
+      );
+    } else {
+      expect(PROVIDER_MOCK.updateWarnings).toHaveBeenCalledWith([]);
+    }
+  }
+
+  beforeEach(() => {
+    vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+      path: 'kind',
+      version: '0.0.1',
+    });
+  });
+
+  test('should set provider status to ready when running container connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STARTED),
+    ]);
+
+    await activate();
+
+    expectProviderState(PROVIDER_STATUS.READY, false);
+  });
+
+  test('should set provider status to configured with warning when no container connections exist on Linux', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+    vi.mocked(podmanDesktopApi.env).isLinux = true;
+
+    await activate();
+
+    expectProviderState(PROVIDER_STATUS.CONFIGURED, true);
+  });
+
+  test('should set provider status to configured with warning when no container connections exist on non-Linux', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+    vi.mocked(podmanDesktopApi.env).isLinux = false;
+
+    await activate();
+
+    expectProviderState(PROVIDER_STATUS.CONFIGURED, true);
+  });
+
+  test('should set provider status to configured when container connections exist but are stopped', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STOPPED),
+    ]);
+    vi.mocked(podmanDesktopApi.env).isLinux = false;
+
+    await activate();
+
+    expectProviderState(PROVIDER_STATUS.CONFIGURED, true);
+  });
+
+  test('should listen to container connection register events', async () => {
+    await activate();
+
+    expect(podmanDesktopApi.provider.onDidRegisterContainerConnection).toHaveBeenCalled();
+  });
+
+  test('should listen to container connection unregister events', async () => {
+    await activate();
+
+    expect(podmanDesktopApi.provider.onDidUnregisterContainerConnection).toHaveBeenCalled();
+  });
+
+  test('should update provider state when container connection status changes', async () => {
+    let onDidUpdateCallback: ((e: unknown) => Promise<void>) | undefined;
+    vi.mocked(podmanDesktopApi.provider.onDidUpdateContainerConnection).mockImplementation(callback => {
+      onDidUpdateCallback = callback as (e: unknown) => Promise<void>;
+      return { dispose: vi.fn() } as extensionApi.Disposable;
+    });
+
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STOPPED),
+    ]);
+
+    await activate();
+
+    vi.mocked(PROVIDER_MOCK.updateStatus).mockClear();
+    vi.mocked(PROVIDER_MOCK.updateWarnings).mockClear();
+
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      createMockConnection(CONNECTION_STATUS.STARTED),
+    ]);
+
+    if (onDidUpdateCallback) {
+      await onDidUpdateCallback({});
+    }
+
+    expectProviderState(PROVIDER_STATUS.READY, false);
   });
 });

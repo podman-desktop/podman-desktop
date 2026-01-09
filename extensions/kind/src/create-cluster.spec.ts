@@ -407,7 +407,7 @@ test('check that consilience check returns warning message', async () => {
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).to.contains({
     type: 'info',
-    record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
+    record: 'It is recommended to install Kind on a virtual machine with at least 6GB of memory.',
   } as AuditRecord);
 });
 
@@ -480,6 +480,52 @@ test('check that auditItems returns error message when HTTPS port is not availab
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).toHaveProperty('type');
   expect(checks.records[0].type).toBe('error');
+});
+
+describe('provider not installed checks', () => {
+  test.each([
+    {
+      name: 'no connections (non-Linux)',
+      connections: [] as extensionApi.ProviderContainerConnection[],
+      isLinux: false,
+      expectedMessage: 'No podman provider found. Please install and configure podman to create a Kind cluster.',
+    },
+    {
+      name: 'no connections (Linux)',
+      connections: [] as extensionApi.ProviderContainerConnection[],
+      isLinux: true,
+      expectedMessage: 'No podman provider found. Please install podman to create a Kind cluster.',
+    },
+    {
+      name: 'wrong provider type',
+      connections: [
+        {
+          providerId: 'docker',
+          connection: {
+            name: 'docker-connection',
+            type: 'docker',
+            endpoint: { socketPath: 'socket' },
+            status: (): extensionApi.ProviderConnectionStatus => 'started',
+          },
+        },
+      ] as extensionApi.ProviderContainerConnection[],
+      isLinux: false,
+      expectedMessage: 'No podman provider found. Please install and configure podman to create a Kind cluster.',
+    },
+  ])('returns error when provider is not installed ($name)', async ({ connections, isLinux, expectedMessage }) => {
+    vi.mocked(extensionApi.provider.getContainerConnections).mockReturnValue(connections);
+    vi.mocked(extensionApi.env).isLinux = isLinux;
+
+    const checks = await connectionAuditor('podman', {
+      'kind.cluster.creation.http.port': 9090,
+      'kind.cluster.creation.https.port': 9443,
+    });
+
+    expect(checks).toBeDefined();
+    expect(checks.records).toHaveLength(1);
+    expect(checks.records[0].type).toBe('error');
+    expect(checks.records[0].record).toBe(expectedMessage);
+  });
 });
 
 test('check that auditItems returns error message when no provider connections are running', async () => {

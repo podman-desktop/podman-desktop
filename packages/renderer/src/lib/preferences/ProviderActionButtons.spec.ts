@@ -25,7 +25,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContextUI } from '/@/lib/context/context';
 import ProviderUpdateButton from '/@/lib/dashboard/ProviderUpdateButton.svelte';
-import type { ProviderInfo } from '/@api/provider-info';
+import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 import ProviderActionButtons from './ProviderActionButtons.svelte';
 
@@ -67,6 +67,28 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
+function renderProviderActionButtons(
+  provider: ProviderInfo,
+  overrides?: {
+    globalContext?: ContextUI;
+    providerInstallationInProgress?: boolean;
+    onCreateNew?: (provider: ProviderInfo, displayName: string) => Promise<void>;
+    onUpdatePreflightChecks?: (checks: CheckStatus[]) => void;
+    isOnboardingEnabled?: (provider: ProviderInfo, context: ContextUI) => boolean;
+    hasAnyConfiguration?: (provider: ProviderInfo) => boolean;
+  },
+): ReturnType<typeof render> {
+  return render(ProviderActionButtons, {
+    provider,
+    globalContext: overrides?.globalContext ?? mockGlobalContext,
+    providerInstallationInProgress: overrides?.providerInstallationInProgress ?? false,
+    onCreateNew: overrides?.onCreateNew ?? vi.fn(),
+    onUpdatePreflightChecks: overrides?.onUpdatePreflightChecks ?? vi.fn(),
+    isOnboardingEnabled: overrides?.isOnboardingEnabled ?? vi.fn().mockReturnValue(false),
+    hasAnyConfiguration: overrides?.hasAnyConfiguration ?? vi.fn().mockReturnValue(false),
+  });
+}
+
 describe('ProviderActionButtons', () => {
   test('shows only Setup button in onboarding mode when provider is not-installed', async () => {
     const provider: ProviderInfo = {
@@ -77,12 +99,7 @@ describe('ProviderActionButtons', () => {
     const isOnboardingEnabled = vi.fn().mockReturnValue(true);
     const hasAnyConfiguration = vi.fn().mockReturnValue(false);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
+    renderProviderActionButtons(provider, {
       isOnboardingEnabled,
       hasAnyConfiguration,
     });
@@ -103,12 +120,7 @@ describe('ProviderActionButtons', () => {
     const isOnboardingEnabled = vi.fn().mockReturnValue(true);
     const hasAnyConfiguration = vi.fn().mockReturnValue(false);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
+    renderProviderActionButtons(provider, {
       isOnboardingEnabled,
       hasAnyConfiguration,
     });
@@ -126,14 +138,8 @@ describe('ProviderActionButtons', () => {
 
     const isOnboardingEnabled = vi.fn().mockReturnValue(true);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
+    renderProviderActionButtons(provider, {
       isOnboardingEnabled,
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
     const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
@@ -151,13 +157,7 @@ describe('ProviderActionButtons', () => {
 
     const hasAnyConfiguration = vi.fn().mockReturnValue(true);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+    renderProviderActionButtons(provider, {
       hasAnyConfiguration,
     });
 
@@ -174,15 +174,7 @@ describe('ProviderActionButtons', () => {
       containerProviderConnectionCreationDisplayName: 'Podman Machine',
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     const createButton = screen.getByRole('button', {
       name: `Create new ${provider.containerProviderConnectionCreationDisplayName}`,
@@ -198,15 +190,7 @@ describe('ProviderActionButtons', () => {
       containerProviderConnectionCreationDisplayName: 'Podman Machine',
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     const createButton = screen.getByText('Initialize ...');
     expect(createButton).toBeInTheDocument();
@@ -219,15 +203,7 @@ describe('ProviderActionButtons', () => {
       kubernetesProviderConnectionCreationDisplayName: 'Kind Cluster',
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     const createButton = screen.getByRole('button', {
       name: `Create new ${provider.kubernetesProviderConnectionCreationDisplayName}`,
@@ -242,15 +218,7 @@ describe('ProviderActionButtons', () => {
       vmProviderConnectionCreationDisplayName: 'Lima VM',
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     const createButton = screen.getByRole('button', {
       name: `Create new ${provider.vmProviderConnectionCreationDisplayName}`,
@@ -267,14 +235,8 @@ describe('ProviderActionButtons', () => {
 
     const onCreateNew = vi.fn();
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
+    renderProviderActionButtons(provider, {
       onCreateNew,
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
     const createButton = screen.getByRole('button', {
@@ -291,14 +253,8 @@ describe('ProviderActionButtons', () => {
       containerProviderConnectionCreation: true,
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
+    renderProviderActionButtons(provider, {
       providerInstallationInProgress: true,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
     const createButton = screen.getByRole('button', { name: `Create new ${provider.name}` });
@@ -313,14 +269,8 @@ describe('ProviderActionButtons', () => {
 
     const isOnboardingEnabled = vi.fn().mockReturnValue(true);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
+    renderProviderActionButtons(provider, {
       isOnboardingEnabled,
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
     const setupButton = screen.getByRole('button', { name: `Setup ${provider.name}` });
@@ -335,13 +285,7 @@ describe('ProviderActionButtons', () => {
 
     const hasAnyConfiguration = vi.fn().mockReturnValue(true);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+    renderProviderActionButtons(provider, {
       hasAnyConfiguration,
     });
 
@@ -358,15 +302,7 @@ describe('ProviderActionButtons', () => {
       },
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     expect(ProviderUpdateButton).toHaveBeenCalled();
   });
@@ -380,15 +316,7 @@ describe('ProviderActionButtons', () => {
       },
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     expect(ProviderUpdateButton).not.toHaveBeenCalled();
   });
@@ -404,14 +332,8 @@ describe('ProviderActionButtons', () => {
 
     const onUpdatePreflightChecks = vi.fn();
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
+    renderProviderActionButtons(provider, {
       onUpdatePreflightChecks,
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
     expect(ProviderUpdateButton).toHaveBeenCalledWith(
@@ -435,13 +357,7 @@ describe('ProviderActionButtons', () => {
 
     const hasAnyConfiguration = vi.fn().mockReturnValue(true);
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+    renderProviderActionButtons(provider, {
       hasAnyConfiguration,
     });
 
@@ -464,15 +380,7 @@ describe('ProviderActionButtons', () => {
       containerProviderConnectionCreation: true,
     };
 
-    render(ProviderActionButtons, {
-      provider,
-      globalContext: mockGlobalContext,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
-      isOnboardingEnabled: vi.fn().mockReturnValue(false),
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
-    });
+    renderProviderActionButtons(provider);
 
     const createButton = screen.getByRole('button', { name: `Create new ${provider.name}` });
     expect(createButton).toBeInTheDocument();
@@ -486,14 +394,9 @@ describe('ProviderActionButtons', () => {
 
     const isOnboardingEnabled = vi.fn().mockReturnValue(true);
 
-    render(ProviderActionButtons, {
-      provider,
+    renderProviderActionButtons(provider, {
       globalContext: undefined,
-      providerInstallationInProgress: false,
-      onCreateNew: vi.fn(),
-      onUpdatePreflightChecks: vi.fn(),
       isOnboardingEnabled,
-      hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
     // Should not show onboarding Setup button (because globalContext is undefined)
@@ -501,5 +404,87 @@ describe('ProviderActionButtons', () => {
     // Should either not exist or be in regular mode (not onboarding mode)
     // In this case, the component should show regular buttons mode
     expect(setupButtons.length).toBeLessThanOrEqual(1);
+  });
+
+  test('kubernetesProviderConnectionCreation shows enabled button with correct tooltip when provider status is ready', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      status: 'ready',
+      kubernetesProviderConnectionCreation: true,
+      kubernetesProviderConnectionCreationDisplayName: 'Kind Cluster',
+    };
+
+    renderProviderActionButtons(provider);
+
+    const createButton = screen.getByRole('button', {
+      name: `Create new ${provider.kubernetesProviderConnectionCreationDisplayName}`,
+    });
+    expect(createButton).toBeInTheDocument();
+    expect(createButton).toBeEnabled();
+
+    // Hover over the tooltip trigger to display the tooltip
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await userEvent.hover(tooltipTrigger);
+
+    // Check tooltip text shows "Create new Kind Cluster"
+    const tooltip = await screen.findByLabelText('tooltip');
+    expect(tooltip).toBeInTheDocument();
+    expect(tooltip.textContent).toBe(`Create new ${provider.kubernetesProviderConnectionCreationDisplayName}`);
+  });
+
+  test.each([
+    {
+      status: 'stopped' as const,
+      warnings: [{ name: 'Provider Warning', details: 'Kubernetes provider is not running' }],
+      expectedTooltip: 'Kubernetes provider is not running',
+      description: 'warning tooltip when provider status is not ready',
+    },
+    {
+      status: 'not-installed' as const,
+      warnings: [],
+      expectedTooltip: 'Provider not ready',
+      description: 'default warning when provider status is not ready and no warnings',
+    },
+    {
+      status: 'unknown' as const,
+      warnings: [],
+      expectedTooltip: 'Provider not ready',
+      description: 'disabled button when provider status is unknown',
+    },
+    {
+      status: 'started' as const,
+      warnings: [],
+      expectedTooltip: 'Provider not ready',
+      description: 'disabled button when provider status is started',
+    },
+  ])('kubernetesProviderConnectionCreation shows disabled button with $description', async ({
+    status,
+    warnings,
+    expectedTooltip,
+  }) => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      status,
+      kubernetesProviderConnectionCreation: true,
+      kubernetesProviderConnectionCreationDisplayName: 'Kind Cluster',
+      warnings,
+    };
+
+    renderProviderActionButtons(provider);
+
+    const createButton = screen.getByRole('button', {
+      name: `Create new ${provider.kubernetesProviderConnectionCreationDisplayName}`,
+    });
+    expect(createButton).toBeInTheDocument();
+    expect(createButton).toBeDisabled();
+
+    // Hover over the tooltip trigger to display the tooltip
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await userEvent.hover(tooltipTrigger);
+
+    // Check tooltip text
+    const tooltip = await screen.findByLabelText('tooltip');
+    expect(tooltip).toBeInTheDocument();
+    expect(tooltip.textContent).toBe(expectedTooltip);
   });
 });

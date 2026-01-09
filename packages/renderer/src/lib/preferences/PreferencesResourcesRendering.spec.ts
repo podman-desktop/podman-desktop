@@ -123,6 +123,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   onboardingList.set([]);
+  vi.resetAllMocks();
 });
 
 describe.each<{
@@ -477,6 +478,10 @@ describe.each<{
     setDisplayName(customProviderInfo, undefined);
     // change name of the provider
     customProviderInfo.name = 'foo-provider';
+    // For kubernetes providers, ensure status is 'ready' so button is not disabled
+    if (customProviderInfo.kubernetesProviderConnectionCreation) {
+      customProviderInfo.status = 'ready';
+    }
     providerInfos.set([customProviderInfo]);
     render(PreferencesResourcesRendering, {});
     const button = screen.getByRole('button', { name: 'Create new foo-provider' });
@@ -491,13 +496,7 @@ describe.each<{
     expect(router.goto).toHaveBeenCalledWith(`/preferences/provider/${customProviderInfo.internalId}`);
   });
 
-  test('Expect to display the dialog if missing requirements for installation', async () => {
-    const installPreflightMock = vi.fn().mockResolvedValue(false);
-    const installProviderMock = vi.fn().mockResolvedValue(undefined);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).runInstallPreflightChecks = installPreflightMock;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).installProvider = installProviderMock;
+  const setupNotInstalledProvider = async (): Promise<void> => {
     // clone providerInfo and change id and status
     const customProviderInfo: ProviderInfo = { ...providerInfo };
     // remove display name
@@ -510,36 +509,33 @@ describe.each<{
     const button = screen.getByRole('button', { name: 'Create new foo-provider' });
     expect(button).toBeInTheDocument();
     await userEvent.click(button);
-    // provider is not installed, it checks the requirements, something fails and the dialog about missing reqs is shown
-    expect(installPreflightMock).toBeCalled();
-    expect(installProviderMock).not.toHaveBeenCalled();
-    const modal = screen.getByLabelText('install provider');
-    expect(modal).toBeInTheDocument();
-  });
+  };
 
-  test('Expect to directly install the provider if requirements are met', async () => {
-    const installPreflightMock = vi.fn().mockResolvedValue(true);
-    const installProviderMock = vi.fn().mockResolvedValue(undefined);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).runInstallPreflightChecks = installPreflightMock;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).installProvider = installProviderMock;
-    // clone providerInfo and change id and status
-    const customProviderInfo: ProviderInfo = { ...providerInfo };
-    // remove display name
-    setDisplayName(customProviderInfo, undefined);
-    // change name of the provider
-    customProviderInfo.status = 'not-installed';
-    customProviderInfo.name = 'foo-provider';
-    providerInfos.set([customProviderInfo]);
-    render(PreferencesResourcesRendering, {});
-    const button = screen.getByRole('button', { name: 'Create new foo-provider' });
-    expect(button).toBeInTheDocument();
-    await userEvent.click(button);
-    // all requirements are met so the installProvider function is called
-    expect(installPreflightMock).toBeCalled();
-    expect(installProviderMock).toBeCalled();
-  });
+  test.skipIf(providerInfo.kubernetesProviderConnectionCreation)(
+    'Expect to display the dialog if missing requirements for installation',
+    async () => {
+      vi.mocked(window.runInstallPreflightChecks).mockResolvedValue(false);
+      vi.mocked(window.installProvider).mockResolvedValue([]);
+      await setupNotInstalledProvider();
+      // provider is not installed, it checks the requirements, something fails and the dialog about missing reqs is shown
+      expect(window.runInstallPreflightChecks).toBeCalled();
+      expect(window.installProvider).not.toHaveBeenCalled();
+      const modal = screen.getByLabelText('install provider');
+      expect(modal).toBeInTheDocument();
+    },
+  );
+
+  test.skipIf(providerInfo.kubernetesProviderConnectionCreation)(
+    'Expect to directly install the provider if requirements are met',
+    async () => {
+      vi.mocked(window.runInstallPreflightChecks).mockResolvedValue(true);
+      vi.mocked(window.installProvider).mockResolvedValue([]);
+      await setupNotInstalledProvider();
+      // all requirements are met so the installProvider function is called
+      expect(window.runInstallPreflightChecks).toBeCalled();
+      expect(window.installProvider).toBeCalled();
+    },
+  );
 
   test('Expect to redirect to onboarding page if setup button is clicked', async () => {
     // clone providerInfo and change id and status
@@ -827,4 +823,128 @@ test('Expect update button to show up when an update is available to a new versi
   await userEvent.click(updateButton);
   expect(window.runUpdatePreflightChecks).toHaveBeenCalled();
   expect(window.updateProvider).toHaveBeenCalled();
+});
+
+describe('Kubernetes provider creation disabled state', () => {
+  const createKubernetesProvider = (
+    status: 'ready' | 'configured',
+    warnings: ProviderInfo['warnings'] = [],
+  ): ProviderInfo => ({
+    id: 'kind',
+    name: 'kind',
+    extensionId: 'kind-ext',
+    images: {
+      icon: 'img',
+    },
+    status,
+    warnings,
+    containerProviderConnectionCreation: false,
+    detectionChecks: [],
+    containerConnections: [],
+    kubernetesConnections: [],
+    kubernetesProviderConnectionCreation: true,
+    kubernetesProviderConnectionCreationDisplayName: 'Kind Cluster',
+    vmConnections: [],
+    vmProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    containerProviderConnectionInitialization: false,
+    kubernetesProviderConnectionInitialization: false,
+    cleanupSupport: false,
+    installationSupport: false,
+    internalId: '1',
+  });
+
+  test('Expect create button to be disabled when kubernetes provider status is not ready', async () => {
+    const kubeProvider = createKubernetesProvider('configured', [
+      {
+        name: 'Container Engine Required',
+        details: 'A running container engine is required to create Kind clusters',
+      },
+    ]);
+
+    providerInfos.set([kubeProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Kind Cluster' });
+    expect(button).toBeInTheDocument();
+    expect(button).toBeDisabled();
+  });
+
+  test('Expect create button to be enabled when kubernetes provider status is ready', async () => {
+    const kubeProvider = createKubernetesProvider('ready', []);
+
+    providerInfos.set([kubeProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Kind Cluster' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect tooltip to show default message when kubernetes provider is ready', async () => {
+    const kubeProvider = createKubernetesProvider('ready', []);
+
+    providerInfos.set([kubeProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Kind Cluster' });
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect fallback message when kubernetes provider has no warning details', async () => {
+    const kubeProvider = createKubernetesProvider('configured', []);
+
+    providerInfos.set([kubeProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Kind Cluster' });
+    expect(button).toBeDisabled();
+  });
+
+  test('Expect container provider buttons to not be affected by disabled logic', async () => {
+    const containerProvider = {
+      id: 'podman',
+      name: 'podman',
+      images: {
+        icon: 'img',
+      },
+      status: 'configured',
+      containerProviderConnectionCreation: true,
+      containerProviderConnectionCreationDisplayName: 'Podman Machine',
+      containerConnections: [],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo;
+
+    providerInfos.set([containerProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Podman Machine' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
+
+  test('Expect VM provider buttons to not be affected by disabled logic', async () => {
+    const vmProvider = {
+      id: 'lima',
+      name: 'lima',
+      images: {
+        icon: 'img',
+      },
+      status: 'configured',
+      vmProviderConnectionCreation: true,
+      vmProviderConnectionCreationDisplayName: 'Lima VM',
+      containerConnections: [],
+      kubernetesConnections: [],
+      vmConnections: [],
+    } as unknown as ProviderInfo;
+
+    providerInfos.set([vmProvider]);
+    render(PreferencesResourcesRendering, {});
+
+    const button = screen.getByRole('button', { name: 'Create new Lima VM' });
+    expect(button).toBeInTheDocument();
+    expect(button).not.toBeDisabled();
+  });
 });

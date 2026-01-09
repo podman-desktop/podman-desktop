@@ -160,6 +160,38 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     records: records,
   };
 
+  // Check if the requested provider is available and running
+  const containerConnections = extensionApi.provider.getContainerConnections();
+  const providerConnections = containerConnections.filter(conn => conn.connection.type === provider);
+
+  if (providerConnections.length === 0) {
+    // Provider isn't installed at all
+    const errorMessage = extensionApi.env.isLinux
+      ? `No ${provider} provider found. Please install ${provider} to create a Kind cluster.`
+      : `No ${provider} provider found. Please install and configure ${provider} to create a Kind cluster.`;
+
+    records.push({
+      type: 'error',
+      record: errorMessage,
+    });
+
+    return auditResult;
+  }
+
+  const runningConnection = providerConnections.find(conn => conn.connection.status() === 'started');
+
+  if (!runningConnection) {
+    // Provider installed but not running
+    records.push({
+      type: 'error',
+      record: `The ${provider} provider is not running. Please start the ${provider} provider to create a Kind cluster.`,
+    });
+
+    return auditResult;
+  }
+
+  // Provider is running, continue with other validations
+
   const image = items['kind.cluster.creation.controlPlaneImage'];
   if (image && !image.includes('@sha256:')) {
     records.push({
@@ -190,31 +222,15 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     });
   }
 
-  const providerSockets = extensionApi.provider
-    .getContainerConnections()
-    .filter(connection => connection.connection.type === provider);
-
-  if (providerSockets.length === 0) return auditResult;
-
-  // Check if any connection from the list is running
-  const runningConnection = providerSockets.find(connection => connection.connection.status() === 'started');
-
-  if (!runningConnection) {
+  // Check memory on the running connection
+  const memTotal = await getMemTotalInfo(runningConnection.connection.endpoint.socketPath);
+  if (memTotal < 6000000000) {
     records.push({
-      type: 'error',
-      record: `The ${provider} provider is not running. Please start the ${provider} provider to create a Kind cluster.`,
+      type: 'info',
+      record: 'It is recommended to install Kind on a virtual machine with at least 6GB of memory.',
     });
-  } else {
-    // Only check memory if provider is running
-    const memTotal = await getMemTotalInfo(runningConnection.connection.endpoint.socketPath);
-    // check if configured memory is less than 6GB
-    if (memTotal < 6000000000) {
-      records.push({
-        type: 'info',
-        record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
-      });
-    }
   }
+
   return auditResult;
 }
 

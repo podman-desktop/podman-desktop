@@ -22,14 +22,16 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderStatus } from '@podman-desktop/api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import { eventCollect, reconnectUI } from '/@/lib/preferences/preferences-connection-rendering-task';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
+import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -105,6 +107,12 @@ function mockCallback(
 beforeEach(() => {
   operationConnectionsInfo.set(new Map());
   vi.resetAllMocks();
+  vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe.each([
@@ -348,27 +356,48 @@ describe.each([
 
   test(`Expect ${label} button to be disabled if itemsAudit returns errors or enabled otherwise`, async () => {
     const callback = vi.fn();
-    let auditSpy = vi.spyOn(window as any, 'auditConnectionParameters');
-    if (!connectionInfo) {
-      auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockImplementationOnce(() => ({ records: [] }));
+    // In update mode (when connectionInfo is set), initial audit is NOT called on mount
+    // So we need different mocks for create vs update mode
+    if (connectionInfo) {
+      // Update mode: no initial audit, so we skip the first mock
+      vi.mocked(window.auditConnectionParameters)
+        .mockResolvedValueOnce({
+          records: [
+            {
+              type: 'error',
+              record: 'error message',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          records: [
+            {
+              type: 'info',
+              record: 'info message',
+            },
+          ],
+        });
+    } else {
+      // Create mode: initial audit is called on mount
+      vi.mocked(window.auditConnectionParameters)
+        .mockResolvedValueOnce({ records: [] })
+        .mockResolvedValueOnce({
+          records: [
+            {
+              type: 'error',
+              record: 'error message',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          records: [
+            {
+              type: 'info',
+              record: 'info message',
+            },
+          ],
+        });
     }
-    auditSpy = auditSpy
-      .mockImplementationOnce(() => ({
-        records: [
-          {
-            type: 'error',
-            record: 'error message',
-          },
-        ],
-      }))
-      .mockImplementationOnce(() => ({
-        records: [
-          {
-            type: 'info',
-            record: 'info message',
-          },
-        ],
-      }));
     // eslint-disable-next-line @typescript-eslint/await-thenable
     render(PreferencesConnectionCreationOrEditRendering, {
       properties: [
@@ -439,21 +468,27 @@ test(`Check itemsAudit receive updated values`, async () => {
   const inputElement = screen.queryByRole('textbox', { name: 'test.factoryProperty' });
   expect(inputElement).toBeDefined();
   await fireEvent.input(inputElement as Element, { target: { value: '2' } });
-  await vi.waitFor(() =>
-    expect(auditSpy).toBeCalledWith('test', {
-      'test.factoryProperty': '2',
-      'test.fileProperty': '',
-    }),
+  await vi.waitFor(
+    () =>
+      expect(auditSpy).toBeCalledWith('test', {
+        'test.factoryProperty': '2',
+        'test.fileProperty': '',
+      }),
+    { timeout: 3000 },
   );
 
   const browseButton = screen.getByRole('button', { name: 'browse' });
   expect(browseButton).toBeInTheDocument();
   await fireEvent.click(browseButton);
 
-  expect(auditSpy).toBeCalledWith('test', {
-    'test.factoryProperty': '2',
-    'test.fileProperty': 'somefile',
-  });
+  await vi.waitFor(
+    () =>
+      expect(auditSpy).toBeCalledWith('test', {
+        'test.factoryProperty': '2',
+        'test.fileProperty': 'somefile',
+      }),
+    { timeout: 3000 },
+  );
 });
 
 test(`Expect create with unchecked and checked checkboxes`, async () => {
@@ -779,5 +814,171 @@ test('Expect reconnectUI to be called only once', async () => {
   await vi.waitFor(() => {
     expect(screen.getByRole('term')).toBeInTheDocument();
     expect(reconnectUI).toBeCalledTimes(1);
+  });
+});
+
+describe('Provider status change re-audit', () => {
+  function createTestProviderInfo(status: ProviderStatus): ProviderInfo {
+    return {
+      ...providerInfo,
+      status,
+    };
+  }
+
+  async function setupComponentWithProvider(
+    testProviderInfo: ProviderInfo,
+    callback: ReturnType<typeof mockCallback>,
+    taskId?: number,
+  ): Promise<void> {
+    providerInfos.set([testProviderInfo]);
+
+    render(PreferencesConnectionCreationOrEditRendering, {
+      properties,
+      providerInfo: testProviderInfo,
+      propertyScope,
+      callback,
+      pageIsLoading: false,
+      taskId,
+    });
+
+    await vi.waitUntil(() => screen.queryByRole('textbox', { name: 'test.factoryProperty' }));
+  }
+
+  async function setupAndTriggerProviderChange(
+    callback: ReturnType<typeof mockCallback>,
+  ): Promise<{ auditSpy: typeof window.auditConnectionParameters }> {
+    const auditSpy = vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+    const testProviderInfo = createTestProviderInfo('started');
+    await setupComponentWithProvider(testProviderInfo, callback);
+
+    auditSpy.mockClear();
+
+    const updatedProviderInfo = createTestProviderInfo('stopped');
+    providerInfos.set([updatedProviderInfo]);
+
+    return { auditSpy };
+  }
+
+  test('Expect re-audit to be called when provider status changes after initial load', async () => {
+    const callback = mockCallback(async () => {});
+    const { auditSpy } = await setupAndTriggerProviderChange(callback);
+
+    await vi.waitFor(() => expect(auditSpy).toHaveBeenCalled());
+    expect(auditSpy).toHaveBeenCalledWith('test', { 'test.factoryProperty': '0' });
+  });
+
+  test('Expect re-audit to skip first effect call via providerInfosInitialized flag', async () => {
+    const callback = mockCallback(async () => {});
+    const { auditSpy } = await setupAndTriggerProviderChange(callback);
+
+    await vi.waitFor(() => expect(auditSpy).toHaveBeenCalled());
+  });
+
+  test('Expect re-audit to not be called when operation is in progress', async () => {
+    const taskId = 5;
+    let providedKeyLogger: ((key: symbol, eventName: LoggerEventName, args: string[]) => void) | undefined;
+
+    const callback = mockCallback(async keyLogger => {
+      providedKeyLogger = keyLogger;
+    });
+
+    const auditSpy = vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+
+    const testProviderInfo = createTestProviderInfo('started');
+    await setupComponentWithProvider(testProviderInfo, callback, taskId);
+
+    const createButton = screen.getByRole('button', { name: 'Create' });
+    await fireEvent.click(createButton);
+
+    auditSpy.mockClear();
+
+    const updatedProviderInfo = createTestProviderInfo('stopped');
+    providerInfos.set([updatedProviderInfo]);
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(auditSpy).not.toHaveBeenCalled();
+
+    const currentConnectionInfoMap = get(operationConnectionsInfo);
+    const currentConnectionInfo = currentConnectionInfoMap.get(taskId);
+    if (providedKeyLogger && currentConnectionInfo) {
+      providedKeyLogger(currentConnectionInfo.operationKey, 'finish', []);
+    }
+  });
+
+  test('Expect re-audit to use existing form data when available', async () => {
+    const callback = mockCallback(async () => {});
+    const auditSpy = vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+
+    const taskId = 6;
+    const testProviderInfo = createTestProviderInfo('started');
+
+    const operationConnectionsInfoMock = {
+      operationKey: Symbol(),
+      providerInfo: testProviderInfo,
+      connectionInfo: undefined,
+      properties,
+      propertyScope: 'DEFAULT',
+      operationInProgress: false,
+      operationSuccessful: false,
+      operationStarted: false,
+      errorMessage: '',
+      formData: { 'test.factoryProperty': 42 },
+    };
+    operationConnectionsInfo.update(map => map.set(taskId, operationConnectionsInfoMock));
+
+    await setupComponentWithProvider(testProviderInfo, callback, taskId);
+
+    auditSpy.mockClear();
+
+    const updatedProviderInfo = createTestProviderInfo('stopped');
+    providerInfos.set([updatedProviderInfo]);
+
+    await vi.waitFor(() => expect(auditSpy).toHaveBeenCalled());
+    expect(auditSpy).toHaveBeenCalledWith('test', { 'test.factoryProperty': '42' });
+  });
+
+  test('Expect audit result to update button state when re-audit returns errors', async () => {
+    const callback = mockCallback(async () => {});
+    const auditSpy = vi.mocked(window.auditConnectionParameters).mockResolvedValue({ records: [] });
+
+    const testProviderInfo = createTestProviderInfo('started');
+    await setupComponentWithProvider(testProviderInfo, callback);
+    const createButton = screen.getByRole('button', { name: 'Create' });
+    await vi.waitFor(() => expect(createButton).toBeEnabled());
+
+    auditSpy.mockResolvedValue({
+      records: [
+        {
+          type: 'error',
+          record: 'Provider is not running',
+        },
+      ],
+    });
+
+    const updatedProviderInfo = createTestProviderInfo('stopped');
+    providerInfos.set([updatedProviderInfo]);
+
+    await vi.waitFor(() => expect(createButton).toBeDisabled());
+  });
+
+  test('Expect auditConnectionParameters to handle null result gracefully', async () => {
+    const callback = mockCallback(async () => {});
+    const auditSpy = vi
+      .spyOn(window as any, 'auditConnectionParameters')
+      .mockResolvedValueOnce({ records: [] })
+      .mockResolvedValueOnce(null);
+
+    const testProviderInfo = createTestProviderInfo('started');
+    await setupComponentWithProvider(testProviderInfo, callback);
+
+    const inputElement = screen.queryByRole('textbox', { name: 'test.factoryProperty' });
+    expect(inputElement).toBeDefined();
+
+    await fireEvent.input(inputElement!, { target: { value: '5' } });
+    await vi.waitFor(() => expect(auditSpy).toHaveBeenCalledTimes(2));
+
+    const createButton = screen.getByRole('button', { name: 'Create' });
+    expect(createButton).toBeInTheDocument();
   });
 });

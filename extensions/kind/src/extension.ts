@@ -93,6 +93,31 @@ async function installLatestKind(): Promise<string> {
   return cliPath;
 }
 
+/**
+ * Updates the Kind provider state based on running container connections.
+ * Sets provider status to 'ready' when container engines are running,
+ * or 'configured' with a warning when no running container engines are available.
+ */
+function updateKindProviderState(): void {
+  const containerConnections = extensionApi.provider.getContainerConnections();
+  const runningConnections = containerConnections.filter(conn => conn.connection.status() === 'started');
+
+  if (runningConnections.length > 0) {
+    provider.updateStatus('ready');
+    provider.updateWarnings([]);
+  } else {
+    provider.updateStatus('configured');
+    provider.updateWarnings([
+      {
+        name: 'Container Engine Required',
+        details: extensionApi.env.isLinux
+          ? 'Install and start a container engine (e.g. Podman) to create Kind clusters'
+          : 'Start your container provider (e.g. Podman) to create Kind clusters',
+      },
+    ]);
+  }
+}
+
 async function registerProvider(
   extensionContext: extensionApi.ExtensionContext,
   provider: extensionApi.Provider,
@@ -126,6 +151,10 @@ async function registerProvider(
 
   // search
   await searchKindClusters(provider);
+
+  // Initialize provider state based on container connections
+  updateKindProviderState();
+
   console.log('kind extension is active');
 }
 
@@ -287,7 +316,13 @@ export function refreshKindClustersOnProviderConnectionUpdate(provider: extensio
   extensionApi.provider.onDidUpdateContainerConnection(async () => {
     // needs to search for kind clusters
     await searchKindClusters(provider);
+    // update Kind requirements when container connections change
+    updateKindProviderState();
   });
+
+  // also listen to container connection register/unregister
+  extensionApi.provider.onDidRegisterContainerConnection(updateKindProviderState);
+  extensionApi.provider.onDidUnregisterContainerConnection(updateKindProviderState);
 }
 
 let currentUpdateDisposable: extensionApi.Disposable | undefined = undefined;

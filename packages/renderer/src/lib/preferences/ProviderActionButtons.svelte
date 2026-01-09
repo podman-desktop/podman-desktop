@@ -68,6 +68,12 @@ const showSetupButton = $derived(
 
 const showUpdateButton = $derived(provider.updateInfo?.version && provider.version !== provider.updateInfo?.version);
 
+const isDisabled = $derived(provider.kubernetesProviderConnectionCreation && provider.status !== 'ready');
+
+const tooltipText = $derived(
+  isDisabled ? (provider.warnings?.[0]?.details ?? 'Provider not ready') : `Create new ${providerDisplayName}`,
+);
+
 function handleCreateNew(): Promise<void> {
   return onCreateNew(provider, providerDisplayName);
 }
@@ -92,9 +98,10 @@ function handleSetup(): void {
   {:else}
     <div class="flex flex-row justify-around flex-wrap gap-2">
       {#if showCreateNewButton}
-        <Tooltip bottom tip="Create new {providerDisplayName}">
+        <Tooltip bottom tip={tooltipText}>
           <Button
             aria-label="Create new {providerDisplayName}"
+            disabled={isDisabled}
             inProgress={providerInstallationInProgress}
             onclick={handleCreateNew}>
             {buttonTitle} ...

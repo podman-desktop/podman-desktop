@@ -77,11 +77,18 @@ let showLogs = $state(false);
 let tokenId: number | undefined = $state();
 // get only ContainerProviderConnectionFactory scope fields that are starting by the provider id
 let configurationKeys: IConfigurationPropertyRecordedSchema[] = $state([]);
-let isValid = $state(true);
+let componentValid = $state(true);
+let auditValid = $state(true);
+let isValid = $derived(componentValid && auditValid);
 let errorMessage: string | undefined = $state();
 let formEl: HTMLFormElement | undefined = $state();
 let connectionAuditResult: AuditResult | undefined = $state();
 let logsTerminal: Terminal | undefined = $state();
+let initialLoadComplete = $state(false);
+let providerInfosInitialized = $state(false);
+let lastProviderId = $state(providerInfo.internalId);
+let lastProviderStatus = $state(providerInfo.status);
+let auditTimeout: NodeJS.Timeout | undefined = $state();
 
 let existingFormData: { [key: string]: unknown } | undefined;
 let operationFailed = false;
@@ -105,6 +112,28 @@ $effect(() => {
     } finally {
       reconnectedUI = true;
     }
+  }
+});
+
+// Re-audit connection when provider status changes
+$effect(() => {
+  const currentProviderId = providerInfo.internalId;
+  const currentProviderStatus = providerInfo.status;
+
+  // Skip the first call when initializing
+  if (!providerInfosInitialized) {
+    providerInfosInitialized = true;
+    lastProviderId = currentProviderId;
+    lastProviderStatus = currentProviderStatus;
+    return;
+  }
+
+  const providerChanged = currentProviderId !== lastProviderId || currentProviderStatus !== lastProviderStatus;
+
+  if (providerChanged && initialLoadComplete && !inProgress && !operationStarted && configurationKeys.length > 0) {
+    lastProviderId = currentProviderId;
+    lastProviderStatus = currentProviderStatus;
+    scheduleAudit(providerInfo.internalId, buildAuditData());
   }
 });
 
@@ -157,9 +186,11 @@ onMount(async () => {
     }
   }
   pageIsLoading = false;
+  initialLoadComplete = true;
 });
 
 onDestroy(() => {
+  clearTimeout(auditTimeout);
   if (loggerHandlerKey) {
     disconnectUI(loggerHandlerKey);
   }
@@ -217,12 +248,35 @@ async function loadConnectionParams(): Promise<void> {
   }
 }
 
+function buildAuditData(): AuditRequestItems {
+  const data: AuditRequestItems = {};
+
+  if (existingFormData) {
+    Object.assign(data, existingFormData);
+    return data;
+  }
+
+  for (const field of configurationKeys) {
+    if (field.id) {
+      const value = configurationValues.get(field.id);
+      data[field.id] = value?.value ?? field.default;
+    }
+  }
+
+  return data;
+}
+
+function updateAuditState(auditResult: AuditResult): void {
+  auditValid = auditResult.records.filter(record => record.type === 'error').length === 0;
+  connectionAuditResult = auditResult;
+}
+
 function handleInvalidComponent(): void {
-  isValid = false;
+  componentValid = false;
 }
 
 async function handleValidComponent(): Promise<void> {
-  isValid = true;
+  componentValid = true;
 
   // it can happen (at least in tests) that some fields are not set yet (NumberItem will wait 500ms before to change value)
   if (!formEl) {
@@ -245,17 +299,22 @@ async function handleValidComponent(): Promise<void> {
     data[key] = value;
   }
 
-  try {
-    const auditResult = await window.auditConnectionParameters(providerInfo.internalId, data as AuditRequestItems);
-    isValid = auditResult.records.filter(record => record.type === 'error').length === 0;
-    connectionAuditResult = auditResult;
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.warn(err.message);
-    } else {
-      console.warn(String(err));
-    }
-  }
+  scheduleAudit(providerInfo.internalId, data);
+}
+
+function scheduleAudit(providerId: string, auditData: AuditRequestItems): void {
+  clearTimeout(auditTimeout);
+
+  const performAudit = (id: string, data: AuditRequestItems): void => {
+    window
+      .auditConnectionParameters(id, data)
+      .then(auditResult => updateAuditState(auditResult))
+      .catch((err: unknown) => {
+        console.error('unable to audit connection', err);
+      });
+  };
+
+  auditTimeout = setTimeout(() => performAudit(providerId, auditData), 500);
 }
 
 function internalSetConfigurationValue(id: string, modified: boolean, value: string | boolean | number): void {
