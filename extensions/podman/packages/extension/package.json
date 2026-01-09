@@ -442,7 +442,7 @@
     "@podman-desktop/podman-extension-api": "workspace:*",
     "async-mutex": "^0.5.0",
     "compare-versions": "^6.1.1",
-    "inversify": "^7.10.8",
+    "inversify": "^7.11.0",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
     "smol-toml": "1.6.0",
