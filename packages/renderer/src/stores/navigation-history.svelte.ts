@@ -16,7 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { get } from 'svelte/store';
 import { router } from 'tinro';
+
+import { navigationRegistry } from '/@/stores/navigation/navigation-registry';
 
 /**
  * Navigation history store
@@ -61,11 +64,27 @@ export function goForward(): void {
   }
 }
 
+/**
+ * Check if a URL is a submenu base route that immediately redirects.
+ * Submenu routes (like /kubernetes) redirect to their first item (like /kubernetes/dashboard)
+ * and should not be added to history to prevent navigation issues when going back.
+ */
+function isSubmenuBaseRoute(url: string): boolean {
+  const registry = get(navigationRegistry);
+  return registry.some(entry => entry.type === 'submenu' && entry.link === url);
+}
+
 // Initialize router subscription
 router.subscribe(navigation => {
   if (navigation.url) {
     if (isNavigatingHistory) {
       isNavigatingHistory = false;
+      return;
+    }
+
+    // Skip submenu base routes - they immediately redirect to a sub-page
+    // and shouldn't be in the history stack
+    if (isSubmenuBaseRoute(navigation.url)) {
       return;
     }
 

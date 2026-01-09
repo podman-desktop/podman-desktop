@@ -91,3 +91,21 @@ describe('goForward', () => {
     expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.forward');
   });
 });
+
+describe('submenu base routes', () => {
+  test('goBack should skip submenu base routes like /kubernetes', () => {
+    // Simulate the navigation scenario:
+    // User went /containers -> /kubernetes/dashboard
+    // The /kubernetes route should NOT be in the stack since it's a submenu base route
+    // that immediately redirects to a sub-page
+    navigationHistory.stack = ['/containers', '/kubernetes/dashboard'];
+    navigationHistory.index = 1;
+
+    goBack();
+
+    // Should go directly back to /containers, not to /kubernetes
+    expect(navigationHistory.index).toBe(0);
+    expect(router.goto).toHaveBeenCalledWith('/containers');
+    expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.back');
+  });
+});
