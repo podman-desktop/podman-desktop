@@ -21,7 +21,7 @@
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.1.10",
+    "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-links": "^10.1.11",
     "@storybook/addon-svelte-csf": "5.0.9",
