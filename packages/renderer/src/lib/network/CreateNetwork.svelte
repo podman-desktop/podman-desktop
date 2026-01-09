@@ -28,37 +28,18 @@ let networkInfo: NetworkCreateFormInfo = $state({
   internalEnabled: false,
   driver: 'bridge',
   options: [],
-  dnsEnabled: true,
-  dnsServers: [''],
+  dnsEnabled: undefined,
+  dnsServers: undefined,
 });
 
 let createError: string | undefined = $state(undefined);
 let createNetworkInProgress: boolean = $state(false);
-let driverOptions: string[] = $state([]);
+let selectedProvider: ProviderContainerConnectionInfo | undefined = $derived(networkInfo.selectedProvider);
 
-// Fetch available network drivers when the selected provider changes
-$effect(() => {
-  const provider = networkInfo.selectedProvider;
-  if (provider) {
-    window
-      .getNetworkDrivers($state.snapshot(provider))
-      .then(drivers => {
-        driverOptions = drivers;
-        // Reset driver to 'bridge' on provider change
-        if (drivers.includes('bridge')) {
-          networkInfo.driver = 'bridge';
-        } else if (drivers.length > 0) {
-          networkInfo.driver = drivers[0];
-        }
-      })
-      .catch((error: unknown) => {
-        console.error('Failed to fetch network drivers:', error);
-        driverOptions = [];
-      });
-  } else {
-    driverOptions = [];
-  }
-});
+// Fetch available network drivers for selected provider
+let driverOptions = $derived(
+  selectedProvider ? window.getNetworkDrivers($state.snapshot(selectedProvider)) : Promise.resolve([]),
+);
 
 // Detect if the selected provider is Podman (for DNS server feature)
 let isPodman = $derived(networkInfo.selectedProvider?.type === 'podman');
@@ -110,21 +91,18 @@ async function createNetwork(): Promise<void> {
           : undefined,
     };
 
-    // Add DNS servers for Podman if DNS is enabled and servers are specified
-    if (isPodman && dnsAvailable && networkInfo.dnsEnabled) {
-      const dnsServers = networkInfo.dnsServers.filter(dns => dns.trim() !== '');
-      if (dnsServers.length > 0) {
-        networkOptions.Options = {
-          ...networkOptions.Options,
-          dns: dnsServers.join(','),
-        };
-      }
-    }
-
     const result = await window.createNetwork($state.snapshot(networkInfo.selectedProvider), networkOptions);
 
     if (!result.Id || !result.engineId) {
       throw new Error('Network creation failed: Missing network ID or engine ID');
+    }
+
+    // Add DNS servers for Podman using libpod API (compat API doesn't support DNS)
+    if (isPodman && dnsAvailable && networkInfo.dnsEnabled) {
+      const dnsServers = networkInfo.dnsServers?.filter(dns => dns.trim() !== '') ?? [];
+      if (dnsServers.length > 0) {
+        await window.updateNetwork(result.engineId, result.Id, dnsServers, []);
+      }
     }
 
     await waitForNetworkInStore(result.Id, result.engineId);
@@ -170,15 +148,28 @@ function cancelRoute(): void {
 }
 
 let providerConnections = $derived(
-  $providerInfos.reduce<ProviderContainerConnectionInfo[]>((acc, provider) => {
-    const startedConnections = provider.containerConnections.filter(connection => connection.status === 'started');
-    return acc.concat(startedConnections);
-  }, []),
+  $providerInfos
+    .map(provider => provider.containerConnections)
+    .flat()
+    .filter(providerContainerConnection => providerContainerConnection.status === 'started'),
 );
 
 // Select default provider connection on mount only (not on tab switches)
 onMount(() => {
   networkInfo.selectedProvider ??= providerConnections.length > 0 ? providerConnections[0] : undefined;
+});
+
+// Initialize DNS defaults when Podman is selected, reset for other providers
+$effect(() => {
+  if (networkInfo.selectedProvider?.type === 'podman') {
+    if (networkInfo.dnsEnabled === undefined) {
+      networkInfo.dnsEnabled = true;
+      networkInfo.dnsServers = [''];
+    }
+  } else {
+    networkInfo.dnsEnabled = undefined;
+    networkInfo.dnsServers = undefined;
+  }
 });
 
 // Redirect to basic tab if landing on base path without a specific tab
@@ -195,11 +186,11 @@ let hasInvalidFields = $derived(
 
 // DNS server management functions
 function addDnsServer(): void {
-  networkInfo.dnsServers = [...networkInfo.dnsServers, ''];
+  networkInfo.dnsServers = [...(networkInfo.dnsServers ?? []), ''];
 }
 
 function removeDnsServer(index: number): void {
-  networkInfo.dnsServers = networkInfo.dnsServers.filter((_, i) => i !== index);
+  networkInfo.dnsServers = (networkInfo.dnsServers ?? []).filter((_, i) => i !== index);
 }
 </script>
 
@@ -213,8 +204,8 @@ function removeDnsServer(index: number): void {
     {#snippet content()}
       <div class="space-y-2">
         <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
-          <Button type="tab" on:click={(): void => router.goto(getTabUrl($router.path, 'basic'))} selected={isTabSelected($router.path, 'basic')}>Basic</Button>
-          <Button type="tab" on:click={(): void => router.goto(getTabUrl($router.path, 'advanced'))} selected={isTabSelected($router.path, 'advanced')}>Advanced</Button>
+          <Button type="tab" onclick={(): void => router.goto(getTabUrl($router.path, 'basic'))} selected={isTabSelected($router.path, 'basic')}>Basic</Button>
+          <Button type="tab" onclick={(): void => router.goto(getTabUrl($router.path, 'advanced'))} selected={isTabSelected($router.path, 'advanced')}>Advanced</Button>
         </div>
         <div>
           <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
@@ -227,7 +218,8 @@ function removeDnsServer(index: number): void {
                     id="providerChoice"
                     name="providerChoice"
                     bind:value={networkInfo.selectedProvider}
-                    connections={providerConnections} />
+                    connections={providerConnections}
+                    onchange={(): void => { networkInfo.driver = 'bridge'; }} />
                 </div>
               {/if}
 
@@ -251,7 +243,7 @@ function removeDnsServer(index: number): void {
                 <label for="driver" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
                   >Network Driver</label>
                 <Dropdown class="w-full" name="driver" bind:value={networkInfo.driver}>
-                  {#each driverOptions as option (option)}
+                  {#each await driverOptions as option (option)}
                     <option value={option}>{option}</option>
                   {/each}
                 </Dropdown>
@@ -317,54 +309,46 @@ function removeDnsServer(index: number): void {
               </div>
 
               <!-- DNS Servers (Podman only) -->
-              <div class:opacity-50={!dnsAvailable}>
-                <label for="dns" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">
-                  DNS Servers
-                  {#if !isPodman}
-                    <span class="text-sm font-normal text-[var(--pd-content-card-text)]">(Podman only)</span>
+              {#if isPodman}
+                <div class:opacity-50={!dnsAvailable}>
+                  <label for="dns" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">
+                    DNS Servers
+                  </label>
+                  
+                  {#if dnsAvailable}
+                    <Checkbox bind:checked={networkInfo.dnsEnabled} title="Enable DNS" class="mb-2">
+                      Enable DNS
+                    </Checkbox>
                   {/if}
-                </label>
-                
-                {#if dnsAvailable}
-                  <Checkbox bind:checked={networkInfo.dnsEnabled} title="Enable DNS" class="mb-2">
-                    Enable DNS
-                  </Checkbox>
-                {/if}
-                
-                {#if networkInfo.dnsEnabled && dnsAvailable}
-                  {#each networkInfo.dnsServers as _, index (index)}
-                    <div class="flex flex-row items-center w-full py-1">
-                      <Input
-                        bind:value={networkInfo.dnsServers[index]}
-                        placeholder="8.8.8.8"
-                        disabled={!dnsAvailable}
-                        class="w-full" />
-                      <Button
-                        type="link"
-                        hidden={index === networkInfo.dnsServers.length - 1}
-                        onclick={(): void => removeDnsServer(index)}
-                        icon={faMinusCircle}
-                        disabled={!dnsAvailable} />
-                      <Button
-                        type="link"
-                        hidden={index < networkInfo.dnsServers.length - 1}
-                        onclick={addDnsServer}
-                        icon={faPlusCircle}
-                        disabled={!dnsAvailable} />
-                    </div>
-                  {/each}
-                {/if}
-                
-                {#if !isPodman}
-                  <p class="text-sm text-[var(--pd-content-card-text)] mt-1">
-                    Custom DNS servers are only available for Podman networks.
-                  </p>
-                {:else if networkInfo.driver !== 'bridge'}
-                  <p class="text-sm text-[var(--pd-content-card-text)] mt-1">
-                    DNS is only available for bridge networks.
-                  </p>
-                {/if}
-              </div>
+                  
+                  {#if networkInfo.dnsEnabled && dnsAvailable && networkInfo.dnsServers}
+                    {#each networkInfo.dnsServers as _, index (index)}
+                      <div class="flex flex-row items-center w-full py-1">
+                        <Input
+                          bind:value={networkInfo.dnsServers[index]}
+                          placeholder="8.8.8.8"
+                          class="w-full" />
+                        <Button
+                          type="link"
+                          hidden={index === networkInfo.dnsServers.length - 1}
+                          onclick={(): void => removeDnsServer(index)}
+                          icon={faMinusCircle} />
+                        <Button
+                          type="link"
+                          hidden={index < networkInfo.dnsServers.length - 1}
+                          onclick={addDnsServer}
+                          icon={faPlusCircle} />
+                      </div>
+                    {/each}
+                  {/if}
+                  
+                  {#if networkInfo.driver !== 'bridge'}
+                    <p class="text-sm text-[var(--pd-content-card-text)] mt-1">
+                      DNS is only available for bridge networks.
+                    </p>
+                  {/if}
+                </div>
+              {/if}
             </div>
           </Route>
         </div>

@@ -295,8 +295,8 @@ export interface NetworkCreateFormInfo {
   options: string[];
   selectedProvider: ProviderContainerConnectionInfo | undefined;
   // DNS servers (Podman only)
-  dnsEnabled: boolean;
-  dnsServers: string[];
+  dnsEnabled: boolean | undefined;
+  dnsServers: string[] | undefined;
 }
 
 export interface VolumeCreateOptions {

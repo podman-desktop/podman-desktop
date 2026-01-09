@@ -168,6 +168,53 @@ test('Expect container engine dropdown to appear when multiple providers', async
   expect(engineDropdown).toBeInTheDocument();
 });
 
+test('Expect driver to reset to bridge when switching providers', async () => {
+  // Docker has more drivers including 'host' which Podman doesn't support
+  vi.mocked(window.getNetworkDrivers).mockResolvedValue(['bridge', 'host', 'ipvlan', 'macvlan']);
+
+  const podman = createProviderConnection({
+    name: 'podman',
+    displayName: 'Podman',
+    endpoint: { socketPath: '/run/podman/podman.sock' },
+    type: 'podman',
+  });
+  const docker = createProviderConnection({
+    name: 'docker',
+    displayName: 'Docker',
+    endpoint: { socketPath: '/var/run/docker.sock' },
+    type: 'docker',
+  });
+
+  renderCreate([docker, podman]);
+
+  // Switch to Advanced tab to access driver dropdown
+  const advancedTab = screen.getByRole('button', { name: 'Advanced' });
+  await fireEvent.click(advancedTab);
+
+  // Select 'host' driver (only available on Docker)
+  const driverDropdown = screen.getByRole('button', { name: 'bridge' });
+  await fireEvent.click(driverDropdown);
+  const hostOption = screen.getByRole('button', { name: 'host' });
+  await fireEvent.click(hostOption);
+
+  // Verify host is selected
+  expect(screen.getByRole('button', { name: 'host' })).toBeInTheDocument();
+
+  // Go back to Basic tab to switch provider
+  const basicTab = screen.getByRole('button', { name: 'Basic' });
+  await fireEvent.click(basicTab);
+
+  // Switch to Podman provider
+  const engineDropdown = screen.getByLabelText(/Container engine/);
+  await fireEvent.click(engineDropdown);
+  const podmanOption = screen.getByRole('button', { name: 'podman' });
+  await fireEvent.click(podmanOption);
+
+  // Go back to Advanced tab and verify driver was reset to bridge
+  await fireEvent.click(advancedTab);
+  expect(screen.getByRole('button', { name: 'bridge' })).toBeInTheDocument();
+});
+
 test('Expect empty screen when no providers available', async () => {
   providerInfos.set([]);
 
@@ -265,7 +312,7 @@ test('Expect to switch to Advanced tab and see advanced options', async () => {
   expect(screen.getByText('DNS Servers')).toBeInTheDocument();
 });
 
-test('Expect DNS section to show Podman only message for Docker provider', async () => {
+test('Expect DNS section to be hidden for Docker provider', async () => {
   const docker = createProviderConnection({
     name: 'docker',
     displayName: 'Docker',
@@ -279,9 +326,8 @@ test('Expect DNS section to show Podman only message for Docker provider', async
   const advancedTab = screen.getByRole('button', { name: 'Advanced' });
   await fireEvent.click(advancedTab);
 
-  // Expect Podman only message
-  expect(screen.getByText('(Podman only)')).toBeInTheDocument();
-  expect(screen.getByText('Custom DNS servers are only available for Podman networks.')).toBeInTheDocument();
+  // DNS section should not be visible for Docker
+  expect(screen.queryByText('DNS Servers')).not.toBeInTheDocument();
 });
 
 test('Expect Advanced tab to show network driver dropdown with ipvlan/macvlan options', async () => {
@@ -432,8 +478,9 @@ test('Expect createNetwork to be called with IP range when provided', async () =
   );
 });
 
-test('Expect createNetwork to be called with custom DNS servers for Podman', async () => {
+test('Expect updateNetwork to be called with DNS servers after network creation for Podman', async () => {
   vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId: 'engine1' });
+  vi.mocked(window.updateNetwork).mockResolvedValue();
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
@@ -450,15 +497,16 @@ test('Expect createNetwork to be called with custom DNS servers for Podman', asy
   const createButton = screen.getByRole('button', { name: 'Create' });
   await userEvent.click(createButton);
 
+  // Network should be created without DNS options (compat API doesn't support it)
   expect(window.createNetwork).toHaveBeenCalledWith(
     expect.anything(),
     expect.objectContaining({
       Name: 'dns-network',
-      Options: expect.objectContaining({
-        dns: '8.8.8.8',
-      }),
     }),
   );
+
+  // DNS servers should be added via updateNetwork (libpod API)
+  expect(window.updateNetwork).toHaveBeenCalledWith('engine1', 'network123', ['8.8.8.8'], []);
 });
 
 test('Expect createNetwork to be called with ipvlan driver and explicit subnet', async () => {
@@ -503,6 +551,7 @@ test('Expect createNetwork to be called with ipvlan driver and explicit subnet',
 
 test('Expect createNetwork to be called with all advanced options combined', async () => {
   vi.mocked(window.createNetwork).mockResolvedValue({ Id: 'network123', engineId: 'engine1' });
+  vi.mocked(window.updateNetwork).mockResolvedValue();
   renderCreate();
 
   const networkName = screen.getByRole('textbox', { name: 'Name *' });
@@ -553,11 +602,11 @@ test('Expect createNetwork to be called with all advanced options combined', asy
           }),
         ]),
       }),
-      Options: expect.objectContaining({
-        dns: '1.1.1.1',
-      }),
     }),
   );
+
+  // DNS servers should be added via updateNetwork (libpod API)
+  expect(window.updateNetwork).toHaveBeenCalledWith('engine1', 'network123', ['1.1.1.1'], []);
 });
 
 test('Expect Create button to be disabled when ipvlan selected without subnet', async () => {
