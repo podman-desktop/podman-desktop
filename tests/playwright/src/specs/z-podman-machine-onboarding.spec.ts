@@ -231,7 +231,7 @@ test.describe.serial('Podman Machine verification', { tag: '@pdmachine' }, () =>
     const podmanMachineDetails = await openMachineDetailsPage(page, navigationBar);
 
     await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: TIMEOUT_LONG,
+      timeout: TIMEOUT_SETUP,
     });
     await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStopButton.click();
