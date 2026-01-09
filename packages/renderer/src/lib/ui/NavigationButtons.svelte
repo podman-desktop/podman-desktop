@@ -13,7 +13,7 @@ let { class: className = '' }: Props = $props();
 
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
-let isMac = $state(false);
+let isMac = $derived((await window.getOsPlatform()) === 'darwin');
 let swipeCooldown = $state(false);
 
 // Mouse button navigation (button 3 = back, button 4 = forward)
@@ -84,11 +84,6 @@ function handleKeyDown(e: KeyboardEvent): void {
     }
   }
 }
-
-onMount(async () => {
-  const platform = await window.getOsPlatform();
-  isMac = platform === 'darwin';
-});
 
 onMount(() => {
   window.addEventListener('keydown', handleKeyDown);
