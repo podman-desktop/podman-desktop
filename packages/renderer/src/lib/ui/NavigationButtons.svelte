@@ -14,7 +14,7 @@ let { class: className = '' }: Props = $props();
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
-let swipeCooldown = $state(false);
+let timeout: NodeJS.Timeout | undefined = $state(undefined);
 
 // Mouse button navigation (button 3 = back, button 4 = forward)
 function handleGlobalMouseUp(event: MouseEvent): void {
@@ -29,7 +29,7 @@ function handleGlobalMouseUp(event: MouseEvent): void {
 
 // Trackpad swipe navigation
 function handleWheel(e: WheelEvent): void {
-  if (swipeCooldown) return;
+  if (timeout) return;
 
   if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
     const SWIPE_THRESHOLD = 30;
@@ -49,10 +49,9 @@ function handleWheel(e: WheelEvent): void {
 }
 
 function triggerSwipeCooldown(): void {
-  swipeCooldown = true;
-  setTimeout(() => {
-    swipeCooldown = false;
-  }, 800);
+  timeout = setTimeout(() => {
+    timeout = undefined;
+  }, 500);
 }
 
 // Keyboard shortcuts for navigation
