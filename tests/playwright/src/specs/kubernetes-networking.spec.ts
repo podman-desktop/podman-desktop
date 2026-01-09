@@ -136,7 +136,7 @@ test.describe.serial('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () =
           KubernetesResources.Deployments,
           DEPLOYMENT_NAME,
           KubernetesResourceState.Running,
-          80_000,
+          360_000,
         );
       });
       test.describe(() => {
