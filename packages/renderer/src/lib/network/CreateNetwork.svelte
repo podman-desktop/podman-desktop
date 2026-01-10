@@ -41,13 +41,12 @@ let driverOptions = $derived(
   selectedProvider ? window.getNetworkDrivers($state.snapshot(selectedProvider)) : Promise.resolve([]),
 );
 
-// Detect if the selected provider is Podman (for DNS server feature)
+// Detect if the selected provider is Podman (for DNS server feature that doesnt use dockerode api)
+// feature works only for bridge driver
 let isPodman = $derived(networkInfo.selectedProvider?.type === 'podman');
-
-// DNS should be available for bridge driver and only for Podman
 let dnsAvailable = $derived(isPodman && networkInfo.driver === 'bridge');
 
-// Check if subnet is required (for ipvlan and macvlan)
+// Subnet is required for ipvlan and macvlan
 let requiresSubnet = $derived(networkInfo.driver === 'ipvlan' || networkInfo.driver === 'macvlan');
 
 async function createNetwork(): Promise<void> {
@@ -57,6 +56,10 @@ async function createNetwork(): Promise<void> {
   try {
     if (!networkInfo.selectedProvider) {
       throw new Error('There is no container engine available.');
+    }
+
+    if (requiresSubnet && !networkInfo.subnet) {
+      throw new Error('Subnet is required for ipvlan/macvlan networks.');
     }
 
     // Build IPAM config if subnet is provided
@@ -326,17 +329,20 @@ function removeDnsServer(index: number): void {
                       <div class="flex flex-row items-center w-full py-1">
                         <Input
                           bind:value={networkInfo.dnsServers[index]}
+                          aria-label={`DNS server ${index + 1}`}
                           placeholder="8.8.8.8"
                           class="w-full" />
                         <Button
                           type="link"
                           hidden={index === networkInfo.dnsServers.length - 1}
                           onclick={(): void => removeDnsServer(index)}
+                          title={`Remove DNS server ${index + 1}`}
                           icon={faMinusCircle} />
                         <Button
                           type="link"
                           hidden={index < networkInfo.dnsServers.length - 1}
                           onclick={addDnsServer}
+                          title="Add DNS server"
                           icon={faPlusCircle} />
                       </div>
                     {/each}
