@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
+import { TelemetryMessages } from '/@api/telemetry.js';
 import product from '/@product.json' with { type: 'json' };
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
@@ -108,14 +109,18 @@ export class Telemetry {
   }
 
   async init(): Promise<void> {
+    const telemetryMessages = this.getTelemetryMessages();
+    const telemetryLink =
+      telemetryMessages.infoLink && telemetryMessages.infoURL
+        ? ` [${telemetryMessages.infoLink}](${telemetryMessages.infoURL})`
+        : '';
     const telemetryConfigurationNode: IConfigurationNode = {
       id: 'preferences.telemetry',
       title: 'Telemetry',
       type: 'object',
       properties: {
         [TelemetrySettings.SectionName + '.' + TelemetrySettings.Enabled]: {
-          markdownDescription:
-            'Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data. Read our [privacy statement](https://developers.redhat.com/article/tool-data-collection)',
+          markdownDescription: `${telemetryMessages.acceptMessage}${telemetryLink}`,
           type: 'boolean',
           default: true,
         },
@@ -174,6 +179,14 @@ export class Telemetry {
     const telemetryConfiguration = this.configurationRegistry.getConfiguration(TelemetrySettings.SectionName);
     const enabled = telemetryConfiguration.get<boolean>(TelemetrySettings.Enabled);
     return enabled === true;
+  }
+
+  getTelemetryMessages(): TelemetryMessages {
+    return {
+      acceptMessage: product.telemetry.acceptMessage,
+      infoLink: product.telemetry.infoLink,
+      infoURL: product.telemetry.infoURL,
+    } as TelemetryMessages;
   }
 
   protected createBuiltinTelemetrySender(extensionInfo: {

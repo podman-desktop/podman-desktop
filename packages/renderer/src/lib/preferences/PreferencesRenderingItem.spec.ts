@@ -113,3 +113,26 @@ test('locked record should display managed-by label', async () => {
 
   await vi.waitFor(() => getByText('Managed'));
 });
+
+test('locked record should not show reset to default button', async () => {
+  const lockedRecord: IConfigurationPropertyRecordedSchema = {
+    id: 'proxy.http',
+    title: 'Proxy',
+    parentId: 'proxy',
+    description: 'HTTP proxy configuration',
+    type: 'string',
+    locked: true,
+    default: 'default-value',
+  };
+
+  const { queryByRole, getByText } = render(PreferencesRenderingItem, {
+    record: lockedRecord,
+  });
+
+  // Verify managed label is shown
+  await vi.waitFor(() => getByText('Managed'));
+
+  // Verify reset button is not present
+  const resetButton = queryByRole('button', { name: 'Reset to default value' });
+  expect(resetButton).not.toBeInTheDocument();
+});

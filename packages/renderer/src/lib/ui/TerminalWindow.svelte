@@ -7,8 +7,7 @@ import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import TerminalSearchControls from '/@/lib/ui/TerminalSearchControls.svelte';
-
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 interface Props {
   terminal?: Terminal;

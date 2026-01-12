@@ -21,7 +21,7 @@
  *--------------------------------------------------------------------------------------------*/
 // based on https://github.com/microsoft/vscode/blob/3eed9319874b7ca037128962593b6a8630869253/src/vs/platform/contextkey/common/scanner.ts
 
-import { CharCode } from '../../../../main/src/plugin/util/charCode';
+import { CharCode } from '/@api/context/charCode';
 
 export const enum TokenType {
   LParen,

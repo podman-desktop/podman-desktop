@@ -18,7 +18,7 @@ async function close(): Promise<void> {
 
 <!-- Display the min, max and close buttons and avoid drag & drop on this region-->
 <div
-  class="absolute {platform === 'linux' ? 'top-[7px] right-3' : ''} {platform === 'win32' ? 'top-0 right-0' : ''}"
+  class="{platform === 'linux' ? 'pr-3' : ''}"
   style="-webkit-app-region: none;">
   <div class="flex flex-row {platform === 'linux' ? 'space-x-2' : 'space-x-[1px]'}">
     <WindowControlButton platform={platform} name="Minimize" action={minimize} />

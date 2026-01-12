@@ -175,3 +175,20 @@ test('If FileItem has readonly = true, then expect readonly to show in the eleme
   expect(input).toBeInTheDocument();
   expect((input as HTMLInputElement).readOnly).toBe(true);
 });
+
+test('If FileItem has locked = true, then expect readonly to show in the element', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    format: 'file',
+    locked: true,
+  };
+
+  render(FileItem, { record, value: '' });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect((input as HTMLInputElement).readOnly).toBe(true);
+});

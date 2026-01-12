@@ -54,6 +54,8 @@ import type { Task, TaskAction } from './tasks/tasks.js';
 import { Disposable } from './types/disposable.js';
 import { HttpServer } from './webview/webview-registry.js';
 
+vi.mock(import('./extension/extension-api-version.js'));
+
 let pluginSystem: TestPluginSystem;
 
 class TestPluginSystem extends PluginSystem {

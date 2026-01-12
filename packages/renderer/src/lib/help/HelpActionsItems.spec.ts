@@ -21,8 +21,21 @@ import '@testing-library/jest-dom/vitest';
 import { render } from '@testing-library/svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ActionKind, type ItemInfo } from '/@api/help-menu';
+
 import HelpActionsItems from './HelpActionsItems.svelte';
-import { Items } from './HelpItems';
+
+export const Items: readonly ItemInfo[] = [
+  {
+    title: 'Getting Started',
+    icon: 'fas fa-external-link-alt',
+    enabled: true,
+    action: {
+      kind: ActionKind.LINK,
+      parameter: `example.com/docs/intro`,
+    },
+  },
+];
 
 let toggleMenuCallback: () => void;
 
