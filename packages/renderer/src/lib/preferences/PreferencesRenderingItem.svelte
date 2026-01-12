@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
@@ -100,7 +100,7 @@ async function openGitHubDiscussion(): Promise<void> {
           {#if record.experimental !== undefined}
             <Label>
               <div class="flex flex-row space-x-1 items-center">
-                <Fa title="experimental" size="xs" icon={faFlask}/>
+                <Icon title="experimental" size="xs" icon={faFlask}/>
                 <span>Experimental</span>
               </div>
             </Label>

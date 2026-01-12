@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { Button, CloseButton, Modal } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
@@ -42,7 +42,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
           <div class="flex flex-col min-h-[150px] mt-5 mx-auto py-4 px-10 rounded-md bg-[var(--pd-content-card-bg)]">
             {#each preflightChecks as preCheck, index (index)}
               <div class="flex flex-row mb-2 mx-auto">
-                <Fa icon={faCircleXmark} class="text-[var(--pd-state-error)] mt-0.5" />
+                <Icon icon={faCircleXmark} class="text-[var(--pd-state-error)] mt-0.5" />
                 <div class="flex flex-col ml-1 text-sm">
                   {#if preCheck.description}
                     <span class="w-full" aria-label={preCheck.description}>{preCheck.description}</span>

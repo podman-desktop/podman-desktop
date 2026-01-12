@@ -9,7 +9,7 @@ import {
   faTimesCircle,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { DeploymentCondition } from '/@/lib/deployments/DeploymentUI';
 import Label from '/@/lib/ui/Label.svelte';
@@ -86,7 +86,7 @@ function getConditionAttributes(condition: DeploymentCondition): { name: string;
 <div class="flex flex-row gap-1">
   {#each object.conditions as condition, index (index)}
     <Label tip={condition.message} name={getConditionAttributes(condition).name}>
-      <Fa size="1x" icon={getConditionAttributes(condition).icon} class={getConditionAttributes(condition).color} />
+      <Icon size="1x" icon={getConditionAttributes(condition).icon} class={getConditionAttributes(condition).color} />
     </Label>
   {/each}
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { TinroRouteMeta } from 'tinro';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
@@ -14,7 +14,7 @@ export let iconWithTitle = true;
 {#each $webviews as webview (webview.id)}
   <NavItem href="/webviews/{webview.id}" bind:meta={meta} tooltip={webview.name}>
     {#if !webview.icon}
-      <Fa icon={faPuzzlePiece} size="1.5x" />
+      <Icon icon={faPuzzlePiece} size="1.5x" />
     {:else}
       <IconImage image={webview?.icon} alt={webview.name} class="max-h-6 max-w-[24px]" />
     {/if}

@@ -1,8 +1,8 @@
 <script lang="ts">
 import { faFileLines, faPaste } from '@fortawesome/free-regular-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
-import Fa from 'svelte-fa';
 
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
@@ -28,11 +28,11 @@ async function copyLogsToClipboard(): Promise<void> {
 
 <div class="flex flex-col w-full m-4 p-4 rounded-lg bg-[var(--pd-content-card-bg)]">
   <div class="flex flex-row align-middle items-center w-full mb-4">
-    <Fa size="1.875x" class="pr-3" icon={faFileLines} />
+    <Icon size="1.875x" class="pr-3" icon={faFileLines} />
     <div class="text-xl">Logs</div>
     <div class="flex flex-1 justify-end">
       <Button title="Copy To Clipboard" class="ml-5" on:click={async (): Promise<void> => await copyLogsToClipboard()} type="link"
-        ><Fa class="h-5 w-5 cursor-pointer text-xl text-[var(--pd-button-primary-bg)]" icon={faPaste} /></Button>
+        ><Icon class="h-5 w-5 cursor-pointer text-xl text-[var(--pd-button-primary-bg)]" icon={faPaste} /></Button>
     </div>
   </div>
   {#if logs.length > 0}

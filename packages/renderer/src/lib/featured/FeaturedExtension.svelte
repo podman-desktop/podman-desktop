@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCheckCircle, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { FeaturedExtension } from '/@api/featured/featured-api';
 
@@ -33,14 +33,14 @@ export let displayTitle: boolean = false;
       <div class="h-full w-18 flex flex-col items-end place-content-center">
         {#if featuredExtension.installed}
           <div class="text-[var(--pd-content-card-border-selected)] p-1 text-center flex flex-row place-items-center">
-            <Fa class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
+            <Icon class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
             <div class="uppercase font-bold text-sm cursor-default">installed</div>
           </div>
         {:else if featuredExtension.fetchable}
           <FeaturedExtensionDownload extension={featuredExtension} />
         {:else}
           <div class="text-[var(--pd-label-text)] p-1 text-center flex flex-row place-items-center">
-            <Fa class="ml-1.5 mr-1" size="1.1x" icon={faCircleXmark} />
+            <Icon class="ml-1.5 mr-1" size="1.1x" icon={faCircleXmark} />
             <div class="uppercase text-sm cursor-default font-extralight">N/A</div>
           </div>
         {/if}

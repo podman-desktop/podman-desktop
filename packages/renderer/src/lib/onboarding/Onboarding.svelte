@@ -29,9 +29,9 @@
 import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faForward } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link, Spinner } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
@@ -365,7 +365,7 @@ $: globalOnboarding = global;
               class="flex flex-row text-xs items-center hover:underline text-[var(--pd-content-sub-header)] mt-1"
               on:click={(): void => setDisplayCancelSetup(true)}>
               <span class="mr-1">Skip this entire setup</span>
-              <Fa icon={faForward} size="0.8x" />
+              <Icon icon={faForward} size="0.8x" />
             </button>
           </div>
         </div>
@@ -394,7 +394,7 @@ $: globalOnboarding = global;
                     class="mt-1 flex flex-row text-xs items-center hover:underline text-[var(--pd-content-sub-header)]"
                     on:click={skipCurrentOnboarding}>
                     <span class="mr-1">Skip</span>
-                    <Fa icon={faForward} size="0.8x" />
+                    <Icon icon={faForward} size="0.8x" />
                   </button>
                 {/if}
               </div>
@@ -513,7 +513,7 @@ $: globalOnboarding = global;
       role="dialog"
       aria-label="Skip Setup Popup">
       <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
-        <Fa class="h-4 w-4" icon={faCircleQuestion} />
+        <Icon class="h-4 w-4" icon={faCircleQuestion} />
         <span class="grow text-md font-bold capitalize">Skip the entire setup?</span>
       </div>
 
