@@ -135,8 +135,8 @@ test('svg icon should be visible', () => {
   expect(svg).toBeInTheDocument();
 });
 
-describe('icon position', () => {
-  test('default icon position should be left', () => {
+describe('icon', () => {
+  test('icon should be displayed on the left', () => {
     const { getByRole } = render(SettingsNavItem, {
       title: 'DummyTitle',
       href: '/dummy/path',
@@ -147,17 +147,52 @@ describe('icon position', () => {
     expect(svg).toBeInTheDocument();
     expect(svg.parentElement).toHaveClass('flex-row');
   });
+});
 
-  test('icon position right should use reverse row', () => {
-    const { getByRole } = render(SettingsNavItem, {
+describe('iconRight', () => {
+  test('iconRight with align end should be at far right', () => {
+    const { getAllByRole } = render(SettingsNavItem, {
       title: 'DummyTitle',
       href: '/dummy/path',
       selected: false,
       icon: MyIcon,
-      iconPosition: 'right',
+      iconRight: MyIcon,
+      iconRightAlign: 'end',
     });
-    const svg = getByRole('img', { hidden: true });
-    expect(svg).toBeInTheDocument();
-    expect(svg.parentElement).toHaveClass('flex-row-reverse');
+    const svgs = getAllByRole('img', { hidden: true });
+    expect(svgs).toHaveLength(2);
+    // First icon (left) should be in the title span
+    expect(svgs[0].parentElement).toHaveClass('flex-row');
+    // Second icon (right) should be in the end container with px-2
+    expect(svgs[1].parentElement).toHaveClass('px-2');
+  });
+
+  test('iconRight with align inline should be next to title', () => {
+    const { getAllByRole } = render(SettingsNavItem, {
+      title: 'DummyTitle',
+      href: '/dummy/path',
+      selected: false,
+      icon: MyIcon,
+      iconRight: MyIcon,
+      iconRightAlign: 'inline',
+    });
+    const svgs = getAllByRole('img', { hidden: true });
+    expect(svgs).toHaveLength(2);
+    // Both icons should be in the same flex-row container
+    expect(svgs[0].parentElement).toHaveClass('flex-row');
+    expect(svgs[1].parentElement).toHaveClass('flex-row');
+  });
+
+  test('iconRight defaults to end alignment', () => {
+    const { getAllByRole } = render(SettingsNavItem, {
+      title: 'DummyTitle',
+      href: '/dummy/path',
+      selected: false,
+      iconRight: MyIcon,
+    });
+    const svgs = getAllByRole('img', { hidden: true });
+    expect(svgs).toHaveLength(1);
+    // Icon should be in the end container with px-2
+    expect(svgs[0].parentElement).toHaveClass('px-2');
   });
 });
