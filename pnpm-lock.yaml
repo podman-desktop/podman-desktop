@@ -552,6 +552,9 @@ importers:
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
+      winreg:
+        specifier: ^1.2.5
+        version: 1.2.5
     devDependencies:
       '@types/mustache':
         specifier: ^4.2.6

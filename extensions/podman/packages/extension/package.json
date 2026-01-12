@@ -44,6 +44,10 @@
       {
         "command": "podman.setupRegistry",
         "title": "Podman: Setup registry"
+      },
+      {
+        "command": "podman.uninstallLegacyPodmanInstaller",
+        "title": "Podman: Uninstall legacy podman installer"
       }
     ],
     "configuration": {
@@ -446,7 +450,8 @@
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
     "smol-toml": "1.6.0",
-    "ssh2": "^1.17.0"
+    "ssh2": "^1.17.0",
+    "winreg": "^1.2.5"
   },
   "devDependencies": {
     "@types/mustache": "^4.2.6",
