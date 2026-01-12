@@ -22,10 +22,16 @@ interface Props {
 
 let { class: className = '' }: Props = $props();
 
+let longPressTimer: NodeJS.Timeout | undefined = $state(undefined);
+let showDropdown: Direction | undefined = $state(undefined);
+let dropdownEntries: { index: number; name: string }[] = $state([]);
+let hoveredEntryIndex: number | undefined = $state(undefined);
+let isLongPressing = $state(false);
+let timeout: NodeJS.Timeout | undefined = $state(undefined);
+
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
-let timeout: NodeJS.Timeout | undefined = $state(undefined);
 
 function handleGlobalMouseUp(event: MouseEvent): void {
   // Handle mouse buttons 3/4 for back/forward
@@ -59,7 +65,7 @@ function handleMouseDown(event: MouseEvent, direction: Direction): void {
       dropdownEntries = entries;
       showDropdown = direction;
     }
-  }, LONG_PRESS_DELAY);
+  }, 500);
 }
 
 function handleClick(direction: Direction): void {
@@ -171,10 +177,17 @@ function handleKeyDown(e: KeyboardEvent): void {
 onMount(() => {
   window.addEventListener('mouseup', handleGlobalMouseUp);
   window.addEventListener('wheel', handleWheel);
+  window.addEventListener('click', handleClickOutside);
+  window.addEventListener('keydown', handleKeyDown);
 
   return (): void => {
     window.removeEventListener('mouseup', handleGlobalMouseUp);
     window.removeEventListener('wheel', handleWheel);
+    window.removeEventListener('click', handleClickOutside);
+    window.removeEventListener('keydown', handleKeyDown);
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+    }
   };
 });
 
