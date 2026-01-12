@@ -219,3 +219,28 @@ test('Expect input to be disabled when record.readonly is true', async () => {
   const incrementButton = screen.getByLabelText('increment');
   expect(incrementButton).toBeDisabled();
 });
+
+test('Expect input to be disabled when record.locked is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 1,
+    maximum: 34,
+    locked: true,
+  };
+  const value = 10;
+  render(NumberItem, { record, value });
+
+  const input = screen.getByRole('textbox', { name: 'record-description' });
+  expect(input).toBeInTheDocument();
+  expect(input).toBeDisabled();
+
+  const decrementButton = screen.getByLabelText('decrement');
+  expect(decrementButton).toBeDisabled();
+
+  const incrementButton = screen.getByLabelText('increment');
+  expect(incrementButton).toBeDisabled();
+});

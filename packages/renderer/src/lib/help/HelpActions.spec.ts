@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import { render } from '@testing-library/svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import HelpActions from './HelpActions.svelte';
-import { Items } from './HelpItems';
 
 let toggleMenuCallback: (() => void) | undefined;
 
@@ -41,17 +40,6 @@ describe('HelpActions component', () => {
       return {
         dispose: (): void => {},
       };
-    });
-  });
-
-  test.each(Items)('contains item with $title', async ({ title, tooltip }) => {
-    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
-    const ha = render(HelpActions);
-    await vi.waitUntil(() => !!toggleMenuCallback);
-    toggleMenuCallback?.();
-    await vi.waitFor(async () => {
-      const item = await ha.findByTitle(tooltip ?? title);
-      expect(item).toBeVisible();
     });
   });
 

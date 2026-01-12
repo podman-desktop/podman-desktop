@@ -24,6 +24,6 @@ function onChangeHandler(newValue: unknown): void {
   bind:value={value}
   ariaInvalid={invalidEntry}
   ariaLabel={record.description}
-  disabled={!!record.readonly}
+  disabled={!!record.readonly || !!record.locked}
   options={record.enum?.map(recordEnum => ({label: recordEnum, value: recordEnum}))}>
 </Dropdown>
