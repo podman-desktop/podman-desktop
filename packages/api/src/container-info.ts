@@ -294,6 +294,9 @@ export interface NetworkCreateFormInfo {
   driver: string;
   options: string[];
   selectedProvider: ProviderContainerConnectionInfo | undefined;
+  // DNS servers (Podman only)
+  dnsEnabled: boolean | undefined;
+  dnsServers: string[] | undefined;
 }
 
 export interface VolumeCreateOptions {

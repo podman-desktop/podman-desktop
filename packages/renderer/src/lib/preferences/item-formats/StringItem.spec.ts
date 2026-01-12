@@ -98,3 +98,19 @@ test('Ensure that after typing into the input, that onChange is called each time
   await userEvent.type(input, 'foobar');
   expect(onChange).toHaveBeenCalledTimes(6);
 });
+
+test('Ensure HTMLInputElement readonly when locked', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    locked: true,
+  };
+
+  render(StringItem, { record, value: '' });
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect((input as HTMLInputElement).readOnly).toBeTruthy();
+});

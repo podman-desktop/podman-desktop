@@ -7,8 +7,7 @@ import type { Unsubscriber } from 'svelte/store';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { isDark } from '/@/stores/appearance';
-
-import { EditorSettings } from '../../../../main/src/plugin/editor-settings';
+import { EditorSettings } from '/@api/editor/editor-settings';
 
 let divEl: HTMLDivElement;
 let editor: monaco.editor.IStandaloneCodeEditor;

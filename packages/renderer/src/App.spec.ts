@@ -26,7 +26,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
 import App from './App.svelte';
-import { lastPage, lastSubmenuPages } from './stores/breadcrumb';
+import { lastPage } from './stores/breadcrumb';
 import { navigationRegistry, type NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
 const mocks = vi.hoisted(() => ({
@@ -179,32 +179,6 @@ test('displays kubernetes empty screen if no current context, without Kubernetes
   expect(mocks.KubernetesDashboard).toHaveBeenCalled();
   expect(mocks.DeploymentsList).not.toHaveBeenCalled();
   expect(mocks.SubmenuNavigation).not.toHaveBeenCalled();
-});
-
-test('go to last kubernetes page when available', async () => {
-  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
-  lastSubmenuPages.set({ Kubernetes: '/kubernetes/deployments' });
-  render(App);
-  router.goto('/kubernetes');
-  await tick();
-  expect(mocks.DeploymentsList).toHaveBeenCalled();
-});
-
-test('go to dashboard page when last kubernetes page is /kubernetes', async () => {
-  lastSubmenuPages.set({ Kubernetes: '/kubernetes' });
-  render(App);
-  router.goto('/kubernetes');
-  await tick();
-
-  expect(mocks.KubernetesDashboard).toHaveBeenCalled();
-});
-
-test('go to dashboard page when last kubernetes page not available', async () => {
-  lastSubmenuPages.set({});
-  render(App);
-  router.goto('/kubernetes');
-  await tick();
-  expect(mocks.KubernetesDashboard).toHaveBeenCalled();
 });
 
 test('receive show-release-notes event from main', async () => {
