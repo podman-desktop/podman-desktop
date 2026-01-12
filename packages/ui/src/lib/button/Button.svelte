@@ -97,10 +97,8 @@ let classes = $derived.by(() => {
       class:py-[3px]={!children}>
       {#if inProgress}
         <Spinner size="1em" />
-      {:else}
-        {#if icon}
-          <Icon icon={icon}/>
-        {/if}
+      {:else if icon}
+        <Icon icon={icon}/>
       {/if}
       {#if children}
         <span>{@render children()}</span>

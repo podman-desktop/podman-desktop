@@ -7,7 +7,7 @@ import Icon from '../icons/Icon.svelte';
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
 interface Props {
-  icon: IconDefinition | Component | string | undefined;
+  icon?: IconDefinition | Component | string;
   title?: string;
   message?: string;
   detail?: string;
@@ -22,7 +22,7 @@ interface Props {
 }
 
 let {
-  icon = undefined,
+  icon,
   title = 'No title',
   message = '',
   detail = '',
