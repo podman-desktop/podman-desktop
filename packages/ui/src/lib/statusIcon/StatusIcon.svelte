@@ -34,10 +34,8 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     title={status}>
     {#if status === 'DELETING' || status === 'UPDATING'}
       <Spinner size="1.4em" />
-    {:else}
-      {#if icon}
-        <Icon icon={icon} size={size} />
-      {/if}
+    {:else if icon}
+      <Icon icon={icon} size={size} />
     {/if}
   </div>
   {#if status === 'CREATED'}
