@@ -61,6 +61,12 @@
         "tooltip": "Join Slack #podman-desktop channel",
         "icon": "fab fa-slack",
         "link": "https://slack.k8s.io"
+      },
+      {
+        "title": "@podman-desktop",
+        "tooltip": "Follow Podman Desktop LinkedIn account",
+        "icon": "fab fa-linkedin",
+        "link": "https://www.linkedin.com/company/podman-desktop/"
       }
     ]
   }
