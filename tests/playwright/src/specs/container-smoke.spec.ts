@@ -148,6 +148,9 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
     await playExpect
       .poll(async () => containersDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
+
+    await containersDetails.clearLogs();
+    await playExpect(containersDetails.terminalContent).not.toContainText('Hello World');
   });
 
   test('Redirecting to image details from a container details', async ({ page, navigationBar }) => {
