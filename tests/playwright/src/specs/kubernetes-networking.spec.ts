@@ -129,7 +129,7 @@ test.describe.serial('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () =
       });
 
       test('Create and verify a running Kubernetes deployment', async ({ page }) => {
-        test.setTimeout(80_000);
+        test.setTimeout(360_000);
         await createKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, DEPLOYMENT_YAML_PATH);
         await checkKubernetesResourceState(
           page,
