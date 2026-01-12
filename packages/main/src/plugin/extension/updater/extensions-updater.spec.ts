@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { app } from 'electron';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
@@ -28,12 +28,6 @@ import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalo
 import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import { ExtensionsUpdater } from './extensions-updater.js';
-
-vi.mock('electron', () => ({
-  app: {
-    getVersion: vi.fn(),
-  },
-}));
 
 let extensionsUpdater: ExtensionsUpdater;
 
@@ -113,6 +107,10 @@ const telemetry = {
   }),
 } as unknown as Telemetry;
 
+const extensionApiVersion: ExtensionApiVersion = {
+  getApiVersion: vi.fn(),
+} as ExtensionApiVersion;
+
 const originalConsoleError = console.error;
 beforeEach(() => {
   console.error = vi.fn();
@@ -122,6 +120,7 @@ beforeEach(() => {
     configurationRegistry,
     extensionInstaller,
     telemetry,
+    extensionApiVersion,
   );
   vi.clearAllMocks();
 });
@@ -179,7 +178,7 @@ test('should check for updates if podman desktop version mistmatch and try to up
   } as ExtensionInfo;
 
   // mock current version being 1.0.0
-  vi.mocked(app.getVersion).mockReturnValue('1.0.0');
+  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
 
   if (!catalogExtension1.versions[0]) {
     throw new Error('No version');

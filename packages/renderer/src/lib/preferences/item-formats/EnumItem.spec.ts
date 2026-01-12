@@ -75,3 +75,19 @@ test('Expect dropdown to be disabled when record.readonly is true', async () => 
   expect(button).toBeInTheDocument();
   expect(button).toBeDisabled();
 });
+
+test('Expect dropdown to be disabled when record.locked is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    enum: ['hello', 'world'],
+    locked: true,
+  };
+
+  render(EnumItem, { record, value: 'hello' });
+  const button = screen.getByRole('button');
+  expect(button).toBeInTheDocument();
+  expect(button).toBeDisabled();
+});
