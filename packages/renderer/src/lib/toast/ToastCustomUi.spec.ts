@@ -88,7 +88,7 @@ test('Check with in-progress', async () => {
   // expect the in-progress is used
   const status = screen.getByRole('status', { name: 'in-progress' });
   expect(status).toBeInTheDocument();
-  const progressbar = screen.getByRole('progressbar');
+  const progressbar = screen.getByRole('status', { name: 'Loading' });
   expect(progressbar).toBeInTheDocument();
 
   // expect name is there

@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { describe, expect, test } from 'vitest';
+import { assert, describe, expect, test } from 'vitest';
 
 import Spinner from './Spinner.svelte';
 
@@ -29,8 +29,9 @@ describe('parent attributes should be propagate', () => {
       style: 'color: green;',
     });
 
-    const spinner = screen.getByRole('progressbar', { name: 'Loading', busy: true });
+    const spinner = screen.getByRole('status', { name: 'Loading' });
     expect(spinner).toBeDefined();
+    expect(spinner.getAttribute('aria-live')).toBe('polite');
 
     expect(spinner.getAttribute('style')).toBe('color: green;');
   });
@@ -40,9 +41,22 @@ describe('parent attributes should be propagate', () => {
       class: 'dummy-class',
     });
 
-    const spinner = screen.getByRole('progressbar', { name: 'Loading', busy: true });
+    const spinner = screen.getByRole('status', { name: 'Loading' });
     expect(spinner).toBeDefined();
 
     expect(spinner.classList).toContain('dummy-class');
   });
+});
+
+test('should have aria-hidden="true" on SVG', () => {
+  const { getByRole } = render(Spinner);
+  const spinner = getByRole('status', { name: 'Loading' });
+  const svg = spinner.querySelector('svg');
+  assert(svg);
+  expect(svg.getAttribute('aria-hidden')).toBe('true');
+});
+
+test('should use custom label', () => {
+  const { getByRole } = render(Spinner, { label: 'Custom Loading' });
+  getByRole('status', { name: 'Custom Loading' });
 });
