@@ -61,7 +61,6 @@ const fakedImage: ImageInfoUI = {
   base64RepoTag: 'base64RepoTag',
   selected: false,
   status: 'UNUSED',
-  icon: {},
   badges: [],
   digest: 'sha256:1234567890',
 };
