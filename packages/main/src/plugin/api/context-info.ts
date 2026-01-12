@@ -17,18 +17,6 @@
  ***********************************************************************/
 import type { Context } from '../context/context.js';
 
-export type ContextKeyValue =
-  | undefined
-  | boolean
-  | number
-  | string
-  | Array<undefined | boolean | number | string>
-  | Record<string, undefined | boolean | number | string>;
-
-export interface IContext {
-  getValue<T extends ContextKeyValue = ContextKeyValue>(key: string): T | undefined;
-}
-
 export interface ContextInfo {
   readonly id: number;
   readonly parent?: Context;

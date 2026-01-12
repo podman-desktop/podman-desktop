@@ -2,10 +2,9 @@
 import { faSquareUpRight, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
 import { type ForwardConfig } from '/@api/kubernetes-port-forward-model';
-
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 
 interface Props {
   object: ForwardConfig;

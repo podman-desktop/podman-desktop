@@ -5,9 +5,9 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
-import { EditorSettings } from '../../../../main/src/plugin/editor-settings';
-import { isDark } from '../../stores/appearance';
-import { AppearanceUtil } from '../appearance/appearance-util';
+import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
+import { isDark } from '/@/stores/appearance';
+import { EditorSettings } from '/@api/editor/editor-settings';
 
 let divEl: HTMLDivElement;
 let editor: monaco.editor.IStandaloneCodeEditor;

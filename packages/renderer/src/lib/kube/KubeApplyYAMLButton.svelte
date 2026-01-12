@@ -2,7 +2,7 @@
 import type { KubernetesObject } from '@kubernetes/client-node';
 import { Button } from '@podman-desktop/ui-svelte';
 
-import SolidKubeIcon from '../images/SolidKubeIcon.svelte';
+import SolidKubeIcon from '/@/lib/images/SolidKubeIcon.svelte';
 
 let inProgress = false;
 

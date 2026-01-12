@@ -18,11 +18,11 @@
 import type containerDesktopAPI from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from '/@/plugin/api.js';
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';

@@ -1,5 +1,6 @@
 <script lang="ts">
-import { isNamespaced } from '../kube-utils';
+import { isNamespaced } from '/@/lib/kube/kube-utils';
+
 import type { Props } from './props';
 
 let { object }: Props = $props();

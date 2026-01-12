@@ -6,6 +6,7 @@ import type { TinroRouteMeta } from 'tinro';
 
 import AuthenticationIcon from '/@/lib/images/AuthenticationIcon.svelte';
 import CLIToolsIcon from '/@/lib/images/CLIToolsIcon.svelte';
+import DockerCompatibilityIcon from '/@/lib/images/DockerCompatibilityIcon.svelte';
 import ExperimentalIcon from '/@/lib/images/ExperimentalIcon.svelte';
 import KubernetesIcon from '/@/lib/images/KubernetesIcon.svelte';
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
@@ -48,6 +49,7 @@ let settingsNavigationItems = $derived<SettingsNavItemConfig[]>([
     title: 'Docker Compatibility',
     href: '/preferences/docker-compatibility',
     visible: dockerCompatibilityEnabled,
+    icon: DockerCompatibilityIcon,
   },
   { title: 'Registries', href: '/preferences/registries', visible: true, icon: RegistriesIcon },
   { title: 'Authentication', href: '/preferences/authentication-providers', visible: true, icon: AuthenticationIcon },

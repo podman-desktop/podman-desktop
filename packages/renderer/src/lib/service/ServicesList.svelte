@@ -2,12 +2,12 @@
 import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import ServiceIcon from '/@/lib/images/ServiceIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
 import { kubernetesCurrentContextServicesFiltered, serviceSearchPattern } from '/@/stores/kubernetes-contexts-state';
 
-import ServiceIcon from '../images/ServiceIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import ActionsColumn from './columns/Actions.svelte';
 import TypeColumn from './columns/Type.svelte';
 import { ServiceUtils } from './service-utils';

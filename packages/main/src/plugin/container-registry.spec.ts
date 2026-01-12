@@ -32,7 +32,6 @@ import type { Headers, PackOptions } from 'tar-fs';
 import * as tarstream from 'tar-stream';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@/plugin/api.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { InternalContainerProvider } from '/@/plugin/container-registry.js';
 import { ContainerProviderRegistry, LatestImageError } from '/@/plugin/container-registry.js';
@@ -40,6 +39,7 @@ import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ContainerCreateOptions, HostConfig } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ImageInfo } from '/@api/image-info.js';
@@ -6123,6 +6123,30 @@ describe('kube play', () => {
 
     expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', KUBE_PLAY_OPT);
   });
+
+  test('abortSignal should be passed down to libpod', async () => {
+    const ABORT_SIGNAL = new AbortController().signal;
+    vi.mocked(PODMAN_PROVIDER.api.version).mockResolvedValue(PODMAN_531_VERSION);
+    vi.mocked(KubePlayContext.prototype.getBuildContexts).mockReturnValue([]); // mock no contexts
+
+    // set provider
+    containerRegistry.addInternalProvider('podman.podman', PODMAN_PROVIDER);
+
+    await containerRegistry.playKube(
+      'dummy-file',
+      {
+        name: PODMAN_PROVIDER.name,
+        endpoint: PODMAN_PROVIDER.connection.endpoint,
+      } as unknown as ProviderContainerConnectionInfo,
+      {
+        abortSignal: ABORT_SIGNAL,
+      },
+    );
+
+    expect(PODMAN_PROVIDER.libpodApi.playKube).toHaveBeenCalledWith('dummy-file', {
+      abortSignal: ABORT_SIGNAL,
+    });
+  });
 });
 
 const originalConsoleWarn = console.warn;
@@ -6342,16 +6366,27 @@ describe('getNetworkDrivers', () => {
       info: infoMock,
     } as unknown as Dockerode;
 
+    const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'engine1',
+      endpoint: {
+        socketPath: '/engine1.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
     containerRegistry.addInternalProvider('engine1', {
       name: 'engine1',
       id: 'engine1',
       connection: {
         type: 'podman',
+        name: 'engine1',
+        endpoint: {
+          socketPath: '/engine1.socket',
+        },
       },
       api: fakeDockerode,
     } as InternalContainerProvider);
 
-    const result = await containerRegistry.getNetworkDrivers('engine1');
+    const result = await containerRegistry.getNetworkDrivers(providerConnectionInfo);
 
     expect(result).toEqual(['bridge', 'macvlan', 'ipvlan']);
   });
@@ -6363,23 +6398,41 @@ describe('getNetworkDrivers', () => {
       info: infoMock,
     } as unknown as Dockerode;
 
+    const providerConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'engine2',
+      endpoint: {
+        socketPath: '/engine2.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
     containerRegistry.addInternalProvider('engine2', {
       name: 'engine2',
       id: 'engine2',
       connection: {
         type: 'docker',
+        name: 'engine2',
+        endpoint: {
+          socketPath: '/engine2.socket',
+        },
       },
       api: fakeDockerode,
     } as InternalContainerProvider);
 
-    const result = await containerRegistry.getNetworkDrivers('engine2');
+    const result = await containerRegistry.getNetworkDrivers(providerConnectionInfo);
 
     expect(result).toEqual([]);
   });
 
   test('throws error when engine not found', async () => {
-    await expect(containerRegistry.getNetworkDrivers('nonexistent')).rejects.toThrow(
-      'no engine matching this container',
+    const nonexistentConnectionInfo: ProviderContainerConnectionInfo = {
+      name: 'nonexistent',
+      endpoint: {
+        socketPath: '/nonexistent.socket',
+      },
+    } as ProviderContainerConnectionInfo;
+
+    await expect(containerRegistry.getNetworkDrivers(nonexistentConnectionInfo)).rejects.toThrow(
+      'no running provider for the matching container',
     );
   });
 });

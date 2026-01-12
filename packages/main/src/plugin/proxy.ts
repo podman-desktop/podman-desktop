@@ -22,7 +22,7 @@ import { Agent, ProxyAgent } from 'undici';
 
 import { Certificates } from '/@/plugin/certificates.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { ProxyState } from '/@api/proxy.js';
+import { PROXY_CONFIG_KEYS, ProxyState } from '/@api/proxy.js';
 
 import { Emitter } from './events/emitter.js';
 import { getProxyUrl } from './proxy-resolver.js';
@@ -79,25 +79,25 @@ export class Proxy {
       title: 'Proxy',
       type: 'object',
       properties: {
-        ['proxy.http']: {
+        [PROXY_CONFIG_KEYS.HTTP]: {
           description: 'Proxy (HTTP)',
           type: 'string',
           default: '',
           hidden: true,
         },
-        ['proxy.https']: {
+        [PROXY_CONFIG_KEYS.HTTPS]: {
           description: 'Proxy (HTTPS)',
           type: 'string',
           default: '',
           hidden: true,
         },
-        ['proxy.no']: {
+        [PROXY_CONFIG_KEYS.NO_PROXY]: {
           description: 'Pattern for not using a proxy',
           type: 'string',
           default: '',
           hidden: true,
         },
-        ['proxy.enabled']: {
+        [PROXY_CONFIG_KEYS.ENABLED]: {
           description: 'Configure proxy',
           type: 'number',
           maximum: 2,

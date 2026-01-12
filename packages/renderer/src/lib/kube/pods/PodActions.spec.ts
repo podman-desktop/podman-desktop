@@ -21,9 +21,9 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import type { PodInfoContainerUI } from '/@/lib/pod/PodInfoUI';
 import type { V1Route } from '/@api/openshift-types';
 
-import type { PodInfoContainerUI } from '../../pod/PodInfoUI';
 import PodActions from './PodActions.svelte';
 import type { PodUI } from './PodUI';
 

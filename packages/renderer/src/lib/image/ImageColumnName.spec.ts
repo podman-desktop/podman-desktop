@@ -23,7 +23,8 @@ import { render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
-import ImageIcon from '../images/ImageIcon.svelte';
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+
 import ImageColumnName from './ImageColumnName.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 

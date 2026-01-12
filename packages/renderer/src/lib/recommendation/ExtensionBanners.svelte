@@ -1,12 +1,11 @@
 <script lang="ts">
+import { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ExtensionBanner from '/@/lib/recommendation/ExtensionBanner.svelte';
+import { isDark } from '/@/stores/appearance';
 import { extensionBannerInfos } from '/@/stores/extensionBanners';
-
-import type { ExtensionBanner as ExtensionBannerInfo } from '../../../../main/src/plugin/recommendations/recommendations-api';
-import { isDark } from '../../stores/appearance';
-import { providerInfos } from '../../stores/providers';
-import { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
+import { providerInfos } from '/@/stores/providers';
+import type { ExtensionBanner as ExtensionBannerInfo } from '/@api/recommendations/recommendations';
 
 let banners: ExtensionBannerInfo[] = $derived.by(() =>
   $extensionBannerInfos.filter(banner => !banner.when || isBannerVisible(banner)),
@@ -22,6 +21,6 @@ function isBannerVisible(banner: ExtensionBannerInfo): boolean | undefined {
 }
 </script>
 
-{#each banners as banner (banner.extensionId)}  
+{#each banners as banner (banner.extensionId)}
   <ExtensionBanner banner={banner} isDark={$isDark} />
 {/each}

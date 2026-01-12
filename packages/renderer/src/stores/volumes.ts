@@ -19,9 +19,9 @@
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import type { VolumeListInfo } from '/@api/volume-info';
 
-import VolumeIcon from '../lib/images/VolumeIcon.svelte';
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';
 

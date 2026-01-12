@@ -18,7 +18,7 @@
 
 import type { V1IngressRule } from '@kubernetes/client-node';
 
-import type { KubernetesNamespacedObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI } from '/@/lib/objects/KubernetesObjectUI';
 
 export interface IngressUI extends KubernetesNamespacedObjectUI {
   rules?: Array<V1IngressRule>;

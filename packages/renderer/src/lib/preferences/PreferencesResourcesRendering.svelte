@@ -10,26 +10,26 @@ import type { Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
+import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
 import BooleanEnumDisplay from '/@/lib/ui/BooleanEnumDisplay.svelte';
+import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
+import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
+import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
+import { capitalize } from '/@/lib/ui/Util';
+import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
+import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import { configurationProperties } from '../../stores/configurationProperties';
-import { providerInfos } from '../../stores/providers';
-import ContributionActions from '../actions/ContributionActions.svelte';
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
-import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
-import ConnectionErrorInfoButton from '../ui/ConnectionErrorInfoButton.svelte';
-import ConnectionStatus from '../ui/ConnectionStatus.svelte';
-import EngineIcon from '../ui/EngineIcon.svelte';
-import { capitalize } from '../ui/Util';
 import { PeerProperties } from './PeerProperties';
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
@@ -465,6 +465,10 @@ $effect(() => {
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
+              {#if provider.version}
+                <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 break-words"
+                  >v{provider.version}</span>
+              {/if}
             </div>
             <ProviderActionButtons
               provider={provider}
@@ -598,10 +602,6 @@ $effect(() => {
                 {/snippet}
               </PreferencesConnectionActions>
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
-                <div aria-label="Connection Version">
-                  {provider.name}
-                  {provider.version ? `v${provider.version}` : ''}
-                </div>
                 <div aria-label="Connection Type">{container.vmType ? capitalize(container.vmType.name) : ''}</div>
               </div>
             </div>

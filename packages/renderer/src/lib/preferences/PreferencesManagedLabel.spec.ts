@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import PreferencesManagedLabel from '/@/lib/preferences/PreferencesManagedLabel.svelte';
@@ -38,5 +38,17 @@ test('simple test to see if the svg (icon) renders', async () => {
   await vi.waitFor(() => {
     const svgElement = container.querySelector('svg');
     expect(svgElement).toBeInTheDocument();
+  });
+});
+
+test('should have This setting is managed by your organization tooltip', async () => {
+  const { getByText, getByTestId } = render(PreferencesManagedLabel);
+
+  await vi.waitFor(async () => {
+    const tooltipTrigger = getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+
+    const element = getByText('This setting is managed by your organization.');
+    expect(element).toBeInTheDocument();
   });
 });

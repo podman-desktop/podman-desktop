@@ -21,16 +21,16 @@ import { inject, injectable } from 'inversify';
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Featured } from '/@/plugin/featured/featured.js';
-import type { FeaturedExtension } from '/@/plugin/featured/featured-api.js';
+import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { FeaturedExtension } from '/@api/featured/featured-api.js';
 import type {
   ExtensionBanner,
   RecommendedRegistry,
   RecommendedRegistryExtensionDetails,
-} from '/@/plugin/recommendations/recommendations-api.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+} from '/@api/recommendations/recommendations.js';
+import { RecommendationsSettings } from '/@api/recommendations/recommendations-settings.js';
 
 import recommendations from '../../../../../recommendations.json' with { type: 'json' };
-import { RecommendationsSettings } from './recommendations-settings.js';
 
 @injectable()
 export class RecommendationsRegistry {

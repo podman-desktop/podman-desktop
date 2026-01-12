@@ -4,14 +4,14 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
+import { ContainerUtils } from '/@/lib/container/container-utils';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import ComposeIcon from '/@/lib/images/PodIcon.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
 
-import Route from '../../Route.svelte';
-import { ContainerUtils } from '../container/container-utils';
-import type { ContainerInfoUI } from '../container/ContainerInfoUI';
-import ComposeIcon from '../images/PodIcon.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import ComposeActions from './ComposeActions.svelte';
 import ComposeDetailsInspect from './ComposeDetailsInspect.svelte';
 import ComposeDetailsKube from './ComposeDetailsKube.svelte';

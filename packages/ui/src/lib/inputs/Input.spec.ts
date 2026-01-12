@@ -56,6 +56,7 @@ test('Expect basic styling', async () => {
   expect(element).toHaveClass('outline-0');
   expect(element).toHaveClass('bg-[var(--pd-input-field-bg)]');
   expect(element).toHaveClass('text-[color:var(--pd-input-field-focused-text)]');
+  expect(element).toHaveClass('placeholder:text-[color:var(--pd-input-field-placeholder-text)]');
 
   expect(element).toHaveClass('group-hover:bg-[var(--pd-input-field-hover-bg)]');
   expect(element).toHaveClass('group-focus-within:bg-[var(--pd-input-field-hover-bg)]');
@@ -108,10 +109,12 @@ test('Expect basic disabled styling', async () => {
   expect(element).toHaveClass('outline-0');
   expect(element).toHaveClass('bg-[var(--pd-input-field-bg)]');
   expect(element).toHaveClass('text-[color:var(--pd-input-field-disabled-text)]');
+  expect(element).toHaveClass('placeholder:text-[color:var(--pd-input-field-disabled-text)]');
 
   expect(element).not.toHaveClass('group-hover:bg-[var(--pd-input-field-hover-bg)]');
   expect(element).not.toHaveClass('group-focus-within:bg-[var(--pd-input-field-hover-bg)]');
   expect(element).not.toHaveClass('group-hover-placeholder:text-[color:var(--pd-input-field-placeholder-text)]');
+  expect(element).not.toHaveClass('placeholder:text-[color:var(--pd-input-field-placeholder-text)]');
 
   expect(element.parentElement).toBeInTheDocument();
   expect(element.parentElement).toHaveClass('bg-[var(--pd-input-field-bg)]');

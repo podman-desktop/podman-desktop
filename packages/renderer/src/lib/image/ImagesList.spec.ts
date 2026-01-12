@@ -28,12 +28,12 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
+import { imagesInfos } from '/@/stores/images';
+import { providerInfos } from '/@/stores/providers';
 import { viewsContributions } from '/@/stores/views';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import { imagesInfos } from '../../stores/images';
-import { providerInfos } from '../../stores/providers';
-import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '../view/views';
 import ImagesList from './ImagesList.svelte';
 
 // fake the window.events object

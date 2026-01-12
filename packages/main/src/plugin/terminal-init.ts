@@ -19,8 +19,7 @@
 import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-
-import { TerminalSettings } from './terminal-settings.js';
+import { TerminalSettings } from '/@api/terminal/terminal-settings.js';
 
 @injectable()
 export class TerminalInit {

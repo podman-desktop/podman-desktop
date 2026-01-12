@@ -18,27 +18,46 @@
 
 import { inject, injectable } from 'inversify';
 
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import { IPCHandle } from '/@/plugin/api.js';
+import { ActionKind, ItemInfo } from '/@api/help-menu.js';
+import product from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class HelpMenu {
-  constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
+  constructor(
+    @inject(IPCHandle)
+    private readonly ipcHandle: IPCHandle,
+  ) {}
 
   init(): void {
-    const helpMenuConfiguration: IConfigurationNode = {
-      id: 'preferences.experimental.helpMenu',
-      title: 'Experimental (Help menu)',
-      type: 'object',
-      properties: {
-        'helpMenu.useProductConfig': {
-          description: 'Replace help menu with the one defined in the product',
-          type: 'object',
-          default: import.meta.env.DEV ? {} : undefined,
-          experimental: {},
-        },
-      },
-    };
+    this.ipcHandle('help-menu:getItems', async (): Promise<ItemInfo[]> => {
+      return this.getItems();
+    });
+  }
 
-    this.configurationRegistry.registerConfigurations([helpMenuConfiguration]);
+  getItems(): ItemInfo[] {
+    return product.helpMenu.items.map(item => {
+      const baseItem = { icon: item.icon, title: item.title, tooltip: item.tooltip };
+      if (item.command) {
+        return {
+          ...baseItem,
+          action: {
+            kind: ActionKind.COMMAND,
+            parameter: item.command,
+          },
+          enabled: true,
+        };
+      } else if (item.link) {
+        return {
+          ...baseItem,
+          action: {
+            kind: ActionKind.LINK,
+            parameter: item.link,
+          },
+          enabled: true,
+        };
+      }
+      return { ...baseItem, enabled: false };
+    });
   }
 }

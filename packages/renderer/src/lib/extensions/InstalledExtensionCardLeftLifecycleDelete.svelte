@@ -1,9 +1,8 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
+import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
-
-import LoadingIconButton from '../ui/LoadingIconButton.svelte';
 
 interface Props {
   extension: CombinedExtensionInfoUI;

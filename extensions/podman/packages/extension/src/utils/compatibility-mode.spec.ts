@@ -19,7 +19,8 @@
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, expect, test, vi } from 'vitest';
 
-import * as extension from '../extension';
+import * as extension from '/@/extension';
+
 import { DarwinSocketCompatibility, getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
 
 afterEach(() => {

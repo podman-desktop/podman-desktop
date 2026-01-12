@@ -36,6 +36,7 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -64,7 +65,6 @@ import type { PullEvent } from '/@api/pull-event.js';
 import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 
 import { isWindows } from '../util.js';
-import { ApiSenderType } from './api.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type {
   ContainerCreateMountOption,
@@ -2610,6 +2610,7 @@ export class ContainerProviderRegistry {
     options?: {
       build?: boolean;
       replace?: boolean;
+      abortSignal?: AbortSignal;
     },
   ): Promise<PlayKubeInfo> {
     const telemetryOptions: Record<string, unknown> = {
@@ -2853,15 +2854,14 @@ export class ContainerProviderRegistry {
     return infos.filter((item): item is containerDesktopAPI.ContainerEngineInfo => !!item);
   }
 
-  async getNetworkDrivers(engineId: string): Promise<string[]> {
-    const provider = this.internalProviders.get(engineId);
-    if (!provider) {
-      throw new Error('no engine matching this container');
-    }
-    if (!provider.api) {
+  async getNetworkDrivers(
+    providerContainerConnectionInfo: ProviderContainerConnectionInfo | containerDesktopAPI.ContainerProviderConnection,
+  ): Promise<string[]> {
+    const matchingContainerProvider = this.getMatchingContainerProvider(providerContainerConnectionInfo);
+    if (!matchingContainerProvider?.api) {
       throw new Error('no running provider for the matching container');
     }
-    const info = await provider.api.info();
+    const info = await matchingContainerProvider.api.info();
     return info.Plugins?.Network ?? [];
   }
 

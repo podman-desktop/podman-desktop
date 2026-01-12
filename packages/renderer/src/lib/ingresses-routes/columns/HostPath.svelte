@@ -1,7 +1,8 @@
 <script lang="ts">
 import { Link } from '@podman-desktop/ui-svelte';
 
-import { IngressRouteUtils } from '../ingress-route-utils';
+import { IngressRouteUtils } from '/@/lib/ingresses-routes/ingress-route-utils';
+
 import type { Props } from './props';
 
 let { object }: Props = $props();

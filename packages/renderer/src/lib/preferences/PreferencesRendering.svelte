@@ -3,11 +3,11 @@ import { SearchInput } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
 
+import type { ContextUI } from '/@/lib/context/context';
+import Route from '/@/Route.svelte';
 import { context } from '/@/stores/context';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import Route from '../../Route.svelte';
-import type { ContextUI } from '../context/context';
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import { isDefaultScope, isPropertyValidInContext } from './Util';

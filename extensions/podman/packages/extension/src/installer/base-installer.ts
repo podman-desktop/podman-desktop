@@ -18,7 +18,8 @@
 import type { InstallCheck } from '@podman-desktop/api';
 import { compare } from 'compare-versions';
 
-import { getBundledPodmanVersion } from '../utils/podman-bundled';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+
 import type { Installer } from './installer';
 
 export abstract class BaseInstaller implements Installer {

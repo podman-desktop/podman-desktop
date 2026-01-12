@@ -2,7 +2,8 @@
 import { faCheckCircle, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 
-import type { FeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
+
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 
 export let featuredExtension: FeaturedExtension;

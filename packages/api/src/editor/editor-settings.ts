@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export enum TerminalSettings {
-  SectionName = 'terminal',
+export enum EditorSettings {
+  SectionName = 'editor',
   FontSize = 'integrated.fontSize',
-  LineHeight = 'integrated.lineHeight',
-  Scrollback = 'integrated.scrollback',
 }

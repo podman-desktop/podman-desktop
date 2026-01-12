@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
@@ -19,7 +19,7 @@ function openDetailsExtension(): void {
   <button aria-label="{extension.name} extension details" type="button" on:click={openDetailsExtension}>
     <div class="flex flex-row items-center text-[var(--pd-content-header)]">
       {#if displayIcon}
-        <Fa icon={faArrowUpRightFromSquare} />
+        <Fa icon={faCircleInfo} />
       {/if}
       <div class="text-left before:{$$props.class}">
         {extension.displayName} extension

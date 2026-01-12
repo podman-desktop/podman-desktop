@@ -18,7 +18,8 @@
 import type { CheckResult } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { BaseCheck } from '../base-check';
+import { BaseCheck } from '/@/checks/base-check';
+
 import { HyperVInstalledCheck } from './hyper-v-installed-check';
 import { HyperVRunningCheck } from './hyper-v-running-check';
 import { PodmanDesktopElevatedCheck } from './podman-desktop-elevated-check';

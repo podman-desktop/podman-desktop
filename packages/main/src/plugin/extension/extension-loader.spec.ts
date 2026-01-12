@@ -27,9 +27,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
 import type { IDisposable } from '/@api/disposable.js';
 import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
@@ -41,7 +43,6 @@ import type { WebviewInfo } from '/@api/webview-info.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { getBase64Image } from '../../util.js';
-import type { ApiSenderType } from '../api.js';
 import type { AuthenticationImpl } from '../authentication.js';
 import type { CliToolRegistry } from '../cli-tool-registry.js';
 import type { ColorRegistry } from '../color-registry.js';
@@ -276,6 +277,10 @@ const dialogRegistry: DialogRegistry = {
 
 const certificates: Certificates = {} as unknown as Certificates;
 
+const extensionApiVersion: ExtensionApiVersion = {
+  getApiVersion: vi.fn(),
+};
+
 const extensionWatcher = {
   monitor: vi.fn(),
   untrack: vi.fn(),
@@ -332,6 +337,11 @@ const readdirMock = vi.mocked(
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
+  vi.resetAllMocks();
+  Object.defineProperty(process, 'resourcesPath', {
+    value: '/resources',
+  });
+
   extensionLoader = new TestExtensionLoader(
     commandRegistry,
     menuRegistry,
@@ -371,6 +381,7 @@ beforeEach(() => {
     extensionWatcher,
     extensionDevelopmentFolder,
     extensionAnalyzer,
+    extensionApiVersion,
   );
 });
 
@@ -400,7 +411,7 @@ describe('extensionLoader#start', () => {
 
     expect(readDevelopmentFoldersMock).toHaveBeenCalledOnce();
     const devFolder = readDevelopmentFoldersMock.mock.calls[0]?.[0];
-    expect(devFolder?.endsWith('extensions-extra')).toBeTruthy();
+    expect(devFolder).toEqual(path.join(process.resourcesPath, 'extensions-extra'));
   });
 
   test('error in one of analyzeExtension should not be dramatic', async () => {
@@ -767,7 +778,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
 test('Verify disable extension updates configuration', async () => {
   const ids = ['extension.foo'];
 
-  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
   extensionLoader.setDisabledExtensionIds(ids);
 
   expect(configurationRegistryUpdateConfigurationMock).toHaveBeenCalledWith('extensions.disabled', ids);
@@ -781,13 +792,15 @@ test('Verify enable extension updates configuration', async () => {
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: () => before,
   });
-  configurationRegistryUpdateConfigurationMock.mockResolvedValue(Promise.resolve);
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
   extensionLoader.ensureExtensionIsEnabled(id);
 
   expect(configurationRegistryUpdateConfigurationMock).toHaveBeenCalledWith('extensions.disabled', after);
 });
 
 test('Verify stopping extension disables it', async () => {
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
+
   const id = 'extension.no.foo';
   configurationRegistryGetConfigurationMock.mockReturnValue({
     get: () => [],
@@ -798,6 +811,8 @@ test('Verify stopping extension disables it', async () => {
 });
 
 test('Verify starting extension enables it', async () => {
+  configurationRegistryUpdateConfigurationMock.mockResolvedValue(undefined);
+
   const id = 'extension.no.foo';
 
   configurationRegistryGetConfigurationMock.mockReturnValue({
@@ -1850,6 +1865,17 @@ test('check version', async () => {
 
   // check we called method
   expect(readPodmanVersion).toBe(fakeVersion);
+});
+
+describe('apiVersion', () => {
+  const APP_VERSION_MOCK = '1.2.3';
+
+  test('expect apiVersion to be the return value of ExtensionApiVersion#getApiVersion', async () => {
+    vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue(APP_VERSION_MOCK);
+    const api = createApi();
+
+    expect(api.apiVersion).toEqual(APP_VERSION_MOCK);
+  });
 });
 
 test('listPods', async () => {

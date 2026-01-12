@@ -30,7 +30,7 @@ const mocks = vi.hoisted(() => ({
   EmbeddableCatalogExtensionList: vi.fn(),
 }));
 
-vi.mock('../extensions/EmbeddableCatalogExtensionList.svelte', () => ({
+vi.mock(import('/@/lib/extensions/EmbeddableCatalogExtensionList.svelte'), () => ({
   default: mocks.EmbeddableCatalogExtensionList,
 }));
 

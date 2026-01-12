@@ -3,8 +3,8 @@ import { faArrowUp, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher } from 'svelte';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import ActionsWrapper from './ActionsMenu.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 

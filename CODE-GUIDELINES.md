@@ -110,6 +110,30 @@ This is much simpler than managing promises manually and avoids the need for `{#
 
 For more details on async patterns in Svelte, see the [Svelte documentation on await expressions](https://svelte.dev/docs/svelte/await-expressions).
 
+### Svelte Attachments (Svelte 5.29+)
+
+You can use attachments to add DOM behavior that runs on mount and cleans up on detach.
+
+Example:
+
+```ts
+<script lang="ts">
+  import type { Attachment } from 'svelte/attachments';
+
+  const clickOnce: Attachment = (el) => {
+    const onClick = () => {
+      // handle click
+    };
+    el.addEventListener('click', onClick);
+    return () => el.removeEventListener('click', onClick);
+  };
+</script>
+
+<button {@attach clickOnce}>...</button>
+```
+
+References: [@attach](https://svelte.dev/docs/svelte/@attach), [svelte/attachments](https://svelte.dev/docs/svelte/svelte-attachments)
+
 ## Unit tests code
 
 ### Use `vi.mocked`, not a generic `myFunctionMock`

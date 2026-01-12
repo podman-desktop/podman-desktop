@@ -3,6 +3,10 @@ import { type KubernetesObject } from '@kubernetes/client-node';
 import { TableColumn, TableDurationColumn, TableRow } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import IngressRouteIcon from '/@/lib/images/IngressRouteIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
 import {
   ingressSearchPattern,
   kubernetesCurrentContextIngressesFiltered,
@@ -11,10 +15,6 @@ import {
 } from '/@/stores/kubernetes-contexts-state';
 import type { V1Route } from '/@api/openshift-types';
 
-import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import ActionsColumn from './columns/Actions.svelte';
 import BackendColumn from './columns/Backend.svelte';
 import HostPathColumn from './columns/HostPath.svelte';

@@ -4,14 +4,14 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
+import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 
-import { registriesInfos, registriesSuggestedInfos } from '../../stores/registries';
-import IconImage from '../appearance/IconImage.svelte';
-import Dialog from '../dialogs/Dialog.svelte';
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';
 

@@ -25,8 +25,9 @@ import * as extensionApi from '@podman-desktop/api';
 import { Mutex } from 'async-mutex';
 import * as toml from 'smol-toml';
 
-import type { RegistryConfiguration } from '../configuration/registry-configuration';
-import { RegistryConfigurationImpl } from '../configuration/registry-configuration';
+import type { RegistryConfiguration } from '/@/configuration/registry-configuration';
+import { RegistryConfigurationImpl } from '/@/configuration/registry-configuration';
+
 import { VMTYPE } from './util';
 
 const configurationRosetta = 'setting.rosetta';

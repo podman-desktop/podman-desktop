@@ -1,7 +1,6 @@
 <script lang="ts">
+import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-
-import SlideToggle from '../../ui/SlideToggle.svelte';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let checked = false;
@@ -22,8 +21,8 @@ function onChecked(state: boolean): void {
   left
   bind:checked={checked}
   on:checked={(event): void => onChecked(event.detail)}
-  readonly={!!record.readonly}
-  disabled={!!record.readonly}
+  readonly={!!record.readonly || !!record.locked}
+  disabled={!!record.readonly || !!record.locked}
   aria-invalid={invalidEntry}
   aria-label={record.description ?? record.markdownDescription}>
   <span class="text-xs">{checked ? 'Enabled' : 'Disabled'}</span>

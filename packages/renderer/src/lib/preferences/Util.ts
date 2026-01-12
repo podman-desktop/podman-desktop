@@ -19,6 +19,8 @@
 import type { ConfigurationScope } from '@podman-desktop/api';
 import type { Terminal } from '@xterm/xterm';
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type {
@@ -27,9 +29,6 @@ import type {
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
 } from '/@api/provider-info';
-
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
 
 export interface IProviderConnectionConfigurationPropertyRecorded extends IConfigurationPropertyRecordedSchema {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

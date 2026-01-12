@@ -22,10 +22,10 @@ import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 
-import { ContextUI } from '../context/context';
 import Onboarding from './Onboarding.svelte';
 
 vi.mock('/@product.json', () => ({

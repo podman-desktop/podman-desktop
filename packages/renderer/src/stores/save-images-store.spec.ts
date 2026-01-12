@@ -21,7 +21,8 @@
 import { get } from 'svelte/store';
 import { expect, test } from 'vitest';
 
-import type { ImageInfoUI } from '../lib/image/ImageInfoUI';
+import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
+
 import { saveImagesInfo } from './save-images-store';
 
 const imageInfo: ImageInfoUI = {

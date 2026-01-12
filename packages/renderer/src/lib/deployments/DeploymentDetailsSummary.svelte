@@ -3,12 +3,11 @@ import type { V1Deployment } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
-
-import type { EventUI } from '../events/EventUI';
-import KubeDeploymentArtifact from '../kube/details/KubeDeploymentArtifact.svelte';
-import KubeDeploymentStatusArtifact from '../kube/details/KubeDeploymentStatusArtifact.svelte';
-import KubeEventsArtifact from '../kube/details/KubeEventsArtifact.svelte';
-import KubeObjectMetaArtifact from '../kube/details/KubeObjectMetaArtifact.svelte';
+import type { EventUI } from '/@/lib/events/EventUI';
+import KubeDeploymentArtifact from '/@/lib/kube/details/KubeDeploymentArtifact.svelte';
+import KubeDeploymentStatusArtifact from '/@/lib/kube/details/KubeDeploymentStatusArtifact.svelte';
+import KubeEventsArtifact from '/@/lib/kube/details/KubeEventsArtifact.svelte';
+import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
 
 interface Props {
   deployment: V1Deployment | undefined;

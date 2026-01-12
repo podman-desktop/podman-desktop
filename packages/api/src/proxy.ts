@@ -21,3 +21,12 @@ export enum ProxyState {
   PROXY_MANUAL = 1,
   PROXY_DISABLED = 2,
 }
+
+// Easier to remember constants for our proxy configuration keys
+// now can refer to PROXY_CONFIG_KEYS.ENABLED instead of 'proxy.enabled'
+export const PROXY_CONFIG_KEYS = {
+  ENABLED: 'proxy.enabled',
+  HTTP: 'proxy.http',
+  HTTPS: 'proxy.https',
+  NO_PROXY: 'proxy.no',
+} as const;

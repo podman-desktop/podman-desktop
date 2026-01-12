@@ -1,10 +1,11 @@
 <script lang="ts">
-import { faArrowUpRightFromSquare, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
-import FeaturedExtensionDownload from '../featured/FeaturedExtensionDownload.svelte';
+import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
+
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 
 export let catalogExtensionUI: CatalogExtensionInfoUI;
@@ -73,7 +74,7 @@ function openExtensionDetails(): void {
       <div class="flex flex-1 justify-end items-center">
         <Button
           type="link"
-          icon={faArrowUpRightFromSquare}
+          icon={faCircleInfo}
           aria-label="{catalogExtensionUI.displayName} details"
           on:click={openExtensionDetails}>More details</Button>
       </div>

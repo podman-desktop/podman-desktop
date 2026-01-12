@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import VolumeIcon from '../../lib/images/VolumeIcon.svelte';
-import { volumeListInfos } from '../volumes';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import { volumeListInfos } from '/@/stores/volumes';
+
 import type { NavigationRegistryEntry } from './navigation-registry';
 
 let count = $state(0);

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ServiceUI } from '../ServiceUI';
+import type { ServiceUI } from '/@/lib/service/ServiceUI';
 
 export interface Props {
   object: ServiceUI;

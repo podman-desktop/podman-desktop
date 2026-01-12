@@ -23,8 +23,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { WinPlatform } from '/@/platforms/win-platform';
+import { getAssetsFolder } from '/@/utils/util';
 
-import { getAssetsFolder } from '../utils/util';
 import { WinInstaller } from './win-installer';
 
 vi.mock('node:fs');
@@ -41,7 +41,7 @@ const progress = {
 const mockTelemetryLogger = {} as TelemetryLogger;
 const mockWinPlatform = {} as WinPlatform;
 
-vi.mock(import('./../utils/util'), () => ({
+vi.mock(import('/@/utils/util'), () => ({
   getAssetsFolder: vi.fn(),
 }));
 

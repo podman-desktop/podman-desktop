@@ -3,12 +3,13 @@ import { Button, Checkbox, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
+import IconImage from '/@/lib/appearance/IconImage.svelte';
+import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 import type { OnboardingInfo } from '/@api/onboarding';
+import type { TelemetryMessages } from '/@api/telemetry';
 
-import IconImage from '../appearance/IconImage.svelte';
-import DesktopIcon from '../images/DesktopIcon.svelte';
 import bgImage from './background.png';
 import { WelcomeUtils } from './welcome-utils';
 
@@ -16,6 +17,7 @@ export let showWelcome = false;
 export let showTelemetry = false;
 
 let telemetry = true;
+let telemetryMessages: TelemetryMessages;
 
 const welcomeUtils = new WelcomeUtils();
 let podmanDesktopVersion: string;
@@ -58,6 +60,7 @@ onMount(async () => {
 
   const telemetryPrompt = await welcomeUtils.havePromptedForTelemetry();
   if (!telemetryPrompt) {
+    telemetryMessages = await window.getTelemetryMessages();
     showTelemetry = true;
   }
   podmanDesktopVersion = await window.getPodmanDesktopVersion();
@@ -161,11 +164,15 @@ function startOnboardingQueue(): void {
             class="text-lg px-2"
             title="Enable telemetry"><div class="text-base font-medium">Telemetry:</div></Checkbox>
           <div class="w-2/5 text-[var(--pd-content-card-text)]">
-            Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.
-            <Link
-              on:click={async (): Promise<void> => {
-                await window.openExternal('https://developers.redhat.com/article/tool-data-collection');
-              }}>Read our privacy statement</Link>
+            {#if telemetryMessages}
+              {telemetryMessages.acceptMessage}
+              {#if telemetryMessages?.infoLink && telemetryMessages?.infoURL}
+                <Link
+                  on:click={async (): Promise<void> => {
+                    await window.openExternal(telemetryMessages.infoURL ?? '');
+                  }}>{telemetryMessages?.infoLink}</Link>
+              {/if}
+            {/if}
           </div>
         </div>
         <div class="flex justify-center p-1 text-sm text-[var(--pd-content-card-text)]">

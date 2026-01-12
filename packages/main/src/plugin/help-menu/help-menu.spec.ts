@@ -15,46 +15,36 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
 import { expect, test, vi } from 'vitest';
 
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { IPCHandle } from '/@/plugin/api.js';
 
 import { HelpMenu } from './help-menu.js';
 
-const registerConfigurationsMock = vi.fn();
-const configurationRegistryMock = {
-  registerConfigurations: registerConfigurationsMock,
-} as unknown as ConfigurationRegistry;
+const ipcHandle: IPCHandle = vi.fn();
 
-const productConfigPropertyName = 'helpMenu.useProductConfig';
-test('should register a configuration', async () => {
-  vi.stubEnv('DEV', true);
-  const helpMenu = new HelpMenu(configurationRegistryMock);
+test('should get the items', async () => {
+  const helpMenu = new HelpMenu(ipcHandle);
   helpMenu.init();
 
-  expect(configurationRegistryMock.registerConfigurations).toBeCalled();
-  const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
-  expect(configurationNode?.id).toBe('preferences.experimental.helpMenu');
-  expect(configurationNode?.title).toBe('Experimental (Help menu)');
-  expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(1);
-  expect(configurationNode?.properties?.[productConfigPropertyName]).toBeDefined();
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.type).toBe('object');
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.description).toBe(
-    'Replace help menu with the one defined in the product',
-  );
+  const items = helpMenu.getItems();
 
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.experimental).toStrictEqual({});
-});
+  expect(items).not.toHaveLength(0);
 
-test('Undefined should be default if not in dev env', () => {
-  vi.resetAllMocks();
-  vi.stubEnv('DEV', false);
-  const helpMenu = new HelpMenu(configurationRegistryMock);
-  helpMenu.init();
+  items.forEach(item => {
+    expect(item.enabled).toBeDefined();
+    expect(item.enabled).toBeTypeOf('boolean');
+    if (item.action) {
+      expect(item.action.kind).toBeDefined();
+      expect(item.action.kind).toBeTypeOf('number');
 
-  expect(configurationRegistryMock.registerConfigurations).toBeCalled();
-  const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
-
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.default).toBe(undefined);
+      expect(item.action.parameter).toBeDefined();
+      expect(item.action.parameter).toBeTypeOf('string');
+    }
+    expect(item.icon).toBeDefined();
+    expect(item.icon).toBeTypeOf('string');
+    expect(item.title).toBeDefined();
+    expect(item.title).toBeTypeOf('string');
+  });
 });

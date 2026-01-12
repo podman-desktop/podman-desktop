@@ -1,9 +1,11 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 
-import CommandPalette from '../dialogs/CommandPalette.svelte';
-import DesktopIcon from '../images/DesktopIcon.svelte';
-import WindowControlButtons from '../window-control-buttons/ControlButtons.svelte';
+import CommandPalette from '/@/lib/dialogs/CommandPalette.svelte';
+import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
+import NavigationButtons from '/@/lib/ui/NavigationButtons.svelte';
+import WindowControlButtons from '/@/lib/window-control-buttons/ControlButtons.svelte';
+
 import SearchButton from './SearchButton.svelte';
 
 let platform: string = $state('');
@@ -26,32 +28,34 @@ function closeCommandPalette(): void {
 
 <header
   id="navbar"
-  class="bg-[var(--pd-titlebar-bg)] body-font z-999 relative {platform === 'win32'
+  class="bg-[var(--pd-titlebar-bg)] body-font relative {platform === 'win32'
     ? 'min-h-[32px]'
     : 'min-h-[38px]'} border-[var(--pd-global-nav-bg-border)] border-b-[1px]"
   style="-webkit-app-region: drag;">
-  <div class="flex select-none">
-    <!-- On Linux, title is centered and we have control buttons in the title bar-->
-    {#if platform === 'linux'}
-      <div class="flex mx-auto flex-row pt-[7px] pb-[6px] items-center">
-        <div class="absolute left-[10px] top-[10px]">
-          <DesktopIcon size="18" />
-        </div>
-        <SearchButton onclick={openCommandPalette}/>
-        <WindowControlButtons platform={platform} />
-      </div>
-    {:else if platform === 'win32'}
-      <div class="flex flex-row pt-[10px] pb-[10px] items-center">
-        <div class="absolute left-[7px] top-[7px]">
-          <DesktopIcon size="20" />
-        </div>
-        <SearchButton onclick={openCommandPalette}/>
-        <div class="ml-[35px] text-left text-base leading-3 text-[color:var(--pd-titlebar-text)]">{title}</div>
-        <WindowControlButtons platform={platform} />
-      </div>
-    {:else if platform === 'darwin'}
+  <div class="select-none grid grid-cols-3 items-center h-full w-full">
+    <!-- left -->
+    <div class="flex flex-row grow pl-[7px] items-center gap-x-2">
+      {#if platform !== 'darwin'}
+        <DesktopIcon size={platform === 'win32' ? '20' : '18'} />
+      {/if}
+      {#if  platform === 'win32'}
+        <div class="text-left text-base leading-3 text-[color:var(--pd-titlebar-text)]">{title}</div>
+      {/if}
+      <NavigationButtons class={platform === 'darwin' ? 'pl-20' : ''}/>
+    </div>
+
+    <!-- center -->
+    <div class="flex flex-row grow items-center justify-center w-full">
       <SearchButton onclick={openCommandPalette}/>
-    {/if}
-    <CommandPalette display={commandPaletteVisible} onclose={closeCommandPalette}/>
+    </div>
+
+    <!-- right -->
+    <div class="flex flex-row grow justify-end">
+      {#if platform !== 'darwin'}
+        <WindowControlButtons platform={platform} />
+      {/if}
+    </div>
   </div>
 </header>
+
+<CommandPalette display={commandPaletteVisible} onclose={closeCommandPalette}/>

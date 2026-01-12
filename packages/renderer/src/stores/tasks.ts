@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import { derived, writable } from 'svelte/store';
 
 import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatus } from '/@api/taskInfo';
 
-import type { TaskImpl } from '../../../main/src/plugin/tasks/task-impl';
 import { findMatchInLeaves } from './search-util';
 
 /**
@@ -103,7 +102,7 @@ window.events?.receive('task-updated', (task: unknown) => {
   updateTask(task as TaskInfo);
 });
 window.events?.receive('task-removed', (task: unknown) => {
-  tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== (task as TaskImpl).id));
+  tasksInfo.update(tasks => tasks.filter(mTask => mTask.id !== (task as TaskInfo | NotificationTaskInfo).id));
 });
 
 export function isNotificationTask(task: TaskInfo): task is NotificationTaskInfo {

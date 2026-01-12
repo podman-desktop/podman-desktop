@@ -27,10 +27,10 @@ import type {
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { CliToolExtensionInfo, CliToolInfo } from '/@api/cli-tool-info.js';
 import type { Event } from '/@api/event.js';
 
-import { ApiSenderType } from './api.js';
 import { CliToolImpl } from './cli-tool-impl.js';
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
@@ -51,8 +51,14 @@ export class CliToolRegistry {
     this.cliTools.set(cliTool.id, cliTool);
     this.apiSender.send('cli-tool-create');
     this._onDidCliToolsChange.fire();
-    cliTool.onDidUpdateVersion(() => this.apiSender.send('cli-tool-change', cliTool.id));
-    cliTool.onDidUninstall(() => this.apiSender.send('cli-tool-change', cliTool.id));
+    cliTool.onDidUpdateVersion(() => {
+      this._onDidCliToolsChange.fire();
+      this.apiSender.send('cli-tool-change', cliTool.id);
+    });
+    cliTool.onDidUninstall(() => {
+      this._onDidCliToolsChange.fire();
+      this.apiSender.send('cli-tool-change', cliTool.id);
+    });
     return cliTool;
   }
 

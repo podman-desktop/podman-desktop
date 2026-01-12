@@ -4,10 +4,10 @@ import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 
-import { lastPage } from '../../stores/breadcrumb';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import TroubleshootingDevToolsConsoleLogs from './TroubleshootingDevToolsConsoleLogs.svelte';
 import TroubleshootingGatherLogs from './TroubleshootingGatherLogs.svelte';
 import TroubleshootingPageKubernetes from './TroubleshootingPageKubernetes.svelte';

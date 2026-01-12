@@ -1,5 +1,6 @@
 <script lang="ts">
-import { ContainerGroupInfoTypeUI } from '../container/ContainerInfoUI';
+import { ContainerGroupInfoTypeUI } from '/@/lib/container/ContainerInfoUI';
+
 import Label from './Label.svelte';
 import ProviderInfoCircle from './ProviderInfoCircle.svelte';
 

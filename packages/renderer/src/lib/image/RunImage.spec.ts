@@ -25,11 +25,10 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import RunImage from '/@/lib/image/RunImage.svelte';
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+import { runImageInfo } from '/@/stores/run-image-store';
 import type { ImageInspectInfo } from '/@api/image-inspect-info';
-
-import { mockBreadcrumb } from '../../stores/breadcrumb.spec';
-import { runImageInfo } from '../../stores/run-image-store';
-import ImageIcon from '../images/ImageIcon.svelte';
 
 const originalConsoleDebug = console.debug;
 

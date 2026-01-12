@@ -4,9 +4,9 @@ import { Buffer } from 'buffer';
 import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
+import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import LoadingIconButton from '../ui/LoadingIconButton.svelte';
 import {
   type ConnectionCallback,
   eventCollect,

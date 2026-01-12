@@ -1,7 +1,8 @@
 <script lang="ts">
 import { StatusIcon } from '@podman-desktop/ui-svelte';
 
-import PodIcon from '../images/PodIcon.svelte';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+
 import type { PodInfoUI } from './PodInfoUI';
 
 export let object: PodInfoUI;

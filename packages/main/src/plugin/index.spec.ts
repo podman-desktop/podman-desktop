@@ -30,12 +30,12 @@ import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } 
 import type { PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import type { TrayMenu } from '../tray-menu.js';
-import { ApiSenderType } from './api.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
@@ -53,6 +53,8 @@ import { TaskManager } from './tasks/task-manager.js';
 import type { Task, TaskAction } from './tasks/tasks.js';
 import { Disposable } from './types/disposable.js';
 import { HttpServer } from './webview/webview-registry.js';
+
+vi.mock(import('./extension/extension-api-version.js'));
 
 let pluginSystem: TestPluginSystem;
 
@@ -1015,6 +1017,7 @@ describe('container-provider-registry:playKube', () => {
     options?: {
       build?: boolean;
       replace?: boolean;
+      cancellableTokenId?: number;
     },
   ) => Promise<{ result: PlayKubeInfo | { error: Error } }>;
 
@@ -1069,11 +1072,48 @@ describe('container-provider-registry:playKube', () => {
 
     expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
       title: 'Podman Play Kube',
+      cancellable: false,
+      cancellationTokenSourceId: undefined,
     });
 
     // Verify the task was marked as success and name was updated
     const createdTask = createTaskSpy.mock.results[0]?.value;
     expect(createdTask.status).toBe('success');
+  });
+
+  test('should create a cancellable task if cancellableTokenId is provided', async () => {
+    // let's create a cancellation token
+    const createTokenHandler: () => Promise<{ result: number }> = handlers.get('cancellableTokenSource:create');
+    expect(createTokenHandler).not.equal(undefined);
+    const { result: cancellationTokenId } = await createTokenHandler();
+
+    // Let's run the platKube logic
+    const playKubeHandler: PlayKubeHandler = handlers.get('container-provider-registry:playKube');
+    expect(playKubeHandler).not.equal(undefined);
+
+    const playKubeSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'playKube');
+    playKubeSpy.mockResolvedValue(PLAY_KUBE_INFO_MOCK);
+
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+
+    await playKubeHandler(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK, {
+      cancellableTokenId: cancellationTokenId,
+    });
+
+    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
+      title: 'Podman Play Kube',
+      cancellable: true,
+      cancellationTokenSourceId: cancellationTokenId,
+    });
+
+    // Verify the task was marked as success and name was updated
+    const createdTask = createTaskSpy.mock.results[0]?.value;
+    expect(createdTask.status).toBe('success');
+
+    // ensure the internal logic nicely created an AbortSignal
+    const kubePlayOptions = playKubeSpy.mock.calls[0]?.[2];
+    expect(kubePlayOptions?.abortSignal).toBeDefined();
+    expect(kubePlayOptions?.abortSignal).toBeInstanceOf(AbortSignal);
   });
 
   test('task should be failed if ContainerProviderRegistry#kubePlay throw an error', async () => {
@@ -1091,6 +1131,8 @@ describe('container-provider-registry:playKube', () => {
 
     expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
       title: 'Podman Play Kube',
+      cancellable: false,
+      cancellationTokenSourceId: undefined,
     });
 
     // Verify the task was marked as success and name was updated
