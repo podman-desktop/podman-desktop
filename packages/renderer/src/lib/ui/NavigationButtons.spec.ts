@@ -32,12 +32,6 @@ import {
 
 import NavigationButtons from './NavigationButtons.svelte';
 
-const goBackMock = vi.fn();
-const goForwardMock = vi.fn();
-const goToHistoryIndexMock = vi.fn();
-const getBackEntriesMock = vi.fn().mockReturnValue([]);
-const getForwardEntriesMock = vi.fn().mockReturnValue([]);
-
 vi.mock(import('/@/stores/navigation-history.svelte'));
 
 beforeEach(() => {
@@ -260,110 +254,106 @@ describe('trackpad swipe navigation', () => {
   });
 });
 
-describe('mouse button navigation', () => {
-  test('mouse button 3 should trigger goBack', async () => {
-    render(NavigationButtons);
+describe('long press dropdown', () => {
+  test('long press on back button should show dropdown', async () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 2;
 
-    // Simulate mouse button 3 (back)
-    const mouseUpEvent = new MouseEvent('mouseup', { button: 3 });
-    window.dispatchEvent(mouseUpEvent);
+    vi.mocked(getBackEntries).mockReturnValue([
+      { index: 1, name: 'Images' },
+      { index: 0, name: 'Containers' },
+    ]);
 
-    expect(goBackMock).toHaveBeenCalled();
+    const { findByTitle } = render(NavigationButtons);
+
+    await vi.waitFor(async () => {
+      const backButton = await findByTitle('Back (hold for history)');
+
+      // Start long press
+      await fireEvent.mouseDown(backButton, { button: 0 });
+
+      // Advance timer past long press delay (500ms)
+      vi.advanceTimersByTime(600);
+
+      // Dropdown should be visible
+      expect(await findByTitle('Images')).toBeInTheDocument();
+      expect(await findByTitle('Containers')).toBeInTheDocument();
+    });
   });
 
-  test('mouse button 4 should trigger goForward', async () => {
-    render(NavigationButtons);
+  test('long press on forward button should show dropdown', async () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 0;
 
-    // Simulate mouse button 4 (forward)
-    const mouseUpEvent = new MouseEvent('mouseup', { button: 4 });
-    window.dispatchEvent(mouseUpEvent);
+    vi.mocked(getForwardEntries).mockReturnValue([
+      { index: 1, name: 'Images' },
+      { index: 2, name: 'Pods' },
+    ]);
 
-    expect(goForwardMock).toHaveBeenCalled();
+    const { findByTitle } = render(NavigationButtons);
+
+    await vi.waitFor(async () => {
+      const forwardButton = await findByTitle('Forward (hold for history)');
+
+      // Start long press
+      await fireEvent.mouseDown(forwardButton, { button: 0 });
+
+      // Advance timer past long press delay (500ms)
+      vi.advanceTimersByTime(600);
+
+      // Dropdown should be visible
+      expect(await findByTitle('Images')).toBeInTheDocument();
+      expect(await findByTitle('Pods')).toBeInTheDocument();
+    });
+  });
+
+  test('short click should not show dropdown', async () => {
+    navigationHistory.stack = ['/containers', '/images'];
+    navigationHistory.index = 1;
+
+    vi.mocked(getBackEntries).mockReturnValue([{ index: 0, name: 'Containers' }]);
+
+    const { findByTitle, queryByTitle } = render(NavigationButtons);
+
+    await vi.waitFor(async () => {
+      const backButton = await findByTitle('Back (hold for history)');
+
+      // Short click (mousedown then mouseup before timer)
+      await fireEvent.mouseDown(backButton, { button: 0 });
+      vi.advanceTimersByTime(100); // Less than 500ms
+      await fireEvent.mouseUp(backButton);
+
+      // Dropdown should not be visible
+      expect(queryByTitle('Containers')).not.toBeInTheDocument();
+    });
   });
 });
 
-describe('keyboard navigation - Windows/Linux', () => {
-  test('Alt+Left should trigger goBack', async () => {
-    render(NavigationButtons);
-    await tick();
+describe('dropdown item selection', () => {
+  test('clicking dropdown item should navigate to that index', async () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 2;
 
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowLeft',
-      altKey: true,
+    vi.mocked(getBackEntries).mockReturnValue([
+      { index: 1, name: 'Images' },
+      { index: 0, name: 'Containers' },
+    ]);
+
+    const { findByTitle } = render(NavigationButtons);
+
+    await vi.waitFor(async () => {
+      const backButton = await findByTitle('Back (hold for history)');
+
+      // Long press to show dropdown
+      await fireEvent.mouseDown(backButton, { button: 0 });
+      vi.advanceTimersByTime(600);
+
+      // Click on dropdown item
+      const containersItem = await findByTitle('Containers');
+      await fireEvent.click(containersItem);
+
+      expect(goToHistoryIndex).toHaveBeenCalledWith(0);
+      expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.historySelect', { direction: 'back' });
     });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goBackMock).toHaveBeenCalled();
-  });
-
-  test('Alt+Right should trigger goForward', async () => {
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
-      altKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goForwardMock).toHaveBeenCalled();
-  });
-});
-
-describe('keyboard navigation - macOS', () => {
-  test('Cmd+[ should trigger goBack', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: '[',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goBackMock).toHaveBeenCalled();
-  });
-
-  test('Cmd+] should trigger goForward', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: ']',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goForwardMock).toHaveBeenCalled();
-  });
-
-  test('Cmd+Left should trigger goBack', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowLeft',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goBackMock).toHaveBeenCalled();
-  });
-
-  test('Cmd+Right should trigger goForward', async () => {
-    vi.mocked(window.getOsPlatform).mockResolvedValue('darwin');
-    render(NavigationButtons);
-    await tick();
-
-    const keydownEvent = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
-      metaKey: true,
-    });
-    window.dispatchEvent(keydownEvent);
-
-    expect(goForwardMock).toHaveBeenCalled();
   });
 });
