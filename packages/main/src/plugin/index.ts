@@ -58,7 +58,6 @@ import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-regis
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import type { ExtensionBanner, RecommendedRegistry } from '/@/plugin/recommendations/recommendations-api.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -131,6 +130,7 @@ import type {
 } from '/@api/provider-info.js';
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
+import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
