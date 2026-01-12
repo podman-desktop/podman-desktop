@@ -62,6 +62,7 @@ import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -144,7 +145,6 @@ import { securityRestrictionCurrentHandler } from '../security-restrictions-hand
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
 import { AppearanceInit } from './appearance-init.js';
-import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';

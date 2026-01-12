@@ -44,6 +44,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication';
 import type { CliToolInfo } from '/@api/cli-tool-info';
 import type { ColorInfo } from '/@api/color-info';
 import type { CommandInfo } from '/@api/command-info';
@@ -128,7 +129,6 @@ import type { WebviewInfo } from '/@api/webview-info';
 
 import type { ListOrganizerItem } from '../../api/src/list-organizer';
 import type { ContextInfo } from '../../main/src/plugin/api/context-info';
-import type { AuthenticationProviderInfo } from '../../main/src/plugin/authentication';
 import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   PlayKubeInfo,
