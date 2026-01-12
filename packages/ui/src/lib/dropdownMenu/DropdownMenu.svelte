@@ -1,14 +1,14 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
-import type { Snippet } from 'svelte';
+import type { Component, Snippet } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 import DropDownMenuItems from './DropDownMenuItems.svelte';
 
 interface Props {
   onBeforeToggle?: () => void;
-  icon?: IconDefinition;
+  icon?: IconDefinition | Component | string;
   shownAsMenuActionItem?: boolean;
   hidden?: boolean;
   title?: string;

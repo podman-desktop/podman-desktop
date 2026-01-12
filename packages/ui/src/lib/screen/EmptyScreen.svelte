@@ -1,14 +1,13 @@
 <script lang="ts">
-import { faPaste } from '@fortawesome/free-solid-svg-icons';
-import { createEventDispatcher, onMount, type Snippet } from 'svelte';
+import { faPaste, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { type Component, createEventDispatcher, onMount, type Snippet } from 'svelte';
 
 import Button from '../button/Button.svelte';
 import Icon from '../icons/Icon.svelte';
 import { isFontAwesomeIcon } from '../utils/icon-utils';
 
 interface Props {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any;
+  icon: IconDefinition | Component | string | undefined;
   title?: string;
   message?: string;
   detail?: string;
@@ -68,7 +67,7 @@ let copyTextDivElement = $state<HTMLDivElement>();
   aria-label={ariaLabel}>
   <div class="flex flex-col h-full justify-center text-center space-y-3">
     <div class="flex justify-center text-[var(--pd-details-empty-icon)] py-2">
-      {#if processed}
+      {#if processed && icon}
         {#if fontAwesomeIcon}
           <Icon icon={icon} size='4x'/>
         {:else}

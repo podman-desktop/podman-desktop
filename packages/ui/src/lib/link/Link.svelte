@@ -1,13 +1,13 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
-import { createEventDispatcher, type Snippet } from 'svelte';
+import { type Component, createEventDispatcher, type Snippet } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 
 const dispatch = createEventDispatcher<{ click: undefined }>();
 
 interface Props {
-  icon?: IconDefinition;
+  icon?: IconDefinition | Component | string;
   class?: string;
   children: Snippet;
   onclick?: () => void;

@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { Snippet } from 'svelte';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component, Snippet } from 'svelte';
 import { createEventDispatcher } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
@@ -11,8 +12,7 @@ interface Props {
   inProgress?: boolean;
   disabled?: boolean;
   type?: ButtonType;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon?: any;
+  icon?: IconDefinition | Component | string;
   selected?: boolean;
   padding?: string;
   class?: string;
@@ -98,7 +98,9 @@ let classes = $derived.by(() => {
       {#if inProgress}
         <Spinner size="1em" />
       {:else}
-        <Icon icon={icon}/>
+        {#if icon}
+          <Icon icon={icon}/>
+        {/if}
       {/if}
       {#if children}
         <span>{@render children()}</span>
