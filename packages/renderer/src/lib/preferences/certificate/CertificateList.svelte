@@ -1,10 +1,20 @@
 <script lang="ts">
-import type { CertificateInfo } from '@podman-desktop/core-api';
-import { FilteredEmptyScreen, SearchInput, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
+import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import type { SplitButtonOption } from '@podman-desktop/ui-svelte';
+import {
+  Button,
+  FilteredEmptyScreen,
+  SearchInput,
+  SplitButton,
+  Table,
+  TableColumn,
+  TableRow,
+} from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
-import { certificatesInfos, filtered, searchPattern } from '/@/stores/certificates';
+import { certificatesInfos, certificateSyncTargets, filtered, searchPattern } from '/@/stores/certificates';
+import type { CertificateInfo } from '/@api/certificate-info';
 
 import { getIssuerDisplayNameWithSelfSigned, getSubjectDisplayName } from './certificate-util';
 import CertificateColumnExpires from './CertificateColumnExpires.svelte';
@@ -28,6 +38,67 @@ let { searchTerm = $bindable('') }: Props = $props();
 $effect(() => {
   searchPattern.set(searchTerm);
 });
+
+// Create options for the SplitButton from sync targets (only trusted extensions are included)
+let options: SplitButtonOption[] = $derived(
+  $certificateSyncTargets.map(target => ({
+    id: `${target.providerId}:${target.id}`,
+    label: target.name,
+  })),
+);
+
+// Show simple button when there's exactly one target
+let showSimpleButton = $derived(options.length === 1);
+
+// Enable multiple selection when there are multiple targets
+let useMultipleSelection = $derived(options.length > 1);
+
+// Track selected option IDs (empty array = no selection)
+let selectedOptionIds = $state<string[]>([]);
+
+// Clear selection if current selection is no longer valid
+$effect(() => {
+  const validIds = selectedOptionIds.filter(id => options.some(o => o.id === id));
+  if (validIds.length !== selectedOptionIds.length) {
+    selectedOptionIds = validIds;
+  }
+});
+
+// Get the first selected option for display
+let selectedOption = $derived(options.find(o => selectedOptionIds.includes(o.id)));
+
+// Sync progress state
+let syncInProgress = $state(false);
+
+async function synchronizeCertificates(optionId: string): Promise<void> {
+  syncInProgress = true;
+  try {
+    await synchronizeCertificatesToTarget(optionId);
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+async function handleSplitButtonAction(selected: SplitButtonOption[]): Promise<void> {
+  if (selected.length === 0) return;
+
+  syncInProgress = true;
+  try {
+    // Sync to all selected targets in parallel
+    await Promise.all(selected.map(option => synchronizeCertificatesToTarget(option.id)));
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+async function synchronizeCertificatesToTarget(optionId: string): Promise<void> {
+  const [providerId, targetId] = optionId.split(':');
+  if (!providerId || !targetId) {
+    console.error('Invalid option ID format:', optionId);
+    return;
+  }
+  await window.synchronizeCertificatesToTarget(providerId, targetId);
+}
 
 let certificates: CertificateInfoUI[] = $derived(
   $filtered.map((cert, index) => ({
@@ -115,8 +186,33 @@ onDestroy(() => {
   {/snippet}
   {#snippet header()}
   <div class="flex flex-col w-full">  
-    <div class="flex w-full max-w-[905px] mt-4 pl-7">
-      <SearchInput title="certificates" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
+    <div class="flex w-full max-w-[905px] justify-between items-center mt-4 pl-7 pr-10 self-center">
+      <SearchInput title="preferences" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
+      {#if showSimpleButton}
+        <Button
+          icon={faArrowsRotate}
+          onclick={(): void => { options[0] && synchronizeCertificates(options[0].id).catch((err: unknown) => console.error('Failed to synchronize certificates:', err)); }}
+          inProgress={syncInProgress}>
+          Synchronize to {options[0]?.label}
+        </Button>
+      {:else}
+        <SplitButton
+          options={options}
+          selectedOptionIds={selectedOptionIds}
+          multipleSelection={useMultipleSelection}
+          emptyLabel="No synchronization targets available"
+          noSelectionLabel="Synchronize to ..."
+          icon={faArrowsRotate}
+          onAction={handleSplitButtonAction}
+          onSelect={(selected): void => { selectedOptionIds = selected.map(o => o.id); }}
+          inProgress={syncInProgress}>
+          {#if selectedOptionIds.length > 1}
+            Synchronize to ({selectedOptionIds.length})
+          {:else}
+            Synchronize to {selectedOption?.label}
+          {/if}
+        </SplitButton>
+      {/if}
     </div>
   </div>
   {/snippet}

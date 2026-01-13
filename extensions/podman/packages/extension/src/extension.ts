@@ -53,6 +53,7 @@ import type { InstalledPodman } from '/@/utils/podman-binary';
 import { PodmanBinary } from '/@/utils/podman-binary';
 
 import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
+import { PodmanCertificateSync } from './certificate-sync/podman-certificate-sync';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
@@ -1418,6 +1419,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   start(extensionContext, provider, podmanInstall, podmanConfiguration, version).catch((error: unknown) => {
     console.error('Error starting the Podman extension', error);
   });
+
+  // Register certificate sync target provider for Podman machines
+  const podmanCertificateSync = new PodmanCertificateSync(getJSONMachineList);
+  extensionContext.subscriptions.push(
+    extensionApi.certificates.registerSyncTargetProvider('podman-machines', podmanCertificateSync),
+  );
 
   return {
     exec,

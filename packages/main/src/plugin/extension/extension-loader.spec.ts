@@ -36,6 +36,7 @@ import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AuthenticationImpl } from '/@/plugin/authentication.js';
+import type { CertificateSyncTargetRegistry } from '/@/plugin/certificate-sync-target-registry.js';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { CliToolRegistry } from '/@/plugin/cli-tool-registry.js';
 import type { ColorRegistry } from '/@/plugin/color-registry.js';
@@ -282,6 +283,7 @@ const dialogRegistry: DialogRegistry = {
 } as unknown as DialogRegistry;
 
 const certificates: Certificates = {} as unknown as Certificates;
+const certificateSyncTargetRegistry: CertificateSyncTargetRegistry = {} as unknown as CertificateSyncTargetRegistry;
 
 const extensionApiVersion: ExtensionApiVersion = {
   getApiVersion: vi.fn(),
@@ -380,6 +382,7 @@ beforeEach(() => {
     dialogRegistry,
     safeStorageRegistry,
     certificates,
+    certificateSyncTargetRegistry,
     extensionWatcher,
     extensionDevelopmentFolder,
     extensionAnalyzer,

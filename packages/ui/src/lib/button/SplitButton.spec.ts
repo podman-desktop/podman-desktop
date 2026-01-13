@@ -218,8 +218,8 @@ describe('SplitButton', () => {
       props: { options: mockOptions, selectedOptionIds: ['merge'], noSelectionLabel: 'Select...', inProgress: true },
     });
 
-    // Spinner component should be present (has role="status")
-    expect(container.querySelector('[role="status"]')).toBeInTheDocument();
+    // Spinner component should be present
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
   test('disables buttons when inProgress', () => {

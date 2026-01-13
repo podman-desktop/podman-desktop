@@ -43,6 +43,7 @@ import type {
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
   CertificateInfo,
+  CertificateSyncTargetInfo,
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -2711,6 +2712,17 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('listCertificates', async (): Promise<CertificateInfo[]> => {
     return ipcInvoke('certificates:listCertificates');
   });
+
+  contextBridge.exposeInMainWorld('getCertificateSyncTargets', async (): Promise<CertificateSyncTargetInfo[]> => {
+    return ipcInvoke('certificates:getSyncTargets');
+  });
+
+  contextBridge.exposeInMainWorld(
+    'synchronizeCertificatesToTarget',
+    async (providerId: string, targetId: string): Promise<void> => {
+      return ipcInvoke('certificates:synchronizeToTarget', providerId, targetId);
+    },
+  );
 }
 
 // expose methods
