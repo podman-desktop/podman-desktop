@@ -41,9 +41,7 @@ beforeEach(() => {
   };
 
   // Mock window methods that might be called
-  (window as unknown as { getConfigurationValue: () => Promise<unknown> }).getConfigurationValue = vi
-    .fn()
-    .mockResolvedValue(false);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 });
 
 async function waitRender(customProperties: object = {}): Promise<void> {
@@ -302,9 +300,9 @@ describe('CertificateList store integration', () => {
 
   test('should update search pattern store when searchTerm prop changes', async () => {
     await waitRender({ searchTerm: 'test-search' });
-    await tick();
-
-    expect(get(searchPattern)).toBe('test-search');
+    await vi.waitFor(() => {
+        expect(get(searchPattern)).toBe('test-search');
+    });
   });
 });
 
