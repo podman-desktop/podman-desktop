@@ -24,13 +24,13 @@ import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 import type { TelemetryMessages } from '/@api/telemetry.js';
+import { TelemetrySettings } from '/@api/telemetry/telemetry-settings.js';
 import product from '/@product.json' with { type: 'json' };
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import type { EventType } from './telemetry.js';
 import { Telemetry, TelemetryLoggerImpl } from './telemetry.js';
-import { TelemetrySettings } from './telemetry-settings.js';
 
 const getConfigurationMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();

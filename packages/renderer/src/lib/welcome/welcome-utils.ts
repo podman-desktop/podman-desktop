@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import { TelemetrySettings } from '/@api/telemetry/telemetry-settings';
 import { WelcomeSettings } from '/@api/welcome/welcome-settings';
-
-import { TelemetrySettings } from '../../../../main/src/plugin/telemetry/telemetry-settings';
 
 export class WelcomeUtils {
   async getVersion(): Promise<string | undefined> {
