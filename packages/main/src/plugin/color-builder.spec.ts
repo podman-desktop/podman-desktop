@@ -60,12 +60,6 @@ describe('applyAlpha', () => {
 });
 
 describe('ColorBuilder', () => {
-  test('should create with colorId', () => {
-    const builder = new ColorBuilder('my-color');
-
-    expect(builder).toBeInstanceOf(ColorBuilder);
-  });
-
   test('should build color definition with ColorPaletteHelper', () => {
     const result = new ColorBuilder('test-color')
       .withLight(colorPaletteHelper('#ffffff'))
