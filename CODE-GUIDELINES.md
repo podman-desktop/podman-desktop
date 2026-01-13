@@ -83,9 +83,8 @@ import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 </script>
 
-<Icon icon={CustomSVGImage} size="2x"/>
-<Icon icon={faGear} size="xs"/>
-<Icon icon='fas fa-angle-down' class="text-md"
+<Icon icon={CustomSVGIcon} size="2x" />
+<Icon icon={faGear} size="xs" />
 ```
 
 🚫 **Instead of:**
@@ -97,9 +96,31 @@ import { faGear } from '@fortawesome/free-solid-svg-icons';
 import Fa from 'svelte-fa';
 </script>
 
-<CustomSVGIcon size='2x'/>
-<Fa size="xs" icon={faGear}/>
+<CustomSVGIcon size='2x' />
+<Fa size="xs" icon={faGear} />
 <i class="fas fa-angle-down"></i>
+```
+
+Use typescript imports rather than string definitions
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+import { faGear } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+</script>
+
+<Icon icon={faGear} />
+```
+
+🚫 **Instead of:**
+
+```ts
+<script lang="ts">
+</script>
+
+<i class="fas fa-gear"></i>
 ```
 
 Another example:
@@ -135,7 +156,7 @@ interface Props {
 let { icon }: Props = $props();
 </script>
 
-{#if fontAwesomeIcon}
+{#if isFontAwesomeIcon(icon)}
   <Fa icon={icon} size="4x" />
 {:else}
   {@const IconComponent = icon}
