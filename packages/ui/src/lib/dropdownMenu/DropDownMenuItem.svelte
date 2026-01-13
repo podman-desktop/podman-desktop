@@ -1,12 +1,13 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import type { Component } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 
 interface Props {
   title: string;
   tooltip?: string;
-  icon: IconDefinition | string;
+  icon: IconDefinition | Component | string;
   enabled?: boolean;
   hidden?: boolean;
   onClick?: () => void;

@@ -20,7 +20,7 @@ let { extension }: Props = $props();
   </div>
   <div class="absolute bottom-0 flex flex-col text-[var(--pd-content-text)] text-sm">
     <div>
-      {extension.removable ? '' : 'Podman Desktop built-in extension'}
+      {extension.removable ? '' : 'Pre-installed'}
     </div>
     <div aria-label="Version">
       {#if extension.version}

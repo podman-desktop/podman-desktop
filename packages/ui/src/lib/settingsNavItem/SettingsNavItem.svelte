@@ -11,7 +11,7 @@ interface Props {
   expanded?: boolean;
   child?: boolean;
   selected?: boolean;
-  icon?: IconDefinition | Component;
+  icon?: IconDefinition | Component | string;
   iconPosition?: 'left' | 'right';
   onClick?: () => void;
 }
