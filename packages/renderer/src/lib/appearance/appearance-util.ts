@@ -17,8 +17,7 @@
  ***********************************************************************/
 
 import { isDark } from '/@/stores/appearance';
-
-import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
 
 let isDarkTheme = false;
 isDark.subscribe(value => {

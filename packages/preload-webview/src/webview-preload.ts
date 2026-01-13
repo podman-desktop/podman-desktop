@@ -20,10 +20,9 @@ import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
 import type { ColorInfo } from '/@api/color-info';
 import type { WebviewInfo } from '/@api/webview-info';
-
-import { AppearanceSettings } from '../../main/src/plugin/appearance-settings';
 
 interface ErrorMessage {
   name: string;

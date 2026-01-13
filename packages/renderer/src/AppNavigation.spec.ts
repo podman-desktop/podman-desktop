@@ -26,11 +26,11 @@ import type { TinroRouteMeta } from 'tinro';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
-import { AppearanceSettings } from '../../main/src/plugin/appearance-settings';
 import AppNavigation from './AppNavigation.svelte';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
 import { contributions } from './stores/contribs';

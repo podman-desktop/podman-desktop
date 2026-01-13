@@ -18,7 +18,8 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import { AppearanceSettings } from '../../../main/src/plugin/appearance-settings';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
+
 import { configurationProperties } from './configurationProperties';
 
 export const isDark: Writable<boolean> = writable(false);

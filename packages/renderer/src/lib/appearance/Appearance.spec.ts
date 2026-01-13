@@ -24,8 +24,8 @@ import type { Component, ComponentProps } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { configurationProperties } from '/@/stores/configurationProperties';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings';
 
-import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
 import Appearance from './Appearance.svelte';
 
 const getConfigurationValueMock = vi.fn();
