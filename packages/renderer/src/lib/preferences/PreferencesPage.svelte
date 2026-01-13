@@ -8,6 +8,7 @@ import Route from '/@/Route.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
+import CertificateList from './certificate/CertificateList.svelte';
 import PreferencesDockerCompatibilityRendering from './docker-compat/PreferencesDockerCompatibilityRendering.svelte';
 import PreferencesAuthenticationProvidersRendering from './PreferencesAuthenticationProvidersRendering.svelte';
 import PreferencesCliToolsRendering from './PreferencesCliToolsRendering.svelte';
@@ -84,6 +85,9 @@ onMount(async () => {
   </Route>
   <Route path="/proxies" breadcrumb="Proxy">
     <PreferencesProxiesRendering />
+  </Route>
+  <Route path="/certificates" breadcrumb="Certificates">
+    <CertificateList />
   </Route>
 
   <Route path="/onboarding/:extensionId" breadcrumb="Extension Onboarding" let:meta navigationHint="details">

@@ -26,6 +26,7 @@ import KubernetesIcon from '/@/lib/images/KubernetesIcon.svelte';
 import ProxyIcon from '/@/lib/images/ProxyIcon.svelte';
 import RegistriesIcon from '/@/lib/images/RegistriesIcon.svelte';
 import ResourcesIcon from '/@/lib/images/ResourcesIcon.svelte';
+import CertificateIcon from '/@/lib/preferences/certificate/CertificateIcon.svelte';
 
 export interface NavItem {
   id: string;
@@ -53,5 +54,6 @@ export const settingsNavigationEntries: SettingsNavItemConfig[] = [
   { title: 'Authentication', href: '/preferences/authentication-providers', visible: true, icon: AuthenticationIcon },
   { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true, icon: CLIToolsIcon },
   { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true, icon: KubernetesIcon },
+  { title: 'Certificates', href: '/preferences/certificates', visible: true, icon: CertificateIcon },
   { title: 'Experimental', href: '/preferences/experimental', visible: false, icon: ExperimentalIcon },
 ];
