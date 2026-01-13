@@ -59,7 +59,8 @@ async function extractNamespacesAndClassesFromAPI(
       }
 
       if (functions.length > 0) {
-        namespaces[namespaceName] = functions;
+        // Deduplicate to handle function overloads
+        namespaces[namespaceName] = Array.from(new Set(functions));
       }
     }
 
@@ -74,7 +75,8 @@ async function extractNamespacesAndClassesFromAPI(
             methods.push(member.name.text);
           }
         }
-        classes[className] = methods;
+        // Deduplicate to handle method overloads
+        classes[className] = Array.from(new Set(methods));
       }
     }
 
