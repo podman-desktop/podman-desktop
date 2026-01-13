@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
-import { inject, injectable, preDestroy } from 'inversify';
+import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
@@ -61,6 +61,7 @@ export class NavigationManager {
     this.#registry = new Map();
   }
 
+  @postConstruct()
   init(): void {
     this.#disposables.push(
       this.commandRegistry.registerCommand('navigation.goBack', () => {
