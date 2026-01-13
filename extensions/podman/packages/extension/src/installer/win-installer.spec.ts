@@ -23,6 +23,7 @@ import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { WinPlatform } from '/@/platforms/win-platform';
+import type { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { getAssetsFolder } from '/@/utils/util';
 
 import { WinInstaller } from './win-installer';
@@ -40,6 +41,7 @@ const progress = {
 
 const mockTelemetryLogger = {} as TelemetryLogger;
 const mockWinPlatform = {} as WinPlatform;
+const legacyInstaller = {} as PodmanWindowsLegacyInstaller;
 
 vi.mock(import('/@/utils/util'), () => ({
   getAssetsFolder: vi.fn(),
@@ -48,7 +50,7 @@ vi.mock(import('/@/utils/util'), () => ({
 let installer: WinInstaller;
 
 beforeEach(() => {
-  installer = new WinInstaller(extensionContext, mockTelemetryLogger, mockWinPlatform);
+  installer = new WinInstaller(extensionContext, mockTelemetryLogger, mockWinPlatform, legacyInstaller);
   vi.resetAllMocks();
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;

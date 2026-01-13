@@ -34,6 +34,7 @@ import { inject, injectable } from 'inversify';
 import { ExtensionContextSymbol, TelemetryLoggerSymbol } from '/@/inject/symbols';
 import { WinPlatform } from '/@/platforms/win-platform';
 import podman5Json from '/@/podman5.json';
+import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { getAssetsFolder } from '/@/utils/util';
 
 import { BaseInstaller } from './base-installer';
@@ -47,6 +48,8 @@ export class WinInstaller extends BaseInstaller {
     readonly telemetryLogger: TelemetryLogger,
     @inject(WinPlatform)
     readonly winPlatform: WinPlatform,
+    @inject(PodmanWindowsLegacyInstaller)
+    readonly legacyPodmanInstaller: PodmanWindowsLegacyInstaller,
   ) {
     super();
   }
