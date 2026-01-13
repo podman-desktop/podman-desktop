@@ -22,7 +22,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '../util.js';
-import { Certificates, OID_C, OID_CN, OID_E, OID_L, OID_O, OID_OU, OID_ST } from './certificates.js';
+import { Certificates } from './certificates.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 let certificate: Certificates;
@@ -52,6 +52,7 @@ const FAKE_ROOT_CERTIFICATES = ['fake-cert-1', 'fake-cert-2'];
 
 // Real valid X.509 self-signed certificate for happy path testing
 // This is the GlobalSign Root CA certificate (a well-known root CA)
+// Subject: C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA
 const VALID_PARSEABLE_CERT = `-----BEGIN CERTIFICATE-----
 MIIDdTCCAl2gAwIBAgILBAAAAAABFUtaw5QwDQYJKoZIhvcNAQEFBQAwVzELMAkG
 A1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jv
@@ -72,6 +73,53 @@ yj1hTdNGCbM+w6DjY1Ub8rrvrTnhQ7k4o+YviiY776BQVvnGCv04zcQLcFGUl5gE
 AbEVtQwdpf5pLGkkeB6zpxxxYu7KyJesF12KwvhHhm4qxFYxldBniYUr+WymXUad
 DKqC5JlR3XC321Y9YeRq4VzW9v493kHMB65jUr9TU/Qr6cf9tveCX4XSQRjbgbME
 HMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==
+-----END CERTIFICATE-----`;
+
+// Valid X.509 certificate with Organization but no Common Name
+// Subject: O=Test Organization Without CN, C=US (no CN field)
+// Used to test fallback from CN to O for subjectCommonName
+const CERT_WITH_ORG_NO_CN = `-----BEGIN CERTIFICATE-----
+MIIDSTCCAjGgAwIBAgIUTYq6YOBIE6EWJvxGYXxcrVspfHcwDQYJKoZIhvcNAQEL
+BQAwNDElMCMGA1UECgwcVGVzdCBPcmdhbml6YXRpb24gV2l0aG91dCBDTjELMAkG
+A1UEBhMCVVMwHhcNMjYwMTEzMDg1MzE1WhcNMzYwMTExMDg1MzE1WjA0MSUwIwYD
+VQQKDBxUZXN0IE9yZ2FuaXphdGlvbiBXaXRob3V0IENOMQswCQYDVQQGEwJVUzCC
+ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJnk7qTMwFh9jJwHNXDPEuF
+DwI3hv7TOh9Pkeyj0v/U4vNFjzhDHQT7e6jO171oUbJ8MQXtHaK7sJjAlTWXXhUj
+D+90Y2q4DYs65eKP0aHZp7LvGbRLC9jNjmF+qPLsiZsS70HVZyKlkzw9Xu7VcCxU
+5DdQdUNV6ReFGKFtlsI7X4DgRPHEUVH2FAsJWmL6oXFg2nW69XBVuL7FkX/cMKU6
+XV0Wpto7b64Qtum4H2JoOH4RBu49OWscc3wcxYJPNtoxGi1KgSMHfHH/iusF8YUm
++dOyETMlA3jJ25BaGm2jvd7hinxcF8a5HjWYuFFnAbDvQKNWCH2vEy5ZJ9SBrnkC
+AwEAAaNTMFEwHQYDVR0OBBYEFOT3MtuSq2izkHXW8yojn1yHNV8pMB8GA1UdIwQY
+MBaAFOT3MtuSq2izkHXW8yojn1yHNV8pMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI
+hvcNAQELBQADggEBAF5CsBBlVcAG+fA0GkBqtcO/zk0UTQoA5rjjLAIPSp+bGSgP
+TPyDxOgWDMoWSVqfVSCYTl1WPna+IsV5ZlAbsatPXIh37OX2WedN4Q58E9dXFjlG
+YuKJNvVT05ve/Hqb/s4rPXAmOjbB4ybShpDhnZjJ67Rw/SWnbayTVkFAVI6Bxnx8
+hGr4+eOAOZ82RRd3AKE1s7R0mu+I11RkoIDrkSJGL1P1NzQpLWSptyBaAXt0JrGt
+CPVU/qHLN9EsrALpCK/ZTE5TKXClaORkUj0gu67MAwmVxBrtLI6NLVJVfl+x2z8J
+7wafAZ2CPH0KPKCVd2BEPpjQmiOJjlPHo5nryjQ=
+-----END CERTIFICATE-----`;
+
+// Valid X.509 certificate with neither CN nor O, only C and ST
+// Subject: C=US, ST=California (no CN, no O)
+// Used to test fallback to full DN when both CN and O are missing
+const CERT_WITH_NO_CN_NO_ORG = `-----BEGIN CERTIFICATE-----
+MIIDJTCCAg2gAwIBAgIUD3lel5m4dbO/9MjT1hLbmiaXm80wDQYJKoZIhvcNAQEL
+BQAwIjELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWEwHhcNMjYwMTEz
+MDg1NTUyWhcNMzYwMTExMDg1NTUyWjAiMQswCQYDVQQGEwJVUzETMBEGA1UECAwK
+Q2FsaWZvcm5pYTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKvjVDMg
+IrJfImFWM2ZVJ778B0AfQuVdt7FitzBkjd90cKDmd6a9Naoq9p6dHWxx0EUJ35/O
+ijXssIEs/cUr23jrBZ5erN7VXovpuV50x7lt0Wus7ZdnU5X1jB/PPYoga+aPHq+n
+32G6suyjY+4JPXPvz5TO1gylrDZOYPw6l1vH4Yzh+mP/qCcax8L9FKBxuwRrfCSm
+05qx/NvPPF8yjpAdz8XKBOv/8Sn/pPirpl2cW7WAM7nBwNC7VzRsIF/yHoqackl9
+wCFwhrwjFYegF/fdWlzd5xzL8djejzZh8wHxpoP0GreOLYh7uMBO+RdD8XhAAP0G
+Eb+uHaZzhcnTE1sCAwEAAaNTMFEwHQYDVR0OBBYEFFTb+ryvsSj4q4tyZvGZDxdP
+3fzSMB8GA1UdIwQYMBaAFFTb+ryvsSj4q4tyZvGZDxdP3fzSMA8GA1UdEwEB/wQF
+MAMBAf8wDQYJKoZIhvcNAQELBQADggEBAF4mt8ac2IOBaDKJhUwyZ2a8IAbVbe6X
+IQhx8g49Sbx8Iigyyx6iENvYEPS8HesWhKbjD27W4vqdHzrsrf/HZl87lbRNVTwj
+plnEFOIMQQflWovJfK5yoXCP/awi6aIJ/va5j/aQxYgPl1rGjOrprZrqYyYVmjAs
+fSTChdQup6J95b/l9MCYaFBjtuIM3flwAz4bl0ZghzNP/EGaocIJs3XY4gItN7mJ
+/nhkWjcxx6Ulb1GnnF+4xGSstf7QHqHR4AYA6PINPbXIji9bA11Kcrrk9RwRSo3a
+B3MoPuHfS6X0iwNorrN1o9n5Wv8Gwqgtu5d4flf25sfvg96jEe4Ijgc=
 -----END CERTIFICATE-----`;
 
 vi.mock('node:tls', () => {
@@ -154,8 +202,8 @@ describe('Windows', () => {
     vi.mocked(wincaAPI).mockImplementation((options: WincaAPIOptions) => {
       if (options.onend) options.onend();
     });
-    // Mock inject to throw an error
-    (wincaAPI as unknown as WincaProcedure).inject = vi.fn().mockImplementation(() => {
+    // Mock inject to throw an error - using vi.mocked() so it's properly restored by vi.clearAllMocks()
+    vi.mocked((wincaAPI as unknown as WincaProcedure).inject).mockImplementationOnce(() => {
       throw new Error('inject failed');
     });
 
@@ -178,25 +226,26 @@ describe('Windows', () => {
 });
 
 // Self-signed test certificate for parsing tests
-// Generated with: openssl req -x509 -newkey rsa:2048 -keyout /dev/null -out /dev/stdout -days 365 -nodes -subj "/CN=Test Cert/O=Test Org/C=US"
+// Subject: CN=Test Cert, O=Test Org, C=US
 const TEST_CERTIFICATE_PEM = `-----BEGIN CERTIFICATE-----
-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
+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
 -----END CERTIFICATE-----`;
 
 describe('parseCertificate', () => {
@@ -212,15 +261,6 @@ describe('parseCertificate', () => {
     expect(result.validTo).toBeUndefined();
     expect(result.isCA).toBe(false);
     expect(result.pem).toBe('invalid-pem-content');
-  });
-
-  test('should return default info for empty PEM', () => {
-    const result = certificate.parseCertificate('');
-
-    expect(result.subjectCommonName).toBe('Non parsable certificate');
-    expect(result.validFrom).toBeUndefined();
-    expect(result.validTo).toBeUndefined();
-    expect(result.pem).toBe('');
   });
 
   test('should return default info for malformed certificate', () => {
@@ -286,28 +326,7 @@ describe('getAllCertificateInfos', () => {
     // First should be unparsable
     expect(result[0]?.subjectCommonName).toBe('Non parsable certificate');
     // Second should have PEM preserved
-    expect(result[1]?.pem).toBe(TEST_CERTIFICATE_PEM);
-  });
-});
-
-describe('CertificateInfo fields', () => {
-  test('isCA should be false for non-CA certificates by default', () => {
-    const result = certificate.parseCertificate('invalid');
-
-    expect(result.isCA).toBe(false);
-  });
-
-  test('serialNumber should be empty string for unparsable certificates', () => {
-    const result = certificate.parseCertificate('invalid');
-
-    expect(result.serialNumber).toBe('');
-  });
-
-  test('issuer and issuerCommonName should be empty for unparsable certificates', () => {
-    const result = certificate.parseCertificate('invalid');
-
-    expect(result.issuer).toBe('');
-    expect(result.issuerCommonName).toBe('');
+    expect(result[1]?.subjectCommonName).toBe('Test Cert');
   });
 });
 
@@ -551,11 +570,7 @@ describe('extractCertificates', () => {
 
 describe('parseCertificate with valid certificates', () => {
   test('should successfully parse valid X.509 certificate', () => {
-    // This test covers line 274 - the successful return path
     const result = certificate.parseCertificate(VALID_PARSEABLE_CERT);
-
-    // Should NOT be the fallback "Non parsable certificate"
-    expect(result.subjectCommonName).not.toBe('Non parsable certificate');
 
     // Should have extracted the GlobalSign Root CA details
     expect(result.subjectCommonName).toBe('GlobalSign Root CA');
@@ -582,18 +597,6 @@ describe('parseCertificate with valid certificates', () => {
     expect(result.pem).toBe(VALID_PARSEABLE_CERT);
   });
 
-  test('should parse certificate and return all fields', () => {
-    const result = certificate.parseCertificate(TEST_CERTIFICATE_PEM);
-
-    expect(result.pem).toBe(TEST_CERTIFICATE_PEM);
-    expect(result.subjectCommonName).toBeDefined();
-    expect(result.subject).toBeDefined();
-    expect(result.issuerCommonName).toBeDefined();
-    expect(result.issuer).toBeDefined();
-    // For unparsable certs, these will be fallback values
-    expect(typeof result.isCA).toBe('boolean');
-  });
-
   test('should preserve PEM in result for all certificates', () => {
     const fakeCert = 'test-pem-content';
     const result = certificate.parseCertificate(fakeCert);
@@ -601,341 +604,89 @@ describe('parseCertificate with valid certificates', () => {
     expect(result.pem).toBe(fakeCert);
   });
 
-  test('should handle certificate parsing gracefully', () => {
-    // Test with fake certificates - they will trigger fallback behavior
-    for (const cert of FAKE_ROOT_CERTIFICATES) {
-      const result = certificate.parseCertificate(cert);
+  test('should use CN as subjectCommonName when present', () => {
+    const result = certificate.parseCertificate(VALID_PARSEABLE_CERT);
 
-      // Should always have pem preserved
-      expect(result.pem).toBe(cert);
-      // Should always have a subject common name (fallback for unparsable)
-      expect(result.subjectCommonName.length).toBeGreaterThan(0);
-    }
+    // subjectCommonName should be CN, not O or full DN
+    expect(result.subjectCommonName).toBe('GlobalSign Root CA');
+    expect(result.subjectCommonName).not.toBe('GlobalSign nv-sa'); // Not O
+    expect(result.subjectCommonName).not.toContain('='); // Not full DN
+  });
+
+  test('should use CN as issuerCommonName when present', () => {
+    const result = certificate.parseCertificate(VALID_PARSEABLE_CERT);
+
+    // issuerCommonName should be CN, not O or full DN
+    expect(result.issuerCommonName).toBe('GlobalSign Root CA');
+    expect(result.issuerCommonName).not.toBe('GlobalSign nv-sa'); // Not O
+    expect(result.issuerCommonName).not.toContain('='); // Not full DN
+  });
+
+  test('should fallback to Organization when CN is not present', () => {
+    const result = certificate.parseCertificate(CERT_WITH_ORG_NO_CN);
+
+    // subjectCommonName should fallback to O since there's no CN
+    expect(result.subjectCommonName).toBe('Test Organization Without CN');
+    expect(result.subject).not.toContain('CN='); // No CN in subject
+    expect(result.subject).toContain('O=Test Organization Without CN');
+    expect(result.subject).toContain('C=US');
+
+    // issuerCommonName should also fallback to O (self-signed)
+    expect(result.issuerCommonName).toBe('Test Organization Without CN');
+  });
+
+  test('should fallback to full DN when neither CN nor O is present', () => {
+    const result = certificate.parseCertificate(CERT_WITH_NO_CN_NO_ORG);
+
+    // subjectCommonName should fallback to full DN since no CN and no O
+    expect(result.subject).not.toContain('CN='); // No CN
+    expect(result.subject).not.toContain('O='); // No O
+    expect(result.subject).toContain('C=US');
+    expect(result.subject).toContain('ST=California');
+
+    // subjectCommonName should be the full DN
+    expect(result.subjectCommonName).toContain('C=US');
+    expect(result.subjectCommonName).toContain('ST=California');
+
+    // issuerCommonName should also be the full DN (self-signed)
+    expect(result.issuerCommonName).toContain('C=US');
+    expect(result.issuerCommonName).toContain('ST=California');
   });
 });
 
-describe('parseCertificate happy path (simulated via helper methods)', () => {
-  test('should correctly extract all certificate fields when parsing succeeds', () => {
-    // Test the full flow by testing each helper method with mock data
-    // This simulates what happens when parseCertificate successfully parses a certificate
+describe('parseCertificate fallback behavior', () => {
+  test('should return fallback name for unparseable certificates', () => {
+    const result = certificate.parseCertificate('invalid-pem');
 
-    const getDisplayName = (
-      certificate as unknown as { getDisplayName: (rdns: unknown) => string }
-    ).getDisplayName.bind(certificate);
-    const formatDN = (certificate as unknown as { formatDN: (rdns: unknown) => string }).formatDN.bind(certificate);
-
-    // Mock subject RDNs (CN=Test Common Name, O=Test Organization, C=US)
-    const mockSubject = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'Test Common Name' } } },
-        { type: OID_O, value: { valueBlock: { value: 'Test Organization' } } },
-        { type: OID_C, value: { valueBlock: { value: 'US' } } },
-      ],
-    };
-
-    // Mock issuer RDNs (CN=Test Issuer, O=Issuer Org)
-    const mockIssuer = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'Test Issuer' } } },
-        { type: OID_O, value: { valueBlock: { value: 'Issuer Org' } } },
-      ],
-    };
-
-    // Verify getDisplayName extracts CN correctly
-    expect(getDisplayName(mockSubject)).toBe('Test Common Name');
-    expect(getDisplayName(mockIssuer)).toBe('Test Issuer');
-
-    // Verify formatDN formats full DN correctly
-    expect(formatDN(mockSubject)).toBe('CN=Test Common Name, O=Test Organization, C=US');
-    expect(formatDN(mockIssuer)).toBe('CN=Test Issuer, O=Issuer Org');
+    expect(result.subjectCommonName).toBe('Non parsable certificate');
+    expect(result.subject).toBe('Non parsable certificate');
+    expect(result.issuerCommonName).toBe('');
+    expect(result.issuer).toBe('');
   });
 
-  test('should handle self-signed certificate (subject equals issuer)', () => {
-    const getDisplayName = (
-      certificate as unknown as { getDisplayName: (rdns: unknown) => string }
-    ).getDisplayName.bind(certificate);
+  test('should preserve PEM even when parsing fails', () => {
+    const invalidPem = 'some-invalid-content';
+    const result = certificate.parseCertificate(invalidPem);
 
-    // Self-signed: subject and issuer are the same
-    const selfSignedRdns = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'Self Signed Root CA' } } },
-        { type: OID_O, value: { valueBlock: { value: 'My Organization' } } },
-      ],
-    };
-
-    const subjectName = getDisplayName(selfSignedRdns);
-    const issuerName = getDisplayName(selfSignedRdns);
-
-    // Both should be identical for self-signed
-    expect(subjectName).toBe(issuerName);
-    expect(subjectName).toBe('Self Signed Root CA');
+    expect(result.pem).toBe(invalidPem);
   });
 
-  test('should correctly format serial number as uppercase hex', () => {
-    // Test serial number formatting logic
-    const mockSerialBytes = new Uint8Array([0x01, 0x02, 0xab, 0xcd, 0xef]);
-    const serialNumber = Array.from(mockSerialBytes)
-      .map(b => b.toString(16).padStart(2, '0').toUpperCase())
-      .join('');
+  test('should set undefined dates for unparseable certificates', () => {
+    const result = certificate.parseCertificate('invalid-pem');
 
-    expect(serialNumber).toBe('0102ABCDEF');
+    expect(result.validFrom).toBeUndefined();
+    expect(result.validTo).toBeUndefined();
   });
 
-  test('should detect CA certificate from basicConstraints extension', () => {
-    // Simulate checking basicConstraints extension
-    const mockExtensions = [
-      { extnID: '2.5.29.19', parsedValue: { cA: true } }, // Basic Constraints with CA=true
-    ];
+  test('should set isCA to false for unparseable certificates', () => {
+    const result = certificate.parseCertificate('invalid-pem');
 
-    const basicConstraintsExt = mockExtensions.find(ext => ext.extnID === '2.5.29.19');
-    const isCA = basicConstraintsExt?.parsedValue?.cA ?? false;
-
-    expect(isCA).toBe(true);
+    expect(result.isCA).toBe(false);
   });
 
-  test('should default isCA to false when basicConstraints is missing', () => {
-    const mockExtensions: { extnID: string; parsedValue?: { cA?: boolean } }[] = [];
+  test('should set empty serial number for unparseable certificates', () => {
+    const result = certificate.parseCertificate('invalid-pem');
 
-    const basicConstraintsExt = mockExtensions.find(ext => ext.extnID === '2.5.29.19');
-    const isCA = basicConstraintsExt?.parsedValue?.cA ?? false;
-
-    expect(isCA).toBe(false);
-  });
-
-  test('should handle certificate with only Organization (no CN)', () => {
-    const getDisplayName = (
-      certificate as unknown as { getDisplayName: (rdns: unknown) => string }
-    ).getDisplayName.bind(certificate);
-
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_O, value: { valueBlock: { value: 'Only Organization Name' } } },
-        { type: OID_C, value: { valueBlock: { value: 'US' } } },
-      ],
-    };
-
-    // Should fall back to O since CN is missing
-    expect(getDisplayName(mockRdns)).toBe('Only Organization Name');
-  });
-});
-
-describe('getDisplayName fallback logic', () => {
-  test('subjectCommonName should match CN when present in subject', () => {
-    // Find a certificate with CN in subject
-    for (const cert of FAKE_ROOT_CERTIFICATES) {
-      const result = certificate.parseCertificate(cert);
-      if (result.subject.includes('CN=')) {
-        // Extract CN value from subject
-        const cnMatch = /CN=([^,]+)/.exec(result.subject);
-        if (cnMatch) {
-          expect(result.subjectCommonName).toBe(cnMatch[1]);
-          return; // Test passed
-        }
-      }
-    }
-    // If no parsable cert with CN found, test passes (unparsable certs have fallback)
-  });
-
-  test('subjectCommonName should fallback to O when CN is not present', () => {
-    // Find a certificate without CN but with O in subject
-    for (const cert of FAKE_ROOT_CERTIFICATES) {
-      const result = certificate.parseCertificate(cert);
-      if (!result.subject.includes('CN=') && result.subject.includes('O=')) {
-        // subjectCommonName should be present in subject (it's the O value)
-        expect(result.subject).toContain(`O=${result.subjectCommonName}`);
-        expect(result.subjectCommonName.length).toBeGreaterThan(0);
-        return; // Test passed
-      }
-    }
-    // If no such certificate found, skip test (it's optional based on test certs)
-  });
-
-  test('issuerCommonName should match CN when present in issuer', () => {
-    // Find a certificate with CN in issuer
-    for (const cert of FAKE_ROOT_CERTIFICATES) {
-      const result = certificate.parseCertificate(cert);
-      if (result.issuer.includes('CN=')) {
-        // Extract CN value from issuer
-        const cnMatch = /CN=([^,]+)/.exec(result.issuer);
-        if (cnMatch) {
-          expect(result.issuerCommonName).toBe(cnMatch[1]);
-          return; // Test passed
-        }
-      }
-    }
-    // If no parsable cert with CN found, test passes
-  });
-
-  test('subjectCommonName should be non-empty for all certificates', () => {
-    // All certificates should have a display name (CN, O, full DN, or fallback)
-    for (const cert of FAKE_ROOT_CERTIFICATES) {
-      const result = certificate.parseCertificate(cert);
-      expect(result.subjectCommonName.length).toBeGreaterThan(0);
-    }
-  });
-
-  test('should fallback to full DN when CN and O are both missing', () => {
-    const getDisplayName = (
-      certificate as unknown as { getDisplayName: (rdns: unknown) => string }
-    ).getDisplayName.bind(certificate);
-
-    // Mock RDNs with only C (no CN and no O)
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_C, value: { valueBlock: { value: 'US' } } },
-        { type: OID_ST, value: { valueBlock: { value: 'California' } } },
-      ],
-    };
-
-    // getDisplayName should fallback to formatDN (full DN)
-    const result = getDisplayName(mockRdns);
-    expect(result).toBe('C=US, ST=California');
-  });
-
-  test('should use O when CN is empty but O is present', () => {
-    // Test getDisplayName directly since parseCertificate fails on invalid PEM
-    const getDisplayName = (
-      certificate as unknown as { getDisplayName: (rdns: unknown) => string }
-    ).getDisplayName.bind(certificate);
-    const getRDNValue = (
-      certificate as unknown as { getRDNValue: (rdns: unknown, oid: string) => string }
-    ).getRDNValue.bind(certificate);
-
-    // Mock RDNs with O but no CN
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_O, value: { valueBlock: { value: 'Test Organization' } } },
-        { type: OID_C, value: { valueBlock: { value: 'US' } } },
-      ],
-    };
-
-    // Verify getRDNValue returns empty for CN
-    expect(getRDNValue(mockRdns, OID_CN)).toBe('');
-    // Verify getRDNValue returns O value
-    expect(getRDNValue(mockRdns, OID_O)).toBe('Test Organization');
-
-    // getDisplayName should fallback to O
-    const result = getDisplayName(mockRdns);
-    expect(result).toBe('Test Organization');
-  });
-
-  test('should use CN when both CN and O are present', () => {
-    const getDisplayName = (
-      certificate as unknown as { getDisplayName: (rdns: unknown) => string }
-    ).getDisplayName.bind(certificate);
-
-    // Mock RDNs with both CN and O
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'Test Common Name' } } },
-        { type: OID_O, value: { valueBlock: { value: 'Test Organization' } } },
-      ],
-    };
-
-    // getDisplayName should use CN (first priority)
-    const result = getDisplayName(mockRdns);
-    expect(result).toBe('Test Common Name');
-  });
-});
-
-describe('getRDNValue', () => {
-  test('should return empty string when RDN type is not found', () => {
-    // Access private method through casting
-    const getRDNValue = (
-      certificate as unknown as { getRDNValue: (rdns: unknown, oid: string) => string }
-    ).getRDNValue.bind(certificate);
-
-    const emptyRdns = { typesAndValues: [] as unknown[] };
-    const result = getRDNValue(emptyRdns, OID_CN);
-
-    expect(result).toBe('');
-  });
-
-  test('should return value when RDN type matches', () => {
-    const getRDNValue = (
-      certificate as unknown as { getRDNValue: (rdns: unknown, oid: string) => string }
-    ).getRDNValue.bind(certificate);
-
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'TestCN' } } },
-        { type: OID_O, value: { valueBlock: { value: 'TestOrg' } } },
-      ],
-    };
-
-    expect(getRDNValue(mockRdns, OID_CN)).toBe('TestCN');
-    expect(getRDNValue(mockRdns, OID_O)).toBe('TestOrg');
-  });
-
-  test('should return empty string when value is undefined', () => {
-    const getRDNValue = (
-      certificate as unknown as { getRDNValue: (rdns: unknown, oid: string) => string }
-    ).getRDNValue.bind(certificate);
-
-    const mockRdns = {
-      typesAndValues: [{ type: OID_CN, value: { valueBlock: { value: undefined } } }],
-    };
-
-    expect(getRDNValue(mockRdns, OID_CN)).toBe('');
-  });
-});
-
-describe('formatDN', () => {
-  test('should format RDNs with known OIDs', () => {
-    const formatDN = (certificate as unknown as { formatDN: (rdns: unknown) => string }).formatDN.bind(certificate);
-
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'TestCN' } } },
-        { type: OID_O, value: { valueBlock: { value: 'TestOrg' } } },
-        { type: OID_C, value: { valueBlock: { value: 'US' } } },
-      ],
-    };
-
-    const result = formatDN(mockRdns);
-
-    expect(result).toBe('CN=TestCN, O=TestOrg, C=US');
-  });
-
-  test('should use raw OID for unknown types', () => {
-    const formatDN = (certificate as unknown as { formatDN: (rdns: unknown) => string }).formatDN.bind(certificate);
-
-    const mockRdns = {
-      typesAndValues: [{ type: '1.2.3.4.5', value: { valueBlock: { value: 'CustomValue' } } }],
-    };
-
-    const result = formatDN(mockRdns);
-
-    expect(result).toBe('1.2.3.4.5=CustomValue');
-  });
-
-  test('should handle empty typesAndValues', () => {
-    const formatDN = (certificate as unknown as { formatDN: (rdns: unknown) => string }).formatDN.bind(certificate);
-
-    const mockRdns = { typesAndValues: [] };
-
-    const result = formatDN(mockRdns);
-
-    expect(result).toBe('');
-  });
-
-  test('should handle all known OID types', () => {
-    const formatDN = (certificate as unknown as { formatDN: (rdns: unknown) => string }).formatDN.bind(certificate);
-
-    const mockRdns = {
-      typesAndValues: [
-        { type: OID_CN, value: { valueBlock: { value: 'CN' } } },
-        { type: OID_C, value: { valueBlock: { value: 'C' } } },
-        { type: OID_L, value: { valueBlock: { value: 'L' } } },
-        { type: OID_ST, value: { valueBlock: { value: 'ST' } } },
-        { type: OID_O, value: { valueBlock: { value: 'O' } } },
-        { type: OID_OU, value: { valueBlock: { value: 'OU' } } },
-        { type: OID_E, value: { valueBlock: { value: 'E' } } },
-      ],
-    };
-
-    const result = formatDN(mockRdns);
-
-    expect(result).toBe('CN=CN, C=C, L=L, ST=ST, O=O, OU=OU, E=E');
+    expect(result.serialNumber).toBe('');
   });
 });
