@@ -62,9 +62,4 @@ export interface CertificateInfo {
    * Indicates whether this is a Certificate Authority (CA) certificate.
    */
   isCA: boolean;
-
-  /**
-   * The raw PEM-encoded certificate string.
-   */
-  pem: string;
 }
