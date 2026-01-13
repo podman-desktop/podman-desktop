@@ -27,11 +27,7 @@ const disabledClasses = 'text-[var(--pd-dropdown-disabled-item-text)] bg-[var(--
       title={tooltip !== '' ? tooltip : title}
       class="group flex items-center no-underline whitespace-nowrap"
       tabindex="-1">
-      {#if typeof icon === 'string'}
-        <Icon icon={icon} />
-      {:else}
-        <Icon class="h-4 w-4 text-md" icon={icon}/>
-      {/if}
+      <Icon class="h-4 w-4 text-md" icon={icon} />
       {#if title}<span class="ml-2">{title}</span>{/if}
     </span>
   </div>
