@@ -21,6 +21,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import product from '/@product.json' with { type: 'json' };
+
 import type { Directories } from './directories.js';
 import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 
@@ -35,6 +37,8 @@ beforeEach(() => {
   delete process.env['XDG_CONFIG_HOME'];
   // biome-ignore lint/complexity/useLiteralKeys: XDG_DATA_HOME comes from an index signature
   delete process.env['XDG_DATA_HOME'];
+  // biome-ignore lint/complexity/useLiteralKeys: FLATPAK_ID comes from an index signature
+  delete process.env['FLATPAK_ID'];
 });
 
 afterEach(() => {
@@ -113,6 +117,23 @@ describe('LinuxXDGDirectories', () => {
 
       expect(provider.getPluginsDirectory()).toBe(path.resolve(expectedDataDir, 'plugins'));
       expect(provider.getExtensionsStorageDirectory()).toBe(path.resolve(expectedDataDir, 'extensions-storage'));
+    });
+  });
+
+  describe('getManagedDefaultsDirectory', () => {
+    test('should return linux managed folder path when not running in Flatpak', () => {
+      provider = new LinuxXDGDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.linux);
+    });
+
+    test('should return flatpak managed folder path when running in Flatpak', () => {
+      // biome-ignore lint/complexity/useLiteralKeys: FLATPAK_ID comes from an index signature
+      process.env['FLATPAK_ID'] = 'io.podman_desktop.PodmanDesktop';
+
+      provider = new LinuxXDGDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.flatpak);
     });
   });
 });
