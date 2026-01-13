@@ -99,6 +99,7 @@ import type { ResourceCount } from '/@api/kubernetes-resource-count';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
 import type { Guide } from '/@api/learning-center/guide';
+import type { PlayKubeInfo } from '/@api/libpod/libpod';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { Menu } from '/@api/menu.js';
 import { NavigationPage } from '/@api/navigation-page';
@@ -129,10 +130,7 @@ import type { WebviewInfo } from '/@api/webview-info';
 
 import type { ListOrganizerItem } from '../../api/src/list-organizer';
 import type { ContextInfo } from '../../main/src/plugin/api/context-info';
-import type {
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  PlayKubeInfo,
-} from '../../main/src/plugin/dockerode/libpod-dockerode';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '../../main/src/plugin/dockerode/libpod-dockerode';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;

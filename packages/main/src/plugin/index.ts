@@ -114,6 +114,7 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
+import type { PlayKubeInfo } from '/@api/libpod/libpod.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { Menu } from '/@api/menu.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
@@ -169,10 +170,7 @@ import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 import { DockerCompatibility } from './docker/docker-compatibility.js';
 import { DockerDesktopInstallation } from './docker-extension/docker-desktop-installation.js';
 import { DockerPluginAdapter } from './docker-extension/docker-plugin-adapter.js';
-import type {
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  PlayKubeInfo,
-} from './dockerode/libpod-dockerode.js';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions } from './dockerode/libpod-dockerode.js';
 import { DocumentationService } from './documentation/documentation-service.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';

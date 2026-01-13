@@ -30,9 +30,10 @@ import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { DockerodeInternals, LibPod, PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
+import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
 import type { PodmanListImagesOptions } from '/@api/image-info.js';
+import type { PlayKubeInfo } from '/@api/libpod/libpod.js';
 
 import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json' with { type: 'json' };
 

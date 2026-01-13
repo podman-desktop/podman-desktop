@@ -25,36 +25,13 @@ import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
 import Dockerode from 'dockerode';
 
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
+import type { PlayKubeInfo, PodCreatePortOptions } from '/@api/libpod/libpod.js';
 import type { LibPodPodInfo, LibPodPodInspectInfo } from '/@api/pod-info.js';
 
 export interface PodContainerInfo {
   Id: string;
   Names: string;
   Status: string;
-}
-
-export interface PlayKubePodInfo {
-  ContainerErrors: string[];
-  Containers: string[];
-  Id: string;
-  InitContainers: string[];
-  Logs: string[];
-}
-
-export interface PlayKubeInfo {
-  Pods: PlayKubePodInfo[];
-  RmReport: { Err: string; Id: string }[];
-  Secrets: { CreateReport: { ID: string } }[];
-  StopReport: { Err: string; Id: string }[];
-  Volumes: { Name: string }[];
-}
-
-export interface PodCreatePortOptions {
-  host_ip: string;
-  container_port: number;
-  host_port: number;
-  protocol: string;
-  range: number;
 }
 
 export interface PodCreateOptions {

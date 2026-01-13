@@ -25,9 +25,9 @@ import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
+import type { PlayKubeInfo } from '/@api/libpod/libpod';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import type { PlayKubeInfo } from '../../../../main/src/plugin/dockerode/libpod-dockerode';
 import KubePlayYAML from './KubePlayYAML.svelte';
 
 const mockedErroredPlayKubeInfo: PlayKubeInfo = {

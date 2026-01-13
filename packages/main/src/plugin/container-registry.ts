@@ -57,6 +57,7 @@ import type { Event } from '/@api/event.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { BuildImageOptions, ImageInfo, ListImagesOptions, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
+import { PlayKubeInfo } from '/@api/libpod/libpod.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
 import type { LibPodPodInfo, PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info.js';
@@ -72,7 +73,6 @@ import type {
   ContainerCreateOptions as PodmanContainerCreateOptions,
   ContainerCreatePortMappingOption,
   LibPod,
-  PlayKubeInfo,
   PodmanDevice,
 } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
