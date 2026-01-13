@@ -248,7 +248,7 @@ export class Certificates {
   /**
    * Parse a PEM-encoded certificate using PKI.js.
    * @param pem The PEM-encoded certificate string.
-   * @returns The parsed certificate information.
+   * @returns The parsed certificate information (without PEM for security).
    */
   parseCertificate(pem: string): CertificateInfo {
     try {
@@ -280,7 +280,6 @@ export class Certificates {
         validFrom: cert.notBefore.value,
         validTo: cert.notAfter.value,
         isCA,
-        pem,
       };
     } catch (error) {
       console.log('error while parsing certificate', error);
@@ -293,7 +292,6 @@ export class Certificates {
         validFrom: undefined,
         validTo: undefined,
         isCA: false,
-        pem,
       };
     }
   }
