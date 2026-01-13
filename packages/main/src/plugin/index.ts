@@ -64,6 +64,7 @@ import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -2416,6 +2417,10 @@ export class PluginSystem {
 
     this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
       return proxy.getState();
+    });
+
+    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
+      return certificates.getAllCertificateInfos();
     });
 
     this.ipcHandle(
