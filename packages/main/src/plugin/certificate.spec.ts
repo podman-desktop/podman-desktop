@@ -260,7 +260,6 @@ describe('parseCertificate', () => {
     expect(result.validFrom).toBeUndefined();
     expect(result.validTo).toBeUndefined();
     expect(result.isCA).toBe(false);
-    expect(result.pem).toBe('invalid-pem-content');
   });
 
   test('should return default info for malformed certificate', () => {
@@ -275,15 +274,7 @@ describe('parseCertificate', () => {
   test('should parse valid certificate and extract subject common name', () => {
     const result = certificate.parseCertificate(TEST_CERTIFICATE_PEM);
 
-    // Even if parsing fails for our test cert, it should return the pem
-    expect(result.pem).toBe(TEST_CERTIFICATE_PEM);
-  });
-
-  test('should preserve PEM in result regardless of parsing success', () => {
-    const testPem = 'test-pem-content';
-    const result = certificate.parseCertificate(testPem);
-
-    expect(result.pem).toBe(testPem);
+    expect(result.subjectCommonName).toBe('Test Cert');
   });
 });
 
@@ -310,8 +301,6 @@ describe('getAllCertificateInfos', () => {
     // Both should be unparsable
     expect(result[0]?.subjectCommonName).toBe('Non parsable certificate');
     expect(result[1]?.subjectCommonName).toBe('Non parsable certificate');
-    expect(result[0]?.pem).toBe(invalidCert1);
-    expect(result[1]?.pem).toBe(invalidCert2);
   });
 
   test('should handle mixed valid and invalid certificates', async () => {
@@ -325,7 +314,7 @@ describe('getAllCertificateInfos', () => {
     expect(result.length).toBe(2);
     // First should be unparsable
     expect(result[0]?.subjectCommonName).toBe('Non parsable certificate');
-    // Second should have PEM preserved
+    // Second should be parsed correctly
     expect(result[1]?.subjectCommonName).toBe('Test Cert');
   });
 });
@@ -592,16 +581,6 @@ describe('parseCertificate with valid certificates', () => {
 
     // Root CA should have isCA = true
     expect(result.isCA).toBe(true);
-
-    // PEM should be preserved
-    expect(result.pem).toBe(VALID_PARSEABLE_CERT);
-  });
-
-  test('should preserve PEM in result for all certificates', () => {
-    const fakeCert = 'test-pem-content';
-    const result = certificate.parseCertificate(fakeCert);
-
-    expect(result.pem).toBe(fakeCert);
   });
 
   test('should use CN as subjectCommonName when present', () => {
@@ -662,13 +641,6 @@ describe('parseCertificate fallback behavior', () => {
     expect(result.subject).toBe('Non parsable certificate');
     expect(result.issuerCommonName).toBe('');
     expect(result.issuer).toBe('');
-  });
-
-  test('should preserve PEM even when parsing fails', () => {
-    const invalidPem = 'some-invalid-content';
-    const result = certificate.parseCertificate(invalidPem);
-
-    expect(result.pem).toBe(invalidPem);
   });
 
   test('should set undefined dates for unparseable certificates', () => {

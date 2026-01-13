@@ -66,7 +66,6 @@ const mockCertificate = (overrides: Partial<CertificateInfo> = {}): CertificateI
   validFrom: new Date('2024-01-01'),
   validTo: new Date('2025-01-01'),
   isCA: false,
-  pem: '-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----',
   ...overrides,
 });
 
