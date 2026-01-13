@@ -29,21 +29,21 @@ import { Mutex } from 'async-mutex';
 import { compareVersions } from 'compare-versions';
 
 import {
-    CLEANUP_REQUIRED_MACHINE_KEY,
-    CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
-    PODMAN_DOCKER_COMPAT_ENABLE_KEY,
-    PODMAN_MACHINE_CPU_SUPPORTED_KEY,
-    PODMAN_MACHINE_DISK_SUPPORTED_KEY,
-    PODMAN_MACHINE_EDIT_CPU,
-    PODMAN_MACHINE_EDIT_DISK_SIZE,
-    PODMAN_MACHINE_EDIT_MEMORY,
-    PODMAN_MACHINE_EDIT_ROOTFUL,
-    PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
-    PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
-    ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
-    START_NOW_MACHINE_INIT_SUPPORTED_KEY,
-    USER_MODE_NETWORKING_SUPPORTED_KEY,
-    WSL_HYPERV_ENABLED_KEY,
+  CLEANUP_REQUIRED_MACHINE_KEY,
+  CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
+  PODMAN_DOCKER_COMPAT_ENABLE_KEY,
+  PODMAN_MACHINE_CPU_SUPPORTED_KEY,
+  PODMAN_MACHINE_DISK_SUPPORTED_KEY,
+  PODMAN_MACHINE_EDIT_CPU,
+  PODMAN_MACHINE_EDIT_DISK_SIZE,
+  PODMAN_MACHINE_EDIT_MEMORY,
+  PODMAN_MACHINE_EDIT_ROOTFUL,
+  PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
+  PODMAN_PROVIDER_LIBKRUN_SUPPORTED_KEY,
+  ROOTFUL_MACHINE_INIT_SUPPORTED_KEY,
+  START_NOW_MACHINE_INIT_SUPPORTED_KEY,
+  USER_MODE_NETWORKING_SUPPORTED_KEY,
+  WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
@@ -72,15 +72,15 @@ import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream
 import { RegistrySetup } from './utils/registry-setup';
 import { checkRosettaMacArm } from './utils/rosetta';
 import {
-    appConfigDir,
-    appHomeDir,
-    execPodman,
-    getAssetsFolder,
-    getMultiplePodmanInstallationsWarnings,
-    getProviderByLabel,
-    getProviderLabel,
-    LoggerDelegator,
-    VMTYPE,
+  appConfigDir,
+  appHomeDir,
+  execPodman,
+  getAssetsFolder,
+  getMultiplePodmanInstallationsWarnings,
+  getProviderByLabel,
+  getProviderLabel,
+  LoggerDelegator,
+  VMTYPE,
 } from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
 
