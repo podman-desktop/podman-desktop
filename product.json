@@ -69,5 +69,12 @@
         "link": "https://www.linkedin.com/company/podman-desktop/"
       }
     ]
+  },
+  "releaseNotes": {
+    "url": "",
+    "blog": "",
+    "title": "",
+    "image": "",
+    "summary": ""
   }
 }
