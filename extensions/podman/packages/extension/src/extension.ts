@@ -1679,7 +1679,7 @@ export async function connectionAuditor(items: extensionApi.AuditRequestItems): 
     if (!(await krunKitCheck).successful) {
       records.push({
         type: 'warning',
-        record: `There is a problem finding 'krunkit' binary. Try to install it manualy, or install Podman from installer.`,
+        record: `There is a problem finding 'krunkit' binary. Try to install it manually, or install Podman from installer.`,
       });
     }
   }
