@@ -28,24 +28,10 @@ $effect(() => {
   searchPattern.set(searchTerm);
 });
 
-let certificates: CertificateInfoUI[] = $state([]);
-
-let certificatesUnsubscribe: Unsubscriber;
-
-onMount(async () => {
-  certificatesUnsubscribe = filtered.subscribe(value => {
-    certificates = value.map(cert => ({
-      ...cert,
-      name: getDisplayName(cert),
-    }));
-  });
-});
-
-onDestroy(() => {
-  if (certificatesUnsubscribe) {
-    certificatesUnsubscribe();
-  }
-});
+let certificates: CertificateInfoUI[] = $derived($filtered.map((cert) => ({
+  ...cert,
+  name: getDisplayName(cert),
+})));
 
 /**
  * Get display name for certificate (Subject: CN → Full DN → 'Unknown')
