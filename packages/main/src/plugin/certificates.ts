@@ -32,6 +32,31 @@ import type { CertificateInfo } from '/@api/certificate-info.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 /**
+ * X.500 Distinguished Name OID constants
+ * @see https://www.alvestrand.no/objectid/2.5.4.html
+ */
+export const OID_CN = '2.5.4.3'; // Common Name
+export const OID_C = '2.5.4.6'; // Country
+export const OID_L = '2.5.4.7'; // Locality
+export const OID_ST = '2.5.4.8'; // State or Province
+export const OID_O = '2.5.4.10'; // Organization
+export const OID_OU = '2.5.4.11'; // Organizational Unit
+export const OID_E = '1.2.840.113549.1.9.1'; // Email Address
+
+/**
+ * Map of OID to human-readable RDN attribute names
+ */
+export const OID_NAME_MAP: Record<string, string> = {
+  [OID_CN]: 'CN',
+  [OID_C]: 'C',
+  [OID_L]: 'L',
+  [OID_ST]: 'ST',
+  [OID_O]: 'O',
+  [OID_OU]: 'OU',
+  [OID_E]: 'E',
+};
+
+/**
  * Provides access to the certificates of the underlying platform.
  * It supports Linux, Windows and MacOS.
  */
@@ -198,18 +223,9 @@ export class Certificates {
    * Format RelativeDistinguishedNames as a string
    */
   private formatDN(rdns: pkijs.RelativeDistinguishedNames): string {
-    const oidMap: Record<string, string> = {
-      '2.5.4.3': 'CN',
-      '2.5.4.6': 'C',
-      '2.5.4.7': 'L',
-      '2.5.4.8': 'ST',
-      '2.5.4.10': 'O',
-      '2.5.4.11': 'OU',
-      '1.2.840.113549.1.9.1': 'E',
-    };
     return rdns.typesAndValues
       .map((rdn: pkijs.AttributeTypeAndValue) => {
-        const name = oidMap[rdn.type] ?? rdn.type;
+        const name = OID_NAME_MAP[rdn.type] ?? rdn.type;
         const value = rdn.value.valueBlock.value?.toString() ?? '';
         return `${name}=${value}`;
       })
@@ -220,10 +236,10 @@ export class Certificates {
    * Get display name with fallback: CN → O → Full DN
    */
   private getDisplayName(rdns: pkijs.RelativeDistinguishedNames): string {
-    const cn = this.getRDNValue(rdns, '2.5.4.3'); // CN
+    const cn = this.getRDNValue(rdns, OID_CN);
     if (cn) return cn;
 
-    const org = this.getRDNValue(rdns, '2.5.4.10'); // O
+    const org = this.getRDNValue(rdns, OID_O);
     if (org) return org;
 
     return this.formatDN(rdns);
@@ -246,6 +262,7 @@ export class Certificates {
       let isCA = false;
       const basicConstraintsExt = cert.extensions?.find((ext: pkijs.Extension) => ext.extnID === '2.5.29.19');
       if (basicConstraintsExt?.parsedValue) {
+        // See https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9 for the definition of cA
         isCA = (basicConstraintsExt.parsedValue as pkijs.BasicConstraints).cA ?? false;
       }
 
