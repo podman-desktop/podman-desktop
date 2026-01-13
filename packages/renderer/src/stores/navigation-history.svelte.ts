@@ -19,6 +19,7 @@
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
+import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
 
 import { navigationRegistry, type NavigationRegistryEntry } from './navigation/navigation-registry';
@@ -94,15 +95,26 @@ function findNavigationEntry(url: string, entries: NavigationRegistryEntry[]): N
   return undefined;
 }
 
-// Get icon for a URL from navigation registry or route icons mapping
-function getIconForUrl(url: string): HistoryEntryIcon | undefined {
+// Get entry info (name and icon) for a URL
+function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
   const path = url.split('?')[0];
 
-  // First check navigation registry (includes webviews, extensions, containers, etc.)
+  // Handle Dashboard specially
+  if (path === '/') {
+    return {
+      name: 'Dashboard',
+      icon: { iconComponent: DashboardIcon },
+    };
+  }
+
+  // Check navigation registry (includes webviews, extensions, containers, etc.)
   const registry = get(navigationRegistry);
-  const entry = findNavigationEntry(url, registry);
-  if (entry?.icon) {
-    return entry.icon;
+  const navEntry = findNavigationEntry(url, registry);
+  if (navEntry) {
+    return {
+      name: navEntry.name,
+      icon: navEntry.icon,
+    };
   }
 
   // Check settings navigation entries for routes not in navigation registry
@@ -110,16 +122,22 @@ function getIconForUrl(url: string): HistoryEntryIcon | undefined {
   const sortedEntries = [...settingsNavigationEntries].sort((a, b) => b.href.length - a.href.length);
   for (const route of sortedEntries) {
     if (
-      route.icon &&
-      (path === route.href ||
-        path.startsWith(route.href + '/') ||
-        (route.href.endsWith('/') && path.startsWith(route.href)))
+      path === route.href ||
+      path.startsWith(route.href + '/') ||
+      (route.href.endsWith('/') && path.startsWith(route.href))
     ) {
-      return { iconComponent: route.icon };
+      return {
+        name: route.title,
+        icon: route.icon ? { iconComponent: route.icon } : undefined,
+      };
     }
   }
 
-  return undefined;
+  // Fallback to URL-based name
+  return {
+    name: urlToDisplayName(url),
+    icon: undefined,
+  };
 }
 
 // Core navigation function
@@ -174,10 +192,11 @@ function getEntries(direction: Direction): HistoryEntry[] {
   for (let i = start; condition(i); i += step) {
     const url = navigationHistory.stack[i];
     if (url) {
+      const info = getEntryInfo(url);
       entries.push({
         index: i,
-        name: urlToDisplayName(url),
-        icon: getIconForUrl(url),
+        name: info.name,
+        icon: info.icon,
       });
     }
   }
