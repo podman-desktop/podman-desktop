@@ -21,8 +21,21 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import learningCenter from '../../../../main/src/plugin/learning-center/guides.json';
+import type { Guide } from '/@api/learning-center/guide';
+
 import LearningCenter from './LearningCenter.svelte';
+
+const guides: Guide[] = [
+  {
+    id: 'podman-desktop-for-kubernetes',
+    url: 'https://developers.redhat.com/articles/2023/11/06/working-kubernetes-podman-desktop',
+    title: 'Working with Kubernetes',
+    description:
+      "Understand how Podman's design philosophy can handle pods just as it handles containers, in consistent way with Kubernetes architectures.",
+    categories: ['Kubernetes'],
+    icon: '',
+  },
+];
 
 vi.mock('svelte/transition', () => ({
   slide: (): { delay: number; duration: number } => ({
@@ -36,7 +49,7 @@ vi.mock('svelte/transition', () => ({
 }));
 
 beforeEach(() => {
-  vi.mocked(window.listGuides).mockResolvedValue(learningCenter.guides);
+  vi.mocked(window.listGuides).mockResolvedValue(guides);
 });
 
 afterEach(() => {
@@ -47,7 +60,7 @@ test('LearningCenter component shows carousel with guides', async () => {
   render(LearningCenter);
 
   await vi.waitFor(() => {
-    const firstCard = screen.getByText(learningCenter.guides[0].title);
+    const firstCard = screen.getByText(guides[0].title);
     expect(firstCard).toBeVisible();
   });
 });
@@ -55,16 +68,16 @@ test('LearningCenter component shows carousel with guides', async () => {
 test('Clicking on LearningCenter title hides carousel with guides', async () => {
   render(LearningCenter);
   await vi.waitFor(() => {
-    const firstCard = screen.getByText(learningCenter.guides[0].title);
+    const firstCard = screen.getByText(guides[0].title);
     expect(firstCard).toBeVisible();
   });
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toBeInTheDocument();
-  expect(screen.queryByText(learningCenter.guides[0].title)).toBeInTheDocument();
+  expect(screen.queryByText(guides[0].title)).toBeInTheDocument();
   await fireEvent.click(button);
   await vi.waitFor(async () => {
-    expect(screen.queryByText(learningCenter.guides[0].title)).not.toBeInTheDocument();
+    expect(screen.queryByText(guides[0].title)).not.toBeInTheDocument();
   });
 });
 
