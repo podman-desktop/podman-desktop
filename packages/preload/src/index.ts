@@ -44,11 +44,8 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type';
-<<<<<<< HEAD
 import type { AuthenticationProviderInfo } from '/@api/authentication/authentication';
-=======
 import type { CertificateInfo } from '/@api/certificate-info';
->>>>>>> 115baac4faa (feat: svelte certificates store)
 import type { CliToolInfo } from '/@api/cli-tool-info';
 import type { ColorInfo } from '/@api/color-info';
 import type { CommandInfo } from '/@api/command-info';
