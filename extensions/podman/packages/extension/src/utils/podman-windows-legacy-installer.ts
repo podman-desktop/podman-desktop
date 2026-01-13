@@ -41,6 +41,13 @@ export const UNINSTALL_REGISTRY_PATH = '\\SOFTWARE\\Microsoft\\Windows\\CurrentV
 export const UNINSTALL_REGISTRY_DISPLAY_NAME_KEY = 'DisplayName';
 export const UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY = 'QuietUninstallString';
 
+/**
+ * On Windows Podman migrated from a system-wide installer requiring admin privilege to
+ * a msi installer that can run in user mode.
+ *
+ * However, the new installer will fail if it detects a previous version of podman installed with the legacy installer.
+ * This class centralize the logic to deal with the legacy installer.
+ */
 @injectable()
 export class PodmanWindowsLegacyInstaller implements Disposable {
   #disposables: Disposable[] = [];
@@ -60,6 +67,12 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
     this.#disposables.push(commands.registerCommand(UNINSTALL_LEGACY_INSTALLER_COMMAND, this.uninstall.bind(this)));
   }
 
+  /**
+   * To detect if we have an installation of Podman made through the legacy installer, we use the
+   * same logic made inside the new podman installer (https://github.com/containers/podman/pull/27284)
+   *
+   * We check in {@link LEGACY_PODMAN_REGISTRY_KEY} registry the existence of {@link LEGACY_PODMAN_REGISTRY_ITEM_NAME}
+   */
   async isInstalled(): Promise<boolean> {
     const legacyRegistry: Registry = new WinReg({
       hive: WinReg.HKLM,
@@ -75,15 +88,16 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
         location: ProgressLocation.TASK_WIDGET,
         title: 'Uninstalling legacy Podman Installer',
       },
-      async ({ report }) => {
-        report({ message: 'Uninstalling legacy Podman Installer' });
-
+      async () => {
         const start = performance.now();
         const telemetry: Record<string, unknown> = {};
 
         try {
           const uninstallString = await this.getUninstallCMD();
 
+          /**
+           * We cannot directly invoke the uninstallation command as it need a shell
+           */
           await processAPI.exec('cmd.exe', ['/s', '/c', `"${uninstallString}"`], {
             logger: {
               error: console.error,
@@ -104,6 +118,13 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
     );
   }
 
+  /**
+   * The legacy podman installer use the DisplayName `Podman` where the new one use `Podman CLI`.
+   * We usually have two entries per program installed, one with a `QuietUninstallString` registered by windows
+   * and the one made by the installer.
+   *
+   * @remarks this function will recognize the registry created by windows by checking both `DisplayName` and `QuietUninstallString`
+   */
   protected async isPodmanUninstallRegistry(registry: Registry): Promise<boolean> {
     const valueExists = promisify(registry.valueExists).bind(registry);
     const exists = await valueExists(UNINSTALL_REGISTRY_DISPLAY_NAME_KEY);
@@ -116,6 +137,13 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
     return valueExists(UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY);
   }
 
+  /**
+   * We want to find the `QuietUninstallString` command for the legacy podman installer.
+   * It is located inside the {@link UNINSTALL_REGISTRY_PATH} registry path
+   *
+   * However, windows use a unique UUID for each entry, and it is unique to each install, so we need to iterate
+   * until we found the one matching the podman one (we use {@link isPodmanUninstallRegistry})
+   */
   protected async getUninstallCMD(): Promise<string> {
     const uninstallRegistry: Registry = new WinReg({
       hive: WinReg.HKLM,
