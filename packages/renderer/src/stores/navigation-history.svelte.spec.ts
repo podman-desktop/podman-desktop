@@ -48,6 +48,17 @@ vi.mock('tinro', () => ({
 vi.mock(import('/@/stores/kubernetes-no-current-context'));
 vi.mock(import('/@/stores/navigation/navigation-registry'));
 
+vi.mock(import('./navigation/navigation-registry'), async () => {
+  const { writable } = await import('svelte/store');
+  return {
+    navigationRegistry: writable([]),
+  };
+});
+
+vi.mock('/@/PreferencesNavigation', () => ({
+  settingsNavigationEntries: [],
+}));
+
 beforeEach(() => {
   vi.resetAllMocks();
 
@@ -232,8 +243,8 @@ describe('getBackEntries', () => {
     const entries = getBackEntries();
 
     expect(entries).toEqual([
-      { index: 1, name: 'Images' },
-      { index: 0, name: 'Containers' },
+      { index: 1, name: 'Images', icon: undefined },
+      { index: 0, name: 'Containers', icon: undefined },
     ]);
   });
 });
@@ -259,8 +270,8 @@ describe('getForwardEntries', () => {
     const entries = getForwardEntries();
 
     expect(entries).toEqual([
-      { index: 1, name: 'Images' },
-      { index: 2, name: 'Pods' },
+      { index: 1, name: 'Images', icon: undefined },
+      { index: 2, name: 'Pods', icon: undefined },
     ]);
   });
 });

@@ -1,11 +1,16 @@
 <script lang="ts">
 import { faHistory, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
+import type { Component } from 'svelte';
+import { get } from 'svelte/store';
+
+import { isDark } from '/@/stores/appearance';
+import type { HistoryEntry, HistoryEntryIcon } from '/@/stores/navigation-history.svelte';
 
 interface Props {
   show: boolean;
-  icon?: IconDefinition | string;
-  entries: { index: number; name: string }[];
+  fallbackIcon?: IconDefinition | Component | string;
+  entries: HistoryEntry[];
   hoveredEntryIndex: number | undefined;
   isLongPressing: boolean;
   onSelectEntry: (index: number) => void;
@@ -15,12 +20,27 @@ interface Props {
 let {
   show,
   entries,
-  icon = faHistory,
+  fallbackIcon = faHistory,
   hoveredEntryIndex,
   isLongPressing,
   onSelectEntry,
   onSetHoveredIndex,
 }: Props = $props();
+
+// Extract icon value from registry icon object
+function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component | string {
+  if (!icon) return fallbackIcon;
+
+  if (icon.iconComponent) return icon.iconComponent;
+  if (icon.faIcon) return icon.faIcon.definition;
+
+  if (icon.iconImage) {
+    if (typeof icon.iconImage === 'string') return icon.iconImage;
+    return get(isDark) ? icon.iconImage.dark : icon.iconImage.light;
+  }
+
+  return fallbackIcon;
+}
 </script>
 
 {#if show && entries.length > 0}
@@ -44,7 +64,7 @@ let {
         }}>
         <DropdownMenu.Item
           title={entry.name}
-          icon={icon}
+          icon={getIcon(entry.icon)}
           onClick={(): void => onSelectEntry(entry.index)} />
       </div>
     {/each}

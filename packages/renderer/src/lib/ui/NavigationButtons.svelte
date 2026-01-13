@@ -13,6 +13,7 @@ import {
   goBack,
   goForward,
   goToHistoryIndex,
+  type HistoryEntry,
   navigationHistory,
 } from '/@/stores/navigation-history.svelte';
 
@@ -24,7 +25,7 @@ let { class: className = '' }: Props = $props();
 
 let longPressTimer: NodeJS.Timeout | undefined = $state(undefined);
 let showDropdown: Direction | undefined = $state(undefined);
-let dropdownEntries: { index: number; name: string }[] = $state([]);
+let dropdownEntries: HistoryEntry[] = $state([]);
 let hoveredEntryIndex: number | undefined = $state(undefined);
 let isLongPressing = $state(false);
 let timeout: NodeJS.Timeout | undefined = $state(undefined);
@@ -212,7 +213,7 @@ function setHoveredEntryIndex(index: number | undefined): void {
     <HistoryDropdown
       show={showDropdown === BACK}
       entries={dropdownEntries}
-      icon={faBackward}
+      fallbackIcon={faBackward}
       {hoveredEntryIndex}
       {isLongPressing}
       onSelectEntry={selectEntry}
@@ -231,7 +232,7 @@ function setHoveredEntryIndex(index: number | undefined): void {
     <HistoryDropdown
       show={showDropdown === FORWARD}
       entries={dropdownEntries}
-      icon={faForward}
+      fallbackIcon={faForward}
       {hoveredEntryIndex}
       {isLongPressing}
       onSelectEntry={selectEntry}
