@@ -39,7 +39,7 @@ export const LEGACY_PODMAN_REGISTRY_ITEM_NAME = 'InstallDir';
 // Uninstall
 export const UNINSTALL_REGISTRY_PATH = '\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall';
 export const UNINSTALL_REGISTRY_DISPLAY_NAME_KEY = 'DisplayName';
-export const UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY = 'QuietUninstallString';
+export const UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY = 'QuietUninstallString';
 
 /**
  * On Windows Podman migrated from a system-wide installer requiring admin privilege to
@@ -134,7 +134,7 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
 
     if (item.value.trim().toLowerCase() !== 'podman') return false;
 
-    return valueExists(UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY);
+    return valueExists(UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY);
   }
 
   /**
@@ -154,7 +154,7 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
     for (const registry of registries) {
       if (await this.isPodmanUninstallRegistry(registry)) {
         const uninstallItem = await promisify(registry.get).bind(registry)(
-          UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY,
+          UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY,
         );
         return uninstallItem.value;
       }

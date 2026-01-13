@@ -27,7 +27,7 @@ import {
   LEGACY_PODMAN_REGISTRY_KEY,
   PodmanWindowsLegacyInstaller,
   UNINSTALL_REGISTRY_DISPLAY_NAME_KEY,
-  UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY,
+  UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY,
 } from '/@/utils/podman-windows-legacy-installer';
 
 vi.mock(import('winreg'));
@@ -104,7 +104,7 @@ describe('dispose', () => {
 });
 
 describe('isInstalled', () => {
-  test('expect true if ', async () => {
+  test('expect true if legacy podman installer is detected', async () => {
     vi.mocked(WinReg.prototype.valueExists).mockImplementation(function (
       this: Registry,
       _: string,
@@ -127,7 +127,7 @@ describe('isInstalled', () => {
     );
   });
 
-  test('should return failure if legacy podman installer detected', async () => {
+  test('expect false if legacy podman installer is not detected', async () => {
     vi.mocked(WinReg.prototype.valueExists).mockImplementation(function (
       this: Registry,
       _: string,
@@ -182,7 +182,7 @@ describe('uninstall', () => {
             } as RegistryItem,
           );
           break;
-        case UNINSTALL_REGISTRY_QUIT_UNINSTALL_STRING_KEY:
+        case UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY:
           cb(
             undefined as unknown as Error,
             {
