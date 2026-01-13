@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, preDestroy } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
@@ -90,6 +90,7 @@ export class NavigationManager {
     );
   }
 
+  @preDestroy()
   dispose(): void {
     this.#disposables.forEach(disposable => disposable.dispose());
   }
