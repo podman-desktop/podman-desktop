@@ -54,10 +54,9 @@ const validCertificate: CertificateInfo = {
   issuerCommonName: 'Test Issuer',
   issuer: 'CN=Test Issuer, O=Issuer Org, C=US',
   serialNumber: 'ABC123',
-  validFrom: new Date('2024-01-01'),
-  validTo: new Date('2030-12-31'),
+  validFrom: '2024-01-01T00:00:00.000Z',
+  validTo: '2030-12-31T00:00:00.000Z',
   isCA: false,
-  pem: '-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----',
 };
 
 const expiredCertificate: CertificateInfo = {
@@ -66,10 +65,9 @@ const expiredCertificate: CertificateInfo = {
   issuerCommonName: 'Expired Issuer',
   issuer: 'CN=Expired Issuer, O=Issuer Org, C=US',
   serialNumber: 'DEF456',
-  validFrom: new Date('2020-01-01'),
-  validTo: new Date('2023-12-31'),
+  validFrom: '2020-01-01T00:00:00.000Z',
+  validTo: '2023-12-31T00:00:00.000Z',
   isCA: true,
-  pem: '-----BEGIN CERTIFICATE-----\nexpired\n-----END CERTIFICATE-----',
 };
 
 const unknownDateCertificate: CertificateInfo = {
@@ -81,7 +79,6 @@ const unknownDateCertificate: CertificateInfo = {
   validFrom: undefined,
   validTo: undefined,
   isCA: false,
-  pem: '-----BEGIN CERTIFICATE-----\nunknown\n-----END CERTIFICATE-----',
 };
 
 describe('CertificateList', () => {
@@ -301,7 +298,7 @@ describe('CertificateList store integration', () => {
   test('should update search pattern store when searchTerm prop changes', async () => {
     await waitRender({ searchTerm: 'test-search' });
     await vi.waitFor(() => {
-        expect(get(searchPattern)).toBe('test-search');
+      expect(get(searchPattern)).toBe('test-search');
     });
   });
 });
@@ -314,10 +311,9 @@ describe('CertificateList sorting', () => {
     issuerCommonName: 'Zeta Issuer',
     issuer: 'CN=Zeta Issuer',
     serialNumber: 'AAA111',
-    validFrom: new Date('2024-01-01'),
-    validTo: new Date('2025-01-01'),
+    validFrom: '2024-01-01T00:00:00.000Z',
+    validTo: '2025-01-01T00:00:00.000Z',
     isCA: false,
-    pem: '-----BEGIN CERTIFICATE-----\nalpha\n-----END CERTIFICATE-----',
   };
 
   const certB: CertificateInfo = {
@@ -326,10 +322,9 @@ describe('CertificateList sorting', () => {
     issuerCommonName: 'Mu Issuer',
     issuer: 'CN=Mu Issuer',
     serialNumber: 'BBB222',
-    validFrom: new Date('2024-06-01'),
-    validTo: new Date('2026-06-01'),
+    validFrom: '2024-06-01T00:00:00.000Z',
+    validTo: '2026-06-01T00:00:00.000Z',
     isCA: true,
-    pem: '-----BEGIN CERTIFICATE-----\nbeta\n-----END CERTIFICATE-----',
   };
 
   const certC: CertificateInfo = {
@@ -338,10 +333,9 @@ describe('CertificateList sorting', () => {
     issuerCommonName: 'Alpha Issuer',
     issuer: 'CN=Alpha Issuer',
     serialNumber: 'CCC333',
-    validFrom: new Date('2023-01-01'),
-    validTo: new Date('2024-06-01'),
+    validFrom: '2023-01-01T00:00:00.000Z',
+    validTo: '2024-06-01T00:00:00.000Z',
     isCA: false,
-    pem: '-----BEGIN CERTIFICATE-----\ngamma\n-----END CERTIFICATE-----',
   };
 
   test('should sort certificates by name when clicking Certificate Name header', async () => {
@@ -475,7 +469,6 @@ describe('CertificateList sorting', () => {
       validFrom: undefined,
       validTo: undefined,
       isCA: false,
-      pem: '-----BEGIN CERTIFICATE-----\nnoexpiry\n-----END CERTIFICATE-----',
     };
 
     certificatesInfos.set([certA, certNoExpiry, certB]);
