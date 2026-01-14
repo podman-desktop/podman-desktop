@@ -676,6 +676,46 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
   expect(onboarding).not.toBeInTheDocument();
 });
 
+test('Expect title to display custom product name from getProductName', async () => {
+  // Mock a custom product name to verify dynamic rendering
+  vi.mocked(window.getProductName).mockResolvedValue('Custom Product Name');
+
+  onboardingList.set([
+    {
+      extension: 'id',
+      removable: true,
+      title: 'onboarding',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+      steps: [
+        {
+          id: 'step',
+          title: 'step',
+          completionEvents: [],
+          content: [
+            [
+              {
+                value: 'content',
+              },
+            ],
+          ],
+        },
+      ],
+      enablement: 'true',
+    },
+  ]);
+  context.set(new ContextUI());
+  await waitRender({
+    extensionIds: ['id'],
+    global: true,
+  });
+
+  // Verify the custom product name is displayed
+  const title = screen.getByText('Get started with Custom Product Name');
+  expect(title).toBeInTheDocument();
+});
+
 test('Expect onboarding to be reset when starting completed onboarding', async () => {
   onboardingList.set([
     {
