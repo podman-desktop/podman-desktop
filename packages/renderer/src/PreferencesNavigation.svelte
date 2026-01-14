@@ -28,10 +28,10 @@ function updateDockerCompatibility(): void {
     .getConfigurationValue<boolean>(`${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`)
     .then(result => {
       if (result !== undefined) {
-        settingsNavigationItems = settingsNavigationEntries.map(entry => ({
-          ...entry,
-          visible: entry.title === 'Docker Compatibility' ? result : true,
-        }));
+        const index = settingsNavigationEntries.findIndex(entry => entry.title === 'Docker Compatibility');
+        if (index !== -1) {
+          settingsNavigationItems[index].visible = result;
+        }
       }
     })
     .catch((err: unknown) =>
@@ -54,10 +54,10 @@ onMount(() => {
     // check for experimental configuration
     experimentalSection = value.some(configuration => !!configuration.experimental);
 
-    settingsNavigationItems = settingsNavigationEntries.map(entry => ({
-      ...entry,
-      visible: entry.title === 'Experimental' ? experimentalSection : true,
-    }));
+    const experimentalIndex = settingsNavigationEntries.findIndex(entry => entry.title === 'Experimental');
+    if (experimentalIndex !== -1) {
+      settingsNavigationItems[experimentalIndex].visible = experimentalSection;
+    }
 
     // update config properties
     configProperties = value.reduce((map, current) => {

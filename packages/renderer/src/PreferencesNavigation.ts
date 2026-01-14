@@ -46,12 +46,12 @@ export const settingsNavigationEntries: SettingsNavItemConfig[] = [
   {
     title: 'Docker Compatibility',
     href: '/preferences/docker-compatibility',
-    visible: true,
+    visible: false,
     icon: DockerCompatibilityIcon,
   },
   { title: 'Registries', href: '/preferences/registries', visible: true, icon: RegistriesIcon },
   { title: 'Authentication', href: '/preferences/authentication-providers', visible: true, icon: AuthenticationIcon },
   { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true, icon: CLIToolsIcon },
   { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true, icon: KubernetesIcon },
-  { title: 'Experimental', href: '/preferences/experimental', visible: true, icon: ExperimentalIcon },
+  { title: 'Experimental', href: '/preferences/experimental', visible: false, icon: ExperimentalIcon },
 ];
