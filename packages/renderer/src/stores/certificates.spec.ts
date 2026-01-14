@@ -20,7 +20,7 @@
 
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CertificateInfo } from '/@api/certificate-info';
 
@@ -53,10 +53,13 @@ vi.mock('./search-util', () => ({
   findMatchInLeaves: vi.fn(() => true),
 }));
 
+beforeAll(() => {
+  certificatesEventStore.setup();
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   searchPattern.set('');
-  certificatesEventStore.setup();
 });
 
 const mockCertificate = (overrides: Partial<CertificateInfo> = {}): CertificateInfo => ({
