@@ -27,11 +27,10 @@ import LearningCenter from './LearningCenter.svelte';
 
 const guides: Guide[] = [
   {
-    id: 'podman-desktop-for-kubernetes',
-    url: 'https://developers.redhat.com/articles/2023/11/06/working-kubernetes-podman-desktop',
-    title: 'Working with Kubernetes',
-    description:
-      "Understand how Podman's design philosophy can handle pods just as it handles containers, in consistent way with Kubernetes architectures.",
+    id: 'podman-desktop-learning-center-example',
+    url: 'https://podman-desktop.io/learning-center/example',
+    title: 'My Title',
+    description: 'fake description',
     categories: ['Kubernetes'],
     icon: '',
   },
