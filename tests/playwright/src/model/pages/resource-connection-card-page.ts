@@ -19,6 +19,7 @@
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import type { ResourceElementActions } from '/@/model/core/operations';
+import { PodmanMachinePrivileges } from '/@/model/core/types';
 
 import { ResourceCardPage } from './resource-card-page';
 
@@ -64,5 +65,32 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
 
   public async getConnectionInfoByLabel(label: string): Promise<string> {
     return (await this.card.getByLabel(label, { exact: true }).textContent()) ?? '';
+  }
+
+  public async toggleMachinePrivileges(targetPrivilege: PodmanMachinePrivileges, timeout = 120_000): Promise<void> {
+    return test.step(`Toggle machine privileges to '${targetPrivilege}'`, async () => {
+      const editForm = this.page.getByRole('form', { name: 'Properties Information' });
+      const rootPrivilegesCheckbox = editForm.getByRole('checkbox', {
+        name: 'Machine with root privileges',
+      });
+      const updateButton = editForm.getByRole('button', { name: 'Update' });
+      const goBackButton = this.page.getByRole('button', { name: 'Go back to resources' });
+
+      const desiredState = targetPrivilege === PodmanMachinePrivileges.Rootful;
+      const currentState = await rootPrivilegesCheckbox.isChecked();
+
+      if (desiredState !== currentState) {
+        await rootPrivilegesCheckbox.locator('..').click();
+        await playExpect
+          .poll(async () => await rootPrivilegesCheckbox.isChecked(), { timeout: 10_000 })
+          .toBe(desiredState);
+      }
+
+      await playExpect(updateButton).toBeEnabled();
+      await updateButton.click();
+
+      await playExpect(goBackButton).toBeEnabled({ timeout: timeout });
+      await goBackButton.click();
+    });
   }
 }

@@ -20,6 +20,7 @@ import * as os from 'node:os';
 
 import type { Page } from '@playwright/test';
 
+import { ResourceElementActions } from '/@/model/core/operations';
 import { ResourceElementState } from '/@/model/core/states';
 import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model/core/types';
 import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
@@ -269,6 +270,53 @@ test.describe.serial('Podman Machine verification', { tag: '@pdmachine' }, () =>
 
     await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
       timeout: TIMEOUT_VERY_LONG,
+    });
+  });
+
+  test('Podman machine operations - EDIT privileges', async ({ page, navigationBar }) => {
+    test.skip(process.env.TEST_PODMAN_MACHINE !== 'true');
+    test.setTimeout(TIMEOUT_SETUP + TIMEOUT_LONG);
+
+    const TOGGLE_TIMEOUT = 120_000;
+
+    await test.step('Navigate to resources page', async () => {
+      await navigationBar.openDashboard();
+      const settingsBar = await navigationBar.openSettings();
+      await settingsBar.resourcesTab.click();
+    });
+
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+
+    const resourcesPodmanConnections = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+    await playExpect(resourcesPodmanConnections.resourceElement).toBeVisible({ timeout: TIMEOUT_MEDIUM });
+
+    await test.step('Toggle machine privileges to rootless', async () => {
+      await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Edit);
+      await resourcesPodmanConnections.toggleMachinePrivileges(PodmanMachinePrivileges.Rootless, TOGGLE_TIMEOUT);
+    });
+
+    await test.step('Wait for machine to restart and verify rootless', async () => {
+      const restartButton = resourcesPodmanConnections.resourceElementConnectionActions.getByRole('button', {
+        name: ResourceElementActions.Restart,
+        exact: true,
+      });
+      await playExpect(restartButton).toBeEnabled({ timeout: TOGGLE_TIMEOUT });
+      await verifyMachinePrivileges(resourcesPodmanConnections, PodmanMachinePrivileges.Rootless);
+    });
+
+    await test.step('Toggle machine privileges back to rootful', async () => {
+      await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Edit);
+      await resourcesPodmanConnections.toggleMachinePrivileges(PodmanMachinePrivileges.Rootful, TOGGLE_TIMEOUT);
+    });
+
+    await test.step('Wait for machine to restart and verify rootful', async () => {
+      const restartButton = resourcesPodmanConnections.resourceElementConnectionActions.getByRole('button', {
+        name: ResourceElementActions.Restart,
+        exact: true,
+      });
+      await playExpect(restartButton).toBeEnabled({ timeout: TOGGLE_TIMEOUT });
+      await verifyMachinePrivileges(resourcesPodmanConnections, PodmanMachinePrivileges.Rootful);
     });
   });
 
