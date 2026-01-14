@@ -64,6 +64,7 @@ import type {
 import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContainerfileInfo } from '/@api/containerfile-info';
+import type { ContextInfo } from '/@api/context/context';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
 import type { IDisposable } from '/@api/disposable';
@@ -128,8 +129,6 @@ import type { TelemetryMessages } from '/@api/telemetry';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
-
-import type { ContextInfo } from '../../main/src/plugin/api/context-info';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;

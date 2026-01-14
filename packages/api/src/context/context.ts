@@ -27,3 +27,9 @@ export type ContextKeyValue =
 export interface IContext {
   getValue<T extends ContextKeyValue = ContextKeyValue>(key: string): T | undefined;
 }
+
+export interface ContextInfo {
+  readonly id: number;
+  readonly parent?: IContext;
+  readonly extension?: string;
+}
