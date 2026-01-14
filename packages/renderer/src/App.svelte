@@ -156,42 +156,106 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <SendFeedback />
         <ToastHandler />
         <ToastTaskNotifications />
+
         <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
           <DashboardPage />
         </Route>
-        <Route path="/containers" breadcrumb="Containers" navigationHint="root">
-          <ContainerList searchTerm={meta.query.filter ?? ''} />
-        </Route>
-        <Route path="/containers/:id/*" let:meta firstmatch>
-          <Route path="/export" breadcrumb="Export Container">
-            <ContainerExport containerID={meta.params.id} />
+
+        <Route path="/containers/*" breadcrumb="Containers" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Containers" navigationHint="root">
+            <ContainerList searchTerm={meta.query.filter ?? ''} />
           </Route>
-          <Route breadcrumb="Container Details" navigationHint="details" path="/*">
-            <ContainerDetails containerID={meta.params.id} />
+          <Route path="/:id/*" let:meta firstmatch>
+            <Route path="/export" breadcrumb="Export Container">
+              <ContainerExport containerID={meta.params.id} />
+            </Route>
+            <Route breadcrumb="Container Details" navigationHint="details" path="/*">
+              <ContainerDetails containerID={meta.params.id} />
+            </Route>
           </Route>
         </Route>
 
         <Route path="/kube/play" breadcrumb="Podman Kube Play">
           <KubePlayYAML />
         </Route>
-        <Route path="/image/run/*" breadcrumb="Run Image">
-          <RunImage />
+
+        <Route path="/images/*" breadcrumb="Images" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Images" navigationHint="root">
+            <ImagesList />
+          </Route>
+          <Route path="/existing-image-create-container" breadcrumb="Select image" >
+            <CreateContainerFromExistingImage />
+          </Route>
+          <Route path="/run/*" breadcrumb="Run Image">
+            <RunImage />
+          </Route>
+          <Route path="/build" breadcrumb="Build an Image" let:meta>
+            <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
+          </Route>
+          <Route path="/pull" breadcrumb="Pull an Image">
+            <PullImage />
+          </Route>
+          <Route path="/import" breadcrumb="Import Containers">
+            <ImportContainersImages />
+          </Route>
+          <Route path="/save" breadcrumb="Save Images">
+            <SaveImages />
+          </Route>
+          <Route path="/load" breadcrumb="Load Images">
+            <LoadImages />
+          </Route>
+          <Route path="/:id/:engineId" breadcrumb="Images" let:meta navigationHint="root">
+            <ImagesList searchTerm={meta.params.id} imageEngineId={meta.params.engineId} />
+          </Route>
+          <Route
+            path="/:id/:engineId/:base64RepoTag/*"
+            breadcrumb="Image Details"
+            let:meta
+            navigationHint="details">
+            <ImageDetails
+              imageID={meta.params.id}
+              engineId={decodeURI(meta.params.engineId)}
+              base64RepoTag={meta.params.base64RepoTag} />
+          </Route>
         </Route>
-        <Route path="/images" breadcrumb="Images" navigationHint="root">
-          <ImagesList />
+
+        <Route path="/networks/*" breadcrumb="Networks" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Networks" navigationHint="root">
+            <NetworksList />
+          </Route>
+          <Route path="/create/*" breadcrumb="Create Network">
+            <CreateNetwork />
+          </Route>
+          <Route path="/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
+            <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
+          </Route>
         </Route>
-        <Route path="/images/existing-image-create-container" breadcrumb="Select image" >
-          <CreateContainerFromExistingImage />
+
+        <Route path="/volumes/*" breadcrumb="Volumes" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Volumes" navigationHint="root">
+            <VolumesList />
+          </Route>
+          <Route path="/create" breadcrumb="Create a Volume">
+            <CreateVolume />
+          </Route>
+          <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
+            <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+          </Route>
         </Route>
-        <Route path="/images/build" breadcrumb="Build an Image" let:meta>
-          <BuildImageFromContainerfile taskId={+meta.query.taskId}/>
+
+        <Route path="/extensions/*" breadcrumb="Extensions" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Extensions" navigationHint="root" let:meta>
+            {@const request = parseExtensionListRequest(meta)}
+            <ExtensionList
+              searchTerm={request.searchTerm}
+              screen={request.screen}
+            />
+          </Route>
+          <Route path="/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
+            <ExtensionDetails extensionId={meta.params.id} />
+          </Route>
         </Route>
-        <Route path="/images/:id/:engineId" breadcrumb="Images" let:meta navigationHint="root">
-          <ImagesList searchTerm={meta.params.id} imageEngineId={meta.params.engineId} />
-        </Route>
-        <Route path="/networks/create/*" breadcrumb="Create Network">
-          <CreateNetwork />
-        </Route>
+
         <Route
           path="/manifests/:id/:engineId/:base64RepoTag/*"
           breadcrumb="Manifest Details"
@@ -201,28 +265,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             imageID={meta.params.id}
             engineId={decodeURI(meta.params.engineId)}
             base64RepoTag={meta.params.base64RepoTag} />
-        </Route>
-        <Route
-          path="/images/:id/:engineId/:base64RepoTag/*"
-          breadcrumb="Image Details"
-          let:meta
-          navigationHint="details">
-          <ImageDetails
-            imageID={meta.params.id}
-            engineId={decodeURI(meta.params.engineId)}
-            base64RepoTag={meta.params.base64RepoTag} />
-        </Route>
-        <Route path="/images/pull" breadcrumb="Pull an Image">
-          <PullImage />
-        </Route>
-        <Route path="/images/import" breadcrumb="Import Containers">
-          <ImportContainersImages />
-        </Route>
-        <Route path="/images/save" breadcrumb="Save Images">
-          <SaveImages />
-        </Route>
-        <Route path="/images/load" breadcrumb="Load Images">
-          <LoadImages />
         </Route>
         <Route path="/pods" breadcrumb="Pods" navigationHint="root">
           <PodsList />
@@ -251,21 +293,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/pod-create-from-containers" breadcrumb="Create Pod">
           <PodCreateFromContainers />
         </Route>
-        <Route path="/volumes" breadcrumb="Volumes" navigationHint="root">
-          <VolumesList />
-        </Route>
-        <Route path="/volumes/create" breadcrumb="Create a Volume">
-          <CreateVolume />
-        </Route>
-        <Route path="/volumes/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
-          <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
-        </Route>
-        <Route path="/networks" breadcrumb="Networks" navigationHint="root">
-          <NetworksList />
-        </Route>
-        <Route path="/networks/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
-          <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
-        </Route>
+        
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
             <KubernetesDashboard />
@@ -390,16 +418,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/troubleshooting/*" breadcrumb="Troubleshooting">
           <TroubleshootingPage />
-        </Route>
-        <Route path="/extensions" breadcrumb="Extensions" navigationHint="root" let:meta>
-          {@const request = parseExtensionListRequest(meta)}
-          <ExtensionList
-            searchTerm={request.searchTerm}
-            screen={request.screen}
-          />
-        </Route>
-        <Route path="/extensions/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
-          <ExtensionDetails extensionId={meta.params.id} />
         </Route>
       </div>
     </div>
