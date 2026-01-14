@@ -20,8 +20,7 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { IDisposable } from '/@api/disposable.js';
-
-import { type ListOrganizerItem, SavedListOrganizerConfig } from '../../../api/src/list-organizer.js';
+import type { ListOrganizerItem, SavedListOrganizerConfig } from '/@api/list-organizer.js';
 
 // Dynamic list organizer registry - populated by frontend components during initialization
 const REGISTERED_LISTS: Record<string, string[]> = {};
