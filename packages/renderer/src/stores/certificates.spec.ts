@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -27,9 +25,9 @@ import type { CertificateInfo } from '/@api/certificate-info';
 import { certificatesEventStore, certificatesInfos, filtered, searchPattern } from './certificates';
 
 // first, patch window object
-const callbacks = new Map<string, any>();
+const callbacks = new Map<string, () => Promise<void>>();
 const eventEmitter = {
-  receive: (message: string, callback: any): void => {
+  receive: (message: string, callback: () => Promise<void>): void => {
     callbacks.set(message, callback);
   },
 };
@@ -49,7 +47,7 @@ Object.defineProperty(global, 'window', {
 
 // We always mock findMatchInLeaves to return true so we can test certificates.ts without having to render
 // the component, as we are not testing the $searchPattern store / functionality.
-vi.mock('./search-util', () => ({
+vi.mock(import('./search-util'), () => ({
   findMatchInLeaves: vi.fn(() => true),
 }));
 
@@ -58,7 +56,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   searchPattern.set('');
 });
 
@@ -80,7 +78,7 @@ describe('certificates store', () => {
 
     const callback = callbacks.get('extensions-started');
     expect(callback).toBeDefined();
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(certificatesInfos);
@@ -94,7 +92,7 @@ describe('certificates store', () => {
     listCertificatesMock.mockResolvedValue([]);
 
     const callback = callbacks.get('extensions-started');
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(certificatesInfos);
@@ -110,7 +108,7 @@ describe('certificates store', () => {
     ]);
 
     const callback = callbacks.get('extensions-started');
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(certificatesInfos);
@@ -132,7 +130,7 @@ describe('certificates store', () => {
     ]);
 
     const callback = callbacks.get('extensions-started');
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(certificatesInfos);
@@ -152,7 +150,7 @@ describe('filtered certificates', () => {
     ]);
 
     const callback = callbacks.get('extensions-started');
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(filtered);
@@ -167,7 +165,7 @@ describe('filtered certificates', () => {
     ]);
 
     const callback = callbacks.get('extensions-started');
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(filtered);
@@ -190,7 +188,7 @@ describe('filtered certificates', () => {
     listCertificatesMock.mockResolvedValue([selfSignedCert]);
 
     const callback = callbacks.get('extensions-started');
-    await callback();
+    await callback!();
 
     await vi.waitFor(() => {
       const certificates = get(filtered);

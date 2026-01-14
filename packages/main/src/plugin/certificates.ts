@@ -224,18 +224,9 @@ export class Certificates {
    * Format RelativeDistinguishedNames as a string
    */
   private formatDN(rdns: pkijs.RelativeDistinguishedNames): string {
-    const oidMap: Record<string, string> = {
-      '2.5.4.3': 'CN',
-      '2.5.4.6': 'C',
-      '2.5.4.7': 'L',
-      '2.5.4.8': 'ST',
-      '2.5.4.10': 'O',
-      '2.5.4.11': 'OU',
-      '1.2.840.113549.1.9.1': 'E',
-    };
     return rdns.typesAndValues
       .map((rdn: pkijs.AttributeTypeAndValue) => {
-        const name = oidMap[rdn.type] ?? rdn.type;
+        const name = OID_NAME_MAP[rdn.type] ?? rdn.type;
         const value = rdn.value.valueBlock.value?.toString() ?? '';
         return `${name}=${value}`;
       })

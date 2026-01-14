@@ -19,7 +19,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -43,10 +42,6 @@ beforeEach(() => {
   // Mock window methods that might be called
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 });
-
-async function waitRender(customProperties: object = {}): Promise<void> {
-  render(CertificateList, { ...customProperties });
-}
 
 const validCertificate: CertificateInfo = {
   subjectCommonName: 'Test Certificate',
@@ -85,21 +80,21 @@ describe('CertificateList', () => {
   test('should display empty screen when no certificates', async () => {
     certificatesInfos.set([]);
 
-    await waitRender();
+    render(CertificateList);
 
     const emptyMessage = screen.getByText('No certificates found');
     expect(emptyMessage).toBeInTheDocument();
   });
 
   test('should display page title', async () => {
-    await waitRender();
+    render(CertificateList);
 
     const title = screen.getByText('Certificates');
     expect(title).toBeInTheDocument();
   });
 
   test('should display subtitle description', async () => {
-    await waitRender();
+    render(CertificateList);
 
     const subtitle = screen.getByText(/Manage host-based certificates in Podman Desktop/);
     expect(subtitle).toBeInTheDocument();
@@ -108,7 +103,7 @@ describe('CertificateList', () => {
   test('should display certificates in table when certificates exist', async () => {
     certificatesInfos.set([validCertificate]);
 
-    await waitRender();
+    render(CertificateList);
 
     // Wait for the table to render
     await vi.waitFor(() => {
@@ -120,7 +115,7 @@ describe('CertificateList', () => {
   test('should display certificate issuer', async () => {
     certificatesInfos.set([validCertificate]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       const issuer = screen.getByText('Test Issuer');
@@ -131,7 +126,7 @@ describe('CertificateList', () => {
   test('should display certificate serial number', async () => {
     certificatesInfos.set([validCertificate]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       const serial = screen.getByText('ABC123');
@@ -142,7 +137,7 @@ describe('CertificateList', () => {
   test('should display multiple certificates', async () => {
     certificatesInfos.set([validCertificate, expiredCertificate]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Test Certificate')).toBeInTheDocument();
@@ -153,7 +148,7 @@ describe('CertificateList', () => {
   test('should display Unknown for certificate with undefined expiration date', async () => {
     certificatesInfos.set([unknownDateCertificate]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       const unknownDate = screen.getByText('Unknown');
@@ -164,12 +159,7 @@ describe('CertificateList', () => {
   test('should display filtered empty screen when search has no results', async () => {
     certificatesInfos.set([validCertificate]);
 
-    await waitRender({ searchTerm: 'nonexistent' });
-    await tick();
-
-    // Update the search pattern store
-    searchPattern.set('nonexistent');
-    await tick();
+    render(CertificateList, { searchTerm: 'nonexistent' });
 
     await vi.waitFor(() => {
       const filteredMessage = screen.getByText(/No certificates/);
@@ -180,9 +170,8 @@ describe('CertificateList', () => {
   test('should filter certificates based on search term', async () => {
     certificatesInfos.set([validCertificate, expiredCertificate]);
 
-    await waitRender({ searchTerm: 'Expired' });
+    render(CertificateList, { searchTerm: 'Expired' });
     searchPattern.set('Expired');
-    await tick();
 
     await vi.waitFor(() => {
       // Expired certificate should be visible
@@ -198,7 +187,7 @@ describe('CertificateList', () => {
     };
     certificatesInfos.set([certWithCN]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('My Common Name')).toBeInTheDocument();
@@ -213,14 +202,11 @@ describe('CertificateList', () => {
     };
     certificatesInfos.set([certWithoutCN]);
 
-    await waitRender();
+    render(CertificateList);
 
     // When subjectCommonName is empty, it falls back to subject in the name column
-    // We check the table is rendered with the certificate
     await vi.waitFor(() => {
-      // The subject should appear somewhere - either as display name or in tooltip
-      const table = screen.getByRole('table');
-      expect(table).toBeInTheDocument();
+      expect(screen.getByText('O=Fallback Subject')).toBeInTheDocument();
     });
   });
 
@@ -232,7 +218,7 @@ describe('CertificateList', () => {
     };
     certificatesInfos.set([certNoName]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       // The name column should show 'Unknown'
@@ -249,7 +235,7 @@ describe('CertificateList', () => {
     };
     certificatesInfos.set([certWithIssuerCN]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Issuer Common Name')).toBeInTheDocument();
@@ -259,7 +245,7 @@ describe('CertificateList', () => {
   test('should display table headers', async () => {
     certificatesInfos.set([validCertificate]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Certificate Name')).toBeInTheDocument();
@@ -270,9 +256,9 @@ describe('CertificateList', () => {
   });
 
   test('should show search input', async () => {
-    await waitRender();
+    render(CertificateList);
 
-    const searchInput = screen.getByRole('textbox', { name: 'search preferences' });
+    const searchInput = screen.getByRole('textbox', { name: 'search certificates' });
     expect(searchInput).toBeInTheDocument();
   });
 });
@@ -281,14 +267,13 @@ describe('CertificateList store integration', () => {
   test('should update certificates when store changes', async () => {
     certificatesInfos.set([]);
 
-    await waitRender();
+    render(CertificateList);
 
     // Initially empty
     expect(screen.getByText('No certificates found')).toBeInTheDocument();
 
     // Update store
     certificatesInfos.set([validCertificate]);
-    await tick();
 
     await vi.waitFor(() => {
       expect(screen.getByText('Test Certificate')).toBeInTheDocument();
@@ -296,12 +281,24 @@ describe('CertificateList store integration', () => {
   });
 
   test('should update search pattern store when searchTerm prop changes', async () => {
-    await waitRender({ searchTerm: 'test-search' });
+    render(CertificateList, { searchTerm: 'test-search' });
     await vi.waitFor(() => {
       expect(get(searchPattern)).toBe('test-search');
     });
   });
 });
+
+/**
+ * Helper to verify elements appear in expected order in the DOM.
+ * More readable than compareDocumentPosition magic numbers.
+ */
+function expectElementsInOrder(...elements: HTMLElement[]): void {
+  for (let i = 0; i < elements.length - 1; i++) {
+    const position = elements[i]!.compareDocumentPosition(elements[i + 1]!);
+    // DOCUMENT_POSITION_FOLLOWING (4) means the second node follows the first
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  }
+}
 
 describe('CertificateList sorting', () => {
   // Create certificates with distinct values for sorting tests
@@ -341,7 +338,7 @@ describe('CertificateList sorting', () => {
   test('should sort certificates by name when clicking Certificate Name header', async () => {
     certificatesInfos.set([certC, certA, certB]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Alpha Certificate')).toBeInTheDocument();
@@ -356,16 +353,14 @@ describe('CertificateList sorting', () => {
     const betaCell = screen.getByText('Beta Certificate');
     const gammaCell = screen.getByText('Gamma Certificate');
 
-    // Descending order: Gamma comes before Beta, Beta comes before Alpha
-    // compareDocumentPosition returns 4 if first precedes second
-    expect(gammaCell.compareDocumentPosition(betaCell)).toBe(4);
-    expect(betaCell.compareDocumentPosition(alphaCell)).toBe(4);
+    // Descending order: Gamma → Beta → Alpha
+    expectElementsInOrder(gammaCell, betaCell, alphaCell);
   });
 
   test('should sort certificates by issuer when clicking Issuer header', async () => {
     certificatesInfos.set([certA, certB, certC]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Zeta Issuer')).toBeInTheDocument();
@@ -379,15 +374,14 @@ describe('CertificateList sorting', () => {
     const muIssuer = screen.getByText('Mu Issuer');
     const zetaIssuer = screen.getByText('Zeta Issuer');
 
-    // Alphabetical order: Alpha < Mu < Zeta
-    expect(alphaIssuer.compareDocumentPosition(muIssuer)).toBe(4);
-    expect(muIssuer.compareDocumentPosition(zetaIssuer)).toBe(4);
+    // Alphabetical order: Alpha → Mu → Zeta
+    expectElementsInOrder(alphaIssuer, muIssuer, zetaIssuer);
   });
 
   test('should sort certificates by serial number when clicking Serial Number header', async () => {
     certificatesInfos.set([certC, certA, certB]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('AAA111')).toBeInTheDocument();
@@ -401,15 +395,14 @@ describe('CertificateList sorting', () => {
     const serialB = screen.getByText('BBB222');
     const serialC = screen.getByText('CCC333');
 
-    // Alphabetical order: AAA111 < BBB222 < CCC333
-    expect(serialA.compareDocumentPosition(serialB)).toBe(4);
-    expect(serialB.compareDocumentPosition(serialC)).toBe(4);
+    // Alphabetical order: AAA111 → BBB222 → CCC333
+    expectElementsInOrder(serialA, serialB, serialC);
   });
 
   test('should sort certificates by expiration date when clicking Expires On header', async () => {
     certificatesInfos.set([certB, certA, certC]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Alpha Certificate')).toBeInTheDocument();
@@ -424,15 +417,14 @@ describe('CertificateList sorting', () => {
     const alphaCell = screen.getByText('Alpha Certificate');
     const betaCell = screen.getByText('Beta Certificate');
 
-    // Chronological order: Gamma (2024-06) < Alpha (2025-01) < Beta (2026-06)
-    expect(gammaCell.compareDocumentPosition(alphaCell)).toBe(4);
-    expect(alphaCell.compareDocumentPosition(betaCell)).toBe(4);
+    // Chronological order: Gamma (2024-06) → Alpha (2025-01) → Beta (2026-06)
+    expectElementsInOrder(gammaCell, alphaCell, betaCell);
   });
 
   test('should reverse sort order when clicking same header twice', async () => {
     certificatesInfos.set([certA, certB, certC]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Alpha Certificate')).toBeInTheDocument();
@@ -441,22 +433,13 @@ describe('CertificateList sorting', () => {
     // Use Issuer column to test toggle behavior (not the default column)
     const issuerHeader = screen.getByRole('columnheader', { name: 'Issuer' });
 
-    // First click - ascending order (Alpha Issuer < Mu Issuer < Zeta Issuer)
+    // First click - ascending order
     await fireEvent.click(issuerHeader);
-
-    let alphaIssuer = screen.getByText('Alpha Issuer');
-    let zetaIssuer = screen.getByText('Zeta Issuer');
-
-    expect(alphaIssuer.compareDocumentPosition(zetaIssuer)).toBe(4);
+    expectElementsInOrder(screen.getByText('Alpha Issuer'), screen.getByText('Zeta Issuer'));
 
     // Second click - descending order
     await fireEvent.click(issuerHeader);
-
-    alphaIssuer = screen.getByText('Alpha Issuer');
-    zetaIssuer = screen.getByText('Zeta Issuer');
-
-    // Now Zeta should come before Alpha (descending)
-    expect(zetaIssuer.compareDocumentPosition(alphaIssuer)).toBe(4);
+    expectElementsInOrder(screen.getByText('Zeta Issuer'), screen.getByText('Alpha Issuer'));
   });
 
   test('should handle certificates with undefined expiration dates in sorting', async () => {
@@ -473,7 +456,7 @@ describe('CertificateList sorting', () => {
 
     certificatesInfos.set([certA, certNoExpiry, certB]);
 
-    await waitRender();
+    render(CertificateList);
 
     await vi.waitFor(() => {
       expect(screen.getByText('Alpha Certificate')).toBeInTheDocument();
@@ -485,10 +468,7 @@ describe('CertificateList sorting', () => {
     await fireEvent.click(expiresHeader);
 
     // Certificates with undefined dates should be treated as 0 (earliest)
-    const noExpiryCell = screen.getByText('No Expiry Cert');
-    const alphaCell = screen.getByText('Alpha Certificate');
-
-    // No Expiry (undefined = 0) should come before Alpha (2025)
-    expect(noExpiryCell.compareDocumentPosition(alphaCell)).toBe(4);
+    // No Expiry (undefined = 0) → Alpha (2025)
+    expectElementsInOrder(screen.getByText('No Expiry Cert'), screen.getByText('Alpha Certificate'));
   });
 });

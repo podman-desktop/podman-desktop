@@ -1,14 +1,15 @@
 <script lang="ts">
 import type { CertificateInfo } from '/@api/certificate-info';
 
+import { getSubjectDisplayName } from './certificate-util';
+
 interface Props {
   object: CertificateInfo;
 }
 
 let { object }: Props = $props();
 
-// Use pre-extracted subjectCommonName from main process (CN → O → full DN fallback)
-let displayName = $derived(object.subjectCommonName || 'Unknown');
+let displayName = $derived(getSubjectDisplayName(object));
 let titleText = $derived(object.subject || 'Unknown');
 </script>
 

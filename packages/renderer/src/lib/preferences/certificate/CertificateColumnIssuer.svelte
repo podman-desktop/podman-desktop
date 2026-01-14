@@ -1,14 +1,15 @@
 <script lang="ts">
 import type { CertificateInfo } from '/@api/certificate-info';
 
+import { getIssuerDisplayNameWithSelfSigned } from './certificate-util';
+
 interface Props {
   object: CertificateInfo;
 }
 
 let { object }: Props = $props();
 
-// Use pre-extracted issuerCommonName from main process (CN → O → full DN fallback)
-let displayName = $derived(object.subject === object.issuer ? 'Self-signed' : object.issuerCommonName || 'Unknown');
+let displayName = $derived(getIssuerDisplayNameWithSelfSigned(object));
 let titleText = $derived(object.issuer || 'Unknown');
 </script>
 
