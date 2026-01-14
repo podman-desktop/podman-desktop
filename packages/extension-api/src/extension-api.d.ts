@@ -4973,6 +4973,8 @@ declare module '@podman-desktop/api' {
 
     // Navigate to the Images page
     export function navigateToImages(): Promise<void>;
+    // Navigate to the Images Build page
+    export function navigateToImageBuild(): Promise<void>;
     // Navigate to a specific image referenced by id, engineId and tag
     export function navigateToImage(id: string, engineId: string, tag: string): Promise<void>;
 

@@ -1391,6 +1391,19 @@ describe('Navigation', async () => {
     expect(sendMock).toBeCalledWith('navigate', { page: NavigationPage.CONTAINERS });
   });
 
+  test('navigateToImageBuild', async () => {
+    const api = createApi();
+
+    // Spy send method
+    const sendMock = vi.spyOn(apiSender, 'send');
+
+    await api.navigation.navigateToImageBuild();
+    expect(sendMock).toBeCalledWith('navigate', {
+      page: NavigationPage.IMAGE_BUILD,
+      parameters: { taskId: undefined },
+    });
+  });
+
   test.each([
     {
       name: 'navigateToContainer valid',

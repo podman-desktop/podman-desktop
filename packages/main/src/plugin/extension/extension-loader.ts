@@ -1533,6 +1533,9 @@ export class ExtensionLoader implements IAsyncDisposable {
     };
 
     const navigation: typeof containerDesktopAPI.navigation = {
+      navigateToImageBuild: async (): Promise<void> => {
+        await this.navigationManager.navigateToImageBuild();
+      },
       navigateToDashboard: async (): Promise<void> => {
         await this.navigationManager.navigateToDashboard();
       },
