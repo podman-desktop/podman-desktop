@@ -50,13 +50,15 @@ export interface CertificateInfo {
 
   /**
    * The date from which the certificate is valid (notBefore).
+   * ISO 8601 string format for IPC serialization.
    */
-  validFrom?: Date;
+  validFrom?: string;
 
   /**
    * The date until which the certificate is valid (notAfter).
+   * ISO 8601 string format for IPC serialization.
    */
-  validTo?: Date;
+  validTo?: string;
 
   /**
    * Indicates whether this is a Certificate Authority (CA) certificate.

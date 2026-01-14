@@ -277,8 +277,8 @@ export class Certificates {
         issuerCommonName: this.getDisplayName(cert.issuer),
         issuer: this.formatDN(cert.issuer),
         serialNumber,
-        validFrom: cert.notBefore.value,
-        validTo: cert.notAfter.value,
+        validFrom: cert.notBefore.value.toISOString(),
+        validTo: cert.notAfter.value.toISOString(),
         isCA,
       };
     } catch (error) {
