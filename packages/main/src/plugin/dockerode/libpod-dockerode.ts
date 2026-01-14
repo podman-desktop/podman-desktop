@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
 import Dockerode from 'dockerode';
 
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
-import type { PlayKubeInfo, PodCreatePortOptions } from '/@api/libpod/libpod.js';
+import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '/@api/libpod/libpod.js';
 import type { LibPodPodInfo, LibPodPodInspectInfo } from '/@api/pod-info.js';
 
 export interface PodContainerInfo {
@@ -48,85 +48,6 @@ export interface PodCreateOptions {
   netns?: {
     nsmode: string;
   };
-}
-
-export interface ContainerCreateMountOption {
-  Name?: string;
-  Type: string;
-  Source: string;
-  Destination: string;
-  Driver?: string;
-  RW: boolean;
-  Propagation: string;
-  Options?: string[];
-}
-
-export interface ContainerCreateHealthConfigOption {
-  Test?: string[];
-  Interval?: number;
-  Timeout?: number;
-  StartPeriod?: number;
-  Retries?: number;
-}
-
-export interface ContainerCreatePortMappingOption {
-  container_port: number;
-  host_ip?: string;
-  host_port?: number;
-  protocol?: string;
-  range?: number;
-}
-
-export interface ContainerCreateNetNSOption {
-  nsmode: string;
-  value?: string;
-}
-
-export interface ContainerCreateNamedVolume {
-  Name: string;
-  Dest: string;
-  Options?: Array<string>;
-  IsAnonymous?: boolean;
-  SubPath?: string;
-}
-
-// represents a device request through the libPod API
-// only path is currently translated
-export interface PodmanDevice {
-  path: string;
-}
-
-export interface ContainerCreateOptions {
-  command?: string[];
-  entrypoint?: string | string[];
-  env?: { [key: string]: string };
-  pod?: string;
-  hostname?: string;
-  image?: string;
-  name?: string;
-  mounts?: Array<ContainerCreateMountOption>;
-  user?: string;
-  labels?: { [label: string]: string };
-  work_dir?: string;
-  portmappings?: Array<ContainerCreatePortMappingOption>;
-  stop_timeout?: number;
-  healthconfig?: ContainerCreateHealthConfigOption;
-  restart_policy?: string;
-  restart_tries?: number;
-  remove?: boolean;
-  seccomp_policy?: string;
-  seccomp_profile_path?: string;
-  cap_add?: Array<string>;
-  cap_drop?: Array<string>;
-  privileged?: boolean;
-  netns?: ContainerCreateNetNSOption;
-  read_only_filesystem?: boolean;
-  dns_server?: Array<Array<number>>;
-  hostadd?: Array<string>;
-  userns?: string;
-  volumes?: Array<ContainerCreateNamedVolume>;
-  selinux_opts?: string[];
-  devices?: PodmanDevice[];
 }
 
 export interface PodRemoveOptions {
