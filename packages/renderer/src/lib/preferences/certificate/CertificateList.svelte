@@ -1,7 +1,6 @@
 <script lang="ts">
 import { FilteredEmptyScreen, SearchInput, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
-import { onDestroy, onMount } from 'svelte';
-import type { Unsubscriber } from 'svelte/store';
+import { onDestroy } from 'svelte';
 
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 import { certificatesInfos, filtered, searchPattern } from '/@/stores/certificates';
@@ -28,10 +27,12 @@ $effect(() => {
   searchPattern.set(searchTerm);
 });
 
-let certificates: CertificateInfoUI[] = $derived($filtered.map((cert) => ({
-  ...cert,
-  name: getDisplayName(cert),
-})));
+let certificates: CertificateInfoUI[] = $derived(
+  $filtered.map(cert => ({
+    ...cert,
+    name: getDisplayName(cert),
+  })),
+);
 
 /**
  * Get display name for certificate (Subject: CN → Full DN → 'Unknown')
@@ -105,6 +106,11 @@ function updateSearchValue(event: any): void {
   clearTimeout(updateSearchValueTimeout);
   updateSearchValueTimeout = setTimeout(() => (searchTerm = event.target.value), 500);
 }
+
+// Cleanup timeout on component unmount to prevent memory leak
+onDestroy(() => {
+  clearTimeout(updateSearchValueTimeout);
+});
 </script>
 
 <SettingsPage title="Certificates">
