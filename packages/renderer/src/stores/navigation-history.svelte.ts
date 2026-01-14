@@ -75,20 +75,26 @@ function urlToDisplayName(url: string): string {
   return name;
 }
 
-// Find navigation entry that matches a URL
-function findNavigationEntry(url: string, entries: NavigationRegistryEntry[]): NavigationRegistryEntry | undefined {
+// Find navigation entry that matches a URL, returning the entry and breadcrumb path
+function findNavigationEntry(
+  url: string,
+  entries: NavigationRegistryEntry[],
+  parentPath: string[] = [],
+): { entry: NavigationRegistryEntry; breadcrumb: string[] } | undefined {
   const path = url.split('?')[0];
 
   for (const entry of entries) {
-    // Check if URL matches this entry's link
-    if (path === entry.link || path.startsWith(entry.link + '/')) {
-      return entry;
-    }
+    const currentPath = [...parentPath, entry.name];
 
     // Check nested items (for groups and submenus)
     if (entry.items) {
-      const found = findNavigationEntry(url, entry.items);
+      const found = findNavigationEntry(url, entry.items, currentPath);
       if (found) return found;
+    }
+
+    // Check if URL matches this entry's link
+    if (path === entry.link || path.startsWith(entry.link + '/')) {
+      return { entry, breadcrumb: currentPath };
     }
   }
 
@@ -109,11 +115,13 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
 
   // Check navigation registry (includes webviews, extensions, containers, etc.)
   const registry = get(navigationRegistry);
-  const navEntry = findNavigationEntry(url, registry);
-  if (navEntry) {
+  const result = findNavigationEntry(url, registry);
+  if (result) {
+    // Use breadcrumb for nested entries (e.g., "Kubernetes > Pods")
+    const name = result.breadcrumb.length > 1 ? result.breadcrumb.join(' > ') : result.breadcrumb[0];
     return {
-      name: navEntry.name,
-      icon: navEntry.icon,
+      name,
+      icon: result.entry.icon,
     };
   }
 
