@@ -571,9 +571,11 @@ describe('parseCertificate with valid certificates', () => {
     expect(result.issuerCommonName).toBe('GlobalSign Root CA');
     expect(result.issuer).toContain('CN=GlobalSign Root CA');
 
-    // Should have valid dates
-    expect(result.validFrom).toBeInstanceOf(Date);
-    expect(result.validTo).toBeInstanceOf(Date);
+    // Should have valid dates as ISO 8601 strings
+    expect(typeof result.validFrom).toBe('string');
+    expect(typeof result.validTo).toBe('string');
+    expect(result.validFrom).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
+    expect(result.validTo).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
 
     // Should have serial number as hex
     expect(result.serialNumber).toMatch(/^[0-9A-F]+$/);

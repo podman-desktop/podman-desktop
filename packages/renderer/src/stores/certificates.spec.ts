@@ -68,8 +68,8 @@ const mockCertificate = (overrides: Partial<CertificateInfo> = {}): CertificateI
   issuerCommonName: 'Test Issuer',
   issuer: 'CN=Test Issuer, O=Test Org, C=US',
   serialNumber: '01',
-  validFrom: new Date('2024-01-01'),
-  validTo: new Date('2025-01-01'),
+  validFrom: '2024-01-01T00:00:00.000Z',
+  validTo: '2025-01-01T00:00:00.000Z',
   isCA: false,
   ...overrides,
 });
