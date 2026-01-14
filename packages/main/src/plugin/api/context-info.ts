@@ -15,10 +15,10 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { Context } from '../context/context.js';
+import type { IContext } from '/@api/context/context.js';
 
 export interface ContextInfo {
   readonly id: number;
-  readonly parent?: Context;
+  readonly parent?: IContext;
   readonly extension?: string;
 }
