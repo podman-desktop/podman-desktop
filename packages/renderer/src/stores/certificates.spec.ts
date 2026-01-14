@@ -20,7 +20,7 @@
 
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CertificateInfo } from '/@api/certificate-info';
 
@@ -53,8 +53,10 @@ vi.mock('./search-util', () => ({
   findMatchInLeaves: vi.fn(() => true),
 }));
 
-beforeAll(() => {
+beforeEach(() => {
   vi.clearAllMocks();
+  searchPattern.set('');
+  certificatesEventStore.setup();
 });
 
 const mockCertificate = (overrides: Partial<CertificateInfo> = {}): CertificateInfo => ({
@@ -70,15 +72,8 @@ const mockCertificate = (overrides: Partial<CertificateInfo> = {}): CertificateI
 });
 
 describe('certificates store', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    searchPattern.set('');
-  });
-
   test('certificates should be loaded after extensions-started event', async () => {
     listCertificatesMock.mockResolvedValue([mockCertificate({ subjectCommonName: 'Cert 1', serialNumber: '01' })]);
-
-    certificatesEventStore.setup();
 
     const callback = callbacks.get('extensions-started');
     expect(callback).toBeDefined();
@@ -95,8 +90,6 @@ describe('certificates store', () => {
   test('should handle empty certificate list', async () => {
     listCertificatesMock.mockResolvedValue([]);
 
-    certificatesEventStore.setup();
-
     const callback = callbacks.get('extensions-started');
     await callback();
 
@@ -112,8 +105,6 @@ describe('certificates store', () => {
       mockCertificate({ subjectCommonName: 'Intermediate CA', serialNumber: '02', isCA: true }),
       mockCertificate({ subjectCommonName: 'End Entity', serialNumber: '03', isCA: false }),
     ]);
-
-    certificatesEventStore.setup();
 
     const callback = callbacks.get('extensions-started');
     await callback();
@@ -137,8 +128,6 @@ describe('certificates store', () => {
       }),
     ]);
 
-    certificatesEventStore.setup();
-
     const callback = callbacks.get('extensions-started');
     await callback();
 
@@ -153,18 +142,11 @@ describe('certificates store', () => {
 });
 
 describe('filtered certificates', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    searchPattern.set('');
-  });
-
   test('filtered should return all certificates when search pattern is empty', async () => {
     listCertificatesMock.mockResolvedValue([
       mockCertificate({ subjectCommonName: 'Cert A', serialNumber: '01' }),
       mockCertificate({ subjectCommonName: 'Cert B', serialNumber: '02' }),
     ]);
-
-    certificatesEventStore.setup();
 
     const callback = callbacks.get('extensions-started');
     await callback();
@@ -205,8 +187,6 @@ describe('filtered certificates', () => {
     });
 
     listCertificatesMock.mockResolvedValue([selfSignedCert]);
-
-    certificatesEventStore.setup();
 
     const callback = callbacks.get('extensions-started');
     await callback();
