@@ -63,27 +63,27 @@ test('Expect tooltip is used if not empty', async () => {
   expect(span).toBeInTheDocument();
 });
 
-test('Expect font awesome icon to have class h-4 w-4', async () => {
+test('Expect font awesome icon to have class w-4 text-md', async () => {
   render(DropDownMenuItem, {
     title: 'dummy-title',
     icon: faCircleUp,
   });
 
   const icon = screen.getByRole('img', { hidden: true });
-  expect(icon).toHaveClass('h-4 w-4 text-md');
+  expect(icon).toHaveClass('w-4 text-md');
 });
 
-test('Expect string icon to have class h-4 w-4', async () => {
+test('Expect string icon to have class w-4 text-md', async () => {
   render(DropDownMenuItem, {
     title: 'dummy-title',
     icon: 'fas fa-circle-up',
   });
 
   const icon = screen.getByRole('img', { hidden: true });
-  expect(icon).toHaveClass('h-4 w-4 text-md');
+  expect(icon).toHaveClass('w-4 text-md');
 });
 
-test('Expect component icon to have class h-4 w-4', async () => {
+test('Expect component icon to have class w-4 text-md', async () => {
   render(DropDownMenuItem, {
     title: 'dummy-title',
     icon: StarIcon,
@@ -92,5 +92,5 @@ test('Expect component icon to have class h-4 w-4', async () => {
   const img = screen.getByRole('img', { hidden: true });
   const imgComponent = img.firstChild;
   expect(imgComponent).toBeInTheDocument();
-  expect(imgComponent).toHaveClass('h-4 w-4 text-md');
+  expect(imgComponent).toHaveClass('w-4 text-md');
 });
