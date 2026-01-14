@@ -71,11 +71,14 @@ let executedCommands: string[] = [];
 
 let telemetrySession = new OnboardingTelemetrySession();
 
+let productName = '';
+
 let onboardingUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 // variable used to mark if the onboarding is running or not
 let started = false;
 onMount(async () => {
+  productName = await window.getProductName();
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   onboardingUnsubscribe = onboardingList.subscribe(onboardingItems => {
     if (onboardings.length === 0) {
@@ -342,7 +345,7 @@ $: globalOnboarding = global;
           {/if}
           <div class="flex flex-col">
             {#if globalOnboarding}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">Get started with Podman Desktop</div>
+              <div class="text-lg font-bold text-[var(--pd-content-header)]">Get started with {productName}</div>
             {:else}
               <div class="text-lg font-bold text-[var(--pd-content-header)]">
                 {replaceContextKeyPlaceholders(

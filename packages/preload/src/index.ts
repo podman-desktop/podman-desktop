@@ -247,6 +247,10 @@ export function initExposure(): void {
     return ipcInvoke('extension-system:isExtensionsStarted');
   });
 
+  contextBridge.exposeInMainWorld('getProductName', async (): Promise<string> => {
+    return ipcInvoke('product:getProductName');
+  });
+
   contextBridge.exposeInMainWorld(
     'getDevtoolsConsoleLogs',
     async (): Promise<{ logType: LogType; date: Date; message: string }[]> => {

@@ -38,6 +38,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
   vi.mocked(window.telemetryTrack).mockResolvedValue();
+  vi.mocked(window.getProductName).mockResolvedValue('Podman Desktop');
 });
 
 test('Expect to have the "Try again" and Cancel buttons if the step represent a failed state', async () => {
