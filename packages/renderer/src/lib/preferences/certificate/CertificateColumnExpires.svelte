@@ -23,7 +23,7 @@ function isExpired(cert: CertificateInfo): boolean {
 /**
  * Format a date for display, returning 'Unknown' if undefined
  */
-function formatExpirationDate(date: Date | undefined): string {
+function formatExpirationDate(date: string | undefined): string {
   if (!date) {
     return 'Unknown';
   }
