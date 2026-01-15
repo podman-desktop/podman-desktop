@@ -15,6 +15,7 @@ import CertificateIcon from './CertificateIcon.svelte';
 
 interface CertificateInfoUI extends CertificateInfo {
   name: string;
+  _index: number; // Fallback for unique key when serialNumber/issuer are empty
 }
 
 interface Props {
@@ -28,9 +29,10 @@ $effect(() => {
 });
 
 let certificates: CertificateInfoUI[] = $derived(
-  $filtered.map(cert => ({
+  $filtered.map((cert, index) => ({
     ...cert,
     name: getDisplayName(cert),
+    _index: index,
   })),
 );
 
@@ -87,8 +89,12 @@ const row = new TableRow<CertificateInfoUI>({});
 /**
  * Utility function for the Table to get the key to use for each item.
  * Uses serialNumber + issuer which is guaranteed unique per RFC 5280.
+ * Falls back to index for unparseable certificates with empty fields.
  */
 function key(item: CertificateInfoUI): string {
+  if (!item.serialNumber && !item.issuer) {
+    return `unparseable-${item._index}`;
+  }
   return `${item.serialNumber}:${item.issuer}`;
 }
 
