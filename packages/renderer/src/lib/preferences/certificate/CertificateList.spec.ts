@@ -258,7 +258,7 @@ describe('CertificateList', () => {
   test('should show search input', async () => {
     render(CertificateList);
 
-    const searchInput = screen.getByRole('textbox', { name: 'search preferences' });
+    const searchInput = screen.getByRole('textbox', { name: 'search certificates' });
     expect(searchInput).toBeInTheDocument();
   });
 });
