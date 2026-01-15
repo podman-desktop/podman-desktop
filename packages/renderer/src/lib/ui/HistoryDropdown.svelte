@@ -11,11 +11,10 @@ interface Props {
   show: boolean;
   fallbackIcon?: IconDefinition | Component | string;
   entries: HistoryEntry[];
-  isLongPressing: boolean;
   onSelectEntry: (index: number) => void;
 }
 
-let { show, entries, fallbackIcon = faHistory, isLongPressing, onSelectEntry }: Props = $props();
+let { show, entries, fallbackIcon = faHistory, onSelectEntry }: Props = $props();
 
 // Extract icon value from registry icon object
 function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component | string {
@@ -41,11 +40,8 @@ function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component
       <div
         role="button"
         tabindex="0"
-        onmouseup={(): void => {
-          if (isLongPressing) {
-            onSelectEntry(entry.index);
-          }
-        }}>
+        data-history-index={entry.index}
+        onmouseup={(): void => onSelectEntry(entry.index)}>
         <DropdownMenu.Item
           title={entry.name}
           icon={getIcon(entry.icon)}

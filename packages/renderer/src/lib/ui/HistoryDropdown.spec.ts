@@ -34,7 +34,6 @@ describe('rendering', () => {
     render(HistoryDropdown, {
       show: false,
       entries: [{ index: 0, name: 'Containers' }],
-      isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
     });
 
@@ -45,11 +44,10 @@ describe('rendering', () => {
     render(HistoryDropdown, {
       show: true,
       entries: [],
-      isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
     });
 
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   test('should render entries when show is true and entries exist', () => {
@@ -59,12 +57,27 @@ describe('rendering', () => {
         { index: 0, name: 'Containers' },
         { index: 1, name: 'Images' },
       ],
-      isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
     });
 
     expect(screen.getByText('Containers')).toBeInTheDocument();
     expect(screen.getByText('Images')).toBeInTheDocument();
+  });
+
+  test('should render data-history-index attributes for long-press selection', () => {
+    const { container } = render(HistoryDropdown, {
+      show: true,
+      entries: [
+        { index: 5, name: 'Containers' },
+        { index: 3, name: 'Images' },
+      ],
+      onSelectEntry: onSelectEntryMock,
+    });
+
+    const items = container.querySelectorAll('[data-history-index]');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveAttribute('data-history-index', '5');
+    expect(items[1]).toHaveAttribute('data-history-index', '3');
   });
 });
 
@@ -76,7 +89,6 @@ describe('click selection', () => {
         { index: 0, name: 'Containers' },
         { index: 1, name: 'Images' },
       ],
-      isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
     });
 
@@ -84,35 +96,5 @@ describe('click selection', () => {
     await fireEvent.click(containersItem);
 
     expect(onSelectEntryMock).toHaveBeenCalledWith(0);
-  });
-});
-
-describe('long press selection', () => {
-  test('mouseup on entry should call onSelectEntry when isLongPressing', async () => {
-    render(HistoryDropdown, {
-      show: true,
-      entries: [{ index: 1, name: 'Images' }],
-      isLongPressing: true,
-      onSelectEntry: onSelectEntryMock,
-    });
-
-    const imagesItem = screen.getByText('Images');
-    await fireEvent.mouseUp(imagesItem);
-
-    expect(onSelectEntryMock).toHaveBeenCalledWith(1);
-  });
-
-  test('mouseup on entry should not call onSelectEntry when not long pressing', async () => {
-    render(HistoryDropdown, {
-      show: true,
-      entries: [{ index: 1, name: 'Images' }],
-      isLongPressing: false,
-      onSelectEntry: onSelectEntryMock,
-    });
-
-    const imagesItem = screen.getByText('Images');
-    await fireEvent.mouseUp(imagesItem);
-
-    expect(onSelectEntryMock).not.toHaveBeenCalled();
   });
 });
