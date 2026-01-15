@@ -20,6 +20,7 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
+import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
 
 import { navigationRegistry, type NavigationRegistryEntry } from './navigation/navigation-registry';
@@ -110,6 +111,14 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
     return {
       name: 'Dashboard',
       icon: { iconComponent: DashboardIcon },
+    };
+  }
+
+  // Handle Preferences base route (/preferences/default/)
+  if (path.startsWith('/preferences/default/')) {
+    return {
+      name: 'Preferences',
+      icon: { iconComponent: SettingsIcon },
     };
   }
 
