@@ -295,6 +295,18 @@ describe('CertificateList store integration', () => {
   });
 });
 
+/**
+ * Helper to verify elements appear in expected order in the DOM.
+ * More readable than compareDocumentPosition magic numbers.
+ */
+function expectElementsInOrder(...elements: HTMLElement[]): void {
+  for (let i = 0; i < elements.length - 1; i++) {
+    const position = elements[i]!.compareDocumentPosition(elements[i + 1]!);
+    // DOCUMENT_POSITION_FOLLOWING (4) means the second node follows the first
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  }
+}
+
 describe('CertificateList sorting', () => {
   // Create certificates with distinct values for sorting tests
   const certA: CertificateInfo = {
@@ -348,10 +360,8 @@ describe('CertificateList sorting', () => {
     const betaCell = screen.getByText('Beta Certificate');
     const gammaCell = screen.getByText('Gamma Certificate');
 
-    // Descending order: Gamma comes before Beta, Beta comes before Alpha
-    // compareDocumentPosition returns 4 if first precedes second
-    expect(gammaCell.compareDocumentPosition(betaCell)).toBe(4);
-    expect(betaCell.compareDocumentPosition(alphaCell)).toBe(4);
+    // Descending order: Gamma → Beta → Alpha
+    expectElementsInOrder(gammaCell, betaCell, alphaCell);
   });
 
   test('should sort certificates by issuer when clicking Issuer header', async () => {
@@ -371,9 +381,8 @@ describe('CertificateList sorting', () => {
     const muIssuer = screen.getByText('Mu Issuer');
     const zetaIssuer = screen.getByText('Zeta Issuer');
 
-    // Alphabetical order: Alpha < Mu < Zeta
-    expect(alphaIssuer.compareDocumentPosition(muIssuer)).toBe(4);
-    expect(muIssuer.compareDocumentPosition(zetaIssuer)).toBe(4);
+    // Alphabetical order: Alpha → Mu → Zeta
+    expectElementsInOrder(alphaIssuer, muIssuer, zetaIssuer);
   });
 
   test('should sort certificates by serial number when clicking Serial Number header', async () => {
@@ -393,9 +402,8 @@ describe('CertificateList sorting', () => {
     const serialB = screen.getByText('BBB222');
     const serialC = screen.getByText('CCC333');
 
-    // Alphabetical order: AAA111 < BBB222 < CCC333
-    expect(serialA.compareDocumentPosition(serialB)).toBe(4);
-    expect(serialB.compareDocumentPosition(serialC)).toBe(4);
+    // Alphabetical order: AAA111 → BBB222 → CCC333
+    expectElementsInOrder(serialA, serialB, serialC);
   });
 
   test('should sort certificates by expiration date when clicking Expires On header', async () => {
@@ -416,9 +424,8 @@ describe('CertificateList sorting', () => {
     const alphaCell = screen.getByText('Alpha Certificate');
     const betaCell = screen.getByText('Beta Certificate');
 
-    // Chronological order: Gamma (2024-06) < Alpha (2025-01) < Beta (2026-06)
-    expect(gammaCell.compareDocumentPosition(alphaCell)).toBe(4);
-    expect(alphaCell.compareDocumentPosition(betaCell)).toBe(4);
+    // Chronological order: Gamma (2024-06) → Alpha (2025-01) → Beta (2026-06)
+    expectElementsInOrder(gammaCell, alphaCell, betaCell);
   });
 
   test('should reverse sort order when clicking same header twice', async () => {
@@ -433,22 +440,13 @@ describe('CertificateList sorting', () => {
     // Use Issuer column to test toggle behavior (not the default column)
     const issuerHeader = screen.getByRole('columnheader', { name: 'Issuer' });
 
-    // First click - ascending order (Alpha Issuer < Mu Issuer < Zeta Issuer)
+    // First click - ascending order
     await fireEvent.click(issuerHeader);
-
-    let alphaIssuer = screen.getByText('Alpha Issuer');
-    let zetaIssuer = screen.getByText('Zeta Issuer');
-
-    expect(alphaIssuer.compareDocumentPosition(zetaIssuer)).toBe(4);
+    expectElementsInOrder(screen.getByText('Alpha Issuer'), screen.getByText('Zeta Issuer'));
 
     // Second click - descending order
     await fireEvent.click(issuerHeader);
-
-    alphaIssuer = screen.getByText('Alpha Issuer');
-    zetaIssuer = screen.getByText('Zeta Issuer');
-
-    // Now Zeta should come before Alpha (descending)
-    expect(zetaIssuer.compareDocumentPosition(alphaIssuer)).toBe(4);
+    expectElementsInOrder(screen.getByText('Zeta Issuer'), screen.getByText('Alpha Issuer'));
   });
 
   test('should handle certificates with undefined expiration dates in sorting', async () => {
@@ -477,10 +475,7 @@ describe('CertificateList sorting', () => {
     await fireEvent.click(expiresHeader);
 
     // Certificates with undefined dates should be treated as 0 (earliest)
-    const noExpiryCell = screen.getByText('No Expiry Cert');
-    const alphaCell = screen.getByText('Alpha Certificate');
-
-    // No Expiry (undefined = 0) should come before Alpha (2025)
-    expect(noExpiryCell.compareDocumentPosition(alphaCell)).toBe(4);
+    // No Expiry (undefined = 0) → Alpha (2025)
+    expectElementsInOrder(screen.getByText('No Expiry Cert'), screen.getByText('Alpha Certificate'));
   });
 });
