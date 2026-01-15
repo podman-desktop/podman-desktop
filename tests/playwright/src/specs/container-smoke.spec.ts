@@ -120,6 +120,12 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
   });
   test('Open a container details', async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible({ timeout: 10_000 });
+
+    await playExpect
+      .poll(async () => await containers.getContainerEnvironment(containerToRun), { timeout: 10_000 })
+      .toContain('podman');
+
     const containersDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containersDetails.heading).toBeVisible();
     await playExpect(containersDetails.heading).toContainText(containerToRun);

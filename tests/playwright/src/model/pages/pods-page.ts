@@ -108,4 +108,16 @@ export class PodsPage extends MainPage {
       return false;
     });
   }
+
+  async getPodEnvironment(name: string): Promise<string> {
+    return test.step(`Get Pod: ${name} environment`, async () => {
+      const podRow = await this.getPodRowByName(name);
+      if (podRow === undefined) {
+        throw Error(`Pod: '${name}' does not exist`);
+      }
+      const environmentElement = podRow.getByTestId('tooltip-trigger').first();
+      const environment = await environmentElement.textContent();
+      return environment ?? '';
+    });
+  }
 }
