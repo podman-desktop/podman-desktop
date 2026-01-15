@@ -22,6 +22,7 @@ import { router } from 'tinro';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
+import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
 
 export const BACK = 'back';
@@ -110,6 +111,14 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
     return {
       name: 'Dashboard',
       icon: { iconComponent: DashboardIcon },
+    };
+  }
+
+  // Handle Preferences base route (/preferences/default/)
+  if (path.startsWith('/preferences/default/')) {
+    return {
+      name: 'Preferences',
+      icon: { iconComponent: SettingsIcon },
     };
   }
 

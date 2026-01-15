@@ -26,7 +26,6 @@ let { class: className = '' }: Props = $props();
 let longPressTimer: NodeJS.Timeout | undefined = $state(undefined);
 let showDropdown: Direction | undefined = $state(undefined);
 let dropdownEntries: HistoryEntry[] = $state([]);
-let hoveredEntryIndex: number | undefined = $state(undefined);
 let isLongPressing = $state(false);
 let timeout: NodeJS.Timeout | undefined = $state(undefined);
 
@@ -46,11 +45,8 @@ function handleGlobalMouseUp(event: MouseEvent): void {
     return;
   }
 
-  // Handle left button release for long-press dropdown selection
+  // Handle left button release for long-press dropdown
   if (event.button === 0 && isLongPressing) {
-    if (showDropdown && hoveredEntryIndex !== undefined) {
-      selectEntry(hoveredEntryIndex);
-    }
     isLongPressing = false;
   }
 }
@@ -101,14 +97,12 @@ function selectEntry(index: number): void {
   window.telemetryTrack('navigation.historySelect', { direction: showDropdown }).catch(console.error);
   showDropdown = undefined;
   dropdownEntries = [];
-  hoveredEntryIndex = undefined;
   goToHistoryIndex(index);
 }
 
 function closeDropdown(): void {
   showDropdown = undefined;
   dropdownEntries = [];
-  hoveredEntryIndex = undefined;
 }
 
 function handleClickOutside(event: MouseEvent): void {
@@ -191,10 +185,6 @@ onMount(() => {
     }
   };
 });
-
-function setHoveredEntryIndex(index: number | undefined): void {
-  hoveredEntryIndex = index;
-}
 </script>
 
 <div
@@ -214,10 +204,8 @@ function setHoveredEntryIndex(index: number | undefined): void {
       show={showDropdown === BACK}
       entries={dropdownEntries}
       fallbackIcon={faBackward}
-      {hoveredEntryIndex}
       {isLongPressing}
-      onSelectEntry={selectEntry}
-      onSetHoveredIndex={setHoveredEntryIndex} />
+      onSelectEntry={selectEntry} />
   </div>
   <div class="relative">
     <button
@@ -233,9 +221,7 @@ function setHoveredEntryIndex(index: number | undefined): void {
       show={showDropdown === FORWARD}
       entries={dropdownEntries}
       fallbackIcon={faForward}
-      {hoveredEntryIndex}
       {isLongPressing}
-      onSelectEntry={selectEntry}
-      onSetHoveredIndex={setHoveredEntryIndex} />
+      onSelectEntry={selectEntry} />
   </div>
 </div>
