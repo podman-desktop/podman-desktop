@@ -19,7 +19,6 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { get } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -161,10 +160,6 @@ describe('CertificateList', () => {
     certificatesInfos.set([validCertificate]);
 
     render(CertificateList, { searchTerm: 'nonexistent' });
-    await tick();
-
-    // Update the search pattern store
-    searchPattern.set('nonexistent');
 
     await vi.waitFor(() => {
       const filteredMessage = screen.getByText(/No certificates/);
