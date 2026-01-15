@@ -99,12 +99,12 @@ function label(item: CertificateInfoUI): string {
   return getDisplayName(item);
 }
 
-let updateSearchValueTimeout: NodeJS.Timeout;
+let updateSearchValueTimeout: ReturnType<typeof setTimeout> | undefined;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function updateSearchValue(event: any): void {
+function updateSearchValue(event: Event): void {
   clearTimeout(updateSearchValueTimeout);
-  updateSearchValueTimeout = setTimeout(() => (searchTerm = event.target.value), 500);
+  const target = event.target as HTMLInputElement;
+  updateSearchValueTimeout = setTimeout(() => (searchTerm = target.value), 500);
 }
 
 // Cleanup timeout on component unmount to prevent memory leak
