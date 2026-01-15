@@ -63,7 +63,7 @@ $: providerContainerConfiguration = tmpProviderContainerConfiguration.filter(
               {@const peerValue = peerProperties.getPeerProperty(connectionSetting.id, providerContainerConfiguration)}
               <Donut
                 title={connectionSetting.description}
-                value={filesize(connectionSetting.value)}
+                value={filesize(connectionSetting.value, connectionSetting.base ? {base: connectionSetting.base} : {})}
                 percent={peerValue} />
             {/if}
           {:else}
