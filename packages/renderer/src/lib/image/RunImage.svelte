@@ -40,7 +40,7 @@ let exposedPorts = $state<string[]>([]);
 let createError = $state<string>();
 let restartPolicyName = $state('');
 let restartPolicyMaxRetryCount = $state(1);
-let onPortInputTimeout: NodeJS.Timeout;
+let onPortInputTimeout: ReturnType<typeof setTimeout>;
 
 // initialize with empty array
 let environmentVariables = $state<{ key: string; value: string }[]>([{ key: '', value: '' }]);

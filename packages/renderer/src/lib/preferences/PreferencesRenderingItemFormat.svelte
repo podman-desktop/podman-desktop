@@ -42,7 +42,7 @@ let {
 }: Props = $props();
 
 let currentRecord: IConfigurationPropertyRecordedSchema;
-let recordUpdateTimeout: NodeJS.Timeout;
+let recordUpdateTimeout: ReturnType<typeof setTimeout>;
 
 let invalidText: string | undefined = $state(undefined);
 let recordValue: unknown = $state(undefined);

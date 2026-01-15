@@ -25,7 +25,7 @@ let contextsUnsubscribe: Unsubscriber;
 let globalContext: ContextUI;
 
 // Search and matching records
-let updateSearchValueTimeout: NodeJS.Timeout;
+let updateSearchValueTimeout: ReturnType<typeof setTimeout>;
 const matchingRecords = $derived(
   properties
     .filter(property => property.parentId.startsWith(key) && isDefaultScope(property.scope) && !property.hidden)

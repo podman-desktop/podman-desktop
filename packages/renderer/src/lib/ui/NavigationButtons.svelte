@@ -14,7 +14,7 @@ let { class: className = '' }: Props = $props();
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
-let timeout: NodeJS.Timeout | undefined = $state(undefined);
+let timeout: ReturnType<typeof setTimeout> | undefined = $state(undefined);
 
 // Mouse button navigation (button 3 = back, button 4 = forward)
 function handleGlobalMouseUp(event: MouseEvent): void {
