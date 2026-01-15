@@ -519,4 +519,32 @@ describe('kube play', () => {
       return playKubePromise;
     }).rejects.toThrowError('The operation was aborted');
   });
+
+  test('default content-type should application/yaml', async () => {
+    await libPod.playKube(file, { build: false });
+
+    expect(postHandler).toHaveBeenCalledOnce();
+    const request = vi.mocked(postHandler).mock.calls[0]?.[0]?.request;
+    assert(request);
+
+    expect(request.headers.get('Content-Type')).toBe('application/yaml');
+  });
+
+  test('previous call should not affect Content-Type', async () => {
+    await libPod.playKube(file, { build: true });
+
+    expect(postHandler).toHaveBeenCalledOnce();
+    const request = vi.mocked(postHandler).mock.calls[0]?.[0]?.request;
+    assert(request);
+
+    expect(request.headers.get('Content-Type')).toBe('application/x-tar');
+
+    await libPod.playKube(file, { build: false });
+
+    expect(postHandler).toHaveBeenCalledTimes(2);
+    const second = vi.mocked(postHandler).mock.calls[1]?.[0]?.request;
+    assert(second);
+
+    expect(second.headers.get('Content-Type')).toBe('application/yaml');
+  });
 });
