@@ -40,12 +40,10 @@ function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component
       <div
         role="button"
         tabindex="0"
-        data-history-index={entry.index}
-        onmouseup={(): void => onSelectEntry(entry.index)}>
+        onmouseup={onSelectEntry.bind(undefined, entry.index)}>
         <DropdownMenu.Item
           title={entry.name}
-          icon={getIcon(entry.icon)}
-          onClick={(): void => onSelectEntry(entry.index)} />
+          icon={getIcon(entry.icon)} />
       </div>
     {/each}
   </div>
