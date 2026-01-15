@@ -34,7 +34,12 @@ import * as nodeTar from 'tar';
 import validator from 'validator';
 
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
+import type {
+  ImageSearchOptions,
+  ImageSearchResult,
+  ImageTagsListOptions,
+  ImageUpdateStatus,
+} from '/@api/image-registry.js';
 
 import { isMac, isWindows } from '../util.js';
 import { Certificates } from './certificates.js';
@@ -446,7 +451,11 @@ export class ImageRegistry {
     if (!valid) {
       throw new Error(`Invalid image Name: ${imageName}`);
     }
-    const registryURL = `https://${registry}/v2`;
+
+    // Docker Hub's API is at index.docker.io, not docker.io
+    const registryHost = registry === 'docker.io' ? 'index.docker.io' : registry;
+    const registryURL = `https://${registryHost}/v2`;
+
     return {
       registry,
       registryURL,
@@ -691,8 +700,16 @@ export class ImageRegistry {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsedManifest: any;
+    let digest: string | undefined;
     try {
-      parsedManifest = await got.get(manifestURL, options).json();
+      const response = await got.get(manifestURL, options);
+      parsedManifest = JSON.parse(response.body);
+      const digestHeader = response.headers['docker-content-digest'];
+      if (typeof digestHeader === 'string') {
+        digest = digestHeader;
+      } else if (Array.isArray(digestHeader)) {
+        digest = digestHeader[0];
+      }
     } catch (requestErr) {
       if (
         requestErr instanceof RequestError &&
@@ -749,7 +766,7 @@ export class ImageRegistry {
         `Unable to find a manifest corresponding to the platform os/architecture ${platformOs}/${platformArch}`,
       );
     }
-    return parsedManifest;
+    return { manifest: parsedManifest, digest };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -790,7 +807,111 @@ export class ImageRegistry {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getManifest(imageData: ImageRegistryNameTag, token: string): Promise<any> {
     const manifestURL = `${imageData.registryURL}/${imageData.name}/manifests/${imageData.tag}`;
-    return this.getManifestFromURL(manifestURL, imageData, token);
+    const { manifest } = await this.getManifestFromURL(manifestURL, imageData, token);
+    return manifest;
+  }
+
+  async getDigestFromImageName(imageName: string): Promise<string> {
+    const imageData = this.extractImageDataFromImageName(imageName);
+
+    // grab auth info from the registry
+    const authInfo = await this.getAuthInfo(imageData.registry);
+    const token = await this.getToken(authInfo, imageData);
+    if (authInfo.scheme.toLowerCase() !== 'bearer') {
+      throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
+    }
+
+    const manifestURL = `${imageData.registryURL}/${imageData.name}/manifests/${imageData.tag}`;
+    const { digest } = await this.getManifestFromURL(manifestURL, imageData, token);
+
+    if (!digest) {
+      throw new Error(`Registry did not return a digest for ${imageName}`);
+    }
+
+    return digest;
+  }
+
+  /**
+   * Check if an image can be updated from a remote registry.
+   * This is a fast operation that only queries the registry for the manifest digest.
+   *
+   * @param imageReference - Full image reference (e.g., "docker.io/library/nginx:latest")
+   * @param imageTag - The tag portion of the image reference
+   * @param localDigests - Array of local digests from imageInfo.RepoDigests
+   * @returns ImageUpdateStatus indicating if update is available
+   */
+  async checkImageUpdateStatus(
+    imageReference: string,
+    imageTag: string,
+    localDigests: string[],
+  ): Promise<ImageUpdateStatus> {
+    // Check for immutable digest-based references
+    // 1. imageTag starting with 'sha256:' (e.g., 'sha256:abc123...')
+    // 2. imageReference containing '@sha256:' (e.g., 'quay.io/image@sha256:abc123...')
+    if (imageTag.startsWith('sha256:') || imageReference.includes('@sha256:')) {
+      return {
+        status: 'skipped',
+        updateAvailable: false,
+        message: 'Immutable digest-based image reference cannot be updated',
+      };
+    }
+
+    // Check for dangling images (no name or tag)
+    if (imageReference.includes('<none>') || imageTag === '<none>') {
+      return {
+        status: 'skipped',
+        updateAvailable: false,
+        message: 'Image is dangling and cannot be checked for updates',
+      };
+    }
+
+    // Check for local-only images that cannot be updated from a remote registry
+    // For Podman: images with localhost in the name are local (e.g., localhost/myimage:tag)
+    // For Docker: images with "local" as the tag are local (e.g., myimage:local)
+    const hasLocalTag =
+      imageReference.startsWith('localhost/') || imageReference.startsWith('localhost:') || imageTag === 'local';
+
+    // Query the remote registry to get the current manifest digest
+    let remoteDigest: string;
+    try {
+      remoteDigest = await this.getDigestFromImageName(imageReference);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (hasLocalTag) {
+        // since we attempted to get the digest from the remote registry the status is normal and no update is available
+        return {
+          status: 'normal',
+          updateAvailable: false,
+          message: 'Image is detected as local and cannot be updated from a remote registry',
+        };
+      } else {
+        // Actual error from registry (auth failure, network issues, etc.)
+        return {
+          status: 'error',
+          updateAvailable: false,
+          message: errorMessage,
+        };
+      }
+    }
+
+    // Check if the image is already up to date
+    const isAlreadyUpToDate = localDigests.some(digest => digest.endsWith(remoteDigest));
+
+    if (isAlreadyUpToDate) {
+      return {
+        status: 'normal',
+        updateAvailable: false,
+        message: 'Image is already the latest version',
+      };
+    }
+
+    // Update is available
+    return {
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest,
+      message: 'A new version is available',
+    };
   }
 
   async getAuthInfo(serviceUrl: string, insecure?: boolean): Promise<{ authUrl: string; scheme: string }> {

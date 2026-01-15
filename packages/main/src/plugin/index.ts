@@ -102,7 +102,12 @@ import type { ImageFilesInfo } from '/@api/image-files-info.js';
 import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
-import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
+import type {
+  ImageSearchOptions,
+  ImageSearchResult,
+  ImageTagsListOptions,
+  ImageUpdateStatus,
+} from '/@api/image-registry.js';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -162,7 +167,7 @@ import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
-import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
+import { ContainerProviderRegistry } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
@@ -1277,25 +1282,14 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'container-provider-registry:updateImage',
-      async (_listener, engineId: string, imageId: string, tag: string): Promise<void> => {
-        const task = taskManager.createTask({
-          title: `Updating image '${tag}'`,
-        });
-        try {
-          await containerProviderRegistry.updateImage(engineId, imageId, tag);
-          task.status = 'success';
-        } catch (error: unknown) {
-          // "Image is already the latest version" is not a breaking error, treat as success
-          if (error instanceof LatestImageError) {
-            task.name = `Image '${tag}' is already up to date`;
-            task.status = 'success';
-            return;
-          }
-          task.error = String(error);
-          task.status = 'failure';
-          throw error;
-        }
+      'image-registry:checkImageUpdateStatus',
+      async (
+        _listener,
+        imageReference: string,
+        imageTag: string,
+        localDigests: string[],
+      ): Promise<ImageUpdateStatus> => {
+        return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
       },
     );
 

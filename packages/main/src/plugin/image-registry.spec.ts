@@ -1332,3 +1332,120 @@ test('listImageTags', async () => {
   const result = await imageRegistry.listImageTags({ image: 'an-image' });
   expect(result).toEqual(['1', '2', '3']);
 });
+
+describe('getDigestFromImageName', () => {
+  test('should return digest from getManifestFromURL response', async () => {
+    const expectedDigest = 'sha256:abc123def456';
+    vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'https://auth.example.com', scheme: 'bearer' });
+    vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('test-token');
+    vi.spyOn(
+      imageRegistry as unknown as { getManifestFromURL: () => Promise<unknown> },
+      'getManifestFromURL',
+    ).mockResolvedValue({ manifest: {}, digest: expectedDigest });
+
+    const digest = await imageRegistry.getDigestFromImageName('nginx:latest');
+    expect(digest).toBe(expectedDigest);
+  });
+
+  test('should throw when digest is missing from response', async () => {
+    vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'https://auth.example.com', scheme: 'bearer' });
+    vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('test-token');
+    vi.spyOn(
+      imageRegistry as unknown as { getManifestFromURL: () => Promise<unknown> },
+      'getManifestFromURL',
+    ).mockResolvedValue({ manifest: {}, digest: undefined });
+
+    await expect(imageRegistry.getDigestFromImageName('nginx:latest')).rejects.toThrow(
+      'Registry did not return a digest',
+    );
+  });
+});
+
+describe('checkImageUpdateStatus', () => {
+  test('should return not updatable for digest-based image references', async () => {
+    const result = await imageRegistry.checkImageUpdateStatus('nginx:sha256:abc123', 'sha256:abc123', []);
+
+    expect(result.status).toBe('skipped');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('digest');
+  });
+
+  test('should return not updatable for image reference with @sha256: format', async () => {
+    const result = await imageRegistry.checkImageUpdateStatus(
+      'quay.io/ramalama/ramalama-whisper-server@sha256:2ce4e2751672e3baf76d6f220100160da86ff5a98001b76392aeae9da2d90b18',
+      '2ce4e2751672e3baf76d6f220100160da86ff5a98001b76392aeae9da2d90b18',
+      [],
+    );
+
+    expect(result.status).toBe('skipped');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('digest');
+  });
+
+  test('should return success for local image that cannot be updated from registry', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockRejectedValue(
+      new Error('Image localhost/mylocal:latest not found in registry'),
+    );
+
+    const result = await imageRegistry.checkImageUpdateStatus('localhost/mylocal:latest', 'latest', []);
+
+    expect(result.status).toBe('normal');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('local');
+  });
+
+  test('should return error status if authentication fails', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockRejectedValue(
+      new Error('Authentication failed for private.registry.io'),
+    );
+
+    const result = await imageRegistry.checkImageUpdateStatus('private.registry.io/image:latest', 'latest', []);
+
+    expect(result.status).toBe('error');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('Authentication failed');
+  });
+
+  test('should return update available when remote digest differs', async () => {
+    const remoteDigest = 'sha256:newdigest';
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue(remoteDigest);
+
+    const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', ['nginx@sha256:olddigest']);
+
+    expect(result.status).toBe('normal');
+    expect(result.updateAvailable).toBe(true);
+    expect(result.remoteDigest).toBe(remoteDigest);
+    expect(result.message).toContain('new version');
+  });
+
+  test('should return no update available when already latest version', async () => {
+    const remoteDigest = 'sha256:samedigest';
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue(remoteDigest);
+
+    const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', ['nginx@sha256:samedigest']);
+
+    expect(result.status).toBe('normal');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('already the latest');
+  });
+
+  test('should detect local image with localhost: prefix', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockRejectedValue(new Error('Not found'));
+
+    const result = await imageRegistry.checkImageUpdateStatus('localhost:5000/myimage:tag', 'tag', []);
+
+    expect(result.status).toBe('normal');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('local');
+  });
+
+  test('should detect local image with :local tag', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockRejectedValue(new Error('Not found'));
+
+    const result = await imageRegistry.checkImageUpdateStatus('myimage:local', 'local', []);
+
+    expect(result.status).toBe('normal');
+    expect(result.updateAvailable).toBe(false);
+    expect(result.message).toContain('local');
+  });
+});
