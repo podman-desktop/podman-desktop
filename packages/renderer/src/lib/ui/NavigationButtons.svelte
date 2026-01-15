@@ -17,7 +17,6 @@ import {
   navigationHistory,
 } from '/@/stores/navigation-history.svelte';
 
-import { click } from './attachments/click';
 import { longPress } from './attachments/longpress';
 
 interface Props {
@@ -156,9 +155,9 @@ onMount(() => {
     <button
       class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
       title="Back (hold for history)"
-      {@attach click((): void => onClick(BACK))}
+      onclick={onClick.bind(undefined, BACK)}
       disabled={!canGoBack}
-      {@attach longPress((): void => onLongPress(BACK))}>
+      {@attach longPress(onLongPress.bind(undefined, BACK))}>
       <Icon icon={faArrowLeft} />
     </button>
     <HistoryDropdown
@@ -169,9 +168,9 @@ onMount(() => {
     <button
       class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
       title="Forward (hold for history)"
-      {@attach click((): void => onClick(FORWARD))}
+      onclick={onClick.bind(undefined, FORWARD)}
       disabled={!canGoForward}
-      {@attach longPress((): void => onLongPress(FORWARD))}>
+      {@attach longPress(onLongPress.bind(undefined, FORWARD))}>
       <Icon icon={faArrowRight} />
     </button>
     <HistoryDropdown
