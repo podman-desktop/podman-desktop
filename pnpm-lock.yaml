@@ -225,8 +225,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 40.0.0-beta.8
-        version: 40.0.0-beta.8
+        specifier: 40.0.0-beta.9
+        version: 40.0.0-beta.9
       electron-builder:
         specifier: 26.0.12
         version: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
@@ -617,8 +617,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 40.0.0-beta.8
-        version: 40.0.0-beta.8
+        specifier: 40.0.0-beta.9
+        version: 40.0.0-beta.9
       vitest:
         specifier: ^4.0.10
         version: 4.0.10(@types/debug@4.1.12)(@types/node@25.0.8)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@25.0.8)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -958,8 +958,8 @@ importers:
         specifier: ^24
         version: 24.6.2
       electron:
-        specifier: 40.0.0-beta.8
-        version: 40.0.0-beta.8
+        specifier: 40.0.0-beta.9
+        version: 40.0.0-beta.9
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -6538,8 +6538,8 @@ packages:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
     engines: {node: '>=20'}
 
-  electron@40.0.0-beta.8:
-    resolution: {integrity: sha512-ustmHzE9+BoQ3JaQimpjEnHIj05Hbm/zHhTIfi2VG1Ji38GhPR45nlT6pnqctltPnD8z8FB6xI5BzXngVzFqUA==}
+  electron@40.0.0-beta.9:
+    resolution: {integrity: sha512-dUGlWuyE9vTn/CHpa9PCZFtK1Lnja6uknm2OROKyOsxhF/cM92VDhAGOBr3xJRnZ6GS4v1srql9uLMRjUgDEyg==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -19003,7 +19003,7 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
-  electron@40.0.0-beta.8:
+  electron@40.0.0-beta.9:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.8
@@ -20220,7 +20220,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.28.4
+      '@babel/runtime': 7.28.6
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
@@ -23387,7 +23387,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.28.4
+      '@babel/runtime': 7.28.6
 
   regexp-ast-analysis@0.7.1:
     dependencies:
