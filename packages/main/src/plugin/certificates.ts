@@ -16,19 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
 import * as asn1js from 'asn1js';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as pkijs from 'pkijs';
 import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import type { CertificateInfo } from '/@api/certificate-info.js';
 
+import type { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
+import type { ProviderRegistry } from './provider-registry.js';
+import { TaskManager } from './tasks/task-manager.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 /**
@@ -63,6 +67,11 @@ export const OID_NAME_MAP: Record<string, string> = {
 @injectable()
 export class Certificates {
   private allCertificates: string[] = [];
+
+  constructor(
+    @inject(TaskManager)
+    private taskManager: TaskManager,
+  ) {}
 
   /**
    * Setup all certificates globally depending on the platform.
@@ -311,5 +320,149 @@ export class Certificates {
    */
   getAllCertificateInfos(): CertificateInfo[] {
     return this.allCertificates.map(pem => this.parseCertificate(pem));
+  }
+
+  /**
+   * Generate a unique filename for a certificate based on its SHA-256 fingerprint.
+   * @param pem The PEM-encoded certificate.
+   * @returns A unique filename like 'cert-abc123def456.pem'
+   */
+  private getCertificateFingerprint(pem: string): string {
+    const hash = crypto.createHash('sha256').update(pem).digest('hex');
+    return hash.substring(0, 16); // Use first 16 chars for reasonable uniqueness
+  }
+
+  /**
+   * Synchronize certificates to a Podman machine VM.
+   * Uploads certificates to /etc/pki/ca-trust/source/anchors/ and updates the trust store.
+   * If no machine name is provided and multiple machines are running, shows a QuickPick to select.
+   * @param providerRegistry - Provider registry to get running machines.
+   * @param inputQuickPickRegistry - QuickPick registry to show machine selection.
+   * @param podmanMachine - Optional name of the Podman machine to synchronize to.
+   */
+  async synchronizeToVm(
+    providerRegistry: ProviderRegistry,
+    inputQuickPickRegistry: InputQuickPickRegistry,
+    podmanMachine?: string,
+  ): Promise<void> {
+    // If no machine specified, determine which machine to use
+    if (!podmanMachine) {
+      const providerInfos = providerRegistry.getProviderInfos();
+      const runningMachines = providerInfos
+        .flatMap(provider => provider.containerConnections)
+        .filter(conn => conn.type === 'podman' && conn.status === 'started')
+        .map(conn => conn.name);
+
+      if (runningMachines.length === 0) {
+        throw new Error('No running Podman machines found');
+      } else if (runningMachines.length === 1) {
+        podmanMachine = runningMachines[0];
+      } else {
+        // Multiple machines - show QuickPick
+        const selected = await inputQuickPickRegistry.showQuickPick(runningMachines, {
+          title: 'Synchronize Certificates',
+          placeHolder: 'Select a Podman machine to synchronize certificates to',
+        });
+
+        if (!selected || typeof selected !== 'string') {
+          // User cancelled
+          return;
+        }
+        podmanMachine = selected;
+      }
+    }
+
+    if (!podmanMachine) {
+      return;
+    }
+    const certificates = this.allCertificates;
+    const totalCerts = certificates.length;
+
+    if (totalCerts === 0) {
+      return;
+    }
+
+    const task = this.taskManager.createTask({
+      title: `Synchronizing certificates to ${podmanMachine}`,
+    });
+
+    const anchorsPath = '/etc/pki/ca-trust/source/anchors';
+
+    try {
+      task.progress = 0;
+
+      // Ensure the anchors directory exists
+      const mkdirResult = await spawnWithPromise('podman', [
+        'machine',
+        'ssh',
+        podmanMachine,
+        `sudo mkdir -p ${anchorsPath}`,
+      ]);
+      if (mkdirResult.error) {
+        throw new Error(`Failed to create anchors directory: ${mkdirResult.error}`);
+      }
+
+      // Upload each certificate
+      for (let i = 0; i < certificates.length; i++) {
+        const pem = certificates[i];
+        if (!pem) continue;
+
+        const fingerprint = this.getCertificateFingerprint(pem);
+        const filename = `podman-desktop-${fingerprint}.crt`;
+        const remotePath = `${anchorsPath}/${filename}`;
+
+        // Update task progress
+        task.name = `Uploading certificate ${i + 1}/${totalCerts}`;
+        task.progress = Math.round(((i + 1) / (totalCerts + 1)) * 100);
+
+        // Write certificate to VM using base64 encoding to handle special characters
+        const base64Cert = Buffer.from(pem).toString('base64');
+        const writeResult = await spawnWithPromise('podman', [
+          'machine',
+          'ssh',
+          podmanMachine,
+          `echo '${base64Cert}' | base64 -d | sudo tee ${remotePath} > /dev/null`,
+        ]);
+
+        if (writeResult.error) {
+          console.error(`Failed to upload certificate ${filename}: ${writeResult.error}`);
+          // Continue with other certificates
+        }
+      }
+
+      // Update the CA trust store
+      task.name = 'Updating CA trust store';
+      task.progress = 90;
+
+      const updateResult = await spawnWithPromise('podman', ['machine', 'ssh', podmanMachine, 'sudo update-ca-trust']);
+
+      if (updateResult.error) {
+        throw new Error(`Failed to update CA trust store: ${updateResult.error}`);
+      }
+
+      // Restart podman services to pick up new certificates
+      task.name = 'Restarting Podman services';
+      task.progress = 95;
+
+      const restartResult = await spawnWithPromise('podman', [
+        'machine',
+        'ssh',
+        podmanMachine,
+        'sudo systemctl restart podman.socket podman.service',
+      ]);
+
+      if (restartResult.error) {
+        throw new Error(`Failed to restart Podman services: ${restartResult.error}`);
+      }
+
+      task.progress = 100;
+      task.name = `Synchronized ${totalCerts} certificates to ${podmanMachine}`;
+      task.status = 'success';
+    } catch (error) {
+      task.status = 'failure';
+      task.error = String(error);
+      console.error('Error synchronizing certificates to VM:', error);
+      throw error;
+    }
   }
 }

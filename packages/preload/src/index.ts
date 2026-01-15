@@ -2697,6 +2697,10 @@ export function initExposure(): void {
   contextBridge.exposeInMainWorld('listCertificates', async (): Promise<CertificateInfo[]> => {
     return ipcInvoke('certificates:listCertificates');
   });
+
+  contextBridge.exposeInMainWorld('synchronizeCertificatesToVm', async (podmanMachine?: string): Promise<void> => {
+    return ipcInvoke('certificates:synchronizeToVm', podmanMachine);
+  });
 }
 
 // expose methods

@@ -1,9 +1,10 @@
 <script lang="ts">
-import { FilteredEmptyScreen, SearchInput, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
+import { Button, FilteredEmptyScreen, SearchInput, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 import { certificatesInfos, filtered, searchPattern } from '/@/stores/certificates';
+import { providerInfos } from '/@/stores/providers';
 import type { CertificateInfo } from '/@api/certificate-info';
 
 import CertificateColumnExpires from './CertificateColumnExpires.svelte';
@@ -27,6 +28,32 @@ let { searchTerm = $bindable('') }: Props = $props();
 $effect(() => {
   searchPattern.set(searchTerm);
 });
+
+// Get running Podman machines
+let runningPodmanMachines = $derived(
+  $providerInfos
+    .flatMap(provider => provider.containerConnections)
+    .filter(conn => conn.type === 'podman' && conn.status === 'started'),
+);
+
+// Button text depends on number of running machines
+let syncButtonText = $derived(
+  runningPodmanMachines.length === 1 ? `Synchronize to ${runningPodmanMachines[0]?.name}` : 'Synchronize ...',
+);
+
+// Button is disabled when no machines are running or sync is in progress
+let syncInProgress = $state(false);
+let syncButtonDisabled = $derived(runningPodmanMachines.length === 0 || syncInProgress);
+
+async function synchronizeCertificates(): Promise<void> {
+  syncInProgress = true;
+  try {
+    // Main process will handle machine selection via QuickPick if needed
+    await window.synchronizeCertificatesToVm();
+  } finally {
+    syncInProgress = false;
+  }
+}
 
 let certificates: CertificateInfoUI[] = $derived(
   $filtered.map((cert, index) => ({
@@ -127,12 +154,14 @@ onDestroy(() => {
   {/snippet}
   {#snippet header()}
   <div class="flex flex-col w-full">  
-    <div class="flex w-full max-w-[905px] mt-4 pl-7">
-      <SearchInput title="certificates" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
+    <div class="flex w-full max-w-[905px] justify-between items-center mt-4 pl-7 pr-10 self-center">
+      <SearchInput title="preferences" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
+      <Button onclick={synchronizeCertificates} disabled={syncButtonDisabled}>{syncButtonText}</Button>
     </div>
   </div>
   {/snippet}
     <div class="flex flex-col px-2 py-2 w-full">
+      
       <div class="flex min-w-full h-full">
         {#if $certificatesInfos.length === 0}
           <CertificateEmptyScreen />
@@ -153,4 +182,3 @@ onDestroy(() => {
       </div>
     </div>
 </SettingsPage>
-

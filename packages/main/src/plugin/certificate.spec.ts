@@ -23,9 +23,20 @@ import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '../util.js';
 import { Certificates } from './certificates.js';
+import type { TaskManager } from './tasks/task-manager.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 let certificate: Certificates;
+
+// Mock TaskManager
+const mockTaskManager = {
+  createTask: vi.fn().mockReturnValue({
+    name: '',
+    progress: 0,
+    status: 'running',
+    error: '',
+  }),
+} as unknown as TaskManager;
 
 const BEGIN_CERTIFICATE = '-----BEGIN CERTIFICATE-----';
 const END_CERTIFICATE = '-----END CERTIFICATE-----';
@@ -161,7 +172,7 @@ vi.mock('win-ca/api', () => {
 });
 
 beforeEach(() => {
-  certificate = new Certificates();
+  certificate = new Certificates(mockTaskManager);
   vi.clearAllMocks();
 });
 
