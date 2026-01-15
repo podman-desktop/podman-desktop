@@ -24,7 +24,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import HistoryDropdown from './HistoryDropdown.svelte';
 
 const onSelectEntryMock = vi.fn();
-const onSetHoveredIndexMock = vi.fn();
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -35,10 +34,8 @@ describe('rendering', () => {
     render(HistoryDropdown, {
       show: false,
       entries: [{ index: 0, name: 'Containers' }],
-      hoveredEntryIndex: undefined,
       isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
     expect(screen.queryByText('Containers')).not.toBeInTheDocument();
@@ -48,10 +45,8 @@ describe('rendering', () => {
     render(HistoryDropdown, {
       show: true,
       entries: [],
-      hoveredEntryIndex: undefined,
       isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -64,10 +59,8 @@ describe('rendering', () => {
         { index: 0, name: 'Containers' },
         { index: 1, name: 'Images' },
       ],
-      hoveredEntryIndex: undefined,
       isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
     expect(screen.getByText('Containers')).toBeInTheDocument();
@@ -83,10 +76,8 @@ describe('click selection', () => {
         { index: 0, name: 'Containers' },
         { index: 1, name: 'Images' },
       ],
-      hoveredEntryIndex: undefined,
       isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
     const containersItem = screen.getByText('Containers');
@@ -101,10 +92,8 @@ describe('long press selection', () => {
     render(HistoryDropdown, {
       show: true,
       entries: [{ index: 1, name: 'Images' }],
-      hoveredEntryIndex: undefined,
       isLongPressing: true,
       onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
     const imagesItem = screen.getByText('Images');
@@ -117,51 +106,13 @@ describe('long press selection', () => {
     render(HistoryDropdown, {
       show: true,
       entries: [{ index: 1, name: 'Images' }],
-      hoveredEntryIndex: undefined,
       isLongPressing: false,
       onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
     });
 
     const imagesItem = screen.getByText('Images');
     await fireEvent.mouseUp(imagesItem);
 
     expect(onSelectEntryMock).not.toHaveBeenCalled();
-  });
-});
-
-describe('hover tracking', () => {
-  test('mouseenter should call onSetHoveredIndex with entry index', async () => {
-    render(HistoryDropdown, {
-      show: true,
-      entries: [{ index: 2, name: 'Pods' }],
-      hoveredEntryIndex: undefined,
-      isLongPressing: false,
-      onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
-    });
-
-    // The outer div has role="button"
-    const podsItem = screen.getByRole('button', { name: /Pods/i });
-    await fireEvent.mouseEnter(podsItem);
-
-    expect(onSetHoveredIndexMock).toHaveBeenCalledWith(2);
-  });
-
-  test('mouseleave should call onSetHoveredIndex with undefined', async () => {
-    render(HistoryDropdown, {
-      show: true,
-      entries: [{ index: 2, name: 'Pods' }],
-      hoveredEntryIndex: 2,
-      isLongPressing: false,
-      onSelectEntry: onSelectEntryMock,
-      onSetHoveredIndex: onSetHoveredIndexMock,
-    });
-
-    // The outer div has role="button"
-    const podsItem = screen.getByRole('button', { name: /Pods/i });
-    await fireEvent.mouseLeave(podsItem);
-
-    expect(onSetHoveredIndexMock).toHaveBeenCalledWith(undefined);
   });
 });

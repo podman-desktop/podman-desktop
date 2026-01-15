@@ -11,21 +11,11 @@ interface Props {
   show: boolean;
   fallbackIcon?: IconDefinition | Component | string;
   entries: HistoryEntry[];
-  hoveredEntryIndex: number | undefined;
   isLongPressing: boolean;
   onSelectEntry: (index: number) => void;
-  onSetHoveredIndex: (index: number | undefined) => void;
 }
 
-let {
-  show,
-  entries,
-  fallbackIcon = faHistory,
-  hoveredEntryIndex,
-  isLongPressing,
-  onSelectEntry,
-  onSetHoveredIndex,
-}: Props = $props();
+let { show, entries, fallbackIcon = faHistory, isLongPressing, onSelectEntry }: Props = $props();
 
 // Extract icon value from registry icon object
 function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component | string {
@@ -51,16 +41,10 @@ function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component
       <div
         role="button"
         tabindex="0"
-        class:bg-[var(--pd-dropdown-item-hover-bg)]={hoveredEntryIndex === entry.index}
         onmouseup={(): void => {
           if (isLongPressing) {
             onSelectEntry(entry.index);
           }
-        }}
-        onmouseenter={(): void => onSetHoveredIndex(entry.index)}
-        onmouseleave={(): void => onSetHoveredIndex(undefined)}
-        onkeydown={(e): void => {
-          if (e.key === 'Enter') onSelectEntry(entry.index);
         }}>
         <DropdownMenu.Item
           title={entry.name}
