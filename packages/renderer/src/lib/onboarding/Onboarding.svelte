@@ -71,14 +71,13 @@ let executedCommands: string[] = [];
 
 let telemetrySession = new OnboardingTelemetrySession();
 
-let productName = '';
+let welcomeMessage = '';
 
 let onboardingUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 // variable used to mark if the onboarding is running or not
 let started = false;
-onMount(async () => {
-  productName = await window.getProductName();
+onMount(() => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   onboardingUnsubscribe = onboardingList.subscribe(onboardingItems => {
     if (onboardings.length === 0) {
@@ -150,6 +149,7 @@ async function setActiveStep(): Promise<void> {
               onboarding,
               step,
             };
+            welcomeMessage = activeStep.onboarding.welcomeMessage ?? '';
             // When the context is updated while on the content page,
             // update the step content to show / hide rows based on the "when" clause
             activeStepContent =
@@ -345,7 +345,7 @@ $: globalOnboarding = global;
           {/if}
           <div class="flex flex-col">
             {#if globalOnboarding}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">Get started with {productName}</div>
+              <div class="text-lg font-bold text-[var(--pd-content-header)]">{welcomeMessage}</div>
             {:else}
               <div class="text-lg font-bold text-[var(--pd-content-header)]">
                 {replaceContextKeyPlaceholders(

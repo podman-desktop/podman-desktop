@@ -141,7 +141,6 @@ import type { TelemetryMessages } from '/@api/telemetry.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
-import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
@@ -473,10 +472,6 @@ export class PluginSystem {
 
     this.ipcHandle('extension-system:isExtensionsStarted', async (): Promise<boolean> => {
       return this.isExtensionsStarted;
-    });
-
-    this.ipcHandle('product:getProductName', async (): Promise<string> => {
-      return product.name;
     });
 
     // redirect main process logs to the extension loader

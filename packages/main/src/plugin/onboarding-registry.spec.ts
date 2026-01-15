@@ -95,6 +95,7 @@ describe('an OnboardingRegistry instance exists', () => {
     const onboarding = onboardingRegistry.getOnboarding(extensionId);
     expect(onboarding).toBeDefined();
     expect(onboarding?.title).toBe('Get started with Podman Desktop');
+    expect(onboarding?.welcomeMessage).toBe('Get started with Podman Desktop');
   });
 
   test('Should not find onboarding after dispose', async () => {
