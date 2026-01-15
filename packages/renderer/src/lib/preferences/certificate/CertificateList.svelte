@@ -126,7 +126,11 @@ onDestroy(() => {
     </span>
   {/snippet}
   {#snippet header()}
-    <SearchInput title="certificates" class="mt-4" searchTerm={searchTerm} oninput={updateSearchValue} />
+  <div class="flex flex-col w-full">  
+    <div class="flex w-full max-w-[905px] mt-4 pl-7">
+      <SearchInput title="certificates" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
+    </div>
+  </div>
   {/snippet}
     <div class="flex flex-col px-2 py-2 w-full">
       <div class="flex min-w-full h-full">
