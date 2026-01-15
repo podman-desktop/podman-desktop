@@ -165,7 +165,6 @@ describe('CertificateList', () => {
 
     // Update the search pattern store
     searchPattern.set('nonexistent');
-    await tick();
 
     await vi.waitFor(() => {
       const filteredMessage = screen.getByText(/No certificates/);
@@ -178,7 +177,6 @@ describe('CertificateList', () => {
 
     render(CertificateList, { searchTerm: 'Expired' });
     searchPattern.set('Expired');
-    await tick();
 
     await vi.waitFor(() => {
       // Expired certificate should be visible
