@@ -36,10 +36,8 @@ export class ListOrganizerRegistry implements IDisposable {
     this.#disposables = [];
   }
 
-  // Get default configuration for a list kind
-  getDefaultListConfig(listKind: string): SavedListOrganizerConfig[] {
-    const defaults = this.registeredLists[listKind] ?? [];
-    return defaults.map(name => ({ id: name, enabled: true }));
+  public get getRegisteredLists(): Record<string, string[]> {
+    return this.registeredLists;
   }
 
   // Load list configuration (with fallback to defaults)

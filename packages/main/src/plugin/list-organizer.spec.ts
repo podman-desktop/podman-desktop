@@ -65,8 +65,14 @@ describe('ListOrganizerRegistry', () => {
     ]);
   });
 
+  // Get default configuration for a list kind
+  function getDefaultListConfig(listKind: string): SavedListOrganizerConfig[] {
+    const defaults = listOrganizerRegistry.getRegisteredLists[listKind] ?? [];
+    return defaults.map(name => ({ id: name, enabled: true }));
+  }
+
   test('should return empty defaults for unknown table types', () => {
-    const defaultConfig = listOrganizerRegistry.getDefaultListConfig('unknown');
+    const defaultConfig = getDefaultListConfig('unknown');
     expect(defaultConfig).toEqual([]);
   });
 
@@ -75,7 +81,7 @@ describe('ListOrganizerRegistry', () => {
     mockConfiguration.get.mockReturnValue([]);
     await listOrganizerRegistry.loadListConfig('container', ['Status', 'Name', 'Actions']);
 
-    const containerConfig = listOrganizerRegistry.getDefaultListConfig('container');
+    const containerConfig = getDefaultListConfig('container');
     expect(containerConfig).toEqual([
       { id: 'Status', enabled: true },
       { id: 'Name', enabled: true },
@@ -85,7 +91,7 @@ describe('ListOrganizerRegistry', () => {
     // Auto-register image layout by calling load
     await listOrganizerRegistry.loadListConfig('image', ['Status', 'Name', 'Actions']);
 
-    const imageConfig = listOrganizerRegistry.getDefaultListConfig('image');
+    const imageConfig = getDefaultListConfig('image');
     expect(imageConfig).toEqual([
       { id: 'Status', enabled: true },
       { id: 'Name', enabled: true },
@@ -205,7 +211,7 @@ describe('ListOrganizerRegistry', () => {
   });
 
   test('should handle unknown table types', () => {
-    const config = listOrganizerRegistry.getDefaultListConfig('unknown');
+    const config = getDefaultListConfig('unknown');
     expect(config).toEqual([]);
   });
 
