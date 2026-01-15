@@ -82,10 +82,18 @@ export async function removeTask(taskId: string): Promise<void> {
   return window.clearTask(taskId);
 }
 
+// Normalize task - for notification tasks with failure status, copy body to error
+function normalizeTask(task: TaskInfo): TaskInfoUI {
+  if (isNotificationTask(task) && task.body && task.status === 'failure') {
+    return { ...task, error: task.body };
+  }
+  return task;
+}
+
 function updateTask(task: TaskInfo): void {
   tasksInfo.update(tasks => {
     tasks = tasks.filter(t => t.id !== task.id);
-    tasks.push(task);
+    tasks.push(normalizeTask(task));
     return tasks;
   });
 }
@@ -96,7 +104,7 @@ export async function clearNotifications(): Promise<void> {
 }
 
 window.events?.receive('task-created', (task: unknown) => {
-  tasksInfo.update(tasks => [...tasks, task as TaskInfo]);
+  tasksInfo.update(tasks => [...tasks, normalizeTask(task as TaskInfo)]);
 });
 window.events?.receive('task-updated', (task: unknown) => {
   updateTask(task as TaskInfo);
