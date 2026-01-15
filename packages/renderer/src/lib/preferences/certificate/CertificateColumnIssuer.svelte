@@ -8,7 +8,10 @@ interface Props {
 let { object }: Props = $props();
 
 // Use pre-extracted issuerCommonName from main process (CN → O → full DN fallback)
-let displayName = $derived(object.subject === object.issuer ? 'Self-signed' : object.issuerCommonName || 'Unknown');
+// Fallback: issuerCommonName → issuer → 'Unknown' (or 'Self-signed' if subject === issuer)
+let displayName = $derived(
+  object.subject === object.issuer ? 'Self-signed' : object.issuerCommonName || object.issuer || 'Unknown',
+);
 let titleText = $derived(object.issuer || 'Unknown');
 </script>
 

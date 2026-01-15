@@ -8,7 +8,8 @@ interface Props {
 let { object }: Props = $props();
 
 // Use pre-extracted subjectCommonName from main process (CN → O → full DN fallback)
-let displayName = $derived(object.subjectCommonName || 'Unknown');
+// Fallback: subjectCommonName → subject → 'Unknown'
+let displayName = $derived(object.subjectCommonName || object.subject || 'Unknown');
 let titleText = $derived(object.subject || 'Unknown');
 </script>
 
