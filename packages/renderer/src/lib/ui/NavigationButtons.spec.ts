@@ -348,9 +348,9 @@ describe('dropdown item selection', () => {
       await fireEvent.mouseDown(backButton, { button: 0 });
       vi.advanceTimersByTime(600);
 
-      // Click on dropdown item
+      // Release mouse on dropdown item (simulates long-press selection)
       const containersItem = await findByTitle('Containers');
-      await fireEvent.click(containersItem);
+      await fireEvent.mouseUp(containersItem);
 
       expect(goToHistoryIndex).toHaveBeenCalledWith(0);
       expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.historySelect', { direction: 'back' });
