@@ -1,8 +1,7 @@
 <script lang="ts">
-import { faCircleCheck, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
-
 import type { CertificateInfo } from '/@api/certificate-info';
+
+import CertificateExpirationIcon from './CertificateExpirationIcon.svelte';
 
 interface Props {
   object: CertificateInfo;
@@ -40,11 +39,7 @@ const tooltipText = $derived(expired ? `Expired: ${displayDate}` : `Valid until:
 </script>
 
 <div class="mx-1 flex items-center gap-2 overflow-hidden whitespace-nowrap">
-  {#if expired}
-    <Fa icon={faTriangleExclamation} class="text-[var(--pd-state-warning)] shrink-0" />
-  {:else if object.validTo}
-    <Fa icon={faCircleCheck} class="text-[var(--pd-state-success)] shrink-0" />
-  {/if}
+  <CertificateExpirationIcon cert={object} />
   <span class="text-[var(--pd-table-body-text-highlight)] overflow-hidden text-ellipsis" title={tooltipText}>
     {displayDate}
   </span>
