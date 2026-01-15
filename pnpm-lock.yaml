@@ -21,6 +21,11 @@ overrides:
   '@kubernetes/client-node>js-yaml': ^4.1.1
   tmp-promise>tmp: ^0.2.5
 
+patchedDependencies:
+  dmg-builder:
+    hash: b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d
+    path: patches/dmg-builder.patch
+
 importers:
 
   .:
@@ -17114,7 +17119,7 @@ snapshots:
       chromium-pickle-js: 0.2.0
       config-file-ts: 0.2.8-rc1
       debug: 4.4.3
-      dmg-builder: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
+      dmg-builder: 26.0.12(patch_hash=b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d)(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
       dotenv: 16.6.1
       dotenv-expand: 11.0.7
       ejs: 3.1.10
@@ -17155,7 +17160,7 @@ snapshots:
       chromium-pickle-js: 0.2.0
       config-file-ts: 0.2.8-rc1
       debug: 4.4.3
-      dmg-builder: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
+      dmg-builder: 26.0.12(patch_hash=b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d)(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
       dotenv: 16.6.1
       dotenv-expand: 11.0.7
       ejs: 3.1.10
@@ -18740,7 +18745,7 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
-  dmg-builder@26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12)):
+  dmg-builder@26.0.12(patch_hash=b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d)(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12)):
     dependencies:
       app-builder-lib: 26.0.12(dmg-builder@26.0.12)(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
       builder-util: 26.0.11
@@ -18929,7 +18934,7 @@ snapshots:
       builder-util: 26.0.11
       builder-util-runtime: 9.3.1
       chalk: 4.1.2
-      dmg-builder: 26.0.12(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
+      dmg-builder: 26.0.12(patch_hash=b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d)(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.0.12))
       fs-extra: 10.1.0
       is-ci: 3.0.1
       lazy-val: 1.0.5
