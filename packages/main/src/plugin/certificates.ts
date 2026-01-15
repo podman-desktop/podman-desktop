@@ -42,6 +42,7 @@ export const OID_ST = '2.5.4.8'; // State or Province
 export const OID_O = '2.5.4.10'; // Organization
 export const OID_OU = '2.5.4.11'; // Organizational Unit
 export const OID_E = '1.2.840.113549.1.9.1'; // Email Address
+export const OID_BASIC_CONSTRAINTS = '2.5.29.19'; // Basic Constraints extension
 
 /**
  * Map of OID to human-readable RDN attribute names
@@ -260,7 +261,7 @@ export class Certificates {
 
       // Get basicConstraints for isCA
       let isCA = false;
-      const basicConstraintsExt = cert.extensions?.find((ext: pkijs.Extension) => ext.extnID === '2.5.29.19');
+      const basicConstraintsExt = cert.extensions?.find((ext: pkijs.Extension) => ext.extnID === OID_BASIC_CONSTRAINTS);
       if (basicConstraintsExt?.parsedValue) {
         // See https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9 for the definition of cA
         isCA = (basicConstraintsExt.parsedValue as pkijs.BasicConstraints).cA ?? false;
