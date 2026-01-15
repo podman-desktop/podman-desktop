@@ -6,6 +6,7 @@ import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 import { certificatesInfos, filtered, searchPattern } from '/@/stores/certificates';
 import type { CertificateInfo } from '/@api/certificate-info';
 
+import { getIssuerDisplayName, getSubjectDisplayName } from './certificate-util';
 import CertificateColumnExpires from './CertificateColumnExpires.svelte';
 import CertificateColumnIssuer from './CertificateColumnIssuer.svelte';
 import CertificateColumnSimple from './CertificateColumnSimple.svelte';
@@ -31,30 +32,16 @@ $effect(() => {
 let certificates: CertificateInfoUI[] = $derived(
   $filtered.map((cert, index) => ({
     ...cert,
-    name: getDisplayName(cert),
+    name: getSubjectDisplayName(cert),
     _index: index,
   })),
 );
-
-/**
- * Get display name for certificate (Subject: CN → Full DN → 'Unknown')
- */
-function getDisplayName(cert: CertificateInfo): string {
-  return cert.subjectCommonName || cert.subject || 'Unknown';
-}
-
-/**
- * Get issuer display name (Issuer: CN → Full DN → 'Unknown')
- */
-function getIssuerDisplayName(cert: CertificateInfo): string {
-  return cert.issuerCommonName || cert.issuer || 'Unknown';
-}
 
 let nameColumn = new TableColumn<CertificateInfoUI, CertificateInfoUI>('Certificate Name', {
   width: '2fr',
   renderMapping: (cert): CertificateInfoUI => cert,
   renderer: CertificateColumnSubject,
-  comparator: (a, b): number => getDisplayName(a).localeCompare(getDisplayName(b)),
+  comparator: (a, b): number => getSubjectDisplayName(a).localeCompare(getSubjectDisplayName(b)),
 });
 
 let issuerColumn = new TableColumn<CertificateInfoUI, CertificateInfoUI>('Issuer', {
@@ -102,7 +89,7 @@ function key(item: CertificateInfoUI): string {
  * Utility function for the Table to get the label to use for each item
  */
 function label(item: CertificateInfoUI): string {
-  return getDisplayName(item);
+  return getSubjectDisplayName(item);
 }
 
 let updateSearchValueTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -153,4 +140,3 @@ onDestroy(() => {
       </div>
     </div>
 </SettingsPage>
-

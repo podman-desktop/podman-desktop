@@ -4,21 +4,13 @@ import Fa from 'svelte-fa';
 
 import type { CertificateInfo } from '/@api/certificate-info';
 
+import { isExpired } from './certificate-util';
+
 interface Props {
   cert: CertificateInfo;
 }
 
 let { cert }: Props = $props();
-
-/**
- * Check if the certificate is expired
- */
-function isExpired(cert: CertificateInfo): boolean {
-  if (!cert.validTo) {
-    return false; // Unknown expiration, don't mark as expired
-  }
-  return new Date(cert.validTo) < new Date();
-}
 
 const expired = $derived(isExpired(cert));
 </script>
