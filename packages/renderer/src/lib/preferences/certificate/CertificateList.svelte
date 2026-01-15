@@ -147,8 +147,7 @@ onDestroy(() => {
             defaultSortColumn="Certificate Name"
             key={key}
             label={label}
-            enableLayoutConfiguration={true}
-            on:update={(): CertificateInfoUI[] => (certificates = certificates)}>
+            enableLayoutConfiguration={true}>
           </Table>
         {/if}
       </div>
