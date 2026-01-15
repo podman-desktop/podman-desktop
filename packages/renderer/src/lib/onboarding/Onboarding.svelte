@@ -345,7 +345,9 @@ $: globalOnboarding = global;
           {/if}
           <div class="flex flex-col">
             {#if globalOnboarding}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">{welcomeMessage}</div>
+              <div class="text-lg font-bold text-[var(--pd-content-header)]">
+                {replaceContextKeyPlaceholders(welcomeMessage, activeStep.onboarding.extension, globalContext)}
+              </div>
             {:else}
               <div class="text-lg font-bold text-[var(--pd-content-header)]">
                 {replaceContextKeyPlaceholders(
