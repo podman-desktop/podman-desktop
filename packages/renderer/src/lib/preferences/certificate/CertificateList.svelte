@@ -133,11 +133,7 @@ onDestroy(() => {
         {#if $certificatesInfos.length === 0}
           <CertificateEmptyScreen />
         {:else if certificates.length === 0}
-          {#if searchTerm}
-            <FilteredEmptyScreen icon={CertificateIcon} kind="certificates" bind:searchTerm={searchTerm} />
-          {:else}
-            <CertificateEmptyScreen />
-          {/if}
+          <FilteredEmptyScreen icon={CertificateIcon} kind="certificates" bind:searchTerm={searchTerm} />
         {:else}
           <Table
             kind="certificate"
