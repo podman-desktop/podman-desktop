@@ -56,7 +56,7 @@ describe('CertificateExpirationIcon', () => {
     expect(icon).not.toBeInTheDocument();
   });
 
-  test('should show warning icon for certificate expiring in the future', () => {
+  test('should show green check icon for certificate expiring in the future', () => {
     const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
 
@@ -74,7 +74,7 @@ describe('CertificateExpirationIcon', () => {
     expect(container.innerHTML).toContain('pd-state-success');
   });
 
-  test('should show green check icon for certificate that expired in the past', () => {
+  test('should show warning icon for certificate that expired in the past', () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
