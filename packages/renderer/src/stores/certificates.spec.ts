@@ -166,8 +166,6 @@ describe('filtered certificates', () => {
       mockCertificate({ subjectCommonName: 'Leaf Cert', serialNumber: '02', isCA: false }),
     ]);
 
-    certificatesEventStore.setup();
-
     const callback = callbacks.get('extensions-started');
     await callback();
 
