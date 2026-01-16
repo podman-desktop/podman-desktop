@@ -86,13 +86,12 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         test.setTimeout(120_000);
 
         await playExpect(imagesPage.heading).toBeVisible();
+        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         const buildImagePage = await imagesPage.openBuildImage();
         await playExpect(buildImagePage.heading).toBeVisible();
         const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
-
-        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         imagesPage = await buildImagePage.buildImage(imageNameSimple, dockerfilePath, contextDirectory, architectures);
         await playExpect
@@ -140,6 +139,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
 
         imagesPage = await navigationBar.openImages();
         await playExpect(imagesPage.heading).toBeVisible();
+        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         const buildImagePage = await imagesPage.openBuildImage();
         await playExpect(buildImagePage.heading).toBeVisible();
@@ -152,7 +152,6 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           'alphine-hello.containerfile',
         );
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
-        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         try {
           imagesPage = await buildImagePage.buildImage(
