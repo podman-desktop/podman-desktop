@@ -20,7 +20,7 @@ import type { Attachment } from 'svelte/attachments';
 
 export function longPress(cb: () => void, button = 0, threshold = 500): Attachment {
   return node => {
-    let timeout: NodeJS.Timeout | undefined = undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
     const handleMouseDown = (event: Event): void => {
       const mouseEvent = event as MouseEvent;

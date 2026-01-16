@@ -27,7 +27,7 @@ let { class: className = '' }: Props = $props();
 
 let showDropdown: Direction | undefined = $state(undefined);
 let dropdownEntries: HistoryEntry[] = $state([]);
-let timeout: NodeJS.Timeout | undefined = $state(undefined);
+let timeout: ReturnType<typeof setTimeout> | undefined = $state(undefined);
 
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
@@ -155,6 +155,7 @@ onMount(() => {
     <button
       class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
       title="Back (hold for history)"
+      aria-label="Back (hold for history)"
       onclick={onClick.bind(undefined, BACK)}
       disabled={!canGoBack}
       {@attach longPress(onLongPress.bind(undefined, BACK))}>
@@ -168,6 +169,7 @@ onMount(() => {
     <button
       class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
       title="Forward (hold for history)"
+      aria-label="Forward (hold for history)"
       onclick={onClick.bind(undefined, FORWARD)}
       disabled={!canGoForward}
       {@attach longPress(onLongPress.bind(undefined, FORWARD))}>

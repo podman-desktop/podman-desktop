@@ -63,26 +63,10 @@ describe('rendering', () => {
     expect(screen.getByText('Containers')).toBeInTheDocument();
     expect(screen.getByText('Images')).toBeInTheDocument();
   });
-
-  test('should render data-history-index attributes for long-press selection', () => {
-    const { container } = render(HistoryDropdown, {
-      show: true,
-      entries: [
-        { index: 5, name: 'Containers' },
-        { index: 3, name: 'Images' },
-      ],
-      onSelectEntry: onSelectEntryMock,
-    });
-
-    const items = container.querySelectorAll('[data-history-index]');
-    expect(items).toHaveLength(2);
-    expect(items[0]).toHaveAttribute('data-history-index', '5');
-    expect(items[1]).toHaveAttribute('data-history-index', '3');
-  });
 });
 
-describe('click selection', () => {
-  test('clicking entry should call onSelectEntry', async () => {
+describe('mouseup selection', () => {
+  test('mouseup on entry should call onSelectEntry', async () => {
     render(HistoryDropdown, {
       show: true,
       entries: [
@@ -92,9 +76,27 @@ describe('click selection', () => {
       onSelectEntry: onSelectEntryMock,
     });
 
-    const containersItem = screen.getByText('Containers');
-    await fireEvent.click(containersItem);
+    const containersEntry = screen.getByLabelText('History entry: Containers');
+    await fireEvent.mouseUp(containersEntry);
 
-    expect(onSelectEntryMock).toHaveBeenCalledWith(0);
+    expect(onSelectEntryMock).toHaveBeenCalled();
+    expect(onSelectEntryMock).toBeCalledWith(0, expect.any(MouseEvent));
+  });
+
+  test('mouseup on second entry should call onSelectEntry with correct index', async () => {
+    render(HistoryDropdown, {
+      show: true,
+      entries: [
+        { index: 5, name: 'Containers' },
+        { index: 3, name: 'Images' },
+      ],
+      onSelectEntry: onSelectEntryMock,
+    });
+
+    const imagesEntry = screen.getByLabelText('History entry: Images');
+    await fireEvent.mouseUp(imagesEntry);
+
+    expect(onSelectEntryMock).toHaveBeenCalled();
+    expect(onSelectEntryMock).toBeCalledWith(3, expect.any(MouseEvent));
   });
 });
