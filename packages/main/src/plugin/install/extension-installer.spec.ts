@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs';
 import { rmSync } from 'node:fs';
 import * as path from 'node:path';
 
@@ -164,6 +165,55 @@ test('should install an image (dd extensions) if labels are correct', async () =
   expect(sendError).not.toHaveBeenCalled();
 
   expect(spyExtractExtensionFiles).not.toHaveBeenCalled();
+});
+
+test('should fail if extension with same name and provider (publisher) is already installed', async () => {
+  const sendLog = vi.fn();
+  const sendError = vi.fn();
+  const sendEnd = vi.fn();
+  const imageToPull = 'fake.io/new-image:tag';
+
+  // Mock valid labels
+  vi.mocked(imageRegistry.getImageConfigLabels).mockResolvedValueOnce({
+    'org.opencontainers.image.title': 'fake-title',
+    'org.opencontainers.image.description': 'fake-description',
+    'org.opencontainers.image.vendor': 'fake-vendor',
+    'io.podman-desktop.api.version': '1.0.0',
+  });
+
+  // Mock existing extension with collision
+  const publisher = 'my-publisher';
+  const name = 'my-extension';
+  listExtensionsMock.mockResolvedValue([
+    {
+      id: `${publisher}.${name}`,
+      name: name,
+      path: '/some/existing/path',
+    },
+  ]);
+
+  // Mock fs.existsSync to return true
+  vi.mocked(fs.existsSync).mockReturnValue(true);
+
+  // Mock fs.promises.readFile
+  const packageJson = JSON.stringify({
+    name: name,
+    publisher: publisher,
+  });
+
+  const readFileSpy = vi.spyOn(fs.promises, 'readFile').mockResolvedValue(packageJson);
+
+  await extensionInstaller.installFromImage(sendLog, sendError, sendEnd, imageToPull);
+
+  expect(sendLog).toHaveBeenCalledWith(`Analyzing image ${imageToPull}...`);
+
+  // expect error
+  expect(sendError).toHaveBeenCalledWith(`Extension ${publisher}.${name} is already installed.`);
+
+  expect(sendEnd).not.toBeCalled();
+
+  // restore spy
+  readFileSpy.mockRestore();
 });
 
 test('should fail if extension is already installed', async () => {
