@@ -48,7 +48,7 @@ describe('FeatureRegistry', () => {
     expect(featureRegistry.listFeatures()).toEqual([]);
   });
 
-  test('handler passed to onFeaturesUpdatedis called when features are registered and unregistered', () => {
+  test('handler passed to onFeaturesUpdated is called when features are registered and unregistered', () => {
     const listener: (features: string[]) => void = vi.fn();
     featureRegistry.onFeaturesUpdated(listener);
     expect(listener).not.toHaveBeenCalled();
