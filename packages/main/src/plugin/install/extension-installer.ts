@@ -23,7 +23,6 @@ import * as path from 'node:path';
 
 import type { IpcMainEvent } from 'electron';
 import { inject, injectable } from 'inversify';
-import * as tarFs from 'tar-fs';
 
 import { IPCMainOn } from '/@/plugin/api.js';
 import { Directories } from '/@/plugin/directories.js';
@@ -104,22 +103,6 @@ export class ExtensionInstaller {
         return cp(sourceFile, path.join(finalFolderPath, 'host', destFile), { recursive: true });
       }),
     );
-  }
-
-  async unpackTarFile(tarFilePath: string, destFolder: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      const readStream = fs.createReadStream(tarFilePath);
-      const extract = tarFs.extract(destFolder);
-      readStream.pipe(extract);
-
-      extract.on('finish', () => {
-        resolve();
-      });
-
-      extract.on('error', error => {
-        reject(error);
-      });
-    });
   }
 
   async analyzeFromImage(
