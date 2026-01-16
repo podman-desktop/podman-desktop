@@ -148,7 +148,7 @@ async function saveImages(): Promise<void> {
           class="flex flex-row justify-center w-full pt-5 text-sm font-medium text-[var(--pd-content-card-header-text)]">
           <div class="flex flex-col grow">Images to save</div>
         </div>
-        {#each imagesToSave as imageToSave, index (imageToSave.id)}
+        {#each imagesToSave as imageToSave, index (`${imageToSave.id}:${imageToSave.tag}:${imageToSave.engineId}`)}
           {@const imageAndTag = `${imageToSave.name}:${imageToSave.tag}`}
           {@const imageDisplayName = `${imageToSave.name === '<none>' ? imageToSave.shortId : imageAndTag}`}
           <div class="flex flex-row justify-center w-full py-1">
