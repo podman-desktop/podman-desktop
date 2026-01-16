@@ -2509,7 +2509,7 @@ test('when loading registry registerRegistry, do not push to disposables', async
     secret: 'baz',
   };
 
-  api.registry.registerRegistry(fakeRegistry);
+  await api.registry.registerRegistry(fakeRegistry);
 
   expect(disposables.length).toBe(0);
 });
