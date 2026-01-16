@@ -34,10 +34,12 @@ function getIcon(icon: HistoryEntryIcon | undefined): IconDefinition | Component
 
 {#if show && entries.length > 0}
   <div
+    aria-label="History dropdown"
     class="history-dropdown absolute left-0 top-full z-50 mt-1 rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] overflow-y-auto overflow-x-hidden text-nowrap max-h-[300px]"
     style="-webkit-app-region: none;">
     {#each entries as entry (entry.index)}
       <div
+        aria-label={`History entry: ${entry.name}`}
         role="button"
         tabindex="0"
         onmouseup={onSelectEntry.bind(undefined, entry.index)}>
