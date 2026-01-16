@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import { inject, injectable, preDestroy } from 'inversify';
 
 import { ColorRegistry } from '/@/plugin/color-registry.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import {
   KubeGeneratorRegistry,
   type KubernetesGeneratorProvider,
@@ -220,6 +221,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private extensionAnalyzer: ExtensionAnalyzer,
     @inject(ExtensionApiVersion)
     private extensionApiVersion: ExtensionApiVersion,
+    @inject(FeatureRegistry)
+    private featureRegistry: FeatureRegistry,
   ) {
     this.pluginsDirectory = directories.getPluginsDirectory();
     this.pluginsScanDirectory = directories.getPluginsScanDirectory();
@@ -1803,6 +1806,11 @@ export class ExtensionLoader implements IAsyncDisposable {
       this.extensionState.set(extension.id, 'started');
       this.apiSender.send('extension-started');
       this._onDidChange.fire();
+
+      const features = extension.manifest?.contributes?.features;
+      if (features && Array.isArray(features) && features.every(feature => typeof feature === 'string')) {
+        extension.subscriptions.push(this.featureRegistry.registerFeatures(extension.id, features));
+      }
     } catch (err) {
       console.log(`Activating extension ${extension.id} failed error:${err}`);
 
