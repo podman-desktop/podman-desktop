@@ -31,6 +31,7 @@ import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalo
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import { ContributionManager } from '../contribution-manager.js';
 import { DockerDesktopContribution, DockerDesktopInstaller } from '../docker-extension/docker-desktop-installer.js';
@@ -187,8 +188,9 @@ export class ExtensionInstaller {
     const finalFolderPath = path.join(unpackedFolder, imageNameWithoutSpecialChars);
 
     // grab all extensions
+    let extensions: ExtensionInfo[] = [];
     if (isPDExtension) {
-      const extensions = await this.extensionLoader.listExtensions();
+      extensions = await this.extensionLoader.listExtensions();
 
       // check if the extension is already installed for that path
       const alreadyInstalledExtension = extensions.find(extension => extension.path === finalFolderPath);
@@ -229,6 +231,10 @@ export class ExtensionInstaller {
       }
       if (analyzedExtension?.error) {
         sendError('Could not load extension: ' + analyzedExtension?.error);
+        return;
+      }
+      if (extensions.find(extension => extension.id === analyzedExtension?.id)) {
+        sendError(`Extension ${analyzedExtension?.id} is already installed.`);
         return;
       }
       return analyzedExtension;

@@ -166,6 +166,47 @@ test('should install an image (dd extensions) if labels are correct', async () =
   expect(spyExtractExtensionFiles).not.toHaveBeenCalled();
 });
 
+test('should fail if extension with same id is already installed', async () => {
+  const sendLog = vi.fn();
+  const sendError = vi.fn();
+  const sendEnd = vi.fn();
+  const imageToPull = 'fake.io/new-image:tag';
+
+  // Mock valid labels
+  vi.mocked(imageRegistry.getImageConfigLabels).mockResolvedValueOnce({
+    'org.opencontainers.image.title': 'fake-title',
+    'org.opencontainers.image.description': 'fake-description',
+    'org.opencontainers.image.vendor': 'fake-vendor',
+    'io.podman-desktop.api.version': '1.0.0',
+  });
+
+  // Mock existing extension with collision
+  const publisher = 'my-publisher';
+  const name = 'my-extension';
+
+  const id = `${publisher}.${name}`;
+  listExtensionsMock.mockResolvedValue([
+    {
+      id,
+      name: name,
+      path: '/some/existing/path',
+    },
+  ]);
+
+  analyzeExtensionMock.mockResolvedValueOnce({
+    id,
+  } as AnalyzedExtension);
+
+  await extensionInstaller.installFromImage(sendLog, sendError, sendEnd, imageToPull);
+
+  expect(sendLog).toHaveBeenCalledWith(`Analyzing image ${imageToPull}...`);
+
+  // expect error
+  expect(sendError).toHaveBeenCalledWith(`Extension ${publisher}.${name} is already installed.`);
+
+  expect(sendEnd).not.toBeCalled();
+});
+
 test('should fail if extension is already installed', async () => {
   const sendLog = vi.fn();
   const sendError = vi.fn();
