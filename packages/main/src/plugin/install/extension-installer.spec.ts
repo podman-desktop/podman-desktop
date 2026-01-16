@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
-import { rmSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import type { IpcMain, IpcMainEvent } from 'electron';
@@ -37,6 +37,8 @@ import type { Telemetry } from '../telemetry/telemetry.js';
 import { ExtensionInstaller } from './extension-installer.js';
 
 let extensionInstaller: ExtensionInstaller;
+
+vi.mock(import('node:fs/promises'));
 
 const apiSenderSendMock = vi.fn();
 const apiSender: ApiSenderType = {
@@ -91,6 +93,8 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(rmSync).mockReturnValue(undefined);
+  vi.mocked(existsSync).mockReturnValue(false);
+  vi.mocked(readFile).mockRejectedValue(new Error(''));
   vi.mocked(directories.getPluginsDirectory).mockReturnValue('/fake/plugins/directory');
   vi.mocked(directories.getContributionStorageDir).mockReturnValue('/fake/dd/directory');
   extensionInstaller = new ExtensionInstaller(
@@ -167,7 +171,7 @@ test('should install an image (dd extensions) if labels are correct', async () =
   expect(spyExtractExtensionFiles).not.toHaveBeenCalled();
 });
 
-test('should fail if extension with same name and provider (publisher) is already installed', async () => {
+test('should fail if extension with same name and publisher is already installed', async () => {
   const sendLog = vi.fn();
   const sendError = vi.fn();
   const sendEnd = vi.fn();
@@ -192,16 +196,14 @@ test('should fail if extension with same name and provider (publisher) is alread
     },
   ]);
 
-  // Mock fs.existsSync to return true
-  vi.mocked(fs.existsSync).mockReturnValue(true);
+  vi.mocked(existsSync).mockReturnValue(true);
 
-  // Mock fs.promises.readFile
-  const packageJson = JSON.stringify({
-    name: name,
-    publisher: publisher,
-  });
-
-  const readFileSpy = vi.spyOn(fs.promises, 'readFile').mockResolvedValue(packageJson);
+  vi.mocked(readFile).mockResolvedValue(
+    JSON.stringify({
+      name: name,
+      publisher: publisher,
+    }),
+  );
 
   await extensionInstaller.installFromImage(sendLog, sendError, sendEnd, imageToPull);
 
@@ -211,9 +213,6 @@ test('should fail if extension with same name and provider (publisher) is alread
   expect(sendError).toHaveBeenCalledWith(`Extension ${publisher}.${name} is already installed.`);
 
   expect(sendEnd).not.toBeCalled();
-
-  // restore spy
-  readFileSpy.mockRestore();
 });
 
 test('should fail if extension is already installed', async () => {
