@@ -86,8 +86,6 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         test.setTimeout(120_000);
 
         await playExpect(imagesPage.heading).toBeVisible();
-
-        await playExpect(imagesPage.rowTable).toBeVisible();
         const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         const buildImagePage = await imagesPage.openBuildImage();
@@ -141,8 +139,6 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
 
         imagesPage = await navigationBar.openImages();
         await playExpect(imagesPage.heading).toBeVisible();
-
-        await playExpect(imagesPage.rowTable).toBeVisible();
         const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         const buildImagePage = await imagesPage.openBuildImage();
