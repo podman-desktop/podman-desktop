@@ -19,6 +19,7 @@
 import { get } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { IDisposable } from '/@api/disposable';
 import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo } from '/@api/taskInfo';
 
 import {
@@ -52,9 +53,32 @@ const NOTIFICATION_TASK: NotificationTaskInfo = {
   cancellable: false,
 };
 
+// first, patch window object
+const { callbacks, eventEmitter } = vi.hoisted(() => {
+  const callbacks = new Map<string, (data: unknown) => void>();
+  const eventEmitter = (message: string, func: (...args: unknown[]) => void): IDisposable => {
+    callbacks.set(message, func);
+    return {} as IDisposable;
+  };
+
+  Object.defineProperty(window, 'events', {
+    value: {
+      receive: vi.fn().mockImplementation((channel: string, func: (...args: unknown[]) => void) => {
+        return eventEmitter(channel, func);
+      }),
+    },
+  });
+
+  return { callbacks, eventEmitter };
+});
+
 beforeEach(() => {
   tasksInfo.set([]);
   vi.resetAllMocks();
+
+  vi.mocked(window.events).receive.mockImplementation((channel, args) => {
+    return eventEmitter(channel, args);
+  });
 });
 
 test('Expect clearNotification to call window.clearTasks', async () => {
@@ -132,5 +156,47 @@ describe('filtered', () => {
 
     // only task2 should be returned
     expect(response).toEqual([task2]);
+  });
+});
+
+describe('normalizeTask via task-created event', () => {
+  test('should copy body to error for notification task with failure status', () => {
+    const task: NotificationTaskInfo = {
+      ...NOTIFICATION_TASK,
+      id: 'notification-1',
+      body: 'this is the error message',
+      status: 'failure',
+    };
+
+    // Trigger the task-created event
+    const callback = callbacks.get('task-created');
+    expect(callback).toBeDefined();
+    callback?.(task);
+
+    // Check tasksInfo has the normalized task with body copied to error
+    const tasks = get(tasksInfo);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].id).toBe('notification-1');
+    expect(tasks[0].error).toBe('this is the error message');
+  });
+
+  test('should not copy body to error for notification task with success status', () => {
+    const task: NotificationTaskInfo = {
+      ...NOTIFICATION_TASK,
+      id: 'notification-2',
+      body: 'this is the body',
+      status: 'success',
+    };
+
+    // Trigger the task-created event
+    const callback = callbacks.get('task-created');
+    expect(callback).toBeDefined();
+    callback?.(task);
+
+    // Check tasksInfo has the task without error field
+    const tasks = get(tasksInfo);
+    const addedTask = tasks.find(t => t.id === 'notification-2');
+    expect(addedTask).toBeDefined();
+    expect(addedTask?.error).toBeUndefined();
   });
 });
