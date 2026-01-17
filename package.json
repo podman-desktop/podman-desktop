@@ -144,7 +144,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/adm-zip": "^0.5.7",
     "@types/culori": "^4.0.1",
-    "@types/dockerode": "^3.3.47",
+    "@types/dockerode": "^4.0.0",
     "@types/express": "^4.17.21",
     "@types/getos": "^3.0.4",
     "@types/hosted-git-info": "^3.0.5",
