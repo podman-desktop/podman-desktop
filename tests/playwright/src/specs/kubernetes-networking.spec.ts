@@ -120,7 +120,7 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
+test.describe.serial('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
   test.describe
     .serial('Ingress routing workflow verification', () => {
       test('Check Ingress controller pods status', async ({ page }) => {
