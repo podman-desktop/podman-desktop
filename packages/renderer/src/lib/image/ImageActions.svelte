@@ -60,7 +60,7 @@ onMount(async () => {
 
 async function runImage(imageInfo: ImageInfoUI): Promise<void> {
   runImageInfo.set(imageInfo);
-  router.goto('/image/run/basic');
+  router.goto('/images/run/basic');
 }
 
 async function deleteImage(): Promise<void> {
