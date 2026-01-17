@@ -31,3 +31,31 @@ export interface ImageSearchResult {
 export interface ImageTagsListOptions {
   image: string;
 }
+
+/**
+ * Result of checking if an image can be updated from a remote registry.
+ */
+export interface ImageUpdateStatus {
+  /**
+   * The status of the check operation.
+   * - 'normal': Check completed successfully
+   * - 'error': Check failed due to an error (registry errors, authentication failures, etc.)
+   */
+  status: 'normal' | 'error';
+
+  /**
+   * Whether an update is available from the remote registry.
+   */
+  updateAvailable: boolean;
+
+  /**
+   * The remote digest if an update is available.
+   * Can be used for verification after pulling.
+   */
+  remoteDigest?: string;
+
+  /**
+   * Human-readable message describing the result.
+   */
+  message: string;
+}

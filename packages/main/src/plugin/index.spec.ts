@@ -38,10 +38,11 @@ import { securityRestrictionCurrentHandler } from '../security-restrictions-hand
 import type { TrayMenu } from '../tray-menu.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
-import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
+import { ContainerProviderRegistry } from './container-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
 import { LockedConfiguration } from './locked-configuration.js';
@@ -937,75 +938,54 @@ describe('container-provider-registry:buildImage', () => {
   });
 });
 
-describe('updateImage handler', () => {
-  test('should update image and set task status to success', async () => {
-    const handle = handlers.get('container-provider-registry:updateImage');
+describe('checkImageUpdateStatus handler', () => {
+  test('should check image update status and return result', async () => {
+    const handle = handlers.get('image-registry:checkImageUpdateStatus');
     expect(handle).not.equal(undefined);
 
-    const engineId = 'engine1';
-    const imageId = 'sha256:abc123';
-    const tag = 'alpine:latest';
+    const imageReference = 'docker.io/library/alpine:latest';
+    const imageTag = 'latest';
+    const localDigests = ['alpine@sha256:abc123'];
 
-    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockResolvedValue(undefined);
-
-    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-
-    await handle(undefined, engineId, imageId, tag);
-
-    expect(ContainerProviderRegistry.prototype.updateImage).toHaveBeenCalledWith(engineId, imageId, tag);
-    expect(createTaskSpy).toHaveBeenCalledWith({
-      title: `Updating image '${tag}'`,
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest: 'sha256:def456',
+      message: 'A newer version is available',
     });
+
+    const result = await handle(undefined, imageReference, imageTag, localDigests);
+
+    expect(result.result).toEqual({
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest: 'sha256:def456',
+      message: 'A newer version is available',
+    });
+    expect(ImageRegistry.prototype.checkImageUpdateStatus).toHaveBeenCalledWith(imageReference, imageTag, localDigests);
   });
 
-  test('should handle update errors and set task error', async () => {
-    const handle = handlers.get('container-provider-registry:updateImage');
+  test('should return update not available when image is latest', async () => {
+    const handle = handlers.get('image-registry:checkImageUpdateStatus');
     expect(handle).not.equal(undefined);
 
-    const engineId = 'engine1';
-    const imageId = 'sha256:abc123';
-    const tag = 'invalid:image';
+    const imageReference = 'docker.io/library/alpine:latest';
+    const imageTag = 'latest';
+    const localDigests = ['alpine@sha256:abc123'];
 
-    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockRejectedValue(new Error('Network error'));
-
-    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-
-    const result = await handle(undefined, engineId, imageId, tag);
-    expect(result).toHaveProperty('error');
-    expect(result.error).toBeInstanceOf(Error);
-    expect(result.error.message).toBe('Network error');
-
-    expect(createTaskSpy).toHaveBeenCalledWith({
-      title: `Updating image '${tag}'`,
-    });
-  });
-
-  test('should treat "Image is already the latest version" as success', async () => {
-    const handle = handlers.get('container-provider-registry:updateImage');
-    expect(handle).not.equal(undefined);
-
-    const engineId = 'engine1';
-    const imageId = 'sha256:abc123';
-    const tag = 'alpine:latest';
-
-    vi.spyOn(ContainerProviderRegistry.prototype, 'updateImage').mockRejectedValue(
-      new LatestImageError('Image is already the latest version'),
-    );
-
-    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-
-    const result = await handle(undefined, engineId, imageId, tag);
-    // Should not return an error since this is treated as success
-    expect(result).not.toHaveProperty('error');
-
-    expect(createTaskSpy).toHaveBeenCalledWith({
-      title: `Updating image '${tag}'`,
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Image is already the latest version',
     });
 
-    // Verify the task was marked as success and name was updated
-    const createdTask = createTaskSpy.mock.results[0]?.value;
-    expect(createdTask.status).toBe('success');
-    expect(createdTask.name).toBe(`Image '${tag}' is already up to date`);
+    const result = await handle(undefined, imageReference, imageTag, localDigests);
+
+    expect(result.result).toEqual({
+      status: 'normal',
+      updateAvailable: false,
+      message: 'Image is already the latest version',
+    });
   });
 });
 

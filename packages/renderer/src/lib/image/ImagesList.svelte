@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faCube, faDownload, faSync, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
@@ -27,6 +27,7 @@ import { context } from '/@/stores/context';
 import { filtered, imagesInfos, searchPattern } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { saveImagesInfo } from '/@/stores/save-images-store';
+import { updateImagesInfo } from '/@/stores/update-images-store';
 import { viewsContributions } from '/@/stores/views';
 import type { ContainerInfo } from '/@api/container-info';
 import type { ImageInfo } from '/@api/image-info';
@@ -220,6 +221,17 @@ async function saveSelectedImages(): Promise<void> {
   router.goto('/images/save');
 }
 
+// update the items selected in the list
+async function updateSelectedImages(): Promise<void> {
+  const selectedImages = images.filter(image => image.selected);
+  if (selectedImages.length === 0) {
+    return;
+  }
+
+  updateImagesInfo.set(selectedImages);
+  router.goto('/images/update');
+}
+
 let selectedItemsNumber: number | undefined = $state();
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
@@ -337,6 +349,11 @@ function label(item: ImageInfoUI): string {
         title="Save {selectedItemsNumber} selected items"
         aria-label="Save images"
         icon={faDownload} />
+      <Button
+        on:click={updateSelectedImages}
+        title="Update {selectedItemsNumber} selected items"
+        aria-label="Update images"
+        icon={faSync} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
   {/snippet}
