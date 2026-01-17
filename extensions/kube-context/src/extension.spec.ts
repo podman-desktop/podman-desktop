@@ -29,17 +29,6 @@ const item = {
   text: '',
 };
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    window: {
-      createStatusBarItem: vi.fn(),
-    },
-    tray: {
-      registerMenuItem: vi.fn(),
-    },
-  };
-});
-
 beforeAll(() => {
   (podmanDesktopApi.window.createStatusBarItem as Mock).mockReturnValue(item);
 });
