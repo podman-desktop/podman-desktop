@@ -194,4 +194,187 @@ describe('GitHubService', () => {
 
     await expect(service.getMetadata()).rejects.toThrow('Required asset not found: Linux AMD64 .tar.gz');
   });
+
+  test('should stop pagination when fewer than 100 commits are returned', async () => {
+    const commitsUrl = `${url}/commits`;
+    let apiCallCount = 0;
+
+    const mockCommits = [
+      {
+        sha: '123',
+        author: {
+          login: 'contributor1',
+          avatar_url: 'https://avatar1.png',
+          html_url: 'https://github.com/contributor1',
+        },
+      },
+      {
+        sha: '456',
+        author: {
+          login: 'contributor2',
+          avatar_url: 'https://avatar2.png',
+          html_url: 'https://github.com/contributor2',
+        },
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        apiCallCount++;
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    const contributors = await service.getLatestContributors(new Set(), 10);
+
+    // Verify pagination stopped after first page (fewer than 100 commits)
+    expect(apiCallCount).toBe(1);
+    expect(contributors).toHaveLength(2);
+    expect(contributors[0].login).toBe('contributor1');
+    expect(contributors[1].login).toBe('contributor2');
+  });
+
+  test('should exclude bot accounts from contributors', async () => {
+    const commitsUrl = `${url}/commits`;
+    const mockCommits = [
+      {
+        sha: '123',
+        author: { login: 'realuser', avatar_url: 'https://avatar.png', html_url: 'https://github.com/realuser' },
+      },
+      {
+        sha: '456',
+        author: {
+          login: 'dependabot[bot]',
+          avatar_url: 'https://bot.png',
+          html_url: 'https://github.com/dependabot[bot]',
+        },
+      },
+      {
+        sha: '789',
+        author: {
+          login: 'github-actions[bot]',
+          avatar_url: 'https://actions.png',
+          html_url: 'https://github.com/github-actions[bot]',
+        },
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    const contributors = await service.getLatestContributors(new Set(), 10);
+
+    expect(contributors).toHaveLength(1);
+    expect(contributors[0].login).toBe('realuser');
+    expect(contributors.find(c => c.login.includes('[bot]'))).toBeUndefined();
+  });
+
+  test('should exclude usernames from the excludeUsernames set', async () => {
+    const commitsUrl = `${url}/commits`;
+    const mockCommits = [
+      {
+        sha: '123',
+        author: {
+          login: 'communityuser',
+          avatar_url: 'https://avatar1.png',
+          html_url: 'https://github.com/communityuser',
+        },
+      },
+      {
+        sha: '456',
+        author: { login: 'maintainer1', avatar_url: 'https://avatar2.png', html_url: 'https://github.com/maintainer1' },
+      },
+      {
+        sha: '789',
+        author: { login: 'Maintainer2', avatar_url: 'https://avatar3.png', html_url: 'https://github.com/Maintainer2' },
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    // Exclude maintainers (case-insensitive - usernames are normalized internally)
+    const excludeUsernames = new Set(['maintainer1', 'maintainer2']);
+    const contributors = await service.getLatestContributors(excludeUsernames, 10);
+
+    expect(contributors).toHaveLength(1);
+    expect(contributors[0].login).toBe('communityuser');
+    expect(contributors.find(c => c.login.toLowerCase() === 'maintainer1')).toBeUndefined();
+    expect(contributors.find(c => c.login.toLowerCase() === 'maintainer2')).toBeUndefined();
+  });
+
+  test('should exclude usernames case-insensitively with mixed-case input', async () => {
+    const commitsUrl = `${url}/commits`;
+    const mockCommits = [
+      {
+        sha: '123',
+        author: {
+          login: 'communityuser',
+          avatar_url: 'https://avatar1.png',
+          html_url: 'https://github.com/communityuser',
+        },
+      },
+      {
+        sha: '456',
+        author: { login: 'JohnDoe', avatar_url: 'https://avatar2.png', html_url: 'https://github.com/JohnDoe' },
+      },
+      {
+        sha: '789',
+        author: { login: 'janedoe', avatar_url: 'https://avatar3.png', html_url: 'https://github.com/janedoe' },
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    // Mixed-case usernames in the exclusion set should still work
+    const excludeUsernames = new Set(['JOHNDOE', 'JaneDoe']);
+    const contributors = await service.getLatestContributors(excludeUsernames, 10);
+
+    expect(contributors).toHaveLength(1);
+    expect(contributors[0].login).toBe('communityuser');
+  });
+
+  test('should handle commits with missing author login', async () => {
+    const commitsUrl = `${url}/commits`;
+    const mockCommits = [
+      {
+        sha: '123',
+        author: {
+          login: 'validuser',
+          avatar_url: 'https://avatar1.png',
+          html_url: 'https://github.com/validuser',
+        },
+      },
+      {
+        sha: '456',
+        author: null, // Author can be null
+      },
+      {
+        sha: '789',
+        author: { avatar_url: 'https://avatar3.png', html_url: 'https://github.com/unknown' }, // Missing login
+      },
+    ];
+
+    server.use(
+      http.get(commitsUrl, () => {
+        return HttpResponse.json(mockCommits);
+      }),
+    );
+
+    const contributors = await service.getLatestContributors(new Set(), 10);
+
+    // Should only include the valid user, skipping null author and missing login
+    expect(contributors).toHaveLength(1);
+    expect(contributors[0].login).toBe('validuser');
+  });
 });
