@@ -62,6 +62,7 @@ const config = {
     globals: true,
     environment: 'node',
     include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    globalSetup: [join(PACKAGE_ROOT, '..', '..', '..', '..', '__mocks__', 'vitest-generate-api-global-setup.ts')],
     alias: {
       '@podman-desktop/api': join(PACKAGE_ROOT, '..', '..', '..', '..', '__mocks__/@podman-desktop/api.js'),
     },
