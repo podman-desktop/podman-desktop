@@ -64,6 +64,7 @@ import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -517,17 +518,6 @@ export class PluginSystem {
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
     colorRegistry.init();
 
-    container.bind<Certificates>(Certificates).toSelf().inSingletonScope();
-    const certificates = container.get<Certificates>(Certificates);
-    await certificates.init();
-
-    container.bind<Proxy>(Proxy).toSelf().inSingletonScope();
-    const proxy = container.get<Proxy>(Proxy);
-    await proxy.init();
-
-    const exec = new Exec(proxy);
-    container.bind<Exec>(Exec).toConstantValue(exec);
-
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
@@ -538,6 +528,18 @@ export class PluginSystem {
     container.bind<TaskManager>(TaskManager).toSelf().inSingletonScope();
     const taskManager = container.get<TaskManager>(TaskManager);
     taskManager.init();
+
+    // Certificates must be bound after TaskManager (dependency) and before Proxy (dependent)
+    container.bind<Certificates>(Certificates).toSelf().inSingletonScope();
+    const certificates = container.get<Certificates>(Certificates);
+    await certificates.init();
+
+    container.bind<Proxy>(Proxy).toSelf().inSingletonScope();
+    const proxy = container.get<Proxy>(Proxy);
+    await proxy.init();
+
+    const exec = new Exec(proxy);
+    container.bind<Exec>(Exec).toConstantValue(exec);
 
     container.bind<NotificationRegistry>(NotificationRegistry).toSelf().inSingletonScope();
     container.bind<MenuRegistry>(MenuRegistry).toSelf().inSingletonScope();
@@ -2417,6 +2419,14 @@ export class PluginSystem {
 
     this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
       return proxy.getState();
+    });
+
+    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
+      return certificates.getAllCertificateInfos();
+    });
+
+    this.ipcHandle('certificates:synchronizeToVm', async (_listener, podmanMachine?: string): Promise<void> => {
+      return certificates.synchronizeToVm(providerRegistry, inputQuickPickRegistry, podmanMachine);
     });
 
     this.ipcHandle(

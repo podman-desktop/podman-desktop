@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,49 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
-import { injectable } from 'inversify';
+import * as asn1js from 'asn1js';
+import { inject, injectable } from 'inversify';
+import * as pkijs from 'pkijs';
 import wincaAPI from 'win-ca/api';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
+
+import type { InputQuickPickRegistry } from './input-quickpick/input-quickpick-registry.js';
+import type { ProviderRegistry } from './provider-registry.js';
+import { TaskManager } from './tasks/task-manager.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
+
+/**
+ * X.500 Distinguished Name OID constants
+ * @see https://www.alvestrand.no/objectid/2.5.4.html
+ */
+export const OID_CN = '2.5.4.3'; // Common Name
+export const OID_C = '2.5.4.6'; // Country
+export const OID_L = '2.5.4.7'; // Locality
+export const OID_ST = '2.5.4.8'; // State or Province
+export const OID_O = '2.5.4.10'; // Organization
+export const OID_OU = '2.5.4.11'; // Organizational Unit
+export const OID_E = '1.2.840.113549.1.9.1'; // Email Address
+
+/**
+ * Map of OID to human-readable RDN attribute names
+ */
+export const OID_NAME_MAP: Record<string, string> = {
+  [OID_CN]: 'CN',
+  [OID_C]: 'C',
+  [OID_L]: 'L',
+  [OID_ST]: 'ST',
+  [OID_O]: 'O',
+  [OID_OU]: 'OU',
+  [OID_E]: 'E',
+};
 
 /**
  * Provides access to the certificates of the underlying platform.
@@ -34,6 +67,11 @@ import { spawnWithPromise } from './util/spawn-promise.js';
 @injectable()
 export class Certificates {
   private allCertificates: string[] = [];
+
+  constructor(
+    @inject(TaskManager)
+    private taskManager: TaskManager,
+  ) {}
 
   /**
    * Setup all certificates globally depending on the platform.
@@ -158,6 +196,273 @@ export class Certificates {
         console.log('error while extracting certificates', error);
         return [];
       }
+    }
+  }
+
+  /**
+   * Convert PEM to ArrayBuffer for PKI.js
+   */
+  private pemToArrayBuffer(pem: string): ArrayBuffer {
+    const b64 = pem
+      .replace(/-----BEGIN CERTIFICATE-----/g, '')
+      .replace(/-----END CERTIFICATE-----/g, '')
+      .replace(/\s/g, '');
+    const binaryString = Buffer.from(b64, 'base64').toString('binary');
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  /**
+   * Get RDN value by type OID from RelativeDistinguishedNames
+   * Common OIDs: CN=2.5.4.3, O=2.5.4.10, OU=2.5.4.11, C=2.5.4.6
+   */
+  private getRDNValue(rdns: pkijs.RelativeDistinguishedNames, oid: string): string {
+    for (const rdn of rdns.typesAndValues) {
+      if (rdn.type === oid) {
+        return rdn.value.valueBlock.value?.toString() ?? '';
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Format RelativeDistinguishedNames as a string
+   */
+  private formatDN(rdns: pkijs.RelativeDistinguishedNames): string {
+    const oidMap: Record<string, string> = {
+      '2.5.4.3': 'CN',
+      '2.5.4.6': 'C',
+      '2.5.4.7': 'L',
+      '2.5.4.8': 'ST',
+      '2.5.4.10': 'O',
+      '2.5.4.11': 'OU',
+      '1.2.840.113549.1.9.1': 'E',
+    };
+    return rdns.typesAndValues
+      .map((rdn: pkijs.AttributeTypeAndValue) => {
+        const name = oidMap[rdn.type] ?? rdn.type;
+        const value = rdn.value.valueBlock.value?.toString() ?? '';
+        return `${name}=${value}`;
+      })
+      .join(', ');
+  }
+
+  /**
+   * Get display name with fallback: CN → O → Full DN
+   */
+  private getDisplayName(rdns: pkijs.RelativeDistinguishedNames): string {
+    const cn = this.getRDNValue(rdns, OID_CN);
+    if (cn) return cn;
+
+    const org = this.getRDNValue(rdns, OID_O);
+    if (org) return org;
+
+    return this.formatDN(rdns);
+  }
+
+  /**
+   * Parse a PEM-encoded certificate using PKI.js.
+   * @param pem The PEM-encoded certificate string.
+   * @returns The parsed certificate information (without PEM for security).
+   */
+  parseCertificate(pem: string): CertificateInfo {
+    try {
+      const asn1 = asn1js.fromBER(this.pemToArrayBuffer(pem));
+      if (asn1.offset === -1) {
+        throw new Error('Failed to parse ASN.1 structure');
+      }
+      const cert = new pkijs.Certificate({ schema: asn1.result });
+
+      // Get basicConstraints for isCA
+      let isCA = false;
+      const basicConstraintsExt = cert.extensions?.find((ext: pkijs.Extension) => ext.extnID === '2.5.29.19');
+      if (basicConstraintsExt?.parsedValue) {
+        // See https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9 for the definition of cA
+        isCA = (basicConstraintsExt.parsedValue as pkijs.BasicConstraints).cA ?? false;
+      }
+
+      // Convert serial number to hex string
+      const serialNumber = Array.from(cert.serialNumber.valueBlock.valueHexView)
+        .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+        .join('');
+
+      return {
+        subjectCommonName: this.getDisplayName(cert.subject),
+        subject: this.formatDN(cert.subject),
+        issuerCommonName: this.getDisplayName(cert.issuer),
+        issuer: this.formatDN(cert.issuer),
+        serialNumber,
+        validFrom: cert.notBefore.value.toISOString(),
+        validTo: cert.notAfter.value.toISOString(),
+        isCA,
+      };
+    } catch (error) {
+      console.log('error while parsing certificate', error);
+      return {
+        subjectCommonName: 'Non parsable certificate',
+        subject: 'Non parsable certificate',
+        issuerCommonName: '',
+        issuer: '',
+        serialNumber: '',
+        validFrom: undefined,
+        validTo: undefined,
+        isCA: false,
+      };
+    }
+  }
+
+  /**
+   * Get all certificates as parsed CertificateInfo objects.
+   * @returns An array of parsed certificate information.
+   */
+  getAllCertificateInfos(): CertificateInfo[] {
+    return this.allCertificates.map(pem => this.parseCertificate(pem));
+  }
+
+  /**
+   * Generate a unique filename for a certificate based on its SHA-256 fingerprint.
+   * @param pem The PEM-encoded certificate.
+   * @returns A unique filename like 'cert-abc123def456.pem'
+   */
+  private getCertificateFingerprint(pem: string): string {
+    const hash = crypto.createHash('sha256').update(pem).digest('hex');
+    return hash.substring(0, 16); // Use first 16 chars for reasonable uniqueness
+  }
+
+  /**
+   * Synchronize certificates to a Podman machine VM.
+   * Uploads certificates to /etc/pki/ca-trust/source/anchors/ and updates the trust store.
+   * If no machine name is provided and multiple machines are running, shows a QuickPick to select.
+   * @param providerRegistry - Provider registry to get running machines.
+   * @param inputQuickPickRegistry - QuickPick registry to show machine selection.
+   * @param podmanMachine - Optional name of the Podman machine to synchronize to.
+   */
+  async synchronizeToVm(
+    providerRegistry: ProviderRegistry,
+    inputQuickPickRegistry: InputQuickPickRegistry,
+    podmanMachine?: string,
+  ): Promise<void> {
+    // If no machine specified, determine which machine to use
+    if (!podmanMachine) {
+      const providerInfos = providerRegistry.getProviderInfos();
+      const runningMachines = providerInfos
+        .flatMap(provider => provider.containerConnections)
+        .filter(conn => conn.type === 'podman' && conn.status === 'started')
+        .map(conn => conn.name);
+
+      if (runningMachines.length === 0) {
+        throw new Error('No running Podman machines found');
+      } else if (runningMachines.length === 1) {
+        podmanMachine = runningMachines[0];
+      } else {
+        // Multiple machines - show QuickPick
+        const selected = await inputQuickPickRegistry.showQuickPick(runningMachines, {
+          title: 'Synchronize Certificates',
+          placeHolder: 'Select a Podman machine to synchronize certificates to',
+        });
+
+        if (!selected || typeof selected !== 'string') {
+          // User cancelled
+          return;
+        }
+        podmanMachine = selected;
+      }
+    }
+
+    if (!podmanMachine) {
+      return;
+    }
+    const certificates = this.allCertificates;
+    const totalCerts = certificates.length;
+
+    if (totalCerts === 0) {
+      return;
+    }
+
+    const task = this.taskManager.createTask({
+      title: `Synchronizing certificates to ${podmanMachine}`,
+    });
+
+    const anchorsPath = '/etc/pki/ca-trust/source/anchors';
+
+    try {
+      task.progress = 0;
+
+      // Ensure the anchors directory exists
+      const mkdirResult = await spawnWithPromise('podman', [
+        'machine',
+        'ssh',
+        podmanMachine,
+        `sudo mkdir -p ${anchorsPath}`,
+      ]);
+      if (mkdirResult.error) {
+        throw new Error(`Failed to create anchors directory: ${mkdirResult.error}`);
+      }
+
+      // Upload each certificate
+      for (let i = 0; i < certificates.length; i++) {
+        const pem = certificates[i];
+        if (!pem) continue;
+
+        const fingerprint = this.getCertificateFingerprint(pem);
+        const filename = `podman-desktop-${fingerprint}.crt`;
+        const remotePath = `${anchorsPath}/${filename}`;
+
+        // Update task progress
+        task.name = `Uploading certificate ${i + 1}/${totalCerts}`;
+        task.progress = Math.round(((i + 1) / (totalCerts + 1)) * 100);
+
+        // Write certificate to VM using base64 encoding to handle special characters
+        const base64Cert = Buffer.from(pem).toString('base64');
+        const writeResult = await spawnWithPromise('podman', [
+          'machine',
+          'ssh',
+          podmanMachine,
+          `echo '${base64Cert}' | base64 -d | sudo tee ${remotePath} > /dev/null`,
+        ]);
+
+        if (writeResult.error) {
+          console.error(`Failed to upload certificate ${filename}: ${writeResult.error}`);
+          // Continue with other certificates
+        }
+      }
+
+      // Update the CA trust store
+      task.name = 'Updating CA trust store';
+      task.progress = 90;
+
+      const updateResult = await spawnWithPromise('podman', ['machine', 'ssh', podmanMachine, 'sudo update-ca-trust']);
+
+      if (updateResult.error) {
+        throw new Error(`Failed to update CA trust store: ${updateResult.error}`);
+      }
+
+      // Restart podman services to pick up new certificates
+      task.name = 'Restarting Podman services';
+      task.progress = 95;
+
+      const restartResult = await spawnWithPromise('podman', [
+        'machine',
+        'ssh',
+        podmanMachine,
+        'sudo systemctl restart podman.socket podman.service',
+      ]);
+
+      if (restartResult.error) {
+        throw new Error(`Failed to restart Podman services: ${restartResult.error}`);
+      }
+
+      task.progress = 100;
+      task.name = `Synchronized ${totalCerts} certificates to ${podmanMachine}`;
+      task.status = 'success';
+    } catch (error) {
+      task.status = 'failure';
+      task.error = String(error);
+      console.error('Error synchronizing certificates to VM:', error);
+      throw error;
     }
   }
 }
