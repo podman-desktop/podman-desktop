@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { SearchAddon } from '@xterm/addon-search';
 import type { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
-import Fa from 'svelte-fa';
 
 interface Props {
   terminal: Terminal;
@@ -73,10 +73,10 @@ function onKeyUp(e: KeyboardEvent): void {
   </div>
   <div class="space-x-1">
     <button aria-label="Previous Match" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={(): void => onSearchPrevious(true)}>
-      <Fa icon={faArrowUp}/>
+      <Icon icon={faArrowUp}/>
     </button>
     <button aria-label="Next Match" class="p-2 rounded-sm hover:bg-[var(--pd-action-button-details-bg)]" onclick={(): void => onSearchNext(true)}>
-      <Fa icon={faArrowDown}/>
+      <Icon icon={faArrowDown}/>
     </button>
   </div>
 </div>

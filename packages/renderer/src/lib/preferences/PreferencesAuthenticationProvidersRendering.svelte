@@ -6,7 +6,7 @@ import {
   faRightToBracket,
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
@@ -57,7 +57,7 @@ import SettingsPage from './SettingsPage.svelte';
                   {provider.displayName}
                 </div>
                 <div class="flex flex-row items-center w-full h-full">
-                  <Fa
+                  <Icon
                     class="h-3 w-3 text-sm mr-2 text-[var(--pd-status-{provider.accounts.length > 0
                       ? 'connected'
                       : 'disconnected'})]"
@@ -92,7 +92,7 @@ import SettingsPage from './SettingsPage.svelte';
                             aria-label="Sign out of {account.label}"
                             class="pl-2 hover:cursor-pointer"
                             on:click={(): Promise<void> => window.requestAuthenticationProviderSignOut(provider.id, account.id)}>
-                            <Fa class="h-3 w-3 text-md mr-2" icon={faRightFromBracket} />
+                            <Icon class="h-3 w-3 text-md mr-2" icon={faRightFromBracket} />
                           </button>
                         </Tooltip>
                       </div>
@@ -113,7 +113,7 @@ import SettingsPage from './SettingsPage.svelte';
                   class="pl-2 mr-4 hover:cursor-pointer hover:text-white text-white"
                   on:click={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}>
                   <div class="flex flex-row items-center">
-                    <Fa class="h-3 w-3 text-md mr-2" icon={faRightToBracket} />Sign in
+                    <Icon class="h-3 w-3 text-md mr-2" icon={faRightToBracket} />Sign in
                   </div>
                 </Button>
               </Tooltip>

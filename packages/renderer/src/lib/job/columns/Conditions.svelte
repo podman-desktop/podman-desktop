@@ -7,7 +7,7 @@ import {
   faTimesCircle,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { JobCondition } from '/@/lib/job/JobUI';
 import Label from '/@/lib/ui/Label.svelte';
@@ -61,7 +61,7 @@ function getConditionAttributes(condition: JobCondition): { name: string; color:
     <div class="flex flex-row gap-1">
       {#if object.condition}
         <Label tip={object.status} name={getConditionAttributes(object.condition).name}>
-          <Fa size="1x" icon={getConditionAttributes(object.condition).icon} class={getConditionAttributes(object.condition).color} />
+          <Icon size="1x" icon={getConditionAttributes(object.condition).icon} class={getConditionAttributes(object.condition).color} />
         </Label>
       {/if}
     </div>

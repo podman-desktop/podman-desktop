@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faFileLines, faScroll } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import { Uri } from '/@/lib/uri/Uri';
 
@@ -20,7 +20,7 @@ async function saveLogsAsZip(): Promise<void> {
 
 <div class="flex flex-col w-full m-4 bg-[var(--pd-content-card-bg)] p-4 rounded-lg">
   <div class="flex flex-row align-middle items-center w-full">
-    <Fa size="1.875x" class="pr-3" icon={faFileLines} />
+    <Icon size="1.875x" class="pr-3" icon={faFileLines} />
     <div class="text-xl">Gather Log Files</div>
     <div class="flex flex-1 justify-end"></div>
   </div>

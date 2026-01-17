@@ -1,8 +1,8 @@
 <script lang="ts">
 import { faEraser } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { SvelteDate } from 'svelte/reactivity';
-import Fa from 'svelte-fa';
 
 import { isMultiplexedLog } from '/@/lib/stream/stream-utils';
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
@@ -55,7 +55,7 @@ async function clear(): Promise<void> {
 
 <div class="absolute top-0 right-2 px-1 z-50 m-1 opacity-50 space-x-1">
   <button title="Clear logs" onclick={clear} class="">
-    <Fa
+    <Icon
       class="cursor-pointer rounded-full bg-[var(--pd-button-disabled)] min-h-8 w-8 p-1.5 hover:bg-[var(--pd-button-primary-hover-bg)]"
       icon={faEraser}
     />

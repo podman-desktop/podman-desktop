@@ -2,9 +2,9 @@
 import { faAngleDown, faAngleUp, faCircleCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import type { CustomPickItem } from '@podman-desktop/api';
 import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
-import Fa from 'svelte-fa';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 
@@ -178,7 +178,7 @@ function dragMe(node: HTMLElement): void {
                   {#if innerItem.selected}
                     <div class="relative">
                       <div class="absolute right-0 m-3 text-xl text-[var(--pd-invert-content-info-icon)]">
-                        <Fa icon={faCircleCheck} />
+                        <Icon icon={faCircleCheck} />
                       </div>
                     </div>
                   {/if}
@@ -242,7 +242,7 @@ function dragMe(node: HTMLElement): void {
                           <div class="relative">
                             <div class="absolute right-0 mr-2 text-xl">
                               <button on:click={(): void => setSectionVisibility((i / colsPerRow) * colsPerRow + j, true)}>
-                                <Fa size="0.9x" icon={faXmark} />
+                                <Icon size="0.9x" icon={faXmark} />
                               </button>
                             </div>
                           </div>

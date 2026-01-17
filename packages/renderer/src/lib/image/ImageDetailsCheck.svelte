@@ -2,9 +2,9 @@
 import { faStethoscope } from '@fortawesome/free-solid-svg-icons';
 import type { ImageInfo } from '@podman-desktop/api';
 import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
-import Fa from 'svelte-fa';
 
 import type { CheckUI, ProviderUI } from '/@/lib/ui/ProviderResultPage';
 import ProviderResultPage from '/@/lib/ui/ProviderResultPage.svelte';
@@ -146,7 +146,7 @@ async function handleAbort(): Promise<void> {
   {#snippet headerInfo()}
   <div class="flex flex-row" role="status" aria-label="Analysis Status">
     <div class="w-full flex mb-4 space-x-4">
-      <Fa size="1.5x" icon={faStethoscope} />
+      <Icon size="1.5x" icon={faStethoscope} />
       {#if aborted}
         <span>Image analysis canceled</span>
       {:else if remainingProviders > 0}

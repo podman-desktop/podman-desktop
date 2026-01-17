@@ -9,7 +9,7 @@ import {
   faStar,
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
@@ -82,7 +82,7 @@ async function openGitHub(): Promise<void> {
       >{feedbackMessages?.experienceLabel}</label>
     <div class="flex space-x-4">
       <button aria-label="very-sad-smiley" onclick={(): void => selectSmiley(1)}>
-        <Fa
+        <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 1
             ? 'text-[var(--pd-button-primary-bg)]'
@@ -90,7 +90,7 @@ async function openGitHub(): Promise<void> {
           icon={faFrown} />
       </button>
       <button aria-label="sad-smiley" onclick={(): void => selectSmiley(2)}>
-        <Fa
+        <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 2
             ? 'text-[var(--pd-button-primary-bg)]'
@@ -98,7 +98,7 @@ async function openGitHub(): Promise<void> {
           icon={faMeh} />
       </button>
       <button aria-label="happy-smiley" onclick={(): void => selectSmiley(3)}>
-        <Fa
+        <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 3
             ? 'text-[var(--pd-button-primary-bg)]'
@@ -106,7 +106,7 @@ async function openGitHub(): Promise<void> {
           icon={faSmile} />
       </button>
       <button aria-label="very-happy-smiley" onclick={(): void => selectSmiley(4)}>
-        <Fa
+        <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 4
             ? 'text-[var(--pd-button-primary-bg)]'
@@ -147,9 +147,9 @@ async function openGitHub(): Promise<void> {
       <WarningMessage class="text-xs" error="We would really appreciate knowing how we can improve" />
     {:else if smileyRating > 2}
       <div class="text-[var(--pd-modal-text)] p-1 flex flex-row items-center text-xs">
-        <Fa size="1.125x" class="cursor-pointer" icon={faQuestionCircle} />
+        <Icon size="1.125x" class="cursor-pointer" icon={faQuestionCircle} />
         <span aria-label="{feedbackMessages?.gitHubStarsMessage}" class="flex items-center">
-          <Fa class="px-1 text-[var(--pd-invert-content-info-icon)]" icon={faHeart} />{smileyRating === 3 ? 'Like' : 'Love'} It? Give us a <Fa
+          <Icon class="px-1 text-[var(--pd-invert-content-info-icon)]" icon={faHeart} />{smileyRating === 3 ? 'Like' : 'Love'} It? Give us a <Icon
             class="px-1 text-[var(--pd-state-warning)]"
             icon={faStar} />on <Link aria-label="GitHub" on:click={openGitHub}>GitHub</Link>
         </span>

@@ -2,12 +2,12 @@
 import { faCircleInfo, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import type { ContainerProviderConnection } from '@podman-desktop/api';
 import { DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
@@ -503,7 +503,7 @@ $effect(() => {
                           container.name,
                         ).toString('base64')}/${Buffer.from(container.endpoint.socketPath).toString('base64')}/summary`,
                       )}>
-                    <Fa icon={faCircleInfo} />
+                    <Icon icon={faCircleInfo} />
                   </button>
                 </Tooltip>
               </div>
@@ -619,7 +619,7 @@ $effect(() => {
                           kubeConnection.endpoint.apiURL,
                         ).toString('base64')}/summary`,
                       )}>
-                    <Fa icon={faCircleInfo} />
+                    <Icon icon={faCircleInfo} />
                   </button>
                 </Tooltip>
               </div>
@@ -655,7 +655,7 @@ $effect(() => {
                     router.goto(
                       `/preferences/vm-connection/${provider.internalId}/${vmConnection.name}/terminal`,
                     )}>
-                  <Fa icon={faCircleInfo} />
+                  <Icon icon={faCircleInfo} />
                 </button>
               </Tooltip>
             </div>

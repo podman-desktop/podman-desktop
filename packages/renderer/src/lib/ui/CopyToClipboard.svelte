@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faPaste } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 export let clipboardData: string;
 export let title: string;
@@ -18,7 +18,7 @@ async function copyTextToClipboard(): Promise<void> {
       class="ml-5 {$$props.class ?? ''}"
       aria-label="Copy To Clipboard"
       on:click={copyTextToClipboard}>
-      <Fa icon={faPaste} />
+      <Icon icon={faPaste} />
     </button>
   </Tooltip>
 </div>

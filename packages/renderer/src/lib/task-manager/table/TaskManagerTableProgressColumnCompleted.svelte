@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleCheck, faCircleXmark } from '@fortawesome/free-regular-svg-icons';
 import { faCancel, faSquareCheck, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { TaskInfoUI } from '/@/stores/tasks';
 
@@ -38,7 +38,7 @@ const { icon, iconColor } = $derived.by(() => {
 
 <div class="flex flex-row items-center max-w-full" aria-label="completed status for task {task.name}" role="status">
   <div class={iconColor} role="img" aria-label="{task.status} icon of task {task.name}">
-    <Fa size="0.875x" icon={icon} />
+    <Icon size="0.875x" icon={icon} />
   </div>
   <div class="ml-1 text-[var(--pd-table-body-text)]">{task.status}</div>
 

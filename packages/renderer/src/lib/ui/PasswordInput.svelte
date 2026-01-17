@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import { Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { ComponentProps } from 'svelte';
 import { createEventDispatcher } from 'svelte';
-import Fa from 'svelte-fa';
 
 type Props = Omit<ComponentProps<Input>, 'value'> & {
   password?: string;
@@ -49,9 +49,9 @@ async function onShowHide(event: MouseEvent): Promise<void> {
       aria-label="show/hide"
       onclick={onShowHide}
       >{#if passwordHidden}
-        <Fa icon={faEye} />
+        <Icon icon={faEye} />
       {:else}
-        <Fa icon={faEyeSlash} />
+        <Icon icon={faEyeSlash} />
       {/if}
     </button>
   {/snippet}

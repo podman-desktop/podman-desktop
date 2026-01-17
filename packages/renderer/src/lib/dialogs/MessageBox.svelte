@@ -2,8 +2,8 @@
 import { faCircle, faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faCircleExclamation, faInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
-import Fa from 'svelte-fa';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { type ButtonsType, type DropdownType, type IconButtonType } from '/@api/dialog';
@@ -120,16 +120,16 @@ function getButtonType(b: boolean): ButtonType {
     {#snippet icon()}
       
         {#if type === 'error'}
-          <Fa class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
+          <Icon class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
         {:else if type === 'warning'}
-          <Fa class="h-4 w-4 text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
+          <Icon class="h-4 w-4 text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
         {:else if type === 'info'}
           <div class="flex">
-            <Fa class="h-4 w-4 place-content-center" icon={faCircle} />
-            <Fa class="h-4 w-4 place-content-center -ml-4 mt-px text-xs" icon={faInfo} />
+            <Icon class="h-4 w-4 place-content-center" icon={faCircle} />
+            <Icon class="h-4 w-4 place-content-center -ml-4 mt-px text-xs" icon={faInfo} />
           </div>
         {:else if type === 'question'}
-          <Fa class="h-4 w-4" icon={faCircleQuestion} />
+          <Icon class="h-4 w-4" icon={faCircleQuestion} />
         {/if}
       
       {/snippet}

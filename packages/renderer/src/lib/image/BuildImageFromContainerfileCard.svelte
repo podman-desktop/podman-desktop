@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faCircle, faPlusCircle, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { Checkbox, isFontAwesomeIcon, Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Component } from 'svelte';
 import { createEventDispatcher, onMount, tick } from 'svelte';
-import Fa from 'svelte-fa';
 
 let iconType: 'fontAwesome' | 'unknown' | undefined = $state(undefined);
 
@@ -110,13 +110,13 @@ onMount(() => {
       {#if !additionalItem}
         <Checkbox bind:checked={checked} title={title} on:click={handleClick} />
       {:else}
-        <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={faPlusCircle} size="1.5x" />
+        <Icon class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={faPlusCircle} size="1.5x" />
       {/if}
     </div>
     <div class="ml-2 text-left break-normal w-36 text-[var(--pd-content-card-text)]">{title}</div>
     {#if isDefault}
       <Tooltip tip="Default platform of your computer">
-        <Fa size="0.5x" class="text-[var(--pd-content-card-border-selected)] cursor-pointer" icon={faCircle} />
+        <Icon size="0.5x" class="text-[var(--pd-content-card-border-selected)] cursor-pointer" icon={faCircle} />
       </Tooltip>
     {/if}
   </div>
@@ -142,7 +142,7 @@ onMount(() => {
     <div class="flex grow justify-end">
       {#if icon}
         {#if iconType === 'fontAwesome'}
-          <Fa class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon as IconDefinition} size="1.5x" />
+          <Icon class="text-[var(--pd-content-card-icon)] cursor-pointer" icon={icon as IconDefinition} size="1.5x" />
         {:else if iconType === 'unknown'}
           {@const SvelteComponent = icon as Component}
           <SvelteComponent class="text-[var(--pd-content-card-icon)] cursor-pointer" size="24" />

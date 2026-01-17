@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -65,7 +65,7 @@ function pin(providerId: string): void {
           {#snippet left()}
             <div class="w-4">
               {#if pinned}
-                <Fa icon={faCheck} title="Pinned" />
+                <Icon icon={faCheck} title="Pinned" />
               {/if}
             </div>
           {/snippet}

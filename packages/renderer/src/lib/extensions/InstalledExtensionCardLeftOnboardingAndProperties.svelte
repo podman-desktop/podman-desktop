@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faFilePen, faGear } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import { derived, get, type Readable, type Unsubscriber } from 'svelte/store';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
@@ -87,7 +87,7 @@ function handleProperties(): void {
   class="m-auto {!isOnboardingEnabled ? 'cursor-not-allowed' : ''}"
   disabled={!isOnboardingEnabled}
   on:click={handleOnboarding}>
-  <Fa size="1x" icon={faGear} />
+  <Icon size="1x" icon={faGear} />
 </Button>
 
 <Button
@@ -97,5 +97,5 @@ function handleProperties(): void {
   class="m-auto {!hasAnyConfiguration ? 'cursor-not-allowed' : ''}"
   disabled={!hasAnyConfiguration}
   on:click={handleProperties}>
-  <Fa size="1x" icon={faFilePen} />
+  <Icon size="1x" icon={faFilePen} />
 </Button>

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
-import Fa from 'svelte-fa';
 
 import PreferencesConnectionCreationOrEditRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
@@ -61,7 +61,7 @@ onMount(() => {
       hideCloseButton={true} />
   {:else}
     <div aria-label="not supported warning" class="flex flex-row min-h-[500px] items-center justify-center">
-      <Fa size="1.125x" class="flex text-[var(--pd-state-warning)] mr-3" icon={faTriangleExclamation} />
+      <Icon size="1.125x" class="flex text-[var(--pd-state-warning)] mr-3" icon={faTriangleExclamation} />
       <span>This extension does not provide a component of type "{component}"</span>
     </div>
   {/if}

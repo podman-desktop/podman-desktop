@@ -1,7 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { TinroRouteMeta } from 'tinro';
 
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
@@ -22,7 +22,7 @@ let { entry, meta = $bindable(), iconWithTitle = false }: NavRegistryEntryProps 
     {#if entry.icon === undefined}
       {entry.name}
     {:else if entry.icon.faIcon}
-      <Fa icon={entry.icon.faIcon.definition} size={entry.icon.faIcon.size} />
+      <Icon icon={entry.icon.faIcon.definition} size={entry.icon.faIcon.size} />
     {:else if entry.icon.iconComponent}
       <!-- svelte-ignore svelte_component_deprecated -->
       <svelte:component this={entry.icon.iconComponent} size="24" />

@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { createEventDispatcher } from 'svelte';
-import Fa from 'svelte-fa';
 
 export let icon: IconDefinition;
 export let selected: boolean = false;
@@ -32,7 +32,7 @@ function onclick(): void {
   on:click={onclick}>
   <div class="flex flex-row items-center space-x-2 px-2 py-1 text-xs">
     {#if icon}
-      <Fa icon={icon} class={displayedIconClass} />
+      <Icon icon={icon} class={displayedIconClass} />
     {/if}
     <span><slot /></span>
   </div>

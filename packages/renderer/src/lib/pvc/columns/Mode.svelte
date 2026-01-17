@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCircle, faEye, faLock, faSitemap, faTh, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Label from '/@/lib/ui/Label.svelte';
 
@@ -35,7 +35,7 @@ function getModeAttributes(mode: string): { color: string; icon: IconDefinition 
 <div class="flex flex-row gap-1">
   {#each object.accessModes as mode, index (index)}
     <Label name={mode}>
-      <Fa size="1x" icon={getModeAttributes(mode).icon} class={getModeAttributes(mode).color} />
+      <Icon size="1x" icon={getModeAttributes(mode).icon} class={getModeAttributes(mode).color} />
     </Label>
   {/each}
 </div>

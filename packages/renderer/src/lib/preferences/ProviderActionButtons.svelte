@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
@@ -107,7 +107,7 @@ function handleSetup(): void {
           aria-label="Setup {provider.name}"
           title="Setup {provider.name}"
           onclick={handleSetup}>
-          <Fa size="0.9x" icon={faGear} />
+          <Icon size="0.9x" icon={faGear} />
         </Button>
       {/if}
 

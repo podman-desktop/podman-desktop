@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleInfo, faTriangleExclamation, faXmarkCircle } from '@fortawesome/free-solid-svg-icons';
 import type { AuditResult } from '@podman-desktop/api';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 interface Props {
   auditResult: AuditResult;
@@ -22,7 +22,7 @@ const errorRecords = $derived(auditResult?.records.filter(record => record.type 
       aria-label="error">
       <div class="flex flex-row">
         <div class="mr-3">
-          <Fa size="1.1x" class="text-[var(--pd-state-error)]" icon={faXmarkCircle} />
+          <Icon size="1.1x" class="text-[var(--pd-state-error)]" icon={faXmarkCircle} />
         </div>
         <div class="text-sm">
           {record.record}
@@ -40,7 +40,7 @@ const errorRecords = $derived(auditResult?.records.filter(record => record.type 
       aria-label="warning">
       <div class="flex flex-row">
         <div class="mr-3">
-          <Fa size="1.1x" class="flex text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
+          <Icon size="1.1x" class="flex text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
         </div>
         <div class="text-sm">
           {record.record}
@@ -58,7 +58,7 @@ const errorRecords = $derived(auditResult?.records.filter(record => record.type 
       aria-label="info">
       <div class="flex flex-row">
         <div class="mr-3">
-          <Fa size="1.1x" class="text-[var(--pd-state-info)]" icon={faCircleInfo} />
+          <Icon size="1.1x" class="text-[var(--pd-state-info)]" icon={faCircleInfo} />
         </div>
         <div class="text-sm">
           {record.record}

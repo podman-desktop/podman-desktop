@@ -2,8 +2,8 @@
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import { faCopy, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import { clearKubeUIContextErrors, setKubeUIContextError } from '/@/lib/kube/KubeContextUI';
@@ -330,7 +330,7 @@ async function connect(contextName: string): Promise<void> {
                   <div><Button on:click={(): Promise<void> => connect(context.name)}>Connect</Button></div>
                 {/if}
                 {#if !context.podsPermitted || !context.deploymentsPermitted}
-                  <Tooltip tip={context.notPermittedHelp}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip>
+                  <Tooltip tip={context.notPermittedHelp}><div><Icon size="1x" icon={faQuestionCircle} /></div></Tooltip>
                 {/if}
               {:else}
                 <div class="flex flex-col space-y-2">

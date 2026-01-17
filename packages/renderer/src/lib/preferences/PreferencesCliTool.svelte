@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircleArrowDown, faCircleArrowUp, faCircleXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
@@ -292,7 +292,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
   </div>
   {#if showError}
     <div class="flex flex-row items-center text-xs text-[var(--pd-state-error)] ml-[200px] mt-2">
-      <Fa icon={faCircleXmark} class="mr-1 text-[var(--pd-state-error)]" />
+      <Icon icon={faCircleXmark} class="mr-1 text-[var(--pd-state-error)]" />
       <span>{errorMessage}</span>
       <Button
         type="link"
