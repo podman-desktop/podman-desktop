@@ -19,7 +19,24 @@
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
-import { navigationRegistry } from '/@/stores/navigation/navigation-registry';
+import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
+import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
+import { settingsNavigationEntries } from '/@/PreferencesNavigation';
+
+import { navigationRegistry, type NavigationRegistryEntry } from './navigation/navigation-registry';
+
+export const BACK = 'back';
+export const FORWARD = 'forward';
+
+export type Direction = typeof BACK | typeof FORWARD;
+
+export type HistoryEntryIcon = NavigationRegistryEntry['icon'];
+
+export interface HistoryEntry {
+  index: number;
+  name: string;
+  icon?: HistoryEntryIcon;
+}
 
 /**
  * Navigation history store
@@ -36,6 +53,109 @@ export const navigationHistory = $state<{
 });
 
 let isNavigatingHistory = false;
+
+// Convert URL to display name
+function urlToDisplayName(url: string): string {
+  const path = url.split('?')[0];
+  const parts = path.split('/').filter(Boolean);
+
+  if (parts.length === 0) return 'Dashboard';
+
+  const mainPart = parts[0];
+  let name = mainPart.charAt(0).toUpperCase() + mainPart.slice(1);
+
+  if (parts.length > 1 && parts[1]) {
+    const detail = parts[1];
+    if (detail.length > 12) {
+      name += `: ${detail.substring(0, 12)}...`;
+    } else {
+      name += `: ${detail}`;
+    }
+  }
+
+  return name;
+}
+
+// Find navigation entry that matches a URL, returning the entry and breadcrumb path
+function findNavigationEntry(
+  url: string,
+  entries: NavigationRegistryEntry[],
+  parentPath: string[] = [],
+): { entry: NavigationRegistryEntry; breadcrumb: string[] } | undefined {
+  const path = url.split('?')[0];
+
+  for (const entry of entries) {
+    const currentPath = [...parentPath, entry.name];
+
+    // Check nested items (for groups and submenus)
+    if (entry.items) {
+      const found = findNavigationEntry(url, entry.items, currentPath);
+      if (found) return found;
+    }
+
+    // Check if URL matches this entry's link
+    if (path === entry.link || path.startsWith(entry.link + '/')) {
+      return { entry, breadcrumb: currentPath };
+    }
+  }
+
+  return undefined;
+}
+
+// Get entry info (name and icon) for a URL
+function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
+  const path = url.split('?')[0];
+
+  // Handle Dashboard specially
+  if (path === '/') {
+    return {
+      name: 'Dashboard',
+      icon: { iconComponent: DashboardIcon },
+    };
+  }
+
+  // Handle Preferences base route (/preferences/default/)
+  if (path.startsWith('/preferences/default/')) {
+    return {
+      name: 'Preferences',
+      icon: { iconComponent: SettingsIcon },
+    };
+  }
+
+  // Check navigation registry (includes webviews, extensions, containers, etc.)
+  const registry = get(navigationRegistry);
+  const result = findNavigationEntry(url, registry);
+  if (result) {
+    // Use breadcrumb for nested entries (e.g., "Kubernetes > Pods")
+    const name = result.breadcrumb.length > 1 ? result.breadcrumb.join(' > ') : result.breadcrumb[0];
+    return {
+      name,
+      icon: result.entry.icon,
+    };
+  }
+
+  // Check settings navigation entries for routes not in navigation registry
+  // Sort by href length descending to match most specific route first
+  const sortedEntries = [...settingsNavigationEntries].sort((a, b) => b.href.length - a.href.length);
+  for (const route of sortedEntries) {
+    if (
+      path === route.href ||
+      path.startsWith(route.href + '/') ||
+      (route.href.endsWith('/') && path.startsWith(route.href))
+    ) {
+      return {
+        name: route.title,
+        icon: route.icon ? { iconComponent: route.icon } : undefined,
+      };
+    }
+  }
+
+  // Fallback to URL-based name
+  return {
+    name: urlToDisplayName(url),
+    icon: undefined,
+  };
+}
 
 // Core navigation function
 function navigateToIndex(index: number): boolean {
@@ -72,6 +192,40 @@ export function goForward(): void {
 function isSubmenuBaseRoute(url: string): boolean {
   const registry = get(navigationRegistry);
   return registry.some(entry => entry.type === 'submenu' && entry.link === url);
+}
+
+export function goToHistoryIndex(index: number): void {
+  navigateToIndex(index);
+}
+
+// Get history entries for a direction
+function getEntries(direction: Direction): HistoryEntry[] {
+  const entries: HistoryEntry[] = [];
+
+  const start = direction === BACK ? navigationHistory.index - 1 : navigationHistory.index + 1;
+  const condition = (i: number): boolean => (direction === BACK ? i >= 0 : i < navigationHistory.stack.length);
+  const step = direction === BACK ? -1 : 1;
+
+  for (let i = start; condition(i); i += step) {
+    const url = navigationHistory.stack[i];
+    if (url) {
+      const info = getEntryInfo(url);
+      entries.push({
+        index: i,
+        name: info.name,
+        icon: info.icon,
+      });
+    }
+  }
+  return entries;
+}
+
+export function getBackEntries(): HistoryEntry[] {
+  return getEntries(BACK);
+}
+
+export function getForwardEntries(): HistoryEntry[] {
+  return getEntries(FORWARD);
 }
 
 // Initialize router subscription
