@@ -436,7 +436,7 @@ $effect(() => {
         class="text-[var(--pd-content-text)] underline underline-offset-2">Extensions</a>
     </span>
   {/snippet}
-  <div class="h-full" role="region" aria-label="Featured Provider Resources">
+  <div class="pb-0.5" role="region" aria-label="Featured Provider Resources">
     <EmptyScreen
       aria-label="no-resource-panel"
       icon={EngineIcon}
