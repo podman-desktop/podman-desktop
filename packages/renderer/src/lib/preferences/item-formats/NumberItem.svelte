@@ -8,7 +8,7 @@ export let value: number | undefined;
 export let onChange = (_id: string, _value: number): void => {};
 export let invalidRecord = (_error: string): void => {};
 
-let valueUpdateTimeout: NodeJS.Timeout;
+let valueUpdateTimeout: ReturnType<typeof setTimeout>;
 
 let recordValue: number = value ?? 0;
 let lastValue: number;

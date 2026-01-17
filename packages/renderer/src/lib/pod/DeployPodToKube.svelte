@@ -26,7 +26,7 @@ let deployStarted = false;
 let deployFinished = false;
 let deployError = '';
 let deployWarning = '';
-let updatePodInterval: NodeJS.Timeout;
+let updatePodInterval: ReturnType<typeof setTimeout>;
 let openshiftConsoleURL: string | undefined;
 let openshiftRouteGroupSupported = false;
 

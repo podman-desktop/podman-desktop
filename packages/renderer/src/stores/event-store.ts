@@ -207,10 +207,10 @@ export class EventStore<T> {
     addStore(eventStoreInfo);
 
     // for debounce
-    let timeout: NodeJS.Timeout | undefined;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
     // for throttling every 5s if not already done
-    let timeoutThrottle: NodeJS.Timeout | undefined;
+    let timeoutThrottle: ReturnType<typeof setTimeout> | undefined;
 
     const update = async (eventName: string, args?: unknown[]): Promise<void> => {
       const needUpdate = await this.checkForUpdate(eventName, args);

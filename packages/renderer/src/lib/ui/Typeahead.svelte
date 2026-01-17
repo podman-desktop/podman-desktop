@@ -37,7 +37,7 @@ let {
   compare,
 }: Props = $props();
 
-let inputDelayTimeout: NodeJS.Timeout | undefined = undefined;
+let inputDelayTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 let input: HTMLInputElement | undefined = $state();
 let list: HTMLDivElement | undefined = $state();
 let inputDiv: HTMLDivElement | undefined = $state();

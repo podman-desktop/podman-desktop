@@ -11,9 +11,9 @@ let systemReady = false;
 
 let toggle = false;
 
-let loadingSequence: NodeJS.Timeout;
+let loadingSequence: ReturnType<typeof setTimeout>;
 
-let extensionsStarterChecker: NodeJS.Timeout;
+let extensionsStarterChecker: ReturnType<typeof setTimeout>;
 
 onMount(async () => {
   loadingSequence = setInterval(() => {
