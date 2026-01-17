@@ -9,7 +9,8 @@
     "managed": {
       "macOS": "/Library/Application Support/io.podman_desktop.PodmanDesktop",
       "windows": "%PROGRAMDATA%\\Podman Desktop",
-      "linux": "/usr/share/podman-desktop"
+      "linux": "/usr/share/podman-desktop",
+      "flatpak": "/run/host/usr/share/podman-desktop"
     }
   },
   "telemetry": {

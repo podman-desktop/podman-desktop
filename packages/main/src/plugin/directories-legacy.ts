@@ -103,6 +103,10 @@ export class LegacyDirectories implements Directories {
       // replace %PROGRAMDATA% in the path
       return product.paths.managed.windows.replace('%PROGRAMDATA%', programData);
     } else if (isLinux()) {
+      // biome-ignore lint/complexity/useLiteralKeys: FLATPAK_ID comes from an index signature
+      if (process.env['FLATPAK_ID']) {
+        return product.paths.managed.flatpak;
+      }
       return product.paths.managed.linux;
     }
     // Fallback to Linux-style path
