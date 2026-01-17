@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,41 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
+import * as asn1js from 'asn1js';
 import { injectable } from 'inversify';
+import * as pkijs from 'pkijs';
 import wincaAPI from 'win-ca/api';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
+
 import { spawnWithPromise } from './util/spawn-promise.js';
+
+/**
+ * X.500 Distinguished Name OID constants
+ * @see https://www.alvestrand.no/objectid/2.5.4.html
+ */
+export const OID_CN = '2.5.4.3'; // Common Name
+export const OID_C = '2.5.4.6'; // Country
+export const OID_L = '2.5.4.7'; // Locality
+export const OID_ST = '2.5.4.8'; // State or Province
+export const OID_O = '2.5.4.10'; // Organization
+export const OID_OU = '2.5.4.11'; // Organizational Unit
+export const OID_E = '1.2.840.113549.1.9.1'; // Email Address
+export const OID_BASIC_CONSTRAINTS = '2.5.29.19'; // Basic Constraints extension
+
+/**
+ * Map of OID to human-readable RDN attribute names
+ */
+export const OID_NAME_MAP: Record<string, string> = {
+  [OID_CN]: 'CN',
+  [OID_C]: 'C',
+  [OID_L]: 'L',
+  [OID_ST]: 'ST',
+  [OID_O]: 'O',
+  [OID_OU]: 'OU',
+  [OID_E]: 'E',
+};
 
 /**
  * Provides access to the certificates of the underlying platform.
@@ -159,5 +189,119 @@ export class Certificates {
         return [];
       }
     }
+  }
+
+  /**
+   * Convert PEM to ArrayBuffer for PKI.js
+   */
+  private pemToArrayBuffer(pem: string): ArrayBuffer {
+    const b64 = pem
+      .replace(/-----BEGIN CERTIFICATE-----/g, '')
+      .replace(/-----END CERTIFICATE-----/g, '')
+      .replace(/\s/g, '');
+    const binaryString = Buffer.from(b64, 'base64').toString('binary');
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  /**
+   * Get RDN value by type OID from RelativeDistinguishedNames
+   * Common OIDs: CN=2.5.4.3, O=2.5.4.10, OU=2.5.4.11, C=2.5.4.6
+   */
+  private getRDNValue(rdns: pkijs.RelativeDistinguishedNames, oid: string): string {
+    for (const rdn of rdns.typesAndValues) {
+      if (rdn.type === oid) {
+        return rdn.value.valueBlock.value?.toString() ?? '';
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Format RelativeDistinguishedNames as a string
+   */
+  private formatDN(rdns: pkijs.RelativeDistinguishedNames): string {
+    return rdns.typesAndValues
+      .map((rdn: pkijs.AttributeTypeAndValue) => {
+        const name = OID_NAME_MAP[rdn.type] ?? rdn.type;
+        const value = rdn.value.valueBlock.value?.toString() ?? '';
+        return `${name}=${value}`;
+      })
+      .join(', ');
+  }
+
+  /**
+   * Get display name with fallback: CN → O → Full DN
+   */
+  private getDisplayName(rdns: pkijs.RelativeDistinguishedNames): string {
+    const cn = this.getRDNValue(rdns, OID_CN);
+    if (cn) return cn;
+
+    const org = this.getRDNValue(rdns, OID_O);
+    if (org) return org;
+
+    return this.formatDN(rdns);
+  }
+
+  /**
+   * Parse a PEM-encoded certificate using PKI.js.
+   * @param pem The PEM-encoded certificate string.
+   * @returns The parsed certificate information (without PEM for security).
+   */
+  parseCertificate(pem: string): CertificateInfo {
+    try {
+      const asn1 = asn1js.fromBER(this.pemToArrayBuffer(pem));
+      if (asn1.offset === -1) {
+        throw new Error('Failed to parse ASN.1 structure');
+      }
+      const cert = new pkijs.Certificate({ schema: asn1.result });
+
+      // Get basicConstraints for isCA
+      let isCA = false;
+      const basicConstraintsExt = cert.extensions?.find((ext: pkijs.Extension) => ext.extnID === OID_BASIC_CONSTRAINTS);
+      if (basicConstraintsExt?.parsedValue) {
+        // See https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.9 for the definition of cA
+        isCA = (basicConstraintsExt.parsedValue as pkijs.BasicConstraints).cA ?? false;
+      }
+
+      // Convert serial number to hex string
+      const serialNumber = Array.from(cert.serialNumber.valueBlock.valueHexView)
+        .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+        .join('');
+
+      return {
+        subjectCommonName: this.getDisplayName(cert.subject),
+        subject: this.formatDN(cert.subject),
+        issuerCommonName: this.getDisplayName(cert.issuer),
+        issuer: this.formatDN(cert.issuer),
+        serialNumber,
+        validFrom: cert.notBefore.value.toISOString(),
+        validTo: cert.notAfter.value.toISOString(),
+        isCA,
+      };
+    } catch (error) {
+      console.log('error while parsing certificate', error);
+      return {
+        subjectCommonName: 'Non parsable certificate',
+        subject: 'Non parsable certificate',
+        issuerCommonName: '',
+        issuer: '',
+        serialNumber: '',
+        validFrom: undefined,
+        validTo: undefined,
+        isCA: false,
+      };
+    }
+  }
+
+  /**
+   * Get all certificates as parsed CertificateInfo objects.
+   * @returns An array of parsed certificate information.
+   */
+  getAllCertificateInfos(): CertificateInfo[] {
+    return this.allCertificates.map(pem => this.parseCertificate(pem));
   }
 }
