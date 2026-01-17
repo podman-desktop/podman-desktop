@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { cp } from 'node:fs/promises';
+import { cp, readFile, rm } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -201,6 +201,27 @@ export class ExtensionInstaller {
 
     sendLog('Downloading and extract layers...');
     await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, sendLog);
+
+    if (isPDExtension) {
+      // check if the extension is already installed for that provider and name
+      // we need to read the package.json file from the tmp folder
+      const extensionPackageJsonPath = path.join(tmpFolderPath, 'extension', 'package.json');
+      if (fs.existsSync(extensionPackageJsonPath)) {
+        const packageJsonContent = await readFile(extensionPackageJsonPath, 'utf8');
+        const packageJson = JSON.parse(packageJsonContent);
+        if (packageJson.name && packageJson.publisher) {
+          const extensionId = `${packageJson.publisher}.${packageJson.name}`;
+          const extensions = await this.extensionLoader.listExtensions();
+          const alreadyInstalledExtension = extensions.find(extension => extension.id === extensionId);
+          if (alreadyInstalledExtension) {
+            // delete the tmp folder
+            await rm(tmpFolderPath, { recursive: true });
+            sendError(`Extension ${packageJson.publisher}.${packageJson.name} is already installed.`);
+            return;
+          }
+        }
+      }
+    }
 
     sendLog('Filtering image content...');
     if (isPDExtension) {
