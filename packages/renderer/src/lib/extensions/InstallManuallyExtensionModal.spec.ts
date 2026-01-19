@@ -119,7 +119,7 @@ test('install button should always be disable when extensionInstallFromImage is 
 
   await userEvent.click(installButton);
 
-  logCallback('Downloading sha256:random-sha256.tar - 100% - (55132/521578)');
+  logCallback('Downloading sha256:random-sha256.tar - 100% - (521578/521578)');
 
   const progressBar = screen.getByRole('progressbar', { name: 'Installation progress' });
   await vi.waitFor(() => {
