@@ -54,26 +54,136 @@ export const navigationHistory = $state<{
 
 let isNavigatingHistory = false;
 
-// Convert URL to display name
-function urlToDisplayName(url: string): string {
+// Tab names that appear at the end of detail URLs
+const TAB_NAMES = ['summary', 'logs', 'inspect', 'kube', 'terminal', 'k8s-terminal', 'tty', 'history'];
+
+// Action keywords that appear in URLs (not resource names)
+const ACTION_KEYWORDS = ['build', 'pull', 'import', 'save', 'load', 'create', 'play'];
+
+// Helper: Parse URL into path and parts
+interface ParsedUrl {
+  path: string;
+  parts: string[];
+}
+
+function parseUrl(url: string): ParsedUrl {
   const path = url.split('?')[0];
   const parts = path.split('/').filter(Boolean);
+  return { path, parts };
+}
 
-  if (parts.length === 0) return 'Dashboard';
+// Helper: Capitalize first letter
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
-  const mainPart = parts[0];
-  let name = mainPart.charAt(0).toUpperCase() + mainPart.slice(1);
+// Helper: Check if a part is a tab name
+function isTabName(part: string): boolean {
+  return TAB_NAMES.includes(part.toLowerCase());
+}
 
-  if (parts.length > 1 && parts[1]) {
-    const detail = parts[1];
-    if (detail.length > 12) {
-      name += `: ${detail.substring(0, 12)}...`;
-    } else {
-      name += `: ${detail}`;
-    }
+// Helper: Truncate long strings
+function truncate(str: string, maxLength: number): string {
+  return str.length > maxLength ? `${str.substring(0, maxLength)}...` : str;
+}
+
+/**
+ * Extract the base resource path from a URL (removes the tab if present)
+ * e.g., /containers/abc123/summary -> /containers/abc123
+ */
+function getBaseResourcePath(url: string): string {
+  const { path, parts } = parseUrl(url);
+
+  if (parts.length === 0) return path;
+
+  const lastPart = parts[parts.length - 1] ?? '';
+
+  // If last part is a tab name, remove it
+  if (isTabName(lastPart)) {
+    return '/' + parts.slice(0, -1).join('/');
   }
 
-  return name;
+  return path;
+}
+
+/**
+ * Check if two URLs are the same resource with different tabs
+ * (e.g., /containers/abc/summary vs /containers/abc/logs)
+ */
+function isSameResourceDifferentTab(url1: string, url2: string): boolean {
+  if (!url1 || !url2) return false;
+
+  const basePath1 = getBaseResourcePath(url1);
+  const basePath2 = getBaseResourcePath(url2);
+  const { path: path1 } = parseUrl(url1);
+  const { path: path2 } = parseUrl(url2);
+
+  // Must have the same base path and both must have tabs
+  return basePath1 === basePath2 && basePath1 !== path1 && basePath2 !== path2;
+}
+
+/**
+ * Extract resource information from URL parts
+ */
+function extractResourceInfo(parts: string[]): { typeLabel: string; name?: string } {
+  if (parts.length === 0) return { typeLabel: 'Dashboard' };
+
+  const resourceType = parts[0];
+  let typeLabel = capitalize(resourceType);
+  let name: string | undefined;
+
+  // Kubernetes resources: /kubernetes/pods/:name/:namespace
+  if (resourceType === 'kubernetes') {
+    if (parts.length >= 3) {
+      // Detail page: has resource name
+      typeLabel = capitalize(parts[1] ?? resourceType);
+      name = decodeURIComponent(parts[2] ?? '');
+    }
+    // else: base route like /kubernetes/pods - no resource name, typeLabel stays 'Kubernetes'
+  }
+  // Resources with middleware: /pods/podman/:name or /compose/details/:name
+  else if ((parts[1] === 'podman' || parts[1] === 'details') && parts.length >= 3) {
+    name = decodeURIComponent(parts[2] ?? '');
+  }
+  // Generic resources: /containers/:name (but not kubernetes base routes)
+  else if (parts.length >= 2 && !ACTION_KEYWORDS.includes(parts[1] ?? '')) {
+    name = decodeURIComponent(parts[1] ?? '');
+  }
+
+  return { typeLabel, name };
+}
+
+// Convert URL to display name
+function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
+  const { parts } = parseUrl(url);
+
+  if (parts.length === 0) return 'Dashboard';
+  if (parts.length === 1) return capitalize(parts[0]);
+
+  // Remove tab from parts if present
+  const lastPart = parts[parts.length - 1] ?? '';
+  const contentParts = isTabName(lastPart) ? parts.slice(0, -1) : parts;
+
+  // Extract resource type and name
+  const { typeLabel, name } = extractResourceInfo(contentParts);
+
+  // If we have a resource name (detail page)
+  if (name) {
+    // Use full registry breadcrumb + resource name
+    // e.g., "Kubernetes > ConfigMaps & Secrets > my-config"
+    const breadcrumb =
+      registryBreadcrumb && registryBreadcrumb.length > 0
+        ? [...registryBreadcrumb, truncate(name, 20)]
+        : [typeLabel, truncate(name, 20)];
+    return breadcrumb.join(' > ');
+  }
+
+  // No resource name (base route) - use registry breadcrumb if available
+  if (registryBreadcrumb && registryBreadcrumb.length > 0) {
+    return registryBreadcrumb.join(' > ');
+  }
+
+  return typeLabel;
 }
 
 // Find navigation entry that matches a URL, returning the entry and breadcrumb path
@@ -82,7 +192,7 @@ function findNavigationEntry(
   entries: NavigationRegistryEntry[],
   parentPath: string[] = [],
 ): { entry: NavigationRegistryEntry; breadcrumb: string[] } | undefined {
-  const path = url.split('?')[0];
+  const { path } = parseUrl(url);
 
   for (const entry of entries) {
     const currentPath = [...parentPath, entry.name];
@@ -102,47 +212,39 @@ function findNavigationEntry(
   return undefined;
 }
 
+/**
+ * Check if a URL matches a route pattern
+ */
+function matchesRoute(url: string, routeHref: string): boolean {
+  return url === routeHref || url.startsWith(routeHref + '/') || (routeHref.endsWith('/') && url.startsWith(routeHref));
+}
+
 // Get entry info (name and icon) for a URL
 function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
-  const path = url.split('?')[0];
+  const { path } = parseUrl(url);
 
-  // Handle Dashboard specially
+  // Handle Dashboard
   if (path === '/') {
-    return {
-      name: 'Dashboard',
-      icon: { iconComponent: DashboardIcon },
-    };
+    return { name: 'Dashboard', icon: { iconComponent: DashboardIcon } };
   }
 
-  // Handle Preferences base route (/preferences/default/)
+  // Handle Preferences
   if (path.startsWith('/preferences/default/')) {
-    return {
-      name: 'Preferences',
-      icon: { iconComponent: SettingsIcon },
-    };
+    return { name: 'Preferences', icon: { iconComponent: SettingsIcon } };
   }
 
-  // Check navigation registry (includes webviews, extensions, containers, etc.)
+  // Check navigation registry
   const registry = get(navigationRegistry);
   const result = findNavigationEntry(url, registry);
   if (result) {
-    // Use breadcrumb for nested entries (e.g., "Kubernetes > Pods")
-    const name = result.breadcrumb.length > 1 ? result.breadcrumb.join(' > ') : result.breadcrumb[0];
-    return {
-      name,
-      icon: result.entry.icon,
-    };
+    // Always use urlToDisplayName, passing registry breadcrumb for base routes
+    return { name: urlToDisplayName(url, result.breadcrumb), icon: result.entry.icon };
   }
 
-  // Check settings navigation entries for routes not in navigation registry
-  // Sort by href length descending to match most specific route first
+  // Check settings navigation entries (sorted by specificity)
   const sortedEntries = [...settingsNavigationEntries].sort((a, b) => b.href.length - a.href.length);
   for (const route of sortedEntries) {
-    if (
-      path === route.href ||
-      path.startsWith(route.href + '/') ||
-      (route.href.endsWith('/') && path.startsWith(route.href))
-    ) {
+    if (matchesRoute(path, route.href)) {
       return {
         name: route.title,
         icon: route.icon ? { iconComponent: route.icon } : undefined,
@@ -151,10 +253,7 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
   }
 
   // Fallback to URL-based name
-  return {
-    name: urlToDisplayName(url),
-    icon: undefined,
-  };
+  return { name: urlToDisplayName(url), icon: undefined };
 }
 
 // Core navigation function
@@ -228,6 +327,17 @@ export function getForwardEntries(): HistoryEntry[] {
   return getEntries(FORWARD);
 }
 
+/**
+ * Check if a URL is a detail page root that will redirect to a tab
+ * (e.g., /containers/abc123/ which redirects to /containers/abc123/summary)
+ */
+function isDetailPageRoot(url: string): boolean {
+  const { path, parts } = parseUrl(url);
+
+  // Must end with / and not be just '/' and have at least 2 segments
+  return path.endsWith('/') && path !== '/' && parts.length >= 2;
+}
+
 // Initialize router subscription
 router.subscribe(navigation => {
   if (navigation.url) {
@@ -242,14 +352,24 @@ router.subscribe(navigation => {
       return;
     }
 
+    // Skip detail page roots (e.g., /containers/abc123/) as they immediately redirect to a tab
+    if (isDetailPageRoot(navigation.url)) {
+      return;
+    }
+
     // Truncate forward history if we're not at the end
     if (navigationHistory.index < navigationHistory.stack.length - 1) {
       navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
     }
 
-    // Only add if different from current
     const currentUrl = navigationHistory.stack[navigationHistory.index];
-    if (currentUrl !== navigation.url) {
+
+    // Check if we're just switching tabs on the same resource
+    if (currentUrl && isSameResourceDifferentTab(currentUrl, navigation.url)) {
+      // Update the current entry instead of adding a new one
+      navigationHistory.stack[navigationHistory.index] = navigation.url;
+    } else if (currentUrl !== navigation.url) {
+      // Add new entry for different resources
       navigationHistory.stack = [...navigationHistory.stack, navigation.url];
       navigationHistory.index = navigationHistory.stack.length - 1;
     }

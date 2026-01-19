@@ -28,12 +28,49 @@ import {
   navigationHistory,
 } from './navigation-history.svelte';
 
-vi.mock(import('tinro'));
-
 vi.mock(import('./navigation/navigation-registry'), async () => {
   const { writable } = await import('svelte/store');
+
+  // Mock navigation registry with kubernetes submenu for testing
+  const mockRegistry = [
+    {
+      name: 'Kubernetes',
+      icon: {},
+      link: '/kubernetes',
+      tooltip: 'Kubernetes',
+      counter: 0,
+      type: 'submenu' as const,
+      items: [
+        {
+          name: 'Pods',
+          icon: {},
+          link: '/kubernetes/pods',
+          tooltip: 'Pods',
+          counter: 0,
+          type: 'entry' as const,
+        },
+        {
+          name: 'ConfigMaps & Secrets',
+          icon: {},
+          link: '/kubernetes/configmapsSecrets',
+          tooltip: 'ConfigMaps & Secrets',
+          counter: 0,
+          type: 'entry' as const,
+        },
+      ],
+    },
+    {
+      name: 'Containers',
+      icon: {},
+      link: '/containers',
+      tooltip: 'Containers',
+      counter: 0,
+      type: 'entry' as const,
+    },
+  ];
+
   return {
-    navigationRegistry: writable([]),
+    navigationRegistry: writable(mockRegistry),
   };
 });
 
@@ -189,7 +226,7 @@ describe('getBackEntries', () => {
 
     expect(entries).toEqual([
       { index: 1, name: 'Images', icon: undefined },
-      { index: 0, name: 'Containers', icon: undefined },
+      { index: 0, name: 'Containers', icon: {} },
     ]);
   });
 });
@@ -218,5 +255,128 @@ describe('getForwardEntries', () => {
       { index: 1, name: 'Images', icon: undefined },
       { index: 2, name: 'Pods', icon: undefined },
     ]);
+  });
+});
+
+describe('submenu navigation', () => {
+  test('should show submenu parent > resource type breadcrumb', () => {
+    // Simulate navigation: Dashboard -> Kubernetes Pods list -> Specific pod
+    navigationHistory.stack = ['/', '/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/summary'];
+    navigationHistory.index = 2;
+
+    const backEntries = getBackEntries();
+
+    expect(backEntries.length).toBe(2);
+    // getBackEntries returns in reverse order, so [0] is index 1, [1] is index 0
+    // backEntries[0] = '/kubernetes/pods' - should show full breadcrumb from registry
+    expect(backEntries[0].name).toBe('Kubernetes > Pods');
+    // backEntries[1] = '/' - should show Dashboard
+    expect(backEntries[1].name).toBe('Dashboard');
+
+    // The current entry (detail page) should show full breadcrumb with resource name
+    const forwardEntries = getForwardEntries();
+    expect(forwardEntries.length).toBe(0); // We're at the end
+  });
+
+  test('should preserve special characters in submenu breadcrumbs', () => {
+    // Test ConfigMaps & Secrets with special character '&'
+    navigationHistory.stack = [
+      '/',
+      '/kubernetes/configmapsSecrets',
+      '/kubernetes/configmapsSecrets/my-config/default/summary',
+    ];
+    navigationHistory.index = 2;
+
+    const backEntries = getBackEntries();
+
+    expect(backEntries.length).toBe(2);
+    // backEntries[0] = '/kubernetes/configmapsSecrets' base route
+    // Should show proper name from registry with '&' preserved
+    expect(backEntries[0].name).toBe('Kubernetes > ConfigMaps & Secrets');
+    // backEntries[1] = '/' Dashboard
+    expect(backEntries[1].name).toBe('Dashboard');
+  });
+
+  test('should show full breadcrumb for detail pages', () => {
+    // Test detail page shows: parent > resource type > resource name
+    navigationHistory.stack = [
+      '/kubernetes/configmapsSecrets/my-config/default/summary',
+      '/kubernetes/configmapsSecrets',
+    ];
+    navigationHistory.index = 1;
+
+    const entries = getBackEntries();
+    expect(entries.length).toBe(1);
+    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets > my-config');
+  });
+});
+
+describe('tab navigation for detail pages', () => {
+  test('should only have one entry per resource when navigating through tabs', () => {
+    // Start by navigating to containers list
+    router.goto('/containers');
+    expect(navigationHistory.stack).toEqual(['/containers']);
+    expect(navigationHistory.index).toBe(0);
+
+    // Navigate to container detail page summary tab (should add new entry)
+    router.goto('/containers/abc123/summary');
+    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
+    expect(navigationHistory.index).toBe(1);
+
+    // Switch to logs tab (should UPDATE current entry, not add new one)
+    router.goto('/containers/abc123/logs');
+
+    // Stack should still only have 2 entries (not 3), with logs replacing summary
+    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/logs']);
+    expect(navigationHistory.stack.length).toBe(2);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('should show same display name for different tabs of same resource', () => {
+    // Set up stack as if user switched through tabs (but only one entry exists due to update logic)
+    navigationHistory.stack = ['/containers', '/containers/abc123/inspect'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+
+    // Should show resource name without tab name
+    expect(entries).toEqual([{ index: 1, name: 'Containers > abc123', icon: {} }]);
+    // Tab name should not appear in display
+    expect(entries[0].name).not.toContain('Inspect');
+    expect(entries[0].name).not.toContain('Summary');
+    expect(entries[0].name).not.toContain('Logs');
+  });
+
+  test('should show resource name without tab for submenu resources', () => {
+    // Kubernetes pod with tab navigation
+    navigationHistory.stack = ['/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/logs'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+
+    expect(entries.length).toBe(1);
+    expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod');
+  });
+
+  test('should skip detail page root URLs ending with / since we are being immediately redirected to the logs tab', () => {
+    // When going to specific containers or pods, we are being immediately redirected to the logs tab
+    // This simulates: user clicks on container -> router goes to /containers/abc123/ -> immediately redirects to /containers/abc123/logs
+
+    navigationHistory.stack = ['/'];
+    navigationHistory.index = 0;
+
+    // Simulate the router subscription receiving the root URL first (should be skipped by isDetailPageRoot)
+    router.goto('/containers/abc123/');
+
+    // Should not have added the root URL to history
+    expect(navigationHistory.stack).toEqual(['/']);
+    expect(navigationHistory.index).toBe(0);
+
+    // Then simulate the immediate redirect to logs tab (should be added)
+    router.goto('/containers/abc123/logs');
+
+    // Now should have both dashboard and logs in history, skipping the root URL
+    expect(navigationHistory.stack).toEqual(['/', '/containers/abc123/logs']);
+    expect(navigationHistory.index).toBe(1);
   });
 });
