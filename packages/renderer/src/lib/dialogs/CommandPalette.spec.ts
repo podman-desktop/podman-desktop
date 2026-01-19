@@ -423,39 +423,41 @@ describe('Command Palette', () => {
     },
   ];
 
-  test.each(shortcutTabTestCases)(
-    'Expect that $description opens command palette with $expectedTabText tab selected',
-    async ({ shortcut, expectedTabText }) => {
-      render(CommandPalette);
+  test.each(
+    shortcutTabTestCases,
+  )('Expect that $description opens command palette with $expectedTabText tab selected', async ({
+    shortcut,
+    expectedTabText,
+  }) => {
+    render(CommandPalette);
 
-      // check command palette is not displayed initially
-      const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-      expect(inputBefore).not.toBeInTheDocument();
+    // check command palette is not displayed initially
+    const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    expect(inputBefore).not.toBeInTheDocument();
 
-      // press the shortcut
-      await userEvent.keyboard(shortcut);
+    // press the shortcut
+    await userEvent.keyboard(shortcut);
 
-      // check command palette is now displayed
-      const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
-      expect(input).toBeInTheDocument();
+    // check command palette is now displayed
+    const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
+    expect(input).toBeInTheDocument();
 
-      const expectedTab = screen.getByRole('button', { name: expectedTabText });
-      expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-      expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+    const expectedTab = screen.getByRole('button', { name: expectedTabText });
+    expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+    expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
-      const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
-      const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
-      const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
-      const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
+    const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
+    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
 
-      [allTab, commandsTab, docsTab, gotoTab].forEach(button => {
-        if (button !== expectedTab) {
-          expect(button).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
-          expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
-        }
-      });
-    },
-  );
+    [allTab, commandsTab, docsTab, gotoTab].forEach(button => {
+      if (button !== expectedTab) {
+        expect(button).not.toHaveClass('text-[var(--pd-button-tab-text-selected)]');
+        expect(button).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+      }
+    });
+  });
 
   test('Expect that clicking tabs switches between them correctly', async () => {
     // Set up some commands so tab switching logic gets triggered
@@ -542,5 +544,29 @@ describe('Command Palette', () => {
     expect(commandsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(docsTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
     expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
+
+    // Test that placeholder text is correct for each tab
+    expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop, or type > for commands');
+
+    // Click Commands tab and verify placeholder changes
+    await userEvent.click(commandsTab);
+
+    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Search and execute commands'));
+
+    // Click Documentation tab and verify placeholder changes
+    await userEvent.click(docsTab);
+    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Search documentation and tutorials'));
+
+    // Click Go to tab and verify placeholder changes
+    await userEvent.click(gotoTab);
+    await vi.waitFor(() =>
+      expect(input).toHaveAttribute('placeholder', 'Search images, containers, pods, and other resources'),
+    );
+
+    // Click All tab and verify placeholder changes back
+    await userEvent.click(allTab);
+    await vi.waitFor(() =>
+      expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop, or type > for commands'),
+    );
   });
 });

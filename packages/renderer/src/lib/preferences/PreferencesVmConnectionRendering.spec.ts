@@ -21,11 +21,11 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import * as preferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesVmConnectionRendering from './PreferencesVmConnectionRendering.svelte';
 import type { IConnectionRestart } from './Util';
@@ -52,15 +52,18 @@ test('Expect that removing the connection is going back to the previous page', a
     internalId: '0',
     vmConnections: [
       {
+        connectionType: 'vm',
         name: vm1,
         status: 'started',
       },
       {
+        connectionType: 'vm',
         name: vm2,
         status: 'stopped',
         lifecycleMethods: ['delete'],
       },
       {
+        connectionType: 'vm',
         name: vm3,
         status: 'started',
       },
@@ -134,6 +137,7 @@ test('Expect to see error message if action fails', async () => {
     internalId: '0',
     vmConnections: [
       {
+        connectionType: 'vm',
         name: vm1,
         status: 'stopped',
         lifecycleMethods: ['delete'],
@@ -198,6 +202,7 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
     internalId: '0',
     vmConnections: [
       {
+        connectionType: 'vm',
         name: 'vm 1',
         status: 'stopped',
         lifecycleMethods: ['delete'],
@@ -224,6 +229,7 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
   // simulate PreferencesConnectionActions is calling addConnectionToRestartingQueue
   expect(preferencesConnectionActions.default).toHaveBeenCalledOnce();
   const params = vi.mocked(preferencesConnectionActions.default).mock.calls[0][1];
+  assert(params);
   const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
 
   addConnectionToRestartingQueue({

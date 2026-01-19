@@ -27,12 +27,10 @@ import type { RouteUI } from './RouteUI';
 
 const deleteIngressMock = vi.fn();
 const deleteRoutesMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 beforeAll(() => {
   Object.defineProperty(window, 'kubernetesDeleteIngress', { value: deleteIngressMock });
   Object.defineProperty(window, 'kubernetesDeleteRoute', { value: deleteRoutesMock });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
 });
 
 afterEach(() => {
@@ -54,7 +52,7 @@ class StatusHolder {
 }
 
 test('Expect no error and status deleting ingress', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 }); // Mock confirmation dialog
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 }); // Mock confirmation dialog
 
   const ingressUI: IngressUI = new StatusHolder('RUNNING') as unknown as IngressUI;
   ingressUI.name = 'my-ingress';
@@ -66,7 +64,7 @@ test('Expect no error and status deleting ingress', async () => {
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Ingress' });
   await fireEvent.click(deleteButton);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce(); // Ensure confirmation dialog was shown
+  expect(window.showMessageBox).toHaveBeenCalledOnce(); // Ensure confirmation dialog was shown
 
   // Wait for the dialog to disappear
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -76,7 +74,7 @@ test('Expect no error and status deleting ingress', async () => {
 });
 
 test('Expect no error and status deleting route', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 }); // Mock confirmation dialog
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 }); // Mock confirmation dialog
 
   const routeUI: RouteUI = new StatusHolder('RUNNING') as unknown as RouteUI;
   routeUI.name = 'my-route';
@@ -96,7 +94,7 @@ test('Expect no error and status deleting route', async () => {
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Route' });
   await fireEvent.click(deleteButton);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce(); // Ensure confirmation dialog was shown
+  expect(window.showMessageBox).toHaveBeenCalledOnce(); // Ensure confirmation dialog was shown
 
   // Wait for the dialog to disappear
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

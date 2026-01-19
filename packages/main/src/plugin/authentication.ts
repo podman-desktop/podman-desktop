@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import type {
   AuthenticationProvider,
   AuthenticationProviderOptions,
   AuthenticationSession,
-  AuthenticationSessionAccountInformation,
   AuthenticationSessionsChangeEvent,
   Disposable,
   Event,
-  ProviderImages,
 } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
-import { ApiSenderType } from './api.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { AuthenticationProviderInfo, SessionRequestInfo } from '/@api/authentication/authentication.js';
+
 import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
 
@@ -42,14 +42,6 @@ export interface ProviderWithMetadata {
   label: string;
   provider: AuthenticationProvider;
   options: AuthenticationProviderOptions;
-}
-
-export interface AuthenticationProviderInfo {
-  id: string;
-  displayName: string;
-  accounts: AuthenticationSessionAccountInformation[];
-  sessionRequests?: SessionRequestInfo[];
-  images?: ProviderImages;
 }
 
 export interface ExtensionInfo {
@@ -73,14 +65,6 @@ interface AccountUsageRecord {
 
 export interface SessionRequest {
   [scopes: string]: string[]; // maps string with scopes to extension id's
-}
-
-export interface SessionRequestInfo {
-  id: string;
-  providerId: string;
-  scopes: string[];
-  extensionId: string;
-  extensionLabel: string;
 }
 
 export type MenuInfo = AuthenticationRequestMenuInfo | AuthenticationSessionMenuInfo;

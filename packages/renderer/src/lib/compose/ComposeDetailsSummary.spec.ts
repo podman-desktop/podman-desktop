@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '../container/ContainerInfoUI';
+import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+
 import ComposeDetailsSummary from './ComposeDetailsSummary.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
@@ -45,6 +46,9 @@ const fakeContainer1: ContainerInfoUI = {
     name: 'group1',
     type: ContainerGroupInfoTypeUI.STANDALONE,
     id: 'fakeContainerID1',
+    engineId: 'foobar',
+    engineName: 'foobar',
+    engineType: 'podman',
   },
   selected: false,
   created: 1234,
@@ -72,6 +76,9 @@ const fakeContainer2: ContainerInfoUI = {
     name: 'group2',
     type: ContainerGroupInfoTypeUI.STANDALONE,
     id: 'fakeContainerID2',
+    engineId: 'Podman.podman',
+    engineName: 'Podman',
+    engineType: 'podman',
   },
   selected: false,
   created: 1234,

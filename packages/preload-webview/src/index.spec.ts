@@ -20,19 +20,14 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { init } from '.';
 import * as webviewPreload from './webview-preload';
+import { WebviewPreload } from './webview-preload';
 
-vi.mock('./webview-preload', async () => {
-  return {
-    WebviewPreload: vi.fn().mockImplementation(() => {
-      return {
-        init: vi.fn().mockResolvedValue(undefined),
-      };
-    }),
-  };
-});
+vi.mock(import('./webview-preload'));
 
 beforeEach(() => {
   vi.clearAllMocks();
+
+  vi.mocked(WebviewPreload.prototype.init).mockResolvedValue(undefined);
 });
 
 test('check call constructor with correct web id by parsing window.location.search', () => {

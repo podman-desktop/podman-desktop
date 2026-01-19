@@ -6,14 +6,13 @@ import { derived, get, type Readable, type Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
+import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
+import { isDefaultScope, isPropertyValidInContext } from '/@/lib/preferences/Util';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
-
-import { ContextKeyExpr } from '../context/contextKey';
-import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
-import { isDefaultScope, isPropertyValidInContext } from '../preferences/Util';
 
 interface Props {
   extension: CombinedExtensionInfoUI;

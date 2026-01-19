@@ -7,8 +7,7 @@ import { router } from 'tinro';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
-
-import { TerminalSettings } from '../../../../../../main/src/plugin/terminal-settings';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 export let podName: string;
 export let containerName: string;

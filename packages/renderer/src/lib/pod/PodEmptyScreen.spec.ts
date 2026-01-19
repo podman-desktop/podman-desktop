@@ -36,7 +36,6 @@ vi.mock('/@/stores/providers', async () => {
 
 beforeAll(() => {
   Object.defineProperty(window, 'createPod', { value: vi.fn(), writable: true });
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
   Object.defineProperty(window, 'clipboardWriteText', { value: vi.fn() });
   Object.defineProperty(window, 'pullImage', { value: vi.fn() });
   Object.defineProperty(window, 'listImages', { value: vi.fn() });

@@ -30,23 +30,8 @@ import { WinInstaller } from '/@/installer/win-installer';
 import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
 
-vi.mock(import('/@/installer/win-installer'));
-vi.mock(import('/@/installer/mac-os-installer'));
-vi.mock(import('/@/cleanup/podman-cleanup-macos'));
-vi.mock(import('/@/cleanup/podman-cleanup-windows'));
-
 const extensionContextMock = {} as ExtensionContext;
 const telemetryLoggerMock = {} as TelemetryLogger;
-
-vi.mock('@podman-desktop/api', () => {
-  return {
-    env: {
-      isWindows: false,
-      isMac: true,
-      isLinux: false,
-    },
-  };
-});
 
 describe('inversifyBinding', () => {
   let inversifyBinding: InversifyBinding;
@@ -79,16 +64,14 @@ describe('inversifyBinding', () => {
       const value = container.get(Installer);
       expect(value).not.toBeUndefined();
 
-      expect(WinInstaller).toHaveBeenCalledOnce();
-      expect(MacOSInstaller).not.toHaveBeenCalled();
+      expect(value).toBeInstanceOf(WinInstaller);
     });
 
     test('InversifyBinding#init should bind PodmanCleanupWindows for ProviderCleanupSymbol', async () => {
       const value = container.get(ProviderCleanupSymbol);
       expect(value).not.toBeUndefined();
 
-      expect(PodmanCleanupWindows).toHaveBeenCalledOnce();
-      expect(PodmanCleanupMacOS).not.toHaveBeenCalled();
+      expect(value).toBeInstanceOf(PodmanCleanupWindows);
     });
   });
 
@@ -103,16 +86,14 @@ describe('inversifyBinding', () => {
       const value = container.get(Installer);
       expect(value).not.toBeUndefined();
 
-      expect(WinInstaller).not.toHaveBeenCalled();
-      expect(MacOSInstaller).toHaveBeenCalled();
+      expect(value).toBeInstanceOf(MacOSInstaller);
     });
 
     test('InversifyBinding#init should bind PodmanCleanupMacOS for ProviderCleanupSymbol', async () => {
       const value = container.get(ProviderCleanupSymbol);
       expect(value).not.toBeUndefined();
 
-      expect(PodmanCleanupMacOS).toHaveBeenCalledOnce();
-      expect(PodmanCleanupWindows).not.toHaveBeenCalled();
+      expect(value).toBeInstanceOf(PodmanCleanupMacOS);
     });
   });
 
@@ -127,18 +108,12 @@ describe('inversifyBinding', () => {
       expect(() => {
         container.get(Installer);
       }).toThrowError('No bindings found for service: "Symbol(Installer)"');
-
-      expect(WinInstaller).not.toHaveBeenCalled();
-      expect(MacOSInstaller).not.toHaveBeenCalled();
     });
 
     test('InversifyBinding#init should not provide any binding for ProviderCleanupSymbol', async () => {
       expect(() => {
         container.get(ProviderCleanupSymbol);
       }).toThrowError('No bindings found for service: "Symbol(ProviderCleanup)"');
-
-      expect(PodmanCleanupMacOS).not.toHaveBeenCalled();
-      expect(PodmanCleanupWindows).not.toHaveBeenCalled();
     });
   });
 });

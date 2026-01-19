@@ -23,19 +23,6 @@ import * as detect from './detect';
 import * as handler from './handler';
 
 vi.mock('./detect');
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    configuration: {
-      getConfiguration: vi.fn(),
-    },
-    window: {
-      showInformationMessage: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-  };
-});
 
 const extensionContextMock: extensionApi.ExtensionContext = {
   storagePath: '/storage-path',

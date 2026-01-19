@@ -18,19 +18,9 @@
 
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
-import { expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { getDockerInstallation } from './docker-cli';
-
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    env: {},
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
 
 test('should not return podman version', async () => {
   const podmanOutput = 'podman version 4.8.3';

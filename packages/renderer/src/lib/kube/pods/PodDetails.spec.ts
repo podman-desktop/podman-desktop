@@ -24,16 +24,19 @@ import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
+import {
+  initListExperimental,
+  initListsNonExperimental,
+  type initListsReturnType,
+} from '/@/lib/kube/tests-helpers/init-lists';
 import { lastPage } from '/@/stores/breadcrumb';
 import * as states from '/@/stores/kubernetes-contexts-state';
 
-import { initListExperimental, initListsNonExperimental, type initListsReturnType } from '../tests-helpers/init-lists';
 import PodDetails from './PodDetails.svelte';
 
-vi.mock('@xterm/xterm');
-vi.mock('@xterm/addon-search');
-
-vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock(import('@xterm/xterm'));
+vi.mock(import('@xterm/addon-search'));
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
 const myPod: V1Pod = {
   apiVersion: 'v1',

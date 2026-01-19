@@ -33,10 +33,10 @@ import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import validator from 'validator';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
 
 import { isMac, isWindows } from '../util.js';
-import { ApiSenderType } from './api.js';
 import { Certificates } from './certificates.js';
 import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';
@@ -393,13 +393,30 @@ export class ImageRegistry {
       throw new Error(`Invalid image name: ${imageName}`);
     }
 
-    // do we have a tag at the end with last
+    // Check if image is referenced by digest (@sha256:hash) instead of tag
+    // Format can be: name:tag, name@sha256:hash, or name:tag@sha256:hash
     let tag = 'latest';
-    const lastColon = imageName.lastIndexOf(':');
+    const atIndex = imageName.indexOf('@');
     const lastSlash = imageName.lastIndexOf('/');
-    if (lastColon !== -1 && lastColon > lastSlash) {
-      tag = imageName.substring(lastColon + 1);
-      imageName = imageName.substring(0, lastColon);
+
+    if (atIndex !== -1 && atIndex > lastSlash) {
+      // Image uses digest format: name@sha256:hash or name:tag@sha256:hash
+      // The digest is the authoritative reference
+      tag = imageName.substring(atIndex + 1);
+      imageName = imageName.substring(0, atIndex);
+
+      // Remove any tag that might be present before the @ (e.g., :0.11.0 in name:0.11.0@sha256:...)
+      const lastColon = imageName.lastIndexOf(':');
+      if (lastColon !== -1 && lastColon > lastSlash) {
+        imageName = imageName.substring(0, lastColon);
+      }
+    } else {
+      // Check for tag format: name:tag
+      const lastColon = imageName.lastIndexOf(':');
+      if (lastColon !== -1 && lastColon > lastSlash) {
+        tag = imageName.substring(lastColon + 1);
+        imageName = imageName.substring(0, lastColon);
+      }
     }
 
     let registry = '';
@@ -422,7 +439,8 @@ export class ImageRegistry {
       valid = true;
     } else if (slashes.length > 2 && slashes[0]) {
       registry = slashes[0];
-      name = `${slashes[1]}/${slashes[2]}`;
+      // join all remaining parts as the image name
+      name = slashes.slice(1).join('/');
       valid = true;
     }
     if (!valid) {
@@ -435,6 +453,21 @@ export class ImageRegistry {
       name,
       tag,
     };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getManifestFromImageName(imageName: string): Promise<any> {
+    const imageData = this.extractImageDataFromImageName(imageName);
+
+    // grab auth info from the registry
+    const authInfo = await this.getAuthInfo(imageData.registry);
+    const token = await this.getToken(authInfo, imageData);
+    if (authInfo.scheme.toLowerCase() !== 'bearer') {
+      throw new Error(`Unsupported auth scheme: ${authInfo.scheme}`);
+    }
+
+    // now, grab manifest for the given image URL
+    return await this.getManifest(imageData, token);
   }
 
   // Fetch the image Labels from the registry for a given image URL

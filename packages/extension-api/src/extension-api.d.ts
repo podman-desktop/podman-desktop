@@ -48,6 +48,11 @@ declare module '@podman-desktop/api' {
   export const version: string;
 
   /**
+   * The version of the extension API.
+   */
+  export const apiVersion: string;
+
+  /**
    * Represents a reference to a command. Provides a title which
    * will be used to represent a command in the UI and, optionally,
    * an array of arguments which will be passed to the command handler
@@ -3779,6 +3784,7 @@ declare module '@podman-desktop/api' {
 
   export interface NetworkCreateResult {
     Id: string;
+    engineId: string;
   }
 
   /**
@@ -4402,6 +4408,11 @@ declare module '@podman-desktop/api' {
    */
   export namespace env {
     /**
+     * The name of the application. (e.g., 'Podman Desktop')
+     */
+    export const appName: string;
+
+    /**
      * Flag indicating whether we are running on macOS (Mac OS X) operating system.
      *
      * If the value of this flag is true, it means the current system is macOS.
@@ -4939,6 +4950,13 @@ declare module '@podman-desktop/api' {
     export function getFreePort(port: number): Promise<number>;
   }
 
+  export interface NavigateToExtensionsCatalogOptions {
+    /**
+     * the search term to use to filter the extensions. Supports `category:`, `keyword:` prefixes and `is:installed`, `not:installed`.
+     */
+    readonly searchTerm?: string;
+  }
+
   export namespace navigation {
     // Navigate to the Dashboard page
     export function navigateToDashboard(): Promise<void>;
@@ -4955,6 +4973,8 @@ declare module '@podman-desktop/api' {
 
     // Navigate to the Images page
     export function navigateToImages(): Promise<void>;
+    // Navigate to the Images Build page
+    export function navigateToImageBuild(): Promise<void>;
     // Navigate to a specific image referenced by id, engineId and tag
     export function navigateToImage(id: string, engineId: string, tag: string): Promise<void>;
 
@@ -5003,6 +5023,11 @@ declare module '@podman-desktop/api' {
      * @param extensionId The id of the extension to navigate to or if missing, default to the extension calling the method
      */
     export function navigateToOnboarding(extensionId?: string): Promise<void>;
+
+    /**
+     * Navigate to the Catalog tab of the Extensions page
+     */
+    export function navigateToExtensionsCatalog(options: NavigateToExtensionsCatalogOptions): Promise<void>;
 
     /**
      * Allow to define custom route for an extension.

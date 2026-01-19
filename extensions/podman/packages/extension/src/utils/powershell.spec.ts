@@ -23,12 +23,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { PowerShellClient } from './powershell';
 import { getPowerShellClient } from './powershell';
 
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-}));
-
 const TELEMETRY_LOGGER_MOCK = {
   logUsage: vi.fn(),
 } as unknown as TelemetryLogger;

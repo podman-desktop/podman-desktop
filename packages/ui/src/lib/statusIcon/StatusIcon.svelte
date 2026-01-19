@@ -1,14 +1,16 @@
 <script lang="ts">
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
+
 import Icon from '../icons/Icon.svelte';
 import StarIcon from '../icons/StarIcon.svelte';
 import Spinner from '../progress/Spinner.svelte';
 
 interface Props {
-  // status: one of RUNNING, STARTING, USED, CREATED, DELETING, or DEGRADED
+  // status: one of RUNNING, STARTING, USED, CREATED, DELETING, UPDATING, or DEGRADED
   // any other status will result in a standard outlined box
-  status?: 'RUNNING' | 'STARTING' | 'USED' | 'DEGRADED' | 'DELETING' | 'CREATED' | string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon?: any;
+  status?: 'RUNNING' | 'STARTING' | 'USED' | 'DEGRADED' | 'DELETING' | 'UPDATING' | 'CREATED' | string;
+  icon?: IconDefinition | Component | string;
   size?: number;
 }
 let { status = 'UNKNOWN', icon, size = 20 }: Props = $props();
@@ -22,7 +24,7 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     class:bg-[var(--pd-status-running)]={status === 'RUNNING' || status === 'USED'}
     class:bg-[var(--pd-status-starting)]={status === 'STARTING'}
     class:bg-[var(--pd-status-degraded)]={status === 'DEGRADED'}
-    class:border-2={!solid && status !== 'DELETING'}
+    class:border-2={!solid && status !== 'DELETING' && status !== 'UPDATING'}
     class:p-0.5={!solid}
     class:p-1={solid}
     class:border-[var(--pd-status-not-running)]={!solid}
@@ -30,12 +32,10 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
     class:text-[var(--pd-status-contrast)]={solid}
     role="status"
     title={status}>
-    {#if status === 'DELETING'}
+    {#if status === 'DELETING' || status === 'UPDATING'}
       <Spinner size="1.4em" />
-    {:else if typeof icon === 'string'}
-       <Icon icon={icon} />
-    {:else}
-       <Icon icon={icon} size={size} />
+    {:else if icon}
+      <Icon icon={icon} size={size} />
     {/if}
   </div>
   {#if status === 'CREATED'}

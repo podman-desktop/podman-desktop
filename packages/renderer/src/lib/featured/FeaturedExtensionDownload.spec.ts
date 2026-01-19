@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import type { FeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
+import type { FeaturedExtension } from '/@api/featured/featured-api';
+
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 
 // fake the window.events object

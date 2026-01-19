@@ -23,14 +23,12 @@ import { NotificationImpl } from '/@/plugin/tasks/notification-impl.js';
 import type { NotificationTask } from '/@/plugin/tasks/notifications.js';
 import { TaskImpl } from '/@/plugin/tasks/task-impl.js';
 import type { Task, TaskAction, TaskUpdateEvent } from '/@/plugin/tasks/tasks.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { NotificationTaskInfo, TaskInfo } from '/@api/taskInfo.js';
 import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
-import taskManagerImage from '../../assets/tasks.Manager.webp';
-import { ApiSenderType } from '../api.js';
 import { CommandRegistry } from '../command-registry.js';
-import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
 
 @injectable()
@@ -48,8 +46,6 @@ export class TaskManager {
     private commandRegistry: CommandRegistry,
     @inject(IConfigurationRegistry)
     private configurationRegistry: IConfigurationRegistry,
-    @inject(ExperimentalConfigurationManager)
-    private experimentalConfigurationManager: ExperimentalConfigurationManager,
   ) {}
 
   public init(): void {
@@ -57,13 +53,7 @@ export class TaskManager {
     this.setStatusBarEntry(false);
 
     this.commandRegistry.registerCommand('show-task-manager', () => {
-      // get the current value of the configuration flag for the task manager
-      const useExperimentalTaskManager = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
-        `${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`,
-      );
-      const showEventName = useExperimentalTaskManager ? 'toggle-task-manager' : 'toggle-legacy-task-manager';
-
-      this.apiSender.send(showEventName, '');
+      this.apiSender.send('toggle-task-manager', '');
       this.setStatusBarEntry(false);
     });
 
@@ -82,14 +72,6 @@ export class TaskManager {
             description: 'Display a notification toast when task is created',
             type: 'boolean',
             default: false,
-          },
-          [`${ExperimentalTasksSettings.SectionName}.${ExperimentalTasksSettings.Manager}`]: {
-            description: 'Replace the current task manager widget by the new one',
-            type: 'object',
-            experimental: {
-              githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/10533',
-              image: taskManagerImage,
-            },
           },
         },
       },

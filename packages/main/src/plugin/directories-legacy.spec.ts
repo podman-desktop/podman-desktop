@@ -22,10 +22,15 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { isLinux, isMac, isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
+
 import type { Directories } from './directories.js';
 import { LegacyDirectories } from './directories-legacy.js';
 
 const originalProcessEnv = process.env;
+
+vi.mock(import('/@/util.js'));
 
 beforeEach(() => {
   // Reset environment variables to clean state
@@ -109,6 +114,77 @@ describe('LegacyDirectories', () => {
       provider = new LegacyDirectories();
 
       expect(mkdirSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('getManagedDefaultsDirectory', () => {
+    test('should return macOS managed folder path when running on macOS', () => {
+      vi.mocked(isMac).mockReturnValue(true);
+      vi.mocked(isWindows).mockReturnValue(false);
+      vi.mocked(isLinux).mockReturnValue(false);
+
+      provider = new LegacyDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.macOS);
+    });
+
+    test('should use appId format for macOS managed folder path', () => {
+      vi.mocked(isMac).mockReturnValue(true);
+      vi.mocked(isWindows).mockReturnValue(false);
+      vi.mocked(isLinux).mockReturnValue(false);
+
+      provider = new LegacyDirectories();
+
+      // The macOS managed path folder should be the appId (macOS format is different vs Windows / Linux)
+      // so make sure we still have the correct format
+      expect(provider.getManagedDefaultsDirectory()).toBe(`/Library/Application Support/${product.appId}`);
+    });
+
+    test('should map PROGRAMDATA into windows managed folder path', () => {
+      vi.mocked(isMac).mockReturnValue(false);
+      vi.mocked(isWindows).mockReturnValue(true);
+      vi.mocked(isLinux).mockReturnValue(false);
+      const customProgramData = 'D:\\CorpData';
+      process.env['PROGRAMDATA'] = customProgramData;
+
+      provider = new LegacyDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(
+        product.paths.managed.windows.replace('%PROGRAMDATA%', customProgramData),
+      );
+    });
+
+    test('should default PROGRAMDATA when env variable is missing', () => {
+      vi.mocked(isMac).mockReturnValue(false);
+      vi.mocked(isWindows).mockReturnValue(true);
+      vi.mocked(isLinux).mockReturnValue(false);
+      delete process.env['PROGRAMDATA'];
+
+      provider = new LegacyDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(
+        product.paths.managed.windows.replace('%PROGRAMDATA%', 'C:\\ProgramData'),
+      );
+    });
+
+    test('should return linux managed folder path when running on Linux', () => {
+      vi.mocked(isMac).mockReturnValue(false);
+      vi.mocked(isWindows).mockReturnValue(false);
+      vi.mocked(isLinux).mockReturnValue(true);
+
+      provider = new LegacyDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.linux);
+    });
+
+    test('should fallback to linux managed folder path when platform is unknown', () => {
+      vi.mocked(isMac).mockReturnValue(false);
+      vi.mocked(isWindows).mockReturnValue(false);
+      vi.mocked(isLinux).mockReturnValue(false);
+
+      provider = new LegacyDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.linux);
     });
   });
 });

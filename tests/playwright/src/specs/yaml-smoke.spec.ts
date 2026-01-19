@@ -19,11 +19,11 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ImageState } from '../model/core/states';
-import { PodmanKubePlayOptions } from '../model/core/types';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteImage, deletePod } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ImageState } from '/@/model/core/states';
+import { PodmanKubePlayOptions } from '/@/model/core/types';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteImage, deletePod } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const podAppName = 'primary-podify-demo';
 const podName = 'podify-demo-pod';

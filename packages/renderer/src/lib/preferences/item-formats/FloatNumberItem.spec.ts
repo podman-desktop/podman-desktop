@@ -135,3 +135,22 @@ test('Expect only one dot is added to input', async () => {
 
   expect(onChange).toBeCalledWith('record', 2.2);
 });
+
+test('Expect input to be disabled when record.readonly is true', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'number',
+    minimum: 1,
+    maximum: 34,
+    readonly: true,
+  };
+  const value = 2;
+  render(FloatNumberItem, { record, value });
+
+  const input = screen.getByLabelText('record-description');
+  expect(input).toBeInTheDocument();
+  expect(input).toBeDisabled();
+});

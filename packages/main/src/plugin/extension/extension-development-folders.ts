@@ -22,11 +22,11 @@ import { resolve } from 'node:path';
 import { inject, injectable } from 'inversify';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-development-folders-info.js';
 
-import { ApiSenderType } from '../api.js';
 import { type AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 
 // Handle the registration / track of all development folders used when developing extensions
@@ -129,7 +129,11 @@ export class ExtensionDevelopmentFolders {
     }
 
     // before adding the path, check it's a valid extension path
-    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension(path, false, true);
+    const analyzedExtension = await this.#extensionAnalyzer.analyzeExtension({
+      extensionPath: path,
+      removable: false,
+      devMode: true,
+    });
     // if there is an error, abort
     if (analyzedExtension.error) {
       throw new Error(analyzedExtension.error);

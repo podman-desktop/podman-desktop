@@ -8,7 +8,9 @@ import { onDestroy } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import FileInput from '/@/lib/ui/FileInput.svelte';
+import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import { handleNavigation } from '/@/navigation';
 import {
   type BuildImageInfo,
@@ -18,14 +20,13 @@ import {
   getNextTaskId,
   lastUpdatedTaskId,
 } from '/@/stores/build-images';
+import { providerInfos } from '/@/stores/providers';
 import { NavigationPage } from '/@api/navigation-page';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
-import EngineFormPage from '../ui/EngineFormPage.svelte';
-import TerminalWindow from '../ui/TerminalWindow.svelte';
 import { type BuildImageCallback, disconnectUI, eventCollect, reconnectUI, startBuild } from './build-image-task';
 import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards.svelte';
+import BuildTargetDropdown from './BuildTargetDropdown.svelte';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 interface Props {
@@ -143,6 +144,7 @@ async function buildSinglePlatformImage(): Promise<void> {
       buildImageInfo.cancellableTokenId,
       formattedBuildArgs,
       buildImageInfo.taskId,
+      buildImageInfo.target,
     );
   } catch (error) {
     eventCollect(buildImageInfo.buildImageKey, 'error', String(error));
@@ -205,6 +207,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         buildImageInfo.cancellableTokenId,
         formattedBuildArgs,
         buildImageInfo.taskId,
+        buildImageInfo.target,
       )) as BuildOutput;
 
       // Extract and store the build ID as this is required for creating the manifest, only if it is available.
@@ -385,6 +388,12 @@ let hasInvalidFields = $derived(
           error={errorContainerImageName}
           class="w-full" />
       </div>
+
+      {#if buildImageInfo.containerFilePath}
+        <div hidden={buildImageInfo.buildRunning}>
+            <BuildTargetDropdown bind:target={buildImageInfo.target} containerFilePath={buildImageInfo.containerFilePath} />
+        </div>
+      {/if}
 
       {#if providerConnections.length > 1}
         <div hidden={buildImageInfo.buildRunning}>

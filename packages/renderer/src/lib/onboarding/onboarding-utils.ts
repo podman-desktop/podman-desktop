@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import type { OnboardingInfo, OnboardingStatus, OnboardingStep } from '/@api/onboarding';
-
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
 
 export const SCOPE_ONBOARDING = 'onboarding';
 

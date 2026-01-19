@@ -18,9 +18,9 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { imagesInfos } from '/@/stores/images';
 import type { ImageInfo } from '/@api/image-info';
 
-import { imagesInfos } from '../images';
 import { createNavigationImageEntry } from './navigation-registry-image.svelte';
 
 beforeEach(() => {

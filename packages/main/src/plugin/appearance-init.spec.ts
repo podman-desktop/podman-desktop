@@ -19,9 +19,9 @@
 import { nativeTheme } from 'electron';
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
-import type { ApiSenderType } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AppearanceSettings } from './appearance-settings.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
@@ -182,7 +182,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.id).toBe('preferences.appearance');
   expect(configurationNode?.title).toBe('Appearance');
   expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(4);
+  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(3);
   expect(configurationNode?.properties?.['preferences.zoomLevel']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.markdownDescription).toBeDefined();
   expect(configurationNode?.properties?.['preferences.zoomLevel']?.type).toBe('number');
@@ -195,8 +195,4 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.['preferences.navigationBarLayout']?.default).toBe(
     AppearanceSettings.IconAndTitle,
   );
-
-  expect(configurationNode?.properties?.['titleBar.searchBar']).toBeDefined();
-  expect(configurationNode?.properties?.['titleBar.searchBar']?.description).toBeDefined();
-  expect(configurationNode?.properties?.['titleBar.searchBar']?.type).toBe('object');
 });

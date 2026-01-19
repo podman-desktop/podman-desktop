@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo } from '@podman-desktop/api';
-import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -28,12 +28,12 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
+import { imagesInfos } from '/@/stores/images';
+import { providerInfos } from '/@/stores/providers';
 import { viewsContributions } from '/@/stores/views';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import { imagesInfos } from '../../stores/images';
-import { providerInfos } from '../../stores/providers';
-import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '../view/views';
 import ImagesList from './ImagesList.svelte';
 
 // fake the window.events object
@@ -45,6 +45,7 @@ beforeEach(() => {
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
 
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
@@ -270,167 +271,167 @@ test('Expect two images in list given image id and engine id', async () => {
 });
 
 describe('Contributions', () => {
-  test.each([{ viewIdContrib: IMAGE_VIEW_ICONS }, { viewIdContrib: IMAGE_LIST_VIEW_ICONS }])(
-    'Expect image status being changed with %s contribution',
-    async ({ viewIdContrib }) => {
-      vi.mocked(window.getProviderInfos).mockResolvedValue([
-        {
-          name: 'podman',
-          status: 'started',
-          internalId: 'podman-internal-id',
-          containerConnections: [
-            {
-              name: 'podman-machine-default',
-              status: 'started',
-            } as unknown as ProviderContainerConnectionInfo,
-          ],
-        } as unknown as ProviderInfo,
-      ]);
+  test.each([
+    { viewIdContrib: IMAGE_VIEW_ICONS },
+    { viewIdContrib: IMAGE_LIST_VIEW_ICONS },
+  ])('Expect image status being changed with %s contribution', async ({ viewIdContrib }) => {
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
+      {
+        name: 'podman',
+        status: 'started',
+        internalId: 'podman-internal-id',
+        containerConnections: [
+          {
+            name: 'podman-machine-default',
+            status: 'started',
+          } as unknown as ProviderContainerConnectionInfo,
+        ],
+      } as unknown as ProviderInfo,
+    ]);
 
-      const labels = {
-        'podman-desktop.label': true,
-      };
+    const labels = {
+      'podman-desktop.label': true,
+    };
 
-      vi.mocked(window.listImages).mockResolvedValue([
-        {
-          Id: 'sha256:1234567890123',
-          RepoTags: ['fedora:old'],
-          Created: 1644009612,
-          Size: 123,
-          Status: 'Running',
-          engineId: 'podman',
-          engineName: 'podman',
-          Labels: labels,
+    vi.mocked(window.listImages).mockResolvedValue([
+      {
+        Id: 'sha256:1234567890123',
+        RepoTags: ['fedora:old'],
+        Created: 1644009612,
+        Size: 123,
+        Status: 'Running',
+        engineId: 'podman',
+        engineName: 'podman',
+        Labels: labels,
+      },
+    ] as unknown as ImageInfo[]);
+
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
+    window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+    window.dispatchEvent(new CustomEvent('image-build'));
+
+    const contribs = [
+      {
+        extensionId: 'foo.bar',
+        viewId: viewIdContrib,
+        value: {
+          icon: '${my-custom-icon}',
+          when: 'podman-desktop.label in imageLabelKeys',
         },
-      ] as unknown as ImageInfo[]);
+      },
+    ];
 
-      window.dispatchEvent(new CustomEvent('extensions-already-started'));
-      window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-      window.dispatchEvent(new CustomEvent('image-build'));
+    vi.mocked(window.listViewsContributions).mockReset();
+    vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
+    // set viewsContributions
+    viewsContributions.set(contribs);
 
-      const contribs = [
-        {
-          extensionId: 'foo.bar',
-          viewId: viewIdContrib,
-          value: {
-            icon: '${my-custom-icon}',
-            when: 'podman-desktop.label in imageLabelKeys',
+    // wait store are populated
+    while (get(imagesInfos).length === 0) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    while (get(providerInfos).length === 0) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    await waitRender({});
+
+    // check image icon of status being overrided due to contributed menu
+
+    const fedoraOld = screen.getByRole('cell', { name: 'fedora 123456789012 old' });
+    expect(fedoraOld).toBeInTheDocument();
+
+    // now check that there is a custom icon for status column
+    const statusElement = screen.getByRole('status', { name: 'UNUSED' });
+
+    // now assert status item contains the icon
+    const subElement = statusElement.getElementsByClassName('podman-desktop-icon-my-custom-icon');
+    expect(subElement.length).toBe(1);
+  });
+
+  test.each([
+    { viewIdContrib: IMAGE_VIEW_BADGES },
+    { viewIdContrib: IMAGE_LIST_VIEW_BADGES },
+  ])('Expect bagde being added with %s contribution', async ({ viewIdContrib }) => {
+    vi.mocked(window.getProviderInfos).mockResolvedValue([
+      {
+        name: 'podman',
+        status: 'started',
+        internalId: 'podman-internal-id',
+        containerConnections: [
+          {
+            name: 'podman-machine-default',
+            status: 'started',
+          } as unknown as ProviderContainerConnectionInfo,
+        ],
+      } as unknown as ProviderInfo,
+    ]);
+
+    const labels = {
+      'podman-desktop.label': true,
+    };
+
+    vi.mocked(window.listImages).mockResolvedValue([
+      {
+        Id: 'sha256:1234567890123',
+        RepoTags: ['fedora:old'],
+        Created: 1644009612,
+        Size: 123,
+        Status: 'Running',
+        engineId: 'podman',
+        engineName: 'podman',
+        Labels: labels,
+      },
+    ] as unknown as ImageInfo[]);
+
+    window.dispatchEvent(new CustomEvent('extensions-already-started'));
+    window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+    window.dispatchEvent(new CustomEvent('image-build'));
+
+    const contribs = [
+      {
+        extensionId: 'foo.bar',
+        viewId: viewIdContrib,
+        value: {
+          badge: {
+            label: 'my-custom-badge',
+            color: '#ff00ff',
           },
+          when: 'podman-desktop.label in imageLabelKeys',
         },
-      ];
+      },
+    ];
 
-      vi.mocked(window.listViewsContributions).mockReset();
-      vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
-      // set viewsContributions
-      viewsContributions.set(contribs);
+    vi.mocked(window.listViewsContributions).mockReset();
+    vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
+    // set viewsContributions
+    viewsContributions.set(contribs);
 
-      // wait store are populated
-      while (get(imagesInfos).length === 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      while (get(providerInfos).length === 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+    // wait store are populated
+    while (get(imagesInfos).length === 0) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    while (get(providerInfos).length === 0) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
-      await waitRender({});
+    await waitRender({});
 
-      // check image icon of status being overrided due to contributed menu
+    // check few ms
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-      const fedoraOld = screen.getByRole('cell', { name: 'fedora 123456789012 old' });
-      expect(fedoraOld).toBeInTheDocument();
+    // check badge is being added
 
-      // now check that there is a custom icon for status column
-      const statusElement = screen.getByRole('status', { name: 'UNUSED' });
+    const fedoraOld = screen.getByRole('cell', { name: 'fedora badge-my-custom-badge 123456789012 old' });
+    expect(fedoraOld).toBeInTheDocument();
 
-      // now assert status item contains the icon
-      const subElement = statusElement.getElementsByClassName('podman-desktop-icon-my-custom-icon');
-      expect(subElement.length).toBe(1);
-    },
-  );
+    const badge = within(fedoraOld).getByText('my-custom-badge');
 
-  test.each([{ viewIdContrib: IMAGE_VIEW_BADGES }, { viewIdContrib: IMAGE_LIST_VIEW_BADGES }])(
-    'Expect bagde being added with %s contribution',
-    async ({ viewIdContrib }) => {
-      vi.mocked(window.getProviderInfos).mockResolvedValue([
-        {
-          name: 'podman',
-          status: 'started',
-          internalId: 'podman-internal-id',
-          containerConnections: [
-            {
-              name: 'podman-machine-default',
-              status: 'started',
-            } as unknown as ProviderContainerConnectionInfo,
-          ],
-        } as unknown as ProviderInfo,
-      ]);
-
-      const labels = {
-        'podman-desktop.label': true,
-      };
-
-      vi.mocked(window.listImages).mockResolvedValue([
-        {
-          Id: 'sha256:1234567890123',
-          RepoTags: ['fedora:old'],
-          Created: 1644009612,
-          Size: 123,
-          Status: 'Running',
-          engineId: 'podman',
-          engineName: 'podman',
-          Labels: labels,
-        },
-      ] as unknown as ImageInfo[]);
-
-      window.dispatchEvent(new CustomEvent('extensions-already-started'));
-      window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
-      window.dispatchEvent(new CustomEvent('image-build'));
-
-      const contribs = [
-        {
-          extensionId: 'foo.bar',
-          viewId: viewIdContrib,
-          value: {
-            badge: {
-              label: 'my-custom-badge',
-              color: '#ff00ff',
-            },
-            when: 'podman-desktop.label in imageLabelKeys',
-          },
-        },
-      ];
-
-      vi.mocked(window.listViewsContributions).mockReset();
-      vi.mocked(window.listViewsContributions).mockResolvedValue(contribs);
-      // set viewsContributions
-      viewsContributions.set(contribs);
-
-      // wait store are populated
-      while (get(imagesInfos).length === 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      while (get(providerInfos).length === 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      await waitRender({});
-
-      // check few ms
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // check badge is being added
-
-      const fedoraOld = screen.getByRole('cell', { name: 'fedora badge-my-custom-badge 123456789012 old' });
-      expect(fedoraOld).toBeInTheDocument();
-
-      const badge = within(fedoraOld).getByText('my-custom-badge');
-
-      // check background color
-      expect(badge).toHaveStyle({
-        'background-color': '#ff00ff',
-      });
-    },
-  );
+    // check background color
+    expect(badge).toHaveStyle({
+      'background-color': '#ff00ff',
+    });
+  });
 });
 
 test('Expect importImage button redirects to image import page', async () => {
@@ -691,7 +692,7 @@ test('Expect to see empty page and no table when no container engine is running'
   window.dispatchEvent(new CustomEvent('image-build'));
 
   // wait imageInfo store is populated
-  await vi.waitFor(() => get(imagesInfos).length > 0);
+  await vi.waitUntil(() => get(imagesInfos).length > 0);
 
   await waitRender({});
 
@@ -700,4 +701,59 @@ test('Expect to see empty page and no table when no container engine is running'
 
   const noContainerEngine = screen.getByText('No Container Engine');
   expect(noContainerEngine).toBeInTheDocument();
+});
+
+test('Expect environment column sorted by engineId', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'engine-zzz',
+      engineName: 'name-aaa',
+    },
+    {
+      Id: 'sha256:2345678901234',
+      RepoTags: ['alpine:latest'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'engine-aaa',
+      engineName: 'name-zzz',
+    },
+  ] as unknown as ImageInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await waitFor(() => {
+    expect(get(imagesInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  const environment = screen.getByRole('columnheader', { name: 'Environment' });
+  await fireEvent.click(environment);
+
+  const cells = screen.getAllByRole('cell', { name: /alpine|fedora/ });
+  expect(cells[0]).toHaveTextContent('alpine');
+  expect(cells[1]).toHaveTextContent('fedora');
 });

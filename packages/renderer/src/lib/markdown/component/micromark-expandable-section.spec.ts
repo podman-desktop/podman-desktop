@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import type { CompileContext } from 'micromark-util-types';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { ExpandableSectionProps } from '../micromark-utils';
+import type { ExpandableSectionProps } from '/@/lib/markdown/micromark-utils';
+
 import { createExpandableSection } from './micromark-expandable-section';
 
 let html = '';

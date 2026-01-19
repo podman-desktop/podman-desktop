@@ -25,7 +25,6 @@ import ConfigMapSecretActions from './ConfigMapSecretActions.svelte';
 import type { ConfigMapSecretUI } from './ConfigMapSecretUI';
 
 const deleteMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 const fakeConfigMap: ConfigMapSecretUI = {
   name: 'my-configmap',
@@ -46,7 +45,6 @@ const fakeSecret: ConfigMapSecretUI = {
 };
 
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'kubernetesDeleteConfigMap', { value: deleteMock });
   Object.defineProperty(window, 'kubernetesDeleteSecret', { value: deleteMock });
 });
@@ -57,7 +55,7 @@ afterEach(() => {
 });
 
 test('Expect no error when deleting configmap', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(ConfigMapSecretActions, { configMapSecret: fakeConfigMap });
 
   // click on delete button
@@ -69,7 +67,7 @@ test('Expect no error when deleting configmap', async () => {
 });
 
 test('Expect no error when deleting secret', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(ConfigMapSecretActions, { configMapSecret: fakeSecret });
 
   // click on delete button

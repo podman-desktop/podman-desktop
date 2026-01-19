@@ -21,7 +21,8 @@
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { configurationProperties } from '../configurationProperties';
+import { configurationProperties } from '/@/stores/configurationProperties';
+
 import { fetchNavigationRegistries, navigationRegistry } from './navigation-registry';
 
 const kubernetesRegisterGetCurrentContextResourcesMock = vi.fn();

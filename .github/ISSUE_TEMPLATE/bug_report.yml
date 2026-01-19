@@ -1,5 +1,6 @@
 name: Bug 🐞
 description: Report a bug report
+type: bug
 labels: [kind/bug 🐞]
 projects: ["podman-desktop/4"]
 
@@ -50,8 +51,10 @@ body:
       label: Version
       description: What version of the software are you running?
       options:
-        - "1.22.0"
+        - "1.24.0"
         - "next (development version)"
+        - "1.23.0"
+        - "1.22.0"
         - "1.21.x"
         - "1.20.x"
         - "1.19.x"

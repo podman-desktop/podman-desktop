@@ -29,7 +29,7 @@ function onChangeFileInput(value: string): void {
     name={record.id}
     bind:value={value}
     onChange={onChangeFileInput}
-    readonly={record.readonly ?? false}
+    readonly={record.readonly ?? record.locked ?? false}
     clearable={true}
     placeholder={record.placeholder}
     options={dialogOptions}

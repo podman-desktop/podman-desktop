@@ -24,20 +24,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PodmanConfiguration } from './podman-configuration';
 import { VMTYPE } from './util';
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-  };
-});
-
 const extensionContext: ExtensionContext = {} as unknown as ExtensionContext;
 
 // allows to call protected methods

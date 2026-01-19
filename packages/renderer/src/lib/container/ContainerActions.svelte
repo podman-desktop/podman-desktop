@@ -16,16 +16,16 @@ import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import { ContextUI } from '/@/lib/context/context';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
 import { context } from '/@/stores/context';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 import { NavigationPage } from '/@api/navigation-page';
 
-import { ContextUI } from '../context/context';
-import FlatMenu from '../ui/FlatMenu.svelte';
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
 
 export let container: ContainerInfoUI;

@@ -21,9 +21,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
-import type { ApiSenderType } from '../api.js';
-import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { TaskManager } from './task-manager.js';
 
 const apiSenderSendMock = vi.fn();
@@ -49,22 +48,12 @@ const configurationRegistry: ConfigurationRegistry = {
   registerConfigurations: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
-const experimentalConfigurationManager: ExperimentalConfigurationManager = {
-  isExperimentalConfigurationEnabled: vi.fn(),
-} as unknown as ExperimentalConfigurationManager;
-
 let taskManager: TaskManager;
 
 beforeEach(() => {
   vi.resetAllMocks();
 
-  taskManager = new TaskManager(
-    apiSender,
-    statusBarRegistry,
-    commandRegistry,
-    configurationRegistry,
-    experimentalConfigurationManager,
-  );
+  taskManager = new TaskManager(apiSender, statusBarRegistry, commandRegistry, configurationRegistry);
   taskManager.init();
 });
 
@@ -89,18 +78,6 @@ test('task manager init should register a configuration option', async () => {
 
   expect(configurationRegistry.registerConfigurations).toHaveBeenCalledWith(
     expect.arrayContaining([
-      expect.objectContaining({
-        properties: expect.objectContaining({
-          'tasks.Manager': {
-            type: 'object',
-            description: 'Replace the current task manager widget by the new one',
-            experimental: {
-              githubDiscussionLink: expect.stringContaining('github.com/podman-desktop/podman-desktop/discussions'),
-              image: expect.stringContaining('.webp'),
-            },
-          },
-        }),
-      }),
       expect.objectContaining({
         properties: expect.objectContaining({
           'tasks.StatusBar': {

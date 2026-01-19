@@ -40,7 +40,7 @@ export default defineConfig({
   },
   plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js', hot: !process.env.VITEST }), svelteTesting()],
   optimizeDeps: {
-    exclude: ['tinro'],
+    exclude: ['tinro', '@podman-desktop/api'],
   },
   test: {
     retry: 3, // Retries failing tests up to 3 times
@@ -55,6 +55,11 @@ export default defineConfig({
       },
       { find: '@floating-ui/dom', replacement: `${PACKAGE_ROOT}/__mocks__/@floating-ui/dom.ts` },
     ],
+    server: {
+      deps: {
+        inline: ['@fortawesome/fontawesome-free/css/all.min.css'],
+      },
+    },
     deps: {
       inline: ['moment'],
     },

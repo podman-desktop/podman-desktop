@@ -88,64 +88,70 @@ describe.each([
     linux_x86: 228416660,
     linux_arm: 228416575,
   },
-])(
-  'Grab asset id for a given release id',
-  async ({ resource, id, macOS_x86, macOS_arm, win_x86, win_arm, linux_x86, linux_arm }) => {
-    beforeEach(async () => {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-      const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
+])('Grab asset id for a given release id', async ({
+  resource,
+  id,
+  macOS_x86,
+  macOS_arm,
+  win_x86,
+  win_arm,
+  linux_x86,
+  linux_arm,
+}) => {
+  beforeEach(async () => {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
 
-      // mock the result of listReleaseAssetsMock REST API
-      const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
+    // mock the result of listReleaseAssetsMock REST API
+    const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
 
-      vi.mocked(octokitMock.paginate).mockImplementation(() => {
-        return resultREST;
-      });
+    vi.mocked(octokitMock.paginate).mockImplementation(() => {
+      return resultREST;
     });
+  });
 
-    test('macOS x86_64', async () => {
-      const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'x64');
-      expect(result).toBeDefined();
-      expect(result).toBe(macOS_x86);
-    });
+  test('macOS x86_64', async () => {
+    const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'x64');
+    expect(result).toBeDefined();
+    expect(result).toBe(macOS_x86);
+  });
 
-    test('macOS arm64', async () => {
-      const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'arm64');
-      expect(result).toBeDefined();
-      expect(result).toBe(macOS_arm);
-    });
+  test('macOS arm64', async () => {
+    const result = await composeGitHubReleases.getReleaseAssetId(id, 'darwin', 'arm64');
+    expect(result).toBeDefined();
+    expect(result).toBe(macOS_arm);
+  });
 
-    test('windows x86_64', async () => {
-      const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'x64');
-      expect(result).toBeDefined();
-      expect(result).toBe(win_x86);
-    });
+  test('windows x86_64', async () => {
+    const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'x64');
+    expect(result).toBeDefined();
+    expect(result).toBe(win_x86);
+  });
 
-    test('windows arm64', async () => {
-      const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'arm64');
-      expect(result).toBeDefined();
-      expect(result).toBe(win_arm);
-    });
+  test('windows arm64', async () => {
+    const result = await composeGitHubReleases.getReleaseAssetId(id, 'win32', 'arm64');
+    expect(result).toBeDefined();
+    expect(result).toBe(win_arm);
+  });
 
-    test('linux x86_64', async () => {
-      const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'x64');
-      expect(result).toBeDefined();
-      expect(result).toBe(linux_x86);
-    });
+  test('linux x86_64', async () => {
+    const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'x64');
+    expect(result).toBeDefined();
+    expect(result).toBe(linux_x86);
+  });
 
-    test('linux arm64', async () => {
-      const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'arm64');
-      expect(result).toBeDefined();
-      expect(result).toBe(linux_arm);
-    });
+  test('linux arm64', async () => {
+    const result = await composeGitHubReleases.getReleaseAssetId(id, 'linux', 'arm64');
+    expect(result).toBeDefined();
+    expect(result).toBe(linux_arm);
+  });
 
-    test('invalid', async () => {
-      await expect(composeGitHubReleases.getReleaseAssetId(id, 'invalid', 'invalid')).rejects.toThrow(
-        'No asset found for',
-      );
-    });
-  },
-);
+  test('invalid', async () => {
+    await expect(composeGitHubReleases.getReleaseAssetId(id, 'invalid', 'invalid')).rejects.toThrow(
+      'No asset found for',
+    );
+  });
+});
 
 test('should download the file if parent folder does exist', async () => {
   vi.mock('node:fs');

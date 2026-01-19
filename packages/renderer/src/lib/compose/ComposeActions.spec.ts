@@ -22,7 +22,8 @@ import { within } from '@testing-library/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, beforeEach, expect, type Mock, test, vi } from 'vitest';
 
-import type { ContainerInfoUI } from '../container/ContainerInfoUI';
+import type { ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+
 import ComposeActions from './ComposeActions.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
@@ -63,7 +64,6 @@ const compose: ComposeInfoUI = new ComposeInfoUIImpl(
 
 const getContributedMenusMock = vi.fn();
 const updateMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 type Deferred<T = void> = {
   promise: Promise<T>;
@@ -81,7 +81,6 @@ const createDeferred = <T = void>(): Deferred<T> => {
 };
 
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'startContainersByLabel', { value: vi.fn() });
   Object.defineProperty(window, 'stopContainersByLabel', { value: vi.fn() });
   Object.defineProperty(window, 'restartContainersByLabel', { value: vi.fn() });
@@ -143,7 +142,8 @@ test('Expect no error and status restarting compose', async () => {
 
 test('Expect no error and status deleting compose', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+
   render(ComposeActions, { compose, onUpdate: updateMock });
 
   // click on delete button

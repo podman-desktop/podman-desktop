@@ -1,6 +1,6 @@
 <script lang="ts">
-import IngressRouteIcon from '../images/IngressRouteIcon.svelte';
-import KubernetesEmptyScreen from '../kube/KubernetesEmptyScreen.svelte';
+import IngressRouteIcon from '/@/lib/images/IngressRouteIcon.svelte';
+import KubernetesEmptyScreen from '/@/lib/kube/KubernetesEmptyScreen.svelte';
 </script>
 
 <KubernetesEmptyScreen

@@ -18,9 +18,9 @@
 
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { CommandInfo } from '/@api/command-info.js';
 
-import { ApiSenderType } from './api.js';
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 

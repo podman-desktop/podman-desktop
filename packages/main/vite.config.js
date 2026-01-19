@@ -33,6 +33,7 @@ const config = {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
       '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
+      '/@product.json': `${join(PACKAGE_ROOT, '../../product.json')}`,
     },
   },
   build: {
@@ -42,7 +43,7 @@ const config = {
     assetsDir: '.',
     minify: process.env.MODE === 'production' ? 'esbuild' : false,
     lib: {
-      entry: 'src/index.ts',
+      entry: ['src/index.ts', 'scripts/download-remote-extensions.ts'],
       formats: ['cjs'],
     },
     rollupOptions: {
@@ -66,7 +67,7 @@ const config = {
   test: {
     retry: 3, // Retries failing tests up to 3 times
     environment: 'node',
-    include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    include: ['{src,scripts}/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   },
 };
 

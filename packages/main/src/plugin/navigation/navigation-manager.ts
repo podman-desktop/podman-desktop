@@ -16,14 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderContainerConnection } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
+import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
+import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
-import { ApiSenderType } from '/@/plugin/api.js';
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import { IDisposable } from '/@api/disposable.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { NavigationRequest } from '/@api/navigation-request.js';
 
@@ -39,6 +40,7 @@ export interface NavigationRoute {
 @injectable()
 export class NavigationManager {
   #registry: Map<string, NavigationRoute>;
+  #disposables: IDisposable[] = [];
 
   constructor(
     @inject(ApiSenderType)
@@ -57,6 +59,41 @@ export class NavigationManager {
     private onboardingRegistry: OnboardingRegistry,
   ) {
     this.#registry = new Map();
+  }
+
+  @postConstruct()
+  init(): void {
+    this.#disposables.push(
+      this.commandRegistry.registerCommand('navigation.goBack', () => {
+        this.apiSender.send('navigation-go-back', '');
+      }),
+    );
+
+    this.#disposables.push(
+      this.commandRegistry.registerCommand('navigation.goForward', () => {
+        this.apiSender.send('navigation-go-forward', '');
+      }),
+    );
+
+    this.#disposables.push(
+      this.commandRegistry.registerCommandPalette(
+        {
+          command: 'navigation.goBack',
+          title: 'Go Back',
+          category: 'Navigation',
+        },
+        {
+          command: 'navigation.goForward',
+          title: 'Go Forward',
+          category: 'Navigation',
+        },
+      ),
+    );
+  }
+
+  @preDestroy()
+  dispose(): void {
+    this.#disposables.forEach(disposable => disposable.dispose());
   }
 
   navigateTo<T extends NavigationPage>(navigateRequest: NavigationRequest<T>): void {
@@ -339,6 +376,15 @@ export class NavigationManager {
       page: NavigationPage.CREATE_PROVIDER_CONNECTION,
       parameters: {
         provider: internalId,
+      },
+    });
+  }
+
+  async navigateToExtensionsCatalog(options: NavigateToExtensionsCatalogOptions): Promise<void> {
+    this.navigateTo({
+      page: NavigationPage.EXTENSIONS_CATALOG,
+      parameters: {
+        searchTerm: options.searchTerm,
       },
     });
   }

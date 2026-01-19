@@ -22,15 +22,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { DockerConfig } from './docker-config.js';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    configuration: {
-      getConfiguration: vi.fn(),
-      onDidChangeConfiguration: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
 });

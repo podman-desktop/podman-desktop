@@ -23,4 +23,5 @@ export const isMac = os.platform() === 'darwin';
 export const isWindows = os.platform() === 'win32';
 export const archType = os.arch();
 
-export const isCI = process.env.CI ? process.env.CI === 'true' : false;
+// powershell $true value is 'True', we need to make it a lowercase first
+export const isCI = String(process.env.CI).toLowerCase() === 'true';

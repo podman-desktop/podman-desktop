@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { RunnerOptions } from '../runner/runner-options';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { isCI, isLinux } from '../utility/platform';
+import { RunnerOptions } from '/@/runner/runner-options';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isCI, isLinux } from '/@/utility/platform';
 
 let rateLimitReachedFlag = false;
 

@@ -19,17 +19,24 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { ContainerState } from '../core/states';
+import { ContainerState } from '/@/model/core/states';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
+import { BuildImagePage } from './build-image-page';
 import { ContainerDetailsPage } from './container-details-page';
 import { CreatePodsPage } from './create-pod-page';
 import { MainPage } from './main-page';
+import { SelectImagePage } from './select-image-page';
 
 export class ContainersPage extends MainPage {
   readonly pruneContainersButton: Locator;
   readonly createContainerButton: Locator;
   readonly pruneConfirmationButton: Locator;
   readonly runAllContainersButton: Locator;
+  readonly createDialog: Locator;
+  readonly createDialogCloseButton: Locator;
+  readonly createDialogContainerOrDockerfileButton: Locator;
+  readonly createDialogExistingImageButton: Locator;
 
   constructor(page: Page) {
     super(page, 'containers');
@@ -43,6 +50,17 @@ export class ContainersPage extends MainPage {
       name: 'Yes',
     });
     this.runAllContainersButton = this.page.getByLabel('Run selected containers and pods');
+    this.createDialog = this.page.getByRole('dialog', {
+      name: 'Create a new container',
+      exact: true,
+    });
+    this.createDialogCloseButton = this.createDialog.getByLabel('Close');
+    this.createDialogContainerOrDockerfileButton = this.createDialog.getByRole('button', {
+      name: 'Containerfile or Dockerfile',
+    });
+    this.createDialogExistingImageButton = this.createDialog.getByRole('button', {
+      name: 'Existing image',
+    });
   }
 
   async openContainersDetails(name: string): Promise<ContainerDetailsPage> {
@@ -132,7 +150,7 @@ export class ContainersPage extends MainPage {
         }
         await row.getByRole('cell').nth(1).click();
       }
-      await this.page.getByRole('button', { name: `Create Pod` }).click();
+      await this.page.getByRole('button', { name: 'Create Pod' }).click();
       return new CreatePodsPage(this.page);
     });
   }
@@ -159,6 +177,56 @@ export class ContainersPage extends MainPage {
       await this.checkAllRows();
       await this.runAllContainersButton.click();
       return this;
+    });
+  }
+
+  async openCreateDialog(): Promise<ContainersPage> {
+    return test.step('Open Create dialog', async () => {
+      await playExpect(this.createContainerButton).toBeEnabled();
+      await this.createContainerButton.click();
+      await playExpect(this.createDialog).toBeVisible();
+      return this;
+    });
+  }
+
+  async closeCreateDialog(): Promise<ContainersPage> {
+    return test.step('Close Create dialog', async () => {
+      await playExpect(this.createDialogCloseButton).toBeVisible();
+      await this.createDialogCloseButton.click();
+      await playExpect(this.createDialog).not.toBeVisible();
+      return this;
+    });
+  }
+
+  async openBuildImageFromDialog(): Promise<BuildImagePage> {
+    return test.step('Open Build Image page from Create dialog', async () => {
+      await this.openCreateDialog();
+      await playExpect(this.createDialogContainerOrDockerfileButton).toBeEnabled({ timeout: 10_000 });
+      await this.createDialogContainerOrDockerfileButton.click();
+      await playExpect(this.createDialog).not.toBeVisible({ timeout: 10_000 });
+      return new BuildImagePage(this.page);
+    });
+  }
+
+  async openSelectImageFromDialog(): Promise<SelectImagePage> {
+    return test.step('Open Select Image page from Create dialog', async () => {
+      await this.openCreateDialog();
+      await playExpect(this.createDialogExistingImageButton).toBeEnabled({ timeout: 10_000 });
+      await this.createDialogExistingImageButton.click();
+      await playExpect(this.createDialog).not.toBeVisible({ timeout: 10_000 });
+      return new SelectImagePage(this.page);
+    });
+  }
+
+  async getContainerEnvironment(name: string): Promise<string> {
+    return test.step(`Get Container: ${name} environment`, async () => {
+      const containerRow = await this.getContainerRowByName(name);
+      if (containerRow === undefined) {
+        throw Error(`Container: '${name}' does not exist`);
+      }
+      const environmentElement = containerRow.getByTestId('tooltip-trigger');
+      const environment = await environmentElement.textContent();
+      return environment ?? '';
     });
   }
 }

@@ -21,11 +21,11 @@ import { execSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import type { KubernetesResourceState } from '../model/core/states';
-import { KubernetesResources } from '../model/core/types';
-import { ContainerDetailsPage } from '../model/pages/container-details-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { handleConfirmationDialog } from './operations';
+import type { KubernetesResourceState } from '/@/model/core/states';
+import { KubernetesResources } from '/@/model/core/types';
+import { ContainerDetailsPage } from '/@/model/pages/container-details-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { handleConfirmationDialog } from '/@/utility/operations';
 
 export async function deployContainerToCluster(
   page: Page,
@@ -85,7 +85,7 @@ export async function deleteKubernetesResource(
   page: Page,
   resourceType: KubernetesResources,
   resourceName: string,
-  timeout: number = 30_000,
+  timeout = 30_000,
 ): Promise<void> {
   return test.step(`Delete ${resourceType} kubernetes resource: ${resourceName}`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -123,7 +123,7 @@ export async function checkKubernetesResourceState(
   resourceType: KubernetesResources,
   resourceName: string,
   expectedResourceState: KubernetesResourceState,
-  timeout: number = 90_000,
+  timeout = 90_000,
 ): Promise<void> {
   return test.step(`Check ${resourceType} kubernetes resource state, should be ${expectedResourceState}`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -146,10 +146,10 @@ export async function editDeploymentYamlFile(
   page: Page,
   resourceType: KubernetesResources,
   deploymentName: string,
-  currentReplicaCount: number = 3,
-  updatedReplicaCount: number = 5,
+  currentReplicaCount = 3,
+  updatedReplicaCount = 5,
 ): Promise<void> {
-  return test.step(`Change deployment kubernetes cluster resource`, async () => {
+  return test.step('Change deployment kubernetes cluster resource', async () => {
     const navigationBar = new NavigationBar(page);
     const kubernetesBar = await navigationBar.openKubernetes();
     await playExpect
@@ -181,7 +181,7 @@ export async function countKubernetesPodReplicas(page: Page, expectedPodName: st
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
 
-    let counter: number = 0;
+    let counter = 0;
     const rows = await kubernetesPodsPage.getAllTableRows();
     for (let i = rows.length - 1; i > 0; i--) {
       const podName = await rows[i].getByRole('cell').nth(3).getByRole('button').textContent();
@@ -205,7 +205,7 @@ export async function configurePortForwarding(
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
     const kubernetesResourceDetailsPage = await kubernetesResourcePage.openResourceDetails(resourceName, resourceType);
     await kubernetesResourceDetailsPage.activateTab('Summary');
-    const forwardButton = page.getByRole('button', { name: `Forward...` });
+    const forwardButton = page.getByRole('button', { name: 'Forward...' });
     await playExpect(forwardButton).toBeVisible();
     await forwardButton.click();
 
@@ -262,7 +262,7 @@ export async function monitorPodStatusInClusterContainer(
   page: Page,
   containerName: string,
   command: string,
-  timeout: number = 160_000,
+  timeout = 160_000,
 ): Promise<void> {
   const navigationBar = new NavigationBar(page);
   const containersPage = await navigationBar.openContainers();

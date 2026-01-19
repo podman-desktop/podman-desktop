@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { DetailsPage } from './details-page';
 import { ImageEditPage } from './image-edit-page';
 import { ImagesPage } from './images-page';
@@ -104,7 +105,7 @@ export class ImageDetailsPage extends DetailsPage {
 
   async saveImage(outputPath: string): Promise<ImagesPage> {
     if (!outputPath) {
-      throw Error(`Path is incorrect or not provided!`);
+      throw Error('Path is incorrect or not provided!');
     }
     // TODO: Will probably require refactoring when https://github.com/containers/podman-desktop/issues/7620 is done
     await playExpect(this.saveImagebutton).toBeEnabled();
@@ -123,7 +124,7 @@ export class ImageDetailsPage extends DetailsPage {
 
   async pushImageToKindCluster(): Promise<void> {
     const kebabMenuButton = this.controlActions.getByRole('button', { name: 'kebab menu', exact: true });
-    let pushToKindButton;
+    let pushToKindButton: Locator;
     const pushToKindName = 'Push image to Kind Cluster';
 
     if ((await kebabMenuButton.count()) > 0) {

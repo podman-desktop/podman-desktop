@@ -19,10 +19,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { KubernetesResourceState } from '../model/core/states';
-import { KubernetesResources } from '../model/core/types';
-import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { KubernetesResourceState } from '/@/model/core/states';
+import { KubernetesResources } from '/@/model/core/types';
+import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   checkKubernetesResourceState,
   configurePortForwarding,
@@ -32,9 +32,9 @@ import {
   monitorPodStatusInClusterContainer,
   verifyLocalPortResponse,
   verifyPortForwardingConfiguration,
-} from '../utility/kubernetes';
-import { deleteContainer, deleteImage, ensureCliInstalled } from '../utility/operations';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+} from '/@/utility/kubernetes';
+import { deleteContainer, deleteImage, ensureCliInstalled } from '/@/utility/operations';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const CLUSTER_NAME: string = 'kind-cluster';
 const CLUSTER_CREATION_TIMEOUT: number = 300_000;
@@ -55,7 +55,7 @@ const INGRESS_CONTROLLER_COMMAND: string = 'kubectl get pods -n projectcontour';
 const REMOTE_PORT: number = 80;
 const LOCAL_PORT: number = 50000;
 const PORT_FORWARDING_ADDRESS: string = `http://localhost:${LOCAL_PORT}/`;
-const SERVICE_ADDRESS: string = `http://localhost:9090/`;
+const SERVICE_ADDRESS: string = 'http://localhost:9090/';
 const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -223,7 +223,7 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
       await playExpect.poll(async () => kubernetesPodsPage.getRowByName(POD_NAME), { timeout: 15_000 }).toBeTruthy();
       const podDetailPage = await kubernetesPodsPage.openResourceDetails(POD_NAME, KubernetesResources.Pods);
       await podDetailPage.activateTab('Summary');
-      const forwardButton = page.getByRole('button', { name: `Forward...` });
+      const forwardButton = page.getByRole('button', { name: 'Forward...' });
       await playExpect(forwardButton).toBeVisible();
     });
 

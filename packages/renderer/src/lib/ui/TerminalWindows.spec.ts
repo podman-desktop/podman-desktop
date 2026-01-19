@@ -25,14 +25,11 @@ import { writable } from 'svelte/store';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
-
-vi.mock('@xterm/xterm');
-
-vi.mock('@xterm/addon-fit');
-
-vi.mock('@xterm/addon-search');
+vi.mock(import('@xterm/xterm'));
+vi.mock(import('@xterm/addon-fit'));
+vi.mock(import('@xterm/addon-search'));
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -118,12 +115,6 @@ test('terminal constructor should contains fontSize and lineHeight from configur
 });
 
 test('addon fit should be loaded on mount', async () => {
-  const fitAddonMock = {
-    fit: vi.fn(),
-  } as unknown as FitAddon;
-
-  vi.mocked(FitAddon).mockReturnValue(fitAddonMock);
-
   render(TerminalWindow, {
     terminal: createTerminalMock(),
   });
@@ -132,7 +123,9 @@ test('addon fit should be loaded on mount', async () => {
     expect(Terminal).toHaveBeenCalled();
   });
 
-  expect(FitAddon).toHaveBeenCalled();
+  expect(FitAddon).toHaveBeenCalledOnce();
+  const fitAddonMock = vi.mocked(FitAddon).mock.instances[0];
+
   expect(Terminal.prototype.loadAddon).toHaveBeenCalledWith(fitAddonMock);
 });
 

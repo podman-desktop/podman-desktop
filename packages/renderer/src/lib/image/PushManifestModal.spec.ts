@@ -26,18 +26,7 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import type { ImageInfoUI } from './ImageInfoUI';
 import PushManifestModal from './PushManifestModal.svelte';
 
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi.fn().mockReturnValue({
-      loadAddon: vi.fn(),
-      open: vi.fn(),
-      write: vi.fn(),
-      clear: vi.fn(),
-      reset: vi.fn(),
-      dispose: vi.fn(),
-    }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'dispatchEvent', {
@@ -60,7 +49,6 @@ const fakedManifest: ImageInfoUI = {
   base64RepoTag: 'base64RepoTag',
   selected: false,
   status: 'UNUSED',
-  icon: {},
   badges: [],
   isManifest: true,
   digest: 'sha256:1234567890',

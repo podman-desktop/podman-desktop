@@ -17,8 +17,7 @@
  ***********************************************************************/
 
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
-
-import type { NavigationRegistryEntry } from '../navigation-registry';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 export function createNavigationKubernetesDashboardEntry(): NavigationRegistryEntry {
   const registry: NavigationRegistryEntry = {

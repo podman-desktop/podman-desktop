@@ -4,10 +4,9 @@ import type { ComponentProps } from 'svelte';
 import { onDestroy, onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
+import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
 import KubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.svelte';
 import type { IDisposable } from '/@api/disposable';
-
-import { listenResourcePermitted } from '../kube/resource-permission';
 
 interface Props extends ComponentProps<EmptyScreen> {
   resources: string[];

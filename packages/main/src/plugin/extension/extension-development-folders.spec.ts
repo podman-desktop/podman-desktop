@@ -18,9 +18,9 @@
 import type { Configuration } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { ExtensionDevelopmentFolderInfoSettings } from '/@api/extension-development-folders-info.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
+import type { TelemetryMessages } from '/@api/telemetry.js';
+import { TelemetrySettings } from '/@api/telemetry/telemetry-settings.js';
+import product from '/@product.json' with { type: 'json' };
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import { TelemetryTrustedValue } from '../types/telemetry.js';
 import type { EventType } from './telemetry.js';
 import { Telemetry, TelemetryLoggerImpl } from './telemetry.js';
-import { TelemetrySettings } from './telemetry-settings.js';
 
 const getConfigurationMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();
@@ -61,6 +63,8 @@ vi.mock('../../../../../telemetry.json', () => ({
     ],
   },
 }));
+
+vi.mock(import('/@product.json'));
 
 class TelemetryTest extends Telemetry {
   constructor() {
@@ -388,5 +392,58 @@ describe('aggregateTrack', () => {
     expect(pending).toBeDefined();
     expect(Array.isArray(pending?.properties)).toBe(true);
     expect(pending?.properties).toEqual([{ foo: 1 }, { bar: 2 }]);
+  });
+
+  test('should return telemetry messages with default product name', async () => {
+    const messages = telemetry.getTelemetryMessages();
+    expect(messages.acceptMessage).toBe(
+      'Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.',
+    );
+    expect(messages.infoLink).toBe('Read our privacy statement');
+    expect(messages.infoURL).toBe('https://developers.redhat.com/article/tool-data-collection');
+  });
+
+  test('should register telemetry preference correctly', async () => {
+    await telemetry.init();
+
+    const messages = telemetry.getTelemetryMessages();
+    expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalledWith([
+      expect.objectContaining({
+        properties: expect.objectContaining({
+          'telemetry.enabled': expect.objectContaining({
+            markdownDescription: `${messages.acceptMessage} [${messages.infoLink}](${messages.infoURL})`,
+          }),
+        }),
+      }),
+    ]);
+  });
+
+  test('should return custom telemetry message', () => {
+    vi.mocked(product).telemetry.acceptMessage = 'Accept message';
+    vi.mocked(product).telemetry.infoLink = 'Privacy message';
+    vi.mocked(product).telemetry.infoURL = 'privacy-url';
+
+    const messages = telemetry.getTelemetryMessages();
+    expect(messages.acceptMessage).toBe('Accept message');
+    expect(messages.infoLink).toBe('Privacy message');
+    expect(messages.infoURL).toBe('privacy-url');
+  });
+
+  test('preference should be formatted correctly when no link is provided', async () => {
+    vi.mocked(telemetry).getTelemetryMessages = vi.fn().mockReturnValue({
+      acceptMessage: 'Accept message',
+    } as TelemetryMessages);
+    await telemetry.init();
+
+    const messages = telemetry.getTelemetryMessages();
+    expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalledWith([
+      expect.objectContaining({
+        properties: expect.objectContaining({
+          'telemetry.enabled': expect.objectContaining({
+            markdownDescription: `${messages.acceptMessage}`,
+          }),
+        }),
+      }),
+    ]);
   });
 });

@@ -2,6 +2,10 @@
 import { TableColumn, TableDurationColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
+import ConfigMapSecretIcon from '/@/lib/images/ConfigMapSecretIcon.svelte';
+import NameColumn from '/@/lib/kube/column/Name.svelte';
+import StatusColumn from '/@/lib/kube/column/Status.svelte';
+import KubernetesObjectsList from '/@/lib/objects/KubernetesObjectsList.svelte';
 import {
   configmapSearchPattern,
   kubernetesCurrentContextConfigMapsFiltered,
@@ -9,10 +13,6 @@ import {
   secretSearchPattern,
 } from '/@/stores/kubernetes-contexts-state';
 
-import ConfigMapSecretIcon from '../images/ConfigMapSecretIcon.svelte';
-import NameColumn from '../kube/column/Name.svelte';
-import StatusColumn from '../kube/column/Status.svelte';
-import KubernetesObjectsList from '../objects/KubernetesObjectsList.svelte';
 import ActionsColumn from './columns/Actions.svelte';
 import TypeColumn from './columns/Type.svelte';
 import { ConfigMapSecretUtils } from './configmap-secret-utils';

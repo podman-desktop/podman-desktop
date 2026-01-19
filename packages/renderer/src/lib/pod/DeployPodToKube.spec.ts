@@ -16,11 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import '@testing-library/jest-dom/vitest';
 
+import type { V1Pod } from '@kubernetes/client-node';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import * as jsYaml from 'js-yaml';
@@ -29,29 +27,12 @@ import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
+import type { SimpleContainerInfo } from '/@api/container-info';
+import type { V1Route } from '/@api/openshift-types';
 
 import DeployPodToKube from './DeployPodToKube.svelte';
 
-const generatePodmanKubeMock = vi.fn();
-const kubernetesGetCurrentContextNameMock = vi.fn();
-const kubernetesGetCurrentNamespaceMock = vi.fn();
-const kubernetesListNamespacesMock = vi.fn();
-const kubernetesReadNamespacedConfigMapMock = vi.fn();
-const telemetryTrackMock = vi.fn();
-const kubernetesCreatePodMock = vi.fn();
-const kubernetesCreateIngressMock = vi.fn();
-const kubernetesCreateServiceMock = vi.fn();
-const kubernetesIsAPIGroupSupported = vi.fn();
-const listSimpleContainersByLabelMock = vi.fn();
-const kubernetesReadNamespacedPodMock = vi.fn();
-const queryCommandSupportedMock = vi.fn();
-const openshiftCreateRouteMock = vi.fn();
-const openExternalMock = vi.fn();
-
-// replace Monaco Editor by a Spinner so we don't need to load tons of stuff
-vi.mock('../editor/MonacoEditor.svelte', actual => {
-  return vi.importActual('@podman-desktop/ui-svelte/Spinner');
-});
+vi.mock(import('/@/lib/editor/MonacoEditor.svelte'));
 
 // mock the router
 vi.mock('tinro', () => {
@@ -64,52 +45,7 @@ vi.mock('tinro', () => {
 
 beforeEach(() => {
   vi.resetAllMocks();
-
-  Object.defineProperty(window, 'generatePodmanKube', {
-    value: generatePodmanKubeMock,
-  });
-  Object.defineProperty(window, 'kubernetesGetCurrentContextName', {
-    value: kubernetesGetCurrentContextNameMock,
-  });
-  Object.defineProperty(window, 'kubernetesGetCurrentNamespace', {
-    value: kubernetesGetCurrentNamespaceMock,
-  });
-  Object.defineProperty(window, 'kubernetesReadNamespacedPod', {
-    value: kubernetesReadNamespacedPodMock,
-  });
-  Object.defineProperty(window, 'kubernetesListNamespaces', {
-    value: kubernetesListNamespacesMock,
-  });
-  Object.defineProperty(window, 'kubernetesReadNamespacedConfigMap', {
-    value: kubernetesReadNamespacedConfigMapMock,
-  });
-  Object.defineProperty(window, 'kubernetesCreatePod', {
-    value: kubernetesCreatePodMock,
-  });
-  Object.defineProperty(window, 'kubernetesCreateIngress', {
-    value: kubernetesCreateIngressMock,
-  });
-  Object.defineProperty(window, 'kubernetesCreateService', {
-    value: kubernetesCreateServiceMock,
-  });
-  Object.defineProperty(window, 'kubernetesIsAPIGroupSupported', {
-    value: kubernetesIsAPIGroupSupported,
-  });
-  Object.defineProperty(window, 'telemetryTrack', {
-    value: telemetryTrackMock,
-  });
-  Object.defineProperty(window, 'openshiftCreateRoute', {
-    value: openshiftCreateRouteMock,
-  });
-  Object.defineProperty(window, 'listSimpleContainersByLabel', {
-    value: listSimpleContainersByLabelMock,
-  });
-  Object.defineProperty(window, 'openExternal', {
-    value: openExternalMock,
-  });
-  Object.defineProperty(document, 'queryCommandSupported', {
-    value: queryCommandSupportedMock,
-  });
+  vi.useRealTimers();
 
   // podYaml with volumes
   const podYaml = {
@@ -149,7 +85,8 @@ beforeEach(() => {
       ],
     },
   };
-  generatePodmanKubeMock.mockResolvedValue(jsYaml.dump(podYaml));
+
+  vi.mocked(window.generatePodmanKube).mockResolvedValue(jsYaml.dump(podYaml));
 
   // Mock listSimpleContainersByLabel with a SimpleContainerInfo[] array of 1 container
   const simpleContainerInfo = {
@@ -160,8 +97,8 @@ beforeEach(() => {
     labels: {
       'com.docker.compose.project': 'hello',
     },
-  };
-  listSimpleContainersByLabelMock.mockResolvedValue([simpleContainerInfo]);
+  } as unknown as SimpleContainerInfo;
+  vi.mocked(window.listSimpleContainersByLabel).mockResolvedValue([simpleContainerInfo]);
 });
 
 async function waitRender(customProperties: Partial<ComponentProps<DeployPodToKube>>): Promise<void> {
@@ -174,17 +111,17 @@ async function waitRender(customProperties: Partial<ComponentProps<DeployPodToKu
 }
 
 test('Expect to create routes with OpenShift and open Link', async () => {
-  kubernetesReadNamespacedConfigMapMock.mockResolvedValue({
+  vi.mocked(window.kubernetesReadNamespacedConfigMap).mockResolvedValue({
     data: {
       consoleURL: 'https://console-openshift-console.apps.cluster-1.example.com',
     },
   });
-  kubernetesGetCurrentContextNameMock.mockResolvedValue('default');
-  kubernetesCreatePodMock.mockResolvedValue({
+  vi.mocked(window.kubernetesGetCurrentContextName).mockResolvedValue('default');
+  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
     metadata: { name: 'hello', namespace: 'default' },
   });
 
-  kubernetesReadNamespacedPodMock.mockResolvedValue({
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
     metadata: { name: 'hello' },
     status: {
       phase: 'Running',
@@ -192,14 +129,14 @@ test('Expect to create routes with OpenShift and open Link', async () => {
   });
 
   // say the pod has been created
-  kubernetesReadNamespacedPodMock.mockResolvedValue({
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
     metadata: { name: 'hello' },
     status: {
       phase: 'Running',
     },
   });
 
-  openshiftCreateRouteMock.mockResolvedValue({
+  vi.mocked(window.openshiftCreateRoute).mockResolvedValue({
     metadata: {
       name: 'hello-8080',
     },
@@ -209,9 +146,9 @@ test('Expect to create routes with OpenShift and open Link', async () => {
         targetPort: '8080',
       },
     },
-  });
+  } as unknown as V1Route);
 
-  kubernetesIsAPIGroupSupported.mockResolvedValue(true);
+  vi.mocked(window.kubernetesIsAPIGroupSupported).mockResolvedValue(true);
   await waitRender({});
 
   const createButton = screen.getByRole('button', { name: 'Deploy' });
@@ -220,10 +157,10 @@ test('Expect to create routes with OpenShift and open Link', async () => {
   await fireEvent.click(createButton);
 
   // wait that openshiftCreateRouteMock is called
-  await vi.waitFor(() => expect(openshiftCreateRouteMock.mock.calls).not.toHaveLength(0));
+  await vi.waitFor(() => expect(vi.mocked(window.openshiftCreateRoute).mock.calls).not.toHaveLength(0));
 
   await vi.waitFor(() =>
-    expect(telemetryTrackMock).toBeCalledWith('deployToKube', {
+    expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
       useRoutes: true,
       useServices: true,
       isOpenshift: true,
@@ -232,7 +169,7 @@ test('Expect to create routes with OpenShift and open Link', async () => {
   );
 
   // check tls option is used
-  expect(openshiftCreateRouteMock).toBeCalledWith('default', {
+  expect(window.openshiftCreateRoute).toBeCalledWith('default', {
     apiVersion: 'route.openshift.io/v1',
     kind: 'Route',
     metadata: {
@@ -262,7 +199,7 @@ test('Expect to create routes with OpenShift and open Link', async () => {
   await fireEvent.click(openRouteButton);
 
   // expect the router to be called with the correct url
-  expect(openExternalMock).toBeCalledWith('https://my-spec-host');
+  expect(window.openExternal).toBeCalledWith('https://my-spec-host');
 });
 
 test('Expect to send telemetry event', async () => {
@@ -273,7 +210,7 @@ test('Expect to send telemetry event', async () => {
 
   await fireEvent.click(createButton);
   await waitFor(() =>
-    expect(telemetryTrackMock).toBeCalledWith('deployToKube', {
+    expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
       useRoutes: true,
       useServices: true,
       createIngress: false,
@@ -282,12 +219,12 @@ test('Expect to send telemetry event', async () => {
 });
 
 test('Expect to send telemetry event with OpenShift', async () => {
-  kubernetesReadNamespacedConfigMapMock.mockResolvedValue({
+  vi.mocked(window.kubernetesReadNamespacedConfigMap).mockResolvedValue({
     data: {
       consoleURL: 'https://console-openshift-console.apps.cluster-1.example.com',
     },
   });
-  kubernetesIsAPIGroupSupported.mockResolvedValue(true);
+  vi.mocked(window.kubernetesIsAPIGroupSupported).mockResolvedValue(true);
   await waitRender({});
   const createButton = screen.getByRole('button', { name: 'Deploy' });
   expect(createButton).toBeInTheDocument();
@@ -295,7 +232,7 @@ test('Expect to send telemetry event with OpenShift', async () => {
 
   await fireEvent.click(createButton);
   await waitFor(() =>
-    expect(telemetryTrackMock).toBeCalledWith('deployToKube', {
+    expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
       useRoutes: true,
       useServices: true,
       isOpenshift: true,
@@ -306,7 +243,7 @@ test('Expect to send telemetry event with OpenShift', async () => {
 
 test('Expect to send telemetry error event', async () => {
   // creation throws an error
-  kubernetesCreatePodMock.mockRejectedValue(new Error('Custom Error'));
+  vi.mocked(window.kubernetesCreatePod).mockRejectedValue(new Error('Custom Error'));
 
   await waitRender({});
   const createButton = screen.getByRole('button', { name: 'Deploy' });
@@ -316,7 +253,7 @@ test('Expect to send telemetry error event', async () => {
   // expect it throws a telemetry event reporting an error
   await fireEvent.click(createButton);
   await waitFor(() =>
-    expect(telemetryTrackMock).toHaveBeenCalledWith('deployToKube', {
+    expect(window.telemetryTrack).toHaveBeenCalledWith('deployToKube', {
       errorMessage: 'Custom Error',
       useRoutes: true,
       useServices: true,
@@ -336,7 +273,7 @@ test('When deploying a pod, volumes should not be added (they are deleted by pod
 
   // Expect kubernetesCreatePod to be called with default namespace and a modified bodyPod with volumes removed
   await waitFor(() =>
-    expect(kubernetesCreatePodMock).toBeCalledWith('default', {
+    expect(window.kubernetesCreatePod).toBeCalledWith('default', {
       metadata: {
         labels: {
           app: 'hello',
@@ -374,7 +311,7 @@ test('Test deploying a group of compose containers with type compose still funct
 
   // Expect to return the correct create pod yaml
   await waitFor(() =>
-    expect(kubernetesCreatePodMock).toBeCalledWith('default', {
+    expect(window.kubernetesCreatePod).toBeCalledWith('default', {
       metadata: {
         labels: {
           app: 'hello',
@@ -417,7 +354,7 @@ test('When modifying the pod name, metadata.apps.label should also have been cha
 
   // Expect kubernetesCreatePod to be called with default namespace and a modified bodyPod with volumes removed
   await waitFor(() =>
-    expect(kubernetesCreatePodMock).toBeCalledWith('default', {
+    expect(window.kubernetesCreatePod).toBeCalledWith('default', {
       metadata: {
         labels: {
           app: 'newName',
@@ -458,7 +395,7 @@ test('When deploying a pod, restricted security context is added', async () => {
 
   // Expect kubernetesCreatePod to be called with default namespace and a modified bodyPod with volumes removed
   await waitFor(() =>
-    expect(kubernetesCreatePodMock).toBeCalledWith('default', {
+    expect(window.kubernetesCreatePod).toBeCalledWith('default', {
       metadata: {
         labels: {
           app: 'hello',
@@ -510,7 +447,7 @@ test('Succeed to deploy ingress if service is selected', async () => {
   await fireEvent.click(createButton);
 
   // Expect kubernetesCreateIngress to not be called since we error out as service wasn't selected
-  expect(kubernetesCreateIngressMock).toHaveBeenCalled();
+  expect(window.kubernetesCreateIngress).toHaveBeenCalled();
 });
 
 test('fail to deploy ingress if service is unselected', async () => {
@@ -523,29 +460,26 @@ test('fail to deploy ingress if service is unselected', async () => {
   await fireEvent.click(createButton);
 
   // Expect kubernetesCreateIngress to not be called since we error out as service wasn't selected
-  expect(kubernetesCreateIngressMock).not.toHaveBeenCalled();
+  expect(window.kubernetesCreateIngress).not.toHaveBeenCalled();
 });
 
 test('Should display Open pod button after successful deployment', async () => {
-  await waitFor(() => kubernetesGetCurrentContextNameMock.mockResolvedValue('default'));
+  vi.mocked(window.kubernetesGetCurrentContextName).mockResolvedValue('default');
+
   await waitRender({});
   const createButton = screen.getByRole('button', { name: 'Deploy' });
   expect(createButton).toBeInTheDocument();
   expect(createButton).toBeEnabled();
 
-  await waitFor(() =>
-    kubernetesCreatePodMock.mockResolvedValue({
-      metadata: { name: 'my-pod', namespace: 'default' },
-    }),
-  );
-  await waitFor(() =>
-    kubernetesReadNamespacedPodMock.mockResolvedValue({
-      metadata: { name: 'my-pod', namespace: 'default' },
-      status: {
-        phase: 'Running',
-      },
-    }),
-  );
+  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
+    metadata: { name: 'my-pod', namespace: 'default' },
+  });
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
+    metadata: { name: 'my-pod', namespace: 'default' },
+    status: {
+      phase: 'Running',
+    },
+  });
 
   vi.useFakeTimers({ shouldAdvanceTime: true });
   await fireEvent.click(createButton);
@@ -568,35 +502,80 @@ test('Should display Open pod button after successful deployment', async () => {
 });
 
 test('Done button should go back to previous page', async () => {
-  await waitFor(() => kubernetesGetCurrentContextNameMock.mockResolvedValue('default'));
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+
+  vi.mocked(window.kubernetesGetCurrentContextName).mockResolvedValue('default');
+
   await waitRender({});
   const createButton = screen.getByRole('button', { name: 'Deploy' });
   expect(createButton).toBeInTheDocument();
   expect(createButton).toBeEnabled();
 
-  await waitFor(() =>
-    kubernetesCreatePodMock.mockResolvedValue({
-      metadata: { name: 'foobar/api-fake-cluster.com:6443', namespace: 'default' },
-    }),
-  );
-  await waitFor(() =>
-    kubernetesReadNamespacedPodMock.mockResolvedValue({
-      metadata: { name: 'foobar/api-fake-cluster.com:6443' },
-      status: {
-        phase: 'Running',
-      },
-    }),
-  );
+  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
+    metadata: { name: 'foobar/api-fake-cluster.com:6443', namespace: 'default' },
+  });
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
+    metadata: { name: 'foobar/api-fake-cluster.com:6443' },
+    status: {
+      phase: 'Running',
+    },
+  });
 
-  vi.useFakeTimers();
   await fireEvent.click(createButton);
-  await vi.runAllTimersAsync();
 
-  const doneButton = screen.getByRole('button', { name: 'Done' });
+  const doneButton = await vi.waitFor(async () => {
+    await vi.advanceTimersByTimeAsync(2000);
+    return screen.getByRole('button', { name: 'Done' });
+  });
   expect(doneButton).toBeInTheDocument();
   expect(doneButton).toBeEnabled();
 
   lastPage.set({ name: 'perious page', path: '/last' });
   await fireEvent.click(doneButton);
   expect(router.goto).toHaveBeenCalledWith(`/last`);
+});
+
+test('ImagePullBackOff error should be reported', async () => {
+  await waitRender({});
+  const createButton = screen.getByRole('button', { name: 'Deploy' });
+  expect(createButton).toBeInTheDocument();
+  expect(createButton).toBeEnabled();
+
+  vi.mocked(window.kubernetesCreatePod).mockResolvedValue({
+    metadata: { name: 'my-pod', namespace: 'default' },
+  });
+  vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({
+    metadata: { name: 'my-pod', namespace: 'default' },
+    status: {
+      containerStatuses: [
+        {
+          state: {
+            waiting: {
+              reason: 'ImagePullBackOff',
+            },
+          },
+        },
+      ],
+    },
+  } as unknown as V1Pod);
+
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  await fireEvent.click(createButton);
+  await vi.runAllTimersAsync();
+
+  await waitFor(() => {
+    // The error is reported to the telemetry and to the user
+    expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
+      errorMessage: 'ImagePullBackOff',
+    });
+    expect(screen.getByLabelText('Deploy Error Message')).toHaveTextContent(
+      'ImagePullBackOff error, please check that the image is accessible from the Kubernetes cluster',
+    );
+  });
+  await vi.waitFor(() => {
+    // The deploy button is displayed again, meaning that the deploy process has been aborted
+    const deployButton = screen.getByRole('button', { name: 'Deploy' });
+    expect(deployButton).toBeVisible();
+    expect(deployButton).toBeEnabled();
+  });
 });

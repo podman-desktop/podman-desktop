@@ -90,6 +90,7 @@ vi.mock('tinro', () => {
 
 const pStatus: ProviderStatus = 'started';
 const pInfo: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'test',
   displayName: 'test',
   status: 'started',
@@ -128,15 +129,6 @@ beforeEach(() => {
     return undefined;
   });
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
-  Object.defineProperty(window, 'matchMedia', {
-    value: () => {
-      return {
-        matches: false,
-        addListener: (): void => {},
-        removeListener: (): void => {},
-      };
-    },
-  });
 
   providerInfos.set([providerInfo]);
 });

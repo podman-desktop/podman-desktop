@@ -20,11 +20,11 @@
 
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import type { ProviderInfo } from '/@api/provider-info';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import { eventStore, providerInfos } from './providers';
+import { containerConnectionCount, eventStore, providerInfos } from './providers';
 
 // first, path window object
 const callbacks = new Map<string, any>();
@@ -48,7 +48,22 @@ Object.defineProperty(global, 'window', {
 });
 
 beforeAll(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+});
+
+test('no provider through window.getProviderInfos should make the store empty', () => {
+  // fast delays (10 & 10ms)
+  eventStore.setupWithDebounce(10, 10);
+
+  // empty list
+  getProviderInfosMock.mockResolvedValue([]);
+
+  // mark as ready to receive updates
+  callbacks.get('system-ready')();
+
+  // now get list
+  const providerListResult = get(providerInfos);
+  expect(providerListResult.length).toBe(0);
 });
 
 test.each([
@@ -98,4 +113,133 @@ test.each([
   const providerListResult = get(providerInfos);
   expect(providerListResult.length).toBe(1);
   expect(providerListResult[0].id).toEqual('id123');
+});
+
+describe('containerConnectionCount', () => {
+  const PODMAN_CONNECTION = {
+    name: 'podman-machine-default',
+    status: 'started',
+    type: 'podman',
+  } as unknown as ProviderContainerConnectionInfo;
+
+  const PODMAN_PROVIDER: ProviderInfo = {
+    id: 'podman',
+    name: 'Podman',
+    kubernetesConnections: [],
+    vmConnections: [],
+    containerConnections: [],
+  } as unknown as ProviderInfo;
+
+  const DOCKER_CONNECTION = {
+    name: 'docker-context',
+    status: 'started',
+    type: 'docker',
+  } as unknown as ProviderContainerConnectionInfo;
+
+  const DOCKER_PROVIDER: ProviderInfo = {
+    id: 'docker',
+    name: 'Docker',
+    kubernetesConnections: [],
+    vmConnections: [],
+    containerConnections: [],
+  } as unknown as ProviderInfo;
+
+  function initProviderInfoStore(providers: ProviderInfo[]): Promise<void> {
+    // fast delays (10 & 10ms)
+    eventStore.setupWithDebounce(10, 10);
+
+    // empty list
+    getProviderInfosMock.mockResolvedValue(providers);
+
+    // mark as ready to receive updates
+    callbacks.get('system-ready')();
+    callbacks.get('provider-change')();
+
+    return vi.waitFor(() => {
+      expect(getProviderInfosMock).toHaveBeenCalled();
+      expect(get(providerInfos)).toHaveLength(providers.length);
+    });
+  }
+
+  test('should be zero if no provider are available', async () => {
+    await initProviderInfoStore([]);
+
+    expect(get(containerConnectionCount)).toEqual(
+      expect.objectContaining({
+        podman: 0,
+        docker: 0,
+      }),
+    );
+  });
+
+  test('should be zero if no provider has container connection', async () => {
+    await initProviderInfoStore([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+
+    expect(get(containerConnectionCount)).toEqual(
+      expect.objectContaining({
+        podman: 0,
+        docker: 0,
+      }),
+    );
+  });
+
+  test('should be one if one started provider are available', async () => {
+    await initProviderInfoStore([
+      {
+        ...PODMAN_PROVIDER,
+        containerConnections: [PODMAN_CONNECTION],
+      },
+    ]);
+
+    expect(get(containerConnectionCount)).toEqual(
+      expect.objectContaining({
+        podman: 1,
+        docker: 0,
+      }),
+    );
+  });
+
+  test('should count podman container connections from all providers', async () => {
+    await initProviderInfoStore([
+      {
+        ...PODMAN_PROVIDER,
+        containerConnections: [PODMAN_CONNECTION],
+      },
+      {
+        ...PODMAN_PROVIDER,
+        containerConnections: [PODMAN_CONNECTION],
+      },
+    ]);
+
+    expect(get(containerConnectionCount)).toEqual(
+      expect.objectContaining({
+        podman: 2,
+        docker: 0,
+      }),
+    );
+  });
+
+  test('should count podman & docker container connections from all providers', async () => {
+    await initProviderInfoStore([
+      {
+        ...PODMAN_PROVIDER,
+        containerConnections: [PODMAN_CONNECTION],
+      },
+      {
+        ...PODMAN_PROVIDER,
+        containerConnections: [PODMAN_CONNECTION],
+      },
+      {
+        ...DOCKER_PROVIDER,
+        containerConnections: [DOCKER_CONNECTION],
+      },
+    ]);
+
+    expect(get(containerConnectionCount)).toEqual(
+      expect.objectContaining({
+        podman: 2,
+        docker: 1,
+      }),
+    );
+  });
 });

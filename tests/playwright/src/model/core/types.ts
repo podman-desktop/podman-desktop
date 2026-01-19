@@ -42,8 +42,8 @@ export interface DeployPodOptions {
 }
 
 export enum PodmanKubePlayOptions {
-  SelectYamlFile,
-  CreateYamlFileFromScratch,
+  SelectYamlFile = 0,
+  CreateYamlFileFromScratch = 1,
 }
 
 export interface PlayFromScratch {
@@ -101,6 +101,47 @@ export enum PodmanVirtualizationProviders {
   LibKrun = 'default GPU enabled (LibKrun)',
   Qemu = 'Qemu',
   Native = '', //not a real provider, used for 'Connection Type' check in Resources page of Linux machines
+}
+
+/**
+ * Maps each virtualization provider enum value to an array of possible UI values.
+ * This allows handling version differences where the same provider may appear with different names.
+ * For example, HyperV can appear as 'Hyperv' or 'Hyper-V' in different versions.
+ */
+export const PodmanVirtualizationProviderVariants: Record<PodmanVirtualizationProviders, string[]> = {
+  [PodmanVirtualizationProviders.WSL]: ['Wsl', 'WSL'],
+  [PodmanVirtualizationProviders.HyperV]: ['Hyperv', 'Hyper-V', 'HyperV'],
+  [PodmanVirtualizationProviders.AppleHV]: ['Apple HyperVisor', 'Apple Hypervisor', 'AppleHV'],
+  [PodmanVirtualizationProviders.LibKrun]: ['default GPU enabled (LibKrun)', 'LibKrun', 'libkrun'],
+  [PodmanVirtualizationProviders.Qemu]: ['Qemu', 'QEMU', 'qemu'],
+  [PodmanVirtualizationProviders.Native]: [''],
+};
+
+/**
+ * Checks if a given value matches any of the possible variants for a provider enum value.
+ * @param provider - The provider enum value to check against
+ * @param value - The value to check (case-insensitive comparison)
+ * @returns True if the value matches any variant of the provider
+ */
+export function matchesProviderVariant(provider: PodmanVirtualizationProviders, value: string): boolean {
+  const variants = PodmanVirtualizationProviderVariants[provider];
+  const normalizedValue = value.toLowerCase().trim();
+  return variants.some(variant => variant.toLowerCase().trim() === normalizedValue);
+}
+
+/**
+ * Gets the first matching provider enum value for a given UI value, or undefined if no match.
+ * @param value - The UI value to match (case-insensitive comparison)
+ * @returns The matching provider enum value, or undefined if no match
+ */
+export function getProviderFromVariant(value: string): PodmanVirtualizationProviders | undefined {
+  const normalizedValue = value.toLowerCase().trim();
+  for (const [provider, variants] of Object.entries(PodmanVirtualizationProviderVariants)) {
+    if (variants.some(variant => variant.toLowerCase().trim() === normalizedValue)) {
+      return provider as PodmanVirtualizationProviders;
+    }
+  }
+  return undefined;
 }
 
 export enum PodmanMachinePrivileges {

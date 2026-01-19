@@ -26,6 +26,7 @@ import {
   BatchV1Api,
   CoreV1Api,
   Exec,
+  Health,
   KubeConfig,
   type KubernetesObject,
   type V1ConfigMap,
@@ -44,15 +45,15 @@ import {
 } from '@kubernetes/client-node';
 import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
-import { beforeAll, beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
+import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { type ForwardConfig, type ForwardOptions, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
-import type { ApiSenderType } from '../api.js';
 import { Emitter } from '../events/emitter.js';
 import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
@@ -281,49 +282,37 @@ const apiSender: ApiSenderType = {
   receive: vi.fn(),
 };
 
-vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-service', async () => {
-  const singletonGetServiceMock = vi.fn();
+vi.mock(import('/@/plugin/kubernetes/kubernetes-port-forward-service.js'));
+vi.mock(import('@kubernetes/client-node'), async importOriginal => {
+  const original = await importOriginal();
   return {
-    KubernetesPortForwardService: vi.fn(),
-    KubernetesPortForwardServiceProvider: vi.fn().mockImplementation(() => {
-      return {
-        getService: singletonGetServiceMock,
-      };
-    }),
-  };
+    // we need to use original ApiException
+    ...original,
+    KubeConfig: vi.fn(),
+    CoreV1Api: {},
+    AppsV1Api: {},
+    BatchV1Api: {},
+    CustomObjectsApi: {},
+    NetworkingV1Api: {},
+    VersionApi: {},
+    makeInformer: vi.fn(),
+    createConfiguration: vi.fn(),
+    KubernetesObjectApi: vi.fn(),
+    HttpError: class HttpError extends Error {
+      statusCode: number;
+      constructor(statusCode: number, message: string) {
+        super(message);
+        this.statusCode = statusCode;
+      }
+    },
+    Exec: vi.fn(),
+    V1DeleteOptions: vi.fn(),
+    V1Job: vi.fn(),
+    Health: vi.fn(),
+  } as unknown as typeof clientNode;
 });
 
 const execMock = vi.fn();
-beforeAll(() => {
-  vi.mock('@kubernetes/client-node', async importOriginal => {
-    const original = await importOriginal<typeof clientNode>();
-    return {
-      // we need to use original ApiException
-      ...original,
-      KubeConfig: vi.fn(),
-      CoreV1Api: {},
-      AppsV1Api: {},
-      BatchV1Api: {},
-      CustomObjectsApi: {},
-      NetworkingV1Api: {},
-      VersionApi: {},
-      makeInformer: vi.fn(),
-      createConfiguration: vi.fn(),
-      KubernetesObjectApi: vi.fn(),
-      HttpError: class HttpError extends Error {
-        statusCode: number;
-        constructor(statusCode: number, message: string) {
-          super(message);
-          this.statusCode = statusCode;
-        }
-      },
-      Exec: vi.fn(),
-      V1DeleteOptions: vi.fn(),
-      V1Job: vi.fn(),
-      Health: vi.fn(),
-    };
-  });
-});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -333,6 +322,7 @@ beforeEach(() => {
   KubeConfig.prototype.getContextObject = getContextObjectMock;
   KubeConfig.prototype.currentContext = 'context';
   Exec.prototype.exec = execMock;
+  Health.prototype.readyz = vi.fn();
 });
 
 test('Create Kubernetes resources with empty should return ok', async () => {
@@ -370,31 +360,32 @@ describe.each([
     namespace: undefined,
     expectedNamespace: 'demons',
   },
-])(
-  'Create Kubernetes resources with apps/v1 resource should return ok',
-  ({ manifest, namespace, expectedNamespace }) => {
-    test(`should use namespace ${expectedNamespace}`, async () => {
-      const client = createTestClient();
-      const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
-      const createMock = vi.fn().mockReturnValue({});
-      makeApiClientMock.mockReturnValue({
-        read: readMock,
-        create: createMock,
-      });
-
-      await client.createResources('dummy', [manifest], namespace);
-      expect(readMock).toHaveBeenCalled();
-      expect(createMock).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
-      );
-      expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
-        action: 'create',
-        manifestsSize: 1,
-        namespace: namespace,
-      });
+])('Create Kubernetes resources with apps/v1 resource should return ok', ({
+  manifest,
+  namespace,
+  expectedNamespace,
+}) => {
+  test(`should use namespace ${expectedNamespace}`, async () => {
+    const client = createTestClient();
+    const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
+    const createMock = vi.fn().mockReturnValue({});
+    makeApiClientMock.mockReturnValue({
+      read: readMock,
+      create: createMock,
     });
-  },
-);
+
+    await client.createResources('dummy', [manifest], namespace);
+    expect(readMock).toHaveBeenCalled();
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
+    );
+    expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
+      action: 'create',
+      manifestsSize: 1,
+      namespace: namespace,
+    });
+  });
+});
 
 describe.each([
   {
@@ -412,31 +403,32 @@ describe.each([
     namespace: undefined,
     expectedNamespace: 'demons',
   },
-])(
-  'Create Kubernetes resources with networking.k8s.io/v1 resource should return ok',
-  ({ manifest, namespace, expectedNamespace }) => {
-    test(`should use namespace ${expectedNamespace}`, async () => {
-      const client = createTestClient();
-      const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
-      const createMock = vi.fn().mockReturnValue({});
-      makeApiClientMock.mockReturnValue({
-        read: readMock,
-        create: createMock,
-      });
-
-      await client.createResources('dummy', [manifest], namespace);
-      expect(readMock).toHaveBeenCalled();
-      expect(createMock).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
-      );
-      expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
-        action: 'create',
-        manifestsSize: 1,
-        namespace: namespace,
-      });
+])('Create Kubernetes resources with networking.k8s.io/v1 resource should return ok', ({
+  manifest,
+  namespace,
+  expectedNamespace,
+}) => {
+  test(`should use namespace ${expectedNamespace}`, async () => {
+    const client = createTestClient();
+    const readMock = vi.fn().mockRejectedValue(new Error('ResourceDoesntExistError'));
+    const createMock = vi.fn().mockReturnValue({});
+    makeApiClientMock.mockReturnValue({
+      read: readMock,
+      create: createMock,
     });
-  },
-);
+
+    await client.createResources('dummy', [manifest], namespace);
+    expect(readMock).toHaveBeenCalled();
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ namespace: expectedNamespace }) }),
+    );
+    expect(telemetry.track).toHaveBeenCalledWith('kubernetesSyncResources', {
+      action: 'create',
+      manifestsSize: 1,
+      namespace: namespace,
+    });
+  });
+});
 
 describe.each([
   {
@@ -477,9 +469,7 @@ describe.each([
 });
 
 test('Check connection to Kubernetes cluster', async () => {
-  vi.mocked(clientNode.Health).mockReturnValue({
-    readyz: vi.fn().mockResolvedValue(true),
-  } as unknown as clientNode.Health);
+  vi.mocked(clientNode.Health.prototype.readyz).mockResolvedValue(true);
   const client = new KubernetesClient(
     {} as ApiSenderType,
     configurationRegistry,
@@ -492,9 +482,7 @@ test('Check connection to Kubernetes cluster', async () => {
 });
 
 test('Check connection to Kubernetes cluster in error', async () => {
-  vi.mocked(clientNode.Health).mockReturnValue({
-    readyz: vi.fn().mockRejectedValue(undefined),
-  } as unknown as clientNode.Health);
+  vi.mocked(clientNode.Health.prototype.readyz).mockRejectedValue(undefined);
 
   const client = new KubernetesClient(
     {} as ApiSenderType,
@@ -2535,8 +2523,7 @@ describe('port forward', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const providerInstance = new KubernetesPortForwardServiceProvider();
-    vi.mocked(providerInstance.getService).mockReturnValue(serviceMock);
+    vi.mocked(KubernetesPortForwardServiceProvider.prototype.getService).mockReturnValue(serviceMock);
   });
 
   test('expect forward to be returned', async () => {

@@ -1,0 +1,150 @@
+#
+# Copyright (C) 2023-2025 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Publish NPM packages to npmjs.com using OIDC
+
+# publish packages on npmjs.com when we push new commits on main branch or new tags
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-version:
+    name: Prepare version info
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+      dist-tag: ${{ steps.set-version.outputs.dist-tag }}
+      github-tag: ${{ steps.set-version.outputs.github-tag }}
+      is-tag: ${{ steps.set-version.outputs.is-tag }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set version / dist-tag depending on ref
+        id: set-version
+        run: |
+          echo "GITHUB_REF=${GITHUB_REF}"
+          echo "GITHUB_REF_TYPE=${GITHUB_REF_TYPE}"
+          echo "GITHUB_REF_NAME=${GITHUB_REF_NAME}"
+
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            # Tag case, e.g. refs/tags/v1.23.1
+            RAW_TAG="${GITHUB_REF_NAME}"  # e.g. v1.23.1
+            # strip leading v
+            VERSION="${RAW_TAG#v}"        # e.g. 1.23.1
+
+            echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+            echo "dist-tag=latest" >> "${GITHUB_OUTPUT}"
+            echo "github-tag=${RAW_TAG}" >> "${GITHUB_OUTPUT}"
+            echo "is-tag=true" >> "${GITHUB_OUTPUT}"
+          else
+            # main branch (or others if you add them)
+            CURRENT_DAY=$(date +'%Y%m%d')
+            SHORT_SHA1=$(git rev-parse --short HEAD)
+            PODMAN_DESKTOP_VERSION=$(jq -r '.version' package.json)
+            STRIPPED_VERSION=${PODMAN_DESKTOP_VERSION%-next}
+            TAG_PATTERN=${STRIPPED_VERSION}-next.$(date +'%Y%m%d%H%M')-${SHORT_SHA1}
+            GITHUB_TAG="v${TAG_PATTERN}"
+
+            echo "Computed githubTag=${GITHUB_TAG}"
+
+            echo "version=${TAG_PATTERN}" >> "${GITHUB_OUTPUT}"
+            echo "dist-tag=next" >> "${GITHUB_OUTPUT}"
+            echo "github-tag=${GITHUB_TAG}" >> "${GITHUB_OUTPUT}"
+            echo "is-tag=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  publish:
+    name: Publish to npm
+    needs: [prepare-version]
+    runs-on: ubuntu-24.04
+    # For tag releases, require an environment (so people can approve it)
+    environment: ${{ needs.prepare-version.outputs.is-tag == 'true' && 'npmjs-publication' || '' }}
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 24 # 24.x for npm publish with OIDC
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Show publish parameters
+        run: |
+          echo "Publishing version: ${{ needs.prepare-version.outputs.version }}"
+          echo "Using dist-tag:     ${{ needs.prepare-version.outputs.dist-tag }}"
+          echo "GitHub tag:         ${{ needs.prepare-version.outputs.github-tag }}"
+          echo "Is tag ref:         ${{ needs.prepare-version.outputs.is-tag }}"
+
+      - name: Update versions in package.json files
+        run: |
+          VERSION="${{ needs.prepare-version.outputs.version }}"
+          echo "Setting version to ${VERSION}"
+
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/extension-api/package.json
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/webview-api/package.json
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/ui/package.json
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" tests/playwright/package.json
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" extensions/podman/packages/api/package.json
+          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" extensions/docker/packages/api/package.json
+
+      - name: Publish Extension API to npmjs
+        run: |
+          cd packages/extension-api
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish Webview API to npmjs
+        run: |
+          cd packages/webview-api
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish ui/svelte to npmjs
+        run: |
+          cd packages/ui
+          pnpm build
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish tests-playwright to npmjs
+        run: |
+          cd tests/playwright
+          pnpm build
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish Podman Extension API to npmjs
+        run: |
+          cd extensions/podman/packages/api
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
+
+      - name: Publish Docker Extension API to npmjs
+        run: |
+          cd extensions/docker/packages/api
+          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public

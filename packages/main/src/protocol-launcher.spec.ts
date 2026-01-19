@@ -95,19 +95,19 @@ test.each([
   await vi.waitFor(() => expect(BROWSER_WINDOW_MOCK.webContents.send).toHaveBeenCalledWith(...webContentsSend));
 });
 
-test.each(['podman-desktop:extension/my.extension', 'podman-desktop:experimental'])(
-  'should not do anything with valid URL on OS different than Windows',
-  async url => {
-    vi.mocked(isWindows).mockReturnValue(false);
+test.each([
+  'podman-desktop:extension/my.extension',
+  'podman-desktop:experimental',
+])('should not do anything with valid URL on OS different than Windows', async url => {
+  vi.mocked(isWindows).mockReturnValue(false);
 
-    const protocol = getProtocolLauncher();
+  const protocol = getProtocolLauncher();
 
-    protocol.handleAdditionalProtocolLauncherArgs([url]);
+  protocol.handleAdditionalProtocolLauncherArgs([url]);
 
-    // no called on it
-    expect(BROWSER_WINDOW_MOCK.webContents.send).not.toHaveBeenCalled();
-  },
-);
+  // no called on it
+  expect(BROWSER_WINDOW_MOCK.webContents.send).not.toHaveBeenCalled();
+});
 
 describe('sanitizeProtocolForExtension', () => {
   test('handle sanitizeProtocolForExtension', () => {

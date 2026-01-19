@@ -16,30 +16,37 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
-import { ResourceElementActions } from '../model/core/operations';
-import { ResourceElementState } from '../model/core/states';
-import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '../model/core/types';
-import { CreateMachinePage } from '../model/pages/create-machine-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementState } from '/@/model/core/states';
+import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model/core/types';
+import { CreateMachinePage } from '/@/model/pages/create-machine-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
   deletePodmanMachine,
-  deletePodmanMachineFromCLI,
   handleConfirmationDialog,
   resetPodmanMachinesFromCLI,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
-} from '../utility/operations';
-import { isLinux, isWindows } from '../utility/platform';
-import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
-import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
+} from '/@/utility/operations';
+import { isLinux, isWindows } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
+import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
 const DEFAULT_PODMAN_MACHINE_NAME = 'podman-machine-default';
 const RESOURCE_NAME = 'podman';
+
+// Timeout constants
+const TIMEOUT_SHORT = 30_000;
+const TIMEOUT_MEDIUM = 60_000;
+const TIMEOUT_LONG = 120_000;
+const TIMEOUT_MACHINE_CREATION = 200_000;
+const TIMEOUT_MACHINE_DELETION = 150_000;
+
 let dialog: Locator;
 
 const machineTypes = [
@@ -56,15 +63,25 @@ const machineTypes = [
     userNet: false,
   },
   {
-    PODMAN_MACHINE_NAME: 'podman-machine-user-networking',
-    MACHINE_VISIBLE_NAME: 'Podman Machine user-networking',
+    PODMAN_MACHINE_NAME: 'podman-machine-usermode',
+    MACHINE_VISIBLE_NAME: 'Podman Machine usermode',
     isRoot: true,
     userNet: true,
   },
 ];
 
+test.skip(
+  isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
+  'Tests suite should not run on Linux platform or if TEST_PODMAN_MACHINE is not true',
+);
+
+test.skip(
+  getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
+  'Podman Desktop is not able to have 2 HyperV machines running at the same time',
+);
+
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
-  runner.setVideoAndTraceName(`podman-machine-resources-e2e`);
+  runner.setVideoAndTraceName('podman-machine-resources-e2e');
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
@@ -85,12 +102,12 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   await waitUntil(
     async () =>
       (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-    { timeout: 30_000, sendError: true },
+    { timeout: TIMEOUT_SHORT, sendError: true },
   );
 });
 
 test.afterAll(async ({ runner, page, navigationBar }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(TIMEOUT_LONG);
 
   try {
     const settingsBar = await navigationBar.openSettings();
@@ -105,8 +122,7 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
         ResourceElementState.Off,
       );
       await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
-      await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-      await handleConfirmationDialog(page, 'Podman', true, 'OK');
+      await handlePodmanConfirmationDialogs(page);
     } catch (error) {
       console.log('No handling dialog displayed', error);
     }
@@ -114,7 +130,7 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
     await waitUntil(
       async () =>
         (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-      { timeout: 60_000, sendError: true },
+      { timeout: TIMEOUT_MEDIUM, sendError: true },
     );
   } finally {
     await runner.close();
@@ -136,105 +152,89 @@ test.afterEach(async ({ page }, testInfo) => {
   }
 });
 
-test.skip(
-  isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
-  'Tests suite should not run on Linux platform or if TEST_PODMAN_MACHINE is not true',
-);
-
-test.skip(
-  getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
-  'Podman Desktop is not able to have 2 HyperV machines running at the same time',
-);
-
 for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of machineTypes) {
-  test.afterAll(async () => {
-    test.setTimeout(60_000);
-    if (test.info().status === 'failed') {
-      await deletePodmanMachineFromCLI(PODMAN_MACHINE_NAME);
-    }
-  });
+  test.describe.serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, { tag: '@pdmachine' }, () => {
+    test.skip(
+      PODMAN_MACHINE_NAME === 'podman-machine-usermode' && !isWindows,
+      'Testing user networking machine only on Windows',
+    );
 
-  test.describe
-    .serial(`${MACHINE_VISIBLE_NAME} Resources workflow Verification`, () => {
-      test.skip(
-        PODMAN_MACHINE_NAME === 'podman-machine-user-networking' && !isWindows,
-        'Testing user networking machine only on Windows',
+    test('Create machine through Resources page', async ({ page, navigationBar }) => {
+      test.setTimeout(TIMEOUT_MACHINE_CREATION);
+
+      const settingsBar = await navigationBar.openSettings();
+      await settingsBar.resourcesTab.click();
+
+      const podmanResources = new ResourceConnectionCardPage(page, RESOURCE_NAME);
+      await podmanResources.createButton.click();
+
+      const createMachinePage = new CreateMachinePage(page);
+
+      const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
+        isRootful: isRoot,
+        enableUserNet: userNet,
+        setAsDefault: false,
+        startNow: false,
+        virtualizationProvider: getVirtualizationProvider(),
+      });
+
+      await playExpect(resourcePage.heading).toBeVisible();
+      const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+      await verifyMachinePrivileges(
+        machineCard,
+        isRoot ? PodmanMachinePrivileges.Rootful : PodmanMachinePrivileges.Rootless,
       );
-      test('Create machine through Resources page', async ({ page, navigationBar }) => {
-        test.setTimeout(200_000);
-
-        const settingsBar = await navigationBar.openSettings();
-        await settingsBar.resourcesTab.click();
-
-        const podmanResources = new ResourceConnectionCardPage(page, RESOURCE_NAME);
-        await podmanResources.createButton.click();
-
-        const createMachinePage = new CreateMachinePage(page);
-
-        const resourcePage = await createMachinePage.createMachine(PODMAN_MACHINE_NAME, {
-          isRootful: isRoot,
-          enableUserNet: userNet,
-          setAsDefault: false,
-          startNow: false,
-          virtualizationProvider: getVirtualizationProvider(),
-        });
-
-        await playExpect(resourcePage.heading).toBeVisible();
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-        await verifyMachinePrivileges(
-          machineCard,
-          isRoot ? PodmanMachinePrivileges.Rootful : PodmanMachinePrivileges.Rootless,
-        );
-        await verifyVirtualizationProvider(
-          machineCard,
-          getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
-        );
-        playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
-        playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
-      });
-
-      test('Start the machine', async ({ page }) => {
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-        await machineCard.performConnectionAction(ResourceElementActions.Start);
-
-        await playExpect(dialog).toBeVisible({ timeout: 60_000 });
-        await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-        await handleConfirmationDialog(page, 'Podman', true, 'OK');
-
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: 30_000, sendError: true },
-        );
-      });
-
-      test('Restart the machine', async ({ page }) => {
-        const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
-        await machineCard.performConnectionAction(ResourceElementActions.Restart);
-
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
-          { timeout: 30_000, sendError: true },
-        );
-
-        await waitUntil(
-          async () =>
-            (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
-          { timeout: 30_000, sendError: true },
-        );
-      });
-
-      test('Stop and delete the machine', async ({ page }) => {
-        test.setTimeout(150_000);
-        await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
-
-        try {
-          await handleConfirmationDialog(page, 'Podman', true, 'Yes');
-          await handleConfirmationDialog(page, 'Podman', true, 'OK');
-        } catch (error) {
-          console.log('No handling dialog displayed', error);
-        }
-      });
+      await verifyVirtualizationProvider(
+        machineCard,
+        getVirtualizationProvider() ?? getDefaultVirtualizationProvider(),
+      );
+      playExpect(await machineCard.doesResourceElementExist()).toBeTruthy();
+      playExpect(await machineCard.resourceElementConnectionStatus.innerText()).toContain(ResourceElementState.Off);
     });
+
+    test('Start the machine', async ({ page }) => {
+      const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+      await machineCard.performConnectionAction(ResourceElementActions.Start);
+
+      await playExpect(dialog).toBeVisible({ timeout: TIMEOUT_MEDIUM });
+      await handlePodmanConfirmationDialogs(page);
+
+      await waitUntil(
+        async () =>
+          (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+        { timeout: TIMEOUT_SHORT, sendError: true },
+      );
+    });
+
+    test('Restart the machine', async ({ page }) => {
+      const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
+      await machineCard.performConnectionAction(ResourceElementActions.Restart);
+
+      await waitUntil(
+        async () => (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
+        { timeout: TIMEOUT_SHORT, sendError: true },
+      );
+
+      await waitUntil(
+        async () =>
+          (await machineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Running),
+        { timeout: TIMEOUT_SHORT, sendError: true },
+      );
+    });
+
+    test('Stop and delete the machine', async ({ page }) => {
+      test.setTimeout(TIMEOUT_MACHINE_DELETION);
+      await deletePodmanMachine(page, PODMAN_MACHINE_NAME);
+      await handlePodmanConfirmationDialogs(page);
+    });
+  });
+}
+
+async function handlePodmanConfirmationDialogs(page: Page): Promise<void> {
+  try {
+    await handleConfirmationDialog(page, 'Podman', true, 'Yes');
+    await handleConfirmationDialog(page, 'Podman', true, 'OK');
+  } catch (error) {
+    console.log('No handling dialog displayed', error);
+  }
 }

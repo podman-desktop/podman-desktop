@@ -20,9 +20,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { KubeContextPage } from '../model/pages/kubernetes-context-page';
-import { PreferencesPage } from '../model/pages/preferences-page';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { KubeContextPage } from '/@/model/pages/kubernetes-context-page';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const testContexts = ['context-1', 'context-2', 'context-3'];
 

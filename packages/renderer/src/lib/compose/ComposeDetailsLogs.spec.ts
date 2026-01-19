@@ -21,18 +21,13 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import { mockBreadcrumb } from '../../stores/breadcrumb.spec';
-import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '../container/ContainerInfoUI';
+import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from '/@/lib/container/ContainerInfoUI';
+import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+
 import ComposeDetailsLogs from './ComposeDetailsLogs.svelte';
 import type { ComposeInfoUI } from './ComposeInfoUI';
 
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), clear: vi.fn(), dispose: vi.fn() }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn() });
@@ -66,6 +61,9 @@ const containerInfoUIMock: ContainerInfoUI = {
     name: 'foobar',
     type: ContainerGroupInfoTypeUI.COMPOSE,
     id: 'podman:foobar',
+    engineId: 'foobar',
+    engineName: 'foobar',
+    engineType: 'podman',
   },
   selected: false,
   created: 0,

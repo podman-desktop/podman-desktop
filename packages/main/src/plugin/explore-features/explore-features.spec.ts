@@ -103,6 +103,7 @@ const providerInfoMock: ProviderInfo = {
   name: 'provider 1',
   containerConnections: [
     {
+      connectionType: 'container',
       name: 'connection1',
       displayName: 'Connection 1',
       status: 'started',

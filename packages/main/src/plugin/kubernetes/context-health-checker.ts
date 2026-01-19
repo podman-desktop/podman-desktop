@@ -73,6 +73,10 @@ export class ContextHealthChecker implements Disposable {
     });
   }
 
+  get contextName(): string {
+    return this.#contextName;
+  }
+
   // start checking the readiness
   public async start(opts?: ContextHealthCheckOptions): Promise<void> {
     this.#currentState = {

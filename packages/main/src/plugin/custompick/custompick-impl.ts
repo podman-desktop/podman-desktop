@@ -17,9 +17,9 @@
  ***********************************************************************/
 import type { CustomPick, CustomPickItem, Event } from '@podman-desktop/api';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { IDisposable } from '/@api/disposable.js';
 
-import type { ApiSenderType } from '../api.js';
 import { Emitter } from '../events/emitter.js';
 import type { CustomPickRegistry } from './custompick-registry.js';
 

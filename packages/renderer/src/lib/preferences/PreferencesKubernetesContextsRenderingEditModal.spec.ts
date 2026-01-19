@@ -32,7 +32,7 @@ vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
   const actual = await importOriginal();
   return {
     ...actual,
-    Dropdown: vi.fn(),
+    Dropdown: vi.fn() as unknown as typeof Dropdown,
   };
 });
 

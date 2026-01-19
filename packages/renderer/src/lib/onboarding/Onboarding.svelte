@@ -34,13 +34,13 @@ import type { Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { lastPage } from '/@/stores/breadcrumb';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import type { OnboardingInfo, OnboardingStepItem } from '/@api/onboarding';
 
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
 import {
   type ActiveOnboardingStep,
   cleanSetup,
@@ -71,11 +71,13 @@ let executedCommands: string[] = [];
 
 let telemetrySession = new OnboardingTelemetrySession();
 
+let welcomeMessage = '';
+
 let onboardingUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 // variable used to mark if the onboarding is running or not
 let started = false;
-onMount(async () => {
+onMount(() => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   onboardingUnsubscribe = onboardingList.subscribe(onboardingItems => {
     if (onboardings.length === 0) {
@@ -147,6 +149,7 @@ async function setActiveStep(): Promise<void> {
               onboarding,
               step,
             };
+            welcomeMessage = activeStep.onboarding.welcomeMessage ?? '';
             // When the context is updated while on the content page,
             // update the step content to show / hide rows based on the "when" clause
             activeStepContent =
@@ -342,7 +345,9 @@ $: globalOnboarding = global;
           {/if}
           <div class="flex flex-col">
             {#if globalOnboarding}
-              <div class="text-lg font-bold text-[var(--pd-content-header)]">Get started with Podman Desktop</div>
+              <div class="text-lg font-bold text-[var(--pd-content-header)]">
+                {replaceContextKeyPlaceholders(welcomeMessage, activeStep.onboarding.extension, globalContext)}
+              </div>
             {:else}
               <div class="text-lg font-bold text-[var(--pd-content-header)]">
                 {replaceContextKeyPlaceholders(

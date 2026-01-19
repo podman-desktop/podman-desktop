@@ -95,8 +95,6 @@ const mockContext5: KubeContext = {
 
 const kubernetesGetCurrentContextNameMock = vi.fn();
 
-const showMessageBoxMock = vi.fn();
-
 const kubernetesDuplicateContextMock = vi.fn();
 
 beforeAll(() => {
@@ -104,7 +102,6 @@ beforeAll(() => {
     value: vi.fn().mockResolvedValue(new Map<string, ContextGeneralState>()),
   });
   Object.defineProperty(window, 'kubernetesGetCurrentContextName', { value: kubernetesGetCurrentContextNameMock });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'kubernetesDuplicateContext', { value: kubernetesDuplicateContextMock });
 });
 
@@ -160,7 +157,7 @@ test('Test that context-name2 is the current context', async () => {
 test('when deleting the current context, a popup should ask confirmation', async () => {
   vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
   vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
-  showMessageBoxMock.mockResolvedValue({ result: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   render(PreferencesKubernetesContextsRendering, {});
   const currentContext = screen.getAllByRole('row')[1];
@@ -172,13 +169,13 @@ test('when deleting the current context, a popup should ask confirmation', async
   const deleteBtn = within(currentContext).getByRole('button', { name: 'Delete Context' });
   expect(deleteBtn).toBeInTheDocument();
   await fireEvent.click(deleteBtn);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce();
+  expect(window.showMessageBox).toHaveBeenCalledOnce();
 });
 
 test('when deleting the non current context, no popup should ask confirmation', async () => {
   vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
   vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
-  showMessageBoxMock.mockResolvedValue({ result: 1 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   render(PreferencesKubernetesContextsRendering, {});
   const currentContext = screen.getAllByRole('row')[0];
@@ -190,7 +187,7 @@ test('when deleting the non current context, no popup should ask confirmation', 
   const deleteBtn = within(currentContext).getByRole('button', { name: 'Delete Context' });
   expect(deleteBtn).toBeInTheDocument();
   await fireEvent.click(deleteBtn);
-  expect(showMessageBoxMock).not.toHaveBeenCalled();
+  expect(window.showMessageBox).not.toHaveBeenCalled();
 });
 
 test('when editing context a modal dialog should be oppened', async () => {

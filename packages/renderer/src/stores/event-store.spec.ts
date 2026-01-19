@@ -128,80 +128,70 @@ test.each<{
     updaterShouldBeCalled: true,
     updaterShouldBeCalledWith: [{ key: 'key2', foo: 'bar' }],
   },
-])(
-  '$name',
-  async ({
-    listenedWindowEvent,
-    sentEvent,
-    sentArg,
-    eventShouldBeRegistered,
-    updaterShouldBeCalled,
-    updaterShouldBeCalledWith,
-  }) => {
-    const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);
-    const updater = vi.fn();
-    const checkForUpdateMock = vi.fn();
-    checkForUpdateMock.mockResolvedValue(true);
+])('$name', async ({
+  listenedWindowEvent,
+  sentEvent,
+  sentArg,
+  eventShouldBeRegistered,
+  updaterShouldBeCalled,
+  updaterShouldBeCalledWith,
+}) => {
+  const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);
+  const updater = vi.fn();
+  const checkForUpdateMock = vi.fn();
+  checkForUpdateMock.mockResolvedValue(true);
 
-    const eventStore = new TestEventStore(
-      'my-test',
-      myStoreInfo,
-      checkForUpdateMock,
-      [listenedWindowEvent],
-      [],
-      updater,
-    );
+  const eventStore = new TestEventStore('my-test', myStoreInfo, checkForUpdateMock, [listenedWindowEvent], [], updater);
 
-    // callbacks are empty
-    expect(callbacks.size).toBe(0);
+  // callbacks are empty
+  expect(callbacks.size).toBe(0);
 
-    // now call the setup
-    const eventStoreInfo = eventStore.setup();
+  // now call the setup
+  const eventStoreInfo = eventStore.setup();
 
-    // check we have callbacks
-    expect(callbacks.size).toBe(1);
+  // check we have callbacks
+  expect(callbacks.size).toBe(1);
 
-    const callback = callbacks.get(sentEvent);
+  const callback = callbacks.get(sentEvent);
 
-    if (!eventShouldBeRegistered) {
-      expect(callback).toBeUndefined();
-      return;
-    }
+  if (!eventShouldBeRegistered) {
+    expect(callback).toBeUndefined();
+    return;
+  }
 
-    expect(callback).toBeDefined();
+  expect(callback).toBeDefined();
 
-    const myCustomTypeInfo: MyCustomTypeInfo = {
-      name: 'my-custom-type',
-    };
-    updater.mockResolvedValue([myCustomTypeInfo]);
+  const myCustomTypeInfo: MyCustomTypeInfo = {
+    name: 'my-custom-type',
+  };
+  updater.mockResolvedValue([myCustomTypeInfo]);
 
-    if (sentArg) {
-      await callback?.(sentArg);
-    } else {
-      await callback?.();
-    }
+  if (sentArg) {
+    await callback?.(sentArg);
+  } else {
+    await callback?.();
+  }
 
-    // check the updater is called
-    if (!updaterShouldBeCalled) {
-      expect(updater).not.toHaveBeenCalled();
-      return;
-    }
+  // check the updater is called
+  if (!updaterShouldBeCalled) {
+    expect(updater).not.toHaveBeenCalled();
+    return;
+  }
 
-    expect(updater).toHaveBeenCalled();
+  expect(updater).toHaveBeenCalled();
 
-    // check the store is updated
-    await vi.waitFor(() => {
-      expect(get(myStoreInfo)).toStrictEqual([myCustomTypeInfo]);
-    });
+  // check the store is updated
+  await vi.waitFor(() => {
+    expect(get(myStoreInfo)).toStrictEqual([myCustomTypeInfo]);
+  });
 
-    // check buffer events
-    expect(eventStoreInfo.bufferEvents.length).toBe(1);
-    expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('name', listenedWindowEvent);
-    expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('skipped', false);
-    expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('args', updaterShouldBeCalledWith);
-    expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('length', 1);
-  },
-);
+  // check buffer events
+  expect(eventStoreInfo.bufferEvents.length).toBe(1);
+  expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('name', listenedWindowEvent);
+  expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('skipped', false);
+  expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('args', updaterShouldBeCalledWith);
+  expect(eventStoreInfo.bufferEvents[0]).toHaveProperty('length', 1);
+});
 
 test('should call fetch method using listener event', async () => {
   const myStoreInfo: Writable<MyCustomTypeInfo[]> = writable([]);

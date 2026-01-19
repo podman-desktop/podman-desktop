@@ -6,13 +6,13 @@ import { Button, FilteredEmptyScreen, NavPage, Table } from '@podman-desktop/ui-
 import { onDestroy, onMount, type Snippet } from 'svelte';
 import { type Readable, type Unsubscriber, type Writable } from 'svelte/store';
 
+import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import KubeActions from '/@/lib/kube/KubeActions.svelte';
+import NamespaceDropdown from '/@/lib/kube/NamespaceDropdown.svelte';
 import { listenResources } from '/@/lib/kube/resources-listen';
+import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
 import type { IDisposable } from '/@api/disposable.js';
 
-import { withBulkConfirmation } from '../actions/BulkActions';
-import KubeActions from '../kube/KubeActions.svelte';
-import NamespaceDropdown from '../kube/NamespaceDropdown.svelte';
-import KubernetesCurrentContextConnectionBadge from '../ui/KubernetesCurrentContextConnectionBadge.svelte';
 import type { KubernetesObjectUI } from './KubernetesObjectUI';
 
 export interface Kind {

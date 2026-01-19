@@ -17,9 +17,10 @@
  ***********************************************************************/
 
 import type { Cluster, Context, KubeConfig, User } from '@kubernetes/client-node';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '../api.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
@@ -94,11 +95,8 @@ describe('context tests', () => {
   }
 
   beforeEach(() => {
+    vi.resetAllMocks();
     client = createClient();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   test('should delete context from config', async () => {

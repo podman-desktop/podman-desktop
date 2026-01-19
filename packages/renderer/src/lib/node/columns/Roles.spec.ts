@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { NodeUI } from '../NodeUI';
+import type { NodeUI } from '/@/lib/node/NodeUI';
+
 import Roles from './Roles.svelte';
 
 const nodeControlPlane: NodeUI = {

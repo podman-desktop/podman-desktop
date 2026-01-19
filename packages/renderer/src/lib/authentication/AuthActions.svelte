@@ -3,9 +3,8 @@ import { faKey, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
 import { handleNavigation } from '/@/navigation';
+import { authenticationProviders } from '/@/stores/authenticationProviders';
 import { NavigationPage } from '/@api/navigation-page';
-
-import { authenticationProviders } from '../../stores/authenticationProviders';
 
 export let onBeforeToggle = (): void => {};
 let showMenu = false;

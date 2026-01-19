@@ -24,7 +24,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ManifestActions from '/@/lib/image/ManifestActions.svelte';
 
-const showMessageBoxMock = vi.fn();
 const getContributedMenusMock = vi.fn();
 
 class ResizeObserver {
@@ -33,7 +32,6 @@ class ResizeObserver {
   unobserve = vi.fn();
 }
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'ResizeObserver', { value: ResizeObserver });
 
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
@@ -57,7 +55,7 @@ test('Expect Delete Manifest to be there', async () => {
 
 test('Expect Push Manifest to be there', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
 
   render(ManifestActions, { manifest: fakedManifest, onPushManifest: vi.fn() });

@@ -41,13 +41,7 @@ const dispatchEventMock = vi.fn();
 const extensionSystemIsExtensionsStartedMock = vi.fn();
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 Object.defineProperty(global, 'window', {
   value: {

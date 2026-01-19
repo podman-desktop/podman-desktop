@@ -34,8 +34,9 @@ import { Disposable } from '/@/plugin/types/disposable.js';
 import { Updater } from '/@/plugin/updater.js';
 import * as util from '/@/util.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import product from '/@product.json' with { type: 'json' };
 
-import type { ApiSenderType } from './api.js';
 import type { TaskManager } from './tasks/task-manager.js';
 
 vi.mock('electron', () => ({
@@ -80,6 +81,8 @@ vi.mock('../../../../package.json', () => ({
     repository: 'appRepo',
   },
 }));
+
+vi.mock(import('/@product.json'));
 
 const messageBoxMock = {
   showMessageBox: vi.fn(),
@@ -133,6 +136,14 @@ beforeEach(() => {
   vi.mocked(app.getVersion).mockReturnValue('@debug');
   // eslint-disable-next-line no-null/no-null
   vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue(null);
+
+  vi.mocked(product).releaseNotes = {
+    url: '',
+    blog: '',
+    title: '',
+    summary: '',
+    image: '',
+  };
 
   vi.mocked(commandRegistryMock.executeCommand).mockResolvedValue(undefined);
   vi.mocked(util.isLinux).mockReturnValue(false);
@@ -247,32 +258,33 @@ describe('differential download', () => {
       configuration: true,
       expectDifferentialDownload: 'disable',
     },
-  ])(
-    'expect differential download to be $expectDifferentialDownload on $platform with config $configuration',
-    ({ platform, configuration, expectDifferentialDownload }) => {
-      // mock platform
-      vi.mocked(isMac).mockReturnValue(platform === 'macos');
-      vi.mocked(isWindows).mockReturnValue(platform === 'windows');
-      vi.mocked(isLinux).mockReturnValue(false);
+  ])('expect differential download to be $expectDifferentialDownload on $platform with config $configuration', ({
+    platform,
+    configuration,
+    expectDifferentialDownload,
+  }) => {
+    // mock platform
+    vi.mocked(isMac).mockReturnValue(platform === 'macos');
+    vi.mocked(isWindows).mockReturnValue(platform === 'windows');
+    vi.mocked(isLinux).mockReturnValue(false);
 
-      mockConfiguration({
-        'update.disableDifferentialDownload': configuration,
-      });
+    mockConfiguration({
+      'update.disableDifferentialDownload': configuration,
+    });
 
-      const updater = new Updater(
-        messageBoxMock,
-        configurationRegistryMock,
-        statusBarRegistryMock,
-        commandRegistryMock,
-        taskManagerMock,
-        apiSenderMock,
-      );
-      updater.init();
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
 
-      // Updater#init should set it to true
-      expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
-    },
-  );
+    // Updater#init should set it to true
+    expect(autoUpdater.disableDifferentialDownload).toBe(expectDifferentialDownload === 'disable');
+  });
 });
 
 test('expect update available entry to be displayed when expected', () => {
@@ -742,6 +754,8 @@ test('open release notes from GitHub', async () => {
   expect(shell.openExternal).toBeCalledWith('appRepo/releases/tag/v1.1.1');
   await updater.openReleaseNotes('1.1.2');
   expect(shell.openExternal).toBeCalledWith('appRepo/releases/tag/v1.1.2');
+
+  getStatusCodeMock.statusCode = 200;
 });
 
 test('get release notes', async () => {
@@ -782,6 +796,54 @@ test('get release notes', async () => {
 
   releaseNotes = await updater.getReleaseNotes();
   expect(releaseNotes).toStrictEqual({ releaseNotesAvailable: false, notesURL: '' });
+});
+
+test('open release notes with product override', async () => {
+  vi.mocked(product).releaseNotes.url = 'http://product-notes.com';
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+
+  vi.mocked(shell.openExternal).mockResolvedValue();
+  updater.init();
+
+  await updater.openReleaseNotes('current');
+  expect(shell.openExternal).toBeCalledWith('http://product-notes.com');
+});
+
+test('get release notes with product override', async () => {
+  vi.mocked(product).releaseNotes.url = 'http://product-notes.com';
+  vi.mocked(product).releaseNotes.blog = 'product-blog';
+  vi.mocked(product).releaseNotes.title = 'product-title';
+  vi.mocked(product).releaseNotes.summary = 'product-summary';
+  vi.mocked(product).releaseNotes.image = 'product-image';
+
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+
+  updater.init();
+  const releaseNotes = await updater.getReleaseNotes();
+  expect(releaseNotes).toStrictEqual({
+    releaseNotesAvailable: true,
+    notesURL: 'http://product-notes.com',
+    notes: {
+      image: 'product-image',
+      blog: 'product-blog',
+      title: 'product-title',
+      summary: 'product-summary',
+    },
+  });
 });
 
 test('get release notes in dev mode', async () => {

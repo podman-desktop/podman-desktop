@@ -69,6 +69,26 @@ describe('buildHideMenuItem', async () => {
     );
   });
 
+  test('build hide item with line feed', async () => {
+    getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
+
+    const menu = navigationItemsMenuBuilder.buildHideMenuItem('Hello\nHallo');
+    expect(menu?.label).toBe('Hide Hello');
+    expect(menu?.click).toBeDefined();
+    expect(menu?.visible).toBe(true);
+
+    // click on the menu
+    menu?.click?.({} as MenuItem, browserWindowMock, {} as unknown as KeyboardEvent);
+
+    expect(getConfigurationMock).toBeCalled();
+    // if clicking it should send the item to the configuration as being disabled
+    expect(configurationRegistryMock.updateConfigurationValue).toBeCalledWith(
+      'navbar.disabledItems',
+      ['Hello'],
+      'DEFAULT',
+    );
+  });
+
   test('should not create a menu item if in excluded list', async () => {
     getConfigurationMock.mockReturnValue({ get: () => [] } as unknown as ConfigurationRegistry);
 

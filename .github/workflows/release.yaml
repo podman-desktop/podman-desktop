@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022-2024 Red Hat, Inc.
+# Copyright (C) 2022-2025 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,9 +47,10 @@ jobs:
       releaseId: ${{ steps.create_release.outputs.id}}
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ github.event.inputs.branch }}
+          token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
       - name: Generate tag utilities
         id: TAG_UTIL
         run: |
@@ -145,7 +146,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ needs.tag.outputs.githubTag}}
 
@@ -154,18 +155,18 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
-      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: "3.x"
 
       - name: setup telemetry key for production
         run: |
-          sed -i -r -e "s/SEGMENT_KEY = '.*'/SEGMENT_KEY = '${{ secrets.SEGMENT_WRITE_KEY }}'/" packages/main/src/plugin/telemetry/telemetry.ts
+          jq --arg key "${{ secrets.SEGMENT_WRITE_KEY }}" '.telemetry.key = $key' product.json > product.json.tmp && rm product.json && mv product.json.tmp product.json
 
       - name: Execute pnpm
         run: pnpm install
@@ -221,68 +222,6 @@ jobs:
         with:
           id: ${{ needs.tag.outputs.releaseId}}
 
-  publish:
-    needs: [tag, release]
-    name: Publish
-    runs-on: ubuntu-24.04
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
-        name: Install pnpm
-        with:
-          run_install: false
-
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Execute pnpm
-        run: pnpm install
-
-      - name: Set-up npmjs auth token
-        run: printf "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}\n" >> ~/.npmrc
-
-      - name: Publish API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/extension-api/package.json
-          cd packages/extension-api && pnpm publish --provenance --tag latest --no-git-checks --access public
-
-      - name: Publish Webview API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/webview-api/package.json
-          cd packages/webview-api && pnpm publish --provenance --tag latest --no-git-checks --access public
-
-      - name: Publish ui/svelte to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/ui/package.json
-          cd packages/ui && pnpm build && pnpm publish --provenance --tag latest --no-git-checks --access public
-
-      - name: Publish tests-playwright to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" tests/playwright/package.json
-          cd tests/playwright && pnpm build && pnpm publish --provenance --tag latest --no-git-checks --access public
-
-      - name: Publish Podman Extension API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" extensions/podman/packages/api/package.json
-          cd extensions/podman/packages/api
-          pnpm publish --provenance --tag latest --no-git-checks --access public
-
-      - name: Publish Docker Extension API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" extensions/docker/packages/api/package.json
-          cd extensions/docker/packages/api
-          pnpm publish --provenance --tag latest --no-git-checks --access public
-
   # publish the pnpm store for flathub builds
   pnpm-store:
     needs: [tag, release]
@@ -295,7 +234,7 @@ jobs:
         arch: [amd64, arm64]
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ needs.tag.outputs.githubTag}}
 
@@ -303,14 +242,14 @@ jobs:
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
       - name: create the pnpm store from the dependencies
         run: |
-          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:22 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
+          podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:24 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
           # now the store is in the pnpm-store directory
           # create a tarball of the store
           echo "Creating the archive store-cache-pnpm-${{ matrix.arch }}.tgz"
           tar -czf store-cache-pnpm-${{ matrix.arch }}.tgz pnpm-store
 
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@81c65b7cd4de9b2570615ce3aad67a41de5b1a13 # v2
+        uses: svenstaro/upload-release-action@6b7fa9f267e90b50a19fef07b3596790bb941741 # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: store-cache-pnpm-${{ matrix.arch }}.tgz

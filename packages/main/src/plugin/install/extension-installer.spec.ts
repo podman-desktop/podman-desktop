@@ -20,16 +20,15 @@ import { rmSync } from 'node:fs';
 import * as path from 'node:path';
 
 import type { IpcMain, IpcMainEvent } from 'electron';
-import { ipcMain } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
-import type { CatalogFetchableExtension } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { CatalogFetchableExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ContributionManager } from '../contribution-manager.js';
 import type { Directories } from '../directories.js';
 import type { ImageRegistry } from '../image-registry.js';
@@ -72,13 +71,6 @@ const extensionsCatalog = {
   getFetchableExtensions: getFetchableExtensionsMock,
 } as unknown as ExtensionsCatalog;
 
-vi.mock('electron', () => {
-  const mockIpcMain = {
-    on: vi.fn().mockReturnThis(),
-  };
-  return { ipcMain: mockIpcMain };
-});
-
 const telemetryMock = {
   track: vi.fn(),
 } as unknown as Telemetry;
@@ -89,25 +81,14 @@ const directories = {
 } as unknown as Directories;
 
 const contributionManager = {} as unknown as ContributionManager;
+const ipcMainOnMock = vi.fn();
 
-vi.mock('node:fs');
-
-vi.mock('./../docker-extension/docker-desktop-installer', async () => {
-  const ddInstallerReal = await vi.importActual('../docker-extension/docker-desktop-installer');
-
-  return {
-    DockerDesktopInstaller: vi.fn().mockImplementation(() => {
-      return {
-        extractExtensionFiles: vi.fn(),
-        setupContribution: vi.fn(),
-      };
-    }),
-    DockerDesktopContribution: ddInstallerReal['DockerDesktopContribution'],
-  };
-});
+vi.mock(import('node:fs'));
+vi.mock(import('./../docker-extension/docker-desktop-installer.js'));
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+
   vi.mocked(rmSync).mockReturnValue(undefined);
   vi.mocked(directories.getPluginsDirectory).mockReturnValue('/fake/plugins/directory');
   vi.mocked(directories.getContributionStorageDir).mockReturnValue('/fake/dd/directory');
@@ -119,6 +100,7 @@ beforeEach(() => {
     telemetryMock,
     directories,
     contributionManager,
+    ipcMainOnMock,
   );
 });
 
@@ -182,6 +164,47 @@ test('should install an image (dd extensions) if labels are correct', async () =
   expect(sendError).not.toHaveBeenCalled();
 
   expect(spyExtractExtensionFiles).not.toHaveBeenCalled();
+});
+
+test('should fail if extension with same id is already installed', async () => {
+  const sendLog = vi.fn();
+  const sendError = vi.fn();
+  const sendEnd = vi.fn();
+  const imageToPull = 'fake.io/new-image:tag';
+
+  // Mock valid labels
+  vi.mocked(imageRegistry.getImageConfigLabels).mockResolvedValueOnce({
+    'org.opencontainers.image.title': 'fake-title',
+    'org.opencontainers.image.description': 'fake-description',
+    'org.opencontainers.image.vendor': 'fake-vendor',
+    'io.podman-desktop.api.version': '1.0.0',
+  });
+
+  // Mock existing extension with collision
+  const publisher = 'my-publisher';
+  const name = 'my-extension';
+
+  const id = `${publisher}.${name}`;
+  listExtensionsMock.mockResolvedValue([
+    {
+      id,
+      name: name,
+      path: '/some/existing/path',
+    },
+  ]);
+
+  analyzeExtensionMock.mockResolvedValueOnce({
+    id,
+  } as AnalyzedExtension);
+
+  await extensionInstaller.installFromImage(sendLog, sendError, sendEnd, imageToPull);
+
+  expect(sendLog).toHaveBeenCalledWith(`Analyzing image ${imageToPull}...`);
+
+  // expect error
+  expect(sendError).toHaveBeenCalledWith(`Extension ${publisher}.${name} is already installed.`);
+
+  expect(sendEnd).not.toBeCalled();
 });
 
 test('should fail if extension is already installed', async () => {
@@ -255,14 +278,12 @@ test('should report error', async () => {
   const spyExtractExtensionFiles = vi.spyOn(extensionInstaller, 'extractExtensionFiles');
   spyExtractExtensionFiles.mockResolvedValueOnce();
 
-  const ipcMainOnMethod = vi.spyOn(ipcMain, 'on');
-
   const replyMethodMock = vi.fn();
 
   const spyInstaller = vi.spyOn(extensionInstaller, 'installFromImage');
   spyInstaller.mockRejectedValueOnce(new Error('fake error'));
 
-  ipcMainOnMethod.mockImplementation(
+  vi.mocked(ipcMainOnMock).mockImplementation(
     (_channel: string, listener: (event: IpcMainEvent, ...args: unknown[]) => void) => {
       // let's call the callback
       listener({ reply: replyMethodMock } as unknown as IpcMainEvent, imageToPull, 0);

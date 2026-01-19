@@ -74,16 +74,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-vi.mock('@podman-desktop/api', () => {
-  return {
-    window: {
-      showQuickPick: vi.fn(),
-      createStatusBarItem: vi.fn(),
-      showInformationMessage: vi.fn(),
-    },
-  };
-});
-
 test('expect getLatestVersionAsset to return the first release from a list of releases', async () => {
   grabLatestsReleasesMetadataMock.mockImplementation(() => {
     return releases;

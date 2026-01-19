@@ -220,3 +220,33 @@ test('Expect user confirmation for bulk delete when required', async () => {
   expect(window.showMessageBox).toHaveBeenCalledTimes(2);
   await waitFor(() => expect(window.removeNetwork).toHaveBeenCalled());
 });
+
+test('Expect environment column sorted by engineId', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([providerInfoMock]);
+
+  const network1Modified = { ...network1, engineId: 'engine-zzz', engineName: 'name-aaa' };
+  const network2Modified = { ...network2, engineId: 'engine-aaa', engineName: 'name-zzz' };
+
+  vi.mocked(window.listNetworks).mockResolvedValue([network1Modified, network2Modified]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  await waitFor(
+    () => {
+      expect(get(providerInfos)).not.toHaveLength(0);
+      expect(get(networksListInfo)).not.toHaveLength(0);
+    },
+    { timeout: 2000 },
+  );
+
+  render(NetworksList);
+  await tick();
+
+  const environment = screen.getByRole('columnheader', { name: 'Environment' });
+  await fireEvent.click(environment);
+
+  const cells = screen.getAllByRole('cell', { name: /Network/ });
+  expect(cells[0]).toHaveTextContent('Network 2');
+  expect(cells[1]).toHaveTextContent('Network 1');
+});

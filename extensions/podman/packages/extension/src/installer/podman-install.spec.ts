@@ -21,12 +21,13 @@ import * as fs from 'node:fs';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as extensionObj from '../extension';
-import { releaseNotes } from '../podman5.json';
-import { getBundledPodmanVersion } from '../utils/podman-bundled';
-import type { InstalledPodman } from '../utils/podman-cli';
-import type { PodmanInfo } from '../utils/podman-info';
-import * as utils from '../utils/util';
+import * as extensionObj from '/@/extension';
+import { releaseNotes } from '/@/podman5.json';
+import type { InstalledPodman, PodmanBinary } from '/@/utils/podman-binary';
+import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
+import type { PodmanInfo } from '/@/utils/podman-info';
+import * as utils from '/@/utils/util';
+
 import type { Installer } from './installer';
 import type { UpdateCheck } from './podman-install';
 import { PodmanInstall } from './podman-install';
@@ -73,6 +74,9 @@ const INSTALLER_MOCK: Installer = {} as unknown as Installer;
 const PROVIDER_CLEANUP_MOCK = {
   getActions: vi.fn(),
 } as unknown as extensionApi.ProviderCleanup;
+const PODMAN_BINARY_MOCK: PodmanBinary = {
+  getBinaryInfo: vi.fn(),
+} as unknown as PodmanBinary;
 
 // mock filesystem
 vi.mock('node:fs');
@@ -95,38 +99,6 @@ vi.mock('node:os', async () => {
   };
 });
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    env: {
-      isMac: true,
-      openExternal: vi.fn(),
-    },
-    window: {
-      withProgress: vi.fn(),
-      showNotification: vi.fn(),
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-      showWarningMessage: vi.fn(),
-    },
-    ProgressLocation: {},
-    process: {
-      exec: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: vi.fn(),
-    },
-    Uri: {
-      parse: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-  };
-});
-
 vi.mock(import('../utils/util'), async () => {
   return {
     getAssetsFolder: vi.fn().mockReturnValue(''),
@@ -143,9 +115,15 @@ vi.mock(import('../utils/util'), async () => {
 let podmanInstall: TestPodmanInstall;
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 
-  podmanInstall = new TestPodmanInstall(extensionContext, mockTelemetryLogger, INSTALLER_MOCK, PROVIDER_CLEANUP_MOCK);
+  podmanInstall = new TestPodmanInstall(
+    extensionContext,
+    mockTelemetryLogger,
+    INSTALLER_MOCK,
+    PROVIDER_CLEANUP_MOCK,
+    PODMAN_BINARY_MOCK,
+  );
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
   console.error = consoleErrorMock;
@@ -200,14 +178,15 @@ describe('update checks', () => {
   test('stopPodmanMachinesIfAnyBeforeUpdating with one machine running', async () => {
     await extensionObj.initInversify(extensionContext, mockTelemetryLogger);
 
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
-
     // return empty machine list
     vi.spyOn(utils, 'execPodman').mockResolvedValueOnce({
       stdout: JSON.stringify([{ Name: 'test', Running: true, VMType: 'libkrun' }]),
     } as unknown as extensionApi.RunResult);
+
+    // return podman version
+    vi.spyOn(utils, 'execPodman').mockResolvedValueOnce({
+      stdout: 'podman version 5.0.0',
+    } as extensionApi.RunResult);
 
     // mock user response
     vi.spyOn(extensionApi.window, 'showInformationMessage').mockResolvedValue('Yes');
@@ -218,11 +197,7 @@ describe('update checks', () => {
     expect(extensionApi.window.showInformationMessage).toHaveBeenCalled();
 
     // check we called the stop command
-    expect(extensionApi.process.exec).toHaveBeenCalledWith(expect.stringContaining('podman'), [
-      'machine',
-      'stop',
-      'test',
-    ]);
+    expect(utils.execPodman).toHaveBeenCalledWith(['machine', 'stop', 'test']);
   });
 
   test('wipeAllDataBeforeUpdatingToV5 with podman 4.9 -> 5.0', async () => {
@@ -435,6 +410,9 @@ describe('performUpdate', () => {
 });
 
 test('check that podman installation refreshed machine settings', async () => {
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+    version: '5.0.0',
+  });
   vi.spyOn(podmanInstall, 'getLastRunInfo').mockResolvedValue({
     lastUpdateCheck: 0,
     podmanVersion: '5.0.0',
@@ -444,7 +422,6 @@ test('check that podman installation refreshed machine settings', async () => {
   // mock existSync being always false (we never find installers)
   vi.spyOn(fs, 'existsSync').mockReturnValue(false);
   vi.mocked(extensionApi.window.showInformationMessage).mockResolvedValue('Yes');
-  vi.mocked(extensionApi.process.exec).mockResolvedValue({ command: '', stderr: '', stdout: '5.0.0' });
   const mock = vi.spyOn(extensionObj, 'calcPodmanMachineSetting');
 
   await podmanInstall.checkForUpdate(undefined);

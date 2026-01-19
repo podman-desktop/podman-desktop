@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { Component } from 'svelte';
+
 import type { ViewContributionBadgeValue } from '/@api/view-info';
 
 export interface ImageInfoUI {
@@ -35,7 +38,7 @@ export interface ImageInfoUI {
   base64RepoTag: string;
   selected: boolean;
   status: 'USED' | 'UNUSED' | 'DELETING';
-  icon: unknown;
+  icon?: string | IconDefinition | Component;
   labels?: { [label: string]: string };
   badges: ViewContributionBadgeValue[];
   children?: ImageInfoUI[];

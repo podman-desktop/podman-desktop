@@ -42,6 +42,7 @@ export interface BuildImageInfo {
   selectedProvider?: ProviderContainerConnectionInfo;
   logsTerminal?: Terminal;
   taskId: number;
+  target?: string;
 }
 
 let taskCounter = 0;
@@ -74,6 +75,7 @@ export function createDefaultBuildImageInfo(): BuildImageInfo {
     containerBuildContextDirectory: '',
     containerBuildPlatform: '',
     buildArgs: [{ key: '', value: '' }],
+    target: undefined,
   };
 }
 

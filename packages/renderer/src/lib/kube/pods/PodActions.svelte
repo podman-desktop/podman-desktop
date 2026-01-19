@@ -5,9 +5,9 @@ import { onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
-import FlatMenu from '../../ui/FlatMenu.svelte';
-import ListItemButtonIcon from '../../ui/ListItemButtonIcon.svelte';
 import type { PodUI } from './PodUI';
 
 export let pod: PodUI;

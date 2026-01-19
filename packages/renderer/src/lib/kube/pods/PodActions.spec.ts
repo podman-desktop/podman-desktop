@@ -21,15 +21,14 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import type { PodInfoContainerUI } from '/@/lib/pod/PodInfoUI';
 import type { V1Route } from '/@api/openshift-types';
 
-import type { PodInfoContainerUI } from '../../pod/PodInfoUI';
 import PodActions from './PodActions.svelte';
 import type { PodUI } from './PodUI';
 
 const restartMock = vi.fn();
 const deleteMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 class PodUIImpl {
   #status: string;
@@ -66,7 +65,6 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.kubernetesListRoutes).mockResolvedValue([]);
-  vi.mocked(window.showMessageBox).mockImplementation(showMessageBoxMock);
   vi.mocked(window.kubernetesGetCurrentNamespace).mockResolvedValue('ns');
   vi.mocked(window.kubernetesReadNamespacedPod).mockResolvedValue({ metadata: { labels: { app: 'foo' } } });
   vi.mocked(window.restartKubernetesPod).mockImplementation(restartMock);
@@ -75,14 +73,14 @@ beforeEach(() => {
 });
 
 test('Check deleting pod', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   render(PodActions, { pod });
 
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Pod' });
   await fireEvent.click(deleteButton);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce();
+  expect(window.showMessageBox).toHaveBeenCalledOnce();
 
   // Wait for confirmation modal to disappear after clicking on delete
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -92,7 +90,7 @@ test('Check deleting pod', async () => {
 });
 
 test('Check restarting pod', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   render(PodActions, { pod });
 

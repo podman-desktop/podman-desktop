@@ -24,15 +24,6 @@ import { KrunkitHelper } from './krunkit-helper';
 
 let krunkitHelper: KrunkitHelper;
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 beforeEach(() => {
   krunkitHelper = new KrunkitHelper();
   vi.resetAllMocks();

@@ -88,13 +88,13 @@ jobs:
     permissions:
       checks: write # required for mikepenz/action-junit-report
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         if: github.event_name == 'push'
 
       - name: Set the default env. variables
@@ -107,7 +107,9 @@ jobs:
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
-        uses: redhat-actions/podman-install@16601a3a718acf7d6986140459092a2f5b941a03
+        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
@@ -117,9 +119,9 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Execute pnpm
@@ -141,7 +143,7 @@ jobs:
           pnpm ${{ env.NPM_TARGET }}
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@e08919a3b1fb83a78393dfb775a9c37f17d8eea6 # v6.0.1
+        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc # v6.1.0
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -151,7 +153,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: e2e-tests
@@ -187,13 +189,13 @@ jobs:
           echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $env:GITHUB_ENV
           echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $env:GITHUB_ENV
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         if: github.event_name == 'push'
 
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
@@ -201,9 +203,9 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Execute pnpm
@@ -258,7 +260,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@e08919a3b1fb83a78393dfb775a9c37f17d8eea6 # v6.0.1
+        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc # v6.1.0
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -268,7 +270,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: ${{ matrix.os }}-update-e2e-test-${{ matrix.installation }}
@@ -281,7 +283,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: 
-        os: [macos-15, macos-13]
+        os: [macos-26, macos-15-intel]
     runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
@@ -299,13 +301,13 @@ jobs:
           echo "UPDATE_TARGET_REPO=${{ github.event.inputs.update_target_repo || env.DEFAULT_UPDATE_TARGET_REPO }}" >> $GITHUB_ENV
           echo "UPDATE_PRERELEASE=${{ github.event.inputs.update_prerelease || env.DEFAULT_UPDATE_PRERELEASE }}" >> $GITHUB_ENV
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: ${{ github.event.inputs.organization }}/${{ github.event.inputs.repositoryName }}
           ref: ${{ github.event.inputs.branch }}
         if: github.event_name == 'workflow_dispatch'
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         if: github.event_name == 'push'
 
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
@@ -313,9 +315,9 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Execute pnpm
@@ -369,7 +371,7 @@ jobs:
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@e08919a3b1fb83a78393dfb775a9c37f17d8eea6 # v6.0.1
+        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc # v6.1.0
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true
@@ -379,7 +381,7 @@ jobs:
           require_tests:  true
           report_paths: '**/*results.xml'
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: ${{ matrix.os }}-update-e2e-test

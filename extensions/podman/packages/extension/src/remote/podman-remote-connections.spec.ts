@@ -26,22 +26,6 @@ import type { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
 vi.mock('node:fs');
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    env: {
-      isWindows: true,
-    },
-    configuration: {
-      onDidChangeConfiguration: vi.fn(),
-      getConfiguration: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 const extensionContext = {} as extensionApi.ExtensionContext;
 
 const provider = {} as extensionApi.Provider;

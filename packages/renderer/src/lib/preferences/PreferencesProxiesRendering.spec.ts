@@ -24,14 +24,14 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PreferencesProxiesRendering from '/@/lib/preferences/PreferencesProxiesRendering.svelte';
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
-import { ProxyState } from '/@api/proxy';
+import { PROXY_CONFIG_KEYS, ProxyState } from '/@api/proxy';
 
 // mock the ui library
 vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
   const actual = await importOriginal();
   return {
     ...actual,
-    Dropdown: vi.fn(),
+    Dropdown: vi.fn() as unknown as typeof Dropdown,
   };
 });
 
@@ -39,6 +39,8 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
+  vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 });
 
 describe('dropdown', () => {
@@ -128,6 +130,268 @@ describe('dropdown', () => {
 
     await vi.waitFor(() => {
       expect(window.setProxyState).toHaveBeenCalledWith(ProxyState.PROXY_MANUAL);
+    });
+  });
+});
+
+describe('managed label', () => {
+  test('should display managed label when http proxy is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTP]: { id: PROXY_CONFIG_KEYS.HTTP, title: 'HTTP Proxy', parentId: 'proxy', locked: true },
+    });
+
+    const { getByText } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(getByText('Managed by your organization')).toBeInTheDocument();
+    });
+  });
+
+  test('should display managed label when https proxy is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTPS]: { id: PROXY_CONFIG_KEYS.HTTPS, title: 'HTTPS Proxy', parentId: 'proxy', locked: true },
+    });
+
+    const { getByText } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(getByText('Managed by your organization')).toBeInTheDocument();
+    });
+  });
+
+  test('should display managed label when no proxy is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.NO_PROXY]: {
+        id: PROXY_CONFIG_KEYS.NO_PROXY,
+        title: 'No Proxy',
+        parentId: 'proxy',
+        locked: true,
+      },
+    });
+
+    const { getByText } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(getByText('Managed by your organization')).toBeInTheDocument();
+    });
+  });
+
+  test('should display multiple managed labels when multiple proxy settings are locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTP]: { id: PROXY_CONFIG_KEYS.HTTP, title: 'HTTP Proxy', parentId: 'proxy', locked: true },
+      [PROXY_CONFIG_KEYS.HTTPS]: { id: PROXY_CONFIG_KEYS.HTTPS, title: 'HTTPS Proxy', parentId: 'proxy', locked: true },
+      [PROXY_CONFIG_KEYS.NO_PROXY]: {
+        id: PROXY_CONFIG_KEYS.NO_PROXY,
+        title: 'No Proxy',
+        parentId: 'proxy',
+        locked: true,
+      },
+    });
+
+    const { getAllByText } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(getAllByText('Managed by your organization')).toHaveLength(3);
+    });
+  });
+
+  test('should not display managed label when proxy settings are not locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTP]: { id: PROXY_CONFIG_KEYS.HTTP, title: 'HTTP Proxy', parentId: 'proxy', locked: false },
+      [PROXY_CONFIG_KEYS.HTTPS]: {
+        id: PROXY_CONFIG_KEYS.HTTPS,
+        title: 'HTTPS Proxy',
+        parentId: 'proxy',
+        locked: false,
+      },
+      [PROXY_CONFIG_KEYS.NO_PROXY]: {
+        id: PROXY_CONFIG_KEYS.NO_PROXY,
+        title: 'No Proxy',
+        parentId: 'proxy',
+        locked: false,
+      },
+    });
+
+    const { queryByText } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(queryByText('Managed by your organization')).not.toBeInTheDocument();
+    });
+  });
+
+  test('should disable input when proxy setting is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTP]: { id: PROXY_CONFIG_KEYS.HTTP, title: 'HTTP Proxy', parentId: 'proxy', locked: true },
+    });
+
+    const { container } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      const httpProxyInput = container.querySelector('input#httpProxy');
+      expect(httpProxyInput).toBeDisabled();
+    });
+  });
+
+  test('should display managed value in input when http proxy is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTP]: { id: PROXY_CONFIG_KEYS.HTTP, title: 'HTTP Proxy', parentId: 'proxy', locked: true },
+    });
+    vi.mocked(window.getConfigurationValue).mockResolvedValue('http://managed-https-proxy.foobar.com:8080');
+
+    const { container } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      const httpProxyInput = container.querySelector('input#httpProxy') as HTMLInputElement;
+      expect(httpProxyInput.value).toBe('http://managed-https-proxy.foobar.com:8080');
+    });
+  });
+
+  test('should display managed value in input when https proxy is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.HTTPS]: { id: PROXY_CONFIG_KEYS.HTTPS, title: 'HTTPS Proxy', parentId: 'proxy', locked: true },
+    });
+    vi.mocked(window.getConfigurationValue).mockResolvedValue('http://managed-https-proxy.foobar.com:8080');
+
+    const { container } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      const httpsProxyInput = container.querySelector('input#httpsProxy') as HTMLInputElement;
+      expect(httpsProxyInput.value).toBe('http://managed-https-proxy.foobar.com:8080');
+    });
+  });
+
+  test('should display managed value in input when no proxy is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.NO_PROXY]: {
+        id: PROXY_CONFIG_KEYS.NO_PROXY,
+        title: 'No Proxy',
+        parentId: 'proxy',
+        locked: true,
+      },
+    });
+    vi.mocked(window.getConfigurationValue).mockResolvedValue('*.foobar.com,192.168.*.*');
+
+    const { container } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      const noProxyInput = container.querySelector('input#noProxy') as HTMLInputElement;
+      expect(noProxyInput.value).toBe('*.foobar.com,192.168.*.*');
+    });
+  });
+
+  test('should display managed label when proxy.enabled is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.ENABLED]: {
+        id: PROXY_CONFIG_KEYS.ENABLED,
+        title: 'Proxy Enabled',
+        parentId: 'proxy',
+        locked: true,
+      },
+    });
+
+    const { getByText } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(getByText('Managed by your organization')).toBeInTheDocument();
+    });
+  });
+
+  test('should disable dropdown when proxy.enabled is locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.ENABLED]: {
+        id: PROXY_CONFIG_KEYS.ENABLED,
+        title: 'Proxy Enabled',
+        parentId: 'proxy',
+        locked: true,
+      },
+    });
+
+    render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          disabled: true,
+        }),
+      );
+    });
+  });
+
+  test('should not disable dropdown when proxy.enabled is not locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.ENABLED]: {
+        id: PROXY_CONFIG_KEYS.ENABLED,
+        title: 'Proxy Enabled',
+        parentId: 'proxy',
+        locked: false,
+      },
+    });
+
+    render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          disabled: false,
+        }),
+      );
+    });
+  });
+
+  test('large test: should display managed label next to dropdown and disable inputs when proxy settings are locked', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+    vi.mocked(window.getConfigurationProperties).mockResolvedValue({
+      [PROXY_CONFIG_KEYS.ENABLED]: {
+        id: PROXY_CONFIG_KEYS.ENABLED,
+        title: 'Proxy Enabled',
+        parentId: 'proxy',
+        locked: true,
+      },
+      [PROXY_CONFIG_KEYS.HTTP]: { id: PROXY_CONFIG_KEYS.HTTP, title: 'HTTP Proxy', parentId: 'proxy', locked: true },
+      [PROXY_CONFIG_KEYS.HTTPS]: { id: PROXY_CONFIG_KEYS.HTTPS, title: 'HTTPS Proxy', parentId: 'proxy', locked: true },
+      [PROXY_CONFIG_KEYS.NO_PROXY]: {
+        id: PROXY_CONFIG_KEYS.NO_PROXY,
+        title: 'No Proxy',
+        parentId: 'proxy',
+        locked: true,
+      },
+    });
+
+    const { getAllByText, container } = render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      // Should have 4 "Managed by your organization" labels (1 for dropdown + 3 for inputs)
+      expect(getAllByText('Managed by your organization')).toHaveLength(4);
+
+      // Dropdown should be disabled too (since we're also testing proxy.enabled locked)
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          disabled: true,
+        }),
+      );
+
+      // All inputs should be disabled for this 'full test'
+      const httpProxyInput = container.querySelector('input#httpProxy');
+      const httpsProxyInput = container.querySelector('input#httpsProxy');
+      const noProxyInput = container.querySelector('input#noProxy');
+      expect(httpProxyInput).toBeDisabled();
+      expect(httpsProxyInput).toBeDisabled();
+      expect(noProxyInput).toBeDisabled();
     });
   });
 });

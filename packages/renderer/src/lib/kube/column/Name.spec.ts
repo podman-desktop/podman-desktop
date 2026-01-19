@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '../../objects/KubernetesObjectUI.ts';
+import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '/@/lib/objects/KubernetesObjectUI.ts';
+
 import KubernetesColumnName from './Name.svelte';
 
 const node: KubernetesObjectUI = {

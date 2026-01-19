@@ -19,7 +19,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { MainPage } from './main-page';
 import { PodmanKubePlayPage } from './podman-kube-play-page';
 import { PodDetailsPage } from './pods-details-page';
@@ -97,7 +98,7 @@ export class PodsPage extends MainPage {
     return row.getByRole('button', { name: 'kebab menu', exact: true });
   }
 
-  public async deployedPodExists(podName: string, environment: string = 'Podman'): Promise<boolean> {
+  public async deployedPodExists(podName: string, environment = 'Podman'): Promise<boolean> {
     return test.step(`Check if deployed pod exists: ${podName}`, async () => {
       const deployedContainerRow = await this.getPodRowByName(podName);
       if (deployedContainerRow) {
@@ -105,6 +106,18 @@ export class PodsPage extends MainPage {
         return env?.trim() === environment;
       }
       return false;
+    });
+  }
+
+  async getPodEnvironment(name: string): Promise<string> {
+    return test.step(`Get Pod: ${name} environment`, async () => {
+      const podRow = await this.getPodRowByName(name);
+      if (podRow === undefined) {
+        throw Error(`Pod: '${name}' does not exist`);
+      }
+      const environmentElement = podRow.getByTestId('tooltip-trigger').first();
+      const environment = await environmentElement.textContent();
+      return environment ?? '';
     });
   }
 }

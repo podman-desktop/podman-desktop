@@ -37,10 +37,11 @@ import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { isLinux, isWindows } from '/@/util.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
+import product from '/@product.json' with { type: 'json' };
 
 import rootPackage from '../../../../package.json' with { type: 'json' };
-import { ApiSenderType } from './api.js';
 import { TaskManager } from './tasks/task-manager.js';
 
 /**
@@ -78,6 +79,11 @@ export class Updater {
   }
 
   public async openReleaseNotes(version: string): Promise<void> {
+    if (product.releaseNotes.url) {
+      shell.openExternal(product.releaseNotes.url).catch(console.error);
+      return;
+    }
+
     if (version === 'current') {
       version = app.getVersion();
     } else if (version === 'latest') {
@@ -99,6 +105,24 @@ export class Updater {
   }
 
   public async getReleaseNotes(): Promise<ReleaseNotesInfo> {
+    if (
+      product.releaseNotes.image &&
+      product.releaseNotes.summary &&
+      product.releaseNotes.title &&
+      product.releaseNotes.blog &&
+      product.releaseNotes.url
+    ) {
+      return {
+        releaseNotesAvailable: true,
+        notesURL: product.releaseNotes.url,
+        notes: {
+          image: product.releaseNotes.image,
+          blog: product.releaseNotes.blog,
+          title: product.releaseNotes.title,
+          summary: product.releaseNotes.summary,
+        },
+      };
+    }
     let version = app.getVersion();
     if (import.meta.env.DEV && version.endsWith('-next')) {
       // use the latest release version published on GitHub

@@ -48,14 +48,8 @@ const KUBERNETES_CONNECTION_PROVIDER = {
   images: {},
 } as unknown as ProviderInfo;
 
-const RESIZE_OBSERVER_MOCK: ResizeObserver = {
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-} as unknown as ResizeObserver;
-
 beforeAll(() => {
   Object.defineProperty(window, 'events', { value: { receive: vi.fn() } });
-  Object.defineProperty(window, 'ResizeObserver', { value: vi.fn() });
 });
 
 beforeEach(() => {
@@ -72,8 +66,6 @@ beforeEach(() => {
       pinned: true,
     },
   ]);
-
-  vi.mocked(window.ResizeObserver).mockReturnValue(RESIZE_OBSERVER_MOCK);
 
   vi.mocked(window.unpinStatusBar).mockResolvedValue(undefined);
   vi.mocked(window.pinStatusBar).mockResolvedValue(undefined);

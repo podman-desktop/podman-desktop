@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ResourceElementState } from '../model/core/states';
-import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '../model/core/types';
-import { CreateMachinePage } from '../model/pages/create-machine-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { canRunKindTests } from '../setupFiles/setup-kind';
-import { createKindCluster, deleteCluster } from '../utility/cluster-operations';
-import { expect as playExpect, test } from '../utility/fixtures';
+import { ResourceElementState } from '/@/model/core/states';
+import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model/core/types';
+import { CreateMachinePage } from '/@/model/pages/create-machine-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { canRunKindTests } from '/@/setupFiles/setup-kind';
+import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   deletePodmanMachine,
   ensureCliInstalled,
@@ -32,10 +32,10 @@ import {
   setStatusBarProvidersFeature,
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
-} from '../utility/operations';
-import { isLinux } from '../utility/platform';
-import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '../utility/provider';
-import { waitForPodmanMachineStartup, waitUntil } from '../utility/wait';
+} from '/@/utility/operations';
+import { isLinux } from '/@/utility/platform';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
+import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
 const podmanProviderName = 'Podman';
 const defaultMachine = 'podman-machine-default';

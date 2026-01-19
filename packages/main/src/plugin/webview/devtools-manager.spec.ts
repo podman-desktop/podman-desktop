@@ -57,7 +57,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.registerDevTools(12345);
 
@@ -71,7 +71,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
       await devToolsManager.registerDevTools(12345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
@@ -91,17 +91,17 @@ describe('DevToolsManager', () => {
       const mockGuest = {
         devToolsWebContents: mockDevToolsWebContents,
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.registerDevTools(12345);
 
-      expect(mockWebContents.fromId).toHaveBeenCalledWith(12345);
+      expect(vi.mocked(mockWebContents.fromId)).toHaveBeenCalledWith(12345);
       expect(mockDevToolsWebContents.isDestroyed).toHaveBeenCalled();
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
     });
 
     test('should handle missing webContents gracefully', async () => {
-      mockWebContents.fromId.mockReturnValue(undefined);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(undefined);
 
       await devToolsManager.registerDevTools(12345);
 
@@ -110,7 +110,7 @@ describe('DevToolsManager', () => {
 
     test('should handle webContents without devToolsWebContents property', async () => {
       const mockGuest = {};
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.registerDevTools(12345);
 
@@ -125,7 +125,7 @@ describe('DevToolsManager', () => {
       const mockGuest = {
         devToolsWebContents: mockDevToolsWebContents,
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.registerDevTools(12345);
 
@@ -133,7 +133,7 @@ describe('DevToolsManager', () => {
     });
 
     test('should handle errors during registration', async () => {
-      mockWebContents.fromId.mockImplementation(() => {
+      vi.mocked(mockWebContents.fromId).mockImplementation(() => {
         throw new Error('WebContents access failed');
       });
 
@@ -152,7 +152,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
       await devToolsManager.registerDevTools(12345);
     });
 
@@ -162,7 +162,7 @@ describe('DevToolsManager', () => {
         isDevToolsOpened: vi.fn().mockReturnValue(true),
         closeDevTools: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.cleanupDevTools(12345);
 
@@ -177,8 +177,8 @@ describe('DevToolsManager', () => {
     });
 
     test('should always remove from map even when all strategies fail', async () => {
-      mockWebContents.fromId.mockReturnValue(undefined); // Strategy 1 & 2 fail
-      mockBrowserWindow.getAllWindows.mockReturnValue([]); // Strategy 3 fails
+      vi.mocked(mockWebContents.fromId).mockReturnValue(undefined); // Strategy 1 & 2 fail
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([]); // Strategy 3 fails
 
       await devToolsManager.cleanupDevTools(12345);
 
@@ -189,7 +189,7 @@ describe('DevToolsManager', () => {
     });
 
     test('should handle errors in cleanup strategies', async () => {
-      mockWebContents.fromId.mockImplementation(() => {
+      vi.mocked(mockWebContents.fromId).mockImplementation(() => {
         throw new Error('Strategy error');
       });
 
@@ -207,7 +207,7 @@ describe('DevToolsManager', () => {
         isDevToolsOpened: vi.fn().mockReturnValue(true),
         closeDevTools: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
@@ -218,7 +218,7 @@ describe('DevToolsManager', () => {
     });
 
     test('should return false when webContents not found', async () => {
-      mockWebContents.fromId.mockReturnValue(undefined);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(undefined);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
@@ -232,7 +232,7 @@ describe('DevToolsManager', () => {
         isDestroyed: vi.fn().mockReturnValue(true),
         closeDevTools: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
@@ -248,7 +248,7 @@ describe('DevToolsManager', () => {
         isDevToolsOpened: vi.fn().mockReturnValue(false),
         closeDevTools: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWebContents'
@@ -265,7 +265,7 @@ describe('DevToolsManager', () => {
         isDestroyed: vi.fn().mockReturnValue(false),
         close: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockDevToolsWebContents as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockDevToolsWebContents as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
@@ -283,7 +283,7 @@ describe('DevToolsManager', () => {
         }),
         destroy: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockDevToolsWebContents as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockDevToolsWebContents as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
@@ -295,7 +295,7 @@ describe('DevToolsManager', () => {
     });
 
     test('should return false when devToolsWebContents not found', async () => {
-      mockWebContents.fromId.mockReturnValue(undefined);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(undefined);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
@@ -308,7 +308,7 @@ describe('DevToolsManager', () => {
       const mockDevToolsWebContents = {
         isDestroyed: vi.fn().mockReturnValue(true),
       };
-      mockWebContents.fromId.mockReturnValue(mockDevToolsWebContents as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockDevToolsWebContents as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
@@ -328,7 +328,7 @@ describe('DevToolsManager', () => {
         }),
       };
 
-      mockWebContents.fromId.mockReturnValue(devToolsWithFailingMethods as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(devToolsWithFailingMethods as unknown as WebContents);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsDirectly'
@@ -345,7 +345,7 @@ describe('DevToolsManager', () => {
         webContents: { id: 67890 },
         close: vi.fn(),
       };
-      mockBrowserWindow.getAllWindows.mockReturnValue([mockWindow as unknown as BrowserWindow]);
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([mockWindow as unknown as BrowserWindow]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
@@ -360,7 +360,7 @@ describe('DevToolsManager', () => {
         isDestroyed: vi.fn().mockReturnValue(true),
         close: vi.fn(),
       };
-      mockBrowserWindow.getAllWindows.mockReturnValue([destroyedWindow as unknown as BrowserWindow]);
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([destroyedWindow as unknown as BrowserWindow]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
@@ -376,7 +376,7 @@ describe('DevToolsManager', () => {
         webContents: { id: 99999 },
         close: vi.fn(),
       };
-      mockBrowserWindow.getAllWindows.mockReturnValue([nonMatchingWindow as unknown as BrowserWindow]);
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([nonMatchingWindow as unknown as BrowserWindow]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
@@ -386,7 +386,7 @@ describe('DevToolsManager', () => {
     });
 
     test('should handle empty windows list', async () => {
-      mockBrowserWindow.getAllWindows.mockReturnValue([]);
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
@@ -412,7 +412,11 @@ describe('DevToolsManager', () => {
         close: vi.fn(),
       };
 
-      mockBrowserWindow.getAllWindows.mockReturnValue([window1, window2, window3] as unknown as BrowserWindow[]);
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([
+        window1,
+        window2,
+        window3,
+      ] as unknown as BrowserWindow[]);
 
       const result = await (devToolsManager as unknown as Record<string, (...args: unknown[]) => Promise<boolean>>)[
         'tryCloseDevToolsViaWindow'
@@ -427,7 +431,7 @@ describe('DevToolsManager', () => {
 
   describe('Error Handling', () => {
     test('should log errors without throwing in registerDevTools', async () => {
-      mockWebContents.fromId.mockImplementation(() => {
+      vi.mocked(mockWebContents.fromId).mockImplementation(() => {
         throw new Error('Test error');
       });
 
@@ -442,10 +446,10 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
       await devToolsManager.registerDevTools(12345);
 
-      mockWebContents.fromId.mockImplementation(() => {
+      vi.mocked(mockWebContents.fromId).mockImplementation(() => {
         throw new Error('Cleanup error');
       });
 
@@ -460,17 +464,17 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
       await devToolsManager.registerDevTools(12345);
 
-      mockWebContents.fromId.mockReturnValue(undefined); // Strategy 1 & 2 fail
+      vi.mocked(mockWebContents.fromId).mockReturnValue(undefined); // Strategy 1 & 2 fail
 
       const mockWindow = {
         isDestroyed: vi.fn().mockReturnValue(false),
         webContents: { id: 67890 },
         close: vi.fn(),
       };
-      mockBrowserWindow.getAllWindows.mockReturnValue([mockWindow as unknown as BrowserWindow]);
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([mockWindow as unknown as BrowserWindow]);
 
       await devToolsManager.cleanupDevTools(12345);
 
@@ -563,7 +567,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
       await devToolsManager.registerDevTools(12345);
 
       expect(devToolsManager.getTrackedDevToolsCount()).toBe(1);
@@ -573,7 +577,7 @@ describe('DevToolsManager', () => {
         isDevToolsOpened: vi.fn().mockReturnValue(true),
         closeDevTools: vi.fn(),
       };
-      mockWebContents.fromId.mockReturnValue(mockGuestForCleanup as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuestForCleanup as unknown as WebContents);
 
       await devToolsManager.cleanupDevTools(12345);
 
@@ -595,7 +599,7 @@ describe('DevToolsManager', () => {
         },
       };
 
-      mockWebContents.fromId
+      vi.mocked(mockWebContents.fromId)
         .mockReturnValueOnce(mockGuest1 as unknown as WebContents)
         .mockReturnValueOnce(mockGuest2 as unknown as WebContents);
 
@@ -612,7 +616,7 @@ describe('DevToolsManager', () => {
             isDestroyed: vi.fn().mockReturnValue(false),
           },
         };
-        mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+        vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
         await devToolsManager.registerDevTools(12345 + i);
 
         const mockGuestForCleanup = {
@@ -620,7 +624,7 @@ describe('DevToolsManager', () => {
           isDevToolsOpened: vi.fn().mockReturnValue(true),
           closeDevTools: vi.fn(),
         };
-        mockWebContents.fromId.mockReturnValue(mockGuestForCleanup as unknown as WebContents);
+        vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuestForCleanup as unknown as WebContents);
         await devToolsManager.cleanupDevTools(12345 + i);
       }
 
@@ -634,7 +638,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId
+      vi.mocked(mockWebContents.fromId)
         .mockReturnValueOnce(mockGuest as unknown as WebContents) // Success
         .mockReturnValueOnce(undefined) // Fail
         .mockReturnValueOnce(mockGuest as unknown as WebContents); // Success
@@ -656,11 +660,11 @@ describe('DevToolsManager', () => {
         close: vi.fn(),
       };
 
-      mockWebContents.fromId
+      vi.mocked(mockWebContents.fromId)
         .mockReturnValueOnce(mockGuestForCleanup as unknown as WebContents) // Strategy 1 succeeds
         .mockReturnValueOnce(undefined); // Strategy 1 fails
 
-      mockBrowserWindow.getAllWindows.mockReturnValue([mockWindow as unknown as BrowserWindow]); // Strategy 3 succeeds
+      vi.mocked(mockBrowserWindow.getAllWindows).mockReturnValue([mockWindow as unknown as BrowserWindow]); // Strategy 3 succeeds
 
       await devToolsManager.cleanupDevTools(11111);
       await devToolsManager.cleanupDevTools(33333);
@@ -677,7 +681,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.registerDevTools(12345);
 
@@ -685,7 +689,7 @@ describe('DevToolsManager', () => {
     });
 
     test('should handle negative webContents IDs', async () => {
-      mockWebContents.fromId.mockReturnValue(undefined);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(undefined);
 
       await devToolsManager.registerDevTools(-1);
       await devToolsManager.cleanupDevTools(-1);
@@ -708,7 +712,7 @@ describe('DevToolsManager', () => {
           isDestroyed: vi.fn().mockReturnValue(false),
         },
       };
-      mockWebContents.fromId.mockReturnValue(mockGuest as unknown as WebContents);
+      vi.mocked(mockWebContents.fromId).mockReturnValue(mockGuest as unknown as WebContents);
 
       await devToolsManager.registerDevTools(12345);
       await devToolsManager.registerDevTools(12345);

@@ -1,5 +1,6 @@
 <script lang="ts">
-import { createEventDispatcher } from 'svelte';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { type Component, createEventDispatcher } from 'svelte';
 
 import Button from '../button/Button.svelte';
 import EmptyScreen from './EmptyScreen.svelte';
@@ -12,8 +13,7 @@ const defaultOnResetFilter = (): void => {
   }
 };
 interface Props {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any;
+  icon?: IconDefinition | Component | string;
   kind: string;
   searchTerm: string;
   onResetFilter?: () => void;

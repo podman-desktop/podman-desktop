@@ -3,12 +3,11 @@ import type { V1Pod } from '@kubernetes/client-node';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import Table from '/@/lib/details/DetailsTable.svelte';
-
-import type { EventUI } from '../../events/EventUI';
-import KubeEventsArtifact from '../details/KubeEventsArtifact.svelte';
-import KubeObjectMetaArtifact from '../details/KubeObjectMetaArtifact.svelte';
-import KubePodSpecArtifact from '../details/KubePodSpecArtifact.svelte';
-import KubePodStatusArtifact from '../details/KubePodStatusArtifact.svelte';
+import type { EventUI } from '/@/lib/events/EventUI';
+import KubeEventsArtifact from '/@/lib/kube/details/KubeEventsArtifact.svelte';
+import KubeObjectMetaArtifact from '/@/lib/kube/details/KubeObjectMetaArtifact.svelte';
+import KubePodSpecArtifact from '/@/lib/kube/details/KubePodSpecArtifact.svelte';
+import KubePodStatusArtifact from '/@/lib/kube/details/KubePodStatusArtifact.svelte';
 
 interface Props {
   pod: V1Pod | undefined;

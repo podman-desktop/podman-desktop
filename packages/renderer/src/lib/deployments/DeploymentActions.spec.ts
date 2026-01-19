@@ -57,11 +57,8 @@ const deployment: DeploymentUI = new DeploymentfUIImpl(
   [],
 ) as unknown as DeploymentUI;
 
-const showMessageBoxMock = vi.fn();
-
 beforeAll(() => {
   Object.defineProperty(window, 'kubernetesDeleteDeployment', { value: deleteMock });
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
 });
 
 afterEach(() => {
@@ -70,14 +67,14 @@ afterEach(() => {
 });
 
 test('Expect no error and status deleting deployment', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   render(DeploymentActions, { deployment });
 
   // click on delete buttons
   const deleteButton = screen.getByRole('button', { name: 'Delete Deployment' });
   await fireEvent.click(deleteButton);
-  expect(showMessageBoxMock).toHaveBeenCalledOnce();
+  expect(window.showMessageBox).toHaveBeenCalledOnce();
 
   // Wait for confirmation modal to disappear after clicking on delete
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

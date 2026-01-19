@@ -29,16 +29,6 @@ import { type CertificateDetectionConfig, CertificateDetectionService } from './
 vi.mock('node:fs/promises');
 vi.mock('node:os');
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    env: {
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-  };
-});
-
 const mockTelemetryLogger: TelemetryLogger = {
   logUsage: vi.fn(),
   logError: vi.fn(),
@@ -58,7 +48,6 @@ function createMockDirent(overrides: Partial<Dirent>): Dirent {
     isFile: (): boolean => false,
     isSymbolicLink: (): boolean => false,
     name: '',
-    path: '',
     parentPath: '',
     ...overrides,
   };
@@ -71,7 +60,6 @@ describe('CertificateDetectionService', () => {
     const mockDirent = createMockDirent({
       name: registryName,
       isDirectory: (): boolean => true,
-      path: registryName,
       parentPath: '/etc/containers/certs.d',
     });
 
@@ -153,13 +141,11 @@ describe('CertificateDetectionService', () => {
       const mockDirent = createMockDirent({
         name: 'registry.example.com',
         isDirectory: (): boolean => true,
-        path: 'registry.example.com',
         parentPath: '/etc/containers/certs.d',
       });
       const mockCertFile = createMockDirent({
         name: 'ca.crt',
         isFile: (): boolean => true,
-        path: 'ca.crt',
         parentPath: '/etc/containers/certs.d/registry.example.com',
       });
 
@@ -201,13 +187,11 @@ describe('CertificateDetectionService', () => {
       const mockDirent = createMockDirent({
         name: 'localhost:5000',
         isDirectory: (): boolean => true,
-        path: 'localhost:5000',
         parentPath: '/home/user/.config/containers/certs.d',
       });
       const mockCertFile = createMockDirent({
         name: 'server.cert',
         isFile: (): boolean => true,
-        path: 'server.cert',
         parentPath: '/home/user/.config/containers/certs.d/localhost:5000',
       });
 
@@ -414,19 +398,16 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'ca.crt',
           isFile: (): boolean => true,
-          path: 'ca.crt',
           parentPath: '/etc/containers/certs.d/registry.example.com',
         }),
         createMockDirent({
           name: 'server.cert',
           isFile: (): boolean => true,
-          path: 'server.cert',
           parentPath: '/etc/containers/certs.d/registry.example.com',
         }),
         createMockDirent({
           name: 'client.key',
           isFile: (): boolean => true,
-          path: 'client.key',
           parentPath: '/etc/containers/certs.d/registry.example.com',
         }),
       ];
@@ -443,19 +424,16 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'ca.crt',
           isFile: (): boolean => true,
-          path: 'ca.crt',
           parentPath: '/etc/containers/certs.d/registry.example.com',
         }),
         createMockDirent({
           name: 'excluded.pem',
           isFile: (): boolean => true,
-          path: 'excluded.pem',
           parentPath: '/etc/containers/certs.d/registry.example.com',
         }),
         createMockDirent({
           name: 'excluded.cer',
           isFile: (): boolean => true,
-          path: 'excluded.cer',
           parentPath: '/etc/containers/certs.d/registry.example.com',
         }),
       ];
@@ -472,13 +450,11 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'ca.crt',
           isFile: (): boolean => true,
-          path: 'ca.crt',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'registry.example.com',
           isDirectory: (): boolean => true,
-          path: 'registry.example.com',
           parentPath: '/etc/containers/certs.d',
         }),
       ];
@@ -507,19 +483,16 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'registry.example.com',
           isDirectory: (): boolean => true,
-          path: 'registry.example.com',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'localhost',
           isDirectory: (): boolean => true,
-          path: 'localhost',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'example.com',
           isDirectory: (): boolean => true,
-          path: 'example.com',
           parentPath: '/etc/containers/certs.d',
         }),
       ];
@@ -545,13 +518,11 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'registry.example.com:5000',
           isDirectory: (): boolean => true,
-          path: 'registry.example.com:5000',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'localhost:8080',
           isDirectory: (): boolean => true,
-          path: 'localhost:8080',
           parentPath: '/etc/containers/certs.d',
         }),
       ];
@@ -576,19 +547,16 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: '.hidden',
           isDirectory: (): boolean => true,
-          path: '.hidden',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: '-invalid',
           isDirectory: (): boolean => true,
-          path: '-invalid',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'invalid_name',
           isDirectory: (): boolean => true,
-          path: 'invalid_name',
           parentPath: '/etc/containers/certs.d',
         }),
       ];
@@ -615,13 +583,11 @@ describe('CertificateDetectionService', () => {
           name: 'registry.example.com',
           isDirectory: (): boolean => true,
           isSymbolicLink: (): boolean => true,
-          path: 'registry.example.com',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'localhost',
           isDirectory: (): boolean => true,
-          path: 'localhost',
           parentPath: '/etc/containers/certs.d',
         }),
       ];
@@ -650,13 +616,11 @@ describe('CertificateDetectionService', () => {
       const mockDirent = createMockDirent({
         name: 'registry.example.com',
         isDirectory: (): boolean => true,
-        path: 'registry.example.com',
         parentPath: '/etc/containers/certs.d',
       });
       const mockSymlinkFile = createMockDirent({
         name: 'symlink.crt',
         isSymbolicLink: (): boolean => true,
-        path: 'symlink.crt',
         parentPath: '/etc/containers/certs.d/registry.example.com',
       });
 
@@ -683,7 +647,6 @@ describe('CertificateDetectionService', () => {
       const mockDirent = createMockDirent({
         name: 'registry.example.com',
         isDirectory: (): boolean => true,
-        path: 'registry.example.com',
         parentPath: '/etc/containers/certs.d',
       });
 
@@ -711,20 +674,17 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'registry.example.com',
           isDirectory: (): boolean => true,
-          path: 'registry.example.com',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'localhost',
           isDirectory: (): boolean => true,
-          path: 'localhost',
           parentPath: '/etc/containers/certs.d',
         }),
       ];
       const mockCertFile = createMockDirent({
         name: 'ca.crt',
         isFile: (): boolean => true,
-        path: 'ca.crt',
         parentPath: '/etc/containers/certs.d/localhost',
       });
 
@@ -767,7 +727,6 @@ describe('CertificateDetectionService', () => {
       const mockDirent = createMockDirent({
         name: 'registry.example.com',
         isDirectory: (): boolean => true,
-        path: 'registry.example.com',
         parentPath: '/etc/containers/certs.d',
       });
 
@@ -800,13 +759,11 @@ describe('CertificateDetectionService', () => {
         createMockDirent({
           name: 'registry1.example.com',
           isDirectory: (): boolean => true,
-          path: 'registry1.example.com',
           parentPath: '/etc/containers/certs.d',
         }),
         createMockDirent({
           name: 'registry2.example.com',
           isDirectory: (): boolean => true,
-          path: 'registry2.example.com',
           parentPath: '/etc/containers/certs.d',
         }),
       ];

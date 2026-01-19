@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,24 @@ import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import 'vitest-canvas-mock';
 import typescript from 'typescript';
-import { expect } from 'vitest';
+import { EventStore } from './src/stores/event-store';
+import { vi } from 'vitest';
 
-global.window.matchMedia = () => {};
+/**
+ * Mock matchMedia
+ * @param query {string} the media query to match
+ * @returns {MediaQueryList} the media query list
+ */
+global.window.matchMedia = query => ({
+  matches: false,
+  media: query,
+  onchange: vi.fn(),
+  addListener: vi.fn(),
+  removeListener: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+});
 
 // read the given path and extract the method names from the Window interface
 function extractWindowMethods(filePath) {
@@ -84,3 +99,9 @@ class ResizeObserverMock {
 
 global.ResizeObserver = ResizeObserverMock;
 global.window.ResizeObserver = ResizeObserverMock;
+
+// Override the prototype of setupWithDebounce to ensure default values are 10ms
+const originalSetupWithDebounce = EventStore.prototype.setupWithDebounce;
+EventStore.prototype.setupWithDebounce = function (debounceTimeoutDelay = 10, debounceThrottleTimeoutDelay = 10) {
+  return originalSetupWithDebounce.call(this, debounceTimeoutDelay, debounceThrottleTimeoutDelay);
+};

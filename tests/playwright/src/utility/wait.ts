@@ -19,8 +19,8 @@
 import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { NavigationBar } from '../model/workbench/navigation';
-import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from './operations';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from '/@/utility/operations';
 
 export async function wait(
   waitFunction: () => Promise<boolean>,
@@ -30,26 +30,24 @@ export async function wait(
   sendError: boolean,
   errorMessage: string,
 ): Promise<void> {
-  return test.step(`Wait for condition ${waitFunction.name} to become '${String(until)}'`, async () => {
-    let time = timeout;
-    while (time > 0) {
-      const waitFuncResult = await waitFunction();
-      if (waitFuncResult === until) {
-        return;
-      }
-      time = time - diff;
-      await delay(diff);
+  let time = timeout;
+  while (time > 0) {
+    const waitFuncResult = await waitFunction();
+    if (waitFuncResult === until) {
+      return;
     }
-    const message =
-      errorMessage.length === 0
-        ? `Timeout (${timeout} ms) was reach while waiting for condition (${waitFunction.name}) to become '${String(
-            until,
-          )}'`
-        : errorMessage;
-    if (sendError) {
-      throw Error(message);
-    }
-  });
+    time = time - diff;
+    await delay(diff);
+  }
+  const message =
+    errorMessage.length === 0
+      ? `Timeout (${timeout} ms) was reach while waiting for condition (${waitFunction.name}) to become '${String(
+          until,
+        )}'`
+      : errorMessage;
+  if (sendError) {
+    throw Error(message);
+  }
 }
 
 /**
@@ -115,30 +113,23 @@ export async function delay(ms: number): Promise<void> {
   });
 }
 
-export async function waitForPodmanMachineStartup(page: Page, timeoutOut = 30_000): Promise<void> {
+export async function waitForPodmanMachineStartup(page: Page, timeout = 30_000): Promise<void> {
   return test.step('Wait for Podman machine to be running', async () => {
     await createPodmanMachineFromCLI();
 
     const dashboardPage = await new NavigationBar(page).openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
-    await waitUntil(async () => await dashboardPage.podmanStatusLabel.isVisible(), {
-      timeout: timeoutOut,
-      sendError: false,
-    });
-
-    await dashboardPage.podmanStatusLabel.scrollIntoViewIfNeeded();
+    await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout });
 
     try {
       // sometimes the podman machine is stuck in STARTING state, so we try to reset it once
-      await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout: timeoutOut });
+      await playExpect(dashboardPage.podmanStatusLabel).not.toHaveText('STARTING', { timeout });
     } catch (error) {
-      console.log('Podman machine stuck in STARTING state, trying to restart it');
+      console.error('Podman machine stuck in STARTING state, trying to restart it', error);
       await resetPodmanMachinesFromCLI();
       await createPodmanMachineFromCLI();
     }
 
-    await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', {
-      timeout: timeoutOut,
-    });
+    await playExpect(dashboardPage.podmanStatusLabel).toHaveText('RUNNING', { timeout });
   });
 }

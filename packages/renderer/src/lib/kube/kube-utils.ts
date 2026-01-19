@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '../objects/KubernetesObjectUI';
+import type { KubernetesNamespacedObjectUI, KubernetesObjectUI } from '/@/lib/objects/KubernetesObjectUI';
 
 export function isNamespaced(object: KubernetesObjectUI): object is KubernetesNamespacedObjectUI {
   return 'namespace' in object;

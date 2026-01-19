@@ -19,8 +19,9 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { ContainerState } from '../core/states';
+import { ContainerState } from '/@/model/core/states';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { ContainersPage } from './containers-page';
 import { DeployToKubernetesPage } from './deploy-to-kubernetes-page';
 import { DetailsPage } from './details-page';
@@ -35,6 +36,7 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly terminalContent: Locator;
   readonly findInLogsInput: Locator;
   readonly searchResults: Locator;
+  readonly clearLogsButton: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -60,6 +62,7 @@ export class ContainerDetailsPage extends DetailsPage {
     this.terminalContent = this.tabContent.locator('.xterm-rows');
     this.findInLogsInput = this.tabContent.getByLabel('Find');
     this.searchResults = this.tabContent.locator('div.xterm-selection > div');
+    this.clearLogsButton = this.tabContent.getByTitle('Clear logs');
   }
 
   async getState(): Promise<string> {
@@ -144,6 +147,13 @@ export class ContainerDetailsPage extends DetailsPage {
       await playExpect(this.findInLogsInput).toBeVisible();
 
       return await this.searchResults.count();
+    });
+  }
+
+  async clearLogs(): Promise<void> {
+    return test.step('Clear logs', async () => {
+      await playExpect(this.clearLogsButton).toBeVisible();
+      await this.clearLogsButton.click();
     });
   }
 }

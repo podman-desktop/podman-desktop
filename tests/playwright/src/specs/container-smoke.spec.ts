@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ContainerState, ImageState } from '../model/core/states';
-import type { ContainerInteractiveParams } from '../model/core/types';
-import { ContainersPage } from '../model/pages/containers-page';
-import { ImageDetailsPage } from '../model/pages/image-details-page';
-import type { ImagesPage } from '../model/pages/images-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage } from '../utility/operations';
-import { waitForPodmanMachineStartup, waitWhile } from '../utility/wait';
+import { ContainerState, ImageState } from '/@/model/core/states';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { ContainersPage } from '/@/model/pages/containers-page';
+import { ImageDetailsPage } from '/@/model/pages/image-details-page';
+import type { ImagesPage } from '/@/model/pages/images-page';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteContainer, deleteImage } from '/@/utility/operations';
+import { waitForPodmanMachineStartup, waitWhile } from '/@/utility/wait';
 
 const imageToPull = 'ghcr.io/linuxcontainers/alpine';
 const imageTag = 'latest';
@@ -120,6 +120,12 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
   });
   test('Open a container details', async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible({ timeout: 10_000 });
+
+    await playExpect
+      .poll(async () => await containers.getContainerEnvironment(containerToRun), { timeout: 10_000 })
+      .toContain('podman');
+
     const containersDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containersDetails.heading).toBeVisible();
     await playExpect(containersDetails.heading).toContainText(containerToRun);
@@ -148,6 +154,9 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
     await playExpect
       .poll(async () => containersDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
+
+    await containersDetails.clearLogs();
+    await playExpect(containersDetails.terminalContent).not.toContainText('Hello World');
   });
 
   test('Redirecting to image details from a container details', async ({ page, navigationBar }) => {
@@ -176,7 +185,7 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
     await playExpect(containersDetails.startButton).toBeVisible();
   });
 
-  test(`Start a container from the Containers page`, async ({ navigationBar }) => {
+  test('Start a container from the Containers page', async ({ navigationBar }) => {
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containersDetails.heading).toBeVisible();
@@ -193,7 +202,7 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
       .toContain(ContainerState.Running);
   });
 
-  test(`Stop a container from the Containers page`, async ({ navigationBar }) => {
+  test('Stop a container from the Containers page', async ({ navigationBar }) => {
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containersDetails.heading).toBeVisible();
@@ -221,7 +230,7 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
       .toBeFalsy();
   });
 
-  test(`Deleting a container from the Containers page`, async ({ navigationBar }) => {
+  test('Deleting a container from the Containers page', async ({ navigationBar }) => {
     //re-start the container from an image
     let images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
@@ -348,5 +357,39 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
         .poll(async () => await containersPage.containerExists(container), { timeout: 30_000 })
         .toBeFalsy();
     }
+  });
+
+  test('Create container using existing image option from dialog', async ({ navigationBar }) => {
+    test.setTimeout(90_000);
+    const containerName = 'create-container-from-dialog';
+
+    const containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible();
+
+    const selectImagePage = await containers.openSelectImageFromDialog();
+    await playExpect(selectImagePage.heading).toBeVisible();
+
+    const runImagePage = await selectImagePage.runImage(imageToPull);
+    await playExpect(runImagePage.heading).toBeVisible({ timeout: 30_000 });
+
+    const containersPage = await runImagePage.startContainer(containerName, containerStartParams);
+    await playExpect(containersPage.header).toBeVisible({ timeout: 30_000 });
+    await playExpect
+      .poll(async () => await containersPage.containerExists(containerName), { timeout: 30_000 })
+      .toBeTruthy();
+
+    const containerDetails = await containersPage.openContainersDetails(containerName);
+    await playExpect(containerDetails.heading).toBeVisible();
+    await playExpect(containerDetails.heading).toContainText(containerName);
+    await playExpect
+      .poll(async () => await containerDetails.getState(), { timeout: 15_000 })
+      .toContain(ContainerState.Running);
+
+    await navigationBar.openContainers();
+    await playExpect(containersPage.heading).toBeVisible({ timeout: 10_000 });
+    await containersPage.deleteContainer(containerName);
+    await playExpect
+      .poll(async () => await containersPage.containerExists(containerName), { timeout: 30_000 })
+      .toBeFalsy();
   });
 });

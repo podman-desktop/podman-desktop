@@ -33,6 +33,7 @@ interface Props {
   bottomRight?: boolean;
   left?: boolean;
   class?: string;
+  containerClass?: string;
   tipSnippet?: Snippet;
   children?: Snippet;
   'aria-label'?: string;
@@ -49,6 +50,7 @@ let {
   bottomRight = false,
   left = false,
   class: className,
+  containerClass,
   tipSnippet,
   children,
   'aria-label': ariaLabel,
@@ -138,7 +140,7 @@ $effect((): (() => void) => {
 });
 </script>
 
-<div class="relative inline-block" aria-label={ariaLabel}>
+<div class={containerClass ?? 'relative inline-block'} aria-label={ariaLabel}>
   <span
     role="none"
     data-testid="tooltip-trigger"

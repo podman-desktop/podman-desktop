@@ -35,14 +35,8 @@ const extensionContext = {
   storagePath: path.resolve(tmpdir(), 'kubectl-cli'),
 } as unknown as extensionApi.ExtensionContext;
 
-vi.mock('./cli-run', () => ({
-  installBinaryToSystem: vi.fn(),
-  getSystemBinaryPath: vi.fn(),
-}));
-
-vi.mock('./kubectl-github-releases', () => ({
-  KubectlGitHubReleases: vi.fn(),
-}));
+vi.mock(import('./cli-run'));
+vi.mock(import('./kubectl-github-releases'));
 
 vi.mock('node:fs', () => ({
   promises: {
@@ -53,58 +47,21 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
 }));
 
-vi.mock('@podman-desktop/api', () => {
-  return {
-    cli: {
-      createCliTool: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      isMac: true,
-      isWindows: false,
-      isLinux: false,
-      createTelemetryLogger: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: vi.fn(),
-      onDidChangeConfiguration: vi.fn(),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    provider: {
-      createProvider: vi.fn(),
-    },
-    window: {
-      showQuickPick: vi.fn(),
-    },
-  };
-});
-
-const downloadReleaseAssetMock = vi.fn();
-
 beforeEach(() => {
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
     update: vi.fn(),
   } as unknown as Configuration);
   vi.mocked(extensionApi.process.exec).mockClear();
 
-  vi.mocked(KubectlGitHubReleases).mockReturnValue({
-    grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
-      {
-        label: 'Kubernetes v1.30.3',
-        tag: 'v1.30.3',
-        id: 165829199,
-      },
-    ]),
-    getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
-    downloadReleaseAsset: downloadReleaseAssetMock,
-  } as unknown as KubectlGitHubReleases);
+  vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+    {
+      label: 'Kubernetes v1.30.3',
+      tag: 'v1.30.3',
+      id: 165829199,
+    },
+  ]);
+  vi.mocked(KubectlGitHubReleases.prototype.getReleaseAssetURL).mockResolvedValue('dummy download url');
+
   KubectlExtension.vpState.version = undefined;
   KubectlExtension.vpState.path = undefined;
 });
@@ -412,17 +369,13 @@ describe('postActivate', () => {
       id: -1,
     } as KubectlGithubReleaseArtifactMetadata);
     // mock return value below current
-    vi.mocked(KubectlGitHubReleases).mockReturnValue({
-      grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
-        {
-          label: 'Kubernetes v1.1.0',
-          tag: 'v1.1.0',
-          id: -1,
-        },
-      ]),
-      getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
-      downloadReleaseAsset: downloadReleaseAssetMock,
-    } as unknown as KubectlGitHubReleases);
+    vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+      {
+        label: 'Kubernetes v1.1.0',
+        tag: 'v1.1.0',
+        id: -1,
+      },
+    ]);
     const deferredCliUpdate: Promise<CliToolSelectUpdate> = new Promise<CliToolSelectUpdate>(resolve => {
       vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
         return {
@@ -444,7 +397,10 @@ describe('postActivate', () => {
     await cliUpdate.selectVersion();
     await cliUpdate.doUpdate({} as unknown as Logger);
 
-    expect(downloadReleaseAssetMock).toHaveBeenCalledWith('dummy download url', expect.anything());
+    expect(KubectlGitHubReleases.prototype.downloadReleaseAsset).toHaveBeenCalledWith(
+      'dummy download url',
+      expect.anything(),
+    );
     expect(cliRun.installBinaryToSystem).toHaveBeenCalledWith(expect.anything(), 'kubectl');
     expect(vi.mocked(cliRun.installBinaryToSystem).mock.calls[0][0]).toContain(
       path.resolve(extensionContext.storagePath, 'bin', 'kubectl'),
@@ -472,17 +428,13 @@ describe('postActivate', () => {
         }),
     );
     // mock return value below current
-    vi.mocked(KubectlGitHubReleases).mockReturnValue({
-      grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
-        {
-          label: 'Kubernetes v1.1.0',
-          tag: 'v1.1.0',
-          id: -1,
-        },
-      ]),
-      getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
-      downloadReleaseAsset: downloadReleaseAssetMock,
-    } as unknown as KubectlGitHubReleases);
+    vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+      {
+        label: 'Kubernetes v1.1.0',
+        tag: 'v1.1.0',
+        id: -1,
+      },
+    ]);
 
     const cliToolMock: extensionApi.CliTool = {
       registerUpdate: vi.fn(),
@@ -522,24 +474,19 @@ describe('postActivate', () => {
           });
         }),
     );
-    const getReleaseAssetURLMock = vi.fn().mockResolvedValue('dummy download url');
     // mock return value below current
-    vi.mocked(KubectlGitHubReleases).mockReturnValue({
-      grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
-        {
-          label: 'Kubernetes v1.1.0',
-          tag: 'v1.1.0',
-          id: -1,
-        },
-        {
-          label: 'Kubernetes v1.2.0',
-          tag: 'v1.2.0',
-          id: -2,
-        },
-      ]),
-      getReleaseAssetURL: getReleaseAssetURLMock,
-      downloadReleaseAsset: downloadReleaseAssetMock,
-    } as unknown as KubectlGitHubReleases);
+    vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+      {
+        label: 'Kubernetes v1.1.0',
+        tag: 'v1.1.0',
+        id: -1,
+      },
+      {
+        label: 'Kubernetes v1.2.0',
+        tag: 'v1.2.0',
+        id: -2,
+      },
+    ]);
     const deferredCliUpdate: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
         vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
@@ -563,8 +510,15 @@ describe('postActivate', () => {
     await cliUpdate.selectVersion(true);
     await cliUpdate.doInstall({} as unknown as Logger);
 
-    expect(downloadReleaseAssetMock).toHaveBeenCalledWith('dummy download url', expect.anything());
-    expect(getReleaseAssetURLMock).toHaveBeenCalledWith('v1.2.0', expect.anything(), expect.anything());
+    expect(KubectlGitHubReleases.prototype.downloadReleaseAsset).toHaveBeenCalledWith(
+      'dummy download url',
+      expect.anything(),
+    );
+    expect(KubectlGitHubReleases.prototype.getReleaseAssetURL).toHaveBeenCalledWith(
+      'v1.2.0',
+      expect.anything(),
+      expect.anything(),
+    );
     expect(cliRun.installBinaryToSystem).toHaveBeenCalledWith(expect.anything(), 'kubectl');
     expect(vi.mocked(cliRun.installBinaryToSystem).mock.calls[0][0]).toContain(
       path.resolve(extensionContext.storagePath, 'bin', 'kubectl'),
@@ -591,7 +545,6 @@ describe('postActivate', () => {
           });
         }),
     );
-    const getReleaseAssetURLMock = vi.fn().mockResolvedValue('dummy download url');
     // mock return value below current
     const releasesMetadata = [
       {
@@ -605,11 +558,7 @@ describe('postActivate', () => {
         id: -2,
       },
     ];
-    vi.mocked(KubectlGitHubReleases).mockReturnValue({
-      grabLatestsReleasesMetadata: vi.fn().mockResolvedValue(releasesMetadata),
-      getReleaseAssetURL: getReleaseAssetURLMock,
-      downloadReleaseAsset: downloadReleaseAssetMock,
-    } as unknown as KubectlGitHubReleases);
+    vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue(releasesMetadata);
     const deferredCliUpdate: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
         vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
@@ -633,8 +582,15 @@ describe('postActivate', () => {
     await cliUpdate.selectVersion(false);
     await cliUpdate.doInstall({} as unknown as Logger);
 
-    expect(downloadReleaseAssetMock).toHaveBeenCalledWith('dummy download url', expect.anything());
-    expect(getReleaseAssetURLMock).toHaveBeenCalledWith('v1.1.0', expect.anything(), expect.anything());
+    expect(KubectlGitHubReleases.prototype.downloadReleaseAsset).toHaveBeenCalledWith(
+      'dummy download url',
+      expect.anything(),
+    );
+    expect(KubectlGitHubReleases.prototype.getReleaseAssetURL).toHaveBeenCalledWith(
+      'v1.1.0',
+      expect.anything(),
+      expect.anything(),
+    );
     expect(cliRun.installBinaryToSystem).toHaveBeenCalledWith(expect.anything(), 'kubectl');
     expect(vi.mocked(cliRun.installBinaryToSystem).mock.calls[0][0]).toContain(
       path.resolve(extensionContext.storagePath, 'bin', 'kubectl'),
@@ -662,17 +618,13 @@ describe('postActivate', () => {
         }),
     );
     // mock return value below current
-    vi.mocked(KubectlGitHubReleases).mockReturnValue({
-      grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
-        {
-          label: 'Kubernetes v1.1.0',
-          tag: 'v1.1.0',
-          id: -1,
-        },
-      ]),
-      getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
-      downloadReleaseAsset: downloadReleaseAssetMock,
-    } as unknown as KubectlGitHubReleases);
+    vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+      {
+        label: 'Kubernetes v1.1.0',
+        tag: 'v1.1.0',
+        id: -1,
+      },
+    ]);
     const deferredCliInstall: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
         vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
@@ -723,17 +675,13 @@ describe('postActivate', () => {
         }),
     );
     // mock return value below current
-    vi.mocked(KubectlGitHubReleases).mockReturnValue({
-      grabLatestsReleasesMetadata: vi.fn().mockResolvedValue([
-        {
-          label: 'Kubernetes v1.1.0',
-          tag: 'v1.1.0',
-          id: -1,
-        },
-      ]),
-      getReleaseAssetURL: vi.fn().mockResolvedValue('dummy download url'),
-      downloadReleaseAsset: downloadReleaseAssetMock,
-    } as unknown as KubectlGitHubReleases);
+    vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+      {
+        label: 'Kubernetes v1.1.0',
+        tag: 'v1.1.0',
+        id: -1,
+      },
+    ]);
     const deferredCliInstall: Promise<extensionApi.CliToolInstaller> = new Promise<extensionApi.CliToolInstaller>(
       resolve => {
         vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {

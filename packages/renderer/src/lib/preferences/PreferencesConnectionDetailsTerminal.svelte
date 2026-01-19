@@ -9,12 +9,11 @@ import { Terminal } from '@xterm/xterm';
 import type { IDisposable } from 'monaco-editor';
 import { onDestroy, onMount } from 'svelte';
 
+import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import { getExistingTerminal, registerTerminal } from '/@/stores/provider-terminal-store';
 import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
-
-import { TerminalSettings } from '../../../../main/src/plugin/terminal-settings';
-import { getTerminalTheme } from '../terminal/terminal-theme';
-import NoLogIcon from '../ui/NoLogIcon.svelte';
+import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 interface ProviderDetailsTerminalProps {
   provider: ProviderInfo;

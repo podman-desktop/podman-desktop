@@ -1,7 +1,7 @@
 <script lang="ts">
-import { faCircleInfo, faGear, faTerminal } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import type { ContainerProviderConnection } from '@podman-desktop/api';
-import { Button, DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
+import { DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
@@ -10,33 +10,33 @@ import type { Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
+import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
+import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
 import BooleanEnumDisplay from '/@/lib/ui/BooleanEnumDisplay.svelte';
+import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
+import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
+import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
+import { capitalize } from '/@/lib/ui/Util';
+import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
+import { providerInfos } from '/@/stores/providers';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import { configurationProperties } from '../../stores/configurationProperties';
-import { providerInfos } from '../../stores/providers';
-import ContributionActions from '../actions/ContributionActions.svelte';
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
-import ProviderUpdateButton from '../dashboard/ProviderUpdateButton.svelte';
-import { normalizeOnboardingWhenClause } from '../onboarding/onboarding-utils';
-import ConnectionErrorInfoButton from '../ui/ConnectionErrorInfoButton.svelte';
-import ConnectionStatus from '../ui/ConnectionStatus.svelte';
-import EngineIcon from '../ui/EngineIcon.svelte';
-import { capitalize } from '../ui/Util';
 import { PeerProperties } from './PeerProperties';
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
 import PreferencesProviderInstallationModal from './PreferencesProviderInstallationModal.svelte';
 import PreferencesResourcesRenderingCopyButton from './PreferencesResourcesRenderingCopyButton.svelte';
+import ProviderActionButtons from './ProviderActionButtons.svelte';
 import SettingsPage from './SettingsPage.svelte';
 import {
   getProviderConnectionName,
@@ -339,6 +339,11 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+function handleUpdatePreflightChecks(checks: CheckStatus[]): CheckStatus[] {
+  preflightChecks = checks;
+  return checks;
+}
+
 interface Props {
   properties?: IConfigurationPropertyRecordedSchema[];
   focus: string | undefined;
@@ -443,12 +448,12 @@ $effect(() => {
       <div
         id={provider.id}
         bind:this={providerElementMap[provider.id]}
-        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex"
+        class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 flex"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup">
+        <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)]">
           <!-- left col - provider icon/name + "create new" button -->
-          <div class="min-w-[170px] max-w-[200px]">
+          <div class="min-w-[170px] max-w-[200px] pr-5 py-2">
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
@@ -460,70 +465,24 @@ $effect(() => {
               {/if}
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
-            </div>
-            <div class="text-center mt-10">
-              <!-- Some providers have a status of 'unknown' so that they do not appear in the dashboard, this allows onboarding to still show. -->
-              {#if globalContext && isOnboardingEnabled(provider, globalContext) && (provider.status === 'not-installed' || provider.status === 'unknown')}
-                <Button
-                  aria-label="Setup {provider.name}"
-                  title="Setup {provider.name}"
-                  onclick={(): void => router.goto(`/preferences/onboarding/${provider.extensionId}`)}>
-                  Setup ...
-                </Button>
-              {:else}
-                <div class="flex flex-row justify-around flex-wrap gap-2">
-                  {#if provider.containerProviderConnectionCreation || provider.kubernetesProviderConnectionCreation || provider.vmProviderConnectionCreation}
-                    {@const providerDisplayName =
-                      (provider.containerProviderConnectionCreation
-                        ? (provider.containerProviderConnectionCreationDisplayName ?? undefined)
-                        : provider.kubernetesProviderConnectionCreation
-                          ? provider.kubernetesProviderConnectionCreationDisplayName
-                          : provider.vmProviderConnectionCreation
-                            ? provider.vmProviderConnectionCreationDisplayName
-                            : undefined) ?? provider.name}
-                    {@const buttonTitle =
-                      (provider.containerProviderConnectionCreation
-                        ? (provider.containerProviderConnectionCreationButtonTitle ?? undefined)
-                        : provider.kubernetesProviderConnectionCreation
-                          ? provider.kubernetesProviderConnectionCreationButtonTitle
-                          : provider.vmProviderConnectionCreation
-                            ? provider.vmProviderConnectionCreationButtonTitle
-                            : undefined) ?? 'Create new'}
-                    <!-- create new provider button -->
-                    <Tooltip bottom tip="Create new {providerDisplayName}">
-                      <Button
-                        aria-label="Create new {providerDisplayName}"
-                        inProgress={providerInstallationInProgress.get(provider.name)}
-                        onclick={(): Promise<void> => doCreateNew(provider, providerDisplayName)}>
-                        {buttonTitle} ...
-                      </Button>
-                    </Tooltip>
-                  {/if}
-                  {#if globalContext && (isOnboardingEnabled(provider, globalContext) || hasAnyConfiguration(provider))}
-                    <Button
-                      aria-label="Setup {provider.name}"
-                      title="Setup {provider.name}"
-                      onclick={(): void => {
-                        if (globalContext && isOnboardingEnabled(provider, globalContext)) {
-                          router.goto(`/preferences/onboarding/${provider.extensionId}`);
-                        } else {
-                          router.goto(`/preferences/default/preferences.${provider.extensionId}`);
-                        }
-                      }}>
-                      <Fa size="0.9x" icon={faGear} />
-                    </Button>
-                  {/if}
-                  {#if provider.updateInfo?.version && provider.version !== provider.updateInfo?.version}
-                    <ProviderUpdateButton onPreflightChecks={(checks): CheckStatus[] => (preflightChecks = checks)} provider={provider} />
-                  {/if}
-                </div>
+              {#if provider.version}
+                <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 break-words"
+                  >v{provider.version}</span>
               {/if}
             </div>
+            <ProviderActionButtons
+              provider={provider}
+              globalContext={globalContext}
+              providerInstallationInProgress={providerInstallationInProgress.get(provider.name) ?? false}
+              onCreateNew={doCreateNew}
+              onUpdatePreflightChecks={handleUpdatePreflightChecks}
+              isOnboardingEnabled={isOnboardingEnabled}
+              hasAnyConfiguration={hasAnyConfiguration} />
           </div>
         </div>
         <!-- providers columns -->
         <div
-          class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2 text-[var(--pd-invert-content-card-text)]"
+          class="grow flex flex-wrap text-[var(--pd-invert-content-card-text)]"
           role="region"
           aria-label="Provider Connections">
           <PreferencesConnectionsEmptyRendering
@@ -532,7 +491,7 @@ $effect(() => {
           {#each provider.containerConnections as container, index (index)}
             {@const peerProperties = new PeerProperties()}
             {@const rootfulInfo = getRootfulDisplayInfo(provider, container)}
-            <div class="px-5 py-2 w-[240px]" role="region" aria-label={container.name}>
+            <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={container.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
                   <button
@@ -643,16 +602,12 @@ $effect(() => {
                 {/snippet}
               </PreferencesConnectionActions>
               <div class="mt-1.5 text-[var(--pd-content-sub-header)] text-[9px] flex justify-between">
-                <div aria-label="Connection Version">
-                  {provider.name}
-                  {provider.version ? `v${provider.version}` : ''}
-                </div>
                 <div aria-label="Connection Type">{container.vmType ? capitalize(container.vmType.name) : ''}</div>
               </div>
             </div>
           {/each}
           {#each provider.kubernetesConnections as kubeConnection, index (index)}
-            <div class="px-5 py-2 w-[240px]" role="region" aria-label={kubeConnection.name}>
+            <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={kubeConnection.name}>
               <div class="float-right">
                 <Tooltip bottom tip="{provider.name} details">
                   <button
@@ -690,7 +645,7 @@ $effect(() => {
             </div>
           {/each}
           {#each provider.vmConnections as vmConnection, index (index)}
-          <div class="px-5 py-2 w-[240px]" role="region" aria-label={vmConnection.name}>
+          <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={vmConnection.name}>
             <div class="float-right">
               <Tooltip bottom tip="{provider.name} details">
                 <button

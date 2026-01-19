@@ -105,13 +105,13 @@ export class PodmanDownload {
       this.#artifactsToDownload.push({
         version: tagVersion,
         downloadName: downloadNameAmd64,
-        artifactName: 'podman-installer-windows-amd64.exe',
+        artifactName: 'podman-installer-windows-amd64.msi',
       });
       const downloadNameArm64 = podmanJSON.platform.win32.arch.arm64.fileName;
       this.#artifactsToDownload.push({
         version: tagVersion,
         downloadName: downloadNameArm64,
-        artifactName: 'podman-installer-windows-arm64.exe',
+        artifactName: 'podman-installer-windows-arm64.msi',
       });
     } else if (this.#platform === 'darwin') {
       const tagVersion = podmanJSON.platform.darwin.version;
@@ -409,7 +409,6 @@ export class Podman5DownloadMachineOS {
     // download the podman 5 machines OS
     if (platform === 'win32') {
       // Here add downloading of HyperV
-      this.#ociRegistryProjectLink = 'https://quay.io/v2/podman/machine-os-wsl';
       await this.download(DiskType.WSL);
     } else {
       await this.download(DiskType.Applehv);

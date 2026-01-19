@@ -20,7 +20,7 @@ import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { createListener } from './micromark-listener-handler';
 
-let mockCommandCallback: ReturnType<typeof vi.fn>;
+let mockCommandCallback: (command: string, state: 'starting' | 'failed' | 'successful', value?: unknown) => void;
 let listener: ReturnType<typeof createListener>;
 
 beforeEach(() => {

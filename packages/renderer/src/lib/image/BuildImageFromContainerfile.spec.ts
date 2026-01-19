@@ -19,11 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, type RenderResult, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { tick } from 'svelte';
+import { type Component, tick } from 'svelte';
 import { get } from 'svelte/store';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import BuildImageFromContainerfile from '/@/lib/image/BuildImageFromContainerfile.svelte';
 import { buildImagesInfo, getNextTaskId } from '/@/stores/build-images';
@@ -32,18 +32,7 @@ import { recommendedRegistries } from '/@/stores/recommendedRegistries';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 // xterm is used in the UI, but not tested, added in order to avoid the multiple warnings being shown during the test.
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi.fn().mockReturnValue({
-      loadAddon: vi.fn(),
-      open: vi.fn(),
-      write: vi.fn(),
-      clear: vi.fn(),
-      dispose: vi.fn(),
-      reset: vi.fn(),
-    }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 // fake the window.events object
 beforeAll(() => {
@@ -55,17 +44,20 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-async function waitRender(): Promise<void> {
-  render(BuildImageFromContainerfile);
+async function waitRender(): Promise<RenderResult<Component>> {
+  const res = render(BuildImageFromContainerfile);
 
   // Wait 200ms for "cards" for platform render correctly
   await new Promise(resolve => setTimeout(resolve, 200));
+
+  return res;
 }
 
 // the build image page expects to have a valid provider connection, so let's mock one
 function setup(): void {
   const pStatus: ProviderStatus = 'started';
   const pInfo: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'test',
     displayName: 'test',
     status: 'started',
@@ -211,6 +203,7 @@ test('Select multiple platforms and expect pressing Build will do two buildImage
     expect.anything(),
     expect.anything(),
     expect.anything(),
+    undefined,
   );
 
   expect(window.buildImage).toHaveBeenCalledWith(
@@ -224,6 +217,7 @@ test('Select multiple platforms and expect pressing Build will do two buildImage
     expect.anything(),
     expect.anything(),
     expect.anything(),
+    undefined,
   );
 });
 
@@ -319,6 +313,7 @@ test('Selecting one platform only calls buildImage once with the selected platfo
     expect.anything(),
     expect.anything(),
     expect.anything(),
+    undefined,
   );
 });
 
@@ -615,4 +610,50 @@ test('Expect error to be displayed if uppercase character in image name', async 
   const buildButton = getByRole('button', { name: 'Build' });
   expect(buildButton).toBeInTheDocument();
   expect(buildButton).toBeDisabled();
+});
+
+describe('Build image that has an intermediate target', () => {
+  test.each([
+    { target: 'custom-target', expected: 'custom-target' },
+    { target: 'default (no target)', expected: undefined },
+  ])('should build with target $target', async ({ target, expected }) => {
+    vi.mocked(window.containerfileGetInfo).mockResolvedValue({
+      targets: ['custom-target'],
+    });
+    vi.mocked(window.getOsArch).mockResolvedValue('amd64');
+    setup();
+
+    const { getByRole } = await waitRender();
+
+    vi.mocked(window.pathRelative).mockResolvedValue('containerfile');
+    const containerFilePath = getByRole('textbox', { name: 'Containerfile path' });
+    await userEvent.type(containerFilePath, '/somepath/containerfile');
+
+    const imageName = getByRole('textbox', { name: 'Image name' });
+    await userEvent.type(imageName, 'foobar');
+
+    const targetDropdown = getByRole('button', { name: 'Target' });
+    await userEvent.click(targetDropdown);
+
+    await userEvent.click(getByRole('button', { name: target }));
+
+    const buildButton = getByRole('button', { name: 'Build' });
+    expect(buildButton).toBeEnabled();
+    await userEvent.click(buildButton);
+
+    expect(window.buildImage).toHaveBeenCalledTimes(1);
+    expect(window.buildImage).toHaveBeenCalledWith(
+      '/somepath',
+      'containerfile',
+      'foobar',
+      'linux/amd64',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      {},
+      expect.anything(),
+      expected,
+    );
+  });
 });

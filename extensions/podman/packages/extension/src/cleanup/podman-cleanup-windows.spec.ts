@@ -23,15 +23,6 @@ import { PodmanCleanupWindows } from './podman-cleanup-windows';
 
 let podmanCleanupWindows: PodmanCleanupWindows;
 
-// mock the API
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 // mock exists sync
 vi.mock('node:fs', async () => {
   return {

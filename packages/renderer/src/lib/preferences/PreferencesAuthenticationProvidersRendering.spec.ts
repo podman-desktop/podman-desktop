@@ -24,7 +24,8 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
-import { authenticationProviders } from '../../stores/authenticationProviders';
+import { authenticationProviders } from '/@/stores/authenticationProviders';
+
 import PreferencesAuthenticationProvidersRendering from './PreferencesAuthenticationProvidersRendering.svelte';
 
 class ResizeObserver {

@@ -22,23 +22,11 @@ import type { CancellationToken, ExtensionContext } from '@podman-desktop/api';
 import { process as processAPI, window } from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getAssetsFolder } from '../utils/util';
+import { getAssetsFolder } from '/@/utils/util';
+
 import { MacOSInstaller } from './mac-os-installer';
 
 vi.mock('node:fs');
-vi.mock('@podman-desktop/api', () => ({
-  commands: {},
-  env: {},
-  window: {
-    withProgress: vi.fn(),
-    showNotification: vi.fn(),
-    showErrorMessage: vi.fn(),
-  },
-  ProgressLocation: {},
-  process: {
-    exec: vi.fn(),
-  },
-}));
 
 const extensionContext = {
   subscriptions: [],

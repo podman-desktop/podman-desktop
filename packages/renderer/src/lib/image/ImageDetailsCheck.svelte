@@ -6,11 +6,10 @@ import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 import Fa from 'svelte-fa';
 
+import type { CheckUI, ProviderUI } from '/@/lib/ui/ProviderResultPage';
+import ProviderResultPage from '/@/lib/ui/ProviderResultPage.svelte';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
-
-import type { CheckUI, ProviderUI } from '../ui/ProviderResultPage';
-import ProviderResultPage from '../ui/ProviderResultPage.svelte';
 
 const orderStatus = ['failed', 'success'];
 const orderSeverity = ['critical', 'high', 'medium', 'low', undefined];

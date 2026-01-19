@@ -23,9 +23,9 @@ import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
 
-import { ContextUI } from '../context/context';
 import ContainerActions from './ContainerActions.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
@@ -50,12 +50,10 @@ const container: ContainerInfoUI = new ContainerInfoUIImpl(
 
 const getContributedMenusMock = vi.fn();
 const updateMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 vi.mock('/@/lib/actions/ContributionActions.svelte');
 
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'startContainer', { value: vi.fn() });
   Object.defineProperty(window, 'stopContainer', { value: vi.fn() });
   Object.defineProperty(window, 'restartContainer', { value: vi.fn() });
@@ -111,7 +109,7 @@ test('Expect no error and status restarting container', async () => {
 
 test('Expect no error and status deleting container', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(ContainerActions, { container, onUpdate: updateMock });
 
   // click on delete button

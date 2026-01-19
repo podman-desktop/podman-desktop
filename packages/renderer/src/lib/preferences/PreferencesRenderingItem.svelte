@@ -3,12 +3,13 @@ import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-i
 import { Button } from '@podman-desktop/ui-svelte';
 import Fa from 'svelte-fa';
 
+import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import Label from '/@/lib/ui/Label.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
-import Markdown from '../markdown/Markdown.svelte';
+import PreferencesManagedLabel from './PreferencesManagedLabel.svelte';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
 interface Props {
@@ -72,6 +73,7 @@ function updateResetButtonVisibility(recordValue: unknown): void {
 }
 
 function doResetToDefault(): void {
+  if (record.locked) return;
   resetToDefault = true;
 }
 
@@ -92,6 +94,10 @@ async function openGitHubDiscussion(): Promise<void> {
       <div class="flex flex-row text-[color:var(--pd-invert-content-card-text)]">
         <div class="flex flex-row space-x-2 items-center">
           <span class="font-semibold">{recordUI.title}</span>
+         
+          {#if record.locked}
+            <PreferencesManagedLabel />
+          {/if}
           {#if record.experimental !== undefined}
             <Label>
               <div class="flex flex-row space-x-1 items-center">
@@ -101,7 +107,7 @@ async function openGitHubDiscussion(): Promise<void> {
             </Label>
           {/if}
         </div>
-        {#if showResetButton}
+        {#if showResetButton && !record.locked}
           <div class="ml-2">
             <RefreshButton label="Reset to default value" onclick={doResetToDefault} />
           </div>

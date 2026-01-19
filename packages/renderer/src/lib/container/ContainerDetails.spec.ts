@@ -48,8 +48,8 @@ const myContainer: ContainerInfo = {
   ImageBase64RepoTag: '',
 };
 
-vi.mock('@xterm/xterm');
-vi.mock('@xterm/addon-search');
+vi.mock(import('@xterm/xterm'));
+vi.mock(import('@xterm/addon-search'));
 
 const getConfigurationValueMock = vi.fn().mockReturnValue(12);
 

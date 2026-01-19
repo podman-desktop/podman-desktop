@@ -19,6 +19,121 @@ import { WinPlatform } from './win-platform';
 import type { WSL2Check } from '../checks/windows/wsl2-check';
 ```
 
+### Svelte
+
+On templates of Svelte components, avoid using inline code and arrow functions. Instead, call a function defined in the script part of the component.
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+async function onButtonClicked(): Promise<void> {
+  // the code here
+}
+</script>
+
+<button on:click={onButtonClicked}>
+```
+
+🚫 **Instead of:**
+
+```ts
+<button on:click={(): Promise<void> => { /* the code here */ }}>
+```
+
+If values have to be passed from the template to the function, use the `bind` method on the function to pass the parameter.
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+async function onButtonClicked(object: Object): Promise<void> {
+  // the code here
+}
+</script>
+
+{#each objects as object (object.id)}
+  <button on:click={onButtonClicked.bind(undefined, object)}>
+{/each}
+```
+
+🚫 **Instead of:**
+
+```ts
+{#each objects as object (object.id)}
+  <button on:click={(): Promise<void> => onButtonClicked(object)}>
+{/each}
+```
+
+### Using async/await in expressions
+
+As of Svelte 5.36+, you can use the `await` keyword directly inside component expressions in three places: at the top level of the component's `<script>`, inside `$derived(...)` declarations, and inside your markup. This enables cleaner code without needing explicit promise handling.
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+async function fetchData(): Promise<Data> {
+  // async logic here
+  return data;
+}
+
+let data = $derived(await fetchData());
+</script>
+
+<p>Data: {data}</p>
+```
+
+🚫 **Instead of:**
+
+```ts
+<script lang="ts">
+async function fetchData(): Promise<Data> {
+  // async logic here
+  return data;
+}
+
+// Without await, this produces a Promise
+let dataPromise = $derived(fetchData());
+</script>
+
+{#await dataPromise}
+  <p>Loading...</p>
+{:then data}
+  <p>Data: {data}</p>
+{:catch error}
+  <p>Error: {error.message}</p>
+{/await}
+```
+
+This is much simpler than managing promises manually and avoids the need for `{#await}` blocks when you just need the final value.
+
+For more details on async patterns in Svelte, see the [Svelte documentation on await expressions](https://svelte.dev/docs/svelte/await-expressions).
+
+### Svelte Attachments (Svelte 5.29+)
+
+You can use attachments to add DOM behavior that runs on mount and cleans up on detach.
+
+Example:
+
+```ts
+<script lang="ts">
+  import type { Attachment } from 'svelte/attachments';
+
+  const clickOnce: Attachment = (el) => {
+    const onClick = () => {
+      // handle click
+    };
+    el.addEventListener('click', onClick);
+    return () => el.removeEventListener('click', onClick);
+  };
+</script>
+
+<button {@attach clickOnce}>...</button>
+```
+
+References: [@attach](https://svelte.dev/docs/svelte/@attach), [svelte/attachments](https://svelte.dev/docs/svelte/svelte-attachments)
+
 ## Unit tests code
 
 ### Use `vi.mocked`, not a generic `myFunctionMock`
@@ -187,6 +302,24 @@ const text = getByText('text in the page');
 expect(text).toHaveStyle({ color: '#FFFFF'});
 ```
 
+### `waitFor` vs `waitUntil`
+
+Use `waitFor` (https://vitest.dev/api/vi.html#vi-waitfor) to retry an assertion until it passes, and `waitUntil` (https://vitest.dev/api/vi.html#vi-waituntil) to wait for a function to return a truthy value.
+
+→ `waitFor` → needs an exception
+
+→ `waitUntil` → needs a boolean
+
+**Example:**
+
+```typescript
+// Use waitFor with an assertion
+await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+
+// Use waitUntil with a boolean value
+await vi.waitUntil(() => get(imagesInfos).length > 0);
+```
+
 ### Mocking a sub-component
 
 To test a component in isolation without testing its sub-components, you have the possibility to mock
@@ -333,3 +466,91 @@ afterEach(() => {
   vi.useRealTimers();
 });
 ```
+
+### Snapshots
+
+Vitest snapshots are a powerful tool to ensure UI components and complex data structures do not change unexpectedly. They are particularly effective for catching regressions in rendered HTML or large objects without writing manual assertions for every property. When a snapshot detects a diff, you can update it using the `-u` param:
+
+#### Updating Snapshots
+
+When a test fails due to an intentional change, you can update the stored snapshots by appending the `-u` (or `--update`) flag to your test command.
+
+#### 1. Standard Snapshots (External Files)
+
+Use standard snapshots for large outputs like rendered HTML. These are stored in a separate **snapshots** directory.
+
+##### Example: Testing Rendered HTML
+
+```ts
+test('multiple container connection should display a dropdown', async () => {
+  providerInfos.set([MULTI_CONNECTIONS]);
+
+  const { getByRole } = render(CreateContainerFromExistingImage);
+  const dropdown = getByRole('button', { name: 'Container Engine' });
+  expect(dropdown).toBeEnabled();
+
+  expect(dropdown).toMatchSnapshot();
+});
+```
+
+**How to update:**
+
+```bash
+cd packages/renderer/
+pnpm test src/lib/container/CreateContainerFromExistingImage.s -u
+```
+
+**Result:** A snapshot file is created or updated at:
+
+`src/lib/container/__snapshots__/CreateContainerFromExistingImage.spec.ts.snap`
+
+#### 2. Inline Snapshots
+
+Inline snapshots are preferred for small data structures. They are written directly back into your test file, making the expected output easier to review during code sessions.
+
+#### Example: Testing an Object
+
+```ts
+test('should parse targets with some special characters', async () => {
+  const info = await containerFileParser.parseContent(`
+    FROM busybox as base
+    ARG TARGETPLATFORM
+    RUN echo $TARGETPLATFORM > /plt
+    FROM --platform=\${TARGETPLATFORM} base AS base-target
+    FROM --platform=$BUILDPLATFORM base AS base-build
+  `);
+  expect(info).toMatchInlineSnapshot(`
+    {
+      "targets": [],
+    }
+  `);
+});
+```
+
+**How to update:**
+
+```bash
+cd packages/main/
+pnpm test:unit src/plugin/containerfile-parser.spec.ts --u
+```
+
+**Result:** Vitest replaces the code in your .spec.ts file with the updated values:
+
+```ts
+expect(info).toMatchInlineSnapshot(`
+  {
+    "targets": [
+      "base",
+      "base-build",
+    ],
+  }
+`);
+```
+
+**Best Practices**
+
+- **Review Before Committing:** Always inspect the diff of a snapshot update. It is easy to accidentally "fix" a test by updating a snapshot that actually contains a bug.
+- **Keep Snapshots Focused:** Avoid snapshotting entire massive objects if you only care about one or two fields; use specific assertions instead to keep tests readable.
+- **Use Inline for Small Data:** If the snapshot is less than 10 lines, prefer `toMatchInlineSnapshot()` for better visibility.
+
+For more details, see the [Vitest snapshot guide](https://vitest.dev/guide/snapshot.html).

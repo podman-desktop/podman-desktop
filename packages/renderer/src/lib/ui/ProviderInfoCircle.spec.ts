@@ -70,3 +70,11 @@ test('Expect missing is gray', async () => {
   expect(circle).toBeInTheDocument();
   expect(circle).toHaveClass('bg-gray-900');
 });
+
+test('Expect appropriate dimension', async () => {
+  const { getByLabelText } = render(ProviderInfoCircle);
+  const circle = getByLabelText('Provider info circle');
+  expect(circle).toBeInTheDocument();
+  expect(circle).toHaveClass('min-w-2');
+  expect(circle).toHaveClass('min-h-2');
+});

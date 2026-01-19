@@ -3,12 +3,13 @@ import { ErrorMessage, StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import Route from '../../Route.svelte';
-import { podsInfos } from '../../stores/pods';
-import PodIcon from '../images/PodIcon.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import StateChange from '../ui/StateChange.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
+import PodIcon from '/@/lib/images/PodIcon.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import StateChange from '/@/lib/ui/StateChange.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
+import { podsInfos } from '/@/stores/pods';
+
 import { PodUtils } from './pod-utils';
 import PodActions from './PodActions.svelte';
 import PodDetailsInspect from './PodDetailsInspect.svelte';

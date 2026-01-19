@@ -2,9 +2,9 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import { uncertainStringToNumber } from '/@/lib/preferences/Util';
 import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
-import { uncertainStringToNumber } from '../Util';
 import { checkNumericValueValid } from './NumberItemUtils';
 
 export let record: IConfigurationPropertyRecordedSchema;
@@ -80,6 +80,7 @@ function assertNumericValueIsValid(value: number): boolean {
       bind:value={recordValue}
       on:keypress={onNumberInputKeyPress}
       on:input={onInput}
+      disabled={!!record.readonly}
       aria-label={record.description} />
   </Tooltip>
 </div>

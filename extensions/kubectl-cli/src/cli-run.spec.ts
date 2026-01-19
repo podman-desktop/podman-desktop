@@ -24,23 +24,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { installBinaryToSystem } from './cli-run';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    window: {
-      showInformationMessage: vi.fn().mockReturnValue(Promise.resolve('Yes')),
-      showErrorMessage: vi.fn(),
-      withProgress: vi.fn(),
-      showNotification: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    ProgressLocation: {
-      APP_ICON: 1,
-    },
-  };
-});
-
 // mock exists sync
 vi.mock('node:fs', async () => {
   return {

@@ -290,3 +290,21 @@ test(`Test navigationHandle for ${NavigationPage.NETWORK}`, () => {
   handleNavigation({ page: NavigationPage.NETWORK, parameters: { name: 'network1', engineId: 'engineId1' } });
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/networks/network1/engineId1/summary');
 });
+
+test(`Test navigationHandle for ${NavigationPage.NETWORK_CREATE}`, () => {
+  handleNavigation({ page: NavigationPage.NETWORK_CREATE });
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/networks/create');
+});
+
+test(`Test navigationHandle for ${NavigationPage.EXTENSIONS_CATALOG}`, () => {
+  handleNavigation({
+    page: NavigationPage.EXTENSIONS_CATALOG,
+    parameters: {
+      searchTerm: 'not:installed category:foo keyword:bar red hat',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
+    '/extensions?screen=catalog&searchTerm=not%3Ainstalled%20category%3Afoo%20keyword%3Abar%20red%20hat',
+  );
+});

@@ -18,8 +18,9 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { waitWhile } from '../../utility/wait';
-import type { ContainerInteractiveParams } from '../core/types';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { waitWhile } from '/@/utility/wait';
+
 import { BasePage } from './base-page';
 import { ContainerDetailsPage } from './container-details-page';
 import { ContainersPage } from './containers-page';
@@ -72,7 +73,7 @@ export class RunImagePage extends BasePage {
   // If the container has a defined exposed port, the mapping offers only one part of the input box, host port
   // Example of the placeholder: 'Enter value for port 80/tcp' : settable value
   async setHostPortToExposedContainerPort(exposedPort: string, port: string): Promise<void> {
-    return test.step(`Set host port to exposed container port`, async () => {
+    return test.step('Set host port to exposed container port', async () => {
       await this.activateTab('Basic');
       const portMapping = this.page
         .getByRole('textbox')
@@ -103,15 +104,19 @@ export class RunImagePage extends BasePage {
         await this.activateTab('Basic');
         await playExpect(this.containerNameInput).toBeVisible();
         await this.containerNameInput.fill(customName);
+        await playExpect(this.containerNameInput).toHaveValue(customName);
       }
 
       if (optionalParams?.attachVolumeName !== undefined && optionalParams?.attachVolumePath !== undefined) {
-        //
         await this.activateTab('Basic');
+
         await playExpect(this.volumeNameInput).toBeVisible();
-        await playExpect(this.volumeContainerPath).toBeVisible();
         await this.volumeNameInput.pressSequentially(optionalParams.attachVolumeName, { delay: 10 });
+        await playExpect(this.volumeNameInput).toHaveValue(optionalParams.attachVolumeName);
+
+        await playExpect(this.volumeContainerPath).toBeVisible();
         await this.volumeContainerPath.pressSequentially(optionalParams.attachVolumePath, { delay: 10 });
+        await playExpect(this.volumeContainerPath).toHaveValue(optionalParams.attachVolumePath);
       }
 
       if (optionalParams?.attachTerminal !== undefined) {

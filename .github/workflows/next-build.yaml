@@ -43,7 +43,7 @@ jobs:
       releaseId: ${{ steps.create_release.outputs.id}}
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
          token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
          fetch-depth: 0
@@ -98,7 +98,7 @@ jobs:
         os: [windows-2025, ubuntu-24.04, macos-15]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: podman-desktop/prereleases
           ref: ${{ needs.tag.outputs.githubTag}}
@@ -108,18 +108,18 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
-      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: "3.x"
 
       - name: setup telemetry key for production
         run: |
-          sed -i -r -e "s/SEGMENT_KEY = '.*'/SEGMENT_KEY = '${{ secrets.SEGMENT_WRITE_KEY }}'/" packages/main/src/plugin/telemetry/telemetry.ts
+          jq --arg key "${{ secrets.SEGMENT_WRITE_KEY }}" '.telemetry.key = $key' product.json > product.json.tmp && rm product.json && mv product.json.tmp product.json
 
       - name: Execute pnpm
         run: pnpm install
@@ -175,65 +175,3 @@ jobs:
           id: ${{ needs.tag.outputs.releaseId}}
           repo: podman-desktop-prereleases
           owner: podman-desktop
-
-  publish:
-    needs: [tag, release]
-    name: Publish
-    runs-on: ubuntu-24.04
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
-        name: Install pnpm
-        with:
-          run_install: false
-
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Execute pnpm
-        run: pnpm install
-
-      - name: Set-up npmjs auth token
-        run: printf "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}\n" >> ~/.npmrc
-
-      - name: Publish API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/extension-api/package.json
-          cd packages/extension-api && pnpm publish --provenance --tag next --no-git-checks --access public
-
-      - name: Publish Webview API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/webview-api/package.json
-          cd packages/webview-api && pnpm publish --provenance --tag next --no-git-checks --access public
-
-      - name: Publish ui/svelte to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" packages/ui/package.json
-          cd packages/ui && pnpm build && pnpm publish --provenance --tag next --no-git-checks --access public
-
-      - name: Publish tests-playwright to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" tests/playwright/package.json
-          cd tests/playwright && pnpm build && pnpm publish --provenance --tag next --no-git-checks --access public
-
-      - name: Publish Podman Extension API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" extensions/podman/packages/api/package.json
-          cd extensions/podman/packages/api
-          pnpm publish --provenance --tag next --no-git-checks --access public
-
-      - name: Publish Docker Extension API to npmjs
-        run: |
-          echo "Using version ${{ needs.tag.outputs.desktopVersion }}"
-          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ needs.tag.outputs.desktopVersion }}\",#g" extensions/docker/packages/api/package.json
-          cd extensions/docker/packages/api
-          pnpm publish --provenance --tag next --no-git-checks --access public

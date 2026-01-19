@@ -59,7 +59,7 @@ Steps:
 2. Install its local dependencies by executing `pnpm install`
 3. Implement your changes to the E2E tests library (optional)
 4. Build the application and tests with `pnpm test:e2e:build`
-5. Set an environment variable by executing: `export PODMAN_DESKTOP_ARGS="/path/to/podman-desktop"` (the current directory) [¹]
+5. Set an environment variable by executing: `export PODMAN_DESKTOP_ARGS="/path/to/podman-desktop"` (the current directory) [¹][⁶]
 6. Get into YOUR repository and update the `package.json` file to have the following contents:
 
 - Under `devDependencies`:
@@ -71,17 +71,28 @@ Steps:
 
 7. Execute `pnpm install`, which should extract the contents of the previously built Podman Desktop into the `node_modules` folder in your repository
 8. Write your E2E tests on your repository, which may use your changes to `@podman-desktop/tests-playwright` from step 3 (optional)
-9. Run your E2E tests by executing `pnpm test:e2e`
+9. Run your E2E tests by executing `pnpm test:e2e` [⁵]
 
 ### Running in e2e tests in PRODUCTION mode
 
-You can skip steps 1 through 4 and set `PODMAN_DESKTOP_BINARY` if you have compiled it or downloaded before and want to run in PRODUCTION mode.
+1. You can either a) download a prerelease binary from the [testing-prereleases repository](https://github.com/podman-desktop/testing-prereleases) or b) compile the binary yourself by getting into the podman-desktop folder and executing `pnpm compile:current`, which will produce a `podman-desktop` executable under `/dist/linux-unpacked`
+2. Set an environment variable by executing: `export PODMAN_DESKTOP_BINARY="/path/to/the/podman-desktop/executable"` [⁶]
+3. Follow steps 6 to 9 from the previous section [⁴]
 
 [¹] Remember that environment variables defined this way only work on the terminal they were defined and only for as long as the terminal is active.
 
-Using the value `next` works for running tests locally, but for remote executions, specify the latest version of the `@podman-desktop/tests-playwright` package. Check the “Versions” tab here to find the latest version. This version will be written into the `pnpm-lock.yaml` file; to ensure you use the latest version in the future, force an update with `pnpm add -D @podman-desktop/tests-playwright@next` (use the `-w` flag in monorepos to install at the workspace root).
+[²] Using the value `next` works for running tests locally, but for remote executions, specify the latest version of the `@podman-desktop/tests-playwright` package. Check the “Versions” tab here to find the latest version. This version will be written into the `pnpm-lock.yaml` file; to ensure you use the latest version in the future, force an update with `pnpm add -D @podman-desktop/tests-playwright@next` (use the `-w` flag in monorepos to install at the workspace root).
 
 [³] If your project does not already have the `xvfb-maybe` dependency, you'll need to add it as well.
+
+[⁴] To verify that the PD binary is correctly being passed to the extension tests, you can check at the beginning of the running tests trace if the path is correct here: `executablePath: /expected/path/to/podman-desktop/binary`
+
+[⁵] Currently in linux, running the tests with `pnpm test:e2e` does not open Podman Desktop (PD starts minimized in the tray). To see the tests running, execute the binary once you've executed `pnpm test:e2e`
+
+[⁶] Alternatively to exporting the envvar, you can add it directly to the execution of the tests like this:
+
+- `PODMAN_DESKTOP_ARGS="/path/to/podman-desktop" pnpm test:e2e`
+- `PODMAN_DESKTOP_BINARY="/path/to/the/podman-desktop/executable" pnpm test:e2e`
 
 ## How to develop and test @podman-desktop/tests-playwright locally
 

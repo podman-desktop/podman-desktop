@@ -279,6 +279,7 @@ export type NetworkCreateOptions = Dockerode.NetworkCreateOptions;
 
 export interface NetworkCreateResult {
   Id: string;
+  engineId: string;
 }
 
 // Form state interface for creating networks in the UI
@@ -293,6 +294,9 @@ export interface NetworkCreateFormInfo {
   driver: string;
   options: string[];
   selectedProvider: ProviderContainerConnectionInfo | undefined;
+  // DNS servers (Podman only)
+  dnsEnabled: boolean | undefined;
+  dnsServers: string[] | undefined;
 }
 
 export interface VolumeCreateOptions {

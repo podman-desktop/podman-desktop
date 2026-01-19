@@ -25,8 +25,8 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import PodDetailsLogs from '/@/lib/pod/PodDetailsLogs.svelte';
 import type { PodInfoUI } from '/@/lib/pod/PodInfoUI';
 
-vi.mock('@xterm/xterm');
-vi.mock('@xterm/addon-search');
+vi.mock(import('@xterm/xterm'));
+vi.mock(import('@xterm/addon-search'));
 
 beforeEach(() => {
   vi.resetAllMocks();

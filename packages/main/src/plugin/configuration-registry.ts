@@ -24,6 +24,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import {
   CONFIGURATION_DEFAULT_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
@@ -40,11 +41,11 @@ import type { IDisposable } from '/@api/disposable.js';
 import type { Event } from '/@api/event.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 
-import { ApiSenderType } from './api.js';
 import { ConfigurationImpl } from './configuration-impl.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { LockedKeys } from './lock-configuration.js';
 import { LockedConfiguration } from './locked-configuration.js';
 import { Disposable } from './types/disposable.js';
 
@@ -65,6 +66,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   // Contains the value of the current configuration
   private configurationValues: Map<string, { [key: string]: unknown }>;
+  private lockedKeys: LockedKeys;
 
   constructor(
     @inject(ApiSenderType)
@@ -82,6 +84,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE, {});
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, {});
+    this.lockedKeys = new LockedKeys(this.configurationValues);
   }
 
   protected getSettingsFile(): string {
@@ -132,7 +135,6 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       });
       configData = {};
     }
-    this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
 
     // Load managed defaults
     const defaults = await this.defaultConfiguration.getContent();
@@ -142,7 +144,47 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const locked = await this.lockedConfiguration.getContent();
     this.configurationValues.set(CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE, locked);
 
+    // Apply managed defaults to user config for any undefined keys
+    // that have not been set yet in the local settings.json
+    const listOfAppliedKeys = this.applyManagedDefaults(configData, defaults);
+
+    // Set the updated configuration data, this doesn't "save-to-disk" yet until we run saveDefault()...
+    this.configurationValues.set(CONFIGURATION_DEFAULT_SCOPE, configData);
+
+    // Note: saveDefault() will filter out any keys that match the schema default, so only non-default values will actually be persisted to settings.json
+    if (listOfAppliedKeys.length > 0) {
+      this.saveDefault();
+    }
+
     return notifications;
+  }
+
+  /**
+   * Apply default settings from default-settings.json (object) to user config (settings.json) (also an object being passed in),
+   * and mutably update the object.
+   * @returns array of keys that were applied to configData (useful for testing and debugging purposes)
+   */
+  protected applyManagedDefaults(configData: Record<string, unknown>, defaults: Record<string, unknown>): string[] {
+    const appliedKeys: string[] = [];
+
+    // Keeping it simple here by iterating over the default keys
+    // and applying it to any undefined keys in the user config.
+    // we do NOT do any deep merging of objects here, as we are only interested if there is a
+    // top-level key that is undefined in the user config, and then copy over the configuration default.
+    for (const key of Object.keys(defaults)) {
+      if (configData[key] === undefined) {
+        configData[key] = defaults[key];
+        appliedKeys.push(key);
+      }
+    }
+
+    // We concatenate the applied keys into one console.log so we don't spam the console,
+    // this is only shown once when initialized / copy over the keys, but does not subsequently log
+    // after each startup.
+    if (appliedKeys.length > 0) {
+      console.log(`[Managed-by]: Applied default settings for: ${appliedKeys.join(', ')}`);
+    }
+    return appliedKeys;
   }
 
   /**
@@ -159,6 +201,10 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   doRegisterConfigurations(configurations: IConfigurationNode[], notify?: boolean): string[] {
     const properties: string[] = [];
+
+    // Get all the locked keys at the start to avoid multiple lookups
+    const lockedSet = this.lockedKeys.getAllKeys();
+
     // biome-ignore lint/complexity/noForEach: <explanation>
     configurations.forEach(configuration => {
       for (const key in configuration.properties) {
@@ -168,6 +214,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
           title: configuration.title,
           id: key,
           parentId: configuration.id,
+          locked: lockedSet.has(key),
         };
         if (configuration.extension) {
           configProperty.extension = { id: configuration.extension?.id };

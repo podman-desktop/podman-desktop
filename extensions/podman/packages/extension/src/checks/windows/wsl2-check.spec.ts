@@ -21,20 +21,11 @@ import { commands, process } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { UserAdminCheck } from '/@/checks/windows/user-admin-check';
+import { normalizeWSLOutput } from '/@/utils/util';
 
-import { normalizeWSLOutput } from '../../utils/util';
 import { WSL2Check } from './wsl2-check';
 
 const userAdminCheck = { execute: vi.fn() } as unknown as UserAdminCheck;
-
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-  commands: {
-    registerCommand: vi.fn(),
-  },
-}));
 
 // mock ps-list
 vi.mock('ps-list', async () => {

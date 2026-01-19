@@ -21,9 +21,9 @@ import * as fs from 'node:fs';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { OnboardingState } from '/@api/onboarding.js';
 
-import type { ApiSenderType } from './api.js';
 import { Context } from './context/context.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
 import type { Disposable } from './types/disposable.js';
@@ -95,6 +95,7 @@ describe('an OnboardingRegistry instance exists', () => {
     const onboarding = onboardingRegistry.getOnboarding(extensionId);
     expect(onboarding).toBeDefined();
     expect(onboarding?.title).toBe('Get started with Podman Desktop');
+    expect(onboarding?.welcomeMessage).toBe('Get started with Podman Desktop');
   });
 
   test('Should not find onboarding after dispose', async () => {

@@ -16,12 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
-import type { Locator, Page } from 'playwright';
 
+import { handleConfirmationDialog } from '/@/utility/operations';
 import { waitUntil } from '/@/utility/wait';
 
-import { handleConfirmationDialog } from '../../utility/operations';
 import { SettingsPage } from './settings-page';
 
 export class CLIToolsPage extends SettingsPage {
@@ -132,7 +132,7 @@ export class CLIToolsPage extends SettingsPage {
     });
   }
 
-  public async downgradeTool(toolName: string, version: string = '', timeout = 60_000): Promise<this> {
+  public async downgradeTool(toolName: string, version = '', timeout = 60_000): Promise<this> {
     return test.step(`Downgrade ${toolName}`, async () => {
       const currentVersion = await this.getCurrentToolVersion(toolName);
       if (!currentVersion) {
@@ -150,17 +150,18 @@ export class CLIToolsPage extends SettingsPage {
       await this.ensureAPIRateLimitNotReached();
       await playExpect(this.dropDownDialog).toBeVisible();
 
-      if (!version) {
-        version = await this.getFirstDifferentVersionFromList(currentVersion);
+      let versionToSelect = version;
+      if (!versionToSelect) {
+        versionToSelect = await this.getFirstDifferentVersionFromList(currentVersion);
       }
 
-      await playExpect(this.getVersionSelectionButton(version)).toBeEnabled();
-      await this.getVersionSelectionButton(version).click();
+      await playExpect(this.getVersionSelectionButton(versionToSelect)).toBeEnabled();
+      await this.getVersionSelectionButton(versionToSelect).click();
 
       await this.ensureAPIRateLimitNotReached();
       await playExpect
         .poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout })
-        .toContain(version);
+        .toContain(versionToSelect);
       return this;
     });
   }
@@ -200,11 +201,10 @@ export class CLIToolsPage extends SettingsPage {
   private async getFirstDifferentVersionFromList(currentVersion = ''): Promise<string> {
     if (!currentVersion) {
       return this.dropDownDialog.getByRole('button').first().innerText();
-    } else {
-      const versionSplitInParts = currentVersion.split(' ');
-      const versionNumber = versionSplitInParts[versionSplitInParts.length - 1];
-      return this.dropDownDialog.getByRole('button').filter({ hasNotText: versionNumber }).first().innerText();
     }
+    const versionSplitInParts = currentVersion.split(' ');
+    const versionNumber = versionSplitInParts[versionSplitInParts.length - 1];
+    return this.dropDownDialog.getByRole('button').filter({ hasNotText: versionNumber }).first().innerText();
   }
 
   private attachRateLimitListener(): void {

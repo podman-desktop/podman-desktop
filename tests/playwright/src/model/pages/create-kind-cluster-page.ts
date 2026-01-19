@@ -18,9 +18,9 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
+import type { KindClusterOptions } from '/@/model/core/types';
 import { fillTextbox } from '/@/utility/operations';
 
-import type { KindClusterOptions } from '../core/types';
 import { CreateClusterBasePage } from './cluster-creation-base-page';
 
 export class CreateKindClusterPage extends CreateClusterBasePage {
@@ -66,7 +66,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
   }
 
   public async createKindCluster(
-    clusterName: string = 'kind-cluster',
+    clusterName = 'kind-cluster',
     { configFilePath, providerType, httpPort, httpsPort, useIngressController, containerImage }: KindClusterOptions = {
       useIngressController: true,
     },

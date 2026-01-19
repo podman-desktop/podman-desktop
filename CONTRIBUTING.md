@@ -71,7 +71,7 @@ You can develop on either: `Windows`, `macOS` or `Linux`.
 
 Requirements:
 
-- [Node.js 22+](https://nodejs.org/en/)
+- [Node.js 24+](https://nodejs.org/en/)
 - [pnpm v10.x](https://pnpm.io/installation) (`corepack enable pnpm`)
 
 Optional Linux requirements:
@@ -251,6 +251,16 @@ This will create a binary according to your local system and output it to the `d
 > **_NOTE:_** macOS and Windows create binaries while Linux will create a `.flatpak`. Make sure your flatpak dependencies are installed for successful compiling on Linux.
 
 > **_macOS NOTE:_** On macOS the `dist/` folder will contain folders for `arm64` and `universal` `.app` files. Ignore these and use the `.app` file in the `dist/mac/` folder for testing.
+
+> **_macOS CODE SIGNING:_** When testing the compiled binary on macOS, you must ad-hoc sign the application before launching it. Without signing, macOS will terminate the app with a `Code Signature Invalid` error. Run the following command after compiling:
+>
+> ```sh
+> # Compile
+> pnpm compile:current
+>
+> # Sign the binary
+> codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app"
+> ```
 
 ## Submitting Pull Requests
 

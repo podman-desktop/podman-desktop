@@ -16,10 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-const exec = require('child_process').exec;
+const { exec, execFile } = require('child_process');
 const Arch = require('builder-util').Arch;
 const path = require('path');
 const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses');
+const product = require('./product.json');
+const fs = require('node:fs');
 
 if (process.env.VITE_APP_VERSION === undefined) {
   const now = new Date();
@@ -66,12 +68,46 @@ async function addElectronFuses(context) {
 }
 
 /**
+ * This function will start the script that will bundle the extensions#remote from the `product.json`
+ * to the extensions-extra folder
+ *
+ * @remarks it should be called in the beforePack to populate the folder extensions-extra before electron builder pack them
+ */
+async function packageRemoteExtensions(context) {
+  const downloadScript = path.join('packages', 'main', 'dist', 'download-remote-extensions.cjs');
+  if (!fs.existsSync(downloadScript)) {
+    console.warn(`${downloadScript} not found, skipping remote extension download`);
+    return;
+  }
+
+  const destination = path.resolve('./extensions-extra');
+
+  await new Promise((resolve, reject) => {
+    execFile(
+      'node',
+      [downloadScript, `--output=${destination}`],
+      { maxBuffer: 10 * 1024 * 1024 }, // use 10MB else default size is too small and we get stdout maxBuffer length exceeded
+      (error, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+  context.packager.config.extraResources.push('./extensions-extra/**');
+}
+
+/**
  * @type {import('electron-builder').Configuration}
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
-  productName: 'Podman Desktop',
-  appId: 'io.podman_desktop.PodmanDesktop',
+  productName: product.name,
+  appId: product.appId,
   directories: {
     output: 'dist',
     buildResources: 'buildResources',
@@ -82,6 +118,15 @@ const config = {
     const DEFAULT_ASSETS = [];
     const PODMAN_EXTENSION_ASSETS = 'extensions/podman/packages/extension/assets';
     context.packager.config.extraResources = DEFAULT_ASSETS;
+
+    // download & package remote extensions
+    await packageRemoteExtensions(context);
+
+    // include product.json
+    context.packager.config.extraResources.push({
+      from: 'product.json',
+      to: 'product.json',
+    });
 
     // universal build, add both pkg files
     // this is hack to avoid issue https://github.com/electron/universal/issues/36
@@ -112,11 +157,11 @@ const config = {
       });
       // add podman installer
       if (context.arch === Arch.x64) {
-        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-amd64.exe`);
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-amd64.msi`);
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-x64.zst`);
       }
       if (context.arch === Arch.arm64) {
-        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-arm64.exe`);
+        context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-installer-windows-arm64.msi`);
         context.packager.config.extraResources.push(`${PODMAN_EXTENSION_ASSETS}/podman-image-arm64.zst`);
       }
     }
@@ -126,10 +171,10 @@ const config = {
   },
   files: ['packages/**/dist/**', 'extensions/**/builtin/*.cdix/**', 'packages/main/src/assets/**'],
   portable: {
-    artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
   },
   nsis: {
-    artifactName: `podman-desktop${artifactNameSuffix}-\${version}-setup-\${arch}.\${ext}`,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-setup-\${arch}.\${ext}`,
     oneClick: false,
     include: 'buildResources/installer.nsh',
   },
@@ -184,7 +229,7 @@ const config = {
       '--env=XDG_SESSION_TYPE=x11',
     ],
     useWaylandFlags: 'false',
-    artifactName: 'podman-desktop-${version}.${ext}',
+    artifactName: `${product.artifactName}-\${version}.\${ext}`,
     runtimeVersion: '25.08',
     branch: 'main',
     files: [
@@ -195,10 +240,12 @@ const config = {
   linux: {
     category: 'Development',
     icon: './buildResources/icon-512x512.png',
+    executableName: product.artifactName,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     target: ['flatpak', { target: 'tar.gz', arch: ['x64', 'arm64'] }],
   },
   mac: {
-    artifactName: `podman-desktop${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
+    artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
     entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
     target: {
@@ -227,8 +274,8 @@ const config = {
     ],
   },
   protocols: {
-    name: 'Podman Desktop',
-    schemes: ['podman-desktop'],
+    name: product.name,
+    schemes: [product.urlProtocol],
     role: 'Editor',
   },
   publish: {

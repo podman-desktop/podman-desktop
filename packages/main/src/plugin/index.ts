@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,27 +44,26 @@ import type {
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
-import type { WebContents } from 'electron';
+import type { IpcMainEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron/main';
 import { Container } from 'inversify';
 
-import type { KubernetesGeneratorInfo } from '/@/plugin/api/KubernetesGeneratorInfo.js';
+import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
+import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
+import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
-import type {
-  GenerateKubeResult,
-  KubernetesGeneratorArgument,
-  KubernetesGeneratorSelector,
-} from '/@/plugin/kubernetes/kube-generator-registry.js';
+import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import type { ExtensionBanner, RecommendedRegistry } from '/@/plugin/recommendations/recommendations-api.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -89,9 +88,11 @@ import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
 import type { IDisposable } from '/@api/disposable.js';
 import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
 import type { DocumentationInfo } from '/@api/documentation-info.js';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
 import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
 import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
+import type { FeaturedExtension } from '/@api/featured/featured-api.js';
+import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { IconInfo } from '/@api/icon-info.js';
 import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
@@ -100,6 +101,12 @@ import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
+import type {
+  GenerateKubeResult,
+  KubernetesGeneratorArgument,
+  KubernetesGeneratorInfo,
+  KubernetesGeneratorSelector,
+} from '/@api/kubernetes/kubernetes-generator-api.js';
 import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
@@ -108,6 +115,8 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions, PlayKubeInfo } from '/@api/libpod/libpod.js';
+import type { ListOrganizerItem } from '/@api/list-organizer.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { Menu } from '/@api/menu.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
@@ -125,20 +134,19 @@ import type {
 } from '/@api/provider-info.js';
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
+import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
+import type { TelemetryMessages } from '/@api/telemetry.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
-import { ApiSenderType } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
-import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
@@ -151,7 +159,7 @@ import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
-import { ContainerProviderRegistry } from './container-registry.js';
+import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
@@ -163,10 +171,6 @@ import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 import { DockerCompatibility } from './docker/docker-compatibility.js';
 import { DockerDesktopInstallation } from './docker-extension/docker-desktop-installation.js';
 import { DockerPluginAdapter } from './docker-extension/docker-plugin-adapter.js';
-import type {
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  PlayKubeInfo,
-} from './dockerode/libpod-dockerode.js';
 import { DocumentationService } from './documentation/documentation-service.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
@@ -174,14 +178,13 @@ import { ExperimentalConfigurationManager } from './experimental-configuration-m
 import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 import { ExploreFeatures } from './explore-features/explore-features.js';
 import { ExtensionsCatalog } from './extension/catalog/extensions-catalog.js';
-import type { CatalogExtension } from './extension/catalog/extensions-catalog-api.js';
 import { ExtensionAnalyzer } from './extension/extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension/extension-development-folders.js';
 import { ExtensionsUpdater } from './extension/updater/extensions-updater.js';
 import { Featured } from './featured/featured.js';
-import type { FeaturedExtension } from './featured/featured-api.js';
 import { FeedbackHandler } from './feedback-handler.js';
 import { FilesystemMonitoring } from './filesystem-monitoring.js';
+import { HelpMenu } from './help-menu/help-menu.js';
 import { IconRegistry } from './icon-registry.js';
 import { ImageCheckerImpl } from './image-checker.js';
 import { ImageFilesRegistry } from './image-files-registry.js';
@@ -200,6 +203,7 @@ import { OpenDevToolsInit } from './open-devtools-init.js';
 import { ProviderRegistry } from './provider-registry.js';
 import { Proxy } from './proxy.js';
 import { RecommendationsRegistry } from './recommendations/recommendations-registry.js';
+import { RegistryInit } from './registry-init.js';
 import { ReleaseNotesBannerInit } from './release-notes-banner-init.js';
 import { SafeStorageRegistry } from './safe-storage/safe-storage-registry.js';
 import { PinRegistry } from './statusbar/pin-registry.js';
@@ -282,6 +286,11 @@ export class PluginSystem {
         return error instanceof Error ? { error } : { error: { message: error } };
       }
     });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ipcMainOn(channel: string, listener: (event: IpcMainEvent, ...args: any[]) => void): void {
+    ipcMain.on(channel, listener);
   }
 
   // Create an Error to access stack trace
@@ -473,6 +482,8 @@ export class PluginSystem {
     const apiSender = this.getApiSender(this.getWebContentsSender());
     const container = new Container();
     container.bind<ApiSenderType>(ApiSenderType).toConstantValue(apiSender);
+    container.bind<IPCHandle>(IPCHandle).toConstantValue(this.ipcHandle);
+    container.bind<IPCMainOn>(IPCMainOn).toConstantValue(this.ipcMainOn);
     container.bind<TrayMenu>(TrayMenu).toConstantValue(this.trayMenu);
     container.bind<IconRegistry>(IconRegistry).toSelf().inSingletonScope();
     const directoryStrategy = new DirectoryStrategy();
@@ -547,6 +558,8 @@ export class PluginSystem {
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
     await kubernetesClient.init();
 
+    container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
+
     container.bind<CloseBehavior>(CloseBehavior).toSelf().inSingletonScope();
     const closeBehaviorConfiguration = container.get<CloseBehavior>(CloseBehavior);
     await closeBehaviorConfiguration.init();
@@ -558,6 +571,10 @@ export class PluginSystem {
     container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
     const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
     statusbarProviders.init();
+
+    container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
+    const helpMenu = container.get<HelpMenu>(HelpMenu);
+    helpMenu.init();
 
     container.bind<MessageBox>(MessageBox).toSelf().inSingletonScope();
 
@@ -599,6 +616,10 @@ export class PluginSystem {
 
     container.bind<AutostartEngine>(AutostartEngine).toSelf().inSingletonScope();
     const autoStartEngine = container.get<AutostartEngine>(AutostartEngine);
+
+    container.bind<ContainerfileParser>(ContainerfileParser).toSelf().inSingletonScope();
+    const containerfileParser = container.get(ContainerfileParser);
+    containerfileParser.init();
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
     providerRegistry.registerAutostartEngine(autoStartEngine);
@@ -676,6 +697,11 @@ export class PluginSystem {
     const editorInit = container.get<EditorInit>(EditorInit);
     editorInit.init();
 
+    // init registry configuration
+    container.bind<RegistryInit>(RegistryInit).toSelf().inSingletonScope();
+    const registryInit = container.get<RegistryInit>(RegistryInit);
+    registryInit.init();
+
     // init welcome configuration
     container.bind<WelcomeInit>(WelcomeInit).toSelf().inSingletonScope();
     const welcomeInit = container.get<WelcomeInit>(WelcomeInit);
@@ -728,6 +754,8 @@ export class PluginSystem {
     pinRegistry.init();
 
     container.bind<ProgressImpl>(ProgressImpl).toSelf().inSingletonScope();
+
+    container.bind<ExtensionApiVersion>(ExtensionApiVersion).toSelf().inSingletonScope();
 
     container.bind<ExtensionLoader>(ExtensionLoader).toSelf().inSingletonScope();
     this.extensionLoader = container.get<ExtensionLoader>(ExtensionLoader);
@@ -858,6 +886,12 @@ export class PluginSystem {
       'container-provider-registry:inspectNetwork',
       async (_listener, engine: string, networkId: string): Promise<NetworkInspectInfo> => {
         return containerProviderRegistry.inspectNetwork(engine, networkId);
+      },
+    );
+    this.ipcHandle(
+      'container-provider-registry:getNetworkDrivers',
+      async (_listener, providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<string[]> => {
+        return containerProviderRegistry.getNetworkDrivers(providerContainerConnectionInfo);
       },
     );
     this.ipcHandle(
@@ -1025,9 +1059,33 @@ export class PluginSystem {
         selectedProvider: ProviderContainerConnectionInfo,
         options?: {
           build?: boolean;
+          replace?: boolean;
+          cancellableTokenId?: number;
         },
       ): Promise<PlayKubeInfo> => {
-        return containerProviderRegistry.playKube(yamlFilePath, selectedProvider, options);
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          options?.cancellableTokenId,
+        );
+
+        const task = taskManager.createTask({
+          title: `Podman Play Kube`,
+          cancellable: options?.cancellableTokenId !== undefined,
+          cancellationTokenSourceId: options?.cancellableTokenId,
+        });
+
+        try {
+          const result = await containerProviderRegistry.playKube(yamlFilePath, selectedProvider, {
+            ...options,
+            abortSignal: abortController?.signal,
+          });
+          task.status = 'success';
+          return result;
+        } catch (error: unknown) {
+          task.error = String(error);
+          task.status = 'failure';
+          throw error;
+        }
       },
     );
 
@@ -1212,6 +1270,30 @@ export class PluginSystem {
         );
       },
     );
+
+    this.ipcHandle(
+      'container-provider-registry:updateImage',
+      async (_listener, engineId: string, imageId: string, tag: string): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Updating image '${tag}'`,
+        });
+        try {
+          await containerProviderRegistry.updateImage(engineId, imageId, tag);
+          task.status = 'success';
+        } catch (error: unknown) {
+          // "Image is already the latest version" is not a breaking error, treat as success
+          if (error instanceof LatestImageError) {
+            task.name = `Image '${tag}' is already up to date`;
+            task.status = 'success';
+            return;
+          }
+          task.error = String(error);
+          task.status = 'failure';
+          throw error;
+        }
+      },
+    );
+
     this.ipcHandle(
       'container-provider-registry:pushImage',
       async (_listener, engine: string, imageId: string, callbackId: number): Promise<void> => {
@@ -1439,10 +1521,20 @@ export class PluginSystem {
         cancellableTokenId?: number,
         buildargs?: { [key: string]: string },
         taskId?: number,
+        target?: string,
       ): Promise<unknown> => {
+        const titleArgs = ['Building image'];
+        if (imageName) {
+          titleArgs.push(imageName);
+        }
+        if (target) {
+          titleArgs.push(`(${target})`);
+          telemetry.track('build-image-intermediate-target');
+        }
+
         // create task
         const task = taskManager.createTask({
-          title: `Building image ${imageName ?? ''}`,
+          title: titleArgs.join(' '),
           action: {
             name: 'Go to task >',
             execute: () => {
@@ -1478,6 +1570,7 @@ export class PluginSystem {
               provider: selectedProvider,
               abortController,
               buildargs,
+              target,
             },
           )
           .then(result => {
@@ -2935,6 +3028,10 @@ export class PluginSystem {
       return feedback.openGitHubIssue(properties);
     });
 
+    this.ipcHandle('feedback:getFeedbackMessages', async (): Promise<FeedbackMessages> => {
+      return feedback.getFeedbackMessages();
+    });
+
     this.ipcHandle('cancellableTokenSource:create', async (): Promise<number> => {
       return cancellationTokenRegistry.createCancellationTokenSource();
     });
@@ -2944,6 +3041,10 @@ export class PluginSystem {
       if (!tokenSource?.token.isCancellationRequested) {
         tokenSource?.dispose(true);
       }
+    });
+
+    this.ipcHandle('telemetry:getTelemetryMessages', async (): Promise<TelemetryMessages> => {
+      return telemetry.getTelemetryMessages();
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3235,25 +3336,12 @@ export class PluginSystem {
     const dockerExtensionAdapter = new DockerPluginAdapter(contributionManager, containerProviderRegistry);
     dockerExtensionAdapter.init();
 
-    const extensionInstaller = new ExtensionInstaller(
-      apiSender,
-      this.extensionLoader,
-      imageRegistry,
-      extensionsCatalog,
-      telemetry,
-      directories,
-      contributionManager,
-    );
+    container.bind<ExtensionInstaller>(ExtensionInstaller).toSelf().inSingletonScope();
+    const extensionInstaller = container.get(ExtensionInstaller);
     await extensionInstaller.init();
 
-    // launch the updater
-    const extensionsUpdater = new ExtensionsUpdater(
-      extensionsCatalog,
-      this.extensionLoader,
-      configurationRegistry,
-      extensionInstaller,
-      telemetry,
-    );
+    container.bind<ExtensionsUpdater>(ExtensionsUpdater).toSelf().inSingletonScope();
+    const extensionsUpdater = container.get(ExtensionsUpdater);
 
     await contributionManager.init();
 

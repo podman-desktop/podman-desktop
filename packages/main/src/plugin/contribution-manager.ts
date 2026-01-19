@@ -23,10 +23,10 @@ import type { RunResult } from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ContributionInfo } from '/@api/contribution-info.js';
 
 import { isMac, isUnixLike, isWindows } from '../util.js';
-import { ApiSenderType } from './api.js';
 import { ContainerProviderRegistry } from './container-registry.js';
 import { Directories } from './directories.js';
 import { Exec } from './util/exec.js';

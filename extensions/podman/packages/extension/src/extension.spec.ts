@@ -24,10 +24,10 @@ import { arch } from 'node:os';
 import type { ServiceIdentifier } from '@inversifyjs/common/lib/esm';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
-import { Disposable, provider as apiProvider } from '@podman-desktop/api';
+import { Disposable } from '@podman-desktop/api';
 import type { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -41,9 +41,16 @@ import {
   PODMAN_MACHINE_MEMORY_SUPPORTED_KEY,
   WSL_HYPERV_ENABLED_KEY,
 } from '/@/constants';
+import { KrunkitHelper } from '/@/helpers/krunkit-helper';
+import { PodmanBinaryLocationHelper } from '/@/helpers/podman-binary-location-helper';
+import { PodmanInfoHelper } from '/@/helpers/podman-info-helper';
+import { QemuHelper } from '/@/helpers/qemu-helper';
 import type { Installer } from '/@/installer/installer';
 import { WinPlatform } from '/@/platforms/win-platform';
+import { PodmanProvider } from '/@/providers/podman-provider';
 import type { ConnectionJSON, MachineInfo, MachineJSON } from '/@/types';
+import type { InstalledPodman } from '/@/utils/podman-binary';
+import { PodmanBinary } from '/@/utils/podman-binary';
 
 import * as extension from './extension';
 import {
@@ -56,7 +63,6 @@ import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
 import * as compatibilityModeLib from './utils/compatibility-mode';
-import type { InstalledPodman } from './utils/podman-cli';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import * as util from './utils/util';
@@ -103,17 +109,6 @@ const provider: extensionApi.Provider = {
   onDidUpdateDetectionChecks: vi.fn(),
 };
 
-// Use 'provider', but just replace status with 'ready'
-const providerWithReadyStatus = {
-  ...provider,
-  status: 'ready' as extensionApi.ProviderStatus,
-};
-
-const providerWithStoppedStatus = {
-  ...provider,
-  status: 'stopped' as extensionApi.ProviderStatus,
-};
-
 const machineInfo: MachineInfo = {
   cpus: 1,
   diskSize: 1000000,
@@ -137,6 +132,10 @@ const podmanConfiguration = {
   updateMachineProviderSettings: updateMachineProviderSettingsMock,
 } as unknown as PodmanConfiguration;
 
+const PODMAN_PROVIDER_MOCK: PodmanProvider = {
+  provider: provider,
+} as unknown as PodmanProvider;
+
 const machineDefaultName = 'podman-machine-default';
 const machine1Name = 'podman-machine-1';
 
@@ -152,12 +151,6 @@ const telemetryLogger: extensionApi.TelemetryLogger = {
 async function waitTelemetryLoggerUsage() {
   await vi.waitFor(() => expect((telemetryLogger.logUsage as Mock).mock.calls).not.toHaveLength(0));
 }
-
-const mocks = vi.hoisted(() => ({
-  getPodmanLocationMacMock: vi.fn(),
-  getKrunkitVersionMock: vi.fn(),
-  getQemuVersionMock: vi.fn(),
-}));
 
 vi.mock('node:fs');
 // mock fs.promises.readdir and use string[] as return type
@@ -180,6 +173,12 @@ vi.mock('./compatibility-mode', async () => {
   };
 });
 
+vi.mock(import('./configuration/registry-configuration'), async () => {
+  const RegistryConfigurationImpl = vi.fn();
+  RegistryConfigurationImpl.prototype.init = vi.fn(() => []);
+  return { RegistryConfigurationImpl };
+});
+
 const PODMAN_INSTALL_MOCK: PodmanInstall = {
   getUpdatePreflightChecks: vi.fn(),
   isAbleToInstall: vi.fn(),
@@ -190,6 +189,10 @@ const WIN_PLATFORM_MOCK: WinPlatform = {
   isWSLEnabled: vi.fn(),
   isHyperVEnabled: vi.fn(),
 } as unknown as WinPlatform;
+const PODMAN_BINARY_MOCK: PodmanBinary = {
+  getBinaryInfo: vi.fn(),
+  invalidate: vi.fn(),
+} as unknown as PodmanBinary;
 
 beforeEach(async () => {
   fakeMachineJSON = [
@@ -237,6 +240,12 @@ beforeEach(async () => {
   };
   vi.resetAllMocks();
   (extensionApi.env.createTelemetryLogger as Mock).mockReturnValue(telemetryLogger);
+
+  // Mock withProgress to execute the task immediately
+  vi.mocked(extensionApi.window.withProgress).mockImplementation((_options, task) => {
+    return task({ report: vi.fn() }, {} as extensionApi.CancellationToken);
+  });
+
   extension.initTelemetryLogger();
   extension.initExtensionNotification();
   extension.resetShouldNotifySetup();
@@ -246,92 +255,32 @@ beforeEach(async () => {
     hasUpdate: false,
   });
 
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue(undefined);
+
+  function getBind(identifier: ServiceIdentifier<unknown>): unknown {
+    switch (identifier) {
+      case PodmanInstall:
+        return PODMAN_INSTALL_MOCK;
+      case WinPlatform:
+        return WIN_PLATFORM_MOCK;
+      case PodmanBinary:
+        return PODMAN_BINARY_MOCK;
+      case PodmanProvider:
+        return PODMAN_PROVIDER_MOCK;
+    }
+    throw new Error(`Unknown identifier ${String(identifier)}`);
+  }
+
   // configure inversify
   vi.mocked(InversifyBinding.prototype.init).mockResolvedValue({
-    get: (identifier: ServiceIdentifier<unknown>) => {
-      switch (identifier) {
-        case PodmanInstall:
-          return PODMAN_INSTALL_MOCK;
-        case WinPlatform:
-          return WIN_PLATFORM_MOCK;
-      }
-      throw new Error(`Unknown identifier ${String(identifier)}`);
-    },
+    get: getBind,
+    getAsync: getBind,
   } as unknown as InversifyContainer);
   await extension.initInversify({ subscriptions: [] } as unknown as extensionApi.ExtensionContext, telemetryLogger);
 });
 
 const originalConsoleError = console.error;
 const consoleErrorMock = vi.fn();
-
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: (): Configuration => config,
-      onDidChangeConfiguration: (): Disposable => {
-        return {
-          dispose: vi.fn(),
-        };
-      },
-    },
-    provider: {
-      onDidRegisterContainerConnection: vi.fn(),
-      onDidUnregisterContainerConnection: vi.fn(),
-      createProvider: (): extensionApi.Provider => provider,
-    },
-    registry: {
-      registerRegistryProvider: vi.fn(),
-      onDidRegisterRegistry: vi.fn(),
-      onDidUnregisterRegistry: vi.fn(),
-      onDidUpdateRegistry: vi.fn(),
-    },
-    proxy: {
-      isEnabled: (): boolean => false,
-      onDidUpdateProxy: vi.fn(),
-      onDidStateChange: vi.fn(),
-      getProxySettings: vi.fn(),
-    },
-    window: {
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-      showWarningMessage: vi.fn(),
-      showNotification: vi.fn(),
-      createStatusBarItem: () => ({
-        show: vi.fn(),
-        dispose: vi.fn(),
-      }),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      createTelemetryLogger: vi.fn(),
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-    containerEngine: {
-      info: vi.fn(),
-    },
-    Disposable: {
-      from: vi.fn(),
-      create: vi.fn(),
-    },
-    fs: {
-      createFileSystemWatcher: vi.fn(),
-    },
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      fire: vi.fn(),
-      dispose: vi.fn(),
-    })),
-  };
-});
 
 vi.mock('node:child_process', async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -359,41 +308,10 @@ vi.mock('node:os', async () => {
   };
 });
 
-vi.mock('./helpers/qemu-helper', () => ({
-  QemuHelper: vi.fn().mockReturnValue({
-    getQemuVersion: mocks.getQemuVersionMock,
-  }),
-}));
-
-vi.mock('./helpers/krunkit-helper', async () => {
-  return {
-    KrunkitHelper: vi.fn().mockImplementation(() => {
-      return {
-        getKrunkitVersion: mocks.getKrunkitVersionMock,
-      };
-    }),
-  };
-});
-vi.mock('./helpers/podman-binary-location-helper', async () => {
-  return {
-    PodmanBinaryLocationHelper: vi.fn().mockImplementation(() => {
-      return {
-        getPodmanLocationMac: mocks.getPodmanLocationMacMock,
-      };
-    }),
-  };
-});
-vi.mock('./helpers/podman-info-helper', async () => {
-  return {
-    PodmanInfoHelper: vi.fn().mockImplementation(() => {
-      return {
-        updateWithPodmanInfoRecords: vi.fn().mockImplementation(() => {
-          return Promise.resolve();
-        }),
-      };
-    }),
-  };
-});
+vi.mock(import('./helpers/qemu-helper'));
+vi.mock(import('./helpers/krunkit-helper'));
+vi.mock(import('./helpers/podman-binary-location-helper'));
+vi.mock(import('./helpers/podman-info-helper'));
 
 vi.mock(import('./utils/util'), async importOriginal => {
   const original = await importOriginal();
@@ -407,7 +325,7 @@ vi.mock(import('./utils/util'), async importOriginal => {
 
 beforeEach(() => {
   console.error = consoleErrorMock;
-
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue(config);
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
@@ -421,6 +339,10 @@ beforeEach(() => {
     tooltipText: (): string => {
       return '';
     },
+  });
+
+  vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockImplementation(() => {
+    return Promise.resolve();
   });
 });
 
@@ -448,9 +370,9 @@ describe.each([
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])(`verify create command called with correct values for %s`, async ({ version, image }) => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: `podman version ${version}`,
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version,
+    });
 
     await extension.createMachine(
       {
@@ -485,9 +407,9 @@ describe.each([
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct image values with image URL %s', async ({ version, image }) => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: `podman version ${version}`,
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version,
+    });
 
     await extension.createMachine(
       {
@@ -524,9 +446,9 @@ describe.each([
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct image values with registry %s', async ({ version, image }) => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: `podman version ${version}`,
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version,
+    });
 
     await extension.createMachine(
       {
@@ -564,9 +486,9 @@ describe.each([
     { version: '4.5.0', image: 'image-path' },
   ])('verify create command called with correct values with user mode networking %s', async ({ version, image }) => {
     vi.mocked(extensionApi.env).isMac = true;
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: `podman version ${version}`,
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version,
+    });
 
     await extension.createMachine(
       {
@@ -604,45 +526,45 @@ describe.each([
     { version: '6.3.2', image: 'image' },
     { version: '5.0.0', image: 'image' },
     { version: '4.5.0', image: 'image-path' },
-  ])(
-    'verify create command called with now flag if start machine after creation is enabled %s',
-    async ({ version, image }) => {
-      vi.mocked(extensionApi.env).isMac = true;
+  ])('verify create command called with now flag if start machine after creation is enabled %s', async ({
+    version,
+    image,
+  }) => {
+    vi.mocked(extensionApi.env).isMac = true;
 
-      vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-        stdout: `podman version ${version}`,
-      } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version,
+    });
 
-      await extension.createMachine(
-        {
-          'podman.factory.machine.cpus': '2',
-          'podman.factory.machine.image': 'path',
-          'podman.factory.machine.memory': '1048000000',
-          'podman.factory.machine.diskSize': '250000000000',
-          'podman.factory.machine.now': true,
+    await extension.createMachine(
+      {
+        'podman.factory.machine.cpus': '2',
+        'podman.factory.machine.image': 'path',
+        'podman.factory.machine.memory': '1048000000',
+        'podman.factory.machine.diskSize': '250000000000',
+        'podman.factory.machine.now': true,
+      },
+      podmanConfiguration,
+    );
+
+    expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
+      podmanCli.getPodmanCli(),
+      expect.arrayContaining([`--${image}`, 'path']),
+      {
+        logger: undefined,
+        env: {
+          CONTAINERS_MACHINE_PROVIDER: provider,
         },
-        podmanConfiguration,
-      );
-
-      expect(vi.mocked(extensionApi.process.exec)).toBeCalledWith(
-        podmanCli.getPodmanCli(),
-        expect.arrayContaining([`--${image}`, 'path']),
-        {
-          logger: undefined,
-          env: {
-            CONTAINERS_MACHINE_PROVIDER: provider,
-          },
-          token: undefined,
-        },
-      );
-      expect(console.error).not.toBeCalled();
-    },
-  );
+        token: undefined,
+      },
+    );
+    expect(console.error).not.toBeCalled();
+  });
 
   test('verify error contains name, message and stderr if creation fails', async () => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
     vi.mocked(extensionApi.process.exec).mockRejectedValueOnce({
       name: 'name',
       message: 'description',
@@ -666,10 +588,9 @@ describe.each([
     vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(getAssetsFolder).mockReturnValue('fake');
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
-
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
     await extension.createMachine(
       {
         'podman.factory.machine.cpus': '2',
@@ -689,7 +610,7 @@ describe.each([
     });
 
     expect(vi.mocked(extensionApi.process.exec)).toHaveBeenNthCalledWith(
-      2,
+      1,
       podmanCli.getPodmanCli(),
       expect.arrayContaining([expect.stringContaining('.zst')]),
       expect.anything(),
@@ -702,9 +623,9 @@ describe.each([
     vi.mocked(getAssetsFolder).mockReturnValue('fake');
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
 
     await extension.createMachine(
       {
@@ -726,9 +647,9 @@ describe.each([
   });
 
   test('verify create command with playbook', async () => {
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.4.0',
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.4.0',
+    });
 
     const fakePlaybookPath = 'myPlaybookPath';
     vi.mocked(podmanConfiguration.registryConfiguration.getPlaybookScriptPath).mockResolvedValue(fakePlaybookPath);
@@ -785,10 +706,10 @@ test.each([
   { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
 ])('verify create on mac from settings on %s', async ({ architecture, expectedProvider }) => {
   vi.mocked(extensionApi.env).isMac = true;
-  vi.mocked(arch).mockReturnValue(architecture);
-  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-    stdout: `podman version 5.4.0`,
-  } as extensionApi.RunResult);
+  vi.mocked(arch).mockReturnValue(architecture as NodeJS.Architecture);
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+    version: '5.4.0',
+  });
 
   await extension.createMachine(
     {
@@ -827,10 +748,10 @@ test.each([
   { architecture: 'x64', expectedProvider: VMTYPE.APPLEHV },
 ])('verify create on mac from dashboard on %s', async ({ architecture, expectedProvider }) => {
   vi.mocked(extensionApi.env).isMac = true;
-  vi.mocked(arch).mockReturnValue(architecture);
-  vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-    stdout: `podman version 5.4.0`,
-  } as extensionApi.RunResult);
+  vi.mocked(arch).mockReturnValue(architecture as NodeJS.Architecture);
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+    version: '5.4.0',
+  });
 
   await extension.createMachine(
     {
@@ -1540,6 +1461,7 @@ test('ensure showNotification is not called during update', async () => {
     telemetryLogger,
     {} as unknown as Installer,
     {} as unknown as extensionApi.ProviderCleanup,
+    PODMAN_BINARY_MOCK,
   );
   vi.spyOn(podmanInstall, 'checkForUpdate').mockImplementation((_installedPodman: InstalledPodman | undefined) => {
     return Promise.resolve({
@@ -1596,6 +1518,7 @@ test('should not register update when there are multiple Podman installations', 
     telemetryLogger,
     {} as unknown as Installer,
     undefined,
+    PODMAN_BINARY_MOCK,
   );
   const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
 
@@ -1629,6 +1552,7 @@ test('should register update when there is single Podman installation', async ()
     telemetryLogger,
     {} as unknown as Installer,
     undefined,
+    PODMAN_BINARY_MOCK,
   );
   const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
 
@@ -1658,6 +1582,7 @@ test('should register update when there are multiple Podman installations but cu
     telemetryLogger,
     {} as unknown as Installer,
     undefined,
+    PODMAN_BINARY_MOCK,
   );
   const findPodmanInstallationsMock = vi.spyOn(podmanCli, 'findPodmanInstallations');
   vi.spyOn(podmanCli, 'getCustomBinaryPath').mockReturnValue('/custom/path/podman');
@@ -1681,6 +1606,55 @@ test('should register update when there are multiple Podman installations but cu
 
   expect(findPodmanInstallationsMock).not.toHaveBeenCalled();
   expect(registerUpdateMock).toHaveBeenCalled();
+});
+
+test('update should be wrapped with withProgress to create a visible task', async () => {
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+
+  const extensionContext = { subscriptions: [], storagePath: '' } as unknown as extensionApi.ExtensionContext;
+  const podmanInstall: PodmanInstall = new PodmanInstall(
+    extensionContext,
+    telemetryLogger,
+    {} as unknown as Installer,
+    undefined,
+    PODMAN_BINARY_MOCK,
+  );
+
+  vi.spyOn(podmanCli, 'findPodmanInstallations').mockResolvedValue(['/usr/local/bin/podman']);
+
+  vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
+    hasUpdate: true,
+    bundledVersion: 'v5.0.0',
+    installedVersion: 'v4.9.0',
+  });
+
+  vi.spyOn(podmanInstall, 'performUpdate').mockResolvedValue();
+
+  const withProgressSpy = vi.spyOn(extensionApi.window, 'withProgress');
+
+  const installedPodman = { version: '4.9.0' } as InstalledPodman;
+
+  let updater: extensionApi.ProviderUpdate | undefined;
+  registerUpdateMock.mockImplementation((update: extensionApi.ProviderUpdate) => {
+    updater = update;
+  });
+
+  await extension.registerUpdatesIfAny(provider, installedPodman, podmanInstall);
+
+  expect(registerUpdateMock).toHaveBeenCalled();
+  expect(updater).toBeDefined();
+
+  // Call the update function
+  await updater?.update({} as extensionApi.Logger);
+
+  // Verify withProgress was called with correct parameters
+  expect(withProgressSpy).toHaveBeenCalledWith(
+    { location: extensionApi.ProgressLocation.TASK_WIDGET, title: 'Updating Podman' },
+    expect.any(Function),
+  );
+
+  // Verify performUpdate was called
+  expect(podmanInstall.performUpdate).toHaveBeenCalledWith(provider, installedPodman);
 });
 
 test('provider is registered with edit capabilities on MacOS', async () => {
@@ -2128,6 +2102,9 @@ describe('initCheckAndRegisterUpdate', () => {
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: 'podman version 4.0',
     } as unknown as extensionApi.RunResult);
+
+    expect(PODMAN_BINARY_MOCK.invalidate).not.toHaveBeenCalled();
+
     // call the updateVersion
     await func('v1');
 
@@ -2137,6 +2114,9 @@ describe('initCheckAndRegisterUpdate', () => {
       update: expect.any(Function),
       version: '5.0',
     });
+
+    // PodmanBinary cache should be invalidate after on update event
+    expect(PODMAN_BINARY_MOCK.invalidate).toHaveBeenCalledOnce();
   });
 });
 
@@ -2173,9 +2153,9 @@ describe('registerOnboardingMachineExistsCommand', () => {
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
     // return an empty object for the first call
-    vi.spyOn(extensionApi.process, 'exec').mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValueOnce({
+      version: '5.2.1',
+    });
     // return 2 empty machines for the second call
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: '[{}, {}]',
@@ -2238,9 +2218,9 @@ describe('registerOnboardingUnsupportedPodmanMachineCommand', () => {
 
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
 
     // second call to get the machine list
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
@@ -2354,9 +2334,9 @@ describe('registerOnboardingUnsupportedPodmanMachineCommand', () => {
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
     // first call to get the podman version
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
 
     // second call to get the machine list
     vi.mocked(extensionApi.process.exec).mockRejectedValue({
@@ -2395,9 +2375,9 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
 
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
 
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: '[]',
@@ -2438,13 +2418,9 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
 
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
-
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
     // two times false (no qemu folders)
     vi.mocked(fs.existsSync).mockReturnValueOnce(false);
     vi.mocked(fs.existsSync).mockReturnValueOnce(false);
@@ -2497,14 +2473,8 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
 
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
-
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'unknown message: 1.2.5.0',
-      stderr: '',
-      command: 'command',
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValueOnce({
+      version: '5.0.0',
     });
 
     // return an error when trying to list output
@@ -2534,6 +2504,40 @@ describe('registerOnboardingRemoveUnsupportedMachinesCommand', () => {
 
     // check called with true
     expect(extensionApi.context.setValue).toBeCalledWith('unsupportedMachineRemoved', 'ok', 'onboarding');
+  });
+});
+
+describe('socketCompatibilityMode command', () => {
+  test('check telemetry sent when error on check disguised podman Mac', async () => {
+    vi.mocked(extensionApi.env).isMac = true;
+    vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
+
+    await extension.activate(getContextMock());
+
+    const socketCommand = 'podman.socketCompatibilityMode';
+
+    // check command is called
+    expect(extensionApi.commands.registerCommand).toHaveBeenCalledWith(socketCommand, expect.any(Function));
+
+    const func = vi
+      .mocked(extensionApi.commands.registerCommand)
+      .mock.calls.find(([command]) => command === socketCommand)?.[1];
+
+    assert(func, `${socketCommand} should have been registered`);
+
+    const error = new Error('test error');
+
+    vi.mocked(isDisguisedPodman).mockRejectedValue(error);
+
+    expect(isDisguisedPodman).not.toBeCalled();
+
+    // call the function
+    await func();
+
+    expect(isDisguisedPodman).toBeCalled();
+
+    expect(telemetryLogger.logError).toBeCalledWith('checkIfSocketDisguisedFailed', expect.objectContaining({ error }));
+    expect(telemetryLogger.logUsage).not.toBeCalled();
   });
 });
 
@@ -2570,9 +2574,6 @@ describe('calcPodmanMachineSetting', () => {
   });
   test('setValue to true if OS is Windows and uses HyperV', async () => {
     vi.mocked(extensionApi.env).isWindows = true;
-    vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-      version: '5.2.1',
-    });
     vi.spyOn(WIN_PLATFORM_MOCK, 'isHyperVEnabled').mockResolvedValue(true);
 
     await extension.calcPodmanMachineSetting();
@@ -2597,9 +2598,9 @@ test('checkForUpdate func should be called if there is no podman installed', asy
     telemetryLogger,
     {} as unknown as Installer,
     {} as unknown as extensionApi.ProviderCleanup,
+    PODMAN_BINARY_MOCK,
   );
 
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue(undefined);
   vi.spyOn(podmanInstall, 'checkForUpdate').mockResolvedValue({
     installedVersion: undefined,
     hasUpdate: false,
@@ -2647,7 +2648,7 @@ describe('isPlaybookMachineInitSupported', () => {
   });
 
   test('isPlaybookMachineInitSupported should return true with 5.4.0 version on Windows/amd', async () => {
-    vi.mocked(arch).mockReturnValue('amd64');
+    vi.mocked(arch).mockReturnValue('amd64' as NodeJS.Architecture);
     vi.mocked(extensionApi.env).isWindows = true;
     const enabled = extension.isPlaybookMachineInitSupported('5.4.0');
     expect(enabled).toBeTruthy();
@@ -2665,11 +2666,14 @@ describe('sendTelemetryRecords', () => {
   test('krunkit found', async () => {
     vi.mocked(extensionApi.env).isMac = true;
 
-    vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
       version: '5.1.2',
     });
-    mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-    mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
+    vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+      foundPath: '/opt/podman/bin/podman',
+      source: 'installer',
+    });
+    vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockResolvedValue('1.2.3');
 
     extension.sendTelemetryRecords(
       'evt',
@@ -2695,11 +2699,14 @@ describe('sendTelemetryRecords', () => {
   test('krunkit not found', async () => {
     vi.mocked(extensionApi.env).isMac = true;
 
-    vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
       version: '5.1.2',
     });
-    mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-    mocks.getKrunkitVersionMock.mockRejectedValue('command not found');
+    vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+      foundPath: '/opt/podman/bin/podman',
+      source: 'installer',
+    });
+    vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockRejectedValue('command not found');
 
     extension.sendTelemetryRecords(
       'evt',
@@ -2722,9 +2729,6 @@ describe('sendTelemetryRecords', () => {
   });
 
   test('qemu found', async () => {
-    vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-      version: '5.1.2',
-    });
     extension.sendTelemetryRecords(
       'evt',
       {
@@ -2736,7 +2740,7 @@ describe('sendTelemetryRecords', () => {
     (extensionApi.env.isMac as boolean) = false;
     vi.mocked(extensionApi.env).isWindows = false;
 
-    mocks.getQemuVersionMock.mockResolvedValue('5.5.5');
+    vi.mocked(QemuHelper.prototype.getQemuVersion).mockResolvedValue('5.5.5');
 
     await vi.waitFor(() => {
       expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
@@ -2750,9 +2754,6 @@ describe('sendTelemetryRecords', () => {
   });
 
   test('qemu not found', async () => {
-    vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-      version: '5.1.2',
-    });
     extension.sendTelemetryRecords(
       'evt',
       {
@@ -2764,7 +2765,7 @@ describe('sendTelemetryRecords', () => {
     (extensionApi.env.isMac as boolean) = false;
     vi.mocked(extensionApi.env).isWindows = false;
 
-    mocks.getQemuVersionMock.mockRejectedValue('command not found');
+    vi.mocked(QemuHelper.prototype.getQemuVersion).mockRejectedValue('command not found');
 
     await vi.waitFor(() => {
       expect(telemetryLogger.logUsage).toHaveBeenCalledWith(
@@ -2784,11 +2785,14 @@ test('if a machine stopped is successfully reporting telemetry', async () => {
   const spyExecPromise = vi
     .spyOn(extensionApi.process, 'exec')
     .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
     version: '5.1.2',
   });
-  mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-  mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
+  vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+    foundPath: '/opt/podman/bin/podman',
+    source: 'installer',
+  });
+  vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockResolvedValue('1.2.3');
   await extension.stopMachine(provider, machineInfo);
 
   await waitTelemetryLoggerUsage();
@@ -2814,11 +2818,14 @@ test('if a machine stopped is successfully reporting an error in telemetry', asy
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => {
     throw customError;
   });
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
     version: '5.1.2',
   });
-  mocks.getPodmanLocationMacMock.mockResolvedValue({ foundPath: '/opt/podman/bin/podman', source: 'installer' });
-  mocks.getKrunkitVersionMock.mockResolvedValue('1.2.3');
+  vi.mocked(PodmanBinaryLocationHelper.prototype.getPodmanLocationMac).mockResolvedValue({
+    foundPath: '/opt/podman/bin/podman',
+    source: 'installer',
+  });
+  vi.mocked(KrunkitHelper.prototype.getKrunkitVersion).mockResolvedValue('1.2.3');
   await expect(extension.stopMachine(provider, machineInfo)).rejects.toThrow(customError.message);
 
   await waitTelemetryLoggerUsage();
@@ -3053,9 +3060,6 @@ test('getJSONMachineList should only get machines from wsl if hyperv is not enab
 test('getJSONMachineList should only get machines from hyperv if wsl is not enabled', async () => {
   vi.mocked(extensionApi.env).isWindows = true;
   vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(true);
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-    version: '5.2.1',
-  });
   vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
     return new Promise<extensionApi.RunResult>(resolve => {
       if (command !== 'wsl' && args?.[0] === '--version') {
@@ -3120,9 +3124,6 @@ test('getJSONMachineList should get machines from hyperv and wsl if both are ena
   vi.mocked(extensionApi.env).isWindows = true;
   vi.mocked(WIN_PLATFORM_MOCK.isWSLEnabled).mockResolvedValue(true);
   vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(true);
-  vi.spyOn(podmanCli, 'getPodmanInstallation').mockResolvedValue({
-    version: '5.2.1',
-  });
   vi.spyOn(extensionApi.process, 'exec').mockImplementation((command, args) => {
     return new Promise<extensionApi.RunResult>(resolve => {
       if (command !== 'wsl' && args?.[0] === '--version') {
@@ -3351,12 +3352,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     });
 
     vi.mock('./utils/warnings');
-
-    // Change the mock return value to return a provider with a ready status for testing,
-    // this uses the original provider, but just replaces the ready status
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithReadyStatus as unknown as extensionApi.Provider,
-    );
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {
@@ -3364,11 +3359,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
     vi.mocked(extensionApi.env).isMac = true;
     vi.mocked(extensionApi.env).isWindows = false;
     vi.mocked(extensionApi.env).isLinux = false;
-
-    // Mock the provider to be "stopped"
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithStoppedStatus as unknown as extensionApi.Provider,
-    );
 
     const api = await extension.activate(contextMock);
     expect(api).toBeDefined();
@@ -3404,20 +3394,9 @@ describe('podman-mac-helper tests', () => {
         return '';
       },
     });
-
-    // Change the mock return value to return a provider with a ready status for testing,
-    // this uses the original provider, but just replaces the ready status
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithReadyStatus as unknown as extensionApi.Provider,
-    );
   });
 
   test('mock that the provider is "stopped" and make sure that the notification is NOT shown', async () => {
-    // Mock the provider to be "stopped"
-    vi.spyOn(apiProvider, 'createProvider').mockReturnValue(
-      providerWithStoppedStatus as unknown as extensionApi.Provider,
-    );
-
     // Activate
     const api = await extension.activate(contextMock);
     expect(api).toBeDefined();
@@ -3450,17 +3429,13 @@ describe('Check notify podman setup', () => {
 
     vi.mocked(extensionApi.commands.registerCommand).mockReturnValue({ dispose: vi.fn() });
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
+      version: '5.0.0',
+    });
 
     // second call to get the machine list
     vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
       stdout: '[]',
-    } as unknown as extensionApi.RunResult);
-
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
     } as unknown as extensionApi.RunResult);
 
     await extension.updateMachines(provider, podmanConfiguration);
@@ -3498,9 +3473,9 @@ describe('Check notify podman setup', () => {
 
     // Podman has been installed
 
-    vi.mocked(extensionApi.process.exec).mockResolvedValueOnce({
-      stdout: 'podman version 5.0.0',
-    } as unknown as extensionApi.RunResult);
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValueOnce({
+      version: '5.0.0',
+    });
 
     await extension.doMonitorProvider(provider);
 

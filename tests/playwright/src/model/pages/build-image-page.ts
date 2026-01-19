@@ -18,8 +18,9 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { archType } from '../../utility/platform';
-import { ArchitectureType } from '../core/platforms';
+import { ArchitectureType } from '/@/model/core/platforms';
+import { archType } from '/@/utility/platform';
+
 import { BasePage } from './base-page';
 import { ImagesPage } from './images-page';
 
@@ -180,7 +181,7 @@ export class BuildImagePage extends BasePage {
     archType: string[] = [ArchitectureType.Default],
   ): Promise<void> {
     if (!containerFilePath) {
-      throw Error(`Path to containerfile is incorrect or not provided!`);
+      throw Error('Path to containerfile is incorrect or not provided!');
     }
 
     await this.containerFilePathInput.fill(containerFilePath);

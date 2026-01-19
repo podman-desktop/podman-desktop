@@ -29,63 +29,10 @@ import { KindInstaller } from './kind-installer';
 import * as util from './util';
 
 vi.mock('node:fs');
-vi.mock('./util');
-vi.mock('./image-handler', () => {
-  return {
-    ImageHandler: vi.fn().mockImplementation(() => {
-      return {
-        moveImage: vi.fn(),
-      };
-    }),
-  };
-});
-vi.mock('./create-cluster', () => ({
-  createCluster: vi.fn(),
-}));
-
-vi.mock('./kind-installer');
-
-vi.mock('@podman-desktop/api', () => ({
-  window: {
-    withProgress: vi.fn(),
-    createStatusBarItem: vi.fn(),
-    showInformationMessage: vi.fn(),
-  },
-  cli: {
-    createCliTool: vi.fn(),
-  },
-  ProgressLocation: {
-    TASK_WIDGET: 'TASK_WIDGET',
-  },
-  provider: {
-    onDidRegisterContainerConnection: vi.fn(),
-    onDidUnregisterContainerConnection: vi.fn(),
-    onDidUpdateProvider: vi.fn(),
-    onDidUpdateContainerConnection: vi.fn(),
-    onDidUpdateVersion: vi.fn(),
-    createProvider: vi.fn(),
-    registerUpdate: vi.fn(),
-  },
-  containerEngine: {
-    listContainers: vi.fn(),
-    onEvent: vi.fn(),
-  },
-  commands: {
-    registerCommand: vi.fn(),
-  },
-  context: {
-    setValue: vi.fn(),
-  },
-  env: {
-    isWindows: false,
-    isMac: false,
-    isLinux: true,
-    createTelemetryLogger: vi.fn(),
-  },
-  process: {
-    exec: vi.fn(),
-  },
-}));
+vi.mock(import('./util'));
+vi.mock(import('./image-handler'));
+vi.mock(import('./create-cluster'));
+vi.mock(import('./kind-installer'));
 
 const CLI_TOOL_MOCK: extensionApi.CliTool = {
   displayName: 'test',

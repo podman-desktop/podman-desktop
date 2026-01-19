@@ -26,20 +26,6 @@ import { ImageHandler } from './image-handler';
 import { getKindPath } from './util';
 
 let imageHandler: ImageHandler;
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    containerEngine: {
-      saveImage: vi.fn(),
-    },
-    window: {
-      showNotification: vi.fn(),
-      showInformationMessage: vi.fn(),
-    },
-    process: {
-      exec: vi.fn().mockReturnValue({} as extensionApi.RunResult),
-    },
-  };
-});
 
 vi.mock('./util', async () => {
   return {

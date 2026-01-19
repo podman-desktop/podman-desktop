@@ -22,8 +22,7 @@ import { render, screen } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 
 import FeaturedExtension from '/@/lib/featured/FeaturedExtension.svelte';
-
-import type { FeaturedExtension as IFeaturedExtension } from '../../../../main/src/plugin/featured/featured-api';
+import type { FeaturedExtension as IFeaturedExtension } from '/@api/featured/featured-api';
 
 const fetchableFeaturedExtension: IFeaturedExtension = {
   builtin: true,

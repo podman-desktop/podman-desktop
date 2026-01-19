@@ -24,7 +24,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import VolumeActions from './VolumeActions.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-const showMessageBoxMock = vi.fn();
 const removeVolumeMock = vi.fn();
 
 class VolumeInfoUIImpl {
@@ -45,13 +44,12 @@ class VolumeInfoUIImpl {
 }
 
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'removeVolume', { value: removeVolumeMock });
 });
 
 test('Expect prompt dialog and deletion', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const volume: VolumeInfoUI = new VolumeInfoUIImpl('dummy', 'UNUSED') as unknown as VolumeInfoUI;
 
@@ -63,7 +61,7 @@ test('Expect prompt dialog and deletion', async () => {
   await fireEvent.click(button);
 
   await waitFor(() => {
-    expect(showMessageBoxMock).toHaveBeenCalledOnce();
+    expect(window.showMessageBox).toHaveBeenCalledOnce();
   });
 
   expect(volume.status).toBe('DELETING');

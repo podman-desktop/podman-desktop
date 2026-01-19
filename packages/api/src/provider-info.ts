@@ -30,6 +30,7 @@ import type {
 export type LifecycleMethod = 'start' | 'stop' | 'delete' | 'edit';
 
 export interface ProviderContainerConnectionInfo {
+  connectionType: 'container';
   name: string;
   displayName: string;
   status: ProviderConnectionStatus;
@@ -47,6 +48,7 @@ export interface ProviderContainerConnectionInfo {
 }
 
 export interface ProviderKubernetesConnectionInfo {
+  connectionType: 'kubernetes';
   name: string;
   status: ProviderConnectionStatus;
   endpoint: {
@@ -56,6 +58,7 @@ export interface ProviderKubernetesConnectionInfo {
 }
 
 export interface ProviderVmConnectionInfo {
+  connectionType: 'vm';
   name: string;
   status: ProviderConnectionStatus;
   lifecycleMethods?: LifecycleMethod[];

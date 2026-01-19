@@ -25,15 +25,3 @@ export interface SavedListOrganizerConfig {
   id: string;
   enabled: boolean;
 }
-
-export interface ListOrganizerCallbacks {
-  onLoad: () => Promise<ListOrganizerItem[]>;
-  onSave: (items: ListOrganizerItem[]) => Promise<void>;
-  onReset: () => Promise<ListOrganizerItem[]>;
-}
-
-export interface ListOrganizerRegistration {
-  kind: string;
-  defaultColumns: string[];
-  columnLabels?: Record<string, string>;
-}

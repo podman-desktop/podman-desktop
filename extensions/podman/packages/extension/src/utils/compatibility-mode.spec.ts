@@ -19,20 +19,9 @@
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, expect, test, vi } from 'vitest';
 
-import * as extension from '../extension';
-import { DarwinSocketCompatibility, getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
+import * as extension from '/@/extension';
 
-vi.mock('@podman-desktop/api', () => {
-  return {
-    window: {
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
+import { DarwinSocketCompatibility, getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
 
 afterEach(() => {
   vi.resetAllMocks();

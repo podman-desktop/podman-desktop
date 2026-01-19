@@ -45,25 +45,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora-version: ['Fedora-41', 'Fedora-42']
+        fedora-version: ['Fedora-42', 'Fedora-43']
     steps:
       - name: Set the default env. variables
         env:
           DEFAULT_NPM_TARGET: 'all'
           DEFAULT_PODMAN_VERSION: 'latest'
+          DEFAULT_NODE_VERSION: 'v24.11.1'
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
           echo "PODMAN_VERSION=${{ github.event.inputs.podman_version || env.DEFAULT_PODMAN_VERSION }}" >> $GITHUB_ENV
+          echo "NODE_VERSION=${{ env.DEFAULT_NODE_VERSION }}" >> $GITHUB_ENV
 
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
         id: run-e2e-tf
-        uses: sclorg/testing-farm-as-github-action@f3a39272a197ed060d5f786186b0e7a3ee7b0b4f
+        uses: sclorg/testing-farm-as-github-action@b23f0de29ac969d12411215a983da264b4ced149
         with:
           api_key: ${{ secrets.TF_TOKEN }}
           create_github_summary: "false"
           compose: ${{ matrix.fedora-version }}
           tmt_plan_filter: 'name:/tests/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}'
-          variables: COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }}
+          variables: COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }};NODE_VERSION=${{ env.NODE_VERSION }}
 
       - name: Extract Testing Farm work ID and base URL
         if: always()
@@ -85,7 +87,7 @@ jobs:
 
       - name: Publish test report to PR
         if: always()
-        uses: mikepenz/action-junit-report@e08919a3b1fb83a78393dfb775a9c37f17d8eea6
+        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc
         with:
           fail_on_failure: true
           include_passed: true
@@ -125,7 +127,7 @@ jobs:
 
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6.0.0
         with:
           name: testing-farm-artifacts-${{ matrix.fedora-version }}
           path: |

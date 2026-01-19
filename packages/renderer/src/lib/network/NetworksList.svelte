@@ -2,15 +2,16 @@
 import { faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
-import { router } from 'tinro';
 
+import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
+import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
+import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import { handleNavigation } from '/@/navigation';
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
+import { NavigationPage } from '/@api/navigation-page';
 
-import { withBulkConfirmation } from '../actions/BulkActions';
-import NoContainerEngineEmptyScreen from '../image/NoContainerEngineEmptyScreen.svelte';
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
-import NetworkColumnEnvironment from './columns/NetworkColumnEnvironment.svelte';
 import NetworkColumnId from './columns/NetworkColumnId.svelte';
 import NetworkColumnName from './columns/NetworkColumnName.svelte';
 import { NetworkUtils } from './network-utils';
@@ -68,7 +69,7 @@ async function deleteSelectedNetworks(): Promise<void> {
 }
 
 function gotoCreateNetwork(): void {
-  router.goto('/networks/create');
+  handleNavigation({ page: NavigationPage.NETWORK_CREATE });
 }
 
 let idColumn = new TableColumn<NetworkInfoUI>('Id', {
@@ -89,8 +90,8 @@ let driverColumn = new TableColumn<NetworkInfoUI>('Driver', {
 });
 
 let envColumn = new TableColumn<NetworkInfoUI>('Environment', {
-  renderer: NetworkColumnEnvironment,
-  comparator: (a, b): number => a.engineName.localeCompare(b.engineName),
+  renderer: ContainerEngineEnvironmentColumn,
+  comparator: (a, b): number => a.engineId.localeCompare(b.engineId),
 });
 
 const columns = [
@@ -139,7 +140,7 @@ function key(network: NetworkInfoUI): string {
   {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">  
+  <div class="flex min-w-full h-full">
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
@@ -157,7 +158,8 @@ function key(network: NetworkInfoUI): string {
         columns={columns}
         row={row}
         key={key}
-        defaultSortColumn="Name">
+        defaultSortColumn="Name"
+        enableLayoutConfiguration={true}>
       </Table>
     {/if}
   </div>

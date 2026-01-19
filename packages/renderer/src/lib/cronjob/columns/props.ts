@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CronJobUI } from '../CronJobUI';
+import type { CronJobUI } from '/@/lib/cronjob/CronJobUI';
 
 export interface Props {
   object: CronJobUI;

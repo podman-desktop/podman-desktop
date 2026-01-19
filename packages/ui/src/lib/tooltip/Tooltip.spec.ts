@@ -293,4 +293,9 @@ describe('Tooltip', () => {
       expect(slotElement).toHaveClass('my-[5px] mx-[10px]');
     });
   });
+
+  test('containerClass prop should replace the default class of the container', async () => {
+    const { container } = render(TooltipTestComponent, { containerClass: 'w-full' });
+    expect(container.childNodes[0]).toHaveClass('w-full');
+  });
 });

@@ -17,7 +17,9 @@
  ***********************************************************************/
 
 import type { RunResult } from '@podman-desktop/api';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { RegistryItem } from 'winreg';
+import WinReg from 'winreg';
 
 import type { Proxy } from '/@/plugin/proxy.js';
 import { getProxySettingsFromSystem } from '/@/plugin/proxy-system.js';
@@ -25,17 +27,7 @@ import { Exec } from '/@/plugin/util/exec.js';
 
 import * as util from '../util.js';
 
-const mocks = vi.hoisted(() => {
-  return {
-    WinRegMock: vi.fn(),
-  };
-});
-
-vi.mock('winreg', () => {
-  return {
-    default: mocks.WinRegMock,
-  };
-});
+vi.mock(import('winreg'));
 
 enum Platform {
   WINDOWS,
@@ -50,36 +42,40 @@ function setupPlatform(platform: Platform): void {
   vi.spyOn(util, 'isUnixLike').mockReturnValue(platform === Platform.LINUX);
 }
 
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
 describe('Windows platform tests', () => {
-  setupPlatform(Platform.WINDOWS);
   test('No state returned in case of execution error', async () => {
-    mocks.WinRegMock.mockReturnValue({
-      values: vi.fn().mockImplementation(cb => {
+    setupPlatform(Platform.WINDOWS);
+    vi.mocked(WinReg.prototype.values).mockImplementation(
+      (cb: (err: Error | undefined, result: RegistryItem[] | undefined) => void) => {
         cb(new Error('execution error'), undefined);
-      }),
-    });
+      },
+    );
     const settings = await getProxySettingsFromSystem({} as Proxy);
     expect(settings).toBeUndefined();
   });
 
   test('No state returned in case of proxy disabled', async () => {
     setupPlatform(Platform.WINDOWS);
-    mocks.WinRegMock.mockReturnValue({
-      values: vi.fn().mockImplementation(cb => {
-        cb(undefined, [{ name: 'ProxyEnable', value: '0x0' }]);
-      }),
-    });
+    vi.mocked(WinReg.prototype.values).mockImplementation(
+      (cb: (err: Error | undefined, result: RegistryItem[] | undefined) => void) => {
+        cb(undefined, [{ name: 'ProxyEnable', value: '0x0' } as RegistryItem]);
+      },
+    );
     const settings = await getProxySettingsFromSystem({} as Proxy);
     expect(settings).toBeUndefined();
   });
 
   test('Empty state returned in case of proxy enabled only', async () => {
     setupPlatform(Platform.WINDOWS);
-    mocks.WinRegMock.mockReturnValue({
-      values: vi.fn().mockImplementation(cb => {
-        cb(undefined, [{ name: 'ProxyEnable', value: '0x1' }]);
-      }),
-    });
+    vi.mocked(WinReg.prototype.values).mockImplementation(
+      (cb: (err: Error | undefined, result: RegistryItem[] | undefined) => void) => {
+        cb(undefined, [{ name: 'ProxyEnable', value: '0x1' } as RegistryItem]);
+      },
+    );
     const settings = await getProxySettingsFromSystem({} as Proxy);
     expect(settings).toBeDefined();
     expect(settings?.httpProxy).toBeUndefined();
@@ -89,14 +85,14 @@ describe('Windows platform tests', () => {
 
   test('State returned in case of proxy enabled and proxy server', async () => {
     setupPlatform(Platform.WINDOWS);
-    mocks.WinRegMock.mockReturnValue({
-      values: vi.fn().mockImplementation(cb => {
+    vi.mocked(WinReg.prototype.values).mockImplementation(
+      (cb: (err: Error | undefined, result: RegistryItem[] | undefined) => void) => {
         cb(undefined, [
-          { name: 'ProxyEnable', value: '0x1' },
-          { name: 'ProxyServer', value: 'http=127.0.0.1:8888;https=127.0.0.1:8889' },
+          { name: 'ProxyEnable', value: '0x1' } as RegistryItem,
+          { name: 'ProxyServer', value: 'http=127.0.0.1:8888;https=127.0.0.1:8889' } as RegistryItem,
         ]);
-      }),
-    });
+      },
+    );
     const settings = await getProxySettingsFromSystem({} as Proxy);
     expect(settings).toBeDefined();
     expect(settings?.httpProxy).toBe('http://127.0.0.1:8888');
@@ -106,15 +102,15 @@ describe('Windows platform tests', () => {
 
   test('State returned in case of proxy enabled and proxy server with exceptions', async () => {
     setupPlatform(Platform.WINDOWS);
-    mocks.WinRegMock.mockReturnValue({
-      values: vi.fn().mockImplementation(cb => {
+    vi.mocked(WinReg.prototype.values).mockImplementation(
+      (cb: (err: Error | undefined, result: RegistryItem[] | undefined) => void) => {
         cb(undefined, [
-          { name: 'ProxyEnable', value: '0x1' },
-          { name: 'ProxyServer', value: 'http=127.0.0.1:8888;https=127.0.0.1:8889' },
-          { name: 'ProxyOverride', value: '*.internal' },
+          { name: 'ProxyEnable', value: '0x1' } as RegistryItem,
+          { name: 'ProxyServer', value: 'http=127.0.0.1:8888;https=127.0.0.1:8889' } as RegistryItem,
+          { name: 'ProxyOverride', value: '*.internal' } as RegistryItem,
         ]);
-      }),
-    });
+      },
+    );
     const settings = await getProxySettingsFromSystem({} as Proxy);
     expect(settings).toBeDefined();
     expect(settings?.httpProxy).toBe('http://127.0.0.1:8888');
@@ -124,14 +120,14 @@ describe('Windows platform tests', () => {
 
   test('State returned in case of proxy enabled and proxy server is <ip:port>', async () => {
     setupPlatform(Platform.WINDOWS);
-    mocks.WinRegMock.mockReturnValue({
-      values: vi.fn().mockImplementation(cb => {
+    vi.mocked(WinReg.prototype.values).mockImplementation(
+      (cb: (err: Error | undefined, result: RegistryItem[] | undefined) => void) => {
         cb(undefined, [
-          { name: 'ProxyEnable', value: '0x1' },
-          { name: 'ProxyServer', value: '127.0.0.1:8888' },
+          { name: 'ProxyEnable', value: '0x1' } as RegistryItem,
+          { name: 'ProxyServer', value: '127.0.0.1:8888' } as RegistryItem,
         ]);
-      }),
-    });
+      },
+    );
     const settings = await getProxySettingsFromSystem({} as Proxy);
     expect(settings).toBeDefined();
     expect(settings?.httpProxy).toBe('http://127.0.0.1:8888');

@@ -57,12 +57,21 @@ export class NavigationItemsMenuBuilder {
     return label.replace('&', '&&');
   }
 
+  protected computeItemName(rawItemName: string): string {
+    // need to filter any counter from the item name
+    // it's at the end with parenthesis like itemName (2)
+    const itemName = rawItemName.replace(/\s\(\d+\)$/, '');
+
+    // Electron sends the whole element text including sub elements, each level separated by '\n'
+    return itemName.split('\n')[0] ?? itemName;
+  }
+
   protected buildHideMenuItem(linkText: string): MenuItemConstructorOptions | undefined {
     const rawItemName = linkText;
 
     // need to filter any counter from the item name
     // it's at the end with parenthesis like itemName (2)
-    const itemName = rawItemName.replace(/\s\(\d+\)$/, '');
+    const itemName = this.computeItemName(rawItemName);
 
     if (EXCLUDED_ITEMS.includes(itemName)) {
       return undefined;

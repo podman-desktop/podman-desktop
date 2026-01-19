@@ -28,22 +28,7 @@ import type { ImageInspectInfo } from '/@api/image-inspect-info';
 import type { ImageInfoUI } from './ImageInfoUI';
 import PushImageModal from './PushImageModal.svelte';
 
-vi.mock('@xterm/xterm', () => {
-  const Terminal = vi.fn();
-  Terminal.prototype = {
-    loadAddon: vi.fn(),
-    open: vi.fn(),
-    write: vi.fn(),
-    clear: vi.fn(),
-    reset: vi.fn(),
-    dispose: vi.fn(),
-  };
-  return { Terminal };
-});
-
-const getConfigurationValueMock = vi.fn();
-const hasAuthMock = vi.fn();
-const pushImageMock = vi.fn();
+vi.mock(import('@xterm/xterm'));
 
 beforeAll(() => {
   (window.events as unknown) = {
@@ -51,16 +36,13 @@ beforeAll(() => {
       func();
     },
   };
-  Object.defineProperty(window, 'ResizeObserver', {
-    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
-  });
-  Object.defineProperty(window, 'getImageInspect', { value: vi.fn().mockImplementation(() => Promise.resolve({})) });
-  Object.defineProperty(window, 'logsContainer', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'refreshTerminal', { value: vi.fn() });
-  Object.defineProperty(window, 'getConfigurationValue', { value: getConfigurationValueMock });
-  Object.defineProperty(window, 'hasAuthconfigForImage', { value: hasAuthMock });
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
-  Object.defineProperty(window, 'pushImage', { value: pushImageMock });
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(window.getImageInspect).mockRejectedValue({});
+  vi.mocked(window.logsContainer).mockResolvedValue(undefined);
 });
 
 // fake ImageInfoUI
@@ -79,7 +61,6 @@ const fakedImage: ImageInfoUI = {
   base64RepoTag: 'base64RepoTag',
   selected: false,
   status: 'UNUSED',
-  icon: {},
   badges: [],
   digest: 'sha256:1234567890',
 };
@@ -150,7 +131,7 @@ async function waitRender(customProperties: object): Promise<void> {
   await tick();
 }
 
-type CallbackType = (name: string, data?: string) => void;
+type CallbackType = (name: string, data: string) => void;
 
 describe('Expect Push Image dialog', () => {
   let callback: CallbackType | undefined;
@@ -174,9 +155,9 @@ describe('Expect Push Image dialog', () => {
       | 'End',
     authConfig = true,
   ): Promise<void> {
-    hasAuthMock.mockResolvedValue(authConfig);
+    vi.mocked(window.hasAuthconfigForImage).mockResolvedValue(authConfig);
     vi.mocked(window.getImageInspect).mockResolvedValue(fakedImageInspect);
-    pushImageMock.mockImplementation((_imageId, _imageTag, cb) => {
+    vi.mocked(window.pushImage).mockImplementation(async (_imageId, _imageTag, cb) => {
       callback = cb;
     });
 
@@ -192,7 +173,7 @@ describe('Expect Push Image dialog', () => {
 
     if (step === 'PushPressed') return;
 
-    callback?.('first-message');
+    callback?.('first-message', '');
 
     if (step === 'FirstMessage') return;
 
@@ -207,7 +188,7 @@ describe('Expect Push Image dialog', () => {
 
     if (step === 'DataErrorMessage') return;
 
-    callback?.('end');
+    callback?.('end', '');
   }
 
   beforeEach(() => {
@@ -250,23 +231,20 @@ describe('Expect Push Image dialog', () => {
   });
 
   test('to clean terminal when "first-message" event received', async () => {
-    const terminalClearSpy = vi.spyOn(Terminal.prototype, 'clear');
     await runTo('FirstMessage');
-    expect(terminalClearSpy).toHaveBeenCalledOnce();
+    expect(Terminal.prototype.clear).toHaveBeenCalledOnce();
   });
 
   test('to write "status" property to terminal received in "data" even', async () => {
-    const terminalWriteSpy = vi.spyOn(Terminal.prototype, 'write');
     await runTo('DataMessage');
-    expect(terminalWriteSpy).toBeCalledWith('DataMessage\n\r');
+    expect(Terminal.prototype.write).toBeCalledWith('DataMessage\n\r');
     expect(button('Push image')).toBeDisabled();
     expect(button('Cancel')).toBe(null);
   });
 
   test('to write error message to terminal from "data" event and reset buttons to initial state', async () => {
-    const terminalWriteSpy = vi.spyOn(Terminal.prototype, 'write');
     await runTo('DataErrorMessage');
-    expect(terminalWriteSpy).toBeCalledWith('DataErrorMessage\n\r');
+    expect(Terminal.prototype.write).toBeCalledWith('DataErrorMessage\n\r');
     expect(button('Push image')).toBeDisabled();
     expect(button('Cancel')).toBe(null);
   });

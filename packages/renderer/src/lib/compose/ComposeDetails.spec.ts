@@ -18,62 +18,44 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import type { ContainerInspectInfo } from '@podman-desktop/api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import { mockBreadcrumb } from '../../stores/breadcrumb.spec';
-import { containersInfos } from '../../stores/containers';
-import { providerInfos } from '../../stores/providers';
+import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
+import { containersInfos } from '/@/stores/containers';
+import { providerInfos } from '/@/stores/providers';
+import type { ContainerInfo } from '/@api/container-info';
+import type { ContainerInspectInfo } from '/@api/container-inspect-info';
+import { type ProviderInfo } from '/@api/provider-info';
+
 import ComposeDetails from './ComposeDetails.svelte';
 
-const listContainersMock = vi.fn();
-const getProviderInfosMock = vi.fn();
-const getContributedMenusMock = vi.fn();
-
-vi.mock('@xterm/xterm', () => {
-  return {
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: vi.fn(), clear: vi.fn(), dispose: vi.fn() }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 beforeAll(() => {
-  const onDidUpdateProviderStatusMock = vi.fn();
-  Object.defineProperty(window, 'onDidUpdateProviderStatus', { value: onDidUpdateProviderStatusMock });
-  onDidUpdateProviderStatusMock.mockImplementation(() => Promise.resolve());
-
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
     },
   };
-  Object.defineProperty(window, 'getConfigurationValue', { value: vi.fn().mockResolvedValue(undefined) });
-  Object.defineProperty(window, 'getConfigurationProperties', { value: vi.fn().mockResolvedValue({}) });
-  Object.defineProperty(window, 'matchMedia', {
-    value: vi.fn().mockReturnValue({
-      addListener: vi.fn(),
-    }),
-  });
-  Object.defineProperty(window, 'ResizeObserver', {
-    value: vi.fn().mockReturnValue({ observe: vi.fn(), unobserve: vi.fn() }),
-  });
-  Object.defineProperty(window, 'initializeProvider', { value: vi.fn().mockResolvedValue([]) });
-  Object.defineProperty(window, 'getContainerInspect', { value: vi.fn().mockResolvedValue(containerInspectInfo) });
-  Object.defineProperty(window, 'listNetworks', { value: vi.fn().mockResolvedValue([]) });
-  Object.defineProperty(window, 'getProviderInfos', { value: getProviderInfosMock });
-  Object.defineProperty(window, 'listContainers', { value: listContainersMock });
-  Object.defineProperty(window, 'logsContainer', { value: vi.fn() });
-  Object.defineProperty(window, 'listViewsContributions', { value: vi.fn() });
-  Object.defineProperty(window, 'generatePodmanKube', { value: vi.fn() });
-  Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
   mockBreadcrumb();
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
+  vi.mocked(window.initializeProvider).mockResolvedValue([]);
+  vi.mocked(window.getContainerInspect).mockResolvedValue(containerInspectInfo);
+  vi.mocked(window.listNetworks).mockResolvedValue([]);
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
+  vi.mocked(window.getProviderInfos).mockResolvedValue([]);
+  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
 });
 
 async function waitRender(name: string, engineId: string): Promise<void> {
@@ -216,7 +198,7 @@ test('Simple test that compose summary is clickable and loadable', async () => {
 });
 
 test('Compose details inspect is clickable and loadable', async () => {
-  getProviderInfosMock.mockResolvedValue([
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
     {
       name: 'podman',
       status: 'started',
@@ -227,10 +209,10 @@ test('Compose details inspect is clickable and loadable', async () => {
           status: 'started',
         },
       ],
-    },
+    } as unknown as ProviderInfo,
   ]);
 
-  const mockedContainers = [
+  const mockedContainers: ContainerInfo[] = [
     {
       Id: 'sha256:1234567890123',
       Image: 'sha256:123',
@@ -255,22 +237,18 @@ test('Compose details inspect is clickable and loadable', async () => {
       },
       ImageID: 'sha256:dummy-image-id',
     },
-  ];
+  ] as unknown as ContainerInfo[];
 
-  listContainersMock.mockResolvedValue(mockedContainers);
+  vi.mocked(window.listContainers).mockResolvedValue(mockedContainers);
 
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
 
   // wait store are populated
-  while (get(containersInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => {
+    return get(containersInfos).length === 0 && get(providerInfos).length === 0;
+  });
 
   // Wait for the render to completely finish
   await waitRender('foobar', 'podman');
@@ -281,7 +259,7 @@ test('Compose details inspect is clickable and loadable', async () => {
 });
 
 test('Test that compose kube tab is clickable and loadable', async () => {
-  listContainersMock.mockResolvedValue([]);
+  vi.mocked(window.listContainers).mockResolvedValue([]);
 
   render(ComposeDetails, { composeName: 'foobar', engineId: 'engine' });
   const kubeHref = screen.getByRole('link', { name: 'Kube' });

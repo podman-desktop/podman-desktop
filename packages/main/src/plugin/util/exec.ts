@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,11 @@
 
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
+import { homedir } from 'node:os';
+import { delimiter, join } from 'node:path';
 
+import * as sudo from '@expo/sudo-prompt';
 import type { RunError, RunOptions, RunResult } from '@podman-desktop/api';
-import * as sudo from 'sudo-prompt';
 
 import { isLinux, isMac, isWindows } from '../../util.js';
 import type { Proxy } from '../proxy.js';
@@ -123,11 +125,14 @@ export class Exec {
           sudo.exec(sudoCommand, sudoOptions, callback);
         });
       } else if (isMac()) {
+        const escapedArgs = (args ?? []).map(arg =>
+          arg.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/ /g, '\\ '),
+        );
+        const shellScript = `${command} ${escapedArgs.join(' ')}`;
+        const escapedShellScript = shellScript.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         args = [
           '-e',
-          `do shell script "${command} ${(args ?? []).join(
-            ' ',
-          )}" with prompt "Podman Desktop requires admin privileges " with administrator privileges`,
+          `do shell script "${escapedShellScript}" with prompt "Podman Desktop requires admin privileges " with administrator privileges`,
         ];
         command = 'osascript';
       } else if (isLinux()) {
@@ -245,7 +250,11 @@ export function getInstallationPath(envPATH?: string): string {
   envPATH ??= process.env['PATH'];
 
   if (isWindows()) {
-    return `c:\\Program Files\\RedHat\\Podman;${envPATH}`;
+    return [
+      join(homedir(), 'AppData', 'Local', 'Programs', 'Podman'),
+      'c:\\Program Files\\RedHat\\Podman',
+      envPATH ?? '',
+    ].join(delimiter);
   } else if (isMac()) {
     if (!envPATH) {
       return macosExtraPath;

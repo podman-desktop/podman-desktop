@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { DeploymentUI } from '../DeploymentUI';
+import type { DeploymentUI } from '/@/lib/deployments/DeploymentUI';
+
 import Pods from './Pods.svelte';
 
 test('Expect simple column styling', async () => {

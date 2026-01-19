@@ -25,7 +25,6 @@ import PVCActions from './PVCActions.svelte';
 import type { PVCUI } from './PVCUI';
 
 const deleteMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 class StatusHolder {
   #status: string;
@@ -50,7 +49,6 @@ fakePVC.selected = false;
 fakePVC.size = '1Gi';
 
 beforeEach(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'kubernetesDeletePersistentVolumeClaim', { value: deleteMock });
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
@@ -65,7 +63,7 @@ afterEach(() => {
 });
 
 test('Expect no error and status deleting PVC', async () => {
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(PVCActions, { pvc: fakePVC });
 
   // click on delete buttons

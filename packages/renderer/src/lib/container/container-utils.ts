@@ -24,11 +24,11 @@ import { filesize } from 'filesize';
 import humanizeDuration from 'humanize-duration';
 import moment from 'moment';
 
+import type { ContextUI } from '/@/lib/context/context';
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import type { ContainerInfo } from '/@api/container-info';
 import { isViewContributionIcon, type ViewInfoUI } from '/@api/view-info';
 
-import type { ContextUI } from '../context/context';
-import { ContextKeyExpr } from '../context/contextKey';
 import type { ContainerGroupInfoUI, ContainerGroupPartInfoUI, ContainerInfoUI } from './ContainerInfoUI';
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';
 
@@ -216,6 +216,7 @@ export class ContainerUtils {
       name: this.getName(containerInfo),
       type: ContainerGroupInfoTypeUI.STANDALONE,
       status: (containerInfo.Status ?? '').toUpperCase(),
+      engineId: containerInfo.engineId,
       engineType: containerInfo.engineType,
       id: containerInfo.Id, // since the container is standalone, let's use its ID as groupInfo#id
       engineName: containerInfo.engineName,

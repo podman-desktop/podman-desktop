@@ -21,14 +21,6 @@ import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { activate } from './extension';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    registry: {
-      suggestRegistry: vi.fn(),
-    },
-  };
-});
-
 beforeAll(() => {});
 
 beforeEach(() => {

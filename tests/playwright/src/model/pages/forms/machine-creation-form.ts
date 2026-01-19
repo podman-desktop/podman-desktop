@@ -19,12 +19,12 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { DropdownComponent } from '/@/model/components/dropdown-component';
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
+import { matchesProviderVariant, PodmanVirtualizationProviderVariants } from '/@/model/core/types';
+import { BasePage } from '/@/model/pages/base-page';
 import { isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider } from '/@/utility/provider';
-
-import { DropdownComponent } from '../../components/dropdown-component';
-import type { PodmanVirtualizationProviders } from '../../core/types';
-import { BasePage } from '../base-page';
 
 export class MachineCreationForm extends BasePage {
   readonly podmanMachineConfiguration: Locator;
@@ -86,7 +86,10 @@ export class MachineCreationForm extends BasePage {
         timeout: 10_000,
       });
       await this.podmanMachineName.clear();
+      await playExpect(this.podmanMachineName).toHaveValue('');
+
       await this.podmanMachineName.fill(machineName);
+      await playExpect(this.podmanMachineName).toHaveValue(machineName);
 
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
       if (isWindows) {
@@ -106,20 +109,12 @@ export class MachineCreationForm extends BasePage {
     return test.step(`Ensure checkbox is ${desiredState ? 'checked' : 'unchecked'}`, async () => {
       if (desiredState !== (await checkbox.isChecked())) {
         await checkbox.locator('..').click();
-        playExpect(await checkbox.isChecked()).toBe(desiredState);
       }
+
+      await playExpect.poll(async () => await checkbox.isChecked()).toBe(desiredState);
     });
   }
 
-  /**
-   * Specifies the virtualization provider for a Podman machine during the creation process.
-   * This method selects the specified virtualization provider from the dropdown if it differs from the default.
-   * If no provider is specified or it matches the default, no action is taken.
-   *
-   * @param virtualizationProvider - The virtualization provider to select (e.g., PodmanVirtualizationProviders.WSL, PodmanVirtualizationProviders.HyperV, etc.), or undefined to use default
-   * @returns A Promise that resolves when the provider selection is complete
-   * @throws Will throw an error if the provider dropdown is not accessible or the specified provider is not available
-   */
   async specifyVirtualizationProvider(
     virtualizationProvider: PodmanVirtualizationProviders | undefined,
   ): Promise<void> {
@@ -128,11 +123,23 @@ export class MachineCreationForm extends BasePage {
       // Only select if the dropdown is actually present/visible
       if (!(await this.providerTypeDropdown.getContainer().isVisible())) return;
       await this.providerTypeDropdown.waitForReady();
-      // Compare by the hidden input value (case-insensitive)
-      const currentValue = (await this.providerTypeDropdown.getCurrentValue()).toLowerCase();
-      if (virtualizationProvider.toLowerCase() !== currentValue) {
-        await this.providerTypeDropdown.selectOption(virtualizationProvider, virtualizationProvider, false);
-        await this.providerTypeDropdown.verifyState(virtualizationProvider, virtualizationProvider);
+      // Compare by the hidden input value using variant matching to handle version differences
+      const currentValue = await this.providerTypeDropdown.getCurrentValue();
+      if (!matchesProviderVariant(virtualizationProvider, currentValue)) {
+        // Try to find which variant actually exists in the dropdown
+        const availableOptions = await this.providerTypeDropdown.getAvailableOptions();
+        const variants = PodmanVirtualizationProviderVariants[virtualizationProvider];
+        // Find the first variant that matches any available option
+        const matchingVariant = variants.find(variant =>
+          availableOptions.some(option => option.toLowerCase().trim() === variant.toLowerCase().trim()),
+        );
+        if (!matchingVariant) {
+          throw new Error(
+            `No matching variant found for provider ${virtualizationProvider}. Available options: ${availableOptions.join(', ')}. Expected variants: ${variants.join(', ')}`,
+          );
+        }
+        await this.providerTypeDropdown.selectOption(matchingVariant, matchingVariant, false);
+        await this.providerTypeDropdown.verifyState(matchingVariant, matchingVariant);
       }
     });
   }

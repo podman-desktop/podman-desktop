@@ -2,9 +2,8 @@
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import Markdown from '/@/lib/markdown/Markdown.svelte';
 import type { NotificationCard } from '/@api/notification';
-
-import Markdown from '../markdown/Markdown.svelte';
 
 export let notification: NotificationCard;
 

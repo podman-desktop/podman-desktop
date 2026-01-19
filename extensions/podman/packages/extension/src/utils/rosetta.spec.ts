@@ -25,20 +25,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { PodmanConfiguration } from './podman-configuration';
 import { checkRosettaMacArm } from './rosetta';
 
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-  window: {
-    showInformationMessage: vi.fn(),
-  },
-  env: {
-    isMac: false,
-    isLinux: false,
-    isWindows: false,
-  },
-}));
-
 vi.mock('node:os', async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const osActual = await vi.importActual<typeof import('node:os')>('node:os');

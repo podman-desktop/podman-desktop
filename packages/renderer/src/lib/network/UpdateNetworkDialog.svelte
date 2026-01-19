@@ -1,7 +1,8 @@
 <script lang="ts">
 import { Button, Input } from '@podman-desktop/ui-svelte';
 
-import Dialog from '../dialogs/Dialog.svelte';
+import Dialog from '/@/lib/dialogs/Dialog.svelte';
+
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
 interface Props {

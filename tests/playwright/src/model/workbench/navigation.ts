@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import { ContainersPage } from '../pages/containers-page';
-import { DashboardPage } from '../pages/dashboard-page';
-import { ExtensionsPage } from '../pages/extensions-page';
-import { ImagesPage } from '../pages/images-page';
-import { KubernetesBar } from '../pages/kubernetes-bar';
-import { PodsPage } from '../pages/pods-page';
-import { SettingsBar } from '../pages/settings-bar';
-import { VolumesPage } from '../pages/volumes-page';
+import { ContainersPage } from '/@/model/pages/containers-page';
+import { DashboardPage } from '/@/model/pages/dashboard-page';
+import { ExtensionsPage } from '/@/model/pages/extensions-page';
+import { ImagesPage } from '/@/model/pages/images-page';
+import { KubernetesBar } from '/@/model/pages/kubernetes-bar';
+import { NetworksPage } from '/@/model/pages/networks-page';
+import { PodsPage } from '/@/model/pages/pods-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { VolumesPage } from '/@/model/pages/volumes-page';
 
 export class NavigationBar {
   readonly page: Page;
@@ -38,6 +39,7 @@ export class NavigationBar {
   readonly settingsLink: Locator;
   readonly extensionsLink: Locator;
   readonly kubernetesLink: Locator;
+  readonly networksLink: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -56,6 +58,9 @@ export class NavigationBar {
     });
     this.kubernetesLink = this.navigationLocator.getByRole('link', {
       name: 'Kubernetes',
+    });
+    this.networksLink = this.navigationLocator.getByRole('link', {
+      name: 'Networks',
     });
   }
 
@@ -126,6 +131,14 @@ export class NavigationBar {
       await playExpect(this.extensionsLink).toBeVisible({ timeout: 10_000 });
       await this.extensionsLink.click({ force: true });
       return new ExtensionsPage(this.page);
+    });
+  }
+
+  async openNetworks(): Promise<NetworksPage> {
+    return test.step('Open Networks page', async () => {
+      await playExpect(this.networksLink).toBeVisible({ timeout: 10_000 });
+      await this.networksLink.click({ force: true });
+      return new NetworksPage(this.page);
     });
   }
 }

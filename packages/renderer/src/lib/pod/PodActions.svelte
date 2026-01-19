@@ -13,13 +13,13 @@ import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
+import { ContainerUtils } from '/@/lib/container/container-utils';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
+import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 
-import { ContainerUtils } from '../container/container-utils';
-import FlatMenu from '../ui/FlatMenu.svelte';
-import ListItemButtonIcon from '../ui/ListItemButtonIcon.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 
 const dispatch = createEventDispatcher<{ update: PodInfoUI }>();

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,22 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import learningCenter from '../../../../main/src/plugin/learning-center/guides.json';
+import type { Guide } from '/@api/learning-center/guide';
+
 import LearningCenter from './LearningCenter.svelte';
+
+const guides: Guide[] = [
+  {
+    id: 'podman-desktop-learning-center-example',
+    url: 'https://podman-desktop.io/learning-center/example',
+    title: 'My Title',
+    description: 'fake description',
+    categories: ['Kubernetes'],
+    icon: '',
+  },
+];
 
 vi.mock('svelte/transition', () => ({
   slide: (): { delay: number; duration: number } => ({
@@ -35,31 +47,8 @@ vi.mock('svelte/transition', () => ({
   }),
 }));
 
-class ResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-  unobserve = vi.fn();
-}
-
-const updateConfigurationValueMock = vi.fn();
-const getConfigurationValueMock = vi.fn();
-const listGuidesMock = vi.fn().mockReturnValue(learningCenter.guides);
-
-beforeAll(() => {
-  Object.defineProperty(window, 'getConfigurationValue', {
-    value: getConfigurationValueMock,
-  });
-  Object.defineProperty(window, 'listGuides', {
-    value: listGuidesMock,
-  });
-  Object.defineProperty(window, 'updateConfigurationValue', {
-    value: updateConfigurationValueMock,
-  });
-  global.ResizeObserver = ResizeObserver;
-});
-
 beforeEach(() => {
-  listGuidesMock.mockReturnValue(learningCenter.guides);
+  vi.mocked(window.listGuides).mockResolvedValue(guides);
 });
 
 afterEach(() => {
@@ -70,7 +59,7 @@ test('LearningCenter component shows carousel with guides', async () => {
   render(LearningCenter);
 
   await vi.waitFor(() => {
-    const firstCard = screen.getByText(learningCenter.guides[0].title);
+    const firstCard = screen.getByText(guides[0].title);
     expect(firstCard).toBeVisible();
   });
 });
@@ -78,38 +67,38 @@ test('LearningCenter component shows carousel with guides', async () => {
 test('Clicking on LearningCenter title hides carousel with guides', async () => {
   render(LearningCenter);
   await vi.waitFor(() => {
-    const firstCard = screen.getByText(learningCenter.guides[0].title);
+    const firstCard = screen.getByText(guides[0].title);
     expect(firstCard).toBeVisible();
   });
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toBeInTheDocument();
-  expect(screen.queryByText(learningCenter.guides[0].title)).toBeInTheDocument();
+  expect(screen.queryByText(guides[0].title)).toBeInTheDocument();
   await fireEvent.click(button);
   await vi.waitFor(async () => {
-    expect(screen.queryByText(learningCenter.guides[0].title)).not.toBeInTheDocument();
+    expect(screen.queryByText(guides[0].title)).not.toBeInTheDocument();
   });
 });
 
 test('Toggling expansion sets configuration', async () => {
   render(LearningCenter);
 
-  expect(updateConfigurationValueMock).not.toHaveBeenCalled();
+  expect(window.updateConfigurationValue).not.toHaveBeenCalled();
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toBeInTheDocument();
   await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'true'));
 
   await fireEvent.click(button);
-  expect(updateConfigurationValueMock).toHaveBeenCalledWith('learningCenter.expanded', false);
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith('learningCenter.expanded', false);
   await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'false'));
 
   await fireEvent.click(button);
-  expect(updateConfigurationValueMock).toHaveBeenCalledWith('learningCenter.expanded', true);
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith('learningCenter.expanded', true);
   expect(button).toHaveAttribute('aria-expanded', 'true');
 
   await fireEvent.click(button);
-  expect(updateConfigurationValueMock).toHaveBeenCalledWith('learningCenter.expanded', false);
+  expect(window.updateConfigurationValue).toHaveBeenCalledWith('learningCenter.expanded', false);
   expect(button).toHaveAttribute('aria-expanded', 'false');
 });
 
@@ -121,20 +110,20 @@ test('Expanded when the config value not set', async () => {
 });
 
 test('Collapsed when the config value is set to not expanded', async () => {
-  getConfigurationValueMock.mockResolvedValue(false);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   render(LearningCenter);
 
-  await waitFor(() => expect(getConfigurationValueMock).toBeCalled());
+  await waitFor(() => expect(window.getConfigurationValue).toBeCalled());
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('Expanded when the config value is set to expanded', async () => {
-  getConfigurationValueMock.mockResolvedValue(true);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
   render(LearningCenter);
 
-  await waitFor(() => expect(getConfigurationValueMock).toBeCalled());
+  await waitFor(() => expect(window.getConfigurationValue).toBeCalled());
 
   const button = screen.getByRole('button', { name: 'Learning Center' });
   expect(button).toHaveAttribute('aria-expanded', 'true');

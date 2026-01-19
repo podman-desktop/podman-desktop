@@ -30,6 +30,8 @@ import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
 import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+
 import imageRegistryConfigJson from '../../tests/resources/data/plugin/image-registry-config.json' with {
   type: 'json',
 };
@@ -42,7 +44,6 @@ import imageRegistryManifestZstdJson from '../../tests/resources/data/plugin/ima
 import imageRegistryManifestMultiArchJson from '../../tests/resources/data/plugin/image-registry-manifest-multi-arch-index.json' with {
   type: 'json',
 };
-import type { ApiSenderType } from './api.js';
 import type { Certificates } from './certificates.js';
 import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';
@@ -338,6 +339,132 @@ describe('extractImageDataFromImageName', () => {
   test('invalid empty', async () => {
     expect(() => imageRegistry.extractImageDataFromImageName('')).toThrow('Image name is empty');
   });
+
+  test('OCI image with three path segments', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName('quay.io/foo/bar/my-ext');
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('latest');
+    expect(nameAndTag.name).toBe('foo/bar/my-ext');
+  });
+
+  test('OCI image with three path segments and tag', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName('quay.io/foo/bar/my-ext:v1.2.3');
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('v1.2.3');
+    expect(nameAndTag.name).toBe('foo/bar/my-ext');
+  });
+
+  test('OCI image with four path segments', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'registry.example.com/org/team/project/image:v1.0.0',
+    );
+    expect(nameAndTag.registry).toBe('registry.example.com');
+    expect(nameAndTag.registryURL).toBe('https://registry.example.com/v2');
+    expect(nameAndTag.tag).toBe('v1.0.0');
+    expect(nameAndTag.name).toBe('org/team/project/image');
+  });
+
+  test('OCI image with five path segments', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'myregistry.io/level1/level2/level3/level4/myimage:latest',
+    );
+    expect(nameAndTag.registry).toBe('myregistry.io');
+    expect(nameAndTag.registryURL).toBe('https://myregistry.io/v2');
+    expect(nameAndTag.tag).toBe('latest');
+    expect(nameAndTag.name).toBe('level1/level2/level3/level4/myimage');
+  });
+
+  test('digest format on library image', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'httpd@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('index.docker.io');
+    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('library/httpd');
+  });
+
+  test('digest format on namespaced image', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'foo/bar@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('index.docker.io');
+    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('foo/bar');
+  });
+
+  test('digest format with explicit registry', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'quay.io/org/image@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('org/image');
+  });
+
+  test('digest format with localhost and port', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'localhost:5000/myimage@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('localhost:5000');
+    expect(nameAndTag.registryURL).toBe('https://localhost:5000/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('myimage');
+  });
+
+  test('tag and digest format on library image', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'httpd:2.4@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('index.docker.io');
+    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('library/httpd');
+  });
+
+  test('tag and digest format on namespaced image', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'foo/bar:v1.0.0@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('index.docker.io');
+    expect(nameAndTag.registryURL).toBe('https://index.docker.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('foo/bar');
+  });
+
+  test('tag and digest format with explicit registry (ghcr.io example)', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'ghcr.io/podman-desktop/pd-extension-quadlet:0.11.0@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    );
+    expect(nameAndTag.registry).toBe('ghcr.io');
+    expect(nameAndTag.registryURL).toBe('https://ghcr.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+    expect(nameAndTag.name).toBe('podman-desktop/pd-extension-quadlet');
+  });
+
+  test('tag and digest format with localhost and port', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'localhost:5000/myimage:latest@sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    );
+    expect(nameAndTag.registry).toBe('localhost:5000');
+    expect(nameAndTag.registryURL).toBe('https://localhost:5000/v2');
+    expect(nameAndTag.tag).toBe('sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789');
+    expect(nameAndTag.name).toBe('myimage');
+  });
+
+  test('tag and digest format with multi-level path', () => {
+    const nameAndTag = imageRegistry.extractImageDataFromImageName(
+      'quay.io/org/team/image:v2.1.0@sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
+    );
+    expect(nameAndTag.registry).toBe('quay.io');
+    expect(nameAndTag.registryURL).toBe('https://quay.io/v2');
+    expect(nameAndTag.tag).toBe('sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210');
+    expect(nameAndTag.name).toBe('org/team/image');
+  });
 });
 
 test('expect getImageConfigLabels works', async () => {
@@ -376,6 +503,84 @@ test('expect getImageConfigLabels works', async () => {
     'Allows the ability to start and stop OpenShift Local and use Podman Desktop to interact with it',
   );
   expect(labels['org.opencontainers.image.vendor']).toBeDefined();
+});
+
+test('expect getManifestFromImageName works', async () => {
+  // need to mock the http request
+  const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');
+  spyGetAuthInfo.mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+
+  // need to mock the http request
+  const spyGetToken = vi.spyOn(imageRegistry, 'getToken');
+  spyGetToken.mockResolvedValue('12345');
+
+  // mock http responses
+  const handlers = [
+    // multi-arch index
+
+    http.get('https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/latest', () =>
+      HttpResponse.json(imageRegistryManifestMultiArchJson),
+    ),
+
+    // image index
+    http.get(
+      'https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/sha256:791352c5f8969387d576cae0586f24a12e716db584c117a15a6138812ddbaef0',
+      () => HttpResponse.json(imageRegistryManifestJson),
+    ),
+  ];
+
+  server = setupServer(...handlers);
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const manifest = await imageRegistry.getManifestFromImageName('my-podman-desktop-fake-registry.io/my/extension');
+  expect(manifest).toStrictEqual(imageRegistryManifestJson);
+});
+
+test('expect getManifestFromImageName works with digest', async () => {
+  const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');
+  spyGetAuthInfo.mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+
+  const spyGetToken = vi.spyOn(imageRegistry, 'getToken');
+  spyGetToken.mockResolvedValue('12345');
+
+  const digest = 'sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
+  const handlers = [
+    http.get(`https://my-podman-desktop-fake-registry.io/v2/my/extension/manifests/${digest}`, () =>
+      HttpResponse.json(imageRegistryManifestJson),
+    ),
+  ];
+  server = setupServer(...handlers);
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const manifest = await imageRegistry.getManifestFromImageName(
+    `my-podman-desktop-fake-registry.io/my/extension@${digest}`,
+  );
+  expect(manifest).toStrictEqual(imageRegistryManifestJson);
+});
+
+test('expect getManifestFromImageName works with tag and digest', async () => {
+  const spyGetAuthInfo = vi.spyOn(imageRegistry, 'getAuthInfo');
+  spyGetAuthInfo.mockResolvedValue({ authUrl: 'http://foobar', scheme: 'bearer' });
+
+  const spyGetToken = vi.spyOn(imageRegistry, 'getToken');
+  spyGetToken.mockResolvedValue('12345');
+
+  const digest = 'sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+
+  const handlers = [
+    http.get(`https://ghcr.io/v2/podman-desktop/pd-extension-quadlet/manifests/${digest}`, () =>
+      HttpResponse.json(imageRegistryManifestJson),
+    ),
+  ];
+  server = setupServer(...handlers);
+  server.listen({ onUnhandledRequest: 'error' });
+
+  // Tag is ignored when digest is present, digest is used for manifest lookup
+  const manifest = await imageRegistry.getManifestFromImageName(
+    `ghcr.io/podman-desktop/pd-extension-quadlet:0.11.0@${digest}`,
+  );
+  expect(manifest).toStrictEqual(imageRegistryManifestJson);
 });
 
 test('expect downloadAndExtractImage works', async () => {

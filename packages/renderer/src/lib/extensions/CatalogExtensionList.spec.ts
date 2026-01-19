@@ -26,7 +26,6 @@ import CatalogExtensionList from './CatalogExtensionList.svelte';
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });
-  Object.defineProperty(window, 'showMessageBox', { value: vi.fn() });
   Object.defineProperty(window, 'refreshCatalogExtensions', { value: vi.fn() });
 });
 

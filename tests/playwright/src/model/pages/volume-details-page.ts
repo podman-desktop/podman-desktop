@@ -19,8 +19,9 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { handleConfirmationDialog } from '../../utility/operations';
-import { VolumeState } from '../core/states';
+import { VolumeState } from '/@/model/core/states';
+import { handleConfirmationDialog } from '/@/utility/operations';
+
 import { DetailsPage } from './details-page';
 import { VolumesPage } from './volumes-page';
 

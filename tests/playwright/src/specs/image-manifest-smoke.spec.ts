@@ -21,27 +21,34 @@ import { fileURLToPath } from 'node:url';
 
 import type { Page } from '@playwright/test';
 
-import { ArchitectureType } from '../model/core/platforms';
-import type { ImagesPage } from '../model/pages/images-page';
-import { ResourceConnectionCardPage } from '../model/pages/resource-connection-card-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { NavigationBar } from '../model/workbench/navigation';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { isWindows } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ArchitectureType } from '/@/model/core/platforms';
+import type { ImagesPage } from '/@/model/pages/images-page';
+import { RegistriesPage } from '/@/model/pages/registries-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isWindows } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
 const imageNameSimple: string = 'manifest-test-simple';
 const imageNameComplex: string = 'manifest-test-complex';
 const manifestLabelSimple: string = `localhost/${imageNameSimple}`;
-const manifestLabelComplex: string = `localhost/${imageNameComplex}`;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let imagesPage: ImagesPage;
-let skipTests: boolean = false;
+let skipTests = false;
 
 let provider: string | undefined;
+
+let registryUrl: string;
+let registryUsername: string;
+let registryPswdSecret: string;
+let manifestLabelComplex: string;
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   runner.setVideoAndTraceName('image-manifest-smoke-e2e');
@@ -53,6 +60,17 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 
   const podmanResourceCard = new ResourceConnectionCardPage(page, 'podman');
   provider = await podmanResourceCard.getConnectionInfoByLabel('Connection Type');
+  console.log('Detected provider type is: ', provider);
+
+  [registryUrl, registryUsername, registryPswdSecret] = setupRegistry();
+
+  // Determine manifest name based on whether registry tests are enabled
+  // If registry tests are enabled, use the full registry path; otherwise use localhost
+  if (canTestRegistry()) {
+    manifestLabelComplex = `${registryUrl}/${registryUsername}/${imageNameComplex}`;
+  } else {
+    manifestLabelComplex = `localhost/${imageNameComplex}`;
+  }
 
   imagesPage = await navigationBar.openImages();
 });
@@ -68,13 +86,12 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         test.setTimeout(120_000);
 
         await playExpect(imagesPage.heading).toBeVisible();
+        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         const buildImagePage = await imagesPage.openBuildImage();
         await playExpect(buildImagePage.heading).toBeVisible();
         const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
-
-        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         imagesPage = await buildImagePage.buildImage(imageNameSimple, dockerfilePath, contextDirectory, architectures);
         await playExpect
@@ -102,10 +119,27 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
     });
   test.describe
     .serial('Image Manifest Validation - Complex Containerfile', () => {
-      test('Build the image using cross-arch build (complex)', async ({ page }) => {
+      test('Add registry for manifest push', async ({ navigationBar, page }) => {
+        test.skip(!canTestRegistry(), 'Registry tests are disabled');
+
+        await navigationBar.openSettings();
+        const settingsBar = new SettingsBar(page);
+        const registryPage = await settingsBar.openTabPage(RegistriesPage);
+        await playExpect(registryPage.heading).toBeVisible();
+
+        await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
+
+        const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+        const username = registryBox.getByText(registryUsername);
+        await playExpect(username).toBeVisible();
+      });
+
+      test('Build the image using cross-arch build (complex)', async ({ page, navigationBar }) => {
         test.setTimeout(120_000);
 
+        imagesPage = await navigationBar.openImages();
         await playExpect(imagesPage.heading).toBeVisible();
+        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         const buildImagePage = await imagesPage.openBuildImage();
         await playExpect(buildImagePage.heading).toBeVisible();
@@ -118,11 +152,10 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
           'alphine-hello.containerfile',
         );
         const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
-        const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
         try {
           imagesPage = await buildImagePage.buildImage(
-            imageNameComplex,
+            manifestLabelComplex,
             dockerfilePath,
             contextDirectory,
             architectures,
@@ -130,9 +163,8 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         } catch (error) {
           skipTests = true;
           await deleteImageManifest(page, manifestLabelComplex);
-          if (isWindows && provider === 'Wsl') {
-            console.log('Building cross-architecture images with the WSL hypervisor is not working yet');
-            test.fail();
+          if (!!isWindows && provider?.toLocaleLowerCase().trim() === 'wsl') {
+            test.skip(true, 'Building cross-architecture images with the WSL hypervisor is not working yet');
           }
           throw error;
         }
@@ -145,8 +177,11 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 2);
       });
 
-      test('Check Manifest details', async () => {
+      test('Check Manifest details', async ({ navigationBar }) => {
         test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
+
+        imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
 
         const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelComplex);
         await Promise.all(
@@ -156,6 +191,31 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
         );
         await playExpect(imageDetailsPage.backLink).toBeVisible();
         await imageDetailsPage.backLink.click();
+      });
+
+      test('Push manifest to registry', async ({ navigationBar }) => {
+        test.skip(!canTestRegistry(), 'Registry tests are disabled');
+        test.skip(skipTests, 'Build manifest failed, skipping the test');
+        test.setTimeout(150_000);
+
+        imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
+
+        await imagesPage.pushManifest(manifestLabelComplex);
+      });
+
+      test('Remove registry after manifest push', async ({ page, navigationBar }) => {
+        test.skip(!canTestRegistry(), 'Registry tests are disabled');
+
+        await navigationBar.openSettings();
+        const settingsBar = new SettingsBar(page);
+        const registryPage = await settingsBar.openTabPage(RegistriesPage);
+        await playExpect(registryPage.heading).toBeVisible();
+
+        await registryPage.removeRegistry('GitHub');
+        const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+        const username = registryBox.getByText(registryUsername);
+        await playExpect(username).toBeHidden();
       });
 
       test('Delete Manifest', async ({ page }) => {

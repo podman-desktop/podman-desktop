@@ -23,6 +23,14 @@ import { get } from 'svelte/store';
 import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import {
+  IMAGE_DETAILS_VIEW_BADGES,
+  IMAGE_DETAILS_VIEW_ICONS,
+  IMAGE_LIST_VIEW_BADGES,
+  IMAGE_LIST_VIEW_ICONS,
+  IMAGE_VIEW_BADGES,
+  IMAGE_VIEW_ICONS,
+} from '/@/lib/view/views';
 import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
@@ -31,19 +39,10 @@ import { viewsContributions } from '/@/stores/views';
 import type { ContainerInfo } from '/@api/container-info';
 import type { ImageInfo } from '/@api/image-info';
 
-import {
-  IMAGE_DETAILS_VIEW_BADGES,
-  IMAGE_DETAILS_VIEW_ICONS,
-  IMAGE_LIST_VIEW_BADGES,
-  IMAGE_LIST_VIEW_ICONS,
-  IMAGE_VIEW_BADGES,
-  IMAGE_VIEW_ICONS,
-} from '../view/views';
 import ImageDetails from './ImageDetails.svelte';
 
 const listImagesMock = vi.fn();
 const getContributedMenusMock = vi.fn();
-const showMessageBoxMock = vi.fn();
 
 const myImage: ImageInfo = {
   Id: 'myImage',
@@ -69,7 +68,6 @@ const deleteImageMock = vi.fn();
 const hasAuthMock = vi.fn();
 
 beforeAll(() => {
-  Object.defineProperty(window, 'showMessageBox', { value: showMessageBoxMock });
   Object.defineProperty(window, 'listImages', { value: listImagesMock });
   Object.defineProperty(window, 'listContainers', { value: vi.fn() });
   Object.defineProperty(window, 'deleteImage', { value: deleteImageMock });
@@ -93,7 +91,7 @@ afterEach(() => {
 
 test('Expect redirect to previous page if image is deleted', async () => {
   // Mock the showMessageBox to return 0 (yes)
-  showMessageBoxMock.mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const routerGotoSpy = vi.spyOn(router, 'goto');
   listImagesMock.mockResolvedValue([myImage]);

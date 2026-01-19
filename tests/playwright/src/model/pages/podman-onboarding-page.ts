@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { MachineCreationForm } from './forms/machine-creation-form';
 import { OnboardingPage } from './onboarding-page';

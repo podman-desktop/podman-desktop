@@ -1,8 +1,7 @@
 <script lang="ts">
+import NotFoundDarkIcon from '/@/lib/images/NotFoundDarkIcon.svelte';
+import NotFoundLightIcon from '/@/lib/images/NotFoundLightIcon.svelte';
 import { isDark } from '/@/stores/appearance';
-
-import NotFoundDarkIcon from '../images/NotFoundDarkIcon.svelte';
-import NotFoundLightIcon from '../images/NotFoundLightIcon.svelte';
 </script>
 
 {#if $isDark}

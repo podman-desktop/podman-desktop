@@ -2,11 +2,12 @@
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
-import Route from '../../Route.svelte';
-import { volumeListInfos } from '../../stores/volumes';
-import VolumeIcon from '../images/VolumeIcon.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
+import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
+import { volumeListInfos } from '/@/stores/volumes';
+
 import VolumeDetailsSummary from '././VolumeDetailsSummary.svelte';
 import { VolumeUtils } from './volume-utils';
 import VolumeActions from './VolumeActions.svelte';

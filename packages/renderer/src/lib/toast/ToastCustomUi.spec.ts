@@ -18,7 +18,6 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { Spinner } from '@podman-desktop/ui-svelte';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { toast } from '@zerodevx/svelte-toast';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -26,14 +25,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { TaskInfo } from '/@api/taskInfo';
 
 import ToastCustomUi from './ToastCustomUi.svelte';
-
-vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    Spinner: vi.fn(),
-  };
-});
 
 const started = new Date().getTime();
 const onpop = vi.fn();
@@ -97,7 +88,8 @@ test('Check with in-progress', async () => {
   // expect the in-progress is used
   const status = screen.getByRole('status', { name: 'in-progress' });
   expect(status).toBeInTheDocument();
-  expect(Spinner).toHaveBeenCalled();
+  const progressbar = screen.getByRole('progressbar');
+  expect(progressbar).toBeInTheDocument();
 
   // expect name is there
   const name = screen.getByText(IN_PROGRESS_TASK.name);

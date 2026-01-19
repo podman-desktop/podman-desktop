@@ -31,3 +31,7 @@ export const PODMAN_MACHINE_EDIT_CPU = 'podman.podmanMachineEditCPUSupported';
 export const PODMAN_MACHINE_EDIT_MEMORY = 'podman.podmanMachineEditMemorySupported';
 export const PODMAN_MACHINE_EDIT_DISK_SIZE = 'podman.podmanMachineEditDiskSizeSupported';
 export const PODMAN_MACHINE_EDIT_ROOTFUL = 'podman.podmanMachineEditRootfulSupported';
+/**
+ * Command ID to uninstall a version of podman installed with non-msi installer
+ */
+export const UNINSTALL_LEGACY_INSTALLER_COMMAND = 'podman.uninstallLegacyPodmanInstaller';

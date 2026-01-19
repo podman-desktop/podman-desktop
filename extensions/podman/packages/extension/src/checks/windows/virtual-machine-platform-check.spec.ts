@@ -21,12 +21,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { VirtualMachinePlatformCheck } from './virtual-machine-platform-check';
 
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-}));
-
 const mockTelemetryLogger = {} as TelemetryLogger;
 
 beforeEach(() => {

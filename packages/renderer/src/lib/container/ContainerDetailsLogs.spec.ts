@@ -19,51 +19,46 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import * as xterm from '@xterm/xterm';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { Terminal } from '@xterm/xterm';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 
 import ContainerDetailsLogs from './ContainerDetailsLogs.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-vi.mock('@xterm/addon-search');
-
-vi.mock('@xterm/xterm', () => {
-  const writeMock = vi.fn();
-  return {
-    writeMock,
-    Terminal: vi.fn().mockReturnValue({
-      loadAddon: vi.fn(),
-      open: vi.fn().mockImplementation((div: HTMLDivElement) => {
-        // create a dummy div element
-        const h = document.createElement('H1');
-        const t = document.createTextNode('dummy element');
-        h.appendChild(t);
-        div.appendChild(h);
-      }),
-      write: writeMock,
-      clear: vi.fn(),
-      dispose: vi.fn(),
-    }),
-  };
-});
+vi.mock(import('@xterm/addon-search'));
+vi.mock(import('@xterm/xterm'));
 
 beforeAll(() => {
-  // Mock returned values with fake ones
-  const mockComputedStyle = {
-    getPropertyValue: vi.fn().mockReturnValue('#ffffff'),
-  };
   Object.defineProperty(global, 'window', {
     value: {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       logsContainer: vi.fn(),
       getConfigurationValue: vi.fn(),
-      getComputedStyle: vi.fn().mockReturnValue(mockComputedStyle),
+      getComputedStyle: vi.fn(),
       dispatchEvent: vi.fn(),
     },
     writable: true,
+  });
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  // Mock returned values with fake ones
+  const mockComputedStyle: CSSStyleDeclaration = {
+    getPropertyValue: vi.fn().mockReturnValue('#ffffff'),
+  } as unknown as CSSStyleDeclaration;
+
+  vi.mocked(window.getComputedStyle).mockReturnValue(mockComputedStyle);
+  vi.mocked(Terminal.prototype.open).mockImplementation((div: HTMLElement) => {
+    // create a dummy div element
+    const h = document.createElement('H1');
+    const t = document.createTextNode('dummy element');
+    h.appendChild(t);
+    div.appendChild(h);
   });
 });
 
@@ -74,12 +69,6 @@ const container: ContainerInfoUI = {
 containerLogsClearTimestamps.set({ foo: '2025-07-31T21:10:35.000Z' });
 
 test('Render container logs ', async () => {
-  // grab the xterm mock
-  let writeMock: unknown | undefined;
-  if ('writeMock' in xterm) {
-    writeMock = xterm.writeMock;
-  }
-
   // Mock compose has no containers, so expect No Log to appear
   render(ContainerDetailsLogs, { container });
 
@@ -99,7 +88,7 @@ test('Render container logs ', async () => {
 
   // expect logs to have been called
   await vi.waitFor(() => {
-    expect(vi.mocked(writeMock)).toHaveBeenCalled();
+    expect(Terminal.prototype.write).toHaveBeenCalled();
   });
 
   // expect the button to clear

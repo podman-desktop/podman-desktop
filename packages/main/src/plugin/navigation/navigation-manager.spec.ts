@@ -21,11 +21,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
 import type { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { OnboardingInfo } from '/@api/onboarding.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import type { ApiSenderType } from '../api.js';
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { ContributionManager } from '../contribution-manager.js';
 import type { ProviderRegistry } from '../provider-registry.js';
@@ -65,6 +65,8 @@ const webviewRegistry = {
 const commandRegistry: CommandRegistry = {
   hasCommand: vi.fn(),
   executeCommand: vi.fn(),
+  registerCommand: vi.fn(),
+  registerCommandPalette: vi.fn(),
 } as unknown as CommandRegistry;
 
 const onboardingRegistry: OnboardingRegistry = {
@@ -291,5 +293,37 @@ test('check navigateToCreateProviderConnection', async () => {
     parameters: {
       provider: 'anInternalId',
     },
+  });
+});
+
+test('check navigateToExtensionsCatalog', async () => {
+  await navigationManager.navigateToExtensionsCatalog({ searchTerm: 'not:installed category:foo keyword:bar' });
+
+  expect(apiSender.send).toHaveBeenCalledWith('navigate', {
+    page: NavigationPage.EXTENSIONS_CATALOG,
+    parameters: {
+      searchTerm: 'not:installed category:foo keyword:bar',
+    },
+  });
+});
+
+describe('register navigation commands', () => {
+  beforeEach(() => {
+    navigationManager.init();
+  });
+
+  test('should register the navigation.goBack command', () => {
+    expect(commandRegistry.registerCommand).toBeCalledWith('navigation.goBack', expect.anything());
+  });
+
+  test('should register the navigation.goForward command', () => {
+    expect(commandRegistry.registerCommand).toBeCalledWith('navigation.goForward', expect.anything());
+  });
+
+  test('should register navigation commands in command palette', () => {
+    expect(commandRegistry.registerCommandPalette).toBeCalledWith(
+      expect.objectContaining({ command: 'navigation.goBack', title: 'Go Back', category: 'Navigation' }),
+      expect.objectContaining({ command: 'navigation.goForward', title: 'Go Forward', category: 'Navigation' }),
+    );
   });
 });

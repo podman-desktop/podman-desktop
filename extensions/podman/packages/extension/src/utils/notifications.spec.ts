@@ -17,7 +17,7 @@
  ***********************************************************************/
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
-import type { Configuration, Disposable } from '@podman-desktop/api';
+import type { Configuration } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -42,78 +42,12 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    commands: {
-      registerCommand: vi.fn(),
-    },
-    configuration: {
-      getConfiguration: (): Configuration => config,
-      onDidChangeConfiguration: (): Disposable => {
-        return {
-          dispose: vi.fn(),
-        };
-      },
-    },
-    provider: {
-      onDidRegisterContainerConnection: vi.fn(),
-      onDidUnregisterContainerConnection: vi.fn(),
-    },
-    registry: {
-      registerRegistryProvider: vi.fn(),
-      onDidRegisterRegistry: vi.fn(),
-      onDidUnregisterRegistry: vi.fn(),
-      onDidUpdateRegistry: vi.fn(),
-    },
-    proxy: {
-      isEnabled: (): boolean => false,
-      onDidUpdateProxy: vi.fn(),
-      onDidStateChange: vi.fn(),
-      getProxySettings: vi.fn(),
-    },
-    window: {
-      showErrorMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-      showWarningMessage: vi.fn(),
-      showNotification: vi.fn(),
-      createStatusBarItem: () => ({
-        show: vi.fn(),
-        dispose: vi.fn(),
-      }),
-    },
-    context: {
-      setValue: vi.fn(),
-    },
-    process: {
-      exec: vi.fn(),
-    },
-    env: {
-      createTelemetryLogger: vi.fn(),
-      isWindows: false,
-      isMac: false,
-      isLinux: false,
-    },
-    containerEngine: {
-      info: vi.fn(),
-    },
-    Disposable: {
-      from: vi.fn(),
-      create: vi.fn(),
-    },
-    fs: {
-      createFileSystemWatcher: vi.fn(),
-    },
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      fire: vi.fn(),
-      dispose: vi.fn(),
-    })),
-  };
-});
-
 beforeEach(() => {
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
+
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue(config);
 
   const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
   mock.mockReturnValue({

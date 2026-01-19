@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ResourceElementState } from '../model/core/states';
-import { DockerCompatibilityPage } from '../model/pages/docker-compatibility-page';
-import { PodmanMachineDetails } from '../model/pages/podman-machine-details-page';
-import { ResourcesPage } from '../model/pages/resources-page';
-import { SettingsBar } from '../model/pages/settings-bar';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { createPodmanMachineFromCLI, setDockerCompatibilityFeature } from '../utility/operations';
-import { isWindows } from '../utility/platform';
-import { waitForPodmanMachineStartup } from '../utility/wait';
+import { ResourceElementState } from '/@/model/core/states';
+import { DockerCompatibilityPage } from '/@/model/pages/docker-compatibility-page';
+import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import { SettingsBar } from '/@/model/pages/settings-bar';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { createPodmanMachineFromCLI, setDockerCompatibilityFeature } from '/@/utility/operations';
+import { isWindows } from '/@/utility/platform';
+import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const defaultMachine = 'Podman Machine';
 
@@ -66,18 +66,19 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
   });
   test('Verify socket reachability is responding to podman machine status', async ({ page }) => {
+    test.setTimeout(180_000);
     const settingsBar = new SettingsBar(page);
     await settingsBar.openTabPage(ResourcesPage);
     const podmanMachineDetails = new PodmanMachineDetails(page, defaultMachine);
     await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStopButton.click();
     await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: 50_000,
+      timeout: 60_000,
     });
 
     const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
     await playExpect
-      .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 50_000 })
+      .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
       .toBeFalsy();
     await playExpect(dockerCompatibilityPage.serverInformationBox).not.toBeVisible();
 
@@ -85,12 +86,12 @@ test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, (
     await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
     await podmanMachineDetails.podmanMachineStartButton.click();
     await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: 50_000,
+      timeout: 120_000,
     });
 
     await settingsBar.openTabPage(DockerCompatibilityPage);
     await playExpect
-      .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 50_000 })
+      .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
       .toBeTruthy();
     await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
   });

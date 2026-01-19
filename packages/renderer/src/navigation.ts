@@ -142,7 +142,17 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.CREATE_PROVIDER_CONNECTION:
       router.goto(`/preferences/provider/${request.parameters.provider}`);
       break;
+    case NavigationPage.NETWORKS:
+      router.goto('/networks');
+      break;
     case NavigationPage.NETWORK:
       router.goto(`/networks/${request.parameters.name}/${request.parameters.engineId}/summary`);
+      break;
+    case NavigationPage.NETWORK_CREATE:
+      router.goto('/networks/create');
+      break;
+    case NavigationPage.EXTENSIONS_CATALOG:
+      router.goto(`/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`);
+      break;
   }
 };

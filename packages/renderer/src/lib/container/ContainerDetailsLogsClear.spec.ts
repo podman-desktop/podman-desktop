@@ -29,15 +29,7 @@ import { containerLogsClearTimestamps } from '/@/stores/container-logs';
 import ContainerDetailsLogsClear from './ContainerDetailsLogsClear.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
-vi.mock('@xterm/xterm', () => {
-  const writeMock = vi.fn();
-  return {
-    writeMock,
-    Terminal: vi
-      .fn()
-      .mockReturnValue({ loadAddon: vi.fn(), open: vi.fn(), write: writeMock, clear: vi.fn(), dispose: vi.fn() }),
-  };
-});
+vi.mock(import('@xterm/xterm'));
 
 beforeEach(() => {
   vi.clearAllMocks();

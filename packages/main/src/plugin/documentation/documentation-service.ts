@@ -20,10 +20,10 @@ import { createHash } from 'node:crypto';
 
 import { inject, injectable } from 'inversify';
 
+import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { DocumentationBaseInfo, DocumentationInfo } from '/@api/documentation-info.js';
 
 import fallbackDocumentation from '../../assets/fallback-documentation.json' with { type: 'json' };
-import { ApiSenderType } from '../api.js';
 import { Disposable } from '../types/disposable.js';
 
 @injectable()

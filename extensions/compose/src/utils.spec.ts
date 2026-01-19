@@ -22,14 +22,6 @@ import { beforeEach, describe, expect, test, vi, vitest } from 'vitest';
 
 import { makeExecutable } from './utils';
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    process: {
-      exec: vi.fn(),
-    },
-  };
-});
-
 describe('makeExecutable', async () => {
   beforeEach(() => {
     vi.resetAllMocks();

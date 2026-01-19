@@ -41,7 +41,7 @@ export class SettingsBar {
     this.authenticationTab = this.settingsNavBar.getByRole('link', { name: 'Authentication' });
     this.cliToolsTab = this.settingsNavBar.getByRole('link', { name: 'CLI Tools' });
     this.kubernetesTab = this.settingsNavBar.getByRole('link', { name: 'Kubernetes' });
-    this.preferencesTab = this.settingsNavBar.getByLabel('preferences');
+    this.preferencesTab = this.settingsNavBar.getByRole('link', { name: 'preferences' });
   }
 
   public async openTabPage<T extends SettingsPage>(type: new (page: Page) => T): Promise<T> {

@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Locator, Page } from 'playwright';
+import type { Locator, Page } from '@playwright/test';
+import { expect as playExpect } from '@playwright/test';
 
-import { expect as playExpect } from '../../utility/fixtures';
 import { SettingsPage } from './settings-page';
 
 export class DockerCompatibilityPage extends SettingsPage {
@@ -47,7 +47,7 @@ export class DockerCompatibilityPage extends SettingsPage {
     try {
       await playExpect(this.podmanListeningLabel).toBeVisible();
       return await this.podmanListeningLabel.isVisible();
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

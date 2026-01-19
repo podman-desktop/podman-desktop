@@ -33,10 +33,10 @@ const mockedPodman5 = {
       version: 'v5.0.0',
       arch: {
         x64: {
-          fileName: 'podman-installer-windows-amd64.exe',
+          fileName: 'podman-installer-windows-amd64.msi',
         },
         arm64: {
-          fileName: 'podman-installer-windows-arm64.exe',
+          fileName: 'podman-installer-windows-arm64.msi',
         },
       },
     },
@@ -230,14 +230,14 @@ describe('windows platform', () => {
 
     // check called with the correct parameters
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining('v5.6'),
-      expect.stringContaining('podman-installer-windows-amd64.exe'),
-      'podman-installer-windows-amd64.exe',
+      expect.stringContaining(`v${podman5JSON.version}`),
+      expect.stringContaining('podman-installer-windows-amd64.msi'),
+      'podman-installer-windows-amd64.msi',
     );
     expect(downloadAndCheckShaSpy).toHaveBeenCalledWith(
-      expect.stringContaining('v5.6'),
-      expect.stringContaining('podman-installer-windows-arm64.exe'),
-      'podman-installer-windows-arm64.exe',
+      expect.stringContaining(`v${podman5JSON.version}`),
+      expect.stringContaining('podman-installer-windows-arm64.msi'),
+      'podman-installer-windows-arm64.msi',
     );
   });
 
@@ -262,16 +262,16 @@ describe('windows platform', () => {
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       1,
       'v5.0.0',
-      'podman-installer-windows-amd64.exe',
-      'podman-installer-windows-amd64.exe',
+      'podman-installer-windows-amd64.msi',
+      'podman-installer-windows-amd64.msi',
     );
 
     // check called with the correct parameters for arm64 installer
     expect(downloadAndCheckShaSpy).toHaveBeenNthCalledWith(
       2,
       'v5.0.0',
-      'podman-installer-windows-arm64.exe',
-      'podman-installer-windows-arm64.exe',
+      'podman-installer-windows-arm64.msi',
+      'podman-installer-windows-arm64.msi',
     );
 
     // check no airgap download
@@ -707,10 +707,10 @@ describe('Podman5DownloadMachineOS', () => {
     };
 
     const handlers = [
-      http.get('https://quay.io/v2/podman/machine-os-wsl/manifests/1.0-fake', () => HttpResponse.json(rootManifest)),
+      http.get('https://quay.io/v2/podman/machine-os/manifests/1.0-fake', () => HttpResponse.json(rootManifest)),
 
       // fake digest for amd64
-      http.get('https://quay.io/v2/podman/machine-os-wsl/manifests/sha256:123amd64', () =>
+      http.get('https://quay.io/v2/podman/machine-os/manifests/sha256:123amd64', () =>
         HttpResponse.json({
           schemaVersion: 2,
           mediaType: 'application/vnd.oci.image.manifest.v1+json',
@@ -734,7 +734,7 @@ describe('Podman5DownloadMachineOS', () => {
       ),
 
       // fake digest for arm64
-      http.get('https://quay.io/v2/podman/machine-os-wsl/manifests/sha256:456arm64', () =>
+      http.get('https://quay.io/v2/podman/machine-os/manifests/sha256:456arm64', () =>
         HttpResponse.json({
           schemaVersion: 2,
           mediaType: 'application/vnd.oci.image.manifest.v1+json',
@@ -758,12 +758,12 @@ describe('Podman5DownloadMachineOS', () => {
       ),
 
       // now do the digests for blobs
-      http.get('https://quay.io/v2/podman/machine-os-wsl/blobs/sha256:zstfakeamd64digest', () =>
+      http.get('https://quay.io/v2/podman/machine-os/blobs/sha256:zstfakeamd64digest', () =>
         HttpResponse.text('fake-amd64-content'),
       ),
 
       http.get(
-        'https://quay.io/v2/podman/machine-os-wsl/blobs/sha256:zstfakearm64digest',
+        'https://quay.io/v2/podman/machine-os/blobs/sha256:zstfakearm64digest',
         () =>
           new HttpResponse(zstdArchiveFakeContent, {
             headers: {
@@ -775,7 +775,7 @@ describe('Podman5DownloadMachineOS', () => {
       ),
 
       http.get(
-        'https://quay.io/v2/podman/machine-os-wsl/blobs/sha256:zstfakearm64digest',
+        'https://quay.io/v2/podman/machine-os/blobs/sha256:zstfakearm64digest',
         () =>
           new HttpResponse(processArm64File(), {
             headers: {

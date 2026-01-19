@@ -19,9 +19,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { NavigationBar } from '../..';
-import { expect as playExpect, test } from '../../utility/fixtures';
-import { isCI, isLinux, isMac, isWindows } from '../../utility/platform';
+import { NavigationBar } from '/@/model/workbench/navigation';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { isCI, isLinux, isMac, isWindows } from '/@/utility/platform';
 
 test.skip(isLinux, 'Podman installation is not supported on Linux');
 
@@ -64,7 +64,7 @@ test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@
     await playExpect(podmanCliNotFoundText).toBeVisible();
   });
   test('Podman installer artifacts are present in local assets storage', async ({ runner }) => {
-    const fileFormatRegexp = isWindows ? 'exe' : 'pkg';
+    const fileFormatRegexp = isWindows ? 'msi' : 'pkg';
     // x64 = amd64 for both windows and mac, arm64 = arm64 for win, and aarch64 for mac
     const archPart = process.arch === 'x64' ? 'amd64' : process.arch === 'arm64' ? (isMac ? 'aarch64' : 'arm64') : null;
     playExpect(archPart, { message: `Unsupported architecture: ${process.arch}` }).not.toBeNull();

@@ -45,19 +45,6 @@ let registrySetup: TestRegistrySetup;
 // mock the fs module
 vi.mock('node:fs');
 
-vi.mock('@podman-desktop/api', async () => {
-  return {
-    registry: {
-      registerRegistryProvider: vi.fn(),
-      registerRegistry: vi.fn(),
-      unregisterRegistry: vi.fn(),
-      onDidRegisterRegistry: vi.fn(),
-      onDidUnregisterRegistry: vi.fn(),
-      onDidUpdateRegistry: vi.fn(),
-    },
-  };
-});
-
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 const consoleErroMock = vi.fn();
@@ -250,55 +237,56 @@ test.each([
     },
     timesCalled: 0,
   },
-])(
-  'do not write existing registries that did not change values to auth.json',
-  async ({ fileAuth, registeredRegistry, timesCalled }) => {
-    // mock the existSync
-    const existSyncMock = vi.mocked(fs.existsSync);
-    existSyncMock.mockReturnValue(true);
+])('do not write existing registries that did not change values to auth.json', async ({
+  fileAuth,
+  registeredRegistry,
+  timesCalled,
+}) => {
+  // mock the existSync
+  const existSyncMock = vi.mocked(fs.existsSync);
+  existSyncMock.mockReturnValue(true);
 
-    // mock the readFile
-    const readFileMock = vi.mocked(fs.readFile) as unknown as MockedFunction<ReadFileType>;
+  // mock the readFile
+  const readFileMock = vi.mocked(fs.readFile) as unknown as MockedFunction<ReadFileType>;
 
-    readFileMock.mockImplementation(
-      (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
-        // mock the error
+  readFileMock.mockImplementation(
+    (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
+      // mock the error
 
-        callback(undefined, JSON.stringify({}));
-      },
-    );
+      callback(undefined, JSON.stringify({}));
+    },
+  );
 
-    // mock the location
-    const authJsonLocation = '/tmp/containers/auth.json';
-    const mockGetAuthFileLocation = vi.spyOn(registrySetup, 'getAuthFileLocation');
-    mockGetAuthFileLocation.mockReturnValue(authJsonLocation);
+  // mock the location
+  const authJsonLocation = '/tmp/containers/auth.json';
+  const mockGetAuthFileLocation = vi.spyOn(registrySetup, 'getAuthFileLocation');
+  mockGetAuthFileLocation.mockReturnValue(authJsonLocation);
 
-    let onRegisterRegistry: ((e: extensionApi.Registry) => unknown) | undefined;
+  let onRegisterRegistry: ((e: extensionApi.Registry) => unknown) | undefined;
 
-    vi.mocked(extensionApi.registry.onDidRegisterRegistry).mockImplementation(callback => {
-      onRegisterRegistry = callback;
+  vi.mocked(extensionApi.registry.onDidRegisterRegistry).mockImplementation(callback => {
+    onRegisterRegistry = callback;
 
-      return {
-        dispose: vi.fn(),
-      };
-    });
+    return {
+      dispose: vi.fn(),
+    };
+  });
 
-    const writeFileMock = vi.mocked(fs.writeFile);
+  const writeFileMock = vi.mocked(fs.writeFile);
 
-    await registrySetup.setup();
+  await registrySetup.setup();
 
-    readFileMock.mockImplementation(
-      (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
-        // mock the error
+  readFileMock.mockImplementation(
+    (_path: string, _encoding: string, callback: (err: Error | undefined, data: string | Buffer) => void) => {
+      // mock the error
 
-        callback(undefined, JSON.stringify({ auths: fileAuth }));
-      },
-    );
+      callback(undefined, JSON.stringify({ auths: fileAuth }));
+    },
+  );
 
-    expect(onRegisterRegistry).toBeDefined();
+  expect(onRegisterRegistry).toBeDefined();
 
-    onRegisterRegistry?.(registeredRegistry);
+  onRegisterRegistry?.(registeredRegistry);
 
-    await vi.waitFor(() => expect(writeFileMock).toHaveBeenCalledTimes(timesCalled));
-  },
-);
+  await vi.waitFor(() => expect(writeFileMock).toHaveBeenCalledTimes(timesCalled));
+});

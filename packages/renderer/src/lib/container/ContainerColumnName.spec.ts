@@ -46,6 +46,9 @@ const container: ContainerInfoUI = {
     name: '',
     type: ContainerGroupInfoTypeUI.STANDALONE,
     id: 'sha256:1234567890123',
+    engineId: 'podman',
+    engineName: 'podman',
+    engineType: 'podman',
   },
   selected: false,
   created: 0,
@@ -63,6 +66,7 @@ const pod: ContainerGroupInfoUI = {
   engineType: ContainerGroupInfoTypeUI.PODMAN,
   engineId: 'engineId',
   id: 'pod-id',
+  engineName: 'podman',
 };
 
 const compose: ContainerGroupInfoUI = {
@@ -74,6 +78,7 @@ const compose: ContainerGroupInfoUI = {
   name: 'my-compose',
   engineType: ContainerGroupInfoTypeUI.PODMAN,
   engineId: 'engine2',
+  engineName: 'engine2',
   id: 'podman:my-compose',
 };
 

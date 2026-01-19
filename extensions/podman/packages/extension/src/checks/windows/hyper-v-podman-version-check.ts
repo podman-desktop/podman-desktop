@@ -17,15 +17,22 @@
  ********************************************************************/
 import type { CheckResult } from '@podman-desktop/api';
 import { compareVersions } from 'compare-versions';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
-import { getPodmanInstallation } from '../../utils/podman-cli';
-import { BaseCheck } from '../base-check';
+import { BaseCheck } from '/@/checks/base-check';
+import { PodmanBinary } from '/@/utils/podman-binary';
 
 @injectable()
 export class HyperVPodmanVersionCheck extends BaseCheck {
   title = 'Minimum Podman Version for Hyper-V';
   static readonly PODMAN_MINIMUM_VERSION_FOR_HYPERV = '5.2.0';
+
+  constructor(
+    @inject(PodmanBinary)
+    private readonly podmanBinary: PodmanBinary,
+  ) {
+    super();
+  }
 
   async execute(): Promise<CheckResult> {
     const isPodmanVersionSupported = await this.isPodmanVersionSupported();
@@ -38,10 +45,8 @@ export class HyperVPodmanVersionCheck extends BaseCheck {
   }
 
   private async isPodmanVersionSupported(): Promise<boolean> {
-    const installedPodman = await getPodmanInstallation();
-    if (installedPodman?.version) {
-      return compareVersions(installedPodman?.version, HyperVPodmanVersionCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
-    }
-    return false;
+    const binaryInfo = await this.podmanBinary.getBinaryInfo();
+    if (!binaryInfo) return false;
+    return compareVersions(binaryInfo?.version, HyperVPodmanVersionCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
   }
 }

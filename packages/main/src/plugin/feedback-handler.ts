@@ -22,7 +22,8 @@ import { inject, injectable } from 'inversify';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { SystemInfo } from '/@/plugin/util/sys-info.js';
 import { getSystemInfo } from '/@/plugin/util/sys-info.js';
-import type { GitHubIssue } from '/@api/feedback.js';
+import type { FeedbackMessages, GitHubIssue } from '/@api/feedback.js';
+import productJSONFile from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class FeedbackHandler {
@@ -30,6 +31,15 @@ export class FeedbackHandler {
 
   constructor(@inject(ExtensionLoader) protected extensionLoader: ExtensionLoader) {
     this.#systemInfo = getSystemInfo();
+  }
+
+  getFeedbackMessages(): FeedbackMessages {
+    const productName = productJSONFile.name;
+    return {
+      experienceLabel: `How was your experience with ${productName}`,
+      thankYouMessage: `Your input is valuable in helping us better understand and tailor ${productName}.`,
+      gitHubStarsMessage: `Like ${productName}? Give us a star on GitHub`,
+    };
   }
 
   async openGitHubIssue(issueProperties: GitHubIssue): Promise<void> {

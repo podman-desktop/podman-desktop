@@ -82,7 +82,7 @@ export class GitHubService {
             flatpak: findAssetOrThrow(a => a.name.endsWith('.flatpak'), 'Linux Flatpak'),
             arm64: findAssetOrThrow(a => a.name.endsWith('-arm64.tar.gz'), 'Linux ARM64 .tar.gz'),
             amd64: findAssetOrThrow(
-              a => a.name.endsWith('.tar.gz') && !a.name.includes('arm64'),
+              a => (a.name.endsWith('-x64.tar.gz') || a.name.endsWith('.tar.gz')) && !a.name.includes('arm64'),
               'Linux AMD64 .tar.gz',
             ),
           },

@@ -32,6 +32,7 @@ import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 import PreferencesConnectionDetailsLogs from './PreferencesConnectionDetailsLogs.svelte';
 
 const containerConnection: ProviderContainerConnectionInfo = {
+  connectionType: 'container',
   name: 'connection',
   displayName: 'connection',
   endpoint: {
@@ -48,10 +49,6 @@ beforeAll(async () => {
     }
     return undefined;
   });
-  global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-  }));
 
   Terminal.prototype.open = vi.fn();
   Terminal.prototype.write = vi.fn();

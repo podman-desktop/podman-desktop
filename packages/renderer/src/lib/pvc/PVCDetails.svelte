@@ -5,17 +5,17 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 import { stringify } from 'yaml';
 
+import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
+import PVCIcon from '/@/lib/images/PVCIcon.svelte';
+import KubeEditYAML from '/@/lib/kube/KubeEditYAML.svelte';
 import { listenResource } from '/@/lib/kube/resource-listen';
+import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
+import StateChange from '/@/lib/ui/StateChange.svelte';
+import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
+import Route from '/@/Route.svelte';
 import { kubernetesCurrentContextPersistentVolumeClaims } from '/@/stores/kubernetes-contexts-state';
 import type { IDisposable } from '/@api/disposable';
 
-import Route from '../../Route.svelte';
-import MonacoEditor from '../editor/MonacoEditor.svelte';
-import PVCIcon from '../images/PVCIcon.svelte';
-import KubeEditYAML from '../kube/KubeEditYAML.svelte';
-import DetailsPage from '../ui/DetailsPage.svelte';
-import StateChange from '../ui/StateChange.svelte';
-import { getTabUrl, isTabSelected } from '../ui/Util';
 import { PVCUtils } from './pvc-utils';
 import PVCActions from './PVCActions.svelte';
 import PVCDetailsSummary from './PVCDetailsSummary.svelte';

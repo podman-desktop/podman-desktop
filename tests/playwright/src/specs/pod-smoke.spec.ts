@@ -18,12 +18,12 @@
 
 import * as os from 'node:os';
 
-import { ContainerState, PodState } from '../model/core/states';
-import type { ContainerInteractiveParams } from '../model/core/types';
-import { PodsPage } from '../model/pages/pods-page';
-import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, deletePod } from '../utility/operations';
-import { waitForPodmanMachineStartup, waitUntil, waitWhile } from '../utility/wait';
+import { ContainerState, PodState } from '/@/model/core/states';
+import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { PodsPage } from '/@/model/pages/pods-page';
+import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteContainer, deleteImage, deletePod } from '/@/utility/operations';
+import { waitForPodmanMachineStartup, waitUntil, waitWhile } from '/@/utility/wait';
 
 let backendPort: string;
 let frontendPort: string;
@@ -182,6 +182,8 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
   test('Checking pod details', async ({ navigationBar }) => {
     const pods = await navigationBar.openPods();
     await playExpect.poll(async () => await pods.podExists(podToRun), { timeout: 10_000 }).toBeTruthy();
+    await playExpect.poll(async () => await pods.getPodEnvironment(podToRun), { timeout: 10_000 }).toContain('podman');
+
     const podDetails = await pods.openPodDetails(podToRun);
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect(podDetails.heading).toContainText(podToRun);
@@ -230,7 +232,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     await playExpect(restartButton).toBeVisible();
   });
 
-  test(`Checking pods under containers`, async ({ navigationBar, page }) => {
+  test('Checking pods under containers', async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
     await playExpect.poll(async () => containers.containerExists(podToRun), { timeout: 10_000 }).toBeTruthy();
     await playExpect
@@ -268,7 +270,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
       // regex for div with number of visits
       const regex = /<div[^>]*>(\d+)<\/div>/i;
       const matches = RegExp(regex).exec(text);
-      playExpect(matches![1]).toEqual(i.toString());
+      playExpect(matches?.[1]).toEqual(i.toString());
       playExpect(matches).toBeDefined();
       playExpect(text).toContain('time(s)');
     }

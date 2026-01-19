@@ -27,9 +27,9 @@ import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
+import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
-import { providerInfos } from '../../stores/providers';
 import PreferencesKubernetesConnectionRendering from './PreferencesKubernetesConnectionRendering.svelte';
 
 test('Expect that removing the connection is going back to the previous page', async () => {
@@ -57,6 +57,7 @@ test('Expect that removing the connection is going back to the previous page', a
     internalId: '0',
     kubernetesConnections: [
       {
+        connectionType: 'kubernetes',
         name: kindCluster1,
         status: 'started',
         endpoint: {
@@ -64,6 +65,7 @@ test('Expect that removing the connection is going back to the previous page', a
         },
       },
       {
+        connectionType: 'kubernetes',
         name: kindCluster2,
         status: 'stopped',
         endpoint: {
@@ -72,6 +74,7 @@ test('Expect that removing the connection is going back to the previous page', a
         lifecycleMethods: ['delete'],
       },
       {
+        connectionType: 'kubernetes',
         name: kindCluster3,
         status: 'started',
         endpoint: {
@@ -159,6 +162,7 @@ test('Expect to see error message if action fails', async () => {
     internalId: '0',
     kubernetesConnections: [
       {
+        connectionType: 'kubernetes',
         name: kindCluster,
         status: 'stopped',
         endpoint: {

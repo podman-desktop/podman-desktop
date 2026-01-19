@@ -21,6 +21,8 @@ import * as path from 'node:path';
 import type { Tray } from 'electron';
 import { app, nativeTheme } from 'electron';
 
+import product from '/@product.json' with { type: 'json' };
+
 import { isLinux, isMac } from './util.js';
 
 export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
@@ -119,19 +121,19 @@ export class AnimatedTray {
     switch (this.status) {
       case 'initialized':
         this.tray.setImage(this.getIconPath('empty'));
-        this.tray.setToolTip('Podman Desktop is initialized');
+        this.tray.setToolTip(`${product.name} is initialized`);
         break;
       case 'error':
         this.tray.setImage(this.getIconPath('error'));
-        this.tray.setToolTip('Podman Desktop has an error');
+        this.tray.setToolTip(`${product.name} has an error`);
         break;
       case 'ready':
         this.tray.setImage(this.getIconPath('default'));
-        this.tray.setToolTip('Podman Desktop is ready');
+        this.tray.setToolTip(`${product.name} is ready`);
         break;
       case 'updating':
         this.animatedInterval = setInterval(this.animateTrayIcon.bind(this), 1000);
-        this.tray.setToolTip('Podman Desktop: resources are being updated');
+        this.tray.setToolTip(`${product.name}: resources are being updated`);
         break;
     }
   }

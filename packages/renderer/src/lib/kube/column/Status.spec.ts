@@ -21,7 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import type { KubernetesObjectUI } from '../../objects/KubernetesObjectUI';
+import type { KubernetesObjectUI } from '/@/lib/objects/KubernetesObjectUI';
+
 import Status from './Status.svelte';
 
 test('Expect pod status to be shown', async () => {

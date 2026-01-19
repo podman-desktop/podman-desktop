@@ -21,8 +21,7 @@ import { inject, injectable } from 'inversify';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { TelemetryLoggerSymbol } from '/@/inject/symbols';
-
-import { getPowerShellClient } from '../../utils/powershell';
+import { getPowerShellClient } from '/@/utils/powershell';
 
 @injectable()
 export class VirtualMachinePlatformCheck extends MemoizedBaseCheck {

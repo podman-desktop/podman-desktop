@@ -22,7 +22,8 @@ import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
 
-import type { RecommendedRegistry } from '../../../main/src/plugin/recommendations/recommendations-api';
+import type { RecommendedRegistry } from '/@api/recommendations/recommendations';
+
 import {
   fetchRecommendedRegistries,
   recommendedRegistries,

@@ -91,4 +91,9 @@ export class WinPlatform {
     const hyperVCheckResult = await this.hyperVSequenceCheck.execute();
     return hyperVCheckResult.successful;
   }
+
+  calcPipeName(machineName: string): string {
+    const name = machineName.startsWith('podman') ? machineName : 'podman-' + machineName;
+    return `//./pipe/${name}`;
+  }
 }

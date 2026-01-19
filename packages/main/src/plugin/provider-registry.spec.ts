@@ -42,6 +42,7 @@ import type {
 } from '@podman-desktop/api';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type {
   CheckStatus,
   PreflightChecksCallback,
@@ -50,7 +51,6 @@ import type {
   ProviderVmConnectionInfo,
 } from '/@api/provider-info.js';
 
-import type { ApiSenderType } from './api.js';
 import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { LifecycleContextImpl } from './lifecycle-context.js';
@@ -86,7 +86,7 @@ const telemetry: Telemetry = {
 
 beforeEach(() => {
   vi.useRealTimers();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.restoreAllMocks();
   const apiSender = {
     send: apiSenderSendMock,
@@ -448,6 +448,7 @@ test('expect isContainerConnection returns false with a KubernetesConnection', a
 
 test('expect isProviderContainerConnection returns true with a ProviderContainerConnection', async () => {
   const connection: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'connection',
     displayName: 'connection',
     type: 'docker',
@@ -463,6 +464,7 @@ test('expect isProviderContainerConnection returns true with a ProviderContainer
 
 test('expect isProviderContainerConnection returns false with a ProviderKubernetesConnectionInfo', async () => {
   const connection: ProviderKubernetesConnectionInfo = {
+    connectionType: 'kubernetes',
     name: 'connection',
     endpoint: {
       apiURL: 'url',
@@ -839,6 +841,7 @@ describe('should send events when starting a container connection', async () => 
       status: 'installed',
     });
     connection = {
+      connectionType: 'container',
       name: 'connection',
       displayName: 'connection',
       type: 'docker',
@@ -961,6 +964,7 @@ test('should send events when starting a Kubernetes connection', async () => {
     status: 'installed',
   });
   const connection: ProviderKubernetesConnectionInfo = {
+    connectionType: 'kubernetes',
     name: 'connection',
     endpoint: { apiURL: 'endpoint' },
     status: 'started',
@@ -1011,6 +1015,7 @@ test('should send events when starting a VM connection', async () => {
     status: 'installed',
   });
   const connection: ProviderVmConnectionInfo = {
+    connectionType: 'vm',
     name: 'connection',
     status: 'started',
   };
@@ -1074,6 +1079,7 @@ describe('when auto-starting a container connection', async () => {
       status: 'installed',
     });
     connection = {
+      connectionType: 'container',
       name: 'connection',
       displayName: 'connection',
       type: 'docker',
@@ -1251,6 +1257,7 @@ test('should send events when stopping a container connection', async () => {
     status: 'installed',
   });
   const connection: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'connection',
     displayName: 'connection',
     type: 'docker',
@@ -1321,6 +1328,7 @@ test('should send events when container connection status change', async () => {
     status: 'installed',
   });
   const connection: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'connection',
     displayName: 'connection',
     type: 'docker',
@@ -1401,6 +1409,7 @@ test('should send events when stopping a Kubernetes connection', async () => {
     status: 'installed',
   });
   const connection: ProviderKubernetesConnectionInfo = {
+    connectionType: 'kubernetes',
     name: 'connection',
     endpoint: {
       apiURL: 'endpoint1',
@@ -1453,6 +1462,7 @@ test('should send events when stopping a VM connection', async () => {
     status: 'installed',
   });
   const connection: ProviderVmConnectionInfo = {
+    connectionType: 'vm',
     name: 'connection',
     status: 'stopped',
   };
@@ -1546,6 +1556,7 @@ test('should retrieve context of container provider', async () => {
     status: 'installed',
   });
   const connection: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
     name: 'connection',
     displayName: 'connection',
     type: 'docker',
@@ -1602,6 +1613,7 @@ test('should retrieve context of kubernetes provider', async () => {
     await providerRegistry.initializeProvider(providerInternalId!);
 
     const connection: ProviderKubernetesConnectionInfo = {
+      connectionType: 'kubernetes',
       name: 'connection',
       endpoint: {
         apiURL: 'url',
@@ -1660,6 +1672,7 @@ test('should retrieve context of VM provider', async () => {
     await providerRegistry.initializeProvider(providerInternalId!);
 
     const connection: ProviderVmConnectionInfo = {
+      connectionType: 'vm',
       name: 'connection',
       status: 'stopped',
     };
@@ -2322,6 +2335,7 @@ describe('shellInProviderConnection', () => {
       status: 'installed',
     });
     const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
       name: 'connection',
       displayName: 'connection',
       type: 'docker',
@@ -2419,6 +2433,7 @@ describe('shellInProviderConnection', () => {
       status: 'installed',
     });
     const connection: ProviderVmConnectionInfo = {
+      connectionType: 'vm',
       name: 'connection',
       status: 'started',
     };
