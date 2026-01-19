@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { satisfies } from 'semver';
+
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 import type { FeaturedExtension } from '/@api/featured/featured-api';
@@ -149,17 +151,29 @@ export class ExtensionsUtils {
     return matchingExtension;
   }
 
-  extractCatalogExtensions(
+  async extractCatalogExtensions(
     catalogExtensions: CatalogExtension[],
     featuredExtensions: FeaturedExtension[],
     installedExtensions: CombinedExtensionInfoUI[],
-  ): CatalogExtensionInfoUI[] {
+  ): Promise<CatalogExtensionInfoUI[]> {
+    const currentPodmanDesktopVersion = await window.getPodmanDesktopVersion();
     // filter out unlisted extensions
     const values: CatalogExtensionInfoUI[] = catalogExtensions
       .filter(e => !e.unlisted)
       .map(catalogExtension => {
         // grab latest version
-        const nonPreviewVersions = catalogExtension.versions.filter(v => !v.preview);
+        const nonPreviewVersions = catalogExtension.versions
+          .filter(v => !v.preview)
+          .filter(v => {
+            const extensionRequirePodmanDesktopVersion = v.podmanDesktopVersion;
+            if (extensionRequirePodmanDesktopVersion && currentPodmanDesktopVersion) {
+              //  keep the versions that are compatible with this version of Podman Desktop
+              return satisfies(currentPodmanDesktopVersion, extensionRequirePodmanDesktopVersion);
+            } else {
+              // if no version is specified, keep the version
+              return true;
+            }
+          });
         const latestVersion = nonPreviewVersions[0];
         const fetchLink = latestVersion?.ociUri;
         const fetchVersion = latestVersion?.version;

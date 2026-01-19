@@ -33,7 +33,7 @@ let filteredInstalledItems: number = $derived($combinedInstalledExtensions.lengt
 // need to add in the catalog extension a flag to know if extension is featured or not
 // and featured extensions need to be displayed first
 const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
-  extensionsUtils.extractCatalogExtensions(
+  await extensionsUtils.extractCatalogExtensions(
     $catalogExtensionInfos,
     $featuredExtensionInfos,
     $combinedInstalledExtensions,

@@ -24,7 +24,7 @@ const extensionsUtils = new ExtensionsUtils();
 
 const catalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
   [catalogExtensionInfos, featuredExtensionInfos, combinedInstalledExtensions],
-  ([$catalogExtensionInfos, $featuredExtensionInfos, $combinedInstalledExtensions]) => {
+  ([$catalogExtensionInfos, $featuredExtensionInfos, $combinedInstalledExtensions], set) => {
     if (category) {
       const filteredCategory = category;
       $catalogExtensionInfos = $catalogExtensionInfos.filter(catalogExtension =>
@@ -44,11 +44,15 @@ const catalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
       );
     }
 
-    return extensionsUtils.extractCatalogExtensions(
-      $catalogExtensionInfos,
-      $featuredExtensionInfos,
-      $combinedInstalledExtensions,
-    );
+    Promise.resolve(
+      extensionsUtils.extractCatalogExtensions(
+        $catalogExtensionInfos,
+        $featuredExtensionInfos,
+        $combinedInstalledExtensions,
+      ),
+    )
+      .then(v => set(v))
+      .catch((err: unknown) => console.error('Error updating catalog', err));
   },
 );
 </script>

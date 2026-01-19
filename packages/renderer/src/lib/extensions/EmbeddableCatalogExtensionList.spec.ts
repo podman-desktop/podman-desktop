@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -97,11 +97,30 @@ const combined: CombinedExtensionInfoUI[] = [
   },
 ] as unknown[] as CombinedExtensionInfoUI[];
 
+async function renderIt(
+  category?: string,
+  showInstalled?: boolean,
+  keywords?: string[],
+  title?: string,
+  showEmptyScreen?: boolean,
+): Promise<void> {
+  render(EmbeddableCatalogExtensionList, {
+    category: category,
+    showInstalled: showInstalled,
+    keywords: keywords,
+    title: title,
+    showEmptyScreen: showEmptyScreen,
+  });
+
+  // wait for page to be rendered
+  await waitFor(() => expect(screen.queryByLabelText('Catalog Extensions')).toBeInTheDocument());
+}
+
 test('Check with defaults', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(EmbeddableCatalogExtensionList, {});
+  await renderIt();
 
   // 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
@@ -119,7 +138,7 @@ test('Check with a specific category', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(EmbeddableCatalogExtensionList, { category: 'Authentication' });
+  await renderIt('Authentication');
 
   // 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
@@ -138,7 +157,7 @@ test('Check with a not displaying installed', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(EmbeddableCatalogExtensionList, { showInstalled: false });
+  await renderIt(undefined, false);
 
   // 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
@@ -157,7 +176,7 @@ test('Check with specific keywords common to both extensions', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(EmbeddableCatalogExtensionList, { keywords: ['key1', 'key2'] });
+  await renderIt(undefined, undefined, ['key1', 'key2']);
 
   // 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
@@ -175,7 +194,7 @@ test('Check with a specific keyword set to one extensions only', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(EmbeddableCatalogExtensionList, { keywords: ['keyA'] });
+  await renderIt(undefined, undefined, ['keyA']);
 
   // 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
@@ -193,7 +212,8 @@ test('non default title', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(EmbeddableCatalogExtensionList, { title: 'Another title' });
+  await renderIt(undefined, undefined, undefined, 'Another title');
+
   const availableExtensions = screen.queryByText('Available extensions');
   expect(availableExtensions).not.toBeInTheDocument();
 
@@ -204,7 +224,7 @@ test('non default title', async () => {
 test('empty catalog, do not hide if empty (default)', async () => {
   catalogExtensionInfos.set([]);
   extensionInfos.set(combined);
-  render(EmbeddableCatalogExtensionList, {});
+  await renderIt();
 
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).toBeInTheDocument();
@@ -213,7 +233,7 @@ test('empty catalog, do not hide if empty (default)', async () => {
 test('empty catalog, hide if empty', async () => {
   catalogExtensionInfos.set([]);
   extensionInfos.set(combined);
-  render(EmbeddableCatalogExtensionList, { showEmptyScreen: false });
+  await renderIt(undefined, undefined, undefined, undefined, false);
 
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).not.toBeInTheDocument();

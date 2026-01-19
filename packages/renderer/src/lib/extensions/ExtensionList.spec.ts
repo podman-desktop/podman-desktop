@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -94,11 +94,18 @@ const combined: CombinedExtensionInfoUI[] = [
   },
 ] as unknown[] as CombinedExtensionInfoUI[];
 
+async function renderIt(searchTerm?: string): Promise<void> {
+  render(ExtensionList, { searchTerm: searchTerm });
+
+  // wait for page to be rendered
+  await waitFor(() => expect(screen.queryByText('extensions')).toBeInTheDocument());
+}
+
 test('Expect to see extensions', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set(combined);
 
-  render(ExtensionList);
+  await renderIt();
 
   const headingExtensions = screen.getByRole('heading', { name: 'extensions' });
   expect(headingExtensions).toBeInTheDocument();
@@ -124,7 +131,7 @@ test('Expect to see empty screen on extension page only', async () => {
   catalogExtensionInfos.set([aFakeExtension]);
   extensionInfos.set([]);
 
-  render(ExtensionList, { searchTerm: 'A' });
+  await renderIt('A');
 
   let title = screen.queryByText(`No extensions matching 'A' found`);
   expect(title).toBeInTheDocument();
@@ -141,7 +148,7 @@ test('Expect to see empty screen on catalog page only', async () => {
   catalogExtensionInfos.set([]);
   extensionInfos.set(combined);
 
-  render(ExtensionList, { searchTerm: 'A' });
+  await renderIt('A');
 
   let title = screen.queryByText(`No extensions matching 'A' found`);
   expect(title).not.toBeInTheDocument();
@@ -158,7 +165,7 @@ test('Expect to see empty screens on both pages', async () => {
   catalogExtensionInfos.set([]);
   extensionInfos.set([]);
 
-  render(ExtensionList, { searchTerm: 'foo' });
+  await renderIt('foo');
 
   let title = screen.getByText(`No extensions matching 'foo' found`);
   expect(title).toBeInTheDocument();
@@ -175,7 +182,7 @@ test('Search extension page searches also description', async () => {
   catalogExtensionInfos.set([aFakeExtension]);
   extensionInfos.set(combined);
 
-  render(ExtensionList, { searchTerm: 'bar' });
+  await renderIt('bar');
 
   const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
   expect(myExtension1).toBeInTheDocument();
@@ -187,7 +194,7 @@ test('Search extension page searches also description', async () => {
   cleanup();
 
   // Change the search
-  render(ExtensionList, { searchTerm: 'foo' });
+  await renderIt('foo');
 
   // The extension should not be there as it doesn't have "foo" in the description
   const myExtension2 = screen.queryByRole('region', { name: 'idAInstalled' });
@@ -198,7 +205,7 @@ test('Search catalog page searches also description', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set([]);
 
-  render(ExtensionList, { searchTerm: 'bar' });
+  await renderIt('bar');
 
   // Click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
@@ -217,7 +224,7 @@ test('Expect to see local extensions tab content', async () => {
   catalogExtensionInfos.set([]);
   extensionInfos.set([]);
 
-  render(ExtensionList);
+  await renderIt();
 
   // select the local extensions tab
   const localModeTab = screen.getByRole('button', { name: 'Local Extensions' });
@@ -232,7 +239,7 @@ test('Switching tabs keeps only terms in search term', async () => {
   catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
   extensionInfos.set([]);
 
-  render(ExtensionList, { searchTerm: 'bar category:bar not:installed' });
+  await renderIt('bar category:bar not:installed');
 
   // Click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });

@@ -26,7 +26,7 @@ async function fetchCatalog(): Promise<void> {
 </script>
 
 <div class="flex flex-col grow px-5 py-3">
-  {#if catalogExtensions.length > 0}
+  {#if catalogExtensions?.length > 0}
     <div class="mb-4 flex flex-row">
       <div class="flex items-center text-[var(--pd-content-header)]">{title}</div>
       <div class="flex-1 text-right">

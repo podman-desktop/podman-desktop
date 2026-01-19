@@ -200,10 +200,10 @@ beforeEach(() => {
   extensionsUtils = new ExtensionsUtils();
 });
 
-describe('extractCatalogExtensions', () => {
+describe('extractCatalogExtensions', async () => {
   test('Expect first one should be featured even having a name starting with Y letter then Z extension, then A extension and then B extension', async () => {
     // get UI objects
-    const catalogExtensionsUI = extensionsUtils.extractCatalogExtensions(
+    const catalogExtensionsUI = await extensionsUtils.extractCatalogExtensions(
       catalogExtensions,
       featuredExtensions,
       installedExtensions,
@@ -379,9 +379,9 @@ describe('filters', () => {
     },
   ] as unknown[] as CombinedExtensionInfoUI[];
 
-  test('filterCatalogExtensions with single word', () => {
+  test('filterCatalogExtensions with single word', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -392,9 +392,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with single word and installed', () => {
+  test('filterCatalogExtensions with single word and installed', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -405,9 +405,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with single word and not installed', () => {
+  test('filterCatalogExtensions with single word and not installed', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -417,9 +417,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions.length).toBe(0);
   });
 
-  test('filterCatalogExtensions with single word and installed and not installed, only first boolean is used', () => {
+  test('filterCatalogExtensions with single word and installed and not installed, only first boolean is used', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -430,9 +430,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with multiple words found', () => {
+  test('filterCatalogExtensions with multiple words found', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -443,9 +443,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with multiple words and one is not found', () => {
+  test('filterCatalogExtensions with multiple words and one is not found', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -455,9 +455,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions.length).toBe(0);
   });
 
-  test('filterCatalogExtensions with multiple words found and one category', () => {
+  test('filterCatalogExtensions with multiple words found and one category', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -468,9 +468,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with multiple words found and multiple categories found', () => {
+  test('filterCatalogExtensions with multiple words found and multiple categories found', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -481,9 +481,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with multiple words found and multiple categories with one not found ', () => {
+  test('filterCatalogExtensions with multiple words found and multiple categories with one not found ', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -493,9 +493,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions.length).toBe(0);
   });
 
-  test('filterCatalogExtensions with multiple words found and one keyword', () => {
+  test('filterCatalogExtensions with multiple words found and one keyword', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -506,9 +506,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with multiple words found and multiple keywords found', () => {
+  test('filterCatalogExtensions with multiple words found and multiple keywords found', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
@@ -519,9 +519,9 @@ describe('filters', () => {
     expect(filteredCatalogExtensions[0].id).toBe('idAInstalled');
   });
 
-  test('filterCatalogExtensions with multiple words found and multiple keywords with one not found ', () => {
+  test('filterCatalogExtensions with multiple words found and multiple keywords with one not found ', async () => {
     const filteredCatalogExtensions = extensionsUtils.filterCatalogExtensions(
-      extensionsUtils.extractCatalogExtensions(
+      await extensionsUtils.extractCatalogExtensions(
         [aFakeExtension, bFakeExtension],
         featuredExtensions,
         installedExtensions,
