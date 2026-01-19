@@ -235,6 +235,7 @@
       "react-router>path-to-regexp": "^1.9.0",
       "serve-handler>path-to-regexp": "^3.3.0",
       "express>cookie": "^0.7.0",
+      "express>qs": "^6.14.1",
       "monaco-editor>dompurify": "^3.2.7",
       "webpack-dev-server>http-proxy-middleware": "^2.0.9",
       "esbuild-register>esbuild": "^0.25.0",
