@@ -3030,11 +3030,7 @@ declare module '@podman-desktop/api' {
       Labels: { [label: string]: string };
     };
     NetworkSettings: {
-      Bridge: string;
       SandboxID: string;
-      HairpinMode: boolean;
-      LinkLocalIPv6Address: string;
-      LinkLocalIPv6PrefixLen: number;
       Ports: {
         [portAndProtocol: string]: Array<{
           HostIp: string;
@@ -3042,16 +3038,6 @@ declare module '@podman-desktop/api' {
         }>;
       };
       SandboxKey: string;
-      SecondaryIPAddresses?: unknown;
-      SecondaryIPv6Addresses?: unknown;
-      EndpointID: string;
-      Gateway: string;
-      GlobalIPv6Address: string;
-      GlobalIPv6PrefixLen: number;
-      IPAddress: string;
-      IPPrefixLen: number;
-      IPv6Gateway: string;
-      MacAddress: string;
       Networks: {
         [type: string]: {
           IPAMConfig?: unknown;
@@ -3067,15 +3053,6 @@ declare module '@podman-desktop/api' {
           GlobalIPv6PrefixLen: number;
           MacAddress: string;
         };
-      };
-      Node?: {
-        ID: string;
-        IP: string;
-        Addr: string;
-        Name: string;
-        Cpus: number;
-        Memory: number;
-        Labels: unknown;
       };
     };
   }
