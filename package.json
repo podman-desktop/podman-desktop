@@ -246,7 +246,8 @@
       "compression>on-headers": "^1.1.0",
       "electron-builder-notarize>js-yaml": "^3.14.2",
       "@kubernetes/client-node>js-yaml": "^4.1.1",
-      "tmp-promise>tmp": "^0.2.5"
+      "tmp-promise>tmp": "^0.2.5",
+      "tar": "^7.5.3"
     },
     "patchedDependencies": {
       "dmg-builder": "patches/dmg-builder.patch"
