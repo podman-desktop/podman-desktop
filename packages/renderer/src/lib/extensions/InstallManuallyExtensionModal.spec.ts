@@ -238,7 +238,7 @@ test('form should be in error even if log reached 100%', async () => {
   await userEvent.click(installButton);
 
   // Simulate 100% log
-  logCallback('Downloading sha256:random-sha256.tar - 100% - (55132/521578)');
+  logCallback('Downloading sha256:random-sha256.tar - 100% - (521578/521578)');
   const progressBar = getByRole('progressbar', { name: 'Installation progress' });
   await vi.waitFor(() => {
     expect(progressBar).toHaveStyle({ width: '100%' });
