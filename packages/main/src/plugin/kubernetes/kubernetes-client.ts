@@ -86,7 +86,6 @@ import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
 import type { V1Route } from '/@api/openshift-types.js';
 
-import kubernetesImage from '../../assets/kubernetes.statesExperimental.webp';
 import { Emitter } from '../events/emitter.js';
 import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';
@@ -242,13 +241,8 @@ export class KubernetesClient {
         },
         ['kubernetes.statesExperimental']: {
           description: 'Use new version of Kubernetes contexts monitoring (needs restart)',
-          type: 'object',
-          experimental: {
-            githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/11424',
-            image: kubernetesImage,
-          },
-          // enabled by default
-          default: {},
+          type: 'boolean',
+          default: true,
         },
       },
     };
