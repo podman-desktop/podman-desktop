@@ -1,0 +1,11 @@
+"use strict";
+(globalThis["webpackChunkdocs"] = globalThis["webpackChunkdocs"] || []).push([[88576],{
+
+/***/ 56581
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"tag":{"label":"flatpak","permalink":"/docs/tags/flatpak","allTagsPath":"/docs/tags","count":2,"items":[{"id":"installation/linux-install/installing-podman-desktop-from-a-flatpak-bundle","title":"Installing from a Flatpak bundle","description":"You can install Podman Desktop on Linux from a Flatpak bundle.","permalink":"/docs/installation/linux-install/installing-podman-desktop-from-a-flatpak-bundle"},{"id":"installation/linux-install/index","title":"Linux","description":"You can install Podman Desktop on Linux from Flathub, a Flatpak bundle, or a compressed tar file.","permalink":"/docs/installation/linux-install/"}],"unlisted":false}}');
+
+/***/ }
+
+}]);

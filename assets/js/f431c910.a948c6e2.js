@@ -1,0 +1,11 @@
+"use strict";
+(globalThis["webpackChunkdocs"] = globalThis["webpackChunkdocs"] || []).push([[44362],{
+
+/***/ 69542
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"tag":{"label":"openshift","permalink":"/docs/tags/openshift","allTagsPath":"/docs/tags","count":3,"items":[{"id":"openshift/developer-sandbox/index","title":"Developer Sandbox","description":"Configuring access to a Developer Sandbox","permalink":"/docs/openshift/developer-sandbox/"},{"id":"openshift/index","title":"OpenShift","description":"Red Hat OpenShift introduction","permalink":"/docs/openshift/"},{"id":"openshift/openshift-local/index","title":"OpenShift Local","description":"Creating an OpenShift Local instance","permalink":"/docs/openshift/openshift-local/"}],"unlisted":false}}');
+
+/***/ }
+
+}]);
