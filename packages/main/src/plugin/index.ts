@@ -554,11 +554,10 @@ export class PluginSystem {
     container.bind<FilesystemMonitoring>(FilesystemMonitoring).toSelf().inSingletonScope();
     container.bind<CustomPickRegistry>(CustomPickRegistry).toSelf().inSingletonScope();
     container.bind<OnboardingRegistry>(OnboardingRegistry).toSelf().inSingletonScope();
+    container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
     container.bind<KubernetesClient>(KubernetesClient).toSelf().inSingletonScope();
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
     await kubernetesClient.init();
-
-    container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
 
     container.bind<CloseBehavior>(CloseBehavior).toSelf().inSingletonScope();
     const closeBehaviorConfiguration = container.get<CloseBehavior>(CloseBehavior);
