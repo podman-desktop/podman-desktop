@@ -20,7 +20,6 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
-import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
@@ -107,10 +106,6 @@ const telemetry = {
   }),
 } as unknown as Telemetry;
 
-const extensionApiVersion: ExtensionApiVersion = {
-  getApiVersion: vi.fn(),
-} as ExtensionApiVersion;
-
 const originalConsoleError = console.error;
 beforeEach(() => {
   console.error = vi.fn();
@@ -120,7 +115,6 @@ beforeEach(() => {
     configurationRegistry,
     extensionInstaller,
     telemetry,
-    extensionApiVersion,
   );
   vi.clearAllMocks();
 });
@@ -155,70 +149,6 @@ test('should check for updates and try to update one extension automatically', a
   // check setExtensionsUpdates is called
   expect(extensionLoaderSetExtensionsUpdatesMock).toBeCalledWith([
     { id: 'foo.extension1', ociUri: 'oci-registry.foo/foo/bar1', version: '2.0.0' },
-  ]);
-
-  expect(extensionInstaller.installFromImage).toBeCalledWith(
-    expect.anything(),
-    expect.anything(),
-    expect.anything(),
-    'oci-registry.foo/foo/bar1',
-  );
-
-  expect(extensionLoader.removeExtension).toBeCalledWith('foo.extension1');
-
-  // telemetry is called
-  expect(telemetry.track).toBeCalled();
-});
-
-test('should check for updates if podman desktop version mistmatch and try to update one extension automatically', async () => {
-  const installedExtension1: ExtensionInfo = {
-    id: 'foo.extension1',
-    version: '1.0.0',
-    removable: true,
-  } as ExtensionInfo;
-
-  // mock current version being 1.0.0
-  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.0.0');
-
-  if (!catalogExtension1.versions[0]) {
-    throw new Error('No version');
-  }
-
-  // change the catalog to include a podmanDesktopVersion minimum of 2.0.0 for the latest but ok for 1.5
-  const catalogExtension1WithVersion: CatalogExtension = {
-    ...catalogExtension1,
-    versions: [
-      {
-        ...catalogExtension1.versions[0],
-        podmanDesktopVersion: '2.0.0',
-      },
-      {
-        ...catalogExtension1.versions[0],
-        version: '1.5.0',
-        podmanDesktopVersion: '1.0.0',
-      },
-    ],
-  };
-
-  extensionsCatalogGetExtensionsMock.mockResolvedValue([catalogExtension1WithVersion, catalogExtension2]);
-  extensionLoaderListExtensionsMock.mockResolvedValue([installedExtension1]);
-
-  // return true for the config check
-  getConfigMock.mockReturnValue(true);
-
-  const spyUpdateExtension = vi.spyOn(extensionsUpdater, 'updateExtension');
-
-  await extensionsUpdater.init();
-
-  // no error
-  expect(console.error).not.toBeCalled();
-
-  // check we didn't get updates
-  expect(spyUpdateExtension).toBeCalled();
-
-  // check setExtensionsUpdates is called but with the 1.5.0 update
-  expect(extensionLoaderSetExtensionsUpdatesMock).toBeCalledWith([
-    { id: 'foo.extension1', ociUri: 'oci-registry.foo/foo/bar1', version: '1.5.0' },
   ]);
 
   expect(extensionInstaller.installFromImage).toBeCalledWith(
