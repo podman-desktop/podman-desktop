@@ -47,6 +47,7 @@ import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
@@ -85,7 +86,9 @@ const experimentalConfigurationManager: ExperimentalConfigurationManager = {
 } as unknown as ExperimentalConfigurationManager;
 const makeApiClientMock = vi.fn();
 const getContextObjectMock = vi.fn();
-
+const featureRegistry: FeatureRegistry = {
+  onFeaturesUpdated: vi.fn(),
+} as unknown as FeatureRegistry;
 const podAndDeploymentTestYAML = `apiVersion: v1
 kind: Pod
 metadata:
@@ -269,6 +272,7 @@ function createTestClient(namespace?: string): TestKubernetesClient {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   if (namespace) {
     client.setInitialNamespace(namespace);
@@ -476,6 +480,7 @@ test('Check connection to Kubernetes cluster', async () => {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   const result = await client.checkConnection();
   expect(result).toBeTruthy();
@@ -490,6 +495,7 @@ test('Check connection to Kubernetes cluster in error', async () => {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   const result = await client.checkConnection();
   expect(result).toBeFalsy();
@@ -508,6 +514,7 @@ test('Check update with empty kubeconfig file', async () => {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   await client.refresh();
   expect(consoleErrorSpy).toBeCalledWith(expect.stringContaining('is empty. Skipping'));
