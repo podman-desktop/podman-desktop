@@ -247,6 +247,12 @@ export class KubernetesClient {
           type: 'boolean',
           default: true,
         },
+        ['kubernetes.useInternalKubernetes']: {
+          description: 'Use internal Kubernetes',
+          hidden: true,
+          type: 'boolean',
+          default: true,
+        },
       },
     };
 
@@ -1865,6 +1871,7 @@ export class KubernetesClient {
     this.contextsState = undefined;
     this.contextsStatesDispatcher?.dispose();
     this.contextsStatesDispatcher = undefined;
+    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', false);
   }
 
   // This method is called when an extension providing Kubernetes feature is disabled
@@ -1881,5 +1888,6 @@ export class KubernetesClient {
       this.contextsState = new ContextsManager(this.apiSender);
     }
     await this.contextsState?.update(this.kubeConfig);
+    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', true);
   }
 }
