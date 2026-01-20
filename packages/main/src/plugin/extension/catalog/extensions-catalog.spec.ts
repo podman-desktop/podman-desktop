@@ -286,7 +286,7 @@ test('should get all extensions', async () => {
 });
 
 test('should filter incompatible extension versions', async () => {
-  // mock current version being 2.0.0
+  // mock current version as 1.5.0
   vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.5.0');
 
   server = setupServer(
