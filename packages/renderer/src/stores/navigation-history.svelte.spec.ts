@@ -19,6 +19,8 @@
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+
 import {
   getBackEntries,
   getForwardEntries,
@@ -28,55 +30,57 @@ import {
   navigationHistory,
 } from './navigation-history.svelte';
 
-vi.mock(import('./navigation/navigation-registry'), async () => {
-  const { writable } = await import('svelte/store');
-
-  // Mock navigation registry with kubernetes submenu for testing
-  const mockRegistry = [
-    {
-      name: 'Kubernetes',
-      icon: {},
-      link: '/kubernetes',
-      tooltip: 'Kubernetes',
-      counter: 0,
-      type: 'submenu' as const,
-      items: [
-        {
-          name: 'Pods',
-          icon: {},
-          link: '/kubernetes/pods',
-          tooltip: 'Pods',
-          counter: 0,
-          type: 'entry' as const,
-        },
-        {
-          name: 'ConfigMaps & Secrets',
-          icon: {},
-          link: '/kubernetes/configmapsSecrets',
-          tooltip: 'ConfigMaps & Secrets',
-          counter: 0,
-          type: 'entry' as const,
-        },
-      ],
-    },
-    {
-      name: 'Containers',
-      icon: {},
-      link: '/containers',
-      tooltip: 'Containers',
-      counter: 0,
-      type: 'entry' as const,
-    },
-  ];
-
-  return {
-    navigationRegistry: writable(mockRegistry),
-  };
-});
-
-vi.mock('/@/PreferencesNavigation', () => ({
+vi.mock(import('/@/PreferencesNavigation'), () => ({
   settingsNavigationEntries: [],
 }));
+
+vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
+  return {
+    navigationRegistry: {
+      subscribe: vi.fn((listener: (value: NavigationRegistryEntry[]) => void) => {
+        listener([
+          {
+            name: 'Kubernetes',
+            icon: {},
+            link: '/kubernetes',
+            tooltip: 'Kubernetes',
+            counter: 0,
+            type: 'submenu',
+            items: [
+              {
+                name: 'Pods',
+                icon: {},
+                link: '/kubernetes/pods',
+                tooltip: 'Pods',
+                counter: 0,
+                type: 'entry',
+              },
+              {
+                name: 'ConfigMaps & Secrets',
+                icon: {},
+                link: '/kubernetes/configmapsSecrets',
+                tooltip: 'ConfigMaps & Secrets',
+                counter: 0,
+                type: 'entry',
+              },
+            ],
+          },
+          {
+            name: 'Containers',
+            icon: {},
+            link: '/containers',
+            tooltip: 'Containers',
+            counter: 0,
+            type: 'entry',
+          },
+        ] as NavigationRegistryEntry[]);
+        return vi.fn();
+      }),
+      set: vi.fn(),
+      update: vi.fn(),
+    },
+  };
+});
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -88,6 +92,10 @@ beforeEach(() => {
 });
 
 describe('goBack', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
   test('should not navigate when history is empty', () => {
     goBack();
 
@@ -118,6 +126,10 @@ describe('goBack', () => {
 });
 
 describe('goForward', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
   test('should not navigate when history is empty', () => {
     goForward();
 

@@ -22,8 +22,7 @@ import { router } from 'tinro';
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
 import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
-
-import { navigationRegistry, type NavigationRegistryEntry } from './navigation/navigation-registry';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 export const BACK = 'back';
 export const FORWARD = 'forward';
