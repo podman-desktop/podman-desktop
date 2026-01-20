@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,18 @@ import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
 import { inject, injectable } from 'inversify';
+import { coerce, satisfies } from 'semver';
 
 import { ApiSenderType } from '/@/plugin/api.js';
 import { Certificates } from '/@/plugin/certificates.js';
+<<<<<<< HEAD
 import type {
   CatalogExtension,
   CatalogFetchableExtension,
 } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
+=======
+import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+>>>>>>> e76061ce (fix: catalog shouldn't expose incompatible extensions)
 import { Proxy } from '/@/plugin/proxy.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import product from '/@product.json' with { type: 'json' };
@@ -53,6 +58,8 @@ export class ExtensionsCatalog {
     private configurationRegistry: IConfigurationRegistry,
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(ExtensionApiVersion)
+    private extensionApiVersion: ExtensionApiVersion,
   ) {}
 
   init(): void {
@@ -124,6 +131,8 @@ export class ExtensionsCatalog {
   // get the list of extensions
   async getExtensions(): Promise<CatalogExtension[]> {
     const catalogJSON = await this.getCatalogJson();
+    const appVersion = this.extensionApiVersion.getApiVersion();
+    const currentPodmanDesktopVersion = coerce(appVersion);
     if (catalogJSON?.extensions) {
       // we have a list of extensions
       return catalogJSON.extensions.map(extension => {
@@ -137,16 +146,27 @@ export class ExtensionsCatalog {
           extensionName: extension.extensionName,
           shortDescription: extension.shortDescription,
           displayName: extension.displayName,
-          versions: extension.versions.map(version => {
-            return {
-              version: version.version,
-              podmanDesktopVersion: version.podmanDesktopVersion,
-              preview: version.preview,
-              ociUri: version.ociUri,
-              files: version.files,
-              lastUpdated: new Date(version.lastUpdated),
-            };
-          }),
+          versions: extension.versions
+            .filter(version => {
+              const extensionRequirePodmanDesktopVersion = version.podmanDesktopVersion;
+              if (extensionRequirePodmanDesktopVersion && currentPodmanDesktopVersion) {
+                //  keep the versions that are compatible with this version of Podman Desktop
+                return satisfies(currentPodmanDesktopVersion, extensionRequirePodmanDesktopVersion);
+              } else {
+                // if no version is specified, keep the version
+                return true;
+              }
+            })
+            .map(version => {
+              return {
+                version: version.version,
+                podmanDesktopVersion: version.podmanDesktopVersion,
+                preview: version.preview,
+                ociUri: version.ociUri,
+                files: version.files,
+                lastUpdated: new Date(version.lastUpdated),
+              };
+            }),
         };
       });
     }

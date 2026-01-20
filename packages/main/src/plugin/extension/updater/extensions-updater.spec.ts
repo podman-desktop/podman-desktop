@@ -21,7 +21,10 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
+<<<<<<< HEAD
 import type { CatalogExtension } from '/@/plugin/extension/catalog/extensions-catalog-api.js';
+=======
+>>>>>>> e76061ce (fix: catalog shouldn't expose incompatible extensions)
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
@@ -170,6 +173,7 @@ test('should check for updates and try to update one extension automatically', a
   // telemetry is called
   expect(telemetry.track).toBeCalled();
 });
+<<<<<<< HEAD
 
 test('should check for updates if podman desktop version mistmatch and try to update one extension automatically', async () => {
   const installedExtension1: ExtensionInfo = {
@@ -234,3 +238,5 @@ test('should check for updates if podman desktop version mistmatch and try to up
   // telemetry is called
   expect(telemetry.track).toBeCalled();
 });
+=======
+>>>>>>> e76061ce (fix: catalog shouldn't expose incompatible extensions)
