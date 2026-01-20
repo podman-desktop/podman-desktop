@@ -26,7 +26,6 @@ const sizeVariants: { label: string; size?: string }[] = [
   { label: '1.4em', size: '1.4em' },
   { label: '1.5em', size: '1.5em' },
   { label: '12px', size: '12px' },
-  { label: '12', size: '12' },
   { label: '16px', size: '16px' },
 ];
 </script>
