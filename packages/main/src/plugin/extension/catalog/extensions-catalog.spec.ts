@@ -24,6 +24,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
+import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
@@ -40,6 +41,10 @@ const apiSender: ApiSenderType = {
   send: vi.fn(),
   receive: vi.fn(),
 };
+
+const extensionApiVersion: ExtensionApiVersion = {
+  getApiVersion: vi.fn(),
+} as ExtensionApiVersion;
 
 let server: SetupServerApi | undefined = undefined;
 
@@ -110,6 +115,37 @@ const fakePublishedExtension3 = {
     },
   ],
 };
+
+// this one has a version that requires an incompatible Podman Desktop version
+const fakePublishedExtension4 = {
+  publisher: {
+    publisherName: 'foo4',
+    displayName: 'Foo publisher display name',
+  },
+  extensionName: 'fooName4',
+  displayName: 'Foo4 extension display name',
+  shortDescription: 'Foo4 extension short description',
+  license: 'Apache-2.0',
+  categories: ['Kubernetes'],
+  versions: [
+    {
+      version: '1.0.0',
+      podmanDesktopVersion: '^1.0.0',
+      preview: false,
+      lastUpdated: '2021-01-01T00:00:00.000Z',
+      ociUri: 'oci-registry.foo/foo/bar',
+      files: [fooAssetIcon],
+    },
+    {
+      version: '2.0.0',
+      podmanDesktopVersion: '^999.0.0',
+      preview: false,
+      lastUpdated: '2021-01-01T00:00:00.000Z',
+      ociUri: 'oci-registry.foo/foo/bar',
+      files: [fooAssetIcon],
+    },
+  ],
+};
 const isEnabledProxyMock = vi.fn();
 const onDidUpdateProxyEmitter = new Emitter<ProxySettings>();
 const getAllCertificatesMock = vi.fn();
@@ -131,7 +167,7 @@ const configurationRegistry: ConfigurationRegistry = {
 
 const originalConsoleError = console.error;
 beforeEach(() => {
-  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender);
+  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender, extensionApiVersion);
   vi.resetAllMocks();
   console.error = vi.fn();
   vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
@@ -199,7 +235,7 @@ test('check getHttpOptions with Proxy', async () => {
     httpsProxy: 'http://localhost',
     noProxy: 'localhost',
   });
-  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender);
+  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender, extensionApiVersion);
 
   const options = extensionsCatalog.getHttpOptions();
   expect(options).toBeDefined();
@@ -243,6 +279,39 @@ test('should get all extensions', async () => {
     preview: false,
     version: '1.0.0',
     podmanDesktopVersion: undefined,
+    files: [fooAssetIcon],
+  });
+  // no error
+  expect(console.error).not.toBeCalled();
+});
+
+test('should filter incompatible extension versions', async () => {
+  // mock current version being 2.0.0
+  vi.mocked(extensionApiVersion.getApiVersion).mockReturnValue('1.5.0');
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [fakePublishedExtension4] }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const allExtensions = await extensionsCatalog.getExtensions();
+  expect(allExtensions).toBeDefined();
+  expect(allExtensions.length).toBe(1);
+
+  // check data
+  const extension = allExtensions[0];
+  expect(extension?.id).toBe('foo4.fooName4');
+  expect(extension?.publisherName).toBe('foo4');
+
+  expect(extension?.versions.length).toEqual(1);
+  expect(extension?.versions[0]).toStrictEqual({
+    ociUri: 'oci-registry.foo/foo/bar',
+    lastUpdated: expect.any(Date),
+    preview: false,
+    version: '1.0.0',
+    podmanDesktopVersion: '^1.0.0',
     files: [fooAssetIcon],
   });
   // no error
@@ -317,7 +386,7 @@ test('Should use proxy object if proxySettings is undefined', () => {
     httpsProxy: 'https://localhost',
     noProxy: 'localhost',
   });
-  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender);
+  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender, extensionApiVersion);
   const options = extensionsCatalog.getHttpOptions();
 
   expect(options).toBeDefined();
