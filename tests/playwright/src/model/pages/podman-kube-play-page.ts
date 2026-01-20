@@ -53,18 +53,11 @@ export class PodmanKubePlayPage extends BasePage {
     this.replaceCheckbox = page.getByRole('checkbox', { name: 'Replace' }).locator('..');
   }
 
-  private async enableBuildFlag(): Promise<void> {
-    await playExpect(this.buildCheckbox).not.toBeChecked();
-    await playExpect(this.buildCheckbox).toBeEnabled();
-    await this.buildCheckbox.check();
-    await playExpect(this.buildCheckbox).toBeChecked();
-  }
-
-  private async enableReplaceFlag(): Promise<void> {
-    await playExpect(this.replaceCheckbox).not.toBeChecked();
-    await playExpect(this.replaceCheckbox).toBeEnabled();
-    await this.replaceCheckbox.check();
-    await playExpect(this.replaceCheckbox).toBeChecked();
+  private async enableCheckbox(checkbox: Locator): Promise<void> {
+    await playExpect(checkbox).not.toBeChecked();
+    await playExpect(checkbox).toBeEnabled();
+    await checkbox.check();
+    await playExpect(checkbox).toBeChecked();
   }
 
   private async createFromScratch(jsonResourceDefinition: string): Promise<void> {
@@ -111,11 +104,11 @@ export class PodmanKubePlayPage extends BasePage {
       }
 
       if (buildImage) {
-        await this.enableBuildFlag();
+        await this.enableCheckbox(this.buildCheckbox);
       }
 
       if (replaceImage) {
-        await this.enableReplaceFlag();
+        await this.enableCheckbox(this.replaceCheckbox);
       }
 
       await this.playButton.click();
