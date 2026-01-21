@@ -59,7 +59,7 @@ test('Expect degraded styling', async () => {
 test('Expect deleting styling', async () => {
   const status = 'DELETING';
   render(StatusIcon, { status });
-  const icon = screen.getByRole('status');
+  const icon = screen.getByRole('status', { name: status });
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveAttribute('title', status);
   expect(icon).not.toHaveAttribute('border');
@@ -72,7 +72,7 @@ test('Expect deleting styling', async () => {
 test('Expect updating styling', async () => {
   const status = 'UPDATING';
   render(StatusIcon, { status });
-  const icon = screen.getByRole('status');
+  const icon = screen.getByRole('status', { name: status });
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveAttribute('title', status);
   expect(icon).not.toHaveAttribute('border');

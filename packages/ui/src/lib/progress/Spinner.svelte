@@ -8,9 +8,9 @@ let { size = '2em', class: className, style }: Props = $props();
 </script>
 
 <i
-  role="progressbar"
+  role="status"
   aria-label="Loading"
-  aria-busy="true"
+  aria-live="polite"
   class="flex justify-center items-center {className}"
   style={style}>
   <svg width={size} height={size} viewBox="0 0 100 100" role="img">
