@@ -171,7 +171,7 @@ configurationProperties.subscribe(() => {
 
 function handleKubernetesGroup(): void {
   window
-    .getConfigurationValue<string[]>('kubernetes.useInternalKubernetes')
+    .getConfigurationValue<boolean>('kubernetes.useInternalKubernetes')
     ?.then(value => {
       if (value) {
         if (!values.find(item => item.name === 'Kubernetes')) {
