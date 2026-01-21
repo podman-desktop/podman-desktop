@@ -26,6 +26,7 @@ import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-re
 import type { ContainerInfo } from '/@api/container-info';
 import type { GoToInfo } from '/@api/documentation-info';
 import type { ImageInfo } from '/@api/image-info';
+import type { NavigationRouteInfo } from '/@api/navigation-route-info';
 import type { PodInfo } from '/@api/pod-info';
 import type { VolumeInfo } from '/@api/volume-info';
 
@@ -368,5 +369,73 @@ describe('Navigation Items', () => {
     // Test getGoToDisplayText for Navigation type
     expect(getGoToDisplayText(imagesItem!)).toBe('Images (5)');
     expect(getGoToDisplayText(settingsItem!)).toBe('Settings');
+  });
+});
+
+describe('Navigation Routes', () => {
+  const mockNavigationRoutes: NavigationRouteInfo[] = [
+    {
+      routeId: 'ailab.downloads',
+      commandId: 'ailab.open-downloads',
+      title: 'Open Downloads',
+      icon: 'data:image/png;base64,abc123',
+      extensionId: 'AI Lab',
+    },
+    {
+      routeId: 'ailab.models',
+      commandId: 'ailab.open-models',
+      title: 'View Models',
+      icon: {
+        light: 'data:image/png;base64,light',
+        dark: 'data:image/png;base64,dark',
+      },
+      extensionId: 'AI Lab',
+    },
+    {
+      routeId: 'kubernetes.dashboard',
+      commandId: 'kubernetes.open-dashboard',
+      title: 'Open Dashboard',
+      extensionId: 'Kubernetes',
+      // No icon
+    },
+    {
+      routeId: 'extension.hidden-route',
+      commandId: 'extension.hidden-command',
+      // No title - should be skipped
+      extensionId: 'Extension',
+    },
+  ];
+
+  test('should create Navigation items from navigation routes', () => {
+    const items = createGoToItems([], [], [], [], [], mockNavigationRoutes);
+    const navigationItems = items.filter(item => item.type === 'Navigation');
+
+    // Should have 3 items (route without title is skipped)
+    expect(navigationItems).toHaveLength(3);
+
+    // Route with string icon
+    const downloadsItem = navigationItems.find(item => item.name === 'AI Lab: Open Downloads');
+    expect(downloadsItem).toBeDefined();
+    expect(downloadsItem?.link).toBe('ailab.downloads');
+    expect(downloadsItem?.icon?.iconImage).toBe('data:image/png;base64,abc123');
+
+    // Route with light/dark icon object
+    const modelsItem = navigationItems.find(item => item.name === 'AI Lab: View Models');
+    expect(modelsItem).toBeDefined();
+    expect(modelsItem?.link).toBe('ailab.models');
+    expect(modelsItem?.icon?.iconImage).toEqual({
+      light: 'data:image/png;base64,light',
+      dark: 'data:image/png;base64,dark',
+    });
+
+    // Route without icon
+    const dashboardItem = navigationItems.find(item => item.name === 'Kubernetes: Open Dashboard');
+    expect(dashboardItem).toBeDefined();
+    expect(dashboardItem?.link).toBe('kubernetes.dashboard');
+    expect(dashboardItem?.icon?.iconImage).toBeUndefined();
+
+    // Route without title should not be present
+    const hiddenRoute = navigationItems.find(item => item.link === 'extension.hidden-route');
+    expect(hiddenRoute).toBeUndefined();
   });
 });

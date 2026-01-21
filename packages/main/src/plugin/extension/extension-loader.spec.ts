@@ -255,6 +255,7 @@ const contributionManager: ContributionManager = {
 } as unknown as ContributionManager;
 
 const webviewRegistry: WebviewRegistry = {
+  createWebviewPanel: vi.fn(),
   listSimpleWebviews: vi.fn(),
   listWebviews: vi.fn(),
 } as unknown as WebviewRegistry;
@@ -2915,4 +2916,56 @@ describe('env API', () => {
     const api = createApi();
     expect(api.env.appName).toBe(product.name);
   });
+});
+
+test('register navigation route with webview name', () => {
+  const api = createApi();
+  expect(api).toBeDefined();
+
+  // Mock webview registry to return a webview matching the extension path
+  const webviewRegistryListWebviewsMock = vi.spyOn(webviewRegistry, 'listWebviews');
+  webviewRegistryListWebviewsMock.mockReturnValue([
+    {
+      id: 'my.extensionId',
+      sourcePath: '/extensionPath1',
+      name: 'My Extension Display Name',
+    } as unknown as WebviewInfo,
+  ]);
+
+  const disposable = api.navigation.register('dummy-route-id', 'dummy-command-id', {
+    title: 'Dummy Route',
+    icon: 'dummy-icon',
+  });
+  expect(disposable).toBeDefined();
+
+  const navigationRoutes = navigationManager.getNavigationRoutes();
+  expect(navigationRoutes.length).toBe(1);
+  expect(navigationRoutes[0]?.routeId).toBe('dummy-route-id');
+  expect(navigationRoutes[0]?.commandId).toBe('dummy-command-id');
+  expect(navigationRoutes[0]?.title).toBe('Dummy Route');
+  expect(navigationRoutes[0]?.icon).toBe('dummy-icon');
+  expect(navigationRoutes[0]?.extensionId).toBe('My Extension Display Name'); // Uses webview name
+  disposable.dispose();
+});
+
+test('register navigation route without webview falls back to extension label', () => {
+  const api = createApi();
+  expect(api).toBeDefined();
+
+  // Mock webview registry to return no webviews
+  const webviewRegistryListWebviewsMock = vi.spyOn(webviewRegistry, 'listWebviews');
+  webviewRegistryListWebviewsMock.mockReturnValue([]);
+
+  const disposable = api.navigation.register('another-route', 'another-command', {
+    title: 'Another Route',
+  });
+  expect(disposable).toBeDefined();
+
+  const navigationRoutes = navigationManager.getNavigationRoutes();
+  expect(navigationRoutes.length).toBe(1);
+  expect(navigationRoutes[0]?.routeId).toBe('another-route');
+  expect(navigationRoutes[0]?.commandId).toBe('another-command');
+  expect(navigationRoutes[0]?.title).toBe('Another Route');
+  expect(navigationRoutes[0]?.extensionId).toBe('dname');
+  disposable.dispose();
 });

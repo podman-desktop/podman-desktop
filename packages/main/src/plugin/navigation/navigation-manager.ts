@@ -16,7 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
+import type {
+  NavigateToExtensionsCatalogOptions,
+  NavigationRouteOptions,
+  ProviderContainerConnection,
+} from '@podman-desktop/api';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
@@ -27,14 +31,17 @@ import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { IDisposable } from '/@api/disposable.js';
 import { NavigationPage } from '/@api/navigation-page.js';
 import type { NavigationRequest } from '/@api/navigation-request.js';
+import { NavigationRouteInfo } from '/@api/navigation-route-info.js';
 
 import { ProviderRegistry } from '../provider-registry.js';
 import { Disposable } from '../types/disposable.js';
 import { WebviewRegistry } from '../webview/webview-registry.js';
 
-export interface NavigationRoute {
+export interface NavigationRoute extends Omit<NavigationRouteOptions, 'title'> {
   routeId: string;
   commandId: string;
+  title?: string;
+  extensionId?: string;
 }
 
 @injectable()
@@ -113,6 +120,21 @@ export class NavigationManager {
 
   hasRoute(routeId: string): boolean {
     return this.#registry.has(routeId);
+  }
+
+  getNavigationRoutes(): NavigationRouteInfo[] {
+    const routes: NavigationRouteInfo[] = [];
+    this.#registry.forEach((route, routeId) => {
+      routes.push({
+        routeId,
+        commandId: route.commandId,
+        title: route.title,
+        icon: route.icon,
+        extensionId: route.extensionId,
+      });
+    });
+
+    return routes;
   }
 
   async navigateToRoute(routeId: string, ...args: unknown[]): Promise<void> {

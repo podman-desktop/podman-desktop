@@ -21,12 +21,14 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
+import { router } from 'tinro';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import type { ContainerInfo } from '/@api/container-info';
+import type { NavigationRouteInfo } from '/@api/navigation-route-info';
 
 import CommandPalette from './CommandPalette.svelte';
 
@@ -41,6 +43,22 @@ const mockContainerInfo = {
   Names: ['test-container'],
 } as unknown as ContainerInfo;
 
+const mockNavigationRoutes: NavigationRouteInfo[] = [
+  {
+    routeId: 'ailab.downloads',
+    commandId: 'ailab.open-downloads',
+    title: 'Open Downloads',
+    icon: 'data:image/png;base64,abc123',
+    extensionId: 'AI Lab',
+  },
+  {
+    routeId: 'kubernetes.dashboard',
+    commandId: 'kubernetes.open-dashboard',
+    title: 'Open Dashboard',
+    extensionId: 'Kubernetes',
+  },
+];
+
 beforeAll(() => {
   (window.events as unknown) = {
     receive: receiveFunctionMock,
@@ -50,6 +68,7 @@ beforeAll(() => {
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
   vi.mocked(window.getOsPlatform).mockResolvedValue('linux');
   vi.mocked(window.getDocumentationItems).mockResolvedValue([]);
+  vi.mocked(window.getNavigationRoutes).mockResolvedValue(mockNavigationRoutes);
 
   containersInfos.set([mockContainerInfo]);
   // mock missing scrollIntoView method
@@ -568,5 +587,34 @@ describe('Command Palette', () => {
     await vi.waitFor(() =>
       expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop, or type > for commands'),
     );
+  });
+
+  test('Expect that navigating to extension route works correctly', async () => {
+    const { findByRole } = render(CommandPalette, { display: true });
+
+    // check navigation route is displayed
+
+    await vi.waitFor(async () => {
+      const navigationRoute = await findByRole('button', { name: 'Open Downloads' });
+      expect(navigationRoute).toBeInTheDocument();
+
+      // click navigation route and expect to be redirected to the navigation route
+      await userEvent.click(navigationRoute);
+      expect(vi.mocked(window.navigateToRoute)).toHaveBeenCalledWith('ailab.downloads');
+    });
+  });
+
+  test('Expect tat navigating to internal route works correctly', async () => {
+    const { findByRole } = render(CommandPalette, { display: true });
+
+    // check internal route is displayed
+    await vi.waitFor(async () => {
+      const internalRoute = await findByRole('button', { name: 'Open Downloads' });
+      expect(internalRoute).toBeInTheDocument();
+
+      // click internal route and expect to be redirected to the internal route
+      await userEvent.click(internalRoute);
+      expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/ailab.downloads');
+    });
   });
 });

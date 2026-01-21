@@ -3147,6 +3147,10 @@ export class PluginSystem {
       },
     );
 
+    this.ipcHandle('navigation:getRoutes', async () => {
+      return navigationManager.getNavigationRoutes();
+    });
+
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();
     });

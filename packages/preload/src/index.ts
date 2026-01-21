@@ -106,6 +106,7 @@ import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } 
 import type { Menu } from '/@api/menu.js';
 import { NavigationPage } from '/@api/navigation-page';
 import type { NavigationRequest } from '/@api/navigation-request';
+import type { NavigationRouteInfo } from '/@api/navigation-route-info';
 import type { NetworkInspectInfo } from '/@api/network-info';
 import type { NotificationCard, NotificationCardOptions } from '/@api/notification';
 import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding';
@@ -1679,6 +1680,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('getCommandPaletteCommands', async (): Promise<CommandInfo[]> => {
     return ipcInvoke('commands:getCommandPaletteCommands');
+  });
+
+  contextBridge.exposeInMainWorld('getNavigationRoutes', async (): Promise<NavigationRouteInfo[]> => {
+    return ipcInvoke('navigation:getRoutes');
   });
 
   contextBridge.exposeInMainWorld('listExtensions', async (): Promise<ExtensionInfo[]> => {

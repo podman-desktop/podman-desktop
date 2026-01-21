@@ -90,7 +90,7 @@ let volumInfos: VolumeInfo[] = $derived($volumeListInfos.map(info => info.Volume
 let imageInfos: ImageInfo[] = $derived($imagesInfos);
 let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
 let goToItems: GoToInfo[] = $derived(
-  createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
+  display ? await createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems) : [],
 );
 let helperText = $derived(searchOptions[searchOptionsSelectedIndex].helperText);
 
@@ -299,7 +299,23 @@ async function executeAction(index: number): Promise<void> {
         parameters: { name: item.Name, engineId: item.engineId },
       });
     } else if (item.type === 'Navigation') {
-      router.goto(item.link);
+      // Podman Desktop internal route
+      if (item.link.startsWith('/')) {
+        router.goto(item.link);
+      } else {
+        // Extension route
+        try {
+          await window.navigateToRoute(item.link);
+        } catch (error: unknown) {
+          console.error(`Error navigating to route ${item.link}: ${error}`);
+        }
+      }
+    } else if (item.type === 'NavigationCommand') {
+      try {
+        await window.executeCommand(item.command, item.id);
+      } catch (error: unknown) {
+        console.error('error executing command', error);
+      }
     }
     itemType = item.type;
   } else {
@@ -377,12 +393,12 @@ function isDocItem(item: CommandPaletteItem): item is DocumentationInfo {
 
 function getTextToHighlight(item: CommandPaletteItem): string {
   if (isDocItem(item)) {
-    return `${item.category}: ${item.name}`;
+    return `${item.category} > ${item.name}`;
   } else if (isGoToItem(item)) {
-    if (item.type === 'Navigation') {
+    if (item.type === 'Navigation' || item.type === 'NavigationCommand') {
       return `${item.name}`;
     }
-    return `${item.type}: ${getGoToDisplayText(item)}`;
+    return `${item.type} > ${getGoToDisplayText(item)}`;
   } else {
     return item.title ?? '';
   }

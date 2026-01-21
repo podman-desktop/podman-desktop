@@ -122,14 +122,45 @@ function extractNavigationPaths(entries: NavigationRegistryEntry[]): Array<Navig
   return items;
 }
 
-// Helper function to create GoToInfo items from resources
-export function createGoToItems(
+// Helper function to fetch extension resources
+async function fetchExtensionResources(): Promise<GoToInfo[]> {
+  const items: GoToInfo[] = [];
+  const extensions = await window.listExtensions();
+  const webviews = await window.listWebviews();
+  for (const extension of extensions) {
+    try {
+      const commandId = `${extension.name}.command.list-resources`;
+      const resources = await window.executeCommand(commandId);
+      const webview = webviews.find(w => w.sourcePath === extension.path);
+      if (resources && Array.isArray(resources)) {
+        for (const resource of resources) {
+          if (resource.hidden) {
+            continue;
+          }
+          items.push({
+            type: 'NavigationCommand',
+            name: `${webview?.name ?? extension.displayName} > ${resource.title}`,
+            command: resource.command,
+            id: resource.id,
+            icon: { iconImage: resource.icon },
+          });
+        }
+      }
+    } catch (err) {
+      // Extension doesn't have list-resources command, skip silently
+    }
+  }
+  return items;
+}
+
+// Helper function to create GoToInfo items from resources (async version)
+export async function createGoToItems(
   images: ImageInfo[],
   containers: ContainerInfo[],
   pods: PodInfo[],
   volumes: VolumeInfo[],
   navigationEntries: NavigationRegistryEntry[] = [],
-): GoToInfo[] {
+): Promise<GoToInfo[]> {
   const items: GoToInfo[] = [];
 
   // Add images
@@ -159,6 +190,25 @@ export function createGoToItems(
       items.push({ type: 'Navigation', ...navigationInfo });
     });
   }
+
+  const navigationRoutes = await window.getNavigationRoutes();
+  // Add registered navigation routes
+  if (navigationRoutes.length > 0) {
+    navigationRoutes.forEach(route => {
+      // Skip routes without a title (don't show them in the command palette)
+      if (!route.title) return;
+
+      items.push({
+        type: 'Navigation',
+        name: route.extensionId + ' > ' + route.title,
+        link: route.routeId,
+        icon: { iconImage: route.icon },
+      } as GoToInfo);
+    });
+  }
+
+  const extensionResources = await fetchExtensionResources();
+  items.push(...extensionResources);
 
   return items;
 }
