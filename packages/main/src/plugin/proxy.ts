@@ -179,7 +179,11 @@ export class Proxy {
   }
 
   isEnabled(): boolean {
-    return this.proxyState !== ProxyState.PROXY_DISABLED && this.proxySettings !== undefined;
+    return (
+      this.proxyState !== ProxyState.PROXY_DISABLED &&
+      this.proxySettings !== undefined &&
+      (this.proxySettings.httpProxy !== undefined || this.proxySettings.httpsProxy !== undefined)
+    );
   }
 
   async setState(state: ProxyState): Promise<void> {
