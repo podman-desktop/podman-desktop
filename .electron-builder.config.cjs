@@ -206,7 +206,11 @@ const config = {
       '--device=dri',
       // Read/write home directory access
       '--filesystem=home',
-      // Read-only access to the host OS filesystem required for managed-configuration
+      // Read-only access to /usr and /etc for managed-configuration support.
+      // Flatpak sandboxes these directories, so we can't use --filesystem=/usr/share/podman-desktop:ro directly.
+      // host-os:ro only exposes /usr and parts of /etc (not the full filesystem).
+      // See: https://github.com/flatpak/flatpak/issues/5575
+      // See: https://man7.org/linux/man-pages/man5/flatpak-metadata.5.html (host-os section)
       '--filesystem=host-os:ro',
       // Read podman socket
       '--filesystem=xdg-run/podman:create',
