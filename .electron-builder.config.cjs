@@ -234,7 +234,6 @@ const config = {
       '--talk-name=org.freedesktop.Flatpak',
       // required to fix cursor scaling on wayland https://github.com/electron/electron/issues/19810 when the user uses --socket=wayland in their flatpak run
       '--env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons',
-      '--env=XDG_SESSION_TYPE=x11',
     ],
     useWaylandFlags: 'false',
     artifactName: `${product.artifactName}-\${version}.\${ext}`,
