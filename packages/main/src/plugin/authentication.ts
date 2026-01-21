@@ -116,6 +116,9 @@ export class AuthenticationImpl {
   private _signInRequestsData: Map<string, SessionRequestInfo> = new Map();
   // store account usage to show confirmation when sign out requested
   private _accountUsageData: AccountUsageRecord[] = [];
+  // In-memory store for extension allowances
+  // Key format: `${providerId}:${accountName}` -> AllowedExtension[]
+  private _extensionAllowances: Map<string, AllowedExtension[]> = new Map();
 
   constructor(
     @inject(ApiSenderType)
@@ -224,19 +227,36 @@ export class AuthenticationImpl {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  readAllowedExtensions(_providerId: string, _accountName: string): AllowedExtension[] {
-    throw new Error('The method is not implemented!');
+  private getAllowanceKey(providerId: string, accountName: string): string {
+    return `${providerId}:${accountName}`;
+  }
+
+  readAllowedExtensions(providerId: string, accountName: string): AllowedExtension[] {
+    const key = this.getAllowanceKey(providerId, accountName);
+    return this._extensionAllowances.get(key) ?? [];
   }
 
   updateAllowedExtension(
-    _providerId: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-    _accountName: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-    _extensionId: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-    _extensionName: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-    _isAllowed: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
+    providerId: string,
+    accountName: string,
+    extensionId: string,
+    extensionName: string,
+    isAllowed: boolean,
   ): void {
-    throw new Error('The method is not implemented!');
+    const key = this.getAllowanceKey(providerId, accountName);
+    const allowances = this._extensionAllowances.get(key) ?? [];
+
+    const existingIndex = allowances.findIndex(ext => ext.id === extensionId);
+    if (existingIndex > -1) {
+      // Update existing entry
+      allowances[existingIndex] = { id: extensionId, name: extensionName, allowed: isAllowed };
+    } else {
+      // Add new entry
+      allowances.push({ id: extensionId, name: extensionName, allowed: isAllowed });
+    }
+
+    this._extensionAllowances.set(key, allowances);
+    this.apiSender.send('authentication-provider-update', { id: providerId });
   }
 
   /**
@@ -247,9 +267,16 @@ export class AuthenticationImpl {
    * @returns Returns true or false if the user has opted to permanently grant or disallow access, and undefined
    * if they haven't made a choice yet
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isAccessAllowed(_providerId: string, _accountName: string, _extensionId: string): boolean | undefined {
-    return true; // To be implemented later
+  isAccessAllowed(providerId: string, accountName: string, extensionId: string): boolean | undefined {
+    const key = this.getAllowanceKey(providerId, accountName);
+    const allowances = this._extensionAllowances.get(key);
+
+    if (!allowances) {
+      return undefined; // No decision made yet
+    }
+
+    const extensionAllowance = allowances.find(ext => ext.id === extensionId);
+    return extensionAllowance?.allowed;
   }
 
   async getSession(
@@ -286,14 +313,50 @@ export class AuthenticationImpl {
 
     const sessions = providerData ? await providerData.provider.getSessions(sortedScopes) : [];
 
-    if (
-      sessions.length &&
-      sessions[0]?.account.label &&
-      this.isAccessAllowed(providerId, sessions[0].account.label, requestingExtension.id)
-    ) {
+    if (sessions.length && sessions[0]?.account.label) {
+      const session = sessions[0];
+      const accessAllowed = this.isAccessAllowed(providerId, session.account.label, requestingExtension.id);
+
+      // If explicitly denied, don't return the session
+      if (accessAllowed === false) {
+        return undefined;
+      }
+
+      // If not yet decided (undefined), ask for permission (unless silent)
+      if (accessAllowed === undefined) {
+        if (options.silent) {
+          // Cannot prompt in silent mode, return undefined
+          return undefined;
+        }
+
+        const allowRsp = await this.messageBox.showMessageBox({
+          title: 'Allow Access',
+          message: `The extension '${requestingExtension.label}' wants to access the ${providerData?.label ?? providerId} account '${session.account.label}'.`,
+          buttons: ['Deny', 'Allow'],
+          type: 'info',
+        });
+
+        const isAllowed = allowRsp.response === 1;
+
+        // Only store allowance when user allows, not when they deny
+        // This way, denying will prompt again next time instead of permanently blocking
+        if (isAllowed) {
+          this.updateAllowedExtension(
+            providerId,
+            session.account.label,
+            requestingExtension.id,
+            requestingExtension.label,
+            true,
+          );
+        } else {
+          return undefined;
+        }
+      }
+
+      // If allowed (true), return the session
       // add account usage to show confirmation on sign out request
-      this.addAccountUsage(providerId, sessions[0].id, requestingExtension.id, requestingExtension.label);
-      return sessions[0];
+      this.addAccountUsage(providerId, session.id, requestingExtension.id, requestingExtension.label);
+      return session;
     }
 
     if (options.createIfNone) {
