@@ -206,6 +206,12 @@ const config = {
       '--device=dri',
       // Read/write home directory access
       '--filesystem=home',
+      // Read-only access to /usr and /etc for managed-configuration support.
+      // Flatpak sandboxes these directories, so we can't use --filesystem=/usr/share/podman-desktop:ro directly.
+      // host-os:ro only exposes /usr and parts of /etc (not the full filesystem).
+      // See: https://github.com/flatpak/flatpak/issues/5575
+      // See: https://man7.org/linux/man-pages/man5/flatpak-metadata.5.html (host-os section)
+      '--filesystem=host-os:ro',
       // Read podman socket
       '--filesystem=xdg-run/podman:create',
       // Read/write containers directory access (ability to save the application preferences)
@@ -226,6 +232,8 @@ const config = {
       '--talk-name=org.kde.StatusNotifierWatcher',
       // Allow to interact with Flatpak system to execute commands outside the application's sandbox
       '--talk-name=org.freedesktop.Flatpak',
+      // required to fix cursor scaling on wayland https://github.com/electron/electron/issues/19810 when the user uses --socket=wayland in their flatpak run
+      '--env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons',
       '--env=XDG_SESSION_TYPE=x11',
     ],
     useWaylandFlags: 'false',
