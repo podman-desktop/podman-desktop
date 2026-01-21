@@ -64,7 +64,7 @@ test('Expect deleting styling', async () => {
   expect(icon).toHaveAttribute('title', status);
   expect(icon).not.toHaveAttribute('border');
 
-  const spinner = screen.getByRole('img');
+  const spinner = screen.getByRole('status', { name: 'Loading' }).firstChild;
   expect(spinner).toBeInTheDocument();
   expect(spinner).toHaveAttribute('width', '1.4em');
 });
@@ -77,7 +77,7 @@ test('Expect updating styling', async () => {
   expect(icon).toHaveAttribute('title', status);
   expect(icon).not.toHaveAttribute('border');
 
-  const spinner = screen.getByRole('img');
+  const spinner = screen.getByRole('status', { name: 'Loading' }).firstChild;
   expect(spinner).toBeInTheDocument();
   expect(spinner).toHaveAttribute('width', '1.4em');
 });
