@@ -107,7 +107,7 @@ export class ExtensionsUtils {
     let publisherDisplayName = matchingCatalogExtension?.publisherDisplayName ?? 'N/A';
 
     if (matchingInstalledExtension && !matchingInstalledExtension.removable) {
-      publisherDisplayName = 'Podman Desktop (built-in)';
+      publisherDisplayName = 'Pre-installed';
     }
 
     const categories: string[] = matchingCatalogExtension?.categories ?? [];

@@ -30,10 +30,10 @@
 /* eslint-disable sonarjs/function-return-type */
 import type { Event } from '@podman-desktop/api';
 
+import { CharCode } from '/@api/context/charCode.js';
+import type { ContextKeyValue, IContext } from '/@api/context/context.js';
 import type { IDisposable } from '/@api/disposable.js';
 
-import type { ContextKeyValue, IContext } from '../../../../main/src/plugin/api/context-info.js';
-import { CharCode } from '../../../../main/src/plugin/util/charCode.js';
 import type { LexingError, Token } from './scanner.js';
 import { Scanner, TokenType } from './scanner.js';
 

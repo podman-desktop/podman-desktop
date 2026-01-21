@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
-import { formatCss, parse } from 'culori';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
@@ -27,11 +26,15 @@ import type { RawThemeContribution } from '/@api/theme-info.js';
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import { isWindows } from '../util.js';
 import { AppearanceSettings } from './appearance-settings.js';
+import { ColorBuilder } from './color-builder.js';
+import { colorPaletteHelper } from './color-palette-helper.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
 const { amber, black, charcoal, dustypurple, fuschia, gray, green, purple, red, sky, stone, white, transparent } =
   tailwindColorPalette;
+
+export type ColorDefinitionWithId = ColorDefinition & { id: string };
 
 export class ColorRegistry {
   #apiSender: ApiSenderType;
@@ -147,6 +150,63 @@ export class ColorRegistry {
     this.#themes.get('light')?.set(colorId, definition.light);
     this.#themes.get('dark')?.set(colorId, definition.dark);
     this.notifyUpdate();
+  }
+
+  /**
+   * Register a color using a built color definition that includes the id.
+   * Use this.color() for fluent color definition creation.
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('my-color')
+   *     .withLight(colorPaletteHelper('#ffffff'))
+   *     .withDark(colorPaletteHelper('#000000'))
+   *     .build()
+   * );
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('transparent-color')
+   *     .withLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
+   *     .withDark(colorPaletteHelper('#000000').withAlpha(0.8))
+   *     .build()
+   * );
+   *
+   * @param definition - The color definition with id, light, and dark values
+   */
+  protected registerColorDefinition(definition: ColorDefinitionWithId): void {
+    this.registerColor(definition.id, {
+      light: definition.light,
+      dark: definition.dark,
+    });
+  }
+
+  /**
+   * Create a ColorBuilder for fluent color definition creation.
+   * Call build() on the result and pass it to registerColorDefinition().
+   * Use colorPaletteHelper() to wrap colors with optional alpha values.
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('my-color')
+   *     .withLight(colorPaletteHelper('#ffffff'))
+   *     .withDark(colorPaletteHelper('#000000'))
+   *     .build()
+   * );
+   *
+   * @example
+   * this.registerColorDefinition(
+   *   this.color('transparent-color')
+   *     .withLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
+   *     .withDark(colorPaletteHelper('#000000').withAlpha(0.8))
+   *     .build()
+   * );
+   *
+   * @param colorId - The unique color identifier
+   * @returns A ColorBuilder instance for method chaining
+   */
+  protected color(colorId: string): ColorBuilder {
+    return new ColorBuilder(colorId);
   }
 
   // check if the given theme is dark
@@ -918,10 +978,12 @@ export class ColorRegistry {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColor(`${link}-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.registerColorDefinition(
+      this.color(`${link}-hover-bg`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.13))
+        .withDark(colorPaletteHelper(white).withAlpha(0.13))
+        .build(),
+    );
   }
 
   // button
@@ -1008,18 +1070,22 @@ export class ColorRegistry {
       dark: white,
       light: black,
     });
-    this.registerColor(`${button}close-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.registerColorDefinition(
+      this.color(`${button}close-hover-bg`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.13))
+        .withDark(colorPaletteHelper(white).withAlpha(0.13))
+        .build(),
+    );
     this.registerColor(`${button}link-text`, {
       dark: purple[400],
       light: purple[700],
     });
-    this.registerColor(`${button}link-hover-bg`, {
-      dark: white + '2',
-      light: black + '2',
-    });
+    this.registerColorDefinition(
+      this.color(`${button}link-hover-bg`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.13))
+        .withDark(colorPaletteHelper(white).withAlpha(0.13))
+        .build(),
+    );
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
@@ -1553,20 +1619,11 @@ export class ColorRegistry {
   }
 
   protected initCommon(): void {
-    const darkParsed = parse(stone[300]);
-    const lightParsed = parse(stone[600]);
-
-    if (!darkParsed || !lightParsed) {
-      throw new Error('Failed to parse stone palette colors');
-    }
-
-    darkParsed.alpha = 0.4;
-    lightParsed.alpha = 0.4;
-
-    this.registerColor(`item-disabled`, {
-      dark: formatCss(darkParsed),
-      light: formatCss(lightParsed),
-      // TODO: light HC + dark HC
-    });
+    this.registerColorDefinition(
+      this.color('item-disabled')
+        .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
+        .withDark(colorPaletteHelper(stone[300]).withAlpha(0.4))
+        .build(),
+    );
   }
 }

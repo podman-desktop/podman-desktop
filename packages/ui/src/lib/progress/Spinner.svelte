@@ -8,12 +8,12 @@ let { size = '2em', class: className, style }: Props = $props();
 </script>
 
 <i
-  role="progressbar"
+  role="status"
   aria-label="Loading"
-  aria-busy="true"
+  aria-live="polite"
   class="flex justify-center items-center {className}"
   style={style}>
-  <svg width={size} height={size} viewBox="0 0 100 100" role="img">
+  <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
     <defs>
       <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:1"></stop>

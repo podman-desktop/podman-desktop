@@ -45,10 +45,18 @@ prepare:
     script: |
       sudo dnf update -y
       sudo dnf install -y \
-        git nodejs npm xorg-x11-server-Xvfb \
+        git curl xorg-x11-server-Xvfb \
         nss nspr atk at-spi2-atk cups libXcomposite libXdamage libXfixes libXrandr cairo pango alsa-lib \
         gcc-c++ gtk3 passt jq
-      sudo npm install -g pnpm
+
+      # Install Node.js directly from official binary (if not already installed)
+      if ! command -v node &> /dev/null || [[ "$(node -v)" != "$NODE_VERSION" ]]; then
+        curl -fsSL https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.xz -o node.tar.xz || exit 1
+        sudo tar -C /usr/local --strip-components=1 -xf node.tar.xz || exit 1
+        rm -f node.tar.xz
+      fi
+
+      npm install -g pnpm
       echo "NodeJS version: $(node -v)"
       echo "npm version: $(npm -v)"
       echo "pnpm Version: $(pnpm --version)"

@@ -1,7 +1,7 @@
 <script lang="ts">
-import { Items } from '/@/lib/help/HelpItems';
-
 import HelpActionsItems from './HelpActionsItems.svelte';
+
+const items = $derived(await window.helpMenuGetItems());
 </script>
 
-<HelpActionsItems items={Items}/>
+<HelpActionsItems items={items}/>

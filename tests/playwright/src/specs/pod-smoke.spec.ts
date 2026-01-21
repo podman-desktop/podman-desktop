@@ -182,6 +182,8 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
   test('Checking pod details', async ({ navigationBar }) => {
     const pods = await navigationBar.openPods();
     await playExpect.poll(async () => await pods.podExists(podToRun), { timeout: 10_000 }).toBeTruthy();
+    await playExpect.poll(async () => await pods.getPodEnvironment(podToRun), { timeout: 10_000 }).toContain('podman');
+
     const podDetails = await pods.openPodDetails(podToRun);
     await playExpect(podDetails.heading).toBeVisible();
     await playExpect(podDetails.heading).toContainText(podToRun);

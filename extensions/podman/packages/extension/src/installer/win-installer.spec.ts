@@ -1,5 +1,5 @@
 /*********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,12 @@ import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { WinPlatform } from '/@/platforms/win-platform';
+import type { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 import { getAssetsFolder } from '/@/utils/util';
 
 import { WinInstaller } from './win-installer';
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const extensionContext = {
   subscriptions: [],
@@ -40,6 +41,10 @@ const progress = {
 
 const mockTelemetryLogger = {} as TelemetryLogger;
 const mockWinPlatform = {} as WinPlatform;
+const legacyInstaller = {
+  isInstalled: vi.fn(),
+  uninstall: vi.fn(),
+} as unknown as PodmanWindowsLegacyInstaller;
 
 vi.mock(import('/@/utils/util'), () => ({
   getAssetsFolder: vi.fn(),
@@ -48,7 +53,7 @@ vi.mock(import('/@/utils/util'), () => ({
 let installer: WinInstaller;
 
 beforeEach(() => {
-  installer = new WinInstaller(extensionContext, mockTelemetryLogger, mockWinPlatform);
+  installer = new WinInstaller(extensionContext, mockTelemetryLogger, mockWinPlatform, legacyInstaller);
   vi.resetAllMocks();
   // reset array of subscriptions
   extensionContext.subscriptions.length = 0;
@@ -98,4 +103,16 @@ test('expect update on windows to throw error if non zero exit code', async () =
   const result = await installer.update();
   expect(result).toBeFalsy();
   expect(extensionApi.window.showErrorMessage).toHaveBeenCalled();
+});
+
+test('expect update to uninstall legacy installer if detected', async () => {
+  vi.mocked(legacyInstaller.isInstalled).mockResolvedValue(true);
+
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readdirSync).mockReturnValue([]);
+
+  const result = await installer.update();
+  expect(result).toBeTruthy();
+
+  expect(legacyInstaller.uninstall).toHaveBeenCalledOnce();
 });

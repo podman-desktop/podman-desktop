@@ -120,7 +120,7 @@ export class ExperimentalConfigurationManager {
       return false;
     } else {
       const config = this.configurationRegistry.getConfiguration(section, scope).get(property);
-      return typeof config === 'object' && config !== null;
+      return (typeof config === 'object' && config !== null) || (typeof config === 'boolean' && config);
     }
   }
 }

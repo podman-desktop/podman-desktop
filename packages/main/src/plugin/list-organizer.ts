@@ -20,15 +20,14 @@ import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import { IDisposable } from '/@api/disposable.js';
-
-import { type ListOrganizerItem, SavedListOrganizerConfig } from '../../../api/src/list-organizer.js';
-
-// Dynamic list organizer registry - populated by frontend components during initialization
-const REGISTERED_LISTS: Record<string, string[]> = {};
+import type { ListOrganizerItem, SavedListOrganizerConfig } from '/@api/list-organizer.js';
 
 @injectable()
 export class ListOrganizerRegistry implements IDisposable {
   #disposables: IDisposable[] = [];
+
+  // Dynamic list organizer registry - populated by frontend components during initialization
+  private registeredLists: Record<string, string[]> = {};
 
   constructor(@inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry) {}
 
@@ -39,7 +38,7 @@ export class ListOrganizerRegistry implements IDisposable {
 
   // Get default configuration for a list kind
   getDefaultListConfig(listKind: string): SavedListOrganizerConfig[] {
-    const defaults = REGISTERED_LISTS[listKind] ?? [];
+    const defaults = this.registeredLists[listKind] ?? [];
     return defaults.map(name => ({ id: name, enabled: true }));
   }
 
@@ -47,8 +46,8 @@ export class ListOrganizerRegistry implements IDisposable {
   async loadListConfig(listKind: string, availableColumns: string[]): Promise<ListOrganizerItem[]> {
     try {
       // Auto-register the list if not already registered
-      if (!REGISTERED_LISTS[listKind]) {
-        REGISTERED_LISTS[listKind] = availableColumns;
+      if (!this.registeredLists[listKind]) {
+        this.registeredLists[listKind] = availableColumns;
 
         // Register the configuration with the configuration registry
         const listConfiguration: IConfigurationNode = {
@@ -95,7 +94,7 @@ export class ListOrganizerRegistry implements IDisposable {
 
   // Helper: Create default list items
   private createDefaultListItems(listKind: string, availableColumns: string[]): ListOrganizerItem[] {
-    const defaults = REGISTERED_LISTS[listKind] ?? availableColumns;
+    const defaults = this.registeredLists[listKind] ?? availableColumns;
     return defaults.map((colName, index) => ({
       id: colName,
       label: this.getColumnLabel(colName),
@@ -123,7 +122,7 @@ export class ListOrganizerRegistry implements IDisposable {
     const mergedItems: ListOrganizerItem[] = [];
 
     // Get default order to determine originalOrder for each column
-    const defaults = REGISTERED_LISTS[listKind] ?? availableColumns;
+    const defaults = this.registeredLists[listKind] ?? availableColumns;
     const getOriginalOrder = (id: string): number => {
       const index = defaults.indexOf(id);
       return index >= 0 ? index : defaults.length; // Put unknown items at the end

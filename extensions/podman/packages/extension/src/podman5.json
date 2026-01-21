@@ -8,10 +8,10 @@
       "version": "v5.7.1",
       "arch": {
         "x64": {
-          "fileName": "podman-installer-windows-amd64.exe"
+          "fileName": "podman-installer-windows-amd64.msi"
         },
         "arm64": {
-          "fileName": "podman-installer-windows-arm64.exe"
+          "fileName": "podman-installer-windows-arm64.msi"
         }
       }
     },

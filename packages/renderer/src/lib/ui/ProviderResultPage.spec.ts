@@ -134,7 +134,7 @@ describe('test ProviderResultPage', async () => {
       expect(providerEntry).toBeInTheDocument();
       const cb = within(providerEntry).queryByRole('checkbox');
       expect(cb).not.toBeInTheDocument();
-      const spinner = within(providerEntry).queryByRole('img');
+      const spinner = within(providerEntry).queryByRole('status', { name: 'Loading' });
       expect(spinner).toBeInTheDocument();
     };
 

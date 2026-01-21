@@ -62,5 +62,6 @@ export interface OnboardingInfo extends Onboarding {
   name: string;
   displayName: string;
   icon: string;
+  welcomeMessage?: string;
   status?: OnboardingStatus;
 }

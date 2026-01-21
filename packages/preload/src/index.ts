@@ -44,6 +44,7 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication';
 import type { CliToolInfo } from '/@api/cli-tool-info';
 import type { ColorInfo } from '/@api/color-info';
 import type { CommandInfo } from '/@api/command-info';
@@ -63,6 +64,7 @@ import type {
 import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 import type { ContainerStatsInfo } from '/@api/container-stats-info';
 import type { ContainerfileInfo } from '/@api/containerfile-info';
+import type { ContextInfo } from '/@api/context/context';
 import type { ContributionInfo } from '/@api/contribution-info';
 import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
 import type { IDisposable } from '/@api/disposable';
@@ -98,6 +100,8 @@ import type { ResourceCount } from '/@api/kubernetes-resource-count';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
 import type { Guide } from '/@api/learning-center/guide';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions, PlayKubeInfo } from '/@api/libpod/libpod';
+import type { ListOrganizerItem } from '/@api/list-organizer';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
 import type { Menu } from '/@api/menu.js';
 import { NavigationPage } from '/@api/navigation-page';
@@ -117,6 +121,7 @@ import type {
 } from '/@api/provider-info';
 import type { ProxyState } from '/@api/proxy';
 import type { PullEvent } from '/@api/pull-event';
+import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar';
 import type { PinOption } from '/@api/status-bar/pin-option';
@@ -124,15 +129,6 @@ import type { TelemetryMessages } from '/@api/telemetry';
 import type { ViewInfoUI } from '/@api/view-info';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
 import type { WebviewInfo } from '/@api/webview-info';
-
-import type { ListOrganizerItem } from '../../api/src/list-organizer';
-import type { ContextInfo } from '../../main/src/plugin/api/context-info';
-import type { AuthenticationProviderInfo } from '../../main/src/plugin/authentication';
-import type {
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  PlayKubeInfo,
-} from '../../main/src/plugin/dockerode/libpod-dockerode';
-import type { ExtensionBanner, RecommendedRegistry } from '../../main/src/plugin/recommendations/recommendations-api';
 
 export type DialogResultCallback = (openDialogReturnValue: Electron.OpenDialogReturnValue) => void;
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;

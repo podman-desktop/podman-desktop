@@ -259,3 +259,59 @@ test('Expect display correctly images to save', async () => {
   const inputHttpdWithDefaultTag = screen.getByRole('textbox', { name: 'image httpd:latest' });
   expect(inputHttpdWithDefaultTag).toBeInTheDocument();
 });
+
+test('Expect images with same ID but different tags to render without duplicate key error', async () => {
+  // This tests the scenario where the same image has multiple tags (e.g., alpine:latest and alpine:2.6)
+  // Both share the same image ID but have different tags
+  const sharedImageId = 'sha256:e738dfbe7a10356ea998e8acc7493c0bfae5ed919ad7eb99550ab60d7f47e214';
+  saveImagesInfo.set([
+    {
+      id: sharedImageId,
+      shortId: 'e738dfbe7a10',
+      name: 'docker.io/library/alpine',
+      tag: 'latest',
+      engineId: 'podman.podman-machine-default',
+    },
+    {
+      id: sharedImageId,
+      shortId: 'e738dfbe7a10',
+      name: 'docker.io/library/alpine',
+      tag: '2.6',
+      engineId: 'podman.podman-machine-default',
+    },
+  ] as ImageInfoUI[]);
+  await waitRender();
+
+  // Both images should be displayed without errors
+  const alpineLatest = screen.getByRole('textbox', { name: 'image docker.io/library/alpine:latest' });
+  expect(alpineLatest).toBeInTheDocument();
+  const alpine26 = screen.getByRole('textbox', { name: 'image docker.io/library/alpine:2.6' });
+  expect(alpine26).toBeInTheDocument();
+});
+
+test('Expect images with same ID and tag but different engines to render without duplicate key error', async () => {
+  // This tests the scenario where two different engines have the same image (same id+tag)
+  // The composite key must include engineId to guarantee uniqueness
+  const sharedImageId = 'sha256:e738dfbe7a10356ea998e8acc7493c0bfae5ed919ad7eb99550ab60d7f47e214';
+  saveImagesInfo.set([
+    {
+      id: sharedImageId,
+      shortId: 'e738dfbe7a10',
+      name: 'docker.io/library/alpine',
+      tag: 'latest',
+      engineId: 'podman.podman-machine-default',
+    },
+    {
+      id: sharedImageId,
+      shortId: 'e738dfbe7a10',
+      name: 'docker.io/library/alpine',
+      tag: 'latest',
+      engineId: 'docker.docker-desktop',
+    },
+  ] as ImageInfoUI[]);
+  await waitRender();
+
+  // Both images should be displayed without errors - query all with same name since they have identical display names
+  const alpineImages = screen.getAllByRole('textbox', { name: 'image docker.io/library/alpine:latest' });
+  expect(alpineImages).toHaveLength(2);
+});

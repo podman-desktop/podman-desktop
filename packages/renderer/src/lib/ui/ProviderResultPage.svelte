@@ -154,7 +154,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
           <div class="flex flex-row items-center">
             <span class="grow">{provider.info.label}</span>
             {#if provider.state === 'running'}
-              <Spinner size="12"></Spinner>
+              <Spinner size="12px"/>
             {/if}
             {#if provider.state === 'failed'}
               <span class="text-[var(--pd-state-error)] mt-1">

@@ -18,7 +18,8 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type { ExtensionBanner } from '../../../main/src/plugin/recommendations/recommendations-api';
+import type { ExtensionBanner } from '/@api/recommendations/recommendations';
+
 import { EventStore } from './event-store';
 
 const windowEvents = [

@@ -19,8 +19,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { ListOrganizerItem, SavedListOrganizerConfig } from '/@api/list-organizer.js';
 
-import type { ListOrganizerItem, SavedListOrganizerConfig } from '../../../api/src/list-organizer.js';
 import { ListOrganizerRegistry } from './list-organizer.js';
 
 let listOrganizerRegistry: ListOrganizerRegistry;

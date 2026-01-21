@@ -73,6 +73,7 @@ function updateResetButtonVisibility(recordValue: unknown): void {
 }
 
 function doResetToDefault(): void {
+  if (record.locked) return;
   resetToDefault = true;
 }
 
@@ -106,7 +107,7 @@ async function openGitHubDiscussion(): Promise<void> {
             </Label>
           {/if}
         </div>
-        {#if showResetButton}
+        {#if showResetButton && !record.locked}
           <div class="ml-2">
             <RefreshButton label="Reset to default value" onclick={doResetToDefault} />
           </div>

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,12 +43,13 @@ import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { ContainerCreateOptions, HostConfig } from '/@api/container-info.js';
 import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
 import type { ImageInfo } from '/@api/image-info.js';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '/@api/libpod/libpod.js';
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 
 import * as util from '../util.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
-import type { ContainerCreateOptions as PodmanContainerCreateOptions, LibPod } from './dockerode/libpod-dockerode.js';
+import type { LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import type { EnvfileParser } from './env-file-parser.js';
 import type { ProviderRegistry } from './provider-registry.js';

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,14 @@ import type { Event } from '/@api/event.js';
 import type { HistoryInfo } from '/@api/history-info.js';
 import type { BuildImageOptions, ImageInfo, ListImagesOptions, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
+import type {
+  ContainerCreateMountOption,
+  ContainerCreateNetNSOption,
+  ContainerCreateOptions as PodmanContainerCreateOptions,
+  ContainerCreatePortMappingOption,
+  PodmanDevice,
+} from '/@api/libpod/libpod.js';
+import { PlayKubeInfo } from '/@api/libpod/libpod.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
 import type { LibPodPodInfo, PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info.js';
@@ -66,15 +74,7 @@ import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume
 
 import { isWindows } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
-import type {
-  ContainerCreateMountOption,
-  ContainerCreateNetNSOption,
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  ContainerCreatePortMappingOption,
-  LibPod,
-  PlayKubeInfo,
-  PodmanDevice,
-} from './dockerode/libpod-dockerode.js';
+import type { LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';
 import { EnvfileParser } from './env-file-parser.js';
 import { Emitter } from './events/emitter.js';

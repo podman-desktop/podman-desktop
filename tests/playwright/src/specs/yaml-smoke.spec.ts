@@ -71,6 +71,25 @@ test.describe.serial(
       await playExpect(podsPage.heading).toBeVisible();
     });
 
+    test('Playing yaml with replace option', async ({ navigationBar }) => {
+      let podsPage = await navigationBar.openPods();
+      await playExpect(podsPage.heading).toBeVisible();
+
+      const podmanKubePlayPage = await podsPage.openPodmanKubePlay();
+      await playExpect(podmanKubePlayPage.heading).toBeVisible();
+
+      const yamlFilePath = path.resolve(__dirname, '..', '..', 'resources', `${podAppName}.yaml`);
+      podsPage = await podmanKubePlayPage.playYaml(
+        {
+          podmanKubePlayOption: PodmanKubePlayOptions.SelectYamlFile,
+          pathToYaml: yamlFilePath,
+        },
+        false,
+        true,
+      );
+      await playExpect(podsPage.heading).toBeVisible();
+    });
+
     test('Checking that created pod from yaml is correct', async ({ page, navigationBar }) => {
       test.setTimeout(120_000);
       const podsPage = await navigationBar.openPods();

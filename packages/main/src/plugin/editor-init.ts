@@ -19,8 +19,7 @@
 import { inject, injectable } from 'inversify';
 
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-
-import { EditorSettings } from './editor-settings.js';
+import { EditorSettings } from '/@api/editor/editor-settings.js';
 
 @injectable()
 export class EditorInit {

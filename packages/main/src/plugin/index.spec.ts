@@ -27,10 +27,10 @@ import { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { PlayKubeInfo } from '/@api/libpod/libpod.js';
 import type { NotificationCardOptions } from '/@api/notification.js';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 

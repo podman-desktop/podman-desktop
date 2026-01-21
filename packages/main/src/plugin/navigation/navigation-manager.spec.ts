@@ -65,6 +65,8 @@ const webviewRegistry = {
 const commandRegistry: CommandRegistry = {
   hasCommand: vi.fn(),
   executeCommand: vi.fn(),
+  registerCommand: vi.fn(),
+  registerCommandPalette: vi.fn(),
 } as unknown as CommandRegistry;
 
 const onboardingRegistry: OnboardingRegistry = {
@@ -302,5 +304,26 @@ test('check navigateToExtensionsCatalog', async () => {
     parameters: {
       searchTerm: 'not:installed category:foo keyword:bar',
     },
+  });
+});
+
+describe('register navigation commands', () => {
+  beforeEach(() => {
+    navigationManager.init();
+  });
+
+  test('should register the navigation.goBack command', () => {
+    expect(commandRegistry.registerCommand).toBeCalledWith('navigation.goBack', expect.anything());
+  });
+
+  test('should register the navigation.goForward command', () => {
+    expect(commandRegistry.registerCommand).toBeCalledWith('navigation.goForward', expect.anything());
+  });
+
+  test('should register navigation commands in command palette', () => {
+    expect(commandRegistry.registerCommandPalette).toBeCalledWith(
+      expect.objectContaining({ command: 'navigation.goBack', title: 'Go Back', category: 'Navigation' }),
+      expect.objectContaining({ command: 'navigation.goForward', title: 'Go Forward', category: 'Navigation' }),
+    );
   });
 });

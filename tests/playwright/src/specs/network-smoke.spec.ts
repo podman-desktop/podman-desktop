@@ -22,7 +22,7 @@ import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const defaultNetworkName = 'bridge';
 const testNetworkName = 'e2e-test-network';
-const testNetworkSubnet = '10.89.0.0/24';
+const testNetworkSubnet = '192.168.1.0/24';
 
 test.describe.serial('Network smoke tests', { tag: ['@smoke'] }, () => {
   test.skip(

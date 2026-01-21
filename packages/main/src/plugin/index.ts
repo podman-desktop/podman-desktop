@@ -54,15 +54,16 @@ import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
+import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import type { ExtensionBanner, RecommendedRegistry } from '/@/plugin/recommendations/recommendations-api.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -114,6 +115,8 @@ import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forwar
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
 import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions, PlayKubeInfo } from '/@api/libpod/libpod.js';
+import type { ListOrganizerItem } from '/@api/list-organizer.js';
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { Menu } from '/@api/menu.js';
 import type { NetworkInspectInfo } from '/@api/network-info.js';
@@ -131,6 +134,7 @@ import type {
 } from '/@api/provider-info.js';
 import type { ProxyState } from '/@api/proxy.js';
 import type { PullEvent } from '/@api/pull-event.js';
+import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations.js';
 import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
 import type { PinOption } from '/@api/status-bar/pin-option.js';
@@ -139,12 +143,10 @@ import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
 
-import type { ListOrganizerItem } from '../../../api/src/list-organizer.js';
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
 import { createHash, isMac } from '../util.js';
 import { AppearanceInit } from './appearance-init.js';
-import type { AuthenticationProviderInfo } from './authentication.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
@@ -169,10 +171,6 @@ import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 import { DockerCompatibility } from './docker/docker-compatibility.js';
 import { DockerDesktopInstallation } from './docker-extension/docker-desktop-installation.js';
 import { DockerPluginAdapter } from './docker-extension/docker-plugin-adapter.js';
-import type {
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  PlayKubeInfo,
-} from './dockerode/libpod-dockerode.js';
 import { DocumentationService } from './documentation/documentation-service.js';
 import { EditorInit } from './editor-init.js';
 import type { Emitter } from './events/emitter.js';
@@ -559,6 +557,8 @@ export class PluginSystem {
     container.bind<KubernetesClient>(KubernetesClient).toSelf().inSingletonScope();
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
     await kubernetesClient.init();
+
+    container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
 
     container.bind<CloseBehavior>(CloseBehavior).toSelf().inSingletonScope();
     const closeBehaviorConfiguration = container.get<CloseBehavior>(CloseBehavior);

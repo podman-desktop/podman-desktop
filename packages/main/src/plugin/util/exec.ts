@@ -18,6 +18,8 @@
 
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
+import { homedir } from 'node:os';
+import { delimiter, join } from 'node:path';
 
 import * as sudo from '@expo/sudo-prompt';
 import type { RunError, RunOptions, RunResult } from '@podman-desktop/api';
@@ -248,7 +250,11 @@ export function getInstallationPath(envPATH?: string): string {
   envPATH ??= process.env['PATH'];
 
   if (isWindows()) {
-    return `c:\\Program Files\\RedHat\\Podman;${envPATH}`;
+    return [
+      join(homedir(), 'AppData', 'Local', 'Programs', 'Podman'),
+      'c:\\Program Files\\RedHat\\Podman',
+      envPATH ?? '',
+    ].join(delimiter);
   } else if (isMac()) {
     if (!envPATH) {
       return macosExtraPath;
