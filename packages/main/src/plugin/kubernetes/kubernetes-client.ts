@@ -207,6 +207,8 @@ export class KubernetesClient {
     { stdout: ExecStreamWriter; stderr: ExecStreamWriter; stdin: StringLineReader; conn: WebSocket }
   > = new Map();
 
+  #managerStarted: boolean = true;
+
   constructor(
     @inject(ApiSenderType)
     private readonly apiSender: ApiSenderType,
@@ -296,12 +298,19 @@ export class KubernetesClient {
       }
     });
 
+    this.#managerStarted = true;
     this.featureRegistry.onFeaturesUpdated(async features => {
       const kubeDashboardRegistered = features.includes('kubernetes-dashboard');
       if (kubeDashboardRegistered) {
-        await this.KubernetesManagerStop();
+        if (this.#managerStarted) {
+          await this.KubernetesManagerStop();
+          this.#managerStarted = false;
+        }
       } else {
-        await this.KubernetesManagerStart();
+        if (!this.#managerStarted) {
+          await this.KubernetesManagerStart();
+          this.#managerStarted = true;
+        }
       }
     });
   }
