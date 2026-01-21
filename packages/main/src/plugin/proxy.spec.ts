@@ -196,3 +196,25 @@ describe.each([
     expect(ensureURL(original)).toBe(converted);
   });
 });
+
+test('check isEnabled returns false when proxy is system but noProxy is not empty', async () => {
+  vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
+    httpProxy: undefined,
+    httpsProxy: undefined,
+    noProxy: 'localhost,127.0.0.1',
+  });
+  await proxy?.setState(ProxyState.PROXY_SYSTEM);
+  await proxy?.setProxy(undefined);
+  expect(proxy?.isEnabled()).toBe(false);
+});
+
+test('check isEnabled returns true when proxy is system and some proxy is enabled', async () => {
+  vi.mocked(getProxySettingsFromSystem).mockResolvedValue({
+    httpProxy: 'http://127.0.0.1:8080',
+    httpsProxy: undefined,
+    noProxy: 'localhost,127.0.0.1',
+  });
+  await proxy?.setState(ProxyState.PROXY_SYSTEM);
+  await proxy?.setProxy(undefined);
+  expect(proxy?.isEnabled()).toBe(true);
+});
