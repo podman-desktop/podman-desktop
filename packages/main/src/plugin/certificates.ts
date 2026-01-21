@@ -35,26 +35,26 @@ import { spawnWithPromise } from './util/spawn-promise.js';
  * X.500 Distinguished Name OID constants
  * @see https://www.alvestrand.no/objectid/2.5.4.html
  */
-export const OID_CN = '2.5.4.3'; // Common Name
-export const OID_C = '2.5.4.6'; // Country
-export const OID_L = '2.5.4.7'; // Locality
-export const OID_ST = '2.5.4.8'; // State or Province
-export const OID_O = '2.5.4.10'; // Organization
-export const OID_OU = '2.5.4.11'; // Organizational Unit
-export const OID_E = '1.2.840.113549.1.9.1'; // Email Address
-export const OID_BASIC_CONSTRAINTS = '2.5.29.19'; // Basic Constraints extension
+export const OID_COMMON_NAME = '2.5.4.3';
+export const OID_COUNTRY = '2.5.4.6';
+export const OID_LOCALITY = '2.5.4.7';
+export const OID_STATE = '2.5.4.8';
+export const OID_ORGANIZATION = '2.5.4.10';
+export const OID_ORGANIZATIONAL_UNIT = '2.5.4.11';
+export const OID_EMAIL = '1.2.840.113549.1.9.1';
+export const OID_BASIC_CONSTRAINTS = '2.5.29.19';
 
 /**
  * Map of OID to human-readable RDN attribute names
  */
 export const OID_NAME_MAP: Record<string, string> = {
-  [OID_CN]: 'CN',
-  [OID_C]: 'C',
-  [OID_L]: 'L',
-  [OID_ST]: 'ST',
-  [OID_O]: 'O',
-  [OID_OU]: 'OU',
-  [OID_E]: 'E',
+  [OID_COMMON_NAME]: 'CN',
+  [OID_COUNTRY]: 'C',
+  [OID_LOCALITY]: 'L',
+  [OID_STATE]: 'ST',
+  [OID_ORGANIZATION]: 'O',
+  [OID_ORGANIZATIONAL_UNIT]: 'OU',
+  [OID_EMAIL]: 'E',
 };
 
 /**
@@ -237,10 +237,10 @@ export class Certificates {
    * Get display name with fallback: CN → O → Full DN
    */
   private getDisplayName(rdns: pkijs.RelativeDistinguishedNames): string {
-    const cn = this.getRDNValue(rdns, OID_CN);
+    const cn = this.getRDNValue(rdns, OID_COMMON_NAME);
     if (cn) return cn;
 
-    const org = this.getRDNValue(rdns, OID_O);
+    const org = this.getRDNValue(rdns, OID_ORGANIZATION);
     if (org) return org;
 
     return this.formatDN(rdns);
