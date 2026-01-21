@@ -73,6 +73,7 @@ const configurationRegistry: IConfigurationRegistry = {
   getConfiguration: vi.fn().mockReturnValue({
     get: vi.fn().mockReturnValue(''),
   }),
+  updateConfigurationValue: vi.fn(),
 } as unknown as IConfigurationRegistry;
 
 const fileSystemMonitoring: FilesystemMonitoring = new FilesystemMonitoring();
@@ -262,6 +263,14 @@ class TestKubernetesClient extends KubernetesClient {
   // need only to be mocked in several test methods
   public override restartJob(name: string, namespace: string): Promise<void> {
     return super.restartJob(name, namespace);
+  }
+
+  public override KubernetesManagerStart(): Promise<void> {
+    return super.KubernetesManagerStart();
+  }
+
+  public override KubernetesManagerStop(): Promise<void> {
+    return super.KubernetesManagerStop();
   }
 }
 
@@ -2648,4 +2657,49 @@ test('expect readNamespacedJob to return the job', async () => {
   const job = await client.readNamespacedJob('foobar', 'default');
   expect(job).toBeDefined();
   expect(job?.metadata?.name).toEqual('foobar');
+});
+
+test('the internal monitoring is stopped when a kubernetes-dashboard feature is registered', async () => {
+  const client = createTestClient('default');
+  expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
+
+  await client.init();
+  expect(featureRegistry.onFeaturesUpdated).toHaveBeenCalledOnce();
+  const callback = vi.mocked(featureRegistry.onFeaturesUpdated).mock.calls[0]?.[0];
+  expect(callback).toBeDefined();
+
+  vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
+  callback!(['kubernetes-dashboard', 'other-feature']);
+  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
+});
+
+test('the internal monitoring is started when a kubernetes-dashboard feature is unregistered', async () => {
+  const client = createTestClient('default');
+  expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
+
+  await client.init();
+  expect(featureRegistry.onFeaturesUpdated).toHaveBeenCalledOnce();
+  const callback = vi.mocked(featureRegistry.onFeaturesUpdated).mock.calls[0]?.[0];
+  expect(callback).toBeDefined();
+
+  vi.spyOn(client, 'KubernetesManagerStart').mockResolvedValue();
+  callback!(['other-feature']);
+  expect(client.KubernetesManagerStart).toHaveBeenCalledOnce();
+});
+
+test('useInternalKubernetes configuration is set to false when internal manager is stopped', async () => {
+  const client = createTestClient('default');
+  await client.init();
+  await client.KubernetesManagerStop();
+  expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
+    'kubernetes.useInternalKubernetes',
+    false,
+  );
+});
+
+test('useInternalKubernetes configuration is set to true when internal manager is started', async () => {
+  const client = createTestClient('default');
+  await client.init();
+  await client.KubernetesManagerStart();
+  expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith('kubernetes.useInternalKubernetes', true);
 });
