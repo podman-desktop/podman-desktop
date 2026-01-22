@@ -19,6 +19,7 @@
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { currentRoute } from '/@/stores/current-route-hint.svelte';
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import {
@@ -160,6 +161,10 @@ describe('goForward', () => {
 });
 
 describe('submenu base routes', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
   test('goBack should skip submenu base routes like /kubernetes', () => {
     // Simulate the navigation scenario:
     // User went /containers -> /kubernetes/dashboard
@@ -178,10 +183,13 @@ describe('submenu base routes', () => {
 });
 
 describe('goToHistoryIndex', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
   test('should not navigate to invalid negative index', () => {
     navigationHistory.stack = ['/containers'];
     navigationHistory.index = 0;
-
     goToHistoryIndex(-1);
 
     expect(router.goto).not.toHaveBeenCalled();
@@ -326,16 +334,19 @@ describe('submenu navigation', () => {
 describe('tab navigation for detail pages', () => {
   test('should only have one entry per resource when navigating through tabs', () => {
     // Start by navigating to containers list
+    currentRoute.navigationHint = undefined;
     router.goto('/containers');
     expect(navigationHistory.stack).toEqual(['/containers']);
     expect(navigationHistory.index).toBe(0);
 
     // Navigate to container detail page summary tab (should add new entry)
+    currentRoute.navigationHint = 'tab';
     router.goto('/containers/abc123/summary');
     expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
     expect(navigationHistory.index).toBe(1);
 
     // Switch to logs tab (should UPDATE current entry, not add new one)
+    currentRoute.navigationHint = 'tab';
     router.goto('/containers/abc123/logs');
 
     // Stack should still only have 2 entries (not 3), with logs replacing summary
@@ -368,27 +379,5 @@ describe('tab navigation for detail pages', () => {
 
     expect(entries.length).toBe(1);
     expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod');
-  });
-
-  test('should skip detail page root URLs ending with / since we are being immediately redirected to the logs tab', () => {
-    // When going to specific containers or pods, we are being immediately redirected to the logs tab
-    // This simulates: user clicks on container -> router goes to /containers/abc123/ -> immediately redirects to /containers/abc123/logs
-
-    navigationHistory.stack = ['/'];
-    navigationHistory.index = 0;
-
-    // Simulate the router subscription receiving the root URL first (should be skipped by isDetailPageRoot)
-    router.goto('/containers/abc123/');
-
-    // Should not have added the root URL to history
-    expect(navigationHistory.stack).toEqual(['/']);
-    expect(navigationHistory.index).toBe(0);
-
-    // Then simulate the immediate redirect to logs tab (should be added)
-    router.goto('/containers/abc123/logs');
-
-    // Now should have both dashboard and logs in history, skipping the root URL
-    expect(navigationHistory.stack).toEqual(['/', '/containers/abc123/logs']);
-    expect(navigationHistory.index).toBe(1);
   });
 });
