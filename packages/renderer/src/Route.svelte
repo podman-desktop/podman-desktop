@@ -3,6 +3,8 @@ import { onDestroy } from 'svelte';
 import type { TinroBreadcrumb, TinroRouteMeta } from 'tinro';
 import { createRouteObject } from 'tinro/dist/tinro_lib';
 
+import { currentRoute } from '/@/stores/current-route-hint.svelte';
+
 import type { NavigationHint } from './navigation';
 import { currentPage, history, lastPage } from './stores/breadcrumb';
 import { TelemetryService } from './TelemetryService';
@@ -34,6 +36,7 @@ const route = createRouteObject({
     processMetaBreadcrumbs(newMeta.breadcrumbs);
     meta = newMeta;
     params = meta.params;
+    currentRoute.navigationHint = navigationHint;
   },
 });
 
