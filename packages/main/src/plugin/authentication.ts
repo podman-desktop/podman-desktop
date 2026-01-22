@@ -117,7 +117,7 @@ export class AuthenticationImpl {
   // store account usage to show confirmation when sign out requested
   private _accountUsageData: AccountUsageRecord[] = [];
   // In-memory store for extension allowances
-  // Key format: `${providerId}:${accountName}` -> AllowedExtension[]
+  // Key format: `${providerId}:${accountId}` -> AllowedExtension[]
   private _extensionAllowances: Map<string, AllowedExtension[]> = new Map();
 
   constructor(
@@ -155,7 +155,8 @@ export class AuthenticationImpl {
       if (session) {
         // show confirmation to sign out with all affected extensions
         const multiple = this._accountUsageData.length > 1;
-        const accountMessage = `The account '${session.account.label}' has been used by:`;
+        const accountDisplayName = session.account.label || session.account.id; // Fallback to id if label is empty
+        const accountMessage = `The account '${accountDisplayName}' has been used by:`;
         const extensionNames: string[] = this._accountUsageData.reduce((prev: string[], current) => {
           if (current.providerId === providerId && current.sessionId === session.id) {
             prev.push(current.extensionName);
@@ -227,23 +228,23 @@ export class AuthenticationImpl {
     );
   }
 
-  private getAllowanceKey(providerId: string, accountName: string): string {
-    return `${providerId}:${accountName}`;
+  private getAllowanceKey(providerId: string, accountId: string): string {
+    return `${providerId}:${accountId}`;
   }
 
-  readAllowedExtensions(providerId: string, accountName: string): AllowedExtension[] {
-    const key = this.getAllowanceKey(providerId, accountName);
+  readAllowedExtensions(providerId: string, accountId: string): AllowedExtension[] {
+    const key = this.getAllowanceKey(providerId, accountId);
     return this._extensionAllowances.get(key) ?? [];
   }
 
   updateAllowedExtension(
     providerId: string,
-    accountName: string,
+    accountId: string,
     extensionId: string,
     extensionName: string,
     isAllowed: boolean,
   ): void {
-    const key = this.getAllowanceKey(providerId, accountName);
+    const key = this.getAllowanceKey(providerId, accountId);
     const allowances = this._extensionAllowances.get(key) ?? [];
 
     const existingIndex = allowances.findIndex(ext => ext.id === extensionId);
@@ -262,13 +263,13 @@ export class AuthenticationImpl {
   /**
    * Check extension access to an account
    * @param providerId The id of the authentication provider
-   * @param accountName The account name that access is checked for
+   * @param accountId The unique identifier of the account that access is checked for
    * @param extensionId The id of the extension requesting access
    * @returns Returns true or false if the user has opted to permanently grant or disallow access, and undefined
    * if they haven't made a choice yet
    */
-  isAccessAllowed(providerId: string, accountName: string, extensionId: string): boolean | undefined {
-    const key = this.getAllowanceKey(providerId, accountName);
+  isAccessAllowed(providerId: string, accountId: string, extensionId: string): boolean | undefined {
+    const key = this.getAllowanceKey(providerId, accountId);
     const allowances = this._extensionAllowances.get(key);
 
     if (!allowances) {
@@ -313,9 +314,11 @@ export class AuthenticationImpl {
 
     const sessions = providerData ? await providerData.provider.getSessions(sortedScopes) : [];
 
-    if (sessions.length && sessions[0]?.account.label) {
+    if (sessions.length > 0 && sessions[0]) {
       const session = sessions[0];
-      const accessAllowed = this.isAccessAllowed(providerId, session.account.label, requestingExtension.id);
+      const accountId = session.account.id;
+      const accountLabel = session.account.label || accountId; // Fallback to accountId if label is empty
+      const accessAllowed = this.isAccessAllowed(providerId, accountId, requestingExtension.id);
 
       // If explicitly denied, don't return the session
       if (accessAllowed === false) {
@@ -331,7 +334,7 @@ export class AuthenticationImpl {
 
         const allowRsp = await this.messageBox.showMessageBox({
           title: 'Allow Access',
-          message: `The extension '${requestingExtension.label}' wants to access the ${providerData?.label ?? providerId} account '${session.account.label}'.`,
+          message: `The extension '${requestingExtension.label}' wants to access the ${providerData?.label ?? providerId} account '${accountLabel}'.`,
           buttons: ['Deny', 'Allow'],
           type: 'info',
         });
@@ -341,13 +344,7 @@ export class AuthenticationImpl {
         // Only store allowance when user allows, not when they deny
         // This way, denying will prompt again next time instead of permanently blocking
         if (isAllowed) {
-          this.updateAllowedExtension(
-            providerId,
-            session.account.label,
-            requestingExtension.id,
-            requestingExtension.label,
-            true,
-          );
+          this.updateAllowedExtension(providerId, accountId, requestingExtension.id, requestingExtension.label, true);
         } else {
           return undefined;
         }
@@ -381,7 +378,7 @@ export class AuthenticationImpl {
         // Auto-allow the creating extension to access its own session
         this.updateAllowedExtension(
           providerId,
-          newSession.account.label,
+          newSession.account.id,
           requestingExtension.id,
           requestingExtension.label,
           true,

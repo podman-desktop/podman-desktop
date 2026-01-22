@@ -411,8 +411,8 @@ test('getSession returns undefined when extension access is explicitly denied', 
 
   expect(session).toBeDefined();
 
-  // Now deny access for ext2
-  authModule.updateAllowedExtension('company.auth-provider', session!.account.label, 'ext2', 'Extension 2', false);
+  // Now deny access for ext2 (using account.id for allowance key)
+  authModule.updateAllowedExtension('company.auth-provider', session!.account.id, 'ext2', 'Extension 2', false);
 
   // ext2 should not get the session
   const sessionForExt2 = await authModule.getSession(
@@ -439,8 +439,8 @@ test('getSession returns session when extension access is allowed', async () => 
 
   expect(session).toBeDefined();
 
-  // Allow access for ext2
-  authModule.updateAllowedExtension('company.auth-provider', session!.account.label, 'ext2', 'Extension 2', true);
+  // Allow access for ext2 (using account.id for allowance key)
+  authModule.updateAllowedExtension('company.auth-provider', session!.account.id, 'ext2', 'Extension 2', true);
 
   // ext2 should get the session
   const sessionForExt2 = await authModule.getSession(
@@ -496,8 +496,8 @@ test('getSession prompts for allowance when accessing session without prior deci
   expect(sessionForExt2).toBeDefined();
   expect(sessionForExt2?.id).toBe(session!.id);
 
-  // Allowance should be stored
-  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.label, 'ext2')).toBe(true);
+  // Allowance should be stored (keyed by account.id)
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext2')).toBe(true);
 });
 
 test('getSession denies access when user clicks Deny on allowance prompt but does not store denial', async () => {
@@ -532,8 +532,8 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
   // Session should not be returned
   expect(sessionForExt2).toBeUndefined();
 
-  // Denial should NOT be stored - allows prompting again next time
-  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.label, 'ext2')).toBeUndefined();
+  // Denial should NOT be stored - allows prompting again next time (keyed by account.id)
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext2')).toBeUndefined();
 });
 
 test('getSession auto-allows creating extension to reuse its own session in silent mode', async () => {
@@ -554,8 +554,8 @@ test('getSession auto-allows creating extension to reuse its own session in sile
 
   expect(session).toBeDefined();
 
-  // Creating extension should be auto-allowed
-  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.label, 'ext1')).toBe(true);
+  // Creating extension should be auto-allowed (keyed by account.id)
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext1')).toBe(true);
 
   // Reset mock to ensure no prompts happen
   vi.mocked(mb.showMessageBox).mockClear();
