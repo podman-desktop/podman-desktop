@@ -347,3 +347,267 @@ test('authentication shows confirmation request when signing out from a session'
     }),
   );
 });
+
+test('readAllowedExtensions returns empty array when no allowances exist', () => {
+  expect(authModule.readAllowedExtensions('provider1', 'account1')).toEqual([]);
+});
+
+test('updateAllowedExtension adds new extension allowance', () => {
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
+
+  const allowances = authModule.readAllowedExtensions('provider1', 'account1');
+  expect(allowances).toHaveLength(1);
+  expect(allowances[0]).toEqual({ id: 'ext1', name: 'Extension 1', allowed: true });
+});
+
+test('updateAllowedExtension updates existing extension allowance', () => {
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', false);
+
+  const allowances = authModule.readAllowedExtensions('provider1', 'account1');
+  expect(allowances).toHaveLength(1);
+  expect(allowances[0]).toEqual({ id: 'ext1', name: 'Extension 1', allowed: false });
+});
+
+test('updateAllowedExtension sends authentication-provider-update event', () => {
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
+
+  expect(apiSender.send).toHaveBeenCalledWith('authentication-provider-update', { id: 'provider1' });
+});
+
+test('isAccessAllowed returns undefined when no allowances exist', () => {
+  expect(authModule.isAccessAllowed('provider1', 'account1', 'ext1')).toBeUndefined();
+});
+
+test('isAccessAllowed returns true when extension is allowed', () => {
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
+
+  expect(authModule.isAccessAllowed('provider1', 'account1', 'ext1')).toBe(true);
+});
+
+test('isAccessAllowed returns false when extension is denied', () => {
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', false);
+
+  expect(authModule.isAccessAllowed('provider1', 'account1', 'ext1')).toBe(false);
+});
+
+test('isAccessAllowed returns undefined for unknown extension when other extensions exist', () => {
+  authModule.updateAllowedExtension('provider1', 'account1', 'ext1', 'Extension 1', true);
+
+  expect(authModule.isAccessAllowed('provider1', 'account1', 'ext2')).toBeUndefined();
+});
+
+test('getSession returns undefined when extension access is explicitly denied', async () => {
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authModule.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // First create a session
+  const session = await authModule.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Now deny access for ext2 (using account.id for allowance key)
+  authModule.updateAllowedExtension('company.auth-provider', session!.account.id, 'ext2', 'Extension 2', false);
+
+  // ext2 should not get the session
+  const sessionForExt2 = await authModule.getSession(
+    { id: 'ext2', label: 'Extension 2' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { silent: true },
+  );
+
+  expect(sessionForExt2).toBeUndefined();
+});
+
+test('getSession returns session when extension access is allowed', async () => {
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authModule.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // First create a session
+  const session = await authModule.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Allow access for ext2 (using account.id for allowance key)
+  authModule.updateAllowedExtension('company.auth-provider', session!.account.id, 'ext2', 'Extension 2', true);
+
+  // ext2 should get the session
+  const sessionForExt2 = await authModule.getSession(
+    { id: 'ext2', label: 'Extension 2' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { silent: true },
+  );
+
+  expect(sessionForExt2).toBeDefined();
+  expect(sessionForExt2?.id).toBe(session!.id);
+});
+
+test('getSession prompts for allowance when accessing session without prior decision', async () => {
+  const mb = {
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // User clicks "Allow"
+  } as unknown as MessageBox;
+  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // First create a session with ext1
+  const session = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Reset mock to track only the next call
+  vi.mocked(mb.showMessageBox).mockClear();
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 }); // User clicks "Allow"
+
+  // ext2 tries to access the session - should prompt for allowance
+  const sessionForExt2 = await authentication.getSession(
+    { id: 'ext2', label: 'Extension 2' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+  );
+
+  // Should have prompted the user
+  expect(mb.showMessageBox).toHaveBeenCalledWith(
+    expect.objectContaining({
+      title: 'Allow Access',
+      message: expect.stringContaining('Extension 2'),
+      buttons: ['Deny', 'Allow'],
+    }),
+  );
+
+  // Session should be returned after user allowed
+  expect(sessionForExt2).toBeDefined();
+  expect(sessionForExt2?.id).toBe(session!.id);
+
+  // Allowance should be stored (keyed by account.id)
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext2')).toBe(true);
+});
+
+test('getSession denies access when user clicks Deny on allowance prompt but does not store denial', async () => {
+  const mb = {
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // First call: Allow (for createIfNone)
+  } as unknown as MessageBox;
+  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // First create a session with ext1
+  const session = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Reset mock - user will click "Deny" this time
+  vi.mocked(mb.showMessageBox).mockClear();
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // User clicks "Deny"
+
+  // ext2 tries to access the session - user denies
+  const sessionForExt2 = await authentication.getSession(
+    { id: 'ext2', label: 'Extension 2' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+  );
+
+  // Session should not be returned
+  expect(sessionForExt2).toBeUndefined();
+
+  // Denial should NOT be stored - allows prompting again next time (keyed by account.id)
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext2')).toBeUndefined();
+});
+
+test('getSession auto-allows creating extension to reuse its own session in silent mode', async () => {
+  const mb = {
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+  } as unknown as MessageBox;
+  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // ext1 creates a session
+  const session = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Creating extension should be auto-allowed (keyed by account.id)
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.id, 'ext1')).toBe(true);
+
+  // Reset mock to ensure no prompts happen
+  vi.mocked(mb.showMessageBox).mockClear();
+
+  // Same extension should be able to reuse session in silent mode
+  const sessionAgain = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { silent: true },
+  );
+
+  // Should NOT have prompted (silent mode with existing allowance)
+  expect(mb.showMessageBox).not.toHaveBeenCalled();
+
+  // Session should be returned
+  expect(sessionAgain).toBeDefined();
+  expect(sessionAgain?.id).toBe(session!.id);
+});
+
+test('getSession returns undefined in silent mode when no allowance decision exists', async () => {
+  const mb = {
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+  } as unknown as MessageBox;
+  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // First create a session with ext1
+  const session = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Reset mock
+  vi.mocked(mb.showMessageBox).mockClear();
+
+  // ext2 tries to access the session in silent mode
+  const sessionForExt2 = await authentication.getSession(
+    { id: 'ext2', label: 'Extension 2' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { silent: true },
+  );
+
+  // Should NOT have prompted (silent mode)
+  expect(mb.showMessageBox).not.toHaveBeenCalled();
+
+  // Session should not be returned in silent mode without prior allowance
+  expect(sessionForExt2).toBeUndefined();
+});
