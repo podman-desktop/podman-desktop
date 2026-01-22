@@ -18,6 +18,12 @@
 
 export interface TelemetryMessages {
   acceptMessage: string;
-  infoLink?: string;
-  infoURL?: string;
+  info?: {
+    link: string;
+    url: string;
+  };
+  privacy?: {
+    link: string;
+    url: string;
+  };
 }
