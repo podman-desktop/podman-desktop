@@ -14,12 +14,12 @@ onMount(async () => {
   <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 pb-4" aria-label="content">
     <slot name="content" />
 
-    {#if telemetryMessages?.privacyLink && telemetryMessages?.privacyURL}
+    {#if telemetryMessages?.privacy}
       <div class="pt-6">
         <Link
           on:click={async (): Promise<void> => {
-          await window.openExternal(telemetryMessages.privacyURL ?? '');
-          }}>{telemetryMessages?.privacyLink}</Link>
+          await window.openExternal(telemetryMessages.privacy?.url ?? '');
+          }}>{telemetryMessages?.privacy.link}</Link>
       </div>
     {/if}
   </div>

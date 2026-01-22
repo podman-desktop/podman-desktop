@@ -16,10 +16,14 @@
   "telemetry": {
     "key": "Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy",
     "acceptMessage": "Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.",
-    "infoLink": "For more information read our statement",
-    "infoURL": "https://developers.redhat.com/article/tool-data-collection",
-    "privacyLink": "Read our privacy statement",
-    "privacyURL": "https://www.redhat.com/en/about/privacy-policy"
+    "info": {
+      "link": "For more information read our statement",
+      "url": "https://developers.redhat.com/article/tool-data-collection"
+    },
+    "privacy": {
+      "link": "Read our privacy statement",
+      "url": "https://www.redhat.com/en/about/privacy-policy"
+    }
   },
   "catalog": {
     "default": "https://registry.podman-desktop.io/api/extensions.json"

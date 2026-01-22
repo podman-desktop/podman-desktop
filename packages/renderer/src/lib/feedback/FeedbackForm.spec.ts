@@ -45,8 +45,10 @@ test('Expect privacy statement is missing from the UI when not provided', async 
 test('Expect privacy statement is included when it exists', async () => {
   const telem: TelemetryMessages = {
     acceptMessage: 'Help improve the product',
-    privacyLink: 'Click here',
-    privacyURL: 'privacy-url',
+    privacy: {
+      link: 'Click here',
+      url: 'privacy-url',
+    },
   };
   vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
 
@@ -56,8 +58,8 @@ test('Expect privacy statement is included when it exists', async () => {
 
   const privacyLink = screen.getByRole('link');
   expect(privacyLink).toBeInTheDocument();
-  expect(privacyLink.textContent).toEqual(telem.privacyLink);
+  expect(privacyLink.textContent).toEqual(telem.privacy?.link);
 
   await fireEvent.click(privacyLink);
-  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.privacyURL));
+  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.privacy?.url));
 });

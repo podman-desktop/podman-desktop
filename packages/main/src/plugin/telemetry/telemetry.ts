@@ -110,17 +110,16 @@ export class Telemetry {
 
   async init(): Promise<void> {
     const telemetryMessages = this.getTelemetryMessages();
-    const telemetryLink =
-      telemetryMessages.infoLink && telemetryMessages.infoURL
-        ? ` [${telemetryMessages.infoLink}](${telemetryMessages.infoURL})`
-        : '';
+    const telemetryInfo = telemetryMessages.info
+      ? ` [${telemetryMessages.info.link}](${telemetryMessages.info.url})`
+      : '';
     const telemetryConfigurationNode: IConfigurationNode = {
       id: 'preferences.telemetry',
       title: 'Telemetry',
       type: 'object',
       properties: {
         [TelemetrySettings.SectionName + '.' + TelemetrySettings.Enabled]: {
-          markdownDescription: `${telemetryMessages.acceptMessage}${telemetryLink}`,
+          markdownDescription: `${telemetryMessages.acceptMessage}${telemetryInfo}`,
           type: 'boolean',
           default: true,
         },
@@ -184,10 +183,18 @@ export class Telemetry {
   getTelemetryMessages(): TelemetryMessages {
     return {
       acceptMessage: product.telemetry.acceptMessage,
-      infoLink: product.telemetry.infoLink,
-      infoURL: product.telemetry.infoURL,
-      privacyLink: product.telemetry.privacyLink,
-      privacyURL: product.telemetry.privacyURL,
+      info: product.telemetry.info
+        ? {
+            link: product.telemetry.info?.link,
+            url: product.telemetry.info?.url,
+          }
+        : undefined,
+      privacy: product.telemetry.privacy
+        ? {
+            link: product.telemetry.privacy?.link,
+            url: product.telemetry.privacy?.url,
+          }
+        : undefined,
     } as TelemetryMessages;
   }
 
