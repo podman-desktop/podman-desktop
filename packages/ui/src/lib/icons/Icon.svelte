@@ -27,12 +27,12 @@ const IconComponent = icon;
     <!-- fas fa- and far fa- and fab fa- for Font awesome icons -->
     <!-- -icon for extension icons e.g. 'kind-icon' -->
     {#if icon.startsWith('fas fa-') || icon.startsWith('far fa-') || icon.startsWith('fab fa-') || icon.endsWith('-icon')}
-        <span class={`${icon} ${size} ${className}`} {role} {title}></span>
+        <span class={`${icon} ${size} ${className} flex flex-row`} {role} {title}></span>
     {:else if icon.startsWith('data:image/')}
-        <img src={icon} alt={title ?? ''} {title} {role} class={className} style={typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : ''} />
+        <img src={icon} alt={title ?? ''} {title} {role} class={`${className} flex flex-row`} style={typeof size === 'number' ? `width: ${size}px; height: ${size}px;` : ''} />
     {/if}
 {:else}
     {#if IconComponent && typeof IconComponent !== 'string' && !isFontAwesomeIcon(IconComponent)}
-        <span {role} {title}><IconComponent class={className} {size}/></span>
+        <span {role} {title}><IconComponent class={`${className} flex flex-row`} {size}/></span>
     {/if}
 {/if}

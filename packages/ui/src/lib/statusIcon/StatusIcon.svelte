@@ -20,7 +20,7 @@ let solid = $derived(status === 'RUNNING' || status === 'STARTING' || status ===
 
 <div class="grid place-content-center" style="position:relative">
   <div
-    class="grid place-content-center rounded-sm aspect-square text-xs"
+    class="grid place-content-center rounded-sm aspect-square"
     class:bg-[var(--pd-status-running)]={status === 'RUNNING' || status === 'USED'}
     class:bg-[var(--pd-status-starting)]={status === 'STARTING'}
     class:bg-[var(--pd-status-degraded)]={status === 'DEGRADED'}
