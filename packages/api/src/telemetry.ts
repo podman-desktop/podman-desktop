@@ -20,4 +20,6 @@ export interface TelemetryMessages {
   acceptMessage: string;
   infoLink?: string;
   infoURL?: string;
+  privacyLink?: string;
+  privacyURL?: string;
 }

@@ -186,6 +186,8 @@ export class Telemetry {
       acceptMessage: product.telemetry.acceptMessage,
       infoLink: product.telemetry.infoLink,
       infoURL: product.telemetry.infoURL,
+      privacyLink: product.telemetry.privacyLink,
+      privacyURL: product.telemetry.privacyURL,
     } as TelemetryMessages;
   }
 

@@ -1,6 +1,27 @@
+<script lang="ts">
+import { Link } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
+
+import type { TelemetryMessages } from '/@api/telemetry';
+
+let telemetryMessages: TelemetryMessages;
+
+onMount(async () => {
+  telemetryMessages = await window.getTelemetryMessages();
+});
+</script>
 <div>
   <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 pb-4" aria-label="content">
     <slot name="content" />
+
+    {#if telemetryMessages?.privacyLink && telemetryMessages?.privacyURL}
+      <div class="pt-6">
+        <Link
+          on:click={async (): Promise<void> => {
+          await window.openExternal(telemetryMessages.privacyURL ?? '');
+          }}>{telemetryMessages?.privacyLink}</Link>
+      </div>
+    {/if}
   </div>
 
   <div class="px-5 py-5 mt-2 flex flex-row w-full space-x-5" aria-label="validation and buttons">

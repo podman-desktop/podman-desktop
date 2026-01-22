@@ -399,8 +399,10 @@ describe('aggregateTrack', () => {
     expect(messages.acceptMessage).toBe(
       'Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.',
     );
-    expect(messages.infoLink).toBe('Read our privacy statement');
+    expect(messages.infoLink).toBe('For more information read our statement');
     expect(messages.infoURL).toBe('https://developers.redhat.com/article/tool-data-collection');
+    expect(messages.privacyLink).toBe('Read our privacy statement');
+    expect(messages.privacyURL).toBe('https://www.redhat.com/en/about/privacy-policy');
   });
 
   test('should register telemetry preference correctly', async () => {
@@ -420,13 +422,17 @@ describe('aggregateTrack', () => {
 
   test('should return custom telemetry message', () => {
     vi.mocked(product).telemetry.acceptMessage = 'Accept message';
-    vi.mocked(product).telemetry.infoLink = 'Privacy message';
-    vi.mocked(product).telemetry.infoURL = 'privacy-url';
+    vi.mocked(product).telemetry.infoLink = 'Info message';
+    vi.mocked(product).telemetry.infoURL = 'info-url';
+    vi.mocked(product).telemetry.privacyLink = 'Privacy message';
+    vi.mocked(product).telemetry.privacyURL = 'privacy-url';
 
     const messages = telemetry.getTelemetryMessages();
     expect(messages.acceptMessage).toBe('Accept message');
-    expect(messages.infoLink).toBe('Privacy message');
-    expect(messages.infoURL).toBe('privacy-url');
+    expect(messages.infoLink).toBe('Info message');
+    expect(messages.infoURL).toBe('info-url');
+    expect(messages.privacyLink).toBe('Privacy message');
+    expect(messages.privacyURL).toBe('privacy-url');
   });
 
   test('preference should be formatted correctly when no link is provided', async () => {
