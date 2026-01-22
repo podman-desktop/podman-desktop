@@ -536,6 +536,46 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
   expect(authentication.isAccessAllowed('company.auth-provider', session!.account.label, 'ext2')).toBeUndefined();
 });
 
+test('getSession auto-allows creating extension to reuse its own session in silent mode', async () => {
+  const mb = {
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),
+  } as unknown as MessageBox;
+  const authentication = new AuthenticationImpl(apiSender, mb);
+  const authProvider = new AuthenticationProviderSingleAccount();
+  authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvider);
+
+  // ext1 creates a session
+  const session = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { createIfNone: true },
+  );
+
+  expect(session).toBeDefined();
+
+  // Creating extension should be auto-allowed
+  expect(authentication.isAccessAllowed('company.auth-provider', session!.account.label, 'ext1')).toBe(true);
+
+  // Reset mock to ensure no prompts happen
+  vi.mocked(mb.showMessageBox).mockClear();
+
+  // Same extension should be able to reuse session in silent mode
+  const sessionAgain = await authentication.getSession(
+    { id: 'ext1', label: 'Ext 1' },
+    'company.auth-provider',
+    ['scope1', 'scope2'],
+    { silent: true },
+  );
+
+  // Should NOT have prompted (silent mode with existing allowance)
+  expect(mb.showMessageBox).not.toHaveBeenCalled();
+
+  // Session should be returned
+  expect(sessionAgain).toBeDefined();
+  expect(sessionAgain?.id).toBe(session!.id);
+});
+
 test('getSession returns undefined in silent mode when no allowance decision exists', async () => {
   const mb = {
     showMessageBox: vi.fn().mockResolvedValue({ response: 1 }),

@@ -378,6 +378,14 @@ export class AuthenticationImpl {
           this._signInRequestsData.delete(request.id);
           this._signInRequests.delete(providerId);
         }
+        // Auto-allow the creating extension to access its own session
+        this.updateAllowedExtension(
+          providerId,
+          newSession.account.label,
+          requestingExtension.id,
+          requestingExtension.label,
+          true,
+        );
         this.addAccountUsage(providerId, newSession.id, requestingExtension.id, requestingExtension.label);
         return newSession;
       } else {
