@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import type extensionApi from '@podman-desktop/api';
-import { compare } from 'compare-versions';
 import { injectable } from 'inversify';
+import { coerce, compare } from 'semver';
 
 import { MemoizedBaseCheck } from '/@/checks/memoized-base-check';
 import { WslHelper } from '/@/helpers/wsl-helper';
@@ -34,7 +34,8 @@ export class WSLVersionCheck extends MemoizedBaseCheck {
       const wslHelper = new WslHelper();
       const wslVersionData = await wslHelper.getWSLVersionData();
       if (wslVersionData.wslVersion) {
-        if (compare(wslVersionData.wslVersion, this.minVersion, '>=')) {
+        const wslVersion = coerce(wslVersionData.wslVersion);
+        if (wslVersion && compare(wslVersion, this.minVersion) >= 0) {
           return this.createSuccessfulResult();
         } else {
           return this.createFailureResult({

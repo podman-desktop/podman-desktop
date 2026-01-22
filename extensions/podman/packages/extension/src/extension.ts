@@ -26,7 +26,7 @@ import type { ContainerEngineInfo, RunError } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import type { PodmanExtensionApi, PodmanRunOptions } from '@podman-desktop/podman-extension-api';
 import { Mutex } from 'async-mutex';
-import { compareVersions } from 'compare-versions';
+import { compare } from 'semver';
 
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
@@ -1826,38 +1826,34 @@ const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';
 
 // Checks if start now flag at machine init is supported.
 export function isStartNowAtMachineInitSupported(podmanVersion: string): boolean {
-  return compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT) >= 0;
+  return compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT) >= 0;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_ROOTFUL_MACHINE_INIT = '4.1.0';
 
 // Checks if rootful machine init is supported.
 export function isRootfulMachineInitSupported(podmanVersion: string): boolean {
-  return compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_ROOTFUL_MACHINE_INIT) >= 0;
+  return compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_ROOTFUL_MACHINE_INIT) >= 0;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_PLAYBOOK_MACHINE_INIT = '5.4.0';
 
 // Checks if playbook option is supported.
 export function isPlaybookMachineInitSupported(podmanVersion: string): boolean {
-  return compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_PLAYBOOK_MACHINE_INIT) >= 0;
+  return compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_PLAYBOOK_MACHINE_INIT) >= 0;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION = '4.5.0';
 
 export function isPodmanSocketLocationMoved(podmanVersion: string): boolean {
-  return (
-    extensionApi.env.isLinux && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION) >= 0
-  );
+  return extensionApi.env.isLinux && compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_NEW_SOCKET_LOCATION) >= 0;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_USER_MODE_NETWORKING = '4.6.0';
 
 // Checks if user mode networking is supported. Only Windows platform allows this parameter to be tuned
 export function isUserModeNetworkingSupported(podmanVersion: string): boolean {
-  return (
-    extensionApi.env.isWindows && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_USER_MODE_NETWORKING) >= 0
-  );
+  return extensionApi.env.isWindows && compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_USER_MODE_NETWORKING) >= 0;
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT = '5.2.0-rc1';
@@ -1867,7 +1863,7 @@ export function isLibkrunSupported(podmanVersion: string): boolean {
   return (
     extensionApi.env.isMac &&
     os.arch() === 'arm64' &&
-    compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0
+    compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0
   );
 }
 
@@ -1877,7 +1873,7 @@ export function setWSLEnabled(enabled: boolean): void {
 }
 
 export function isPodman5OrLater(podmanVersion: string): boolean {
-  return compareVersions(podmanVersion, '5.0.0') >= 0;
+  return compare(podmanVersion, '5.0.0') >= 0;
 }
 
 export function sendTelemetryRecords(
