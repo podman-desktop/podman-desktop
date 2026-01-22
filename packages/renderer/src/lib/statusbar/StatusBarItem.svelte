@@ -3,7 +3,11 @@ import type { StatusBarEntry } from '/@api/status-bar';
 
 import { iconClass } from './StatusBarItem';
 
-export let entry: StatusBarEntry;
+interface Props {
+  entry: StatusBarEntry;
+}
+
+let { entry }: Props = $props();
 
 function tooltipText(entry: StatusBarEntry): string {
   return entry.tooltip ?? '';
@@ -35,7 +39,7 @@ async function executeCommand(entry: StatusBarEntry): Promise<void> {
 </script>
 
 <button
-  on:click={async (): Promise<void> => {
+  onclick={async (): Promise<void> => {
     await executeCommand(entry);
   }}
   class="{opacity(entry)} px-1 py-px flex h-full items-center {hoverBackground(entry)} {hoverCursor(
