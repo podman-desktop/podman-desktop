@@ -99,6 +99,7 @@ export function getSpinnerCode(): string {
 
     // replace the size
     spinnerHtmlCode = spinnerHtmlCode.replaceAll('{size}', '16px');
+    spinnerHtmlCode = spinnerHtmlCode.replaceAll('{label}', 'Loading');
   }
   return spinnerHtmlCode;
 }
