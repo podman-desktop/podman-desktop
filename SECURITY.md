@@ -16,7 +16,7 @@ mailing list, or chat. Instead, you have two options:
 - Open a private GitHub Security Vulnerability Advisory
   ([GitHub documentation](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/report-a-vulnerability/privately-reporting-a-security-vulnerability)).
 - Send an email with as many details as possible to
-  [cncf-podman-desktop-security@lists.cncf.io](mailto:cncf-podman-desktop-security@lists.cncf.io?subject=Security%20Vunerablity%20Report).
+  [cncf-podman-desktop-security@lists.cncf.io](mailto:cncf-podman-desktop-security@lists.cncf.io?subject=Security%20Vulnerablity%20Report).
   This is a private mailing list for the core maintainers.
 
 ## Security Announcements
