@@ -1,0 +1,89 @@
+{
+  "name": "@podman-desktop/core-api",
+  "version": "1.26.0-next",
+  "description": "API to be consumed by main/renderer/preload packages",
+  "type": "module",
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "!dist/**/*.spec.*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "test": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest watch --coverage --passWithNoTests"
+  },
+  "devDependencies": {
+    "hosted-git-info": "^9.0.2",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^4.0.10"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./api-sender": {
+      "types": "./dist/api-sender/api-sender-type.d.ts",
+      "default": "./dist/api-sender/api-sender-type.cjs"
+    },
+    "./authentication": {
+      "types": "./dist/authentication/authentication.d.ts",
+      "default": "./dist/authentication/authentication.cjs"
+    },
+    "./configuration": {
+      "types": "./dist/configuration/index.d.ts",
+      "default": "./dist/configuration/index.cjs"
+    },
+    "./context": {
+      "types": "./dist/context/index.d.ts",
+      "default": "./dist/context/index.cjs"
+    },
+    "./editor": {
+      "types": "./dist/editor/editor-settings.d.ts",
+      "default": "./dist/editor/editor-settings.cjs"
+    },
+    "./extension-catalog": {
+      "types": "./dist/extension-catalog/extensions-catalog-api.d.ts",
+      "default": "./dist/extension-catalog/extensions-catalog-api.cjs"
+    },
+    "./featured": {
+      "types": "./dist/featured/featured-api.d.ts",
+      "default": "./dist/featured/featured-api.cjs"
+    },
+    "./kubernetes": {
+      "types": "./dist/kubernetes/kubernetes-generator-api.d.ts",
+      "default": "./dist/kubernetes/kubernetes-generator-api.cjs"
+    },
+    "./learning-center": {
+      "types": "./dist/learning-center/guide.d.ts",
+      "default": "./dist/learning-center/guide.cjs"
+    },
+    "./libpod": {
+      "types": "./dist/libpod/libpod.d.ts",
+      "default": "./dist/libpod/libpod.cjs"
+    },
+    "./recommendations": {
+      "types": "./dist/recommendations/index.d.ts",
+      "default": "./dist/recommendations/index.cjs"
+    },
+    "./status-bar": {
+      "types": "./dist/status-bar/index.d.ts",
+      "default": "./dist/status-bar/index.cjs"
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry/telemetry-settings.d.ts",
+      "default": "./dist/telemetry/telemetry-settings.cjs"
+    },
+    "./terminal": {
+      "types": "./dist/terminal/terminal-settings.d.ts",
+      "default": "./dist/terminal/terminal-settings.cjs"
+    },
+    "./welcome": {
+      "types": "./dist/welcome/welcome-settings.d.ts",
+      "default": "./dist/welcome/welcome-settings.cjs"
+    }
+  }
+}
