@@ -129,8 +129,6 @@ Another example:
 
 ```ts
 <script lang="ts">
-import { CustomSVGIcon } from '/@/icons';
-import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 interface Props {
@@ -160,7 +158,7 @@ let { icon }: Props = $props();
   <Fa icon={icon} size="4x" />
 {:else}
   {@const IconComponent = icon}
-  <IconComponent size=42 />
+  <IconComponent size='42' />
 {/if}
 ```
 
