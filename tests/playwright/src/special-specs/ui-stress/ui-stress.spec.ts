@@ -40,8 +40,11 @@ test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui
     const images = await navigationBar.openImages();
     await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
     //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods (only ubuntu!) = numberOfObjects + 2
+    // System images (e.g., dependabot images) may exist in CI environment
     const expectedImages = isLinux ? numberOfObjects + 2 : numberOfObjects + 1;
-    await playExpect.poll(async () => await images.countRowsFromTable(), { timeout: 10_000 }).toBe(expectedImages);
+    await playExpect
+      .poll(async () => await images.countRowsFromTable(), { timeout: 10_000 })
+      .toBeGreaterThanOrEqual(expectedImages);
     for (let imgNum = 1; imgNum <= numberOfObjects; imgNum++) {
       await playExpect
         .poll(async () => await images.waitForRowToExists(`localhost/my-image-${imgNum}`), { timeout: 0 })
