@@ -1186,8 +1186,8 @@ export class ColorRegistry {
 
     this.registerColor(`${tooltip}border`, {
       // @deprecated since 2025-11-12. See https://github.com/podman-desktop/podman-desktop/pull/14819
-      light: gray[500],
       dark: charcoal[500],
+      light: gray[500],
     });
 
     this.registerColorDefinition(
