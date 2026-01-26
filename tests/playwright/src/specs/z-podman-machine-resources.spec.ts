@@ -207,6 +207,8 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
     });
 
     test('Restart the machine', async ({ page }) => {
+      test.skip(userNet, 'Restarting podman machine is flaky in cicd pipeline with usermode networking');
+
       const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
       await machineCard.performConnectionAction(ResourceElementActions.Restart);
 
