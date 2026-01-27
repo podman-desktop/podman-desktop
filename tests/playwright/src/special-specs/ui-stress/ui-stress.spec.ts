@@ -20,17 +20,14 @@ import { isLinux } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
+const baselineImageCount = Number(process.env.BASELINE_IMAGE_COUNT) || 0;
 console.log(`numberOfObjects => ${numberOfObjects}`);
+console.log(`baselineImageCount => ${baselineImageCount}`);
 
-let baselineImageCount = 0;
-
-test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
+test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('ui-stress-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
-
-  const images = await navigationBar.openImages();
-  baselineImageCount = await images.countRowsFromTable();
 });
 
 test.afterAll(async ({ runner }) => {
