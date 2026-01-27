@@ -31,7 +31,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 });
 
 test.afterAll(async ({ runner }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(120_000);
   try {
     await runner.close();
   } catch (error) {
