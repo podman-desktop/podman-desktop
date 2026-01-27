@@ -19,8 +19,8 @@ in the [Podman Desktop GitHub organization](https://github.com/podman-desktop).
 
 ## Code of Conduct
 
-All members of the Podman Desktop community are expected to follow the CNCF Community
-[Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md)
+All members of the Podman Desktop community are expected to follow the
+[Code of Conduct](https://github.com/podman-desktop/podman-desktop/blob/main/CODE-OF-CONDUCT.md)
 
 ## Project Roles
 
@@ -31,7 +31,7 @@ People at the Contributor level may be new contributors, or they may only contri
 
 #### Responsibilities
 
-- Follow the [Code of Conduct](https://github.com/containers/podman-desktop/blob/main/CODE-OF-CONDUCT.md)
+- Follow the [Code of Conduct](https://github.com/podman-desktop/podman-desktop/blob/main/CODE-OF-CONDUCT.md)
 - Follow the project [contributing guide](https://github.com/podman-desktop/podman-desktop/blob/main/CONTRIBUTING.md)
 
 #### How to get involved
@@ -97,7 +97,7 @@ and keeping the extension up to date.
 
 Extension repositories are named extension-\<name\>, e.g. https://github.com/podman-desktop/extension-minikube.
 
-Extension Maintainer is a lightweight form of ownership and is reflected through CODEOWNERS.md in each extension repository.
+Extension Maintainer is a lightweight form of ownership and is reflected through CODEOWNERS in each extension repository.
 Each extension can have one or more maintainers.
 
 An Extension Maintainer has all the rights and responsibilities of an Organization Member.
