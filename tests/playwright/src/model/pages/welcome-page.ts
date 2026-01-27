@@ -27,6 +27,7 @@ import { DashboardPage } from './dashboard-page';
 export class WelcomePage extends BasePage {
   readonly welcomeMessage: Locator;
   readonly telemetryConsent: Locator;
+  readonly telemetryConsentContainer: Locator;
   readonly skipOnBoarding: Locator;
   readonly checkLoader: Locator;
   readonly startOnboarding: Locator;
@@ -43,6 +44,7 @@ export class WelcomePage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.welcomeMessage = page.getByText('Welcome to Podman Desktop');
+    this.telemetryConsentContainer = page.getByTitle('Enable telemetry');
     this.telemetryConsent = page.getByLabel('Enable telemetry');
     this.skipOnBoarding = page.getByRole('button', {
       name: 'Skip',
@@ -73,7 +75,7 @@ export class WelcomePage extends BasePage {
 
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
-        await this.telemetryConsent.uncheck({ force: true });
+        await this.telemetryConsentContainer.uncheck({ force: true });
       }
 
       await playExpect(this.telemetryConsent).not.toBeChecked();
