@@ -32,11 +32,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
 test.afterAll(async ({ runner }) => {
   test.setTimeout(120_000);
-  try {
-    await runner.close();
-  } catch (error) {
-    console.log('Error closing runner:', error);
-  }
+  await runner.close();
 });
 
 test.describe.serial('Verification of UI handling lots of objects', { tag: ['@ui-stress'] }, () => {
