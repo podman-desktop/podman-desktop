@@ -1,5 +1,6 @@
 {
   "name": "podman-desktop",
+  "author": "Podman Desktop",
   "productName": "Podman Desktop",
   "repository": "https://github.com/podman-desktop/podman-desktop",
   "homepage": "https://www.podman-desktop.io",
