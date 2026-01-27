@@ -19,7 +19,6 @@
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { currentRoute } from '/@/stores/current-route-hint.svelte';
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 import {
@@ -317,8 +316,8 @@ describe('submenu navigation', () => {
     expect(backEntries[1].name).toBe('Dashboard');
   });
 
-  test('should show full breadcrumb for detail pages', () => {
-    // Test detail page shows: parent > resource type > resource name
+  test('should show full breadcrumb for detail pages including tab', () => {
+    // Test detail page shows: parent > resource type > resource name > tab
     navigationHistory.stack = [
       '/kubernetes/configmapsSecrets/my-config/default/summary',
       '/kubernetes/configmapsSecrets',
@@ -327,50 +326,45 @@ describe('submenu navigation', () => {
 
     const entries = getBackEntries();
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets > my-config');
+    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets > my-config > Summary');
   });
 });
 
 describe('tab navigation for detail pages', () => {
-  test('should only have one entry per resource when navigating through tabs', () => {
+  test('should add new entry for each tab change', () => {
     // Start by navigating to containers list
-    currentRoute.navigationHint = undefined;
     router.goto('/containers');
     expect(navigationHistory.stack).toEqual(['/containers']);
     expect(navigationHistory.index).toBe(0);
 
     // Navigate to container detail page summary tab (should add new entry)
-    currentRoute.navigationHint = 'tab';
     router.goto('/containers/abc123/summary');
     expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
     expect(navigationHistory.index).toBe(1);
 
-    // Switch to logs tab (should UPDATE current entry, not add new one)
-    currentRoute.navigationHint = 'tab';
+    // Switch to logs tab (should ADD a new entry)
     router.goto('/containers/abc123/logs');
 
-    // Stack should still only have 2 entries (not 3), with logs replacing summary
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/logs']);
-    expect(navigationHistory.stack.length).toBe(2);
-    expect(navigationHistory.index).toBe(1);
+    // Stack should now have 3 entries (each tab is a separate history entry)
+    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary', '/containers/abc123/logs']);
+    expect(navigationHistory.stack.length).toBe(3);
+    expect(navigationHistory.index).toBe(2);
   });
 
-  test('should show same display name for different tabs of same resource', () => {
-    // Set up stack as if user switched through tabs (but only one entry exists due to update logic)
+  test('should show tab name in display for different tabs', () => {
+    // Set up stack with different tabs
     navigationHistory.stack = ['/containers', '/containers/abc123/inspect'];
     navigationHistory.index = 0;
 
     const entries = getForwardEntries();
 
-    // Should show resource name without tab name
-    expect(entries).toEqual([{ index: 1, name: 'Containers > abc123', icon: {} }]);
-    // Tab name should not appear in display
-    expect(entries[0].name).not.toContain('Inspect');
-    expect(entries[0].name).not.toContain('Summary');
-    expect(entries[0].name).not.toContain('Logs');
+    // Should show resource name WITH tab name
+    expect(entries).toEqual([{ index: 1, name: 'Containers > abc123 > Inspect', icon: {} }]);
+    // Tab name should appear in display
+    expect(entries[0].name).toContain('Inspect');
   });
 
-  test('should show resource name without tab for submenu resources', () => {
+  test('should show resource name with tab for submenu resources', () => {
     // Kubernetes pod with tab navigation
     navigationHistory.stack = ['/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/logs'];
     navigationHistory.index = 0;
@@ -378,6 +372,6 @@ describe('tab navigation for detail pages', () => {
     const entries = getForwardEntries();
 
     expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod');
+    expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod > Logs');
   });
 });

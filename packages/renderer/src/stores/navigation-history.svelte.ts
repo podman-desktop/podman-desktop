@@ -22,7 +22,6 @@ import { router } from 'tinro';
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
 import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
-import { currentRoute } from '/@/stores/current-route-hint.svelte';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 export const BACK = 'back';
@@ -53,9 +52,6 @@ export const navigationHistory = $state<{
 });
 
 let isNavigatingHistory = false;
-
-// Action keywords that appear in URLs (not resource names)
-const ACTION_KEYWORDS = ['build', 'pull', 'import', 'save', 'load', 'create', 'play'];
 
 interface ParsedUrl {
   path: string;
@@ -105,50 +101,6 @@ function truncate(str: string, maxLength: number): string {
 }
 
 /**
- * Get the base resource path from a URL, removing tab segments
- * @param url - The URL to process
- * @returns The base resource path without tab segment
- * @example
- * getBaseResourcePath('/containers/abc123/logs')
- * // => '/containers/abc123'
- *
- * getBaseResourcePath('/containers/abc123/inspect')
- * // => '/containers/abc123'
- *
- * getBaseResourcePath('/containers')
- * // => '/containers'
- */
-function getBaseResourcePath(url: string): string {
-  const { parts } = parseUrl(url);
-
-  // For detail pages, return path without the last segment (which is the tab)
-  // e.g., /containers/abc123/logs -> /containers/abc123
-  if (parts.length >= 3) {
-    return '/' + parts.slice(0, -1).join('/');
-  }
-
-  return url.split('?')[0];
-}
-
-/**
- * Check if two URLs represent the same resource (ignoring tab differences)
- * @param url1 - First URL to compare
- * @param url2 - Second URL to compare
- * @returns True if both URLs point to the same resource
- * @example
- * isSameResource('/containers/abc123/logs', '/containers/abc123/inspect')
- * // => true (same container, different tabs)
- *
- * isSameResource('/containers/abc123/logs', '/containers/xyz789/logs')
- * // => false (different containers)
- */
-function isSameResource(url1: string, url2: string): boolean {
-  const base1 = getBaseResourcePath(url1);
-  const base2 = getBaseResourcePath(url2);
-  return base1 === base2;
-}
-
-/**
  * Extract resource type and name from URL parts
  * @param parts - URL path segments (from parseUrl)
  * @returns Object with typeLabel (capitalized resource type) and optional name
@@ -186,7 +138,7 @@ function extractResourceInfo(parts: string[]): { typeLabel: string; name?: strin
     name = decodeURIComponent(parts[2]);
   }
   // Generic resources: /containers/:name (but not kubernetes base routes)
-  else if (parts.length >= 2 && !ACTION_KEYWORDS.includes(parts[1])) {
+  else if (parts.length >= 2) {
     name = decodeURIComponent(parts[1]);
   }
 
@@ -206,13 +158,13 @@ function extractResourceInfo(parts: string[]): { typeLabel: string; name?: strin
  * // => 'Containers'
  *
  * urlToDisplayName('/containers/abc123/logs')
- * // => 'Containers > abc123'
+ * // => 'Containers > abc123 > logs'
  *
  * urlToDisplayName('/kubernetes/pods', ['Kubernetes', 'Pods'])
  * // => 'Kubernetes > Pods'
  *
- * urlToDisplayName('/kubernetes/pods/my-pod/default', ['Kubernetes', 'Pods'])
- * // => 'Kubernetes > Pods > my-pod'
+ * urlToDisplayName('/kubernetes/pods/my-pod/default/logs', ['Kubernetes', 'Pods'])
+ * // => 'Kubernetes > Pods > my-pod > logs'
  */
 function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
   const { parts } = parseUrl(url);
@@ -225,12 +177,25 @@ function urlToDisplayName(url: string, registryBreadcrumb?: string[]): string {
 
   // If we have a resource name (detail page)
   if (name) {
-    // Use full registry breadcrumb + resource name
-    // e.g., "Kubernetes > ConfigMaps & Secrets > my-config"
+    // Build breadcrumb with resource name
     const breadcrumb =
       registryBreadcrumb && registryBreadcrumb.length > 0
         ? [...registryBreadcrumb, truncate(name, 20)]
         : [typeLabel, truncate(name, 20)];
+
+    // Extract and add tab name (last segment) if present
+    // For regular resources: /containers/:name/:tab (3+ parts)
+    // For resources with middleware: /pods/podman/:name/:tab (4+ parts)
+    // For kubernetes: /kubernetes/:type/:name/:namespace/:tab (5+ parts)
+    const resourceType = parts[0];
+    const minPartsForTab = resourceType === 'kubernetes' ? 5 : parts[1] === 'podman' || parts[1] === 'details' ? 4 : 3;
+
+    // Tab is always the last segment if we have enough parts
+    if (parts.length >= minPartsForTab) {
+      const tabSegment = parts[parts.length - 1];
+      breadcrumb.push(capitalize(tabSegment));
+    }
+
     return breadcrumb.join(' > ');
   }
 
@@ -399,24 +364,6 @@ export function goForward(): void {
 }
 
 /**
- * Check if a URL is a submenu base route that immediately redirects
- * Submenu routes (like /kubernetes) redirect to their first item (like /kubernetes/dashboard)
- * and should not be added to history to prevent navigation issues when going back.
- * @param url - The URL to check
- * @returns True if the URL is a submenu base route
- * @example
- * isSubmenuBaseRoute('/kubernetes')
- * // => true (submenu that redirects to /kubernetes/dashboard)
- *
- * isSubmenuBaseRoute('/containers')
- * // => false (regular entry, not a submenu)
- */
-function isSubmenuBaseRoute(url: string): boolean {
-  const registry = get(navigationRegistry);
-  return registry.some(entry => entry.type === 'submenu' && entry.link === url);
-}
-
-/**
  * Navigate to a specific index in the history stack (public API)
  * @param index - The history stack index to navigate to
  * @example
@@ -493,44 +440,11 @@ export function getForwardEntries(): HistoryEntry[] {
   return getEntries(FORWARD);
 }
 
-/**
- * Check if a URL is a detail page root that will redirect to a tab
- * These root URLs should not be added to history since they immediately redirect
- * @param url - The URL to check
- * @returns True if the URL is a detail page root that redirects
- * @example
- * isDetailPageRoot('/containers/abc123/')
- * // => true (redirects to /containers/abc123/summary or /containers/abc123/logs)
- *
- * isDetailPageRoot('/containers/abc123/logs')
- * // => false (actual tab page, not a root)
- *
- * isDetailPageRoot('/')
- * // => false (dashboard, not a detail page root)
- */
-function isDetailPageRoot(url: string): boolean {
-  const { path, parts } = parseUrl(url);
-
-  // Must end with / and not be just '/' and have at least 2 segments
-  return path.endsWith('/') && path !== '/' && parts.length >= 2;
-}
-
 // Initialize router subscription
 router.subscribe(navigation => {
   if (navigation.url) {
     if (isNavigatingHistory) {
       isNavigatingHistory = false;
-      return;
-    }
-
-    // Skip submenu base routes - they immediately redirect to a sub-page
-    // and shouldn't be in the history stack
-    if (isSubmenuBaseRoute(navigation.url)) {
-      return;
-    }
-
-    // Skip detail page roots (e.g., /containers/abc123/) as they immediately redirect to a tab
-    if (isDetailPageRoot(navigation.url)) {
       return;
     }
 
@@ -541,21 +455,8 @@ router.subscribe(navigation => {
 
     const currentUrl = navigationHistory.stack[navigationHistory.index];
 
-    // Handle tab routes: update existing entry for the same resource instead of adding new
-    if (currentRoute.navigationHint === 'tab') {
-      // Check if the current history entry is for the same resource
-      if (currentUrl && isSameResource(currentUrl, navigation.url)) {
-        // Update the current entry with the new tab URL (keeps latest tab)
-        // e.g. containers/abc123/summary -> containers/abc123/logs
-        navigationHistory.stack[navigationHistory.index] = navigation.url;
-      } else {
-        // First time visiting this resource, add it to history
-        navigationHistory.stack = [...navigationHistory.stack, navigation.url];
-        navigationHistory.index = navigationHistory.stack.length - 1;
-      }
-    }
-    // Handle non-tab routes normally
-    else if (currentUrl !== navigation.url) {
+    // Add every URL change to history (including tab changes)
+    if (currentUrl !== navigation.url) {
       navigationHistory.stack = [...navigationHistory.stack, navigation.url];
       navigationHistory.index = navigationHistory.stack.length - 1;
     }
