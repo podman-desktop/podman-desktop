@@ -1,5 +1,6 @@
 name: UX Request
 description: UX Request Form
+type: UX (design spec)
 labels: [UX/UI Issue, Graphic design]
 projects: ["podman-desktop/4"]
 
