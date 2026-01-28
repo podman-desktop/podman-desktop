@@ -159,15 +159,18 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/" breadcrumb="Dashboard Page" navigationHint="root">
           <DashboardPage />
         </Route>
-        <Route path="/containers" breadcrumb="Containers" navigationHint="root">
-          <ContainerList searchTerm={meta.query.filter ?? ''} />
-        </Route>
-        <Route path="/containers/:id/*" let:meta firstmatch>
-          <Route path="/export" breadcrumb="Export Container">
-            <ContainerExport containerID={meta.params.id} />
+
+        <Route path="/containers/*" breadcrumb="Containers" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Containers" navigationHint="root">
+            <ContainerList searchTerm={meta.query.filter ?? ''} />
           </Route>
-          <Route breadcrumb="Container Details" navigationHint="details" path="/*">
-            <ContainerDetails containerID={meta.params.id} />
+          <Route path="/:id/*" let:meta firstmatch>
+            <Route path="/export" breadcrumb="Export Container">
+              <ContainerExport containerID={meta.params.id} />
+            </Route>
+            <Route breadcrumb="Container Details" navigationHint="details" path="/*">
+              <ContainerDetails containerID={meta.params.id} />
+            </Route>
           </Route>
         </Route>
 
