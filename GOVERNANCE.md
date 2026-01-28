@@ -146,7 +146,7 @@ lead community meetings, and communicate with the CNCF on behalf of the project.
 
 #### Responsibilities
 
-- Take part in the incoming issue and PR triage and review process. PRs are shared equally among all maintainers
+- Take part in the incoming issue triage and PR review process. PRs are shared equally among all maintainers
 - Drive refactoring and manage tech health across the entire project
 - Participate in CNCF maintainer activities
 - Respond to security incidents in accordance to our [security policy](https://github.com/podman-desktop/podman-desktop/blob/main/SECURITY.md)
