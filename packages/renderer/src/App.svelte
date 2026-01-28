@@ -391,15 +391,18 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/troubleshooting/*" breadcrumb="Troubleshooting">
           <TroubleshootingPage />
         </Route>
-        <Route path="/extensions" breadcrumb="Extensions" navigationHint="root" let:meta>
-          {@const request = parseExtensionListRequest(meta)}
-          <ExtensionList
-            searchTerm={request.searchTerm}
-            screen={request.screen}
-          />
-        </Route>
-        <Route path="/extensions/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
-          <ExtensionDetails extensionId={meta.params.id} />
+
+        <Route path="/extensions/*" breadcrumb="Extensions" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Extensions" navigationHint="root" let:meta>
+            {@const request = parseExtensionListRequest(meta)}
+            <ExtensionList
+              searchTerm={request.searchTerm}
+              screen={request.screen}
+            />
+          </Route>
+          <Route path="/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
+            <ExtensionDetails extensionId={meta.params.id} />
+          </Route>
         </Route>
       </div>
     </div>
