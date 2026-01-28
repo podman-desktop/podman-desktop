@@ -217,10 +217,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
               base64RepoTag={meta.params.base64RepoTag} />
           </Route>
         </Route>
-
-        <Route path="/networks/create/*" breadcrumb="Create Network">
-          <CreateNetwork />
-        </Route>
         <Route
           path="/manifests/:id/:engineId/:base64RepoTag/*"
           breadcrumb="Manifest Details"
@@ -231,6 +227,41 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             engineId={decodeURI(meta.params.engineId)}
             base64RepoTag={meta.params.base64RepoTag} />
         </Route>
+        <Route
+          path="/images/:id/:engineId/:base64RepoTag/*"
+          breadcrumb="Image Details"
+          let:meta
+          navigationHint="details">
+          <ImageDetails
+            imageID={meta.params.id}
+            engineId={decodeURI(meta.params.engineId)}
+            base64RepoTag={meta.params.base64RepoTag} />
+        </Route>
+        <Route path="/images/pull" breadcrumb="Pull an Image">
+          <PullImage />
+        </Route>
+        <Route path="/images/import" breadcrumb="Import Containers">
+          <ImportContainersImages />
+        </Route>
+        <Route path="/images/save" breadcrumb="Save Images">
+          <SaveImages />
+        </Route>
+        <Route path="/images/load" breadcrumb="Load Images">
+          <LoadImages />
+        </Route>
+
+        <Route path="/networks/*" breadcrumb="Networks" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Networks" navigationHint="root">
+            <NetworksList />
+          </Route>
+          <Route path="/create/*" breadcrumb="Create Network">
+            <CreateNetwork />
+          </Route>
+          <Route path="/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
+            <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
+          </Route>
+        </Route>
+
         <Route path="/pods" breadcrumb="Pods" navigationHint="root">
           <PodsList />
         </Route>
@@ -269,13 +300,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
             <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
           </Route>
-        </Route>
-
-        <Route path="/networks" breadcrumb="Networks" navigationHint="root">
-          <NetworksList />
-        </Route>
-        <Route path="/networks/:name/:engineId/*" breadcrumb="Network Details" let:meta navigationHint="details">
-          <NetworkDetails networkName={decodeURIComponent(meta.params.name)} engineId={decodeURIComponent(meta.params.engineId)} />
         </Route>
         {#if $kubernetesNoCurrentContext}
           <Route path="/kubernetes/*" breadcrumb="Kubernetes" navigationHint="root">
