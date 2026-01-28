@@ -7,45 +7,50 @@ import IconImage from '/@/lib/appearance/IconImage.svelte';
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
+import type { OnboardingInfo } from '/@api/onboarding';
+import type { TelemetryMessages } from '/@api/telemetry';
+import type { WelcomeMessages } from '/@api/welcome-info';
 
 import bgImage from './background.png';
 import { WelcomeUtils } from './welcome-utils';
 
-interface Props {
-  showWelcome?: boolean;
-  showTelemetry?: boolean;
-}
+export let showWelcome = false;
+export let showTelemetry = false;
 
-let { showWelcome = false, showTelemetry = false }: Props = $props();
+let telemetry = true;
+let telemetryMessages: TelemetryMessages;
 
 const welcomeUtils = new WelcomeUtils();
+let podmanDesktopVersion: string;
 
-let telemetry = $state(true);
-let telemetryMessages = $derived(await window.getTelemetryMessages());
-let podmanDesktopVersion: string = $derived(await window.getPodmanDesktopVersion());
+// Extend ProviderInfo to have a selected property
+interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
+  selected?: boolean;
+  containerEngine?: boolean;
+}
+
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
+let welcomeMessages: WelcomeMessages;
+
 // Get every provider that has a container connections
-let providersWithContainerConnections = $derived(
-  $providerInfos.filter(provider => provider.containerConnections.length > 0),
-);
+$: providersWithContainerConnections = $providerInfos.filter(provider => provider.containerConnections.length > 0);
 
 // Using providerInfos as well as the information we have from onboarding,
 // we will by default auto-select as well as add containerEngine to the list as true/false
 // so we can make sure that extensions with container engines are listed first
-let onboardingProviders = $derived(
-  $onboardingList
-    .map(provider => {
-      // Check if it's in the list, if it is, then it has a container engine
-      const hasContainerConnection = providersWithContainerConnections.some(
-        connectionProvider => connectionProvider.extensionId === provider.extension,
-      );
-      return {
-        ...provider,
-        selected: true,
-        containerEngine: hasContainerConnection,
-      };
-    })
-    .sort((a, b) => Number(b.containerEngine) - Number(a.containerEngine)),
-); // Sort by containerEngine (true first)
+$: onboardingProviders = $onboardingList
+  .map(provider => {
+    // Check if it's in the list, if it is, then it has a container engine
+    const hasContainerConnection = providersWithContainerConnections.some(
+      connectionProvider => connectionProvider.extensionId === provider.extension,
+    );
+    return {
+      ...provider,
+      selected: true,
+      containerEngine: hasContainerConnection,
+    };
+  })
+  .sort((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
 
 onMount(async () => {
   const ver = await welcomeUtils.getVersion();
@@ -54,11 +59,14 @@ onMount(async () => {
     showWelcome = true;
   }
   router.goto('/');
+  welcomeMessages = await window.getWelcomeMessages();
 
   const telemetryPrompt = await welcomeUtils.havePromptedForTelemetry();
   if (!telemetryPrompt) {
+    telemetryMessages = await window.getTelemetryMessages();
     showTelemetry = true;
   }
+  podmanDesktopVersion = await window.getPodmanDesktopVersion();
 
   if (showWelcome) {
     await window.updateConfigurationValue(`releaseNotesBanner.show`, podmanDesktopVersion);
@@ -98,14 +106,14 @@ function startOnboardingQueue(): void {
     style="background-image: url({bgImage}); background-position: 50% -175%; background-size: 100% 75%">
     <!-- Header -->
     <div class="flex flex-row flex-none backdrop-blur-sm p-6 mt-10">
-      <div class="flex flex-auto text-lg font-bold">Get started with Podman Desktop</div>
+      <div class="flex flex-auto text-lg font-bold">{welcomeMessages?.getStartedMessage}</div>
     </div>
 
     <!-- Body -->
     <div class="flex flex-col justify-center content-center flex-auto backdrop-blur-sm p-2 overflow-y-auto">
       <div class="flex justify-center p-2"><DesktopIcon /></div>
       <div class="flex justify-center text-lg font-bold p-2">
-        <span class="mr-2">🎉</span>Welcome to Podman Desktop v{podmanDesktopVersion} !
+        <span class="mr-2">🎉</span>{welcomeMessages?.welcomeMessage} v{podmanDesktopVersion} !
       </div>
       <div class="flex flex-row justify-center">
         <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">

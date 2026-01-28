@@ -62,6 +62,7 @@ import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
+import { Welcome } from '/@/plugin/welcome.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
@@ -142,6 +143,7 @@ import type { TelemetryMessages } from '/@api/telemetry.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
+import type { WelcomeMessages } from '/@api/welcome-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
@@ -679,6 +681,9 @@ export class PluginSystem {
     container.bind<TerminalInit>(TerminalInit).toSelf().inSingletonScope();
     const terminalInit = container.get<TerminalInit>(TerminalInit);
     terminalInit.init();
+
+    container.bind<Welcome>(Welcome).toSelf().inSingletonScope();
+    const welcome = container.get<Welcome>(Welcome);
 
     container.bind<NavigationItemsInit>(NavigationItemsInit).toSelf().inSingletonScope();
     const navigationItems = container.get<NavigationItemsInit>(NavigationItemsInit);
@@ -3137,6 +3142,10 @@ export class PluginSystem {
         return;
       }
       window.close();
+    });
+
+    this.ipcHandle('welcome:getWelcomeMessages', async (): Promise<WelcomeMessages> => {
+      return welcome.getWelcomeMessages();
     });
 
     this.ipcHandle(
