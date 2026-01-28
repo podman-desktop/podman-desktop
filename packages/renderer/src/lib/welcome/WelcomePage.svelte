@@ -7,6 +7,9 @@ import IconImage from '/@/lib/appearance/IconImage.svelte';
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
+import type { OnboardingInfo } from '/@api/onboarding';
+import type { ProviderInfo } from '/@api/provider-info';
+import type { TelemetryMessages } from '/@api/telemetry';
 
 import bgImage from './background.png';
 import { WelcomeUtils } from './welcome-utils';
@@ -18,25 +21,33 @@ interface Props {
 
 let { showWelcome = false, showTelemetry = false }: Props = $props();
 
-const welcomeUtils = new WelcomeUtils();
-
 let telemetry = $state(true);
-let telemetryMessages = $derived(await window.getTelemetryMessages());
-let podmanDesktopVersion: string = $derived(await window.getPodmanDesktopVersion());
+let telemetryMessages: TelemetryMessages | undefined = $state(undefined);
+
+const welcomeUtils = new WelcomeUtils();
+let podmanDesktopVersion: string = $state('');
+
+// Extend ProviderInfo to have a selected property
+interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
+  selected?: boolean;
+  containerEngine?: boolean;
+}
+
 // Get every provider that has a container connections
-let providersWithContainerConnections = $derived(
-  $providerInfos.filter(provider => provider.containerConnections.length > 0),
+let providersWithContainerConnections: ProviderInfo[] = $derived(
+  $providerInfos.filter((provider: ProviderInfo) => provider.containerConnections.length > 0),
 );
 
 // Using providerInfos as well as the information we have from onboarding,
 // we will by default auto-select as well as add containerEngine to the list as true/false
 // so we can make sure that extensions with container engines are listed first
-let onboardingProviders = $derived(
-  $onboardingList
-    .map(provider => {
-      // Check if it's in the list, if it is, then it has a container engine
+// eslint-disable-next-line svelte/prefer-writable-derived
+let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = $state([]);
+$effect(() => {
+  onboardingProviders = $onboardingList
+    .map((provider: OnboardingInfo) => {
       const hasContainerConnection = providersWithContainerConnections.some(
-        connectionProvider => connectionProvider.extensionId === provider.extension,
+        (connectionProvider: ProviderInfo) => connectionProvider.extensionId === provider.extension,
       );
       return {
         ...provider,
@@ -44,8 +55,8 @@ let onboardingProviders = $derived(
         containerEngine: hasContainerConnection,
       };
     })
-    .sort((a, b) => Number(b.containerEngine) - Number(a.containerEngine)),
-); // Sort by containerEngine (true first)
+    .sort((a, b) => Number(b.containerEngine) - Number(a.containerEngine)); // Sort by containerEngine (true first)
+});
 
 onMount(async () => {
   const ver = await welcomeUtils.getVersion();
@@ -57,8 +68,11 @@ onMount(async () => {
 
   const telemetryPrompt = await welcomeUtils.havePromptedForTelemetry();
   if (!telemetryPrompt) {
+    telemetryMessages = await window.getTelemetryMessages();
     showTelemetry = true;
   }
+
+  podmanDesktopVersion = await window.getPodmanDesktopVersion();
 
   if (showWelcome) {
     await window.updateConfigurationValue(`releaseNotesBanner.show`, podmanDesktopVersion);
@@ -164,7 +178,7 @@ function startOnboardingQueue(): void {
               {#if telemetryMessages?.info}
                 <Link
                   on:click={async (): Promise<void> => {
-                    await window.openExternal(telemetryMessages.info?.url ?? '');
+                    await window.openExternal(telemetryMessages?.info?.url ?? '');
                   }}>{telemetryMessages?.info.link}</Link>
               {/if}
             {/if}
