@@ -196,9 +196,14 @@ export class Runner {
     if (video) {
       try {
         await video.saveAs(path);
-        await video.delete();
       } catch (error) {
         console.log(`Caught exception when saving video: ${error}`);
+      } finally {
+        try {
+          await video.delete();
+        } catch (error) {
+          console.log(`Caught exception when deleting video: ${error}`);
+        }
       }
     } else {
       console.log('Video file associated was not found');
