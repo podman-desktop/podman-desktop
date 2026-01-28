@@ -12,7 +12,8 @@ interface Props {
 
 let { image, alt, class: className = '', children }: Props = $props();
 
-let imgSrc: string | undefined = $derived(await new AppearanceUtil().getImage(image));
+const appearanceUtil = new AppearanceUtil();
+let imgSrc: string | undefined = $derived(await appearanceUtil.getImage(image));
 </script>
 
 {#if imgSrc}

@@ -43,18 +43,18 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('class props should be propagated to button', () => {
-  const { getByRole } = render(ProviderButton, {
+test('class props should be propagated to button', async () => {
+  const { findByRole } = render(ProviderButton, {
     provider: PROVIDER_MOCK,
     onclick: vi.fn(),
     class: 'potatoes',
   });
 
-  const widget = getByRole('button', { name: 'provider1' });
+  const widget = await findByRole('button', { name: 'provider1' });
   expect(widget).toHaveClass('potatoes');
 });
 
-test('provider with an imageClass should render it', () => {
+test('provider with an imageClass should render it', async () => {
   const provider = {
     ...PROVIDER_MOCK,
     images: {
@@ -66,13 +66,13 @@ test('provider with an imageClass should render it', () => {
     },
   };
 
-  render(ProviderButton, {
+  const { findByRole } = render(ProviderButton, {
     provider,
     onclick: vi.fn(),
     class: 'potatoes',
   });
 
-  const icon = screen.getByRole('img');
+  const icon = await findByRole('img');
   expect(icon.className).contains('podman-desktop-icon-provider-monochrome-icon');
 });
 

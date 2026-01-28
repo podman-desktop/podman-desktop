@@ -17,16 +17,16 @@
  ***********************************************************************/
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import type { Component } from 'svelte';
 import { expect, test } from 'vitest';
 
 import { type InitializationContext, InitializeAndStartMode } from '/@/lib/dashboard/ProviderInitUtils';
 import type { ProviderInfo } from '/@api/provider-info';
 
-export function verifyStatus<
+export async function verifyStatus<
   C extends Component<{ provider: ProviderInfo; initializationContext: InitializationContext }>,
->(component: C, status: ProviderStatus, sameVersions: boolean): void {
+>(component: C, status: ProviderStatus, sameVersions: boolean): Promise<void> {
   const provider: ProviderInfo = {
     containerConnections: [],
     containerProviderConnectionCreation: false,
@@ -60,12 +60,14 @@ export function verifyStatus<
     initializationContext: initializationContext,
   });
 
-  const updateButton = screen.queryByRole('button', { name: 'Update to 1.0.1' });
-  if (sameVersions) {
-    expect(updateButton).not.toBeInTheDocument();
-  } else {
-    expect(updateButton).toBeInTheDocument();
-  }
+  await waitFor(() => {
+    const updateButton = screen.queryByRole('button', { name: 'Update to 1.0.1' });
+    if (sameVersions) {
+      expect(updateButton).not.toBeInTheDocument();
+    } else {
+      expect(updateButton).toBeInTheDocument();
+    }
+  });
 }
 
 test('vitest does not accept helper files without a test', () => {

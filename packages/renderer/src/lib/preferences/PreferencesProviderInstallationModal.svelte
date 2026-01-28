@@ -34,7 +34,7 @@ async function openLink(e: MouseEvent, url: string): Promise<void> {
         <div class="flex flex-col rounded-lg">
           <div class="mx-auto max-w-[250px] mb-5">
             <IconImage
-              logo={providerToBeInstalled.provider.images.logo}
+              image={providerToBeInstalled.provider.images.logo}
               alt={providerToBeInstalled.provider.name}
               class="mx-auto max-h-12" />
           </div>
