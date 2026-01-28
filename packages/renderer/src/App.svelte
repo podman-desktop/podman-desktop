@@ -251,15 +251,19 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         <Route path="/pod-create-from-containers" breadcrumb="Create Pod">
           <PodCreateFromContainers />
         </Route>
-        <Route path="/volumes" breadcrumb="Volumes" navigationHint="root">
-          <VolumesList />
+        
+        <Route path="/volumes/*" breadcrumb="Volumes" navigationHint="root" firstmatch>
+          <Route path="/" breadcrumb="Volumes" navigationHint="root">
+            <VolumesList />
+          </Route>
+          <Route path="/create" breadcrumb="Create a Volume">
+            <CreateVolume />
+          </Route>
+          <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
+            <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+          </Route>
         </Route>
-        <Route path="/volumes/create" breadcrumb="Create a Volume">
-          <CreateVolume />
-        </Route>
-        <Route path="/volumes/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
-          <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
-        </Route>
+
         <Route path="/networks" breadcrumb="Networks" navigationHint="root">
           <NetworksList />
         </Route>
