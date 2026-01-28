@@ -297,7 +297,7 @@ async function buildContainerFromImage(): Promise<void> {
     const chosenImage = imageUtils.getImagesInfoUI(localImages[0], []);
     if (chosenImage.length > 0) {
       runImageInfo.set(chosenImage[0]);
-      router.goto('/image/run/basic');
+      router.goto('/images/run/basic');
     }
   }
 }
