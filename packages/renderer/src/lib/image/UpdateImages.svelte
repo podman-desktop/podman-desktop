@@ -1,34 +1,47 @@
-<script lang="ts">
-import { faSync } from '@fortawesome/free-solid-svg-icons';
-import { Button, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
-import { router } from 'tinro';
-
-import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
-import Label from '/@/lib/ui/Label.svelte';
-import { imagesInfos } from '/@/stores/images';
-import { providerInfos } from '/@/stores/providers';
-import { updateImagesInfo } from '/@/stores/update-images-store';
-import type { ImageInfo } from '/@api/image-info';
+<script lang="ts" module>
 import type { ImageUpdateStatus } from '/@api/image-registry';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 
-interface ImageUpdateInfo {
+export interface UpdateImageInfoUI {
   image: ImageInfoUI;
   status?: ImageUpdateStatus;
   updating: boolean;
   updated: boolean;
   error?: string;
+  selected: boolean;
 }
+</script>
 
-let imagesToUpdate: ImageUpdateInfo[] = $state([]);
+<script lang="ts">
+import { faSync } from '@fortawesome/free-solid-svg-icons';
+import { Button, EmptyScreen, ErrorMessage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
+import { router } from 'tinro';
+
+import ImageIcon from '/@/lib/images/ImageIcon.svelte';
+import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
+import { imagesInfos } from '/@/stores/images';
+import { providerInfos } from '/@/stores/providers';
+import { updateImagesInfo } from '/@/stores/update-images-store';
+import type { ImageInfo } from '/@api/image-info';
+import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
+
+import UpdateImageColumnEnvironment from './UpdateImageColumnEnvironment.svelte';
+import UpdateImageColumnName from './UpdateImageColumnName.svelte';
+import UpdateImageColumnResult from './UpdateImageColumnResult.svelte';
+import UpdateImageColumnSize from './UpdateImageColumnSize.svelte';
+import UpdateImageColumnStatus from './UpdateImageColumnStatus.svelte';
+
+let imagesToUpdate: UpdateImageInfoUI[] = $state([]);
 let checkError = $state('');
 let updateError = $state('');
 
 let updateInProgress = $state(false);
 let hasChecked = $state(false);
+
+// Track selected items count
+let selectedItemsNumber: number | undefined = $state();
 
 // Get all started provider connections
 let providerConnections = $derived(
@@ -41,8 +54,10 @@ let providerConnections = $derived(
 // Get all images from the store to lookup RepoDigests
 let allImages = $derived($imagesInfos);
 
-// Count of images that can be updated
-let updatableCount = $derived(imagesToUpdate.filter(info => info.status?.updateAvailable && !info.updated).length);
+// Count of images that can be updated (selected and have updates available)
+let updatableCount = $derived(
+  imagesToUpdate.filter(info => info.selected && info.status?.updateAvailable && !info.updated).length,
+);
 
 onMount(() => {
   const selectedImages = $updateImagesInfo;
@@ -54,6 +69,7 @@ onMount(() => {
     image,
     updating: false,
     updated: false,
+    selected: false, // Start unselected, will be selected when update is found
   }));
 
   // Clear the store to avoid stale data on subsequent navigations
@@ -70,7 +86,7 @@ function goBack(): void {
 }
 
 // Find the ImageInfo from store to get RepoDigests
-function getImageInfo(imageUI: ImageInfoUI): ImageInfo | undefined {
+function getImageInfo(imageUI: { id: string }): ImageInfo | undefined {
   return allImages.find(img => img.Id === imageUI.id);
 }
 
@@ -100,22 +116,27 @@ async function checkForUpdates(): Promise<void> {
   checkError = '';
 
   try {
-    for (const info of imagesToUpdate) {
-      const imageRef = `${info.image.name}:${info.image.tag}`;
-      const imageInfo = getImageInfo(info.image);
-      const localDigests = imageInfo?.RepoDigests ?? [];
+    // Check all images in parallel to avoid sequential iteration issues
+    await Promise.all(
+      imagesToUpdate.map(async info => {
+        const imageRef = `${info.image.name}:${info.image.tag}`;
+        const imageInfo = getImageInfo(info.image);
+        const localDigests = imageInfo?.RepoDigests ?? [];
 
-      try {
-        const status = await window.checkImageUpdateStatus(imageRef, info.image.tag, localDigests);
-        info.status = status;
-      } catch (err: unknown) {
-        info.status = {
-          status: 'error',
-          updateAvailable: false,
-          message: err instanceof Error ? err.message : String(err),
-        };
-      }
-    }
+        try {
+          const status = await window.checkImageUpdateStatus(imageRef, info.image.tag, localDigests);
+          info.status = status;
+        } catch (err: unknown) {
+          info.status = {
+            status: 'error',
+            updateAvailable: false,
+            message: err instanceof Error ? err.message : String(err),
+          };
+        }
+        // Trigger reactivity after each image check completes
+        imagesToUpdate = imagesToUpdate;
+      }),
+    );
     hasChecked = true;
   } catch (err: unknown) {
     checkError = err instanceof Error ? err.message : String(err);
@@ -127,45 +148,56 @@ async function updateImages(): Promise<void> {
   updateInProgress = true;
 
   try {
-    for (const info of imagesToUpdate) {
-      // Skip if not updatable or already updated
-      if (!info.status?.updateAvailable || info.updated) {
-        continue;
-      }
+    // Get images that need updating
+    const imagesToPull = imagesToUpdate.filter(
+      info => info.selected && info.status?.updateAvailable && !info.updated,
+    );
 
-      const providerConnection = getProviderConnection(info.image.engineId);
-      if (!providerConnection) {
-        const availableConnections = providerConnections.map(c => c.name).join(', ');
-        console.error(
-          `No provider connection found for engineId "${info.image.engineId}". Available: ${availableConnections}`,
-        );
-        info.error = `No provider connection found for engineId "${info.image.engineId}". Available connections: ${availableConnections}`;
-        continue;
-      }
-
+    // Mark all as updating and trigger reactivity
+    for (const info of imagesToPull) {
       info.updating = true;
       info.error = undefined;
-
-      try {
-        const imageRef = `${info.image.name}:${info.image.tag}`;
-        console.log(`Updating image ${imageRef} from engine ${info.image.engineId}`);
-
-        // Pull the new image - this automatically re-tags to the new image
-        // The old image will become dangling if this was its only tag,
-        // or keep its other tags if it had multiple (e.g., alpine:2.6)
-        console.log(`Pulling image ${imageRef}...`);
-        await window.pullImage(providerConnection, imageRef, () => {});
-        console.log(`Pull complete for ${imageRef}`);
-
-        info.updated = true;
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        console.error(`Failed to update image ${info.image.name}:${info.image.tag}:`, err);
-        info.error = errorMessage;
-      } finally {
-        info.updating = false;
-      }
     }
+    imagesToUpdate = imagesToUpdate;
+
+    // Pull all images in parallel
+    await Promise.all(
+      imagesToPull.map(async info => {
+        const providerConnection = getProviderConnection(info.image.engineId);
+        if (!providerConnection) {
+          const availableConnections = providerConnections.map(c => c.name).join(', ');
+          console.error(
+            `No provider connection found for engineId "${info.image.engineId}". Available: ${availableConnections}`,
+          );
+          info.error = `No provider connection found for engineId "${info.image.engineId}". Available connections: ${availableConnections}`;
+          info.updating = false;
+          imagesToUpdate = imagesToUpdate;
+          return;
+        }
+
+        try {
+          const imageRef = `${info.image.name}:${info.image.tag}`;
+          console.log(`Updating image ${imageRef} from engine ${info.image.engineId}`);
+
+          // Pull the new image - this automatically re-tags to the new image
+          // The old image will become dangling if this was its only tag,
+          // or keep its other tags if it had multiple (e.g., alpine:2.6)
+          console.log(`Pulling image ${imageRef}...`);
+          await window.pullImage(providerConnection, imageRef, () => {});
+          console.log(`Pull complete for ${imageRef}`);
+
+          info.updated = true;
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          console.error(`Failed to update image ${info.image.name}:${info.image.tag}:`, err);
+          info.error = errorMessage;
+        } finally {
+          info.updating = false;
+          // Trigger reactivity after each image completes
+          imagesToUpdate = imagesToUpdate;
+        }
+      }),
+    );
   } catch (err: unknown) {
     updateError = err instanceof Error ? err.message : String(err);
   } finally {
@@ -173,63 +205,75 @@ async function updateImages(): Promise<void> {
   }
 }
 
-interface LabelStatusStyle {
-  dotColor: string;
-  label: string;
+// Table column definitions
+let nameColumn = new TableColumn<UpdateImageInfoUI>('Name', {
+  width: '2fr',
+  renderer: UpdateImageColumnName,
+  comparator: (a, b): number => a.image.name.localeCompare(b.image.name),
+});
+
+let envColumn = new TableColumn<UpdateImageInfoUI>('Environment', {
+  width: '1fr',
+  renderer: UpdateImageColumnEnvironment,
+  comparator: (a, b): number => a.image.engineId.localeCompare(b.image.engineId),
+});
+
+let sizeColumn = new TableColumn<UpdateImageInfoUI>('Size', {
+  width: '1fr', 
+  renderer: UpdateImageColumnSize,
+  comparator: (a, b): number => b.image.size - a.image.size,
+});
+
+let updateStatusColumn = new TableColumn<UpdateImageInfoUI>('Update Available', {
+  width: '2fr',
+  renderer: UpdateImageColumnStatus,
+  comparator: (a, b): number => {
+    // Sort by update availability (available first)
+    const aAvailable = a.status?.updateAvailable ? 1 : 0;
+    const bAvailable = b.status?.updateAvailable ? 1 : 0;
+    return bAvailable - aAvailable;
+  },
+});
+
+let resultColumn = new TableColumn<UpdateImageInfoUI>('Result', {
+  width: '2fr',
+  renderer: UpdateImageColumnResult,
+  comparator: (a, b): number => {
+    // Sort by result status (updated first, then updating, then failed, then pending)
+    const getOrder = (info: UpdateImageInfoUI): number => {
+      if (info.updated) return 0;
+      if (info.updating) return 1;
+      if (info.error) return 2;
+      return 3;
+    };
+    return getOrder(a) - getOrder(b);
+  },
+});
+
+const columns = [nameColumn, envColumn, sizeColumn, updateStatusColumn, resultColumn];
+
+const row = new TableRow<UpdateImageInfoUI>({
+  // Only allow selection for images that have been checked and have updates available
+  selectable: (info): boolean => {
+    // Disabled while checking (status undefined) or if no update available
+    if (!info.status) return false;
+    return info.status.updateAvailable === true && !info.updated;
+  },
+  disabledText: 'Image has no update available or is already updated',
+});
+
+/**
+ * Utility function for the Table to get the key to use for each item
+ */
+function key(item: UpdateImageInfoUI): string {
+  return `${item.image.engineId}:${item.image.id}:${item.image.tag}`;
 }
 
-function getUpdateAvailableStyle(imgstatus?: ImageUpdateStatus): LabelStatusStyle {
-  if (!imgstatus) {
-    return {
-      dotColor: 'bg-[var(--pd-status-paused)]',
-      label: 'Checking',
-    };
-  }
-  if (imgstatus.status === 'error') {
-    return {
-      dotColor: 'bg-[var(--pd-status-terminated)]',
-      label: 'Error',
-    };
-  }
-  if (imgstatus.updateAvailable) {
-    return {
-      dotColor: 'bg-[var(--pd-status-connected)]',
-      label: 'Available',
-    };
-  }
-  // Check if the image cannot be checked (local, dangling, or immutable)
-  if (imgstatus.status === 'skipped') {
-    return {
-      dotColor: 'bg-[var(--pd-status-stopped)]',
-      label: 'N/A',
-    };
-  }
-  return {
-    dotColor: 'bg-[var(--pd-status-stopped)]',
-    label: 'Up to date',
-  };
-}
-
-function getResultStyle(info: ImageUpdateInfo): LabelStatusStyle | undefined {
-  if (info.updating) {
-    return {
-      dotColor: 'bg-[var(--pd-status-starting)]',
-      label: 'Updating',
-    };
-  }
-  if (info.updated) {
-    return {
-      dotColor: 'bg-[var(--pd-status-connected)]',
-      label: 'Updated',
-    };
-  }
-  if (info.error) {
-    return {
-      dotColor: 'bg-[var(--pd-status-terminated)]',
-      label: 'Failed',
-    };
-  }
-  return undefined;
+/**
+ * Utility function for the Table to get the label to use for each item
+ */
+function label(item: UpdateImageInfoUI): string {
+  return `${item.image.name}:${item.image.tag}`;
 }
 </script>
 
@@ -238,60 +282,28 @@ function getResultStyle(info: ImageUpdateInfo): LabelStatusStyle | undefined {
     <i class="fas fa-sync fa-2x" aria-hidden="true"></i>
   {/snippet}
   {#snippet content()}
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4 h-full">
       <!-- Images Table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-[var(--pd-table-body-text)]" aria-label="images to update">
-          <thead class="text-xs uppercase bg-[var(--pd-table-header-bg)] text-[var(--pd-table-header-text)]">
-            <tr>
-              <th class="px-4 py-3">Image</th>
-              <th class="px-4 py-3">Update Available</th>
-              <th class="px-4 py-3">Message</th>
-              <th class="px-4 py-3">Result</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each imagesToUpdate as info (info.image.id + info.image.engineId + info.image.tag)}
-              {@const isDigest = info.image.tag.startsWith('sha256:') || info.image.tag.startsWith('sha384:') || info.image.tag.startsWith('sha512:')}
-              {@const displayTag = isDigest ? '' : `:${info.image.tag}`}
-              {@const imageDisplay = `${info.image.name}${displayTag}`}
-              {@const fullImageRef = `${info.image.name}:${info.image.tag}`}
-              {@const updateStyle = getUpdateAvailableStyle(info.status)}
-              {@const resultStyle = getResultStyle(info)}
-              <tr class="border-b border-[var(--pd-table-body-text-secondary)] bg-[var(--pd-content-bg)]" aria-label="image {fullImageRef}">
-                <td class="px-4 py-3 font-medium whitespace-nowrap" title={fullImageRef}>
-                  {imageDisplay.length > 50 ? imageDisplay.slice(0, 47) + '...' : imageDisplay}
-                </td>
-                <td class="px-4 py-3" aria-label="update status {updateStyle.label}">
-                  <Label role="status" name={updateStyle.label}>
-                    <div class="w-2 h-2 shrink-0 {updateStyle.dotColor} rounded-full"></div>
-                  </Label>
-                </td>
-                <td class="px-4 py-3 max-w-xs truncate text-[var(--pd-table-body-text-secondary)]" aria-label="message" title={info.status?.message ?? ''}>
-                  {info.status?.message ?? '-'}
-                </td>
-                <td class="px-4 py-3 max-w-xs" aria-label="result {resultStyle?.label ?? 'pending'}">
-                  {#if info.updating}
-                    <Label role="status" name="Updating">
-                      <Spinner size="12" />
-                    </Label>
-                  {:else if resultStyle}
-                    <Label role="status" name={resultStyle.label}>
-                      <div class="w-2 h-2 shrink-0 {resultStyle.dotColor} rounded-full"></div>
-                    </Label>
-                    {#if info.error}
-                      <div class="text-xs text-[var(--pd-status-terminated)] truncate mt-1" aria-label="error" title={info.error}>
-                        {info.error}
-                      </div>
-                    {/if}
-                  {:else}
-                    <span class="text-[var(--pd-table-body-text-secondary)]">-</span>
-                  {/if}
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
+      <div class="flex min-w-full flex-1">
+        {#if imagesToUpdate.length === 0}
+          <EmptyScreen
+            icon={ImageIcon}
+            title="No images selected"
+            message="Select images from the Images list to check for updates." />
+        {:else}
+          <Table
+            kind="update-image"
+            bind:selectedItemsNumber={selectedItemsNumber}
+            data={imagesToUpdate}
+            columns={columns}
+            row={row}
+            defaultSortColumn="Update Available"
+            key={key}
+            label={label}
+            on:update={(): UpdateImageInfoUI[] => (imagesToUpdate = imagesToUpdate)}>
+          </Table>
+        {/if}
+        <!-- For some reason, without defaultSortColumn="" the checkbox reactivity is not working -->
       </div>
 
       <!-- Action Buttons -->
@@ -329,4 +341,3 @@ function getResultStyle(info: ImageUpdateInfo): LabelStatusStyle | undefined {
     </div>
   {/snippet}
 </EngineFormPage>
-

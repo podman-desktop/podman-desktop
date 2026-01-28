@@ -110,7 +110,6 @@ test('Expect Update button is disabled when no updates available', async () => {
   await waitRender();
 
   const updateButton = screen.getByRole('button', { name: 'Update images' });
-  expect(updateButton).toBeInTheDocument();
   expect(updateButton).toBeDisabled();
 });
 
@@ -119,7 +118,6 @@ test('Expect Done button is present and enabled', async () => {
   await waitRender();
 
   const doneButton = screen.getByRole('button', { name: 'Done' });
-  expect(doneButton).toBeInTheDocument();
   expect(doneButton).toBeEnabled();
 });
 
@@ -138,8 +136,8 @@ test('Expect images displayed in table', async () => {
   updateImagesInfo.set([imageInfo, imageInfo2]);
   await waitRender();
 
-  expect(screen.getByText('nginx:latest')).toBeInTheDocument();
-  expect(screen.getByText('redis:7')).toBeInTheDocument();
+  screen.getByText('nginx:latest');
+  screen.getByText('redis:7');
 });
 
 test('Expect checkImageUpdateStatus called automatically on mount', async () => {
@@ -151,7 +149,7 @@ test('Expect checkImageUpdateStatus called automatically on mount', async () => 
   ]);
 });
 
-test('Expect Update button enabled when updates are available', async () => {
+test('Expect Update button enabled when updates are available and selected', async () => {
   vi.mocked(window.checkImageUpdateStatus).mockResolvedValue({
     status: 'normal',
     updateAvailable: true,
@@ -162,7 +160,16 @@ test('Expect Update button enabled when updates are available', async () => {
   updateImagesInfo.set([imageInfo]);
   await waitRender();
 
+  // Update button should be disabled until user selects an image
   const updateButton = screen.getByRole('button', { name: 'Update images' });
+  expect(updateButton).toBeDisabled();
+
+  // Select the image checkbox
+  const checkbox = screen.getByRole('checkbox', { name: 'Toggle update-image' });
+  await userEvent.click(checkbox);
+  await tick();
+
+  // Now the Update button should be enabled
   expect(updateButton).toBeEnabled();
 });
 
@@ -177,7 +184,12 @@ test('Expect pullImage called when updating (no delete needed)', async () => {
   updateImagesInfo.set([imageInfo]);
   await waitRender();
 
-  // Update button should be enabled after auto-check
+  // Select the image checkbox first
+  const checkbox = screen.getByRole('checkbox', { name: 'Toggle update-image' });
+  await userEvent.click(checkbox);
+  await tick();
+
+  // Update button should be enabled after selection
   const updateButton = screen.getByRole('button', { name: 'Update images' });
   await userEvent.click(updateButton);
   await tick();
@@ -189,7 +201,7 @@ test('Expect pullImage called when updating (no delete needed)', async () => {
   expect(vi.mocked(window.deleteImage)).not.toHaveBeenCalled();
 });
 
-test('Expect status columns show correct values after auto-check', async () => {
+test('Expect status columns show correct values after check', async () => {
   vi.mocked(window.checkImageUpdateStatus).mockResolvedValue({
     status: 'normal',
     updateAvailable: true,
@@ -200,8 +212,8 @@ test('Expect status columns show correct values after auto-check', async () => {
   updateImagesInfo.set([imageInfo]);
   await waitRender();
 
-  expect(screen.getByText('Available')).toBeInTheDocument();
-  expect(screen.getByText('A new version is available')).toBeInTheDocument();
+  // When update is available, only the "Available" label is shown (message is not displayed)
+  screen.getByText('Available');
 });
 
 test('Expect error status displayed correctly', async () => {
@@ -214,6 +226,20 @@ test('Expect error status displayed correctly', async () => {
   updateImagesInfo.set([imageInfo]);
   await waitRender();
 
-  expect(screen.getByText('Error')).toBeInTheDocument();
-  expect(screen.getByText('Authentication failed')).toBeInTheDocument();
+  screen.getByText('Error');
+  screen.getByText('Authentication failed');
+});
+
+test('Expect skipped status displayed for local/dangling images', async () => {
+  vi.mocked(window.checkImageUpdateStatus).mockResolvedValue({
+    status: 'skipped',
+    updateAvailable: false,
+    message: 'Local image cannot be checked for updates',
+  });
+
+  updateImagesInfo.set([imageInfo]);
+  await waitRender();
+
+  screen.getByText('N/A');
+  screen.getByText('Local image cannot be checked for updates');
 });
