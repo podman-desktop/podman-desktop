@@ -1,23 +1,22 @@
 <script lang="ts">
+import type { Snippet } from 'svelte';
+
 import { AppearanceUtil } from './appearance-util';
 
-export let image: string | { light: string; dark: string } | undefined = undefined;
-export let alt: string | undefined = undefined;
-
-let imgSrc: string | undefined = undefined;
-
-$: getImgSrc(image);
-
-function getImgSrc(image: string | { light: string; dark: string } | undefined): void {
-  new AppearanceUtil()
-    .getImage(image)
-    .then(s => (imgSrc = s))
-    .catch((err: unknown) => console.error(`Error getting image ${image}`, err));
+interface Props {
+  image?: string | { light: string; dark: string };
+  alt?: string;
+  class?: string;
+  children?: Snippet;
 }
+
+let { image, alt, class: className = '', children }: Props = $props();
+
+let imgSrc: string | undefined = $derived(await new AppearanceUtil().getImage(image));
 </script>
 
 {#if imgSrc}
-  <img src={imgSrc} alt={alt} class={$$props.class} />
+  <img src={imgSrc} alt={alt} class={className} />
 {:else}
-  <slot />
+  {@render children?.()}
 {/if}
