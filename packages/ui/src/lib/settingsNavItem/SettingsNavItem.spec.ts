@@ -163,8 +163,8 @@ describe('iconRight', () => {
     expect(svgs).toHaveLength(2);
     // First icon (left) should be in the title span
     expect(svgs[0].parentElement).toHaveClass('flex-row');
-    // Second icon (right) should be in the end container with px-2
-    expect(svgs[1].parentElement).toHaveClass('px-2');
+    // Second icon (right) should be in a span wrapper, which is in the end container with px-2
+    expect(svgs[1].parentElement?.parentElement).toHaveClass('px-2');
   });
 
   test('iconRight with align inline should be next to title', () => {
@@ -192,7 +192,22 @@ describe('iconRight', () => {
     });
     const svgs = getAllByRole('img', { hidden: true });
     expect(svgs).toHaveLength(1);
-    // Icon should be in the end container with px-2
-    expect(svgs[0].parentElement).toHaveClass('px-2');
+    // Icon should be in a span wrapper, which is in the end container with px-2
+    expect(svgs[0].parentElement?.parentElement).toHaveClass('px-2');
+  });
+
+  test('iconRight with iconRightClass applies custom classes', () => {
+    const { getAllByRole } = render(SettingsNavItem, {
+      title: 'DummyTitle',
+      href: '/dummy/path',
+      selected: false,
+      iconRight: MyIcon,
+      iconRightAlign: 'end',
+      iconRightClass: 'custom-class',
+    });
+    const svgs = getAllByRole('img', { hidden: true });
+    expect(svgs).toHaveLength(1);
+    // The span wrapper should have the custom class
+    expect(svgs[0].parentElement).toHaveClass('custom-class');
   });
 });

@@ -132,6 +132,7 @@ onMount(() => {
       icon={TroubleshootingIcon}
       iconRight={TroubleshootingArrowIcon}
       iconRightAlign="end"
+      iconRightClass="inline-flex items-center justify-center min-w-[14px] min-h-[14px]"
       title="Troubleshooting"
       href="/troubleshooting/repair-connections"
       selected={meta.url === '/troubleshooting/repair-connections'}

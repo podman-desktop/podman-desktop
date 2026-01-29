@@ -14,6 +14,7 @@ interface Props {
   icon?: IconDefinition | Component | string;
   iconRight?: IconDefinition | Component | string;
   iconRightAlign?: 'inline' | 'end';
+  iconRightClass?: string;
   onClick?: () => void;
 }
 
@@ -27,6 +28,7 @@ let {
   icon = undefined,
   iconRight = undefined,
   iconRightAlign = 'end',
+  iconRightClass = '',
   onClick = (): void => {},
 }: Props = $props();
 
@@ -73,7 +75,9 @@ function click(): void {
       </div>
     {:else if iconRight && iconRightAlign === 'end'}
       <div class="px-2 flex items-center">
-        <Icon icon={iconRight}/>
+        <span class={iconRightClass}>
+          <Icon icon={iconRight}/>
+        </span>
       </div>
     {/if}
   </div>
