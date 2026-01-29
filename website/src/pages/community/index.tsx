@@ -52,6 +52,7 @@ export default function Home(): JSX.Element {
       logo: '/img/adopters/amadeus_logo_light.svg',
       logoDark: '/img/adopters/amadeus_logo_dark.svg',
       alt: 'amadeus',
+      url: 'https://amadeus.com/',
       width: '167px',
       height: '68px',
     },
@@ -60,6 +61,7 @@ export default function Home(): JSX.Element {
       id: 'eost-logo',
       logo: '/img/adopters/eost.png',
       alt: 'eost',
+      url: 'https://eost.unistra.fr/',
       width: '83px',
       height: '83px',
     },
@@ -275,6 +277,7 @@ export default function Home(): JSX.Element {
                 logo={logo.logo}
                 logoDark={logo.logoDark}
                 alt={logo.alt}
+                url={logo.url}
                 width={logo.width}
                 height={logo.height}
               />
