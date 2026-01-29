@@ -22,8 +22,7 @@ import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
 
 import { findRunningMachine } from '/@/extension';
-
-import { getPodmanCli } from './podman-cli';
+import { execPodman } from '/@/utils/util';
 
 const podmanSystemdSocket = 'podman.socket';
 
@@ -117,8 +116,8 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
       );
       if (result === 'Yes') {
         // Await since we must wait for the machine to stop before starting it again
-        await extensionApi.process.exec(getPodmanCli(), ['machine', 'stop', machine]);
-        await extensionApi.process.exec(getPodmanCli(), ['machine', 'start', machine]);
+        await execPodman(['machine', 'stop', machine]);
+        await execPodman(['machine', 'start', machine]);
       }
     }
   }
