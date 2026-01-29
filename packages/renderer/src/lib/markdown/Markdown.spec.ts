@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Markdown from './Markdown.svelte';
 
@@ -31,6 +31,10 @@ async function waitRender(customProperties: object): Promise<void> {
 
 beforeAll(() => {
   Object.defineProperty(window, 'executeCommand', { value: vi.fn() });
+});
+
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 test('Expect to have bold', async () => {
