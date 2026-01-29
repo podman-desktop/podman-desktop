@@ -3,7 +3,7 @@ import { Page, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import TroubleShootingIcon from '/@/lib/images/TroubleShootingIcon.svelte';
+import TroubleshootingIcon from '/@/lib/images/TroubleshootingIcon.svelte';
 import { isKubernetesExperimentalMode } from '/@/lib/kube/resources-listen';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
@@ -28,7 +28,7 @@ onMount(async () => {
 
 <Page title="Troubleshooting" onclose={goToPreviousPage}>
   {#snippet icon()}
-  <TroubleShootingIcon size="32" />
+  <TroubleshootingIcon size="32" />
   {/snippet}
 
   {#snippet tabs()}

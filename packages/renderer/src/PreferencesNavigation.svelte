@@ -5,7 +5,7 @@ import type { TinroRouteMeta } from 'tinro';
 
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
 import TroubleshootingArrowIcon from '/@/lib/images/TroubleshootingArrowIcon.svelte';
-import TroubleShootingIcon from '/@/lib/images/TroubleShootingIcon.svelte';
+import TroubleshootingIcon from '/@/lib/images/TroubleshootingIcon.svelte';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants';
 import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
@@ -129,7 +129,7 @@ onMount(() => {
     <!-- Troubleshooting separator and item -->
     <div class="mx-3 my-2 border-t border-[var(--pd-global-nav-bg-border)]"></div>
     <SettingsNavItem
-      icon={TroubleShootingIcon}
+      icon={TroubleshootingIcon}
       iconRight={TroubleshootingArrowIcon}
       iconRightAlign="end"
       title="Troubleshooting"

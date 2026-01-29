@@ -23,7 +23,7 @@ import { expect, test } from 'vitest';
 
 import TroubleshootingIconStyle from './TroubleshootingIconStyle.svelte';
 
-test('Expect style to be injected into document head', async () => {
+test('Expect style to be injected into document head', () => {
   render(TroubleshootingIconStyle);
 
   // Check that a style element was added to the head
