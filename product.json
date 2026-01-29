@@ -40,7 +40,7 @@
       },
       {
         "title": "Troubleshooting",
-        "icon": "fas fa-lightbulb",
+        "icon": "troubleshooting-icon",
         "command": "troubleshooting"
       },
       {

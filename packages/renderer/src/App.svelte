@@ -74,6 +74,7 @@ import ServiceDetails from './lib/service/ServiceDetails.svelte';
 import ServicesList from './lib/service/ServicesList.svelte';
 import StatusBar from './lib/statusbar/StatusBar.svelte';
 import IconsStyle from './lib/style/IconsStyle.svelte';
+import TroubleshootingIconStyle from './lib/style/TroubleshootingIconStyle.svelte';
 import { PodmanDesktopStoragePersist } from './lib/table/PodmanDesktopStoragePersist';
 import TaskManager from './lib/task-manager/TaskManager.svelte';
 import ToastHandler from './lib/toast/ToastHandler.svelte';
@@ -128,6 +129,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
 <Route path="/*" breadcrumb="Home" let:meta>
   <main class="flex flex-col w-screen h-screen overflow-hidden">
     <IconsStyle />
+    <TroubleshootingIconStyle />
     <Appearance />
     <TitleBar />
     <ContextKey />

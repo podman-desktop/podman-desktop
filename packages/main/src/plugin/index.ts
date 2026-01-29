@@ -638,7 +638,7 @@ export class PluginSystem {
       0,
       undefined,
       'Troubleshooting',
-      'fa fa-lightbulb',
+      'troubleshooting-icon',
       true,
       'troubleshooting',
     );
