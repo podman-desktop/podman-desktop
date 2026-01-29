@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import ChevronExpander from './ChevronExpander.svelte';
 import ContainerIcon from './ContainerIcon.svelte';
 import Icon from './Icon.svelte';
 import StarIcon from './StarIcon.svelte';
 
-export { ContainerIcon, Icon, StarIcon };
+export { ChevronExpander, ContainerIcon, Icon, StarIcon };
