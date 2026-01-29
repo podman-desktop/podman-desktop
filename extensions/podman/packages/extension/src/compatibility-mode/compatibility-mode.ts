@@ -22,8 +22,7 @@ import * as os from 'node:os';
 import * as extensionApi from '@podman-desktop/api';
 
 import { findRunningMachine } from '/@/extension';
-
-import { getPodmanCli } from './podman-cli';
+import { getPodmanCli } from '/@/utils/podman-cli';
 
 const podmanSystemdSocket = 'podman.socket';
 

@@ -29,6 +29,7 @@ import type { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
@@ -62,7 +63,6 @@ import {
 import { InversifyBinding } from './inject/inversify-binding';
 import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
-import * as compatibilityModeLib from './utils/compatibility-mode';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
 import * as util from './utils/util';
@@ -167,7 +167,7 @@ vi.mock('ps-list', async () => {
   };
 });
 
-vi.mock('./compatibility-mode', async () => {
+vi.mock(import('/@/compatibility-mode/compatibility-mode'), async () => {
   return {
     getSocketCompatibility: vi.fn(),
   };

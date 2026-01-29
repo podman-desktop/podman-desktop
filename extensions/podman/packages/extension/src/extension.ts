@@ -28,6 +28,7 @@ import type { PodmanExtensionApi, PodmanRunOptions } from '@podman-desktop/podma
 import { Mutex } from 'async-mutex';
 import { compare } from 'semver';
 
+import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
 import {
   CLEANUP_REQUIRED_MACHINE_KEY,
   CREATE_WSL_MACHINE_OPTION_SELECTED_KEY,
@@ -64,7 +65,6 @@ import { WslHelper } from './helpers/wsl-helper';
 import { InversifyBinding } from './inject/inversify-binding';
 import { PodmanInstall } from './installer/podman-install';
 import { PodmanRemoteConnections } from './remote/podman-remote-connections';
-import { getSocketCompatibility } from './utils/compatibility-mode';
 import { ExtensionNotifications } from './utils/notifications';
 import { getPodmanCli } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
