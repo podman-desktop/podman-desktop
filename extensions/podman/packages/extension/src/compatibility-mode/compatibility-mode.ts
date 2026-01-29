@@ -21,20 +21,11 @@ import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 
+import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { findRunningMachine } from '/@/extension';
 import { getPodmanCli } from '/@/utils/podman-cli';
 
 const podmanSystemdSocket = 'podman.socket';
-
-// Create an abstract class for compatibility mode (macOS only)
-// TODO: Windows, Linux
-abstract class SocketCompatibility {
-  abstract isEnabled(): boolean;
-  abstract enable(): Promise<void>;
-  abstract disable(): Promise<void>;
-  abstract details: string;
-  abstract tooltipText(): string;
-}
 
 export class DarwinSocketCompatibility extends SocketCompatibility {
   // Shows the details of the compatibility mode on what we do.
