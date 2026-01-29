@@ -90,8 +90,9 @@ test('Expect section styling', async () => {
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
   expect(element.firstChild).toBeInTheDocument();
-  expect(element.firstChild?.childNodes[2]).toBeInTheDocument();
-  expect(element.firstChild?.childNodes[2]).toContainHTML('fas');
+  const chevronContainer = element.firstChild?.childNodes[2] as HTMLElement;
+  expect(chevronContainer).toBeInTheDocument();
+  expect(chevronContainer.querySelector('svg')).toBeInTheDocument();
 });
 
 test('Expect sections expand', async () => {
@@ -101,16 +102,17 @@ test('Expect sections expand', async () => {
 
   const element = screen.getByLabelText(title);
   expect(element).toBeInTheDocument();
-  expect(element.firstChild).toBeInTheDocument();
-  expect(element.firstChild?.childNodes[2]).toBeInTheDocument();
-  expect(element.firstChild?.childNodes[2]).toContainHTML('fa-angle-right');
-  expect(element.firstChild?.childNodes[2]).not.toContainHTML('fa-angle-down');
 
+  const chevronContainer = element.firstChild?.childNodes[2] as HTMLElement;
+  expect(chevronContainer).toBeInTheDocument();
+
+  const chevronIcon = chevronContainer.querySelector('svg') as SVGElement;
+  expect(chevronIcon).toBeInTheDocument();
+  expect(chevronIcon).toHaveClass('rotate-0');
+
+  // expand section
   await fireEvent.click(element);
-
-  // since it is animated, we'll test that the down angle has appeared (and
-  // not wait for right angle to disappear)
-  expect(element.firstChild?.childNodes[2]).toContainHTML('fa-angle-down');
+  expect(chevronIcon).toHaveClass('rotate-90');
 });
 
 test('fa icon should be visible', () => {

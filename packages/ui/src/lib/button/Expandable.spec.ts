@@ -120,3 +120,11 @@ test('Check clicking fires an event', async () => {
   expect(clickMock).toHaveBeenCalledTimes(2);
   expect(clickMock).toHaveBeenCalledWith(true);
 });
+
+test('Check chevron is present', async () => {
+  renderIt(false);
+
+  const title = screen.getByText('Title');
+  const chevronIcon = title.parentElement?.querySelector('svg');
+  expect(chevronIcon).toBeInTheDocument();
+});
