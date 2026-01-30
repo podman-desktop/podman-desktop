@@ -19,111 +19,13 @@
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, expect, test, vi } from 'vitest';
 
-import * as extension from '/@/extension';
+import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 
-import { DarwinSocketCompatibility, getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
+import { getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
 
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
-});
-
-test('darwin: compatibility mode binary not found failure', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  // Mock that the binary is not found
-  const socketCompatClass = new DarwinSocketCompatibility();
-  const spyFindPodmanHelper = vi.spyOn(socketCompatClass, 'findPodmanHelper');
-  spyFindPodmanHelper.mockReturnValue('');
-
-  // Expect the error to show when it's not found / enable isn't ran.
-  await socketCompatClass.enable();
-  expect(extensionApi.window.showErrorMessage).toHaveBeenCalledWith('podman-mac-helper binary not found.', 'OK');
-});
-
-test('darwin: DarwinSocketCompatibility class, test runMacHelperCommandWithAdminPriv ran within runCommand', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  const socketCompatClass = new DarwinSocketCompatibility();
-
-  // Mock that the binary is found
-  const spyFindPodmanHelper = vi.spyOn(socketCompatClass, 'findPodmanHelper');
-  spyFindPodmanHelper.mockReturnValue('/opt/podman/bin/podman-mac-helper');
-
-  // Mock that admin command ran successfully (since we cannot test interactive mode priv in vitest / has to be integration tests)
-  const spyMacHelperCommand = vi.spyOn(socketCompatClass, 'runMacHelperCommandWithAdminPriv');
-  spyMacHelperCommand.mockImplementation(() => {
-    return Promise.resolve();
-  });
-
-  // Run the command
-  await socketCompatClass.runCommand('enable', 'enabled');
-
-  // Expect that mac helper command was ran
-  expect(spyMacHelperCommand).toHaveBeenCalled();
-});
-
-test('darwin: DarwinSocketCompatibility class, test promptRestart ran within runCommand', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  const socketCompatClass = new DarwinSocketCompatibility();
-
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
-
-  const spyFindRunningMachine = vi.spyOn(extension, 'findRunningMachine');
-  spyFindRunningMachine.mockImplementation(() => {
-    return Promise.resolve('default');
-  });
-
-  // Mock that enable ran successfully
-  const spyEnable = vi.spyOn(socketCompatClass, 'runCommand');
-  spyEnable.mockImplementation(() => {
-    return Promise.resolve();
-  });
-
-  const spyPromptRestart = vi.spyOn(socketCompatClass, 'promptRestart');
-
-  // Run the command
-  await socketCompatClass.enable();
-
-  // Expect that promptRestart was ran
-  expect(spyPromptRestart).toHaveBeenCalled();
-});
-
-test('darwin: mock fs.existsSync returns /usr/local/bin/podman-mac-helper', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  // mock existsSync to return true only if '/usr/local/bin/podman-mac-helper' is passed in,
-  // forcing it to return false for all other paths.
-  // this imitates that the binary is found in /usr/local/bin and not other folders
-  vi.mock('fs', () => {
-    return {
-      existsSync: (path: string): boolean => {
-        return path === '/usr/local/bin/podman-mac-helper';
-      },
-    };
-  });
-
-  // Mock that the binary is found
-  const socketCompatClass = new DarwinSocketCompatibility();
-
-  // Run findPodmanHelper
-  const binaryPath = socketCompatClass.findPodmanHelper();
-
-  // Expect binaryPath to be /usr/local/bin/podman-mac-helper
-  expect(binaryPath).toBe('/usr/local/bin/podman-mac-helper');
 });
 
 // Linux tests
