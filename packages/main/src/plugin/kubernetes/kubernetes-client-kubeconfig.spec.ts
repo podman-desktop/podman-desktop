@@ -19,6 +19,7 @@
 import type { Cluster, Context, KubeConfig, User } from '@kubernetes/client-node';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
@@ -62,6 +63,7 @@ describe('context tests', () => {
   const experimentalConfigurationManager: ExperimentalConfigurationManager = {
     isExperimentalConfigurationEnabled: vi.fn(),
   } as unknown as ExperimentalConfigurationManager;
+  const featureRegistry: FeatureRegistry = {} as unknown as FeatureRegistry;
 
   function createClient(): TestKubernetesClient {
     const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;
@@ -80,6 +82,7 @@ describe('context tests', () => {
       fileSystemMonitoring,
       telemetry,
       experimentalConfigurationManager,
+      featureRegistry,
     );
 
     client.setUsers(originalUsers);

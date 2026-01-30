@@ -6,7 +6,7 @@ import {
   faQuestionCircle,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import { Fa } from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Label from '/@/lib/ui/Label.svelte';
 
@@ -34,5 +34,5 @@ function getTypeAttributes(type: string): { color: string; icon: IconDefinition 
 </script>
 
 <Label name={object.type}>
-  <Fa size="1x" icon={getTypeAttributes(object.type).icon} class={getTypeAttributes(object.type).color} />
+  <Icon size="1x" icon={getTypeAttributes(object.type).icon} class={getTypeAttributes(object.type).color} />
 </Label>

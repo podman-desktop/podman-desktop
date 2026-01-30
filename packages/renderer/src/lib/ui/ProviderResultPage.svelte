@@ -8,9 +8,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import type { ImageCheck } from '@podman-desktop/api';
 import { Spinner } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Snippet } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
-import Fa from 'svelte-fa';
 
 import type { ImageCheckerInfo } from '/@api/image-checker-info';
 
@@ -154,16 +154,16 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
           <div class="flex flex-row items-center">
             <span class="grow">{provider.info.label}</span>
             {#if provider.state === 'running'}
-              <Spinner size="12"></Spinner>
+              <Spinner size="12px"/>
             {/if}
             {#if provider.state === 'failed'}
               <span class="text-[var(--pd-state-error)] mt-1">
-                <Fa size="1.1x" icon={faExclamationTriangle} />
+                <Icon size="1.1x" icon={faExclamationTriangle} />
               </span>
             {/if}
             {#if provider.state === 'canceled'}
               <span class="text-[var(--pd-modal-text)]">
-                <Fa size="1.1x" icon={faCircleMinus} />
+                <Icon size="1.1x" icon={faCircleMinus} />
               </span>
             {/if}
             {#if provider.state === 'success'}
@@ -199,7 +199,7 @@ function onSeverityClicked(severity: 'critical' | 'high' | 'medium' | 'low' | 's
               class:text-[var(--pd-severity-medium)]={result.check.severity === 'medium'}
               class:text-[var(--pd-severity-low)]={result.check.severity === 'low'}
               class:text-[var(--pd-state-success)]={result.check.status === 'success'}
-              ><Fa size="1.1x" class="mt-1" icon={getIcon(result.check)} />
+              ><Icon size="1.1x" class="mt-1" icon={getIcon(result.check)} />
             </span>
             <div class="font-bold">{result.check.name}</div>
             <div class="text-[var(--pd-content-text)] text-sm grow text-right" aria-label="Reported by {result.provider.label}">Reported by {result.provider.label}</div>

@@ -21,7 +21,8 @@ import type { Configuration } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as compatibilityModeLib from './compatibility-mode';
+import * as compatibilityModeLib from '/@/compatibility-mode/compatibility-mode';
+
 import { ExtensionNotifications } from './notifications';
 import { isDisguisedPodman } from './warnings';
 

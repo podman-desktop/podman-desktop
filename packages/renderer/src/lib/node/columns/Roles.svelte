@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { faMicrochip, faSatelliteDish, faServer } from '@fortawesome/free-solid-svg-icons';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Label from '/@/lib/ui/Label.svelte';
 
@@ -33,11 +33,11 @@ $effect(() => {
 
 <div class="flex flex-row gap-1">
   <Label name={roleName}>
-    <Fa size="1x" icon={roleIcon} class={roleClass} />
+    <Icon size="1x" icon={roleIcon} class={roleClass} />
   </Label>
   {#if object.hasGpu}
     <Label name="GPU">
-      <Fa size="1x" icon={faMicrochip} class="text-[var(--pd-status-updated)]" />
+      <Icon size="1x" icon={faMicrochip} class="text-[var(--pd-status-updated)]" />
     </Label>
   {/if}
 </div>

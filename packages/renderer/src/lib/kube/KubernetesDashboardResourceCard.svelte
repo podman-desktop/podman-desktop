@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import KubernetesIcon from './KubernetesIcon.svelte';
 
@@ -28,7 +28,7 @@ async function openLink(): Promise<void> {
   <div class="text-start flex">
     <span class="text-[var(--pd-invert-content-card-text)] font-semibold grow">{type}</span>
     {#if !permitted}
-      <span class="ml-1"><Tooltip bottom={true} class="" tip={`${type} are not accessible`}><div><Fa size="1x" icon={faQuestionCircle} /></div></Tooltip></span>
+      <span class="ml-1"><Tooltip bottom={true} class="" tip={`${type} are not accessible`}><div><Icon size="1x" icon={faQuestionCircle} /></div></Tooltip></span>
     {/if}
   </div>
   <div class="grid grid-cols-{activeCount !== undefined ? '3' : '2'} gap-4 w-full grow items-end">

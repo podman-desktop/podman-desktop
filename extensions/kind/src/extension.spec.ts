@@ -50,6 +50,7 @@ const PROVIDER_MOCK: podmanDesktopApi.Provider = {
   onDidUpdateVersion: vi.fn(),
   updateVersion: vi.fn(),
   registerUpdate: vi.fn(),
+  updateWarnings: vi.fn(),
 } as unknown as podmanDesktopApi.Provider;
 
 beforeEach(() => {
@@ -72,6 +73,7 @@ beforeEach(() => {
   vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([]);
   vi.mocked(util.removeVersionPrefix).mockReturnValue('1.0.0');
   vi.mocked(util.getSystemBinaryPath).mockReturnValue('test-storage-path/kind');
+  vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -106,8 +108,10 @@ test('check we received notifications ', async () => {
     callbackCalled = true;
   });
 
-  const fakeProvider = {} as unknown as podmanDesktopApi.Provider;
-  extension.refreshKindClustersOnProviderConnectionUpdate(fakeProvider);
+  const fakeProvider = { updateWarnings: vi.fn() } as unknown as podmanDesktopApi.Provider;
+  const fakeTelemetryLogger = { logUsage: vi.fn() } as unknown as extensionApi.TelemetryLogger;
+
+  extension.refreshKindClustersOnProviderConnectionUpdate(fakeProvider, fakeTelemetryLogger);
   expect(callbackCalled).toBeTruthy();
   expect(listContainersMock).toBeCalledTimes(1);
 });
@@ -209,6 +213,7 @@ test('Ensuring a progress task is created when calling kind.image.move command',
     setKubernetesProviderConnectionFactory: vi.fn(),
     onDidUpdateVersion: vi.fn(),
     updateVersion: vi.fn(),
+    updateWarnings: vi.fn(),
   }));
 
   const listContainersMock = vi.fn();
@@ -480,11 +485,51 @@ describe('kubernetes create factory', () => {
     );
   });
 
-  test('activate should register a kubernetes create factory', async () => {
-    expect(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).toHaveBeenCalledOnce();
+  test('activate should register a kubernetes create factory when running connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      {
+        connection: {
+          name: 'podman-machine-default',
+          status: () => 'started',
+          type: 'podman',
+        },
+      } as unknown as extensionApi.ProviderContainerConnection,
+    ]);
+
+    await extension.activate(
+      vi.mocked<extensionApi.ExtensionContext>({
+        subscriptions: {
+          push: vi.fn(),
+        },
+      } as unknown as extensionApi.ExtensionContext),
+    );
+
+    expect(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).toHaveBeenCalled();
+  });
+
+  test('activate should NOT register factory when no running connections', async () => {
+    expect(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).not.toHaveBeenCalled();
   });
 
   test('expect info message to be displayed when no binary installed and cluster created called', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      {
+        connection: {
+          name: 'podman-machine-default',
+          status: () => 'started',
+          type: 'podman',
+        },
+      } as unknown as extensionApi.ProviderContainerConnection,
+    ]);
+
+    await extension.activate(
+      vi.mocked<extensionApi.ExtensionContext>({
+        subscriptions: {
+          push: vi.fn(),
+        },
+      } as unknown as extensionApi.ExtensionContext),
+    );
+
     // get the create method
     const { create } = vi.mocked(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).mock.calls[0][0];
     expect(create).toBeDefined();
@@ -501,6 +546,24 @@ describe('kubernetes create factory', () => {
   });
 
   test('user confirm installation should install latest', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      {
+        connection: {
+          name: 'podman-machine-default',
+          status: () => 'started',
+          type: 'podman',
+        },
+      } as unknown as extensionApi.ProviderContainerConnection,
+    ]);
+
+    await extension.activate(
+      vi.mocked<extensionApi.ExtensionContext>({
+        subscriptions: {
+          push: vi.fn(),
+        },
+      } as unknown as extensionApi.ExtensionContext),
+    );
+
     // get the create method
     const { create } = vi.mocked(PROVIDER_MOCK.setKubernetesProviderConnectionFactory).mock.calls[0][0];
     expect(create).toBeDefined();
@@ -555,5 +618,80 @@ describe('provider#update', () => {
 
     await vi.mocked(PROVIDER_MOCK.registerUpdate).mock.calls[0][0].update({} as unknown as podmanDesktopApi.Logger);
     expect(disposeMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('provider warnings', () => {
+  beforeEach(() => {
+    vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+      path: 'kind',
+      version: '0.0.1',
+    });
+    (podmanDesktopApi.env.isLinux as unknown as boolean) = false;
+  });
+
+  test('should clear warnings when running container connections exist', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      {
+        connection: {
+          name: 'podman-machine-default',
+          status: () => 'started',
+          type: 'podman',
+        },
+      } as unknown as extensionApi.ProviderContainerConnection,
+    ]);
+
+    await activate();
+
+    expect(PROVIDER_MOCK.updateWarnings).toHaveBeenCalledWith([]);
+  });
+
+  test('should show warning when no running container connections exist (non-Linux)', async () => {
+    (podmanDesktopApi.env.isLinux as unknown as boolean) = false;
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+
+    await activate();
+
+    expect(PROVIDER_MOCK.updateWarnings).toHaveBeenCalledWith([
+      {
+        name: 'Container Engine Required',
+        details: 'Start your container provider (e.g. Podman) to create Kind clusters',
+      },
+    ]);
+  });
+
+  test('should show warning when no running container connections exist (Linux)', async () => {
+    (podmanDesktopApi.env.isLinux as unknown as boolean) = true;
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([]);
+
+    await activate();
+
+    expect(PROVIDER_MOCK.updateWarnings).toHaveBeenCalledWith([
+      {
+        name: 'Container Engine Required',
+        details: 'Install and start a container engine (e.g. Podman) to create Kind clusters',
+      },
+    ]);
+  });
+
+  test('should show warning when container connections exist but none are running', async () => {
+    vi.mocked(podmanDesktopApi.provider.getContainerConnections).mockReturnValue([
+      {
+        connection: {
+          name: 'podman-machine-default',
+          status: () => 'stopped',
+          type: 'podman',
+        },
+      } as unknown as extensionApi.ProviderContainerConnection,
+    ]);
+
+    await activate();
+
+    expect(PROVIDER_MOCK.updateWarnings).toHaveBeenCalledWith([
+      {
+        name: 'Container Engine Required',
+        details: 'Start your container provider (e.g. Podman) to create Kind clusters',
+      },
+    ]);
   });
 });

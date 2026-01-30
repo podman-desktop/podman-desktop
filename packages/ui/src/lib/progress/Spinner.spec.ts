@@ -29,8 +29,9 @@ describe('parent attributes should be propagate', () => {
       style: 'color: green;',
     });
 
-    const spinner = screen.getByRole('progressbar', { name: 'Loading', busy: true });
+    const spinner = screen.getByRole('status', { name: 'Loading' });
     expect(spinner).toBeDefined();
+    expect(spinner).toHaveAttribute('aria-live', 'polite');
 
     expect(spinner.getAttribute('style')).toBe('color: green;');
   });
@@ -40,9 +41,15 @@ describe('parent attributes should be propagate', () => {
       class: 'dummy-class',
     });
 
-    const spinner = screen.getByRole('progressbar', { name: 'Loading', busy: true });
+    const spinner = screen.getByRole('status', { name: 'Loading' });
     expect(spinner).toBeDefined();
+    expect(spinner).toHaveAttribute('aria-live', 'polite');
 
     expect(spinner.classList).toContain('dummy-class');
   });
+});
+
+test('should use custom label', () => {
+  const { getByRole } = render(Spinner, { label: 'Custom Loading' });
+  getByRole('status', { name: 'Custom Loading' });
 });

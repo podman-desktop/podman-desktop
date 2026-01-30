@@ -16,12 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { compareVersions } from 'compare-versions';
 import { inject, injectable } from 'inversify';
-import { coerce, satisfies } from 'semver';
+import { compare } from 'semver';
 
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
-import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
 import { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
@@ -47,8 +45,6 @@ export class ExtensionsUpdater {
     private extensionInstaller: ExtensionInstaller,
     @inject(Telemetry)
     private telemetry: Telemetry,
-    @inject(ExtensionApiVersion)
-    private extensionApiVersion: ExtensionApiVersion,
   ) {}
 
   async init(): Promise<void> {
@@ -126,7 +122,7 @@ export class ExtensionsUpdater {
 
   // check if some extensions can be updated or not
   async doCheckForUpdates(): Promise<void> {
-    // grab list of extensions
+    // grab list of compatible extensions
     const availableExtensions = await this.extensionCatalog.getExtensions();
 
     // now, grab list of installed extensions
@@ -148,24 +144,8 @@ export class ExtensionsUpdater {
 
         // if found compare versions
         const installedVersion = installedExtension.version;
-        const appVersion = this.extensionApiVersion.getApiVersion();
 
-        // coerce the podman desktop Version
-        const currentPodmanDesktopVersion = coerce(appVersion);
-
-        // filter out versions non-compliant with this version of Podman Desktop
-        const availableVersions = availableExtension.versions.filter(version => {
-          const extensionRequirePodmanDesktopVersion = version.podmanDesktopVersion;
-          if (extensionRequirePodmanDesktopVersion && currentPodmanDesktopVersion) {
-            //  keep the versions that are compatible with this version of Podman Desktop
-            return satisfies(currentPodmanDesktopVersion, extensionRequirePodmanDesktopVersion);
-          } else {
-            // if no version is specified, keep the version
-            return true;
-          }
-        });
-
-        const filteredPreviewVersions = availableVersions.filter(version => version.preview === false);
+        const filteredPreviewVersions = availableExtension.versions.filter(version => version.preview === false);
         // take latest version
         const latestAvailableVersion = filteredPreviewVersions?.[0];
         if (!latestAvailableVersion) {
@@ -173,7 +153,7 @@ export class ExtensionsUpdater {
         }
         // now, compare versions
         // if installed version is greater or equal to latest available version, skip
-        if (compareVersions(installedVersion, latestAvailableVersion.version) >= 0) {
+        if (compare(installedVersion, latestAvailableVersion.version) >= 0) {
           console.log(
             `Skipping update for extension ${installedExtension.id} because installed version ${installedVersion} is greater or equal to latest available version ${latestAvailableVersion.version}`,
           );

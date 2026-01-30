@@ -166,11 +166,11 @@ function startOnboardingQueue(): void {
           <div class="w-2/5 text-[var(--pd-content-card-text)]">
             {#if telemetryMessages}
               {telemetryMessages.acceptMessage}
-              {#if telemetryMessages?.infoLink && telemetryMessages?.infoURL}
+              {#if telemetryMessages?.info}
                 <Link
                   on:click={async (): Promise<void> => {
-                    await window.openExternal(telemetryMessages.infoURL ?? '');
-                  }}>{telemetryMessages?.infoLink}</Link>
+                    await window.openExternal(telemetryMessages.info?.url ?? '');
+                  }}>{telemetryMessages?.info.link}</Link>
               {/if}
             {/if}
           </div>

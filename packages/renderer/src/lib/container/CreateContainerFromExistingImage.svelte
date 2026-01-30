@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -384,7 +384,7 @@ function onContainerConnectionChange(): void {
       {#if selectedProviderConnection?.type === 'podman' && podmanFQN && !matchingLocalImages.includes(podmanFQN)}
         <div class="absolute mt-2 ml-[-18px] self-start">
           <Tooltip tip="Shortname images will be pulled from Docker Hub" topRight>
-            <Fa id="shortname-warning" size="1.1x" class="text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
+            <Icon size="1.1x" class="text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
           </Tooltip>
         </div>
       {/if}

@@ -1,7 +1,6 @@
 name: Epic ⚡
 description: A high-level feature
 type: epic
-labels: [kind/epic ⚡]
 projects: ["podman-desktop/4","podman-desktop/7"]
 
 body:

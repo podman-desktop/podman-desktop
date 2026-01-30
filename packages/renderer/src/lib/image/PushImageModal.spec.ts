@@ -137,7 +137,7 @@ describe('Expect Push Image dialog', () => {
   let callback: CallbackType | undefined;
   const closeCallback = vi.fn();
   function button(name: 'Cancel' | 'Push image' | 'Done'): HTMLElement | null {
-    return screen.queryByRole('button', { name });
+    return screen.queryByRole('button', { name }) ?? screen.queryByRole('button', { name: `Loading ${name}` });
   }
 
   function terminal(): HTMLElement | null {

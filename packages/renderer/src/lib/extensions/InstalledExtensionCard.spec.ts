@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -46,10 +46,10 @@ test('Expect to see a div with extension id title', async () => {
     readme: '',
     icon: 'iconOfMyExtension.png',
   };
-  render(InstalledExtensionCard, { extension });
+  const { findByRole } = render(InstalledExtensionCard, { extension });
 
   // get role Extension Badge
-  const badge = screen.getByRole('region', { name: 'myExtensionId' });
+  const badge = await findByRole('region', { name: 'myExtensionId' });
   expect(badge).toBeInTheDocument();
   expect(badge).toHaveTextContent('built-in');
 });

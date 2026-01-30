@@ -18,8 +18,9 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import type { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementActions } from '/@/model/core/operations';
 import { PodmanMachinePrivileges } from '/@/model/core/types';
+import { handleConfirmationDialog } from '/@/utility/operations';
 
 import { ResourceCardPage } from './resource-card-page';
 
@@ -60,6 +61,11 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
       });
       await playExpect(button).toBeEnabled({ timeout: timeout });
       await button.click();
+
+      // A confirmation dialog is displayed for deletion
+      if (operation === ResourceElementActions.Delete) {
+        await handleConfirmationDialog(this.page);
+      }
     });
   }
 

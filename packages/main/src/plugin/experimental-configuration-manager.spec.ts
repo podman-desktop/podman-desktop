@@ -236,6 +236,28 @@ describe('ExperimentalConfigurationManager', () => {
       expect(result).toBe(false);
     });
 
+    test('should return value when configuration is boolean true', () => {
+      const key = 'kubernetes.statesExperimental';
+      const scope = 'DEFAULT';
+      const mockConfig = { get: vi.fn().mockReturnValue(true) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      const result = experimentalConfigurationManager.isExperimentalConfigurationEnabled(key, scope);
+
+      expect(result).toBe(true);
+    });
+
+    test('should return value when configuration is boolean false', () => {
+      const key = 'kubernetes.statesExperimental';
+      const scope = 'DEFAULT';
+      const mockConfig = { get: vi.fn().mockReturnValue(false) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      const result = experimentalConfigurationManager.isExperimentalConfigurationEnabled(key, scope);
+
+      expect(result).toBe(false);
+    });
+
     test('should return false for invalid key without section or property', () => {
       const key = 'invalid-key';
 

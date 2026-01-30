@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 
@@ -68,7 +68,7 @@ const closeCallback = vi.fn();
 const doCreateNew = vi.fn();
 
 test('Expect to call closeCallback if clicking on Close', async () => {
-  render(PreferencesProviderInstallationModal, {
+  const { findByRole } = render(PreferencesProviderInstallationModal, {
     providerToBeInstalled: {
       provider: providerInfo,
       displayName: 'provider',
@@ -78,7 +78,7 @@ test('Expect to call closeCallback if clicking on Close', async () => {
     preflightChecks: [],
   });
 
-  const button = screen.getByRole('button', { name: 'Close' });
+  const button = await findByRole('button', { name: 'Close' });
   expect(button).toBeInTheDocument();
 
   await userEvent.click(button);
@@ -86,7 +86,7 @@ test('Expect to call closeCallback if clicking on Close', async () => {
 });
 
 test('Expect to call closeCallback if clicking on Cancel', async () => {
-  render(PreferencesProviderInstallationModal, {
+  const { findByRole } = render(PreferencesProviderInstallationModal, {
     providerToBeInstalled: {
       provider: providerInfo,
       displayName: 'provider',
@@ -96,7 +96,7 @@ test('Expect to call closeCallback if clicking on Cancel', async () => {
     preflightChecks: [],
   });
 
-  const button = screen.getByRole('button', { name: 'Cancel' });
+  const button = await findByRole('button', { name: 'Cancel' });
   expect(button).toBeInTheDocument();
 
   await userEvent.click(button);
@@ -104,7 +104,7 @@ test('Expect to call closeCallback if clicking on Cancel', async () => {
 });
 
 test('Expect to call doCreateNew if clicking on Next', async () => {
-  render(PreferencesProviderInstallationModal, {
+  const { findByRole } = render(PreferencesProviderInstallationModal, {
     providerToBeInstalled: {
       provider: providerInfo,
       displayName: 'provider',
@@ -114,7 +114,7 @@ test('Expect to call doCreateNew if clicking on Next', async () => {
     preflightChecks: [],
   });
 
-  const button = screen.getByRole('button', { name: 'Next' });
+  const button = await findByRole('button', { name: 'Next' });
   expect(button).toBeInTheDocument();
 
   await userEvent.click(button);
@@ -122,7 +122,7 @@ test('Expect to call doCreateNew if clicking on Next', async () => {
 });
 
 test('Expect preflight check entry if preflights checks has some value', async () => {
-  render(PreferencesProviderInstallationModal, {
+  const { findByLabelText } = render(PreferencesProviderInstallationModal, {
     providerToBeInstalled: {
       provider: providerInfo,
       displayName: 'provider',
@@ -137,6 +137,6 @@ test('Expect preflight check entry if preflights checks has some value', async (
     ],
   });
 
-  const span = screen.getByLabelText('description');
+  const span = await findByLabelText('description');
   expect(span).toBeInTheDocument();
 });

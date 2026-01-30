@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -501,5 +501,94 @@ describe('ProviderActionButtons', () => {
     // Should either not exist or be in regular mode (not onboarding mode)
     // In this case, the component should show regular buttons mode
     expect(setupButtons.length).toBeLessThanOrEqual(1);
+  });
+
+  test('hides Create new button when no factory and no warnings', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      containerProviderConnectionCreation: false,
+      kubernetesProviderConnectionCreation: false,
+      vmProviderConnectionCreation: false,
+      warnings: [],
+    };
+
+    render(ProviderActionButtons, {
+      provider,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    const createButton = screen.queryByRole('button', { name: /Create new/i });
+    expect(createButton).not.toBeInTheDocument();
+  });
+
+  test('shows disabled Create new button with warning tooltip when no factory but has warnings', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      containerProviderConnectionCreation: false,
+      kubernetesProviderConnectionCreation: false,
+      vmProviderConnectionCreation: false,
+      warnings: [
+        {
+          name: 'Container Engine Required',
+          details: 'Start your container provider to create clusters',
+        },
+        {
+          name: 'Network Issue',
+          details: 'Check your network connection',
+        },
+      ],
+    };
+
+    render(ProviderActionButtons, {
+      provider,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    const createButton = screen.getByRole('button', { name: `Create new ${provider.name}` });
+    expect(createButton).toBeDisabled();
+
+    const tooltipTrigger = screen.getByTestId('tooltip-trigger');
+    await fireEvent.mouseEnter(tooltipTrigger);
+    expect(
+      screen.getByText('Start your container provider to create clusters. Check your network connection'),
+    ).toBeInTheDocument();
+  });
+
+  test('shows enabled Create new button when factory exists even with warnings', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      kubernetesProviderConnectionCreation: true,
+      kubernetesProviderConnectionCreationDisplayName: 'Kind Cluster',
+      warnings: [
+        {
+          name: 'Some Warning',
+          details: 'Some warning details',
+        },
+      ],
+    };
+
+    render(ProviderActionButtons, {
+      provider,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    const createButton = screen.getByRole('button', { name: `Create new Kind Cluster` });
+    expect(createButton).toBeInTheDocument();
+    expect(createButton).not.toBeDisabled();
   });
 });

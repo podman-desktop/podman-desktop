@@ -35,9 +35,9 @@ beforeAll(() => {
 });
 
 test('Expect configured provider shows update button', async () => {
-  verifyStatus(ProviderConfigured, 'configured', false);
+  await verifyStatus(ProviderConfigured, 'configured', false);
 });
 
 test('Expect configured provider does not show update button if version same', async () => {
-  verifyStatus(ProviderConfigured, 'configured', true);
+  await verifyStatus(ProviderConfigured, 'configured', true);
 });

@@ -37,7 +37,7 @@ test('Expect button html when passing a button tag in markdown', async () => {
     item: textComponent,
     inProgressCommandExecution: vi.fn(),
   });
-  const button = screen.getByRole('button', { name: 'label' });
+  const button = screen.getByRole('button', { name: 'Loading label' });
   expect(button).toBeInTheDocument();
   expect(button.dataset.command).toBe('command');
 });

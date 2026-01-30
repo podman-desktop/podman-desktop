@@ -33,6 +33,7 @@ export class PodmanKubePlayPage extends BasePage {
   readonly customYamlEditor: Locator;
   readonly alertMessage: Locator;
   readonly buildCheckbox: Locator;
+  readonly replaceCheckbox: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -49,13 +50,14 @@ export class PodmanKubePlayPage extends BasePage {
     this.doneButton = page.getByRole('button', { name: 'Done' });
     this.alertMessage = this.page.getByLabel('Error Message Content');
     this.buildCheckbox = page.getByRole('checkbox', { name: 'Enable build' }).locator('..');
+    this.replaceCheckbox = page.getByRole('checkbox', { name: 'Replace' }).locator('..');
   }
 
-  private async enableBuildFlag(): Promise<void> {
-    await playExpect(this.buildCheckbox).not.toBeChecked();
-    await playExpect(this.buildCheckbox).toBeEnabled();
-    await this.buildCheckbox.check();
-    await playExpect(this.buildCheckbox).toBeChecked();
+  private async enableCheckbox(checkbox: Locator): Promise<void> {
+    await playExpect(checkbox).not.toBeChecked();
+    await playExpect(checkbox).toBeEnabled();
+    await checkbox.check();
+    await playExpect(checkbox).toBeChecked();
   }
 
   private async createFromScratch(jsonResourceDefinition: string): Promise<void> {
@@ -84,7 +86,12 @@ export class PodmanKubePlayPage extends BasePage {
     await this.yamlPathInput.fill(pathToYaml);
   }
 
-  async playYaml(options: PlayYamlOptions, buildImage = false, timeout = 120_000): Promise<PodsPage> {
+  async playYaml(
+    options: PlayYamlOptions,
+    buildImage = false,
+    replaceImage = false,
+    timeout = 120_000,
+  ): Promise<PodsPage> {
     return test.step('Podman Kube Play', async () => {
       const podmanKubePlayOption = options.podmanKubePlayOption;
       switch (podmanKubePlayOption) {
@@ -97,7 +104,11 @@ export class PodmanKubePlayPage extends BasePage {
       }
 
       if (buildImage) {
-        await this.enableBuildFlag();
+        await this.enableCheckbox(this.buildCheckbox);
+      }
+
+      if (replaceImage) {
+        await this.enableCheckbox(this.replaceCheckbox);
       }
 
       await this.playButton.click();
