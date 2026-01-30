@@ -103,7 +103,7 @@ async function updateTooltipPosition(): Promise<void> {
 
   // Round dimensions to avoid sub-pixel clipping
   const rect = tooltipElement.getBoundingClientRect();
-  tooltipElement.style.width = `${Math.round(rect.width)}px`;
+  tooltipElement.style.width = `${Math.ceil(rect.width)}px`;
 
   isPositioned = true;
 }
