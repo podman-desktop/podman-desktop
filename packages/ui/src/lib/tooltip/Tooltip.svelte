@@ -95,10 +95,15 @@ async function updateTooltipPosition(): Promise<void> {
   // Re-check after async operation - element may have been unmounted
   if (!tooltipElement) return;
 
+  // Round position to avoid sub-pixel positioning
   Object.assign(tooltipElement.style, {
-    left: `${x}px`,
-    top: `${y}px`,
+    left: `${Math.round(x)}px`,
+    top: `${Math.round(y)}px`,
   });
+
+  // Round dimensions to avoid sub-pixel clipping
+  const rect = tooltipElement.getBoundingClientRect();
+  tooltipElement.style.width = `${Math.round(rect.width)}px`;
 
   isPositioned = true;
 }
