@@ -102,6 +102,8 @@ async function updateTooltipPosition(): Promise<void> {
   });
 
   // Round dimensions to avoid sub-pixel clipping
+  // Reset width to auto before measuring so tooltips can shrink
+  tooltipElement.style.width = 'auto';
   const rect = tooltipElement.getBoundingClientRect();
   tooltipElement.style.width = `${Math.ceil(rect.width)}px`;
 
