@@ -46,6 +46,7 @@ import LoadImages from './lib/image/LoadImages.svelte';
 import PullImage from './lib/image/PullImage.svelte';
 import RunImage from './lib/image/RunImage.svelte';
 import SaveImages from './lib/image/SaveImages.svelte';
+import UpdateImages from './lib/image/UpdateImages.svelte';
 import IngressDetails from './lib/ingresses-routes/IngressDetails.svelte';
 import IngressesRoutesList from './lib/ingresses-routes/IngressesRoutesList.svelte';
 import RouteDetails from './lib/ingresses-routes/RouteDetails.svelte';
@@ -220,6 +221,9 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
         </Route>
         <Route path="/images/save" breadcrumb="Save Images">
           <SaveImages />
+        </Route>
+        <Route path="/images/update" breadcrumb="Update Images">
+          <UpdateImages />
         </Route>
         <Route path="/images/load" breadcrumb="Load Images">
           <LoadImages />

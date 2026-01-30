@@ -1,5 +1,13 @@
 <script lang="ts">
-import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUp,
+  faDownload,
+  faEdit,
+  faLayerGroup,
+  faPlay,
+  faSync,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -10,6 +18,7 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { context } from '/@/stores/context';
 import { runImageInfo } from '/@/stores/run-image-store';
 import { saveImagesInfo } from '/@/stores/save-images-store';
+import { updateImagesInfo } from '/@/stores/update-images-store';
 import type { Menu } from '/@api/menu.js';
 import { MenuContext } from '/@api/menu-context.js';
 
@@ -98,6 +107,11 @@ function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
+
+function updateImage(): void {
+  updateImagesInfo.set([image]);
+  router.goto('/images/update');
+}
 </script>
 
 <ListItemButtonIcon title="Run Image" onClick={(): Promise<void> => runImage(image)} detailed={detailed} icon={faPlay} />
@@ -144,6 +158,14 @@ function saveImage(): void {
     menu={dropdownMenu}
     detailed={detailed}
     icon={faDownload} />
+
+  <ListItemButtonIcon
+    title="Check for Update"
+    tooltip="Check if a newer version of this image is available"
+    onClick={updateImage}
+    menu={dropdownMenu}
+    detailed={detailed}
+    icon={faSync} />
 
   <ActionsWrapper dropdownMenu={groupingContributions} dropdownMenuAsMenuActionItem={groupingContributions}>
     <ContributionActions
