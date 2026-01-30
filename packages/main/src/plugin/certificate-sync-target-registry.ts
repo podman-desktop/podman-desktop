@@ -19,7 +19,7 @@
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { injectable } from 'inversify';
 
-import type { CertificateSyncTargetInfo, CertificateSyncTargetProvider } from '/@api/certificate-sync-target.js';
+import type { CertificateSyncTargetInfo } from '/@api/certificate-sync-target.js';
 
 import { Emitter } from './events/emitter.js';
 import { Disposable } from './types/disposable.js';
@@ -39,7 +39,7 @@ export interface CertificateSyncExtensionInfo {
 interface RegisteredProvider {
   extensionInfo: CertificateSyncExtensionInfo;
   providerId: string;
-  provider: CertificateSyncTargetProvider;
+  provider: containerDesktopAPI.CertificateSyncTargetProvider;
 }
 
 /**
