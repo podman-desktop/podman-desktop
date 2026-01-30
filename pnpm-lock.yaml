@@ -28,8 +28,6 @@ patchedDependencies:
   dmg-builder:
     hash: b1937a6dd1c958dfabaa5fd32cb2ede7972c4d6143ccb1e7fe5963e19e34cc3d
     path: patches/dmg-builder.patch
-
-patchedDependencies:
   docker-modem:
     hash: 5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e
     path: patches/docker-modem.patch
