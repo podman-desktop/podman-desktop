@@ -4,6 +4,7 @@ import { Buffer } from 'buffer';
 import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
+import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -190,7 +191,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
         {/if}
         {#if connection.lifecycleMethods.includes('delete')}
           <LoadingIconButton
-            clickAction={(): Promise<void> => deleteConnectionProvider(provider, connection)}
+            clickAction={withConfirmation.bind(undefined, deleteConnectionProvider.bind(undefined, provider, connection), `delete ${connection.name}`)}
             action="delete"
             icon={faTrash}
             state={connectionStatus}

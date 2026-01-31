@@ -34,9 +34,9 @@ beforeAll(() => {
 });
 
 test('Expect ready provider shows update button', async () => {
-  verifyStatus(ProviderReady, 'ready', false);
+  await verifyStatus(ProviderReady, 'ready', false);
 });
 
 test('Expect ready provider does not show update button if version same', async () => {
-  verifyStatus(ProviderReady, 'ready', true);
+  await verifyStatus(ProviderReady, 'ready', true);
 });

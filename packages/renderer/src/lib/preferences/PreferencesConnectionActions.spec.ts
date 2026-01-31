@@ -18,8 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   ProviderContainerConnectionInfo,
@@ -90,6 +90,12 @@ const connectionStatus: IConnectionStatus = {
   inProgress: false,
 };
 
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: undefined });
+});
+
 test('if container connection has start lifecycle method, start button has to be visible', () => {
   const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'podman' };
 
@@ -136,18 +142,70 @@ test('if container connection has start and stop lifecycle methods, restart butt
   expect(restartButton).toBeInTheDocument();
 });
 
-test('if container connection has delete lifecycle method, delete button has to be visible', () => {
-  const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'podman' };
+describe('delete', () => {
+  test('if container connection has delete lifecycle method, delete button has to be visible', () => {
+    const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'podman' };
 
-  render(PreferencesConnectionActions, {
-    connectionStatus,
-    provider: customProviderInfo,
-    connection: containerConnection,
-    updateConnectionStatus,
-    addConnectionToRestartingQueue,
+    render(PreferencesConnectionActions, {
+      connectionStatus,
+      provider: customProviderInfo,
+      connection: containerConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue,
+    });
+    const button = screen.getByRole('button', { name: 'Delete' });
+    expect(button).toBeInTheDocument();
   });
-  const button = screen.getByRole('button', { name: 'Delete' });
-  expect(button).toBeInTheDocument();
+
+  test('delete button should call window.showMessageBox to ask confirmation', async () => {
+    const { getByRole } = render(PreferencesConnectionActions, {
+      connectionStatus,
+      provider: containerProviderInfo,
+      connection: containerConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue,
+    });
+    const button = getByRole('button', { name: 'Delete' });
+
+    await fireEvent.click(button);
+
+    await vi.waitFor(() => {
+      expect(window.showMessageBox).toHaveBeenCalledExactlyOnceWith({
+        title: 'Confirmation',
+        message: `Are you sure you want to delete ${containerConnection.name}?`,
+        buttons: ['Yes', 'Cancel'],
+      });
+    });
+  });
+
+  test('delete button with user confirmation should call window.deleteProviderConnectionLifecycle', async () => {
+    const stoppedConnection: ProviderContainerConnectionInfo = {
+      ...containerConnection,
+      status: 'stopped',
+    };
+    // mock Yes
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+
+    const { getByRole } = render(PreferencesConnectionActions, {
+      connectionStatus,
+      provider: containerProviderInfo,
+      connection: stoppedConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue,
+    });
+    const button = getByRole('button', { name: 'Delete' });
+
+    await fireEvent.click(button);
+
+    await vi.waitFor(() => {
+      expect(window.deleteProviderConnectionLifecycle).toHaveBeenCalledExactlyOnceWith(
+        containerProviderInfo.internalId,
+        stoppedConnection,
+        expect.any(Symbol),
+        expect.any(Function),
+      );
+    });
+  });
 });
 
 test('if kubernetes connection has start lifecycle method, start button has to be visible', () => {

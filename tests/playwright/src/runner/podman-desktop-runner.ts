@@ -194,8 +194,17 @@ export class Runner {
   async saveVideoAs(path: string): Promise<void> {
     const video = this.getPage().video();
     if (video) {
-      await video.saveAs(path);
-      await video.delete();
+      try {
+        await video.saveAs(path);
+      } catch (error) {
+        console.log(`Caught exception when saving video: ${error}`);
+      } finally {
+        try {
+          await video.delete();
+        } catch (error) {
+          console.log(`Caught exception when deleting video: ${error}`);
+        }
+      }
     } else {
       console.log('Video file associated was not found');
     }

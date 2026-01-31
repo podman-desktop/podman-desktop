@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { Link } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import DetailsCell from '/@/lib/details/DetailsCell.svelte';
@@ -75,7 +75,7 @@ if (container.groupInfo.created) {
     <tr>
       <DetailsCell style="cursor-pointer flex items-center" onClick={(): boolean => (labelsDropdownOpen = !labelsDropdownOpen)}>
         Labels
-        <Fa class="ml-1" size="0.9x" icon={labelsDropdownOpen ? faChevronDown : faChevronRight} />
+        <Icon class="ml-1" size="0.9x" icon={labelsDropdownOpen ? faChevronDown : faChevronRight} />
       </DetailsCell>
       <DetailsCell>
         {#if labelsDropdownOpen}

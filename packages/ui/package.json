@@ -149,7 +149,7 @@
     "svelte-fa": "^4.0.0"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.7.4",
+    "@floating-ui/dom": "^1.7.5",
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
@@ -167,10 +167,10 @@
     "@testing-library/svelte": "^5.3.1",
     "@testing-library/user-event": "^14.6.1",
     "@tsconfig/svelte": "^5.0.6",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
     "eslint-plugin-svelte": "^3.14.0",
     "jsdom": "^27.4.0",
-    "svelte": "5.48.0",
+    "svelte": "5.49.0",
     "svelte-check": "^4.3.5",
     "svelte-eslint-parser": "^1.4.1",
     "tailwindcss": "^4.1.18",

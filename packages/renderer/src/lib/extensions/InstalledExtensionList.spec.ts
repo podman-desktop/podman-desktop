@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -57,13 +57,13 @@ test('Expect to see each extension', async () => {
     readme: '',
     icon: 'iconOfMyExtension.png',
   };
-  render(InstalledExtensionList, { extensionInfos: [extension1, extension2] });
+  const { findByRole } = render(InstalledExtensionList, { extensionInfos: [extension1, extension2] });
 
   // get first extension
-  const myExtension1 = screen.getByRole('region', { name: 'myExtensionId1' });
+  const myExtension1 = await findByRole('region', { name: 'myExtensionId1' });
   expect(myExtension1).toBeInTheDocument();
 
   // get second extension
-  const myExtension2 = screen.getByRole('region', { name: 'myExtensionId2' });
+  const myExtension2 = await findByRole('region', { name: 'myExtensionId2' });
   expect(myExtension2).toBeInTheDocument();
 });

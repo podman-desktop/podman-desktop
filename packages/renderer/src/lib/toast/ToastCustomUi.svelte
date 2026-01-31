@@ -1,8 +1,8 @@
 <script lang="ts">
 import { faCheckCircle, faCircleExclamation, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { CloseButton, Spinner } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { toast } from '@zerodevx/svelte-toast';
-import Fa from 'svelte-fa';
 
 import type { TaskInfo } from '/@api/taskInfo';
 
@@ -42,11 +42,11 @@ const closeAction = (): void => {
       {#if taskInfo.status === 'in-progress'}
         <Spinner size="1.5em"/>
       {:else if taskInfo.status === 'success'}
-        <Fa icon={faCheckCircle} class="text-[var(--pd-state-success)] fa-xl"/>
+        <Icon icon={faCheckCircle} class="text-[var(--pd-state-success)] fa-xl"/>
       {:else if taskInfo.status === 'failure'}
-        <Fa icon={faCircleExclamation} class="text-[var(--pd-state-error)] fa-xl"/>
+        <Icon icon={faCircleExclamation} class="text-[var(--pd-state-error)] fa-xl"/>
       {:else if taskInfo.status === 'canceled'}
-        <Fa icon={faTriangleExclamation } class="text-[var(--pd-state-warning)] fa-xl" />
+        <Icon icon={faTriangleExclamation } class="text-[var(--pd-state-warning)] fa-xl" />
       {/if}
     </div>
 

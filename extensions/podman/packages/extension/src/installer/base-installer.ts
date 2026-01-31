@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { InstallCheck } from '@podman-desktop/api';
-import { compare } from 'compare-versions';
+import { compare } from 'semver';
 
 import { getBundledPodmanVersion } from '/@/utils/podman-bundled';
 
@@ -32,6 +32,6 @@ export abstract class BaseInstaller implements Installer {
   abstract getPreflightChecks(): InstallCheck[];
 
   requireUpdate(installedVersion: string): boolean {
-    return compare(installedVersion, getBundledPodmanVersion(), '<');
+    return compare(installedVersion, getBundledPodmanVersion()) < 0;
   }
 }

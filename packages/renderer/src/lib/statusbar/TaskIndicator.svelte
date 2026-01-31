@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import ProgressBar from '/@/lib/task-manager/ProgressBar.svelte';
 import { tasksInfo } from '/@/stores/tasks';
@@ -55,7 +55,7 @@ async function cancelTask(): Promise<void> {
       <div class="flex items-center ml-0.5">
         <Tooltip top tip="Cancel task {title}">
           <button class="cursor-pointer" onclick={cancelTask} aria-label="Cancel task {title}">
-          <Fa size="0.750x" icon={faTimesCircle} />
+          <Icon size="0.750x" icon={faTimesCircle} />
         </button>
         </Tooltip>
       </div>

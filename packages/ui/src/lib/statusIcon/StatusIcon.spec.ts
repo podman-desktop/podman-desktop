@@ -81,3 +81,12 @@ test('Expect updating styling', async () => {
   expect(spinner).toBeInTheDocument();
   expect(spinner).toHaveAttribute('width', '1.4em');
 });
+
+test('Expect icon to not have text-xs class', async () => {
+  const status = 'RUNNING';
+  render(StatusIcon, { status });
+  const icon = screen.getByRole('status');
+  expect(icon).toBeInTheDocument();
+
+  expect(icon).not.toHaveClass('text-xs');
+});

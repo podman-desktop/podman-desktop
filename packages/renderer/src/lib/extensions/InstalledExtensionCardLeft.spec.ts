@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -47,30 +47,28 @@ test('Expect to see icon, link, badge and actions', async () => {
     readme: '',
     icon: 'iconOfMyExtension.png',
   };
-  render(InstalledExtensionCardLeft, { extension });
+  const { findByRole, findByLabelText } = render(InstalledExtensionCardLeft, { extension });
 
   // get actions be there
-  const actions = screen.getByRole('group', { name: 'Extension Actions' });
+  const actions = await findByRole('group', { name: 'Extension Actions' });
   expect(actions).toBeInTheDocument();
 
   // check status
-  const statusLabel = screen.getByLabelText('Extension Status Label');
+  const statusLabel = await findByLabelText('Extension Status Label');
   expect(statusLabel).toBeInTheDocument();
   expect(statusLabel).toHaveTextContent('ACTIVE');
 
   // get role Extension Badge
-  const badge = screen.getByRole('region', { name: 'Extension Badge' });
+  const badge = await findByRole('region', { name: 'Extension Badge' });
   expect(badge).toBeInTheDocument();
   expect(badge).toHaveTextContent('built-in');
 
   // check icon
-  // wait for image to be loaded
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const icon = screen.getByRole('img');
+  const icon = await findByRole('img');
   expect(icon).toBeInTheDocument();
   expect(icon).toHaveAttribute('src', 'iconOfMyExtension.png');
 
   // and the link
-  const detailsButton = screen.getByRole('button', { name: 'foo extension details' });
+  const detailsButton = await findByRole('button', { name: 'foo extension details' });
   expect(detailsButton).toBeInTheDocument();
 });

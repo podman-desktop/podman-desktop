@@ -65,6 +65,103 @@ async function onButtonClicked(object: Object): Promise<void> {
 {/each}
 ```
 
+### Usage of Icon component
+
+The Icon component is a unified icon wrapper that supports multiple icon formats:
+
+- FontAwesome `IconDefinition` object uses `<Fa>` from `svelte-fa`
+- Font class icons strings starting with fas fa-, far fa-, fab fa- or ending with -icon Renders as `<span>` with CSS classes
+- Data URI images strings starting with data:image/ Renders as `<img>`
+- Svelte Components
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+import { CustomSVGIcon } from '/@/icons';
+import { faGear } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+</script>
+
+<Icon icon={CustomSVGIcon} size="2x" />
+<Icon icon={faGear} size="xs" />
+```
+
+🚫 **Instead of:**
+
+```ts
+<script lang="ts">
+import { CustomSVGIcon } from '/@/icons';
+import { faGear } from '@fortawesome/free-solid-svg-icons';
+import Fa from 'svelte-fa';
+</script>
+
+<CustomSVGIcon size='2x' />
+<Fa size="xs" icon={faGear} />
+<i class="fas fa-angle-down"></i>
+```
+
+Use typescript imports rather than string definitions
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+import { faGear } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+</script>
+
+<Icon icon={faGear} />
+```
+
+🚫 **Instead of:**
+
+```ts
+<script lang="ts">
+</script>
+
+<i class="fas fa-gear"></i>
+```
+
+Another example:
+
+✅ **Use this pattern:**
+
+```ts
+<script lang="ts">
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+
+interface Props {
+  icon: unknown;
+}
+
+let { icon }: Props = $props();
+</script>
+
+<Icon icon={icon} />
+```
+
+🚫 **Instead of:**
+
+```ts
+<script lang="ts">
+import Fa from 'svelte-fa';
+
+interface Props {
+  icon: unknown;
+}
+
+let { icon }: Props = $props();
+</script>
+
+{#if isFontAwesomeIcon(icon)}
+  <Fa icon={icon} size="4x" />
+{:else}
+  {@const IconComponent = icon}
+  <IconComponent size='42' />
+{/if}
+```
+
 ### Using async/await in expressions
 
 As of Svelte 5.36+, you can use the `await` keyword directly inside component expressions in three places: at the top level of the component's `<script>`, inside `$derived(...)` declarations, and inside your markup. This enables cleaner code without needing explicit promise handling.

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCheckCircle, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
@@ -55,7 +55,7 @@ function openExtensionDetails(): void {
 
       {#if catalogExtensionUI.isInstalled}
         <div class="flex flex-1 text-[var(--pd-invert-content-info-icon)] p-1 justify-items-end flex-row place-content-end items-center">
-          <Fa class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
+          <Icon class="ml-1.5 mr-2" size="1.1x" icon={faCheckCircle} />
           <div class="uppercase text-sm cursor-default">Already installed</div>
         </div>
       {:else if catalogExtensionUI.fetchable}

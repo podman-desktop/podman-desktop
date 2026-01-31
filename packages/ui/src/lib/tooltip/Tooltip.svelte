@@ -62,6 +62,9 @@ let isVisible = $state(false);
 let isPositioned = $state(false);
 let cleanupAutoUpdate: (() => void) | undefined;
 
+const tooltipInnerClasses =
+  'pt-[4px] pb-[5px] px-2 rounded-lg bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-inner-border)] backdrop-blur-sm';
+
 function getPreferredPlacement(): Placement {
   if (top) return 'top';
   if (topLeft) return 'top-start';
@@ -92,10 +95,17 @@ async function updateTooltipPosition(): Promise<void> {
   // Re-check after async operation - element may have been unmounted
   if (!tooltipElement) return;
 
+  // Round position to avoid sub-pixel positioning
   Object.assign(tooltipElement.style, {
-    left: `${x}px`,
-    top: `${y}px`,
+    left: `${Math.round(x)}px`,
+    top: `${Math.round(y)}px`,
   });
+
+  // Round dimensions to avoid sub-pixel clipping
+  // Reset width to auto before measuring so tooltips can shrink
+  tooltipElement.style.width = 'auto';
+  const rect = tooltipElement.getBoundingClientRect();
+  tooltipElement.style.width = `${Math.ceil(rect.width)}px`;
 
   isPositioned = true;
 }
@@ -150,20 +160,16 @@ $effect((): (() => void) => {
   {#if isVisible && !$tooltipHidden && (tip ?? tipSnippet)}
     <div
       bind:this={tooltipElement}
-      class="fixed tooltip-content transition-opacity duration-150 ease-in-out pointer-events-none text-sm z-[9999]"
+      class="fixed tooltip-content pointer-events-none text-base/4 z-[9999] rounded-[9px] border-[1px] border-[var(--pd-tooltip-outer-border)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
       class:opacity-0={!isPositioned}
       style="left: 0; top: 0;">
       {#if tip}
-        <div
-          class="py-2 px-4 rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
-          aria-label="tooltip">
+        <div class="{tooltipInnerClasses} {className}" aria-label="tooltip">
           {tip}
         </div>
       {/if}
       {#if tipSnippet && !tip}
-        <div
-          class="rounded-md bg-[var(--pd-tooltip-bg)] text-[var(--pd-tooltip-text)] border-[1px] border-[var(--pd-tooltip-border)] {className}"
-          aria-label="tooltip">
+        <div class="{tooltipInnerClasses} {className}" aria-label="tooltip">
           {@render tipSnippet?.()}
         </div>
       {/if}

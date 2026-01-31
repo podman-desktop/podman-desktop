@@ -60,9 +60,9 @@ test('check we have list of webviews in navigation bar', async () => {
 
   webviews.set(webviewTestList);
   const fakeMeta = { url: '/webviews' } as unknown as TinroRouteMeta;
-  render(Webviews, { meta: fakeMeta, iconWithTitle: false });
+  const { findAllByRole } = render(Webviews, { meta: fakeMeta, iconWithTitle: false });
 
-  const links = screen.getAllByRole('link');
+  const links = await findAllByRole('link');
 
   // check we have 2 links
   expect(links).toHaveLength(2);
@@ -107,9 +107,9 @@ test('check that title shows up if iconWithTitle is true', async () => {
 
   webviews.set(webviewTestList);
   const fakeMeta = { url: '/webviews' } as unknown as TinroRouteMeta;
-  render(Webviews, { meta: fakeMeta, iconWithTitle: true });
+  const { findAllByRole } = render(Webviews, { meta: fakeMeta, iconWithTitle: true });
 
-  const links = screen.getAllByRole('link');
+  const links = await findAllByRole('link');
 
   // check we have 2 links
   expect(links).toHaveLength(2);

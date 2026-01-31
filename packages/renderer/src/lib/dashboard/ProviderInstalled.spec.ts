@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
 
@@ -90,15 +90,18 @@ test('Expect installed provider shows button', async () => {
   const initializationContext: InitializationContext = new InitializationContextImpl(
     InitializeAndStartMode,
   ) as unknown as InitializationContext;
-  render(ProviderInstalled, { provider: provider, initializationContext: initializationContext });
+  const { findByText, findByRole } = render(ProviderInstalled, {
+    provider: provider,
+    initializationContext: initializationContext,
+  });
 
-  const providerText = screen.getByText(content => content === 'MyProvider');
+  const providerText = await findByText(content => content === 'MyProvider');
   expect(providerText).toBeInTheDocument();
 
-  const installedText = screen.getByText(content => content.toLowerCase().includes('installed but not ready'));
+  const installedText = await findByText(content => content.toLowerCase().includes('installed but not ready'));
   expect(installedText).toBeInTheDocument();
 
-  const button = screen.getByRole('button', { name: 'Initialize and start' });
+  const button = await findByRole('button', { name: 'Initialize and start' });
   expect(button).toBeInTheDocument();
 
   await userEvent.click(button);
@@ -108,11 +111,11 @@ test('Expect installed provider shows button', async () => {
 });
 
 test('Expect installed provider shows update button', async () => {
-  verifyStatus(ProviderInstalled, 'installed', false);
+  await verifyStatus(ProviderInstalled, 'installed', false);
 });
 
 test('Expect installed provider does not show update button if version same', async () => {
-  verifyStatus(ProviderInstalled, 'installed', true);
+  await verifyStatus(ProviderInstalled, 'installed', true);
 });
 
 test('Expect to see the initialize context error if provider installation fails', async () => {
@@ -143,15 +146,18 @@ test('Expect to see the initialize context error if provider installation fails'
   const initializationContext: InitializationContext = new InitializationContextImpl(
     InitializeAndStartMode,
   ) as unknown as InitializationContext;
-  render(ProviderInstalled, { provider: provider, initializationContext: initializationContext });
+  const { findByText, findByRole } = render(ProviderInstalled, {
+    provider: provider,
+    initializationContext: initializationContext,
+  });
 
-  const providerText = screen.getByText(content => content === 'MyProvider');
+  const providerText = await findByText('MyProvider');
   expect(providerText).toBeInTheDocument();
 
-  const installedText = screen.getByText(content => content.toLowerCase().includes('installed but not ready'));
+  const installedText = await findByText('INSTALLED BUT NOT READY');
   expect(installedText).toBeInTheDocument();
 
-  const button = screen.getByRole('button', { name: 'Initialize and start' });
+  const button = await findByRole('button', { name: 'Initialize and start' });
   expect(button).toBeInTheDocument();
 
   await userEvent.click(button);

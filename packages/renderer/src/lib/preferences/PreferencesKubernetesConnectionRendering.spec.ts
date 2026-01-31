@@ -25,12 +25,20 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderInfo } from '/@api/provider-info';
 
 import PreferencesKubernetesConnectionRendering from './PreferencesKubernetesConnectionRendering.svelte';
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(window.showMessageBox).mockResolvedValue({
+    response: 0,
+  });
+});
 
 test('Expect that removing the connection is going back to the previous page', async () => {
   const kindCluster1 = 'kind cluster 1';
