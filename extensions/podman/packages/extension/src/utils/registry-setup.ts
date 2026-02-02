@@ -82,11 +82,11 @@ export class RegistrySetup {
     // compare file and inMemory registries
     // For each registry in the file that is not in the inMemory, add it
     const toBeAdded = inFileRegistries.filter(fileRegistry => !this.localRegistries.has(fileRegistry.serverUrl));
-    for (const registry of toBeAdded) {
+    toBeAdded.forEach(registry => {
       // do not use the disposable from registerRegistry as we want to keep the registry after extension is stopped.
-      await extensionApi.registry.registerRegistry(registry);
+      extensionApi.registry.registerRegistry(registry);
       this.localRegistries.set(registry.serverUrl, registry);
-    }
+    });
     // For each registry in the inMemory that is not in the file, remove it
     const toBeRemoved = Array.from(this.localRegistries.values()).filter(
       localRegistry =>

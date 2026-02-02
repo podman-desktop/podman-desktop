@@ -117,7 +117,7 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
   if (auth) {
     console.debug(`Configuring registry ${registry}`);
 
-    await imageRegistry.registerRegistry({
+    imageRegistry.registerRegistry({
       source: 'scripts',
       serverUrl: registry,
       username: auth.username,
