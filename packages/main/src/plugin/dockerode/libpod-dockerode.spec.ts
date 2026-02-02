@@ -520,7 +520,7 @@ describe('kube play', () => {
     }).rejects.toThrowError('The operation was aborted');
   });
 
-  test('default content-type should application/yaml', async () => {
+  test('default content-type should be application/yaml', async () => {
     await libPod.playKube(file, { build: false });
 
     expect(postHandler).toHaveBeenCalledOnce();
