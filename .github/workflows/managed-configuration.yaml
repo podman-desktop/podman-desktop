@@ -1,0 +1,205 @@
+name: Managed configuration tests
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  managed-configuration:
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: Managed configuration tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+    continue-on-error: ${{ matrix.optional == true }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            timeout: 15
+          - os: macos-15-intel # unstable, sometimes very slow execution
+            timeout: 15
+            optional: true
+          - os: macos-15
+            timeout: 15
+          - os: windows-2022 # Windows 10 equivalent
+            timeout: 15
+            optional: true
+          - os: windows-2025 # Windows 11 equivalent
+            timeout: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # --- OS-specific administrative setup ---
+      - name: Linux managed configuration files
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          echo "chrome-sandbox patch"
+          sudo pwd
+          sudo chown -R root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+          echo "Managed configuration set-up for Linux"
+          mkdir -p $HOME/.config/containers/podman-desktop/configuration
+          sudo mkdir -p /usr/share/podman-desktop
+          cat > $HOME/.config/containers/podman-desktop/configuration/settings.json <<EOF
+          {
+            "preferences.appearance": "system",
+            "feedback.dialog": false,
+            "tasks.Toast": true
+          }
+          EOF
+          sudo sh -c 'cat > /usr/share/podman-desktop/default-settings.json <<EOF
+          {
+            "feedback.dialog": true,
+            "preferences.zoomLevel": 0.5,
+            "preferences.ExitOnClose": false
+          }
+          EOF'
+          sudo sh -c 'cat > /usr/share/podman-desktop/locked.json <<EOF
+          {
+            "locked": [
+              "terminal.integrated.lineHeight",
+              "tasks.Toast",
+              "preferences.ExitOnClose"
+            ]
+          }
+          EOF'
+          echo "User settings:" && cat $HOME/.config/containers/podman-desktop/configuration/settings.json
+          echo "Default settings:" && sudo cat /usr/share/podman-desktop/default-settings.json
+          echo "Locked settings:" && sudo cat /usr/share/podman-desktop/locked.json
+      - name: MacOS managed configuration files
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        run: |
+          echo "Managed configuration set-up for macOS"
+          mkdir -p $HOME/.config/containers/podman-desktop/configuration
+          sudo mkdir -p /Library/Application\ Support/io.podman_desktop.PodmanDesktop/
+          cat > $HOME/.config/containers/podman-desktop/configuration/settings.json <<EOF
+          {
+            "preferences.appearance": "system",
+            "feedback.dialog": false,
+            "tasks.Toast": true
+          }
+          EOF
+          sudo sh -c 'cat > /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json <<EOF
+          {
+            "feedback.dialog": true,
+            "preferences.zoomLevel": 0.5,
+            "preferences.ExitOnClose": false
+          }
+          EOF'
+          sudo sh -c 'cat > /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json <<EOF
+          {
+            "locked": [
+              "terminal.integrated.lineHeight",
+              "tasks.Toast",
+              "preferences.ExitOnClose"
+            ]
+          }
+          EOF'
+          echo "User settings:" && cat $HOME/.config/containers/podman-desktop/configuration/settings.json
+          echo "Default settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json
+          echo "Locked settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json
+      - name: Windows managed configuration files
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        shell: pwsh
+        run: |
+          Write-Host "Managed configuration set-up for Windows"
+          $configDir = Join-Path $env:USERPROFILE '.local' 'share' 'containers' 'podman-desktop' 'configuration'
+          New-Item -Path $configDir -ItemType Directory -Force | Out-Null
+          $managedDir = Join-Path $env:ProgramData 'Podman Desktop'
+          New-Item -Path $managedDir -ItemType Directory -Force | Out-Null
+          $settings = @'
+          {
+            "preferences.appearance": "system",
+            "feedback.dialog": false,
+            "tasks.Toast": true
+          }
+          '@
+          Set-Content -Path (Join-Path $configDir 'settings.json') -Value $settings -Encoding UTF8
+          $defaultSettings = @'
+          {
+            "feedback.dialog": true,
+            "preferences.zoomLevel": 0.5,
+            "preferences.ExitOnClose": false
+          }
+          '@
+          Set-Content -Path (Join-Path $managedDir 'default-settings.json') -Value $defaultSettings -Encoding UTF8
+          $locked = @'
+          {
+            "locked": [
+              "terminal.integrated.lineHeight",
+              "tasks.Toast",
+              "preferences.ExitOnClose"
+            ]
+          }
+          '@
+          Set-Content -Path (Join-Path $managedDir 'locked.json') -Value $locked -Encoding UTF8
+          Write-Host "User settings:"
+          Get-Content -Path (Join-Path $configDir 'settings.json')
+          Write-Host "Default settings:"
+          Get-Content -Path (Join-Path $managedDir 'default-settings.json')
+          Write-Host "Locked settings:"
+          Get-Content -Path (Join-Path $managedDir 'locked.json')
+      # ========================================
+
+      - name: Build (for E2E)
+        run: pnpm run test:e2e:build
+
+      - name: Run managed configuration spec
+        shell: bash
+        run: |
+          echo "Runner OS: $RUNNER_OS, matrix.os: ${{ matrix.os }}"
+          mkdir -p tests/playwright/output
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            pnpm run test:e2e:managed-configuration:run
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            pnpm run test:e2e:managed-configuration:run
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            pwsh -NoProfile -NonInteractive -Command "pnpm run test:e2e:managed-configuration:run"
+          else
+            echo "Unsupported RUNNER_OS: $RUNNER_OS"
+            exit 1
+          fi
+
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@74626db7353a25a20a72816467ebf035f674c5f8 # v6.2.0
+        if: always()
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests: true
+          report_paths: '**/*results.xml'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: managed-configuration-${{ matrix.os }}
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
