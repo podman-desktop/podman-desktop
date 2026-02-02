@@ -851,7 +851,7 @@ describe('expect checkCredentials', async () => {
       username: 'a-username',
       secret: 'pass',
     };
-    const res1 = await imageRegistry.registerRegistry(reg1);
+    const res1 = imageRegistry.registerRegistry(reg1);
     expectTypeOf(res1).toMatchTypeOf({} as Disposable);
     // Make a non-readonly copy, as readonly arrays are not supported by toBeArray
     const newRegistries: Registry[] = [...imageRegistry.getRegistries()];
@@ -870,14 +870,14 @@ describe('expect checkCredentials', async () => {
       username: 'a-username',
       secret: 'pass',
     };
-    const res1 = await imageRegistry.registerRegistry(reg1);
+    const res1 = imageRegistry.registerRegistry(reg1);
     expectTypeOf(res1).toMatchTypeOf({} as Disposable);
     const registries1: Registry[] = [...imageRegistry.getRegistries()];
     expect(registries1).toBeDefined();
     expectTypeOf(registries1).toBeArray();
     expect(registries1.length).toBe(1);
 
-    const res2 = await imageRegistry.registerRegistry(reg1);
+    const res2 = imageRegistry.registerRegistry(reg1);
     expectTypeOf(res2).toMatchTypeOf({} as Disposable);
     const registries2: Registry[] = [...imageRegistry.getRegistries()];
     expect(registries2).toBeDefined();
@@ -886,9 +886,11 @@ describe('expect checkCredentials', async () => {
   });
 });
 
-test('should not register a registry with credential or info that does not work', async () => {
+test('should unregister a registry with credential or info that does not work', async () => {
   const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
   spyCheckCredentials.mockRejectedValue(new Error('something went wrong'));
+
+  const unregisterRegistrySpy = vi.spyOn(imageRegistry, 'unregisterRegistry');
 
   const registries: Registry[] = [...imageRegistry.getRegistries()];
   expect(registries).toBeDefined();
@@ -902,7 +904,9 @@ test('should not register a registry with credential or info that does not work'
     secret: 'pass',
   };
 
-  await imageRegistry.registerRegistry(reg1);
+  imageRegistry.registerRegistry(reg1);
+
+  await vi.waitFor(() => expect(unregisterRegistrySpy).toHaveBeenCalledWith(reg1));
 
   const registries2: Registry[] = [...imageRegistry.getRegistries()];
   expect(registries2).toBeDefined();
@@ -1146,7 +1150,7 @@ test('getAuthconfigForServer returns the expected authconfig', async () => {
   const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
   spyCheckCredentials.mockResolvedValue(undefined);
 
-  await imageRegistry.registerRegistry({
+  imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
     secret: 'my-secret',
@@ -1164,7 +1168,7 @@ test('getAuthconfigForServer returns docker.io authconfig when server is index.d
   const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
   spyCheckCredentials.mockResolvedValue(undefined);
 
-  await imageRegistry.registerRegistry({
+  imageRegistry.registerRegistry({
     serverUrl: 'docker.io',
     username: 'foo',
     secret: 'my-secret',
@@ -1182,7 +1186,7 @@ test('getToken with registry auth', async () => {
   const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
   spyCheckCredentials.mockResolvedValue(undefined);
 
-  await imageRegistry.registerRegistry({
+  imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
     secret: 'my-secret',
