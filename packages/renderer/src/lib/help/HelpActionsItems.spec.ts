@@ -111,4 +111,21 @@ describe('HelpActionsItems component', () => {
       expect(item).toBeVisible();
     });
   });
+
+  test('should dispose of the listener when the component is unmounted', () => {
+    const disposeMock = vi.fn();
+    vi.mocked(window.events.receive).mockReturnValue({
+      dispose: disposeMock,
+    });
+
+    const { unmount } = render(HelpActionsItems, { items: Items });
+
+    expect(window.events.receive).toHaveBeenCalledWith('toggle-help-menu', expect.any(Function));
+
+    expect(disposeMock).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(disposeMock).toHaveBeenCalled();
+  });
 });
