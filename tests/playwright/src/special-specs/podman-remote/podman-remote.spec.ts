@@ -28,9 +28,15 @@ const IMAGE = 'ghcr.io/podmandesktop-ci/alpine-remote';
 const REMOTE_MACHINE = 'remote-machine';
 const PODMAN = 'podman';
 
-test.beforeAll(async ({ runner, welcomePage }) => {
+test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('podman-remote-e2e');
 
+  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForFunction(() => document.readyState === 'complete');
+  await page.evaluate(() => {
+    return window.getComputedStyle(document.body).height; // Triggers reflow
+  });
   await welcomePage.handleWelcomePage(true);
 });
 

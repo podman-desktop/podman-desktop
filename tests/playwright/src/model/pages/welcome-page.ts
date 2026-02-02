@@ -44,8 +44,8 @@ export class WelcomePage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.welcomeMessage = page.getByText('Welcome to Podman Desktop');
-    this.telemetryConsentContainer = page.getByTitle('Enable telemetry');
     this.telemetryConsent = page.getByLabel('Enable telemetry');
+    this.telemetryConsentContainer = page.getByTitle('Enable telemetry').locator('..');
     this.skipOnBoarding = page.getByRole('button', {
       name: 'Skip',
       exact: true,
@@ -73,9 +73,15 @@ export class WelcomePage extends BasePage {
       // Extensions load sequentially (faster speed but can block ui)
       await playExpect(this.startOnboarding).toBeEnabled({ timeout: 45_000 });
 
+      await playExpect(this.telemetryConsent).toBeVisible({ timeout: 20_000 });
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
-        await this.telemetryConsentContainer.uncheck({ force: true });
+        try {
+          await this.telemetryConsent.uncheck({ force: true });
+        } catch (err) {
+          console.log(`Error caught when unchecking telemetry: ${err}`);
+          await this.telemetryConsentContainer.click();
+        }
       }
 
       await playExpect(this.telemetryConsent).not.toBeChecked();
