@@ -26,11 +26,17 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 import * as extension from '/@/extension';
 import { findRunningMachine } from '/@/extension';
-import { getPodmanCli } from '/@/utils/podman-cli';
+import * as util from '/@/utils/util';
 
 vi.mock(import('/@/extension'));
 vi.mock(import('node:fs'));
-vi.mock(import('/@/utils/podman-cli'));
+vi.mock(
+  import('/@/utils/util'),
+  (): Partial<typeof util> => ({
+    appHomeDir: () => 'appHomeDir',
+    execPodman: vi.fn(),
+  }),
+);
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -50,8 +56,6 @@ beforeEach(() => {
   Object.defineProperty(process, 'platform', {
     value: 'darwin',
   });
-
-  vi.mocked(getPodmanCli).mockReturnValue('podman');
 });
 
 test('darwin: compatibility mode binary not found failure', async () => {
@@ -214,8 +218,8 @@ describe('promptRestart', () => {
 
     await socketCompatClass.promptRestart(PODMAN_MACHINE_MOCK);
 
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('podman', ['machine', 'stop', PODMAN_MACHINE_MOCK]);
-    expect(extensionApi.process.exec).toHaveBeenCalledWith('podman', ['machine', 'start', PODMAN_MACHINE_MOCK]);
+    expect(util.execPodman).toHaveBeenCalledWith(['machine', 'stop', PODMAN_MACHINE_MOCK]);
+    expect(util.execPodman).toHaveBeenCalledWith(['machine', 'start', PODMAN_MACHINE_MOCK]);
   });
 });
 
