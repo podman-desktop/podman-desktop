@@ -21,45 +21,11 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 
-import { getSocketCompatibility, LinuxSocketCompatibility } from './compatibility-mode';
+import { getSocketCompatibility } from './compatibility-mode';
 
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
-});
-
-// Linux tests
-test('linux: compatibility mode pass', async () => {
-  Object.defineProperty(process, 'platform', {
-    value: 'linux',
-  });
-  expect(() => getSocketCompatibility()).toBeTruthy();
-});
-
-// Fail when trying to use runSystemdCommand with a command that's not "enable" or "disable"
-test('linux: fail when trying to use runSystemdCommand with a command that is not "enable" or "disable"', async () => {
-  Object.defineProperty(process, 'platform', {
-    value: 'linux',
-  });
-
-  const socketCompatClass = new LinuxSocketCompatibility();
-  await expect(socketCompatClass.runSystemdCommand('start', 'enabled')).rejects.toThrowError(
-    'runSystemdCommand only accepts enable or disable as the command',
-  );
-});
-
-test('linux: pass enabling when systemctl command exists', async () => {
-  Object.defineProperty(process, 'platform', {
-    value: 'linux',
-  });
-
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
-
-  const socketCompatClass = new LinuxSocketCompatibility();
-
-  // Expect enable() to pass since systemctl command exists
-  await expect(socketCompatClass.enable()).resolves.toBeUndefined();
-  expect(extensionApi.window.showErrorMessage).not.toHaveBeenCalled();
 });
 
 // Windows tests

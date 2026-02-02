@@ -16,88 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as fs from 'node:fs';
-
-import * as extensionApi from '@podman-desktop/api';
-
 import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
-import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
-
-const podmanSystemdSocket = 'podman.socket';
-
-export class LinuxSocketCompatibility extends SocketCompatibility {
-  details =
-    'Administrative privileges are required to enable or disable the systemd Podman socket for Docker compatibility.';
-
-  // This will show the "opposite" of what the current state is
-  // "Enable" if it's currently disabled, "Disable" if it's currently enabled
-  // for tooltip text
-  tooltipText(): string {
-    const text = 'Linux Docker socket compatibility for Podman.';
-    return this.isEnabled() ? `Disable ${text}` : `Enable ${text}`;
-  }
-
-  // isEnabled() checks to see if /etc/systemd/system/socket.target.wants/podman.socket exists
-  isEnabled(): boolean {
-    const filename = '/etc/systemd/system/socket.target.wants/podman.socket';
-    return fs.existsSync(filename);
-  }
-
-  // Runs the systemd command either 'enable' or 'disable'
-  async runSystemdCommand(command: string, description: string): Promise<void> {
-    // Only allow enable or disable, throw error if anything else is inputted
-    if (command !== 'enable' && command !== 'disable') {
-      throw new Error('runSystemdCommand only accepts enable or disable as the command');
-    }
-
-    // Create the full command to run with --now as well as the podman socket name
-    const fullCommand = [command, '--now', podmanSystemdSocket];
-
-    try {
-      // Have to run via sudo
-      await extensionApi.process.exec('systemctl', fullCommand);
-    } catch (error) {
-      console.error(`Error running systemctl command: ${error}`);
-      await extensionApi.window.showErrorMessage(`Error running systemctl command: ${error}`, 'OK');
-      return;
-    }
-
-    // Show information message to the user that they may need to run
-    // ln -s /run/podman/podman.sock /var/run/docker.sock to enable Docker compatibility
-    if (command === 'enable') {
-      // Show information and give the user an option of Yes or Cancel
-      const result = await extensionApi.window.showInformationMessage(
-        'Do you want to create a symlink from /run/podman/podman.sock to /var/run/docker.sock to enable Docker compatibility without having to set the DOCKER_HOST environment variable?',
-        'Yes',
-        'Cancel',
-      );
-      // If the user clicked Yes, run the ln command
-      if (result === 'Yes') {
-        try {
-          await extensionApi.process.exec('pkexec', ['ln', '-s', '/run/podman/podman.sock', '/var/run/docker.sock']);
-          await extensionApi.window.showInformationMessage(
-            'Symlink created successfully. The Podman socket is now available at /var/run/docker.sock.',
-          );
-        } catch (error) {
-          console.error(`Error creating symlink: ${error}`);
-          await extensionApi.window.showErrorMessage(`Error creating symlink: ${error}`, 'OK');
-          return;
-        }
-      }
-    }
-    await extensionApi.window.showInformationMessage(
-      `Podman systemd socket has been ${description} for Docker compatibility.`,
-    );
-  }
-
-  async enable(): Promise<void> {
-    return this.runSystemdCommand('enable', 'enabled');
-  }
-
-  async disable(): Promise<void> {
-    return this.runSystemdCommand('disable', 'disabled');
-  }
-}
+import { LinuxSocketCompatibility } from '/@/compatibility-mode/linux-socket-compatibility';
+import type { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 
 // TODO: Windows
 export function getSocketCompatibility(): SocketCompatibility {
