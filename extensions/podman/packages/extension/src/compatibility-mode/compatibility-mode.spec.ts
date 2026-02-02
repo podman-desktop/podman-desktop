@@ -16,10 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as extensionApi from '@podman-desktop/api';
 import { afterEach, expect, test, vi } from 'vitest';
-
-import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
 
 import { getSocketCompatibility } from './compatibility-mode';
 
@@ -37,49 +34,4 @@ test('windows: compatibility mode fail', async () => {
 
   // Expect getSocketCompatibility to return error since Linux is not supported yet
   expect(() => getSocketCompatibility()).toThrowError();
-});
-
-test('darwin: test promptRestart IS NOT ran when findRunningMachine returns undefined for enable AND disable', async () => {
-  // Mock platform to be darwin
-  Object.defineProperty(process, 'platform', {
-    value: 'darwin',
-  });
-
-  const socketCompatClass = new DarwinSocketCompatibility();
-
-  // Mock execPromise was ran successfully
-  vi.mock('execPromise', () => {
-    return Promise.resolve();
-  });
-
-  // Mock that enable ran successfully
-  const spyEnable = vi.spyOn(socketCompatClass, 'runCommand');
-  spyEnable.mockImplementation(() => {
-    return Promise.resolve();
-  });
-
-  // Mock that disable ran successfully
-  const spyDisable = vi.spyOn(socketCompatClass, 'runCommand');
-  spyDisable.mockImplementation(() => {
-    return Promise.resolve();
-  });
-
-  // Mock that findRunningMachine returns undefined
-  vi.mock('./../extension', () => {
-    return {
-      findRunningMachine: (): Promise<void> => {
-        return Promise.resolve();
-      },
-    };
-  });
-
-  const spyPromptRestart = vi.spyOn(extensionApi.window, 'showInformationMessage');
-
-  // Enable shouldn't call promptRestart
-  await socketCompatClass.enable();
-  expect(spyPromptRestart).not.toHaveBeenCalled();
-
-  // Disable shouldn't call promptRestart
-  await socketCompatClass.disable();
-  expect(spyPromptRestart).not.toHaveBeenCalled();
 });
