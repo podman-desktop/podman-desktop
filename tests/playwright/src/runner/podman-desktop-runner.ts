@@ -120,6 +120,15 @@ export class Runner {
     // Start playwright tracing
     await this.startTracing();
 
+    // Verify video recording is active on the page's context
+    const video = this._page.video();
+    if (video) {
+      const videoPath = await video.path();
+      console.log(`Video recording started, will be saved to: ${videoPath}`);
+    } else {
+      console.log('Warning: Video recording is not active on this page');
+    }
+
     // also get stderr from the node process
     this._app.process().stderr?.on('data', data => {
       console.log(`STDERR: ${data}`);
@@ -160,7 +169,7 @@ export class Runner {
     let name = '';
     if (this._videoAndTraceName) name = this._videoAndTraceName;
 
-    name = name + '_trace.zip';
+    name = `${name}_trace.zip`;
     await this.getPage()
       .context()
       .tracing.stop({ path: join(this._testOutput, 'traces', name) });
