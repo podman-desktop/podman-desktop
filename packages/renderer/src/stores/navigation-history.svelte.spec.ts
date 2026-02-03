@@ -16,12 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { router } from 'tinro';
+import { router, type TinroRoute } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { goBack, goForward, navigationHistory } from './navigation-history.svelte';
 
-vi.mock(import('tinro'));
+let routerSubscribeCallback = vi.hoisted(() => {
+  return vi.fn() as unknown as (navigation: TinroRoute) => void;
+});
+
+vi.mock('tinro', () => ({
+  router: {
+    goto: vi.fn(),
+    subscribe: vi.fn((callback: (navigation: TinroRoute) => void) => {
+      routerSubscribeCallback = callback;
+      return vi.fn();
+    }),
+  },
+}));
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -107,5 +119,18 @@ describe('submenu base routes', () => {
     expect(navigationHistory.index).toBe(0);
     expect(router.goto).toHaveBeenCalledWith('/containers');
     expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.back');
+  });
+});
+
+describe('router navigation events', () => {
+  test('should not store index.html in the history stack', () => {
+    // Simulate navigation: /index.html -> / when starting the app in production mode
+    // The /index.html route should not be stored in the navigation history
+    routerSubscribeCallback({ url: '/index.html' } as TinroRoute);
+    routerSubscribeCallback({ url: '/' } as TinroRoute);
+
+    expect(navigationHistory.stack).not.toContain('/index.html');
+    expect(navigationHistory.stack).toContain('/');
+    expect(navigationHistory.index).toBe(0);
   });
 });
