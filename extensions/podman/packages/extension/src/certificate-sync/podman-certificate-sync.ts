@@ -104,6 +104,11 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
 
   /**
    * Perform the actual certificate synchronization with progress reporting.
+   * Uses a diff-based algorithm:
+   * 1. Get existing certificates on VM
+   * 2. Delete certificates that no longer exist on host
+   * 3. Upload only new certificates (skip existing ones with matching fingerprint)
+   *
    * Note: progress.report({ increment }) SETS the progress value, doesn't add to it.
    */
   private async doSynchronize(
@@ -111,57 +116,109 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
     certificates: string[],
     progress: Progress<{ message?: string; increment?: number }>,
   ): Promise<void> {
-    const totalCerts = certificates.length;
     const anchorsPath = '/etc/pki/ca-trust/source/anchors';
-    let currentPercent = 0;
 
     try {
-      // Ensure the anchors directory exists (0% -> 5%)
-      currentPercent = 5;
-      progress.report({ message: `Creating anchors directory on ${machineName}`, increment: currentPercent });
+      // Step 1: Ensure the anchors directory exists (0% -> 5%)
+      progress.report({ message: `Creating anchors directory on ${machineName}`, increment: 5 });
       await this.runMachineCommand(machineName, `sudo mkdir -p ${anchorsPath}`);
 
-      // Upload each certificate (5% -> 85%)
-      for (let i = 0; i < certificates.length; i++) {
-        const pem = certificates[i];
+      // Step 2: Get existing certificate fingerprints from VM (5% -> 10%)
+      progress.report({ message: `Checking existing certificates on ${machineName}`, increment: 10 });
+      const remoteFingerprints = await this.getRemoteCertificateFingerprints(machineName, anchorsPath);
+
+      // Step 3: Build map of host certificates (fingerprint -> PEM)
+      const hostCertificates = new Map<string, string>();
+      for (const pem of certificates) {
         if (!pem) continue;
-
         const fingerprint = this.getCertificateFingerprint(pem);
-        const filename = `podman-desktop-${fingerprint}.crt`;
-        const remotePath = `${anchorsPath}/${filename}`;
+        hostCertificates.set(fingerprint, pem);
+      }
+      const hostFingerprints = new Set(hostCertificates.keys());
 
-        // Update progress at the START of each certificate upload
-        currentPercent = 5 + Math.floor(((i + 1) / totalCerts) * 80);
+      // Step 4: Calculate diff
+      // Stale: on remote but not on host (need to delete)
+      const staleFingerprints = [...remoteFingerprints].filter(fp => !hostFingerprints.has(fp));
+      // New: on host but not on remote (need to upload)
+      const newFingerprints = [...hostFingerprints].filter(fp => !remoteFingerprints.has(fp));
+      // Existing: on both (skip, already synced)
+      const existingCount = hostFingerprints.size - newFingerprints.length;
+
+      // Step 5: Delete stale certificates (10% -> 20%)
+      if (staleFingerprints.length > 0) {
         progress.report({
-          message: `(${i + 1}/${totalCerts}) Uploading certificate to ${machineName}`,
-          increment: currentPercent,
+          message: `Removing ${staleFingerprints.length} obsolete certificate(s) from ${machineName}`,
+          increment: 15,
         });
+        await this.deleteRemoteCertificates(machineName, anchorsPath, staleFingerprints);
+      }
+      progress.report({ increment: 20 });
 
-        // Write certificate to VM using base64 encoding to handle special characters
-        const base64Cert = Buffer.from(pem).toString('base64');
-        try {
-          await this.runMachineCommand(
-            machineName,
-            `echo '${base64Cert}' | base64 -d | sudo tee ${remotePath} > /dev/null`,
-          );
-        } catch (error) {
-          console.error(`Failed to upload certificate ${filename}:`, error);
-          // Continue with other certificates
+      // Step 6: Upload only new certificates (20% -> 85%)
+      const totalNew = newFingerprints.length;
+      if (totalNew > 0) {
+        for (let i = 0; i < newFingerprints.length; i++) {
+          const fingerprint = newFingerprints[i];
+          if (!fingerprint) continue;
+
+          const pem = hostCertificates.get(fingerprint);
+          if (!pem) continue;
+
+          const filename = `podman-desktop-${fingerprint}.crt`;
+          const remotePath = `${anchorsPath}/${filename}`;
+
+          // Update progress
+          const currentPercent = 20 + Math.floor(((i + 1) / totalNew) * 65);
+          progress.report({
+            message: `(${i + 1}/${totalNew}) Uploading new certificate to ${machineName}`,
+            increment: currentPercent,
+          });
+
+          // Write certificate to VM using base64 encoding to handle special characters
+          const base64Cert = Buffer.from(pem).toString('base64');
+          try {
+            await this.runMachineCommand(
+              machineName,
+              `echo '${base64Cert}' | base64 -d | sudo tee ${remotePath} > /dev/null`,
+            );
+          } catch (error) {
+            console.error(`Failed to upload certificate ${filename}:`, error);
+            // Continue with other certificates
+          }
         }
+      } else {
+        progress.report({ increment: 85 });
       }
 
-      // Update the CA trust store (85% -> 95%)
+      // Step 7: Update the CA trust store (85% -> 92%)
       progress.report({ message: `Updating CA trust store on ${machineName}`, increment: 90 });
       await this.runMachineCommand(machineName, 'sudo update-ca-trust');
 
-      // Restart podman services to pick up new certificates (95% -> 100%)
+      // Step 8: Restart podman services to pick up new certificates (92% -> 100%)
       progress.report({ message: `Restarting Podman services on ${machineName}`, increment: 95 });
       await this.runMachineCommand(machineName, 'sudo systemctl restart podman.socket podman.service');
 
-      progress.report({ message: `Synchronized ${totalCerts} certificates to ${machineName}`, increment: 100 });
+      // Final summary
+      const summary = this.buildSyncSummary(staleFingerprints.length, totalNew, existingCount);
+      progress.report({ message: `${summary} on ${machineName}`, increment: 100 });
     } finally {
       progress.report({ increment: -1 });
     }
+  }
+
+  /**
+   * Build a human-readable summary of the sync operation.
+   */
+  private buildSyncSummary(deleted: number, added: number, unchanged: number): string {
+    const parts: string[] = [];
+    if (added > 0) parts.push(`${added} added`);
+    if (deleted > 0) parts.push(`${deleted} removed`);
+    if (unchanged > 0) parts.push(`${unchanged} unchanged`);
+
+    if (parts.length === 0) {
+      return 'No changes';
+    }
+    return `Certificates: ${parts.join(', ')}`;
   }
 
   /**
@@ -170,6 +227,72 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
    */
   private async runMachineCommand(machineName: string, command: string): Promise<void> {
     await execPodman(['machine', 'ssh', machineName, command]);
+  }
+
+  /**
+   * Run a command on a Podman machine via SSH and return the output.
+   */
+  private async runMachineCommandWithOutput(machineName: string, command: string): Promise<string> {
+    const result = await execPodman(['machine', 'ssh', machineName, command]);
+    return result.stdout;
+  }
+
+  /**
+   * Get the set of certificate fingerprints currently on the remote machine.
+   * Parses filenames like 'podman-desktop-abc123.crt' to extract fingerprints.
+   */
+  private async getRemoteCertificateFingerprints(machineName: string, anchorsPath: string): Promise<Set<string>> {
+    const fingerprints = new Set<string>();
+
+    try {
+      // List podman-desktop managed certificate files, suppress errors if none exist
+      const output = await this.runMachineCommandWithOutput(
+        machineName,
+        `ls -1 ${anchorsPath}/podman-desktop-*.crt 2>/dev/null || true`,
+      );
+
+      // Parse output to extract fingerprints from filenames
+      const lines = output
+        .trim()
+        .split('\n')
+        .filter(line => line.length > 0);
+      const fingerprintRegex = /podman-desktop-([a-f0-9]+)\.crt$/;
+      for (const line of lines) {
+        // Extract fingerprint from filename: /path/podman-desktop-FINGERPRINT.crt
+        const match = fingerprintRegex.exec(line);
+        if (match?.[1]) {
+          fingerprints.add(match[1]);
+        }
+      }
+    } catch (error) {
+      // If listing fails, assume no existing certificates
+      console.warn('Failed to list existing certificates on VM:', error);
+    }
+
+    return fingerprints;
+  }
+
+  /**
+   * Delete certificates from the remote machine by their fingerprints.
+   */
+  private async deleteRemoteCertificates(
+    machineName: string,
+    anchorsPath: string,
+    fingerprints: string[],
+  ): Promise<void> {
+    if (fingerprints.length === 0) {
+      return;
+    }
+
+    // Build list of files to delete
+    const filesToDelete = fingerprints.map(fp => `${anchorsPath}/podman-desktop-${fp}.crt`).join(' ');
+
+    try {
+      await this.runMachineCommand(machineName, `sudo rm -f ${filesToDelete}`);
+    } catch (error) {
+      console.error('Failed to delete stale certificates:', error);
+      // Continue even if deletion fails
+    }
   }
 
   /**
