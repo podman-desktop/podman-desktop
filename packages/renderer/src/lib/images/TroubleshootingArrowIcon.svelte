@@ -5,12 +5,16 @@ interface Props {
   style?: string;
 }
 
-let { size = '8', class: className = '', style = '' }: Props = $props();
+let { size = '9', class: className = '', style = '' }: Props = $props();
+
+// Calculate height based on viewBox aspect ratio (8:6 = 4:3)
+const width = size;
+const height = typeof size === 'number' ? size * 0.75 : `calc(${size} * 0.75)`;
 </script>
         
 <svg
-  width={size}
-  height={size}
+  width={width}
+  height={height}
   class={className}
   style={style}
   viewBox="0 0 8 6"
