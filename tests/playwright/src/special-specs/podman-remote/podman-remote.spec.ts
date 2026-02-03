@@ -28,8 +28,9 @@ const IMAGE = 'ghcr.io/podmandesktop-ci/alpine-remote';
 const REMOTE_MACHINE = 'remote-machine';
 const PODMAN = 'podman';
 
-test.beforeAll(async ({ runner }) => {
+test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('podman-remote-e2e');
+  await welcomePage.handleWelcomePage(true);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -38,8 +39,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Verification of Podman Remote', { tag: ['@podman-remote'] }, () => {
-  test('Check Remote Podman Connection is not available', async ({ page, navigationBar, welcomePage }) => {
-    await welcomePage.handleWelcomePage(true);
+  test('Check Remote Podman Connection is not available', async ({ page, navigationBar }) => {
     // open preferences page
     const settingsBar = await navigationBar.openSettings();
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
