@@ -639,7 +639,7 @@ export class PluginSystem {
       0,
       undefined,
       'Troubleshooting',
-      'fa fa-lightbulb',
+      'fa fa-crosshairs',
       true,
       'troubleshooting',
     );

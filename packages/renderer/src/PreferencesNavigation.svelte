@@ -4,6 +4,7 @@ import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
+import TroubleshootingArrowIcon from '/@/lib/images/TroubleshootingArrowIcon.svelte';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
 import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants';
 import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
@@ -123,5 +124,16 @@ onMount(() => {
       {/if}
     {/each}
     <!-- Default configuration properties end -->
-  </div>
+
+    <!-- Troubleshooting separator and item -->
+    <div class="mx-3 my-2 border-t border-[var(--pd-global-nav-bg-border)]"></div>
+      <SettingsNavItem
+        icon='fas fa-crosshairs'
+        iconRight={TroubleshootingArrowIcon}
+        iconRightAlign="end"
+        title="Troubleshooting"
+        href="/troubleshooting/repair-connections"
+        selected={meta.url === '/troubleshooting/repair-connections'}
+      />
+    </div>
 </nav>
