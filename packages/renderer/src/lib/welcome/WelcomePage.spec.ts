@@ -36,6 +36,10 @@ import WelcomePage from './WelcomePage.svelte';
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
+  vi.mocked(window.getWelcomeMessages).mockResolvedValue({
+    getStartedMessage: 'Get started with Podman Desktop',
+    welcomeMessage: 'Welcome to Podman Desktop',
+  });
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();

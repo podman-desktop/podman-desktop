@@ -9,6 +9,7 @@ import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 import type { OnboardingInfo } from '/@api/onboarding';
 import type { TelemetryMessages } from '/@api/telemetry';
+import type { WelcomeMessages } from '/@api/welcome-info';
 
 import bgImage from './background.png';
 import { WelcomeUtils } from './welcome-utils';
@@ -29,6 +30,7 @@ interface OnboardingInfoWithAdditionalInfo extends OnboardingInfo {
 }
 
 let onboardingProviders: OnboardingInfoWithAdditionalInfo[] = [];
+let welcomeMessages: WelcomeMessages;
 
 // Get every provider that has a container connections
 $: providersWithContainerConnections = $providerInfos.filter(provider => provider.containerConnections.length > 0);
@@ -57,6 +59,7 @@ onMount(async () => {
     showWelcome = true;
   }
   router.goto('/');
+  welcomeMessages = await window.getWelcomeMessages();
 
   const telemetryPrompt = await welcomeUtils.havePromptedForTelemetry();
   if (!telemetryPrompt) {
@@ -103,14 +106,14 @@ function startOnboardingQueue(): void {
     style="background-image: url({bgImage}); background-position: 50% -175%; background-size: 100% 75%">
     <!-- Header -->
     <div class="flex flex-row flex-none backdrop-blur-sm p-6 mt-10">
-      <div class="flex flex-auto text-lg font-bold">Get started with Podman Desktop</div>
+      <div class="flex flex-auto text-lg font-bold">{welcomeMessages?.getStartedMessage}</div>
     </div>
 
     <!-- Body -->
     <div class="flex flex-col justify-center content-center flex-auto backdrop-blur-sm p-2 overflow-y-auto">
       <div class="flex justify-center p-2"><DesktopIcon /></div>
       <div class="flex justify-center text-lg font-bold p-2">
-        <span class="mr-2">🎉</span>Welcome to Podman Desktop v{podmanDesktopVersion} !
+        <span class="mr-2">🎉</span>{welcomeMessages?.welcomeMessage} v{podmanDesktopVersion} !
       </div>
       <div class="flex flex-row justify-center">
         <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">
