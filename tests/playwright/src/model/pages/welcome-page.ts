@@ -111,6 +111,7 @@ export class WelcomePage extends BasePage {
         }
       }
 
+      await this.page.waitForTimeout(5_000);
       await this.turnOffTelemetry();
       await this.closeWelcomePage();
       await playExpect(this.welcomeMessage).toHaveCount(0);
