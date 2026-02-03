@@ -24,6 +24,7 @@ import * as extensionApi from '@podman-desktop/api';
 
 import { getPodmanCli } from '/@/utils/podman-cli';
 
+import { PodmanRemoteDirectTunnel } from './podman-remote-direct-tunnel';
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
 interface ConnectionListFormatJson {
@@ -35,7 +36,7 @@ interface ConnectionListFormatJson {
 
 interface RemoteSystemConnection {
   name: string;
-  sshTunnel: PodmanRemoteSshTunnel;
+  tunnel: PodmanRemoteSshTunnel | PodmanRemoteDirectTunnel;
   connectionDisposable: extensionApi.Disposable;
 }
 
@@ -77,7 +78,7 @@ export class PodmanRemoteConnections {
     // filter out all machines (that are local)
     return connections
       .filter(connection => connection.IsMachine !== true)
-      .filter(connection => connection.URI.startsWith('ssh:'));
+      .filter(connection => connection.URI.startsWith('ssh:') || connection.URI.startsWith('tcp:'));
   }
 
   start(): void {
@@ -155,7 +156,14 @@ export class PodmanRemoteConnections {
       const privateKeyFile = connection.Identity;
 
       // read the content of the private key
-      const privateKey = readFileSync(privateKeyFile, 'utf8');
+      let privateKey: string | undefined;
+      if (privateKeyFile) {
+        try {
+          privateKey = readFileSync(privateKeyFile, 'utf8');
+        } catch (error) {
+          // ignore the error if the file does not exist
+        }
+      }
       const remotePath = uri.pathname;
 
       let localPath;
@@ -167,10 +175,22 @@ export class PodmanRemoteConnections {
         localPath = join(tmpdir(), `podman-remote-${connection.Name}.sock`);
       }
 
-      const sshTunnel = this.createTunnel(host, port, username, privateKey, remotePath, localPath);
+      let tunnel: PodmanRemoteSshTunnel | PodmanRemoteDirectTunnel;
+      if (uri.protocol === 'ssh:') {
+        if (!privateKey) {
+          console.error(`Error reading private key for connection ${connection.Name}`);
+          continue;
+        }
+        tunnel = this.createSshTunnel(host, port, username, privateKey, remotePath, localPath);
+      } else if (uri.protocol === 'tcp:') {
+        tunnel = this.createDirectTunnel(host, port, localPath);
+      } else {
+        console.error(`Unsupported protocol ${uri.protocol} for connection ${connection.Name}`);
+        continue;
+      }
 
       // connect the tunnel
-      sshTunnel.connect();
+      tunnel.connect();
 
       //delay before registering the socket
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -178,7 +198,7 @@ export class PodmanRemoteConnections {
       // register the socket
       const connectionDisposable = this.#provider.registerContainerProviderConnection({
         name: connection.Name,
-        status: () => sshTunnel.status(),
+        status: () => tunnel.status(),
         type: 'podman',
         endpoint: {
           socketPath: localPath,
@@ -187,7 +207,7 @@ export class PodmanRemoteConnections {
       this.#extensionContext.subscriptions.push(connectionDisposable);
       const remoteConnection: RemoteSystemConnection = {
         name: connection.Name,
-        sshTunnel,
+        tunnel,
         connectionDisposable,
       };
       this.#currentConnections.set(connection.Name, remoteConnection);
@@ -201,7 +221,7 @@ export class PodmanRemoteConnections {
     for (const connection of connections) {
       const remoteConnection = this.#currentConnections.get(connection.name);
       if (remoteConnection) {
-        remoteConnection.sshTunnel.disconnect();
+        remoteConnection.tunnel.disconnect();
         this.#currentConnections.delete(connection.name);
         // unregister the connection
         remoteConnection.connectionDisposable.dispose();
@@ -209,7 +229,7 @@ export class PodmanRemoteConnections {
     }
   }
 
-  protected createTunnel(
+  protected createSshTunnel(
     host: string,
     port: number,
     username: string,
@@ -218,6 +238,10 @@ export class PodmanRemoteConnections {
     localPath: string,
   ): PodmanRemoteSshTunnel {
     return new PodmanRemoteSshTunnel(host, port, username, privateKey, remotePath, localPath);
+  }
+
+  protected createDirectTunnel(host: string, port: number, localPath: string): PodmanRemoteDirectTunnel {
+    return new PodmanRemoteDirectTunnel(host, port, localPath);
   }
 
   stop(): void {
