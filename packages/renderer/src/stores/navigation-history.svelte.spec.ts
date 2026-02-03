@@ -16,8 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { writable } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import * as navigationRegistry from '/@/stores/navigation/navigation-registry';
 
 import { goBack, goForward, navigationHistory } from './navigation-history.svelte';
 
@@ -35,10 +40,25 @@ vi.mock('tinro', () => ({
   },
 }));
 
+vi.mock(import('/@/stores/kubernetes-no-current-context'));
+vi.mock(import('/@/stores/navigation/navigation-registry'));
+
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
+  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
+
+  vi.mocked(navigationRegistry).navigationRegistry = writable([
+    { type: 'root', link: '/', title: 'Dashboard' } as unknown as NavigationRegistryEntry,
+    { type: 'submenu', link: '/kubernetes', title: 'Kubernetes' } as unknown as NavigationRegistryEntry,
+    {
+      title: 'Kubernetes Dashboard',
+      link: '/kubernetes/dashboard',
+      type: 'entry',
+    } as unknown as NavigationRegistryEntry,
+  ]);
+
   // Reset navigation history state
   navigationHistory.stack = [];
   navigationHistory.index = -1;
@@ -104,21 +124,33 @@ describe('goForward', () => {
   });
 });
 
-describe('submenu base routes', () => {
-  test('goBack should skip submenu base routes like /kubernetes', () => {
-    // Simulate the navigation scenario:
-    // User went /containers -> /kubernetes/dashboard
-    // The /kubernetes route should NOT be in the stack since it's a submenu base route
-    // that immediately redirects to a sub-page
-    navigationHistory.stack = ['/containers', '/kubernetes/dashboard'];
-    navigationHistory.index = 1;
+describe('kubernetes dashboard submenu', () => {
+  test('/kubernetes submenu base route should NOT be added to history stack when kubernetes context exists', () => {
+    // When cluster exists (kubernetesNoCurrentContext = false)
+    // /kubernetes route should be skipped because it redirects to /kubernetes/dashboard
+    vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 
-    goBack();
+    routerSubscribeCallback({ url: '/' } as TinroRoute);
+    routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
+    // Simulate redirect to /kubernetes/dashboard
+    routerSubscribeCallback({ url: '/kubernetes/dashboard' } as TinroRoute);
 
-    // Should go directly back to /containers, not to /kubernetes
-    expect(navigationHistory.index).toBe(0);
-    expect(router.goto).toHaveBeenCalledWith('/containers');
-    expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.back');
+    // Stack should contain / and /kubernetes/dashboard, but NOT /kubernetes
+    expect(navigationHistory.stack).toEqual(['/', '/kubernetes/dashboard']);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('/kubernetes submenu base route SHOULD be added to history stack when kubernetes context does NOT exist', () => {
+    // When no cluster exists (kubernetesNoCurrentContext = true)
+    // /kubernetes route should be added because user stays on the empty page
+    vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
+
+    routerSubscribeCallback({ url: '/' } as TinroRoute);
+    routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
+
+    // Stack should contain both / and /kubernetes
+    expect(navigationHistory.stack).toEqual(['/', '/kubernetes']);
+    expect(navigationHistory.index).toBe(1);
   });
 });
 

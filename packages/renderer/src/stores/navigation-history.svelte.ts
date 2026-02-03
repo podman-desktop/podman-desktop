@@ -19,6 +19,7 @@
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry } from '/@/stores/navigation/navigation-registry';
 
 /**
@@ -99,7 +100,16 @@ router.subscribe(navigation => {
     // Skip submenu base routes - they immediately redirect to a sub-page
     // and shouldn't be in the history stack
     if (isSubmenuBaseRoute(navigation.url)) {
-      return;
+      // When going to Kubernetes page (submenu) - `/kubernetes` and you:
+      // 1. DONT have created cluster yet, you will be redirected to the Empty page - `/kubernetes`
+      // 2. HAVE created cluster, you are imidiatly redirected to the Dashboard page - `/kubernetes/dashboard`
+      // When going back in case:
+      // 1. We want to go to `/kubernetes` page where should be the Empty Kubernetes page
+      // 2. We want to skip the `kubernetes` submenu base route - `/kubernetes` since we have not actually navigated to it
+      // (we have been imidiatly redirected to the Kubernetes Dashboard page)
+      if (!get(kubernetesNoCurrentContext)) {
+        return;
+      }
     }
 
     if (!isValidRoute(navigation.url)) {
