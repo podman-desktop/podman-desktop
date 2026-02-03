@@ -27,7 +27,7 @@ onMount(async () => {
 
 <Page title="Troubleshooting" onclose={goToPreviousPage}>
   {#snippet icon()}
-  <i class="fas fa-lightbulb fa-2x" aria-hidden="true"></i>
+  <i class="fas fa-crosshairs fa-2x" aria-hidden="true"></i>
   {/snippet}
 
   {#snippet tabs()}
