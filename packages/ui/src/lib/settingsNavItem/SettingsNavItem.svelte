@@ -2,6 +2,7 @@
 import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
 import type { Component } from 'svelte';
 
+import ChevronExpander from '../icons/ChevronExpander.svelte';
 import Icon from '../icons/Icon.svelte';
 
 interface Props {
@@ -64,12 +65,8 @@ function click(): void {
       {/if}
     </span>
     {#if section}
-      <div class="px-2 flex items-center text-[color:var(--pd-secondary-nav-expander)] pointer-events-none">
-        {#if expanded}
-          <Icon icon='fas fa-angle-down' class="text-md transform origin-center transition-transform duration-200 -rotate-90" />
-        {:else}
-          <Icon icon='fas fa-angle-right' class="text-md transform origin-center transition-transform duration-200 rotate-90" />
-        {/if}
+      <div class="px-2 text-[color:var(--pd-secondary-nav-expander)] pointer-events-none">
+        <ChevronExpander expanded={expanded} />
       </div>
     {:else if iconRight && iconRightAlign === 'end'}
       <div class="px-2 flex items-center">

@@ -1,7 +1,6 @@
 <script lang="ts">
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import type { V1ObjectMeta } from '@kubernetes/client-node';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { ChevronExpander } from '@podman-desktop/ui-svelte';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
@@ -80,7 +79,7 @@ if (artifact?.annotations) {
         style="cursor-pointer flex items-center"
         onClick={(): boolean => (internalLabelsDropdownOpen = !internalLabelsDropdownOpen)}>
         Internal Labels
-        <Icon class="ml-1" size="0.9x" icon={internalLabelsDropdownOpen ? faChevronDown : faChevronRight} />
+        <ChevronExpander expanded={internalLabelsDropdownOpen} size="0.9x" class="ml-1" />
       </Cell>
       <Cell>
         {#if internalLabelsDropdownOpen}
@@ -112,7 +111,7 @@ if (artifact?.annotations) {
         style="cursor-pointer flex items-center"
         onClick={(): boolean => (internalAnnotationsDropdownOpen = !internalAnnotationsDropdownOpen)}>
         Internal Annotations
-        <Icon class="ml-1" size="0.9x" icon={internalAnnotationsDropdownOpen ? faChevronDown : faChevronRight} />
+        <ChevronExpander expanded={internalAnnotationsDropdownOpen} size="0.9x" class="ml-1" />
       </Cell>
       <Cell>
         {#if internalAnnotationsDropdownOpen}

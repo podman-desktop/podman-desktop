@@ -218,3 +218,23 @@ describe('promptRestart', () => {
     expect(extensionApi.process.exec).toHaveBeenCalledWith('podman', ['machine', 'start', PODMAN_MACHINE_MOCK]);
   });
 });
+
+test('darwin: test promptRestart IS NOT ran when findRunningMachine returns undefined for enable AND disable', async () => {
+  const socketCompatClass = new DarwinSocketCompatibility();
+
+  // Mock that enable ran successfully
+  vi.spyOn(socketCompatClass, 'runCommand').mockResolvedValue(undefined);
+
+  // Mock that disable ran successfully
+  vi.spyOn(socketCompatClass, 'runCommand').mockResolvedValue(undefined);
+
+  const spyPromptRestart = vi.spyOn(extensionApi.window, 'showInformationMessage');
+
+  // Enable shouldn't call promptRestart
+  await socketCompatClass.enable();
+  expect(spyPromptRestart).not.toHaveBeenCalled();
+
+  // Disable shouldn't call promptRestart
+  await socketCompatClass.disable();
+  expect(spyPromptRestart).not.toHaveBeenCalled();
+});
