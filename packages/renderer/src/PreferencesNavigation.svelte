@@ -123,4 +123,5 @@ onMount(() => {
       {/if}
     {/each}
     <!-- Default configuration properties end -->
+  </div>
 </nav>
