@@ -78,6 +78,7 @@ async function pushManifestFinished(): Promise<void> {
       {/if}
       {#if !pushFinished}
         <Button
+          type="primary"
           class="w-auto"
           icon={faCircleArrowUp}
           on:click={pushManifest}
