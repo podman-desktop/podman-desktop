@@ -26,6 +26,11 @@ export class PreferencesPage extends SettingsPage {
   readonly searchbar: Locator;
   readonly kubePathInput: Locator;
   readonly APPEARANCE_PREFERENCE_LABEL = 'Appearance';
+  readonly FEEDBACK_DIALOG_PREFERENCE_LABEL = 'Dialog';
+  readonly TOAST_PREFERENCE_LABEL = 'Toast';
+  readonly ZOOM_LEVEL_PREFERENCE_LABEL = 'Zoom Level';
+  readonly EXIT_ON_CLOSE_PREFERENCE_LABEL = ' Exit On Close';
+  readonly LINE_HEIGHT_PREFERENCE_LABEL = 'Line Height';
 
   constructor(page: Page) {
     super(page, 'Preferences');
@@ -39,7 +44,8 @@ export class PreferencesPage extends SettingsPage {
   getPreferenceRowByName(name: string): Locator {
     return this.content
       .locator('div.flex.flex-row.justify-between')
-      .filter({ has: this.page.getByText(name, { exact: true }) });
+      .filter({ has: this.page.getByText(name, { exact: true }) })
+      .first();
   }
 
   async isPreferenceManaged(name: string): Promise<boolean> {
@@ -80,6 +86,87 @@ export class PreferencesPage extends SettingsPage {
     const option = appearancePreferenceRow.getByRole('button', { name: value, exact: true });
     await playExpect(option).toBeVisible();
     await option.click();
+  }
+
+  async getFeedbackDialogPreferenceValue(): Promise<boolean> {
+    const feedbackPreferenceRow = this.getPreferenceRowByName(this.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+    await playExpect(feedbackPreferenceRow).toBeAttached();
+    await feedbackPreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(feedbackPreferenceRow).toBeVisible();
+
+    const selectionToggle = feedbackPreferenceRow.getByLabel('Show feedback dialog for experimental features');
+    await playExpect(selectionToggle).toBeAttached();
+    return await selectionToggle.isChecked();
+  }
+
+  async toggleFeedbackDialogPreference(): Promise<void> {
+    const feedbackPreferenceRow = this.getPreferenceRowByName(this.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+    await playExpect(feedbackPreferenceRow).toBeAttached();
+    await feedbackPreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(feedbackPreferenceRow).toBeVisible();
+
+    const selectionToggle = feedbackPreferenceRow.getByLabel('Show feedback dialog for experimental features');
+    await playExpect(selectionToggle).toBeVisible();
+    await selectionToggle.click({ force: true });
+  }
+
+  async getToastPreferenceValue(): Promise<boolean> {
+    const toastPreferenceRow = this.getPreferenceRowByName(this.TOAST_PREFERENCE_LABEL);
+    await playExpect(toastPreferenceRow).toBeAttached();
+    await toastPreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(toastPreferenceRow).toBeVisible();
+
+    const selectionToggle = toastPreferenceRow.getByLabel('Display a notification toast when task is created');
+    await playExpect(selectionToggle).toBeAttached();
+    return await selectionToggle.isChecked();
+  }
+
+  async getZoomLevelPreferenceValue(): Promise<string> {
+    const zoomLevelPreferenceRow = this.getPreferenceRowByName(this.ZOOM_LEVEL_PREFERENCE_LABEL);
+    await playExpect(zoomLevelPreferenceRow).toBeAttached();
+    await zoomLevelPreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(zoomLevelPreferenceRow).toBeVisible();
+
+    const preferenceInput = zoomLevelPreferenceRow.locator('input[name="preferences.zoomLevel"]');
+    await playExpect(preferenceInput).toBeAttached();
+    return await preferenceInput.inputValue();
+  }
+
+  async setZoomLevelPreference(value: string): Promise<void> {
+    const zoomLevelPreferenceRow = this.getPreferenceRowByName(this.ZOOM_LEVEL_PREFERENCE_LABEL);
+    await playExpect(zoomLevelPreferenceRow).toBeAttached();
+    await zoomLevelPreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(zoomLevelPreferenceRow).toBeVisible();
+
+    const preferenceInput = zoomLevelPreferenceRow.locator('input[name="preferences.zoomLevel"]');
+    await playExpect(preferenceInput).toBeAttached();
+    await preferenceInput.fill(value);
+  }
+
+  async getExitOnClosePreferenceValue(): Promise<boolean> {
+    const exitOnClosePreferenceRow = this.getPreferenceRowByName(this.EXIT_ON_CLOSE_PREFERENCE_LABEL);
+    await playExpect(exitOnClosePreferenceRow).toBeAttached();
+    await exitOnClosePreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(exitOnClosePreferenceRow).toBeVisible();
+
+    const selectionToggle = exitOnClosePreferenceRow.getByLabel(
+      'Quit the app when the close button is clicked instead of minimizing to the tray.',
+    );
+    await playExpect(selectionToggle).toBeAttached();
+    return await selectionToggle.isChecked();
+  }
+
+  async getLineHeightPreferenceValue(): Promise<string> {
+    const lineHeightPreferenceRow = this.getPreferenceRowByName(this.LINE_HEIGHT_PREFERENCE_LABEL);
+    await playExpect(lineHeightPreferenceRow).toBeAttached();
+    await lineHeightPreferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(lineHeightPreferenceRow).toBeVisible();
+
+    const preferenceInput = lineHeightPreferenceRow.getByLabel(
+      'Line height of the terminal. This number is multiplied by the terminal font size to get the actual terminal height in pixels.',
+    );
+    await playExpect(preferenceInput).toBeAttached();
+    return await preferenceInput.inputValue();
   }
 
   async selectKubeFile(pathToKube: string): Promise<void> {
