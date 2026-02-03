@@ -73,6 +73,7 @@ export class WelcomePage extends BasePage {
 
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
+        await this.page.waitForTimeout(5_000);
         await this.telemetryConsent.uncheck({ force: true });
       }
 
