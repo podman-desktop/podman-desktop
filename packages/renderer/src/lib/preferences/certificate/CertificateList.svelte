@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsRotate, faCircleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { SplitButtonOption } from '@podman-desktop/ui-svelte';
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   TableColumn,
   TableRow,
 } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy } from 'svelte';
 
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
@@ -42,7 +43,7 @@ $effect(() => {
 // Create options for the SplitButton from sync targets (only trusted extensions are included)
 let options: SplitButtonOption[] = $derived(
   $certificateSyncTargets.map(target => ({
-    id: `${target.providerId}:${target.id}`,
+    id: target.id,
     label: target.name,
   })),
 );
@@ -69,35 +70,38 @@ let selectedOption = $derived(options.find(o => selectedOptionIds.includes(o.id)
 
 // Sync progress state
 let syncInProgress = $state(false);
+// Error state - true if sync failed
+let syncError = $state(false);
 
-async function synchronizeCertificates(optionId: string): Promise<void> {
+// Clear errors when starting a new sync
+function clearErrors(): void {
+  syncError = false;
+}
+
+// Unified sync function for both single and multiple targets
+async function synchronizeToTargets(selectedOptions: SplitButtonOption[]): Promise<void> {
+  if (selectedOptions.length === 0) return;
+
+  clearErrors();
   syncInProgress = true;
   try {
-    await synchronizeCertificatesToTarget(optionId);
+    const targetIds = selectedOptions.map(option => option.id);
+    const result = await window.synchronizeCertificatesToTargets(targetIds);
+    if (result.errors.length > 0) {
+      syncError = true;
+    }
+  } catch (err: unknown) {
+    syncError = true;
   } finally {
     syncInProgress = false;
   }
 }
 
-async function handleSplitButtonAction(selected: SplitButtonOption[]): Promise<void> {
-  if (selected.length === 0) return;
-
-  syncInProgress = true;
-  try {
-    // Sync to all selected targets in parallel
-    await Promise.all(selected.map(option => synchronizeCertificatesToTarget(option.id)));
-  } finally {
-    syncInProgress = false;
-  }
-}
-
-async function synchronizeCertificatesToTarget(optionId: string): Promise<void> {
-  const [providerId, targetId] = optionId.split(':');
-  if (!providerId || !targetId) {
-    console.error('Invalid option ID format:', optionId);
-    return;
-  }
-  await window.synchronizeCertificatesToTarget(providerId, targetId);
+// Open task manager to show error details
+function openTaskManager(): void {
+  window
+    .executeCommand('show-task-manager')
+    .catch((err: unknown) => console.error('Failed to open task manager:', err));
 }
 
 let certificates: CertificateInfoUI[] = $derived(
@@ -191,9 +195,9 @@ onDestroy(() => {
       {#if showSimpleButton}
         <Button
           icon={faArrowsRotate}
-          onclick={(): void => { options[0] && synchronizeCertificates(options[0].id).catch((err: unknown) => console.error('Failed to synchronize certificates:', err)); }}
+          onclick={(): void => { synchronizeToTargets([options[0]]).catch((err: unknown) => console.error('Failed to synchronize certificates:', err)); }}
           inProgress={syncInProgress}>
-          Synchronize to {options[0]?.label}
+          Synchronize to {options[0].label}
         </Button>
       {:else}
         <SplitButton
@@ -203,7 +207,7 @@ onDestroy(() => {
           emptyLabel="No synchronization targets available"
           noSelectionLabel="Synchronize to ..."
           icon={faArrowsRotate}
-          onAction={handleSplitButtonAction}
+          onAction={synchronizeToTargets}
           onSelect={(selected): void => { selectedOptionIds = selected.map(o => o.id); }}
           inProgress={syncInProgress}>
           {#if selectedOptionIds.length > 1}
@@ -214,6 +218,18 @@ onDestroy(() => {
         </SplitButton>
       {/if}
     </div>
+    {#if syncError}
+      <div class="flex w-full max-w-[905px] mt-2 pl-7 pr-10 self-center justify-end" role="alert">
+        <button
+          class="flex items-center text-[var(--pd-state-error)] text-sm hover:underline cursor-pointer"
+          aria-label="Open task manager to see error details"
+          title="Open task manager to see error details"
+          onclick={openTaskManager}>
+          <Icon size="1.1x" class="mr-2 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
+          <span>Error: certificates couldn't be synced</span>
+        </button>
+      </div>
+    {/if}
   </div>
   {/snippet}
     <div class="flex flex-col -mx-5 py-2 w-full">

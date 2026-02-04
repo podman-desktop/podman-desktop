@@ -18,7 +18,13 @@
 
 import * as crypto from 'node:crypto';
 
-import type { CertificateSyncTarget, CertificateSyncTargetProvider, Progress } from '@podman-desktop/api';
+import type {
+  CancellationToken,
+  CertificateSyncTarget,
+  CertificateSyncTargetProvider,
+  Progress,
+  RunError,
+} from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
 import type { MachineJSON, MachineJSONListOutput } from '../types';
@@ -82,6 +88,7 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
 
   /**
    * Synchronize certificates to a specific Podman machine target.
+   * Supports cancellation - user can cancel the operation via the task manager.
    */
   async synchronize(targetId: string, certificates: string[]): Promise<void> {
     const machineName = targetId;
@@ -95,9 +102,10 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
       {
         location: extensionApi.ProgressLocation.TASK_WIDGET,
         title: `Synchronizing certificates to ${machineName}`,
+        cancellable: true,
       },
-      async (progress: Progress<{ message?: string; increment?: number }>) => {
-        await this.doSynchronize(machineName, certificates, progress);
+      async (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => {
+        await this.doSynchronize(machineName, certificates, progress, token);
       },
     );
   }
@@ -109,23 +117,36 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
    * 2. Delete certificates that no longer exist on host
    * 3. Upload only new certificates (skip existing ones with matching fingerprint)
    *
+   * Supports cancellation - checks token before each major operation.
+   *
    * Note: progress.report({ increment }) SETS the progress value, doesn't add to it.
    */
   private async doSynchronize(
     machineName: string,
     certificates: string[],
     progress: Progress<{ message?: string; increment?: number }>,
+    token: CancellationToken,
   ): Promise<void> {
     const anchorsPath = '/etc/pki/ca-trust/source/anchors';
 
+    // Helper to check if cancelled - returns true if should stop
+    const isCancelled = (): boolean => token.isCancellationRequested;
+
     try {
+      // Check for cancellation before starting
+      if (isCancelled()) return;
+
       // Step 1: Ensure the anchors directory exists (0% -> 5%)
       progress.report({ message: `Creating anchors directory on ${machineName}`, increment: 5 });
-      await this.runMachineCommand(machineName, `sudo mkdir -p ${anchorsPath}`);
+      await this.runMachineCommand(machineName, `sudo mkdir -p ${anchorsPath}`, token);
+
+      if (isCancelled()) return;
 
       // Step 2: Get existing certificate fingerprints from VM (5% -> 10%)
       progress.report({ message: `Checking existing certificates on ${machineName}`, increment: 10 });
-      const remoteFingerprints = await this.getRemoteCertificateFingerprints(machineName, anchorsPath);
+      const remoteFingerprints = await this.getRemoteCertificateFingerprints(machineName, anchorsPath, token);
+
+      if (isCancelled()) return;
 
       // Step 3: Build map of host certificates (fingerprint -> PEM)
       const hostCertificates = new Map<string, string>();
@@ -146,11 +167,12 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
 
       // Step 5: Delete stale certificates (10% -> 20%)
       if (staleFingerprints.length > 0) {
+        if (isCancelled()) return;
         progress.report({
           message: `Removing ${staleFingerprints.length} obsolete certificate(s) from ${machineName}`,
           increment: 15,
         });
-        await this.deleteRemoteCertificates(machineName, anchorsPath, staleFingerprints);
+        await this.deleteRemoteCertificates(machineName, anchorsPath, staleFingerprints, token);
       }
       progress.report({ increment: 20 });
 
@@ -158,6 +180,9 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
       const totalNew = newFingerprints.length;
       if (totalNew > 0) {
         for (let i = 0; i < newFingerprints.length; i++) {
+          // Check for cancellation before each certificate upload
+          if (isCancelled()) return;
+
           const fingerprint = newFingerprints[i];
           if (!fingerprint) continue;
 
@@ -170,37 +195,46 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
           // Update progress
           const currentPercent = 20 + Math.floor(((i + 1) / totalNew) * 65);
           progress.report({
-            message: `(${i + 1}/${totalNew}) Uploading new certificate to ${machineName}`,
+            message: `Uploading new certificates to ${machineName}`,
             increment: currentPercent,
           });
 
           // Write certificate to VM using base64 encoding to handle special characters
           const base64Cert = Buffer.from(pem).toString('base64');
-          try {
-            await this.runMachineCommand(
-              machineName,
-              `echo '${base64Cert}' | base64 -d | sudo tee ${remotePath} > /dev/null`,
-            );
-          } catch (error) {
-            console.error(`Failed to upload certificate ${filename}:`, error);
-            // Continue with other certificates
-          }
+          await this.runMachineCommand(
+            machineName,
+            `echo '${base64Cert}' | base64 -d | sudo tee ${remotePath} > /dev/null`,
+            token,
+          );
         }
       } else {
         progress.report({ increment: 85 });
       }
 
+      if (isCancelled()) return;
+
       // Step 7: Update the CA trust store (85% -> 92%)
       progress.report({ message: `Updating CA trust store on ${machineName}`, increment: 90 });
-      await this.runMachineCommand(machineName, 'sudo update-ca-trust');
+      await this.runMachineCommand(machineName, 'sudo update-ca-trust', token);
+
+      if (isCancelled()) return;
 
       // Step 8: Restart podman services to pick up new certificates (92% -> 100%)
       progress.report({ message: `Restarting Podman services on ${machineName}`, increment: 95 });
-      await this.runMachineCommand(machineName, 'sudo systemctl restart podman.socket podman.service');
+      await this.runMachineCommand(machineName, 'sudo systemctl restart podman.socket podman.service', token);
+
+      if (isCancelled()) return;
 
       // Final summary
       const summary = this.buildSyncSummary(staleFingerprints.length, totalNew, existingCount);
       progress.report({ message: `${summary} on ${machineName}`, increment: 100 });
+    } catch (error) {
+      // If cancelled, just return silently - task manager will show cancelled status
+      if (isCancelled() || (error as RunError)?.cancelled) {
+        return;
+      }
+      // Re-throw non-cancellation errors - these will show in UI
+      throw error;
     } finally {
       progress.report({ increment: -1 });
     }
@@ -224,16 +258,22 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
   /**
    * Run a command on a Podman machine via SSH.
    * If the command fails, execPodman will throw a RunError.
+   * Supports cancellation via token - will kill the SSH process if cancelled.
    */
-  private async runMachineCommand(machineName: string, command: string): Promise<void> {
-    await execPodman(['machine', 'ssh', machineName, command]);
+  private async runMachineCommand(machineName: string, command: string, token?: CancellationToken): Promise<void> {
+    await execPodman(['machine', 'ssh', machineName, command], undefined, { token });
   }
 
   /**
    * Run a command on a Podman machine via SSH and return the output.
+   * Supports cancellation via token - will kill the SSH process if cancelled.
    */
-  private async runMachineCommandWithOutput(machineName: string, command: string): Promise<string> {
-    const result = await execPodman(['machine', 'ssh', machineName, command]);
+  private async runMachineCommandWithOutput(
+    machineName: string,
+    command: string,
+    token?: CancellationToken,
+  ): Promise<string> {
+    const result = await execPodman(['machine', 'ssh', machineName, command], undefined, { token });
     return result.stdout;
   }
 
@@ -241,7 +281,11 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
    * Get the set of certificate fingerprints currently on the remote machine.
    * Parses filenames like 'podman-desktop-abc123.crt' to extract fingerprints.
    */
-  private async getRemoteCertificateFingerprints(machineName: string, anchorsPath: string): Promise<Set<string>> {
+  private async getRemoteCertificateFingerprints(
+    machineName: string,
+    anchorsPath: string,
+    token?: CancellationToken,
+  ): Promise<Set<string>> {
     const fingerprints = new Set<string>();
 
     try {
@@ -249,6 +293,7 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
       const output = await this.runMachineCommandWithOutput(
         machineName,
         `ls -1 ${anchorsPath}/podman-desktop-*.crt 2>/dev/null || true`,
+        token,
       );
 
       // Parse output to extract fingerprints from filenames
@@ -265,7 +310,11 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
         }
       }
     } catch (error) {
-      // If listing fails, assume no existing certificates
+      // Silently ignore cancellation errors - caller checks isCancelled()
+      if (token?.isCancellationRequested || (error as RunError)?.cancelled) {
+        return fingerprints;
+      }
+      // If listing fails for other reasons, assume no existing certificates
       console.warn('Failed to list existing certificates on VM:', error);
     }
 
@@ -279,6 +328,7 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
     machineName: string,
     anchorsPath: string,
     fingerprints: string[],
+    token?: CancellationToken,
   ): Promise<void> {
     if (fingerprints.length === 0) {
       return;
@@ -288,10 +338,14 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
     const filesToDelete = fingerprints.map(fp => `${anchorsPath}/podman-desktop-${fp}.crt`).join(' ');
 
     try {
-      await this.runMachineCommand(machineName, `sudo rm -f ${filesToDelete}`);
+      await this.runMachineCommand(machineName, `sudo rm -f ${filesToDelete}`, token);
     } catch (error) {
+      // Silently ignore cancellation errors - caller checks isCancelled()
+      if (token?.isCancellationRequested || (error as RunError)?.cancelled) {
+        return;
+      }
       console.error('Failed to delete stale certificates:', error);
-      // Continue even if deletion fails
+      // Continue even if deletion fails for other reasons
     }
   }
 

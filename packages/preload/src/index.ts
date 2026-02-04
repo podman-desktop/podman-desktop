@@ -2718,9 +2718,9 @@ export function initExposure(): void {
   });
 
   contextBridge.exposeInMainWorld(
-    'synchronizeCertificatesToTarget',
-    async (providerId: string, targetId: string): Promise<void> => {
-      return ipcInvoke('certificates:synchronizeToTarget', providerId, targetId);
+    'synchronizeCertificatesToTargets',
+    async (targetIds: string[]): Promise<{ errors: { targetId: string; error: string }[] }> => {
+      return ipcInvoke('certificates:synchronizeToTargets', targetIds);
     },
   );
 }

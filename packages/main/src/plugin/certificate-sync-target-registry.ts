@@ -136,29 +136,25 @@ export class CertificateSyncTargetRegistry {
 
   /**
    * Synchronize certificates to a specific target.
+   * Searches all providers to find the target by ID.
    *
-   * @param providerId The ID of the provider.
-   * @param targetId The ID of the target within the provider.
+   * @param targetId The ID of the target.
    * @param certificates Array of PEM-encoded certificates to synchronize.
-   * @throws Error if the provider or target is not found.
+   * @throws Error if the target is not found in any provider.
    */
-  async synchronize(providerId: string, targetId: string, certificates: string[]): Promise<void> {
-    // Find the provider by providerId
-    const registeredProvider = Array.from(this.providers.values()).find(p => p.providerId === providerId);
+  async synchronize(targetId: string, certificates: string[]): Promise<void> {
+    // Search all providers for the target
+    for (const registeredProvider of this.providers.values()) {
+      const targets = await registeredProvider.provider.getTargets();
+      const target = targets.find(t => t.id === targetId);
 
-    if (!registeredProvider) {
-      throw new Error(`Certificate sync target provider '${providerId}' not found`);
+      if (target) {
+        // Found the target, perform synchronization
+        await registeredProvider.provider.synchronize(targetId, certificates);
+        return;
+      }
     }
 
-    // Verify the target exists
-    const targets = await registeredProvider.provider.getTargets();
-    const target = targets.find(t => t.id === targetId);
-
-    if (!target) {
-      throw new Error(`Target '${targetId}' not found in provider '${providerId}'`);
-    }
-
-    // Perform the synchronization
-    await registeredProvider.provider.synchronize(targetId, certificates);
+    throw new Error(`Target '${targetId}' not found in any provider`);
   }
 }

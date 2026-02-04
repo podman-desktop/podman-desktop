@@ -124,12 +124,16 @@ describe('PodmanCertificateSync', () => {
       expect(extensionApi.window.withProgress).not.toHaveBeenCalled();
     });
 
-    test('should call withProgress with correct options', async () => {
+    test('should call withProgress with correct options including cancellable', async () => {
       vi.mocked(extensionApi.window.withProgress).mockImplementation(async (_options, task) => {
         const mockProgress: Progress<{ message?: string; increment?: number }> = {
           report: vi.fn(),
         };
-        await task(mockProgress, {} as CancellationToken);
+        const mockToken: CancellationToken = {
+          isCancellationRequested: false,
+          onCancellationRequested: vi.fn(),
+        };
+        await task(mockProgress, mockToken);
       });
 
       // Mock all the SSH commands
@@ -141,6 +145,7 @@ describe('PodmanCertificateSync', () => {
         {
           location: extensionApi.ProgressLocation.TASK_WIDGET,
           title: 'Synchronizing certificates to my-machine',
+          cancellable: true,
         },
         expect.any(Function),
       );
@@ -149,6 +154,7 @@ describe('PodmanCertificateSync', () => {
 
   describe('doSynchronize (via synchronize)', () => {
     let mockProgress: Progress<{ message?: string; increment?: number }>;
+    let mockToken: CancellationToken;
     let reportCalls: Array<{ message?: string; increment?: number }>;
 
     beforeEach(() => {
@@ -156,9 +162,13 @@ describe('PodmanCertificateSync', () => {
       mockProgress = {
         report: vi.fn().mockImplementation(data => reportCalls.push(data)),
       };
+      mockToken = {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      };
 
       vi.mocked(extensionApi.window.withProgress).mockImplementation(async (_options, task) => {
-        await task(mockProgress, {} as CancellationToken);
+        await task(mockProgress, mockToken);
       });
     });
 
@@ -174,13 +184,12 @@ describe('PodmanCertificateSync', () => {
 
       await certSync.synchronize('test-machine', [SAMPLE_CERT_1, SAMPLE_CERT_2]);
 
-      // Verify mkdir was called
-      expect(execPodmanMock).toHaveBeenCalledWith([
-        'machine',
-        'ssh',
-        'test-machine',
-        'sudo mkdir -p /etc/pki/ca-trust/source/anchors',
-      ]);
+      // Verify mkdir was called (with token for cancellation support)
+      expect(execPodmanMock).toHaveBeenCalledWith(
+        ['machine', 'ssh', 'test-machine', 'sudo mkdir -p /etc/pki/ca-trust/source/anchors'],
+        undefined,
+        expect.objectContaining({ token: expect.any(Object) }),
+      );
 
       // Verify certificates were uploaded (base64 encoded)
       const uploadCalls = execPodmanMock.mock.calls.filter(call =>
@@ -189,15 +198,18 @@ describe('PodmanCertificateSync', () => {
       expect(uploadCalls).toHaveLength(2);
 
       // Verify update-ca-trust was called
-      expect(execPodmanMock).toHaveBeenCalledWith(['machine', 'ssh', 'test-machine', 'sudo update-ca-trust']);
+      expect(execPodmanMock).toHaveBeenCalledWith(
+        ['machine', 'ssh', 'test-machine', 'sudo update-ca-trust'],
+        undefined,
+        expect.objectContaining({ token: expect.any(Object) }),
+      );
 
       // Verify podman services were restarted
-      expect(execPodmanMock).toHaveBeenCalledWith([
-        'machine',
-        'ssh',
-        'test-machine',
-        'sudo systemctl restart podman.socket podman.service',
-      ]);
+      expect(execPodmanMock).toHaveBeenCalledWith(
+        ['machine', 'ssh', 'test-machine', 'sudo systemctl restart podman.socket podman.service'],
+        undefined,
+        expect.objectContaining({ token: expect.any(Object) }),
+      );
     });
 
     test('should skip existing certificates with matching fingerprint', async () => {
@@ -243,13 +255,17 @@ describe('PodmanCertificateSync', () => {
 
       await certSync.synchronize('test-machine', [SAMPLE_CERT_1]);
 
-      // Verify stale certificate was deleted
-      expect(execPodmanMock).toHaveBeenCalledWith([
-        'machine',
-        'ssh',
-        'test-machine',
-        `sudo rm -f /etc/pki/ca-trust/source/anchors/podman-desktop-${staleFingerprint}.crt`,
-      ]);
+      // Verify stale certificate was deleted (with token for cancellation support)
+      expect(execPodmanMock).toHaveBeenCalledWith(
+        [
+          'machine',
+          'ssh',
+          'test-machine',
+          `sudo rm -f /etc/pki/ca-trust/source/anchors/podman-desktop-${staleFingerprint}.crt`,
+        ],
+        undefined,
+        expect.objectContaining({ token: expect.any(Object) }),
+      );
     });
 
     test('should report progress correctly', async () => {
@@ -266,8 +282,7 @@ describe('PodmanCertificateSync', () => {
       expect(reportCalls.some(r => r.increment === -1)).toBe(true); // cleanup
     });
 
-    test('should continue uploading when one certificate fails', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    test('should fail sync when certificate upload fails', async () => {
       let uploadCount = 0;
 
       execPodmanMock.mockImplementation(async (args: string[]) => {
@@ -284,14 +299,78 @@ describe('PodmanCertificateSync', () => {
         return { stdout: '', stderr: '', command: '' } as RunResult;
       });
 
+      await expect(certSync.synchronize('test-machine', [SAMPLE_CERT_1, SAMPLE_CERT_2])).rejects.toThrow(
+        'SSH connection failed',
+      );
+
+      // Should have only attempted first upload before failing
+      expect(uploadCount).toBe(1);
+    });
+
+    test('should stop gracefully when cancellation is requested before starting', async () => {
+      // Set cancellation requested before starting
+      mockToken.isCancellationRequested = true;
+
+      execPodmanMock.mockResolvedValue({ stdout: '', stderr: '', command: '' } as RunResult);
+
+      // Should resolve without throwing - task manager will show cancelled status
+      await certSync.synchronize('test-machine', [SAMPLE_CERT_1]);
+
+      // No commands should have been executed
+      expect(execPodmanMock).not.toHaveBeenCalled();
+    });
+
+    test('should stop gracefully when cancellation is requested mid-process', async () => {
+      let commandCount = 0;
+
+      execPodmanMock.mockImplementation(async (args: string[]) => {
+        const command = args.join(' ');
+        commandCount++;
+
+        // Cancel after mkdir command
+        if (command.includes('mkdir')) {
+          mockToken.isCancellationRequested = true;
+        }
+
+        if (command.includes('ls -1')) {
+          return { stdout: '', stderr: '', command: '' } as RunResult;
+        }
+        return { stdout: '', stderr: '', command: '' } as RunResult;
+      });
+
+      // Should resolve without throwing - task manager will show cancelled status
+      await certSync.synchronize('test-machine', [SAMPLE_CERT_1]);
+
+      // Should have only executed mkdir (1 command), then stopped
+      expect(commandCount).toBe(1);
+    });
+
+    test('should stop gracefully during certificate upload loop when cancelled', async () => {
+      let uploadCount = 0;
+
+      execPodmanMock.mockImplementation(async (args: string[]) => {
+        const command = args.join(' ');
+
+        if (command.includes('ls -1')) {
+          return { stdout: '', stderr: '', command: '' } as RunResult;
+        }
+
+        if (command.includes('base64 -d')) {
+          uploadCount++;
+          // Cancel after first upload
+          if (uploadCount === 1) {
+            mockToken.isCancellationRequested = true;
+          }
+        }
+
+        return { stdout: '', stderr: '', command: '' } as RunResult;
+      });
+
+      // Should resolve without throwing - task manager will show cancelled status
       await certSync.synchronize('test-machine', [SAMPLE_CERT_1, SAMPLE_CERT_2]);
 
-      // Should have attempted both uploads
-      expect(uploadCount).toBe(2);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to upload certificate'),
-        expect.any(Error),
-      );
+      // Should have only uploaded 1 certificate before cancellation was detected
+      expect(uploadCount).toBe(1);
     });
   });
 

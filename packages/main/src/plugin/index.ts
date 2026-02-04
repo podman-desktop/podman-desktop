@@ -2446,10 +2446,30 @@ export class PluginSystem {
     });
 
     this.ipcHandle(
-      'certificates:synchronizeToTarget',
-      async (_listener, providerId: string, targetId: string): Promise<void> => {
+      'certificates:synchronizeToTargets',
+      async (_listener, targetIds: string[]): Promise<{ errors: { targetId: string; error: string }[] }> => {
         const certificatePems = certificates.getAllCertificates();
-        return certificateSyncTargetRegistry.synchronize(providerId, targetId, certificatePems);
+
+        // Run all targets in parallel - each target has its own cancellation handling
+        const results = await Promise.allSettled(
+          targetIds.map(targetId => certificateSyncTargetRegistry.synchronize(targetId, certificatePems)),
+        );
+
+        // Collect errors from failed targets
+        const errors: { targetId: string; error: string }[] = [];
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            const targetId = targetIds[index];
+            if (targetId) {
+              errors.push({
+                targetId,
+                error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+              });
+            }
+          }
+        });
+
+        return { errors };
       },
     );
 
