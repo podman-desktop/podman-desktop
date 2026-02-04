@@ -4462,8 +4462,8 @@ declare module '@podman-desktop/api' {
      * where host certificates can be synchronized.
      *
      * Note: Only preinstalled extensions (bundled with Podman Desktop) can register
-     * enabled sync targets. User-installed extensions will have their targets shown
-     * but disabled for security reasons.
+     * sync targets. User-installed extensions will have their targets excluded from
+     * the UI entirely for security reasons.
      *
      * @param id The unique identifier of the provider.
      * @param provider The certificate sync target provider.
