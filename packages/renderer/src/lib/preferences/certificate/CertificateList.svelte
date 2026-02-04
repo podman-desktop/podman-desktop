@@ -191,7 +191,7 @@ onDestroy(() => {
   {#snippet header()}
   <div class="flex flex-col w-full">  
     <div class="flex w-full max-w-[905px] justify-between items-center mt-4 pl-7 pr-10 self-center">
-      <SearchInput title="preferences" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
+      <SearchInput title="certificates" searchTerm={searchTerm} oninput={updateSearchValue} class="w-[200px]"/>
       {#if showSimpleButton}
         <Button
           icon={faArrowsRotate}
