@@ -73,9 +73,6 @@ export class WelcomePage extends BasePage {
 
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
-        await this.telemetryConsent.scrollIntoViewIfNeeded();
-        await this.page.waitForTimeout(5_000);
-        await this.telemetryConsent.focus();
         await this.telemetryConsent.uncheck({ force: true });
       }
 
@@ -113,7 +110,6 @@ export class WelcomePage extends BasePage {
         }
       }
 
-      await this.page.waitForTimeout(5_000);
       await this.turnOffTelemetry();
       await this.closeWelcomePage();
       await playExpect(this.welcomeMessage).toHaveCount(0);
