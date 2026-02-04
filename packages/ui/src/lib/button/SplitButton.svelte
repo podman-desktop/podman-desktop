@@ -19,7 +19,7 @@ interface Props {
   title?: string;
   inProgress?: boolean;
   disabled?: boolean;
-  type?: ButtonType;
+  type?: Exclude<ButtonType, 'link' | 'tab'>;
   icon?: IconDefinition | Component | string;
   options: SplitButtonOption[];
   /** Selected option ID(s) - works for both single and multi-select modes */
@@ -139,86 +139,74 @@ function selectOption(option: SplitButtonOption): void {
   onSelect?.(allSelected);
 }
 
-// Helper to get button classes based on disabled state
-function getButtonClasses(isDisabledState: boolean): string {
-  let result: string = '';
-  if (isDisabledState || inProgress) {
-    if (type === 'primary') {
-      result = 'bg-[var(--pd-button-disabled)]';
-    } else if (type === 'secondary') {
-      result = 'border-[1px] border-[var(--pd-button-disabled)] bg-[var(--pd-button-disabled)]';
-    } else if (type === 'danger') {
-      result =
-        'border-2 border-[var(--pd-button-danger-disabled-border)] text-[var(--pd-button-danger-disabled-text)] bg-[var(--pd-button-danger-disabled-bg)]';
-    }
-    if (type !== 'danger') {
-      result += ' text-[var(--pd-button-disabled-text)]';
-    }
-  } else if (type === 'primary') {
-    result =
-      'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)]';
-  } else if (type === 'secondary') {
-    result =
-      'border-[1px] border-[var(--pd-button-secondary)] text-[var(--pd-button-secondary)] hover:bg-[var(--pd-button-secondary-hover)] hover:border-[var(--pd-button-secondary-hover)] hover:text-[var(--pd-button-text)]';
-  } else if (type === 'danger') {
-    result =
-      'border-2 border-[var(--pd-button-danger-border)] bg-[var(--pd-button-danger-bg)] text-[var(--pd-button-danger-text)] hover:bg-[var(--pd-button-danger-hover-bg)] hover:text-[var(--pd-button-danger-hover-text)]';
-  }
-  return result;
-}
+const styles = {
+  primary: {
+    button: {
+      enabled:
+        'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] hover:bg-[var(--pd-button-primary-hover-bg)]',
+      disabled: 'bg-[var(--pd-button-disabled)] text-[var(--pd-button-disabled-text)]',
+    },
+    divider: 'bg-[var(--pd-button-text)]',
+    border: 'border-[var(--pd-button-primary-bg)]',
+    containerBg: 'bg-[var(--pd-button-primary-bg)]',
+  },
+  secondary: {
+    button: {
+      enabled:
+        'border-[1px] border-[var(--pd-button-secondary)] text-[var(--pd-button-secondary)] hover:bg-[var(--pd-button-secondary-hover)] hover:border-[var(--pd-button-secondary-hover)] hover:text-[var(--pd-button-text)]',
+      disabled:
+        'border-[1px] border-[var(--pd-button-disabled)] bg-[var(--pd-button-disabled)] text-[var(--pd-button-disabled-text)]',
+    },
+    divider: 'bg-[var(--pd-button-secondary)]',
+    border: 'border-[var(--pd-button-secondary)]',
+    containerBg: 'bg-[var(--pd-button-disabled)]',
+  },
+  danger: {
+    button: {
+      enabled:
+        'border-2 border-[var(--pd-button-danger-border)] bg-[var(--pd-button-danger-bg)] text-[var(--pd-button-danger-text)] hover:bg-[var(--pd-button-danger-hover-bg)] hover:text-[var(--pd-button-danger-hover-text)]',
+      disabled:
+        'border-2 border-[var(--pd-button-danger-disabled-border)] text-[var(--pd-button-danger-disabled-text)] bg-[var(--pd-button-danger-disabled-bg)]',
+    },
+    divider: 'bg-[var(--pd-button-danger-text)]',
+    border: 'border-[var(--pd-button-danger-border)]',
+    containerBg: 'bg-[var(--pd-button-danger-bg)]',
+  },
+};
+
+const currentStyle = $derived(styles[type]);
 
 // Main button styling (enabled in "no action" or "no selection" mode to allow opening dropdown)
-let mainClasses = $derived(getButtonClasses(isMainDisabled && !isNoActionMode && !isNoSelectionMode));
+const mainClasses = $derived(
+  (isMainDisabled && !isNoActionMode && !isNoSelectionMode) || inProgress
+    ? currentStyle.button.disabled
+    : currentStyle.button.enabled,
+);
 
 // Dropdown toggle styling (disabled only when empty or explicitly disabled)
-let dropdownClasses = $derived(getButtonClasses(isDropdownDisabled));
+const dropdownClasses = $derived(
+  isDropdownDisabled || inProgress ? currentStyle.button.disabled : currentStyle.button.enabled,
+);
 
-let dividerClasses = $derived.by(() => {
-  if (isDropdownDisabled || inProgress) {
-    return 'bg-[var(--pd-button-disabled-text)]';
-  }
-  if (type === 'primary') {
-    return 'bg-[var(--pd-button-text)]';
-  }
-  if (type === 'secondary') {
-    return 'bg-[var(--pd-button-secondary)]';
-  }
-  if (type === 'danger') {
-    return 'bg-[var(--pd-button-danger-text)]';
-  }
-  return 'bg-current';
-});
+const dividerClasses = $derived(
+  isDropdownDisabled || inProgress ? 'bg-[var(--pd-button-disabled-text)]' : currentStyle.divider,
+);
 
-let borderClasses = $derived.by(() => {
-  if (isDropdownDisabled || inProgress) {
-    return 'border-[var(--pd-button-disabled)]';
-  }
-  if (type === 'primary') {
-    return 'border-[var(--pd-button-primary-bg)]';
-  }
-  if (type === 'secondary') {
-    return 'border-[var(--pd-button-secondary)]';
-  }
-  if (type === 'danger') {
-    return 'border-[var(--pd-button-danger-border)]';
-  }
-  return 'border-[var(--pd-button-primary-bg)]';
-});
+const borderClasses = $derived(
+  isDropdownDisabled || inProgress ? 'border-[var(--pd-button-disabled)]' : currentStyle.border,
+);
 
-let containerBgClasses = $derived.by(() => {
-  if (isDropdownDisabled || inProgress) {
-    return 'bg-[var(--pd-button-disabled)]';
-  }
-  if (type === 'primary') {
-    return 'bg-[var(--pd-button-primary-bg)]';
-  }
-  if (type === 'secondary') {
-    return 'bg-[var(--pd-button-disabled)]';
-  }
-  if (type === 'danger') {
-    return 'bg-[var(--pd-button-danger-bg)]';
-  }
-  return 'bg-[var(--pd-button-primary-bg)]';
+const containerBgClasses = $derived(
+  isDropdownDisabled || inProgress ? 'bg-[var(--pd-button-disabled)]' : currentStyle.containerBg,
+);
+
+// Determine the label to display on the button
+const buttonLabel = $derived.by(() => {
+  if (isEmpty) return emptyLabel;
+  if (isNoActionMode) return noActionLabel;
+  if (isNoSelectionMode) return noSelectionLabel;
+  if (!children && selectedOption) return selectedOption.label;
+  return undefined;
 });
 </script>
 
@@ -235,36 +223,19 @@ let containerBgClasses = $derived.by(() => {
       aria-label={ariaLabel}
       onclick={handleMainClick}
       disabled={(isMainDisabled && !isNoActionMode && !isNoSelectionMode) || inProgress}>
-      {#if icon ?? inProgress}
-        <div class="flex flex-row items-center gap-2">
-          {#if inProgress}
-            <Spinner size="1em" />
-          {:else if icon}
-            <Icon {icon} />
-          {/if}
-          {#if isEmpty}
-            <span>{emptyLabel}</span>
-          {:else if isNoActionMode}
-            <span>{noActionLabel}</span>
-          {:else if isNoSelectionMode}
-            <span>{noSelectionLabel}</span>
-          {:else if children}
-            <span>{@render children()}</span>
-          {:else if selectedOption}
-            <span>{selectedOption.label}</span>
-          {/if}
-        </div>
-      {:else if isEmpty}
-        {emptyLabel}
-      {:else if isNoActionMode}
-        {noActionLabel}
-      {:else if isNoSelectionMode}
-        {noSelectionLabel}
-      {:else if children}
-        {@render children()}
-      {:else if selectedOption}
-        {selectedOption.label}
-      {/if}
+      <div class="flex flex-row items-center gap-2">
+        {#if inProgress}
+          <Spinner size="1em" />
+        {:else if icon}
+          <Icon {icon} />
+        {/if}
+
+        {#if buttonLabel !== undefined}
+          <span>{buttonLabel}</span>
+        {:else if children}
+          <span>{@render children()}</span>
+        {/if}
+      </div>
     </button>
 
     <!-- Divider -->
