@@ -1334,17 +1334,30 @@ test('listImageTags', async () => {
 });
 
 describe('getDigestFromImageName', () => {
-  test('should return digest from getManifestFromURL response', async () => {
-    const expectedDigest = 'sha256:abc123def456';
+  test('single-arch image: should return platform digest with no listDigest', async () => {
     vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'https://auth.example.com', scheme: 'bearer' });
     vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('test-token');
     vi.spyOn(
       imageRegistry as unknown as { getManifestFromURL: () => Promise<unknown> },
       'getManifestFromURL',
-    ).mockResolvedValue({ manifest: {}, digest: expectedDigest });
+    ).mockResolvedValue({ manifest: {}, digest: 'sha256:abc123' });
 
-    const digest = await imageRegistry.getDigestFromImageName('nginx:latest');
-    expect(digest).toBe(expectedDigest);
+    const result = await imageRegistry.getDigestFromImageName('nginx:latest');
+    expect(result.digest).toBe('sha256:abc123');
+    expect(result.listDigest).toBeUndefined();
+  });
+
+  test('multi-arch image: should return both platform digest and listDigest', async () => {
+    vi.spyOn(imageRegistry, 'getAuthInfo').mockResolvedValue({ authUrl: 'https://auth.example.com', scheme: 'bearer' });
+    vi.spyOn(imageRegistry, 'getToken').mockResolvedValue('test-token');
+    vi.spyOn(
+      imageRegistry as unknown as { getManifestFromURL: () => Promise<unknown> },
+      'getManifestFromURL',
+    ).mockResolvedValue({ manifest: {}, digest: 'sha256:platform', listDigest: 'sha256:list' });
+
+    const result = await imageRegistry.getDigestFromImageName('nginx:latest');
+    expect(result.digest).toBe('sha256:platform');
+    expect(result.listDigest).toBe('sha256:list');
   });
 
   test('should throw when digest is missing from response', async () => {
@@ -1408,7 +1421,7 @@ describe('checkImageUpdateStatus', () => {
 
   test('should return update available when remote digest differs', async () => {
     const remoteDigest = 'sha256:newdigest';
-    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue(remoteDigest);
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue({ digest: remoteDigest });
 
     const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', ['nginx@sha256:olddigest']);
 
@@ -1420,13 +1433,53 @@ describe('checkImageUpdateStatus', () => {
 
   test('should return no update available when already latest version', async () => {
     const remoteDigest = 'sha256:samedigest';
-    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue(remoteDigest);
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue({ digest: remoteDigest });
 
     const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', ['nginx@sha256:samedigest']);
 
     expect(result.status).toBe('normal');
     expect(result.updateAvailable).toBe(false);
     expect(result.message).toContain('already the latest');
+  });
+
+  // Multi-arch image tests: Docker and Podman both store manifest list digest in RepoDigests
+  test('multi-arch image: should match using list digest (Docker/Podman store list digest)', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue({
+      digest: 'sha256:platformdigest',
+      listDigest: 'sha256:listdigest',
+    });
+
+    // localDigests contains the list digest (as stored by Docker/Podman for multi-arch)
+    const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', ['nginx@sha256:listdigest']);
+
+    expect(result.updateAvailable).toBe(false);
+  });
+
+  // Single-arch image tests: Both runtimes store platform digest only
+  test('single-arch image: should match using platform digest (no listDigest)', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue({
+      digest: 'sha256:platformdigest',
+      listDigest: undefined,
+    });
+
+    // localDigests contains the platform digest (single-arch image)
+    const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', [
+      'nginx@sha256:platformdigest',
+    ]);
+
+    expect(result.updateAvailable).toBe(false);
+  });
+
+  test('should return update available when digest does not match', async () => {
+    vi.spyOn(imageRegistry, 'getDigestFromImageName').mockResolvedValue({
+      digest: 'sha256:newplatform',
+      listDigest: 'sha256:newlist',
+    });
+
+    // localDigests has an old digest that doesn't match either remote digest
+    const result = await imageRegistry.checkImageUpdateStatus('nginx:latest', 'latest', ['nginx@sha256:olddigest']);
+
+    expect(result.updateAvailable).toBe(true);
   });
 
   test('should detect local image with localhost: prefix', async () => {
