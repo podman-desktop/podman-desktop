@@ -15,6 +15,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { ConnectOverCDPOptions } from 'playwright-core';
+
+interface ChromeDevToolProtocolOptions extends ConnectOverCDPOptions {
+  endpointURL: string;
+}
 
 export class RunnerOptions {
   public readonly _profile: string;
@@ -28,6 +33,7 @@ export class RunnerOptions {
   public readonly _binaryPath: string | undefined;
   public readonly _saveTracesOnPass: boolean;
   public readonly _saveVideosOnPass: boolean;
+  public readonly _cdp: ChromeDevToolProtocolOptions | undefined;
   public readonly _customSettings: { [key: string]: unknown } = {};
 
   constructor({
@@ -42,6 +48,7 @@ export class RunnerOptions {
     binaryPath = undefined,
     saveTracesOnPass = false,
     saveVideosOnPass = false,
+    cdp = undefined,
     customSettings = {},
   }: {
     profile?: string;
@@ -55,6 +62,7 @@ export class RunnerOptions {
     binaryPath?: string;
     saveTracesOnPass?: boolean;
     saveVideosOnPass?: boolean;
+    cdp?: ChromeDevToolProtocolOptions;
     customSettings?: { [key: string]: unknown };
   } = {}) {
     this._profile = profile;
@@ -68,6 +76,7 @@ export class RunnerOptions {
     this._binaryPath = binaryPath;
     this._saveTracesOnPass = saveTracesOnPass;
     this._saveVideosOnPass = saveVideosOnPass;
+    this._cdp = cdp;
     this._customSettings = customSettings;
   }
 
