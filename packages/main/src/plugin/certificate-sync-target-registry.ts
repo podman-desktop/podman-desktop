@@ -136,15 +136,25 @@ export class CertificateSyncTargetRegistry {
 
   /**
    * Synchronize certificates to a specific target.
-   * Searches all providers to find the target by ID.
+   * Searches trusted providers only to find the target by ID.
+   *
+   * Applies the same trust model as getTargets():
+   * - Preinstalled extensions (removable === false): allowed
+   * - User-installed extensions (removable === true): rejected
    *
    * @param targetId The ID of the target.
    * @param certificates Array of PEM-encoded certificates to synchronize.
-   * @throws Error if the target is not found in any provider.
+   * @throws Error if the target is not found in any trusted provider.
    */
   async synchronize(targetId: string, certificates: string[]): Promise<void> {
-    // Search all providers for the target
+    // Search trusted providers only for the target
     for (const registeredProvider of this.providers.values()) {
+      // Skip untrusted (user-installed) extensions
+      const isTrusted = registeredProvider.extensionInfo.removable === false;
+      if (!isTrusted) {
+        continue;
+      }
+
       const targets = await registeredProvider.provider.getTargets();
       const target = targets.find(t => t.id === targetId);
 
@@ -155,6 +165,6 @@ export class CertificateSyncTargetRegistry {
       }
     }
 
-    throw new Error(`Target '${targetId}' not found in any provider`);
+    throw new Error(`Target '${targetId}' not found in any trusted provider`);
   }
 }
