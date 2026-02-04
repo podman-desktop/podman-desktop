@@ -461,11 +461,12 @@ Each sprint a new "Triage manager" will be assigned.
 Your responsibilities include:
 
 - Review the [status/need-triage](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aopen+is%3Aissue+label%3Astatus%2Fneed-triage) label on new issues. As a maintainer, you will need to categorize these issues under the correct [area labels](https://github.com/podman-desktop/podman-desktop/labels?q=area%2F).
-- Add `dev/investigate` label if there is a need for the engineering team to take an initial look and provide some info on where the changes could be and categorize the issue in appropriate area. Add the issue to the current sprint
-- Add `qe/review` label if we want QE to reproduce this issue
+- Validate the issue type. Since issues can be opened without templates or may not align with the chosen template, ensure the issue is correctly classified and update labels accordingly. For example, an issue opened as a bug may actually be a feature request and should be relabeled to reflect the correct type.
+- Add `dev/investigate` label if there is a need for the engineering team to take an initial look and provide some info on where the changes could be and categorize the issue in appropriate area. Add the issue to the current sprint.
+- Add `qe/review` label if we want QE to reproduce this issue.
 - Add `status/info-needed` label if logs are missing or additional info is needed from the user filing the issue
 - Identify issues that are simple to resolve and marking them as "good first issue," thereby encouraging newcomers to contribute to the project.
-- Once categorized, remove the `status/need-triage` label
+- Once categorized, remove the `status/need-triage` label.
 - Evaluate the severity of new issues. If an issue is classified as "critical" or "high priority" and requires immediate attention, tag a maintainer in the issue and notify them via the public community channel.
 - Evaluate any stale / lingering pull requests and pinging the respective contributors. If the pull request has been opened for an extensive amount of time, ping someone to contact the contributor / push any changes required to get it merged in. If there is no communication / the pull request is stale, close them.
 
