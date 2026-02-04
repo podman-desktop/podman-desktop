@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,59 +15,30 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
-import { _electron as electron, test } from '@playwright/test';
-import type { BrowserWindow } from 'electron';
+import type { Page } from '@playwright/test';
+import { test } from '@playwright/test';
 
+import { RunnerOptions } from '/@/runner/runner-options';
 import { isLinux } from '/@/utility/platform';
-import { waitWhile } from '/@/utility/wait';
 
-import { RunnerOptions } from './runner-options';
+export abstract class Runner {
+  protected _options: object;
+  protected _running: boolean;
+  protected _page: Page | undefined;
+  protected readonly _profile: string;
+  protected readonly _customFolder;
+  protected readonly _testOutput: string;
+  protected _videoAndTraceName: string | undefined;
+  protected _runnerOptions: RunnerOptions;
+  protected _saveTracesOnPass: boolean;
+  protected _saveVideosOnPass: boolean;
 
-type WindowState = {
-  isVisible: boolean;
-  isDevToolsOpened: boolean;
-  isCrashed: boolean;
-};
-
-export class Runner {
-  private _options: object;
-  private _running: boolean;
-  private _app: ElectronApplication | undefined;
-  private _page: Page | undefined;
-  private readonly _profile: string;
-  private readonly _customFolder;
-  private readonly _testOutput: string;
-  private _videoAndTraceName: string | undefined;
-  private _runnerOptions: RunnerOptions;
-  private _saveTracesOnPass: boolean;
-  private _saveVideosOnPass: boolean;
-
-  private static _instance: Runner | undefined;
-
-  static async getInstance({
-    runnerOptions = new RunnerOptions(),
-  }: {
-    runnerOptions?: RunnerOptions;
-  } = {}): Promise<Runner> {
-    if (!Runner._instance) {
-      Runner._instance = new Runner({ runnerOptions });
-      await Runner._instance.start();
-    }
-    return Runner._instance;
-  }
-
-  private constructor({
-    runnerOptions = new RunnerOptions(),
-  }: {
-    runnerOptions?: RunnerOptions;
-  } = {}) {
+  protected constructor(options?: { runnerOptions?: RunnerOptions }) {
     this._running = false;
-    this._runnerOptions = runnerOptions;
+    this._runnerOptions = options?.runnerOptions ?? new RunnerOptions();
     this._profile = this._runnerOptions._profile;
     this._saveTracesOnPass = this._runnerOptions._saveTracesOnPass;
     this._saveVideosOnPass = this._runnerOptions._saveVideosOnPass;
@@ -79,54 +50,8 @@ export class Runner {
     this._options = this.defaultOptions();
   }
 
-  public async start(): Promise<Page> {
-    if (this.isRunning()) {
-      console.log('Podman Desktop is already running');
-      return this.getPage();
-    }
-
-    try {
-      // start the app with given properties
-      this._running = true;
-      console.log('Starting Podman Desktop');
-      console.log('Electron app launch options: ');
-      Object.keys(this._options).forEach(key => {
-        console.log(`${key}: ${(this._options as { [k: string]: string })[key]}`);
-      });
-      this._app = await electron.launch({
-        ...this._options,
-      });
-      // setup state
-      this._page = await this.getElectronApp().firstWindow();
-      const exe = this.getElectronApp().evaluate(async ({ app }) => {
-        return app.getPath('exe');
-      });
-      const filePath = await exe;
-      console.log(`The Executable Electron app. file: ${filePath}`);
-
-      // Evaluate that the main window is visible
-      // at the same time, the function also makes sure that event 'ready-to-show' was triggered
-      // keeping this call meeses up communication between playwright and electron app on linux
-      // did not have time to investigate why is this occasionally happening
-      // const windowState = await this.getBrowserWindowState();
-    } catch (err) {
-      console.log(`Caught exception in startup: ${err}`);
-      throw Error(`Podman Desktop could not be started correctly with error: ${err}`);
-    }
-
-    // Direct Electron console to Node terminal.
-    this.getPage().on('console', console.log);
-
-    // Start playwright tracing
-    await this.startTracing();
-
-    // also get stderr from the node process
-    this._app.process().stderr?.on('data', data => {
-      console.log(`STDERR: ${data}`);
-    });
-
-    return this._page;
-  }
+  abstract start(): Promise<Page>;
+  abstract close(timeout?: number): Promise<void>;
 
   public getPage(): Page {
     if (this._page) {
@@ -136,59 +61,78 @@ export class Runner {
     throw Error('Application was not started yet');
   }
 
-  public getElectronApp(): ElectronApplication {
-    if (this._app) {
-      return this._app;
+  public get options(): object {
+    return this._options;
+  }
+
+  public setOptions(value: object): void {
+    this._options = value;
+  }
+
+  public isRunning(): boolean {
+    return this._running;
+  }
+
+  protected setupPodmanDesktopCustomFolder(): object {
+    const env: { [key: string]: string } = process.env as { [key: string]: string };
+    const dir = join(this._customFolder);
+    console.log(`podman desktop custom config will be written to: ${dir}`);
+    env.PODMAN_DESKTOP_HOME_DIR = dir;
+
+    // required to get dashboard opened, https://github.com/podman-desktop/podman-desktop/issues/15220
+    if (isLinux) {
+      env.XDG_SESSION_TYPE = 'x11';
     }
 
-    throw Error('Application was not started yet');
+    // add a custom config file by disabling OpenDevTools
+    const settingsFile = resolve(dir, 'configuration', 'settings.json');
+
+    // create parent folder if missing
+    const parentDir = dirname(settingsFile);
+    if (!existsSync(parentDir)) {
+      mkdirSync(parentDir, { recursive: true });
+    }
+
+    const settingsContent = this._runnerOptions.createSettingsJson();
+
+    // write the file
+    console.log(`disabling OpenDevTools in configuration file ${settingsFile}`);
+    writeFileSync(settingsFile, settingsContent);
+
+    return env;
   }
 
-  public async getBrowserWindow(): Promise<JSHandle<BrowserWindow>> {
-    return await this.getElectronApp().browserWindow(this.getPage());
-  }
-
-  public async screenshot(filename: string): Promise<void> {
-    await this.getPage().screenshot({ path: join(this._testOutput, 'screenshots', filename) });
-  }
-
-  public async startTracing(): Promise<void> {
-    await this.getPage().context().tracing.start({ screenshots: true, snapshots: true, sources: true });
-  }
-
-  public async stopTracing(): Promise<void> {
-    let name = '';
-    if (this._videoAndTraceName) name = this._videoAndTraceName;
-
-    name = name + '_trace.zip';
-    await this.getPage()
-      .context()
-      .tracing.stop({ path: join(this._testOutput, 'traces', name) });
-  }
-
-  public async getBrowserWindowState(): Promise<WindowState> {
-    return await (await this.getBrowserWindow()).evaluate((mainWindow): Promise<WindowState> => {
-      const getState = (): { isVisible: boolean; isDevToolsOpened: boolean; isCrashed: boolean } => {
-        return {
-          isVisible: mainWindow.isVisible(),
-          isDevToolsOpened: mainWindow.webContents.isDevToolsOpened(),
-          isCrashed: mainWindow.webContents.isCrashed(),
-        };
-      };
-
-      return new Promise(resolve => {
-        /**
-         * The main window is created hidden, and is shown only when it is ready.
-         * See {@link ../packages/main/src/mainWindow.ts} function
-         */
-        if (mainWindow.isVisible()) {
-          resolve(getState());
-        } else
-          mainWindow.once('ready-to-show', () => {
-            resolve(getState());
-          });
-      });
-    });
+  private defaultOptions(): object {
+    const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
+    const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
+    if (pdArgs && pdBinary) {
+      throw new Error(
+        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY are both set, cannot run tests in development and production mode at the same time...',
+      );
+    }
+    const directory = join(this._testOutput, 'videos');
+    const tracesDir = join(this._testOutput, 'traces', 'raw');
+    console.log(`video will be written to: ${directory}`);
+    const env = this.setupPodmanDesktopCustomFolder();
+    const recordVideo = {
+      dir: directory,
+      size: {
+        width: 1050,
+        height: 700,
+      },
+    };
+    const args = pdArgs ? [pdArgs] : ['.'];
+    // executablePath defaults to this package's installation location: node_modules/.bin/electron
+    const executablePath = pdArgs ? join(pdArgs, 'node_modules', '.bin', 'electron') : (pdBinary ?? undefined);
+    const timeout = 45000;
+    return {
+      args,
+      executablePath,
+      env,
+      recordVideo,
+      timeout,
+      tracesDir,
+    };
   }
 
   async saveVideoAs(path: string): Promise<void> {
@@ -210,45 +154,18 @@ export class Runner {
     }
   }
 
-  public async close(timeout = 30_000): Promise<void> {
-    // Stop playwright tracing
-    await this.stopTracing();
+  public async startTracing(): Promise<void> {
+    await this.getPage().context().tracing.start({ screenshots: true, snapshots: true, sources: true });
+  }
 
-    if (!this.isRunning()) {
-      throw Error('Podman Desktop is not running');
-    }
+  public async stopTracing(): Promise<void> {
+    let name = '';
+    if (this._videoAndTraceName) name = this._videoAndTraceName;
 
-    if (this.getElectronApp()) {
-      const pid = this.getElectronApp()?.process()?.pid;
-      console.log(`Closing Podman Desktop with a timeout of ${timeout} ms`);
-      try {
-        await Promise.race([
-          waitWhile(async () => this.isRunning(), { timeout: timeout, diff: 100 }),
-          this.getElectronApp().close(),
-        ]);
-      } catch (err: unknown) {
-        console.log(`Caught exception in closing: ${err}`);
-        console.log('Trying to kill the electron app process');
-        if (pid) {
-          console.log(`Killing the electron app process with PID: ${pid}`);
-          try {
-            process.kill(pid as number);
-          } catch (error: unknown) {
-            console.log(`Exception thrown when killing the process: ${error}`);
-          }
-        }
-      }
-    }
-    this._running = false;
-    Runner._instance = undefined;
-
-    if (this._videoAndTraceName) {
-      const videoPath = join(this._testOutput, 'videos', `${this._videoAndTraceName}.webm`);
-      const elapsed = await this.trackTime(async () => await this.saveVideoAs(videoPath));
-      console.log(`Saving a video file took: ${elapsed} ms`);
-      console.log(`Video file saved as: ${videoPath}`);
-    }
-    await this.removeTracesOnFinished();
+    name = name + '_trace.zip';
+    await this.getPage()
+      .context()
+      .tracing.stop({ path: join(this._testOutput, 'traces', name) });
   }
 
   async removeTracesOnFinished(): Promise<void> {
@@ -296,76 +213,6 @@ export class Runner {
       });
   }
 
-  private defaultOptions(): object {
-    const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
-    const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
-    if (pdArgs && pdBinary) {
-      throw new Error(
-        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY are both set, cannot run tests in development and production mode at the same time...',
-      );
-    }
-    const directory = join(this._testOutput, 'videos');
-    const tracesDir = join(this._testOutput, 'traces', 'raw');
-    console.log(`video will be written to: ${directory}`);
-    const env = this.setupPodmanDesktopCustomFolder();
-    const recordVideo = {
-      dir: directory,
-      size: {
-        width: 1050,
-        height: 700,
-      },
-    };
-    const args = pdArgs ? [pdArgs] : ['.'];
-    // executablePath defaults to this package's installation location: node_modules/.bin/electron
-    const executablePath = pdArgs ? join(pdArgs, 'node_modules', '.bin', 'electron') : (pdBinary ?? undefined);
-    const timeout = 45000;
-    return {
-      args,
-      executablePath,
-      env,
-      recordVideo,
-      timeout,
-      tracesDir,
-    };
-  }
-
-  private setupPodmanDesktopCustomFolder(): object {
-    const env: { [key: string]: string } = process.env as { [key: string]: string };
-    const dir = join(this._customFolder);
-    console.log(`podman desktop custom config will be written to: ${dir}`);
-    env.PODMAN_DESKTOP_HOME_DIR = dir;
-
-    // required to get dashboard opened, https://github.com/podman-desktop/podman-desktop/issues/15220
-    if (isLinux) {
-      env.XDG_SESSION_TYPE = 'x11';
-    }
-
-    // add a custom config file by disabling OpenDevTools
-    const settingsFile = resolve(dir, 'configuration', 'settings.json');
-
-    // create parent folder if missing
-    const parentDir = dirname(settingsFile);
-    if (!existsSync(parentDir)) {
-      mkdirSync(parentDir, { recursive: true });
-    }
-
-    const settingsContent = this._runnerOptions.createSettingsJson();
-
-    // write the file
-    console.log(`disabling OpenDevTools in configuration file ${settingsFile}`);
-    writeFileSync(settingsFile, settingsContent);
-
-    return env;
-  }
-
-  public isRunning(): boolean {
-    return this._running;
-  }
-
-  public setOptions(value: object): void {
-    this._options = value;
-  }
-
   public setVideoAndTraceName(name: string): void {
     this._videoAndTraceName = name;
 
@@ -378,7 +225,7 @@ export class Runner {
     return this._testOutput;
   }
 
-  public get options(): object {
-    return this._options;
+  public async screenshot(filename: string): Promise<void> {
+    await this.getPage().screenshot({ path: join(this._testOutput, 'screenshots', filename) });
   }
 }

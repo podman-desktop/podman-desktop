@@ -94,6 +94,7 @@
     "lint:fix": "node --max-old-space-size=8192 node_modules/eslint/bin/eslint.js --cache . --cache-strategy content --fix",
     "lint:check": "node --max-old-space-size=8192 node_modules/eslint/bin/eslint.js --cache . --cache-strategy content",
     "typecheck:extension-api": "tsc --noEmit -p packages/extension-api/tsconfig.json",
+    "typecheck:tests": "tsc --noEmit -p tests/playwright/tsconfig.json",
     "typecheck:main": "tsc --noEmit -p packages/main/tsconfig.json",
     "typecheck:preload": "tsc --noEmit -p packages/preload/tsconfig.json",
     "typecheck:preload-dd-extension": "tsc --noEmit -p packages/preload-docker-extension/tsconfig.json",

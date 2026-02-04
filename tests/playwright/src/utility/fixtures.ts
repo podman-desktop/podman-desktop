@@ -22,7 +22,8 @@ import { test as base } from '@playwright/test';
 import { WelcomePage } from '/@/model/pages/welcome-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { StatusBar } from '/@/model/workbench/status-bar';
-import { Runner } from '/@/runner/podman-desktop-runner';
+import type { Runner } from '/@/runner/podman-desktop-runner';
+import { RunnerFactory } from '/@/runner/runner-factory';
 import { RunnerOptions } from '/@/runner/runner-options';
 
 export type TestFixtures = {
@@ -40,7 +41,7 @@ export type FixtureOptions = {
 export const test = base.extend<TestFixtures & FixtureOptions>({
   runnerOptions: [new RunnerOptions(), { option: true }],
   runner: async ({ runnerOptions }, use) => {
-    const runner = await Runner.getInstance({ runnerOptions });
+    const runner = await RunnerFactory.getInstance({ runnerOptions });
     await use(runner);
   },
   page: async ({ runner }, use) => {
