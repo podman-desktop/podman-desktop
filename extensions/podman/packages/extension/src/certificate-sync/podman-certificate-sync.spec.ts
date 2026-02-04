@@ -115,6 +115,21 @@ describe('PodmanCertificateSync', () => {
       expect(targets).toEqual([]);
       expect(consoleSpy).toHaveBeenCalledWith('Failed to get Podman machines for certificate sync:', expect.any(Error));
     });
+
+    test('should log error when getMachineList returns error string', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockGetMachineList.mockResolvedValue({
+        list: [],
+        error: 'podman machine command failed',
+      });
+
+      const targets = await certSync.getTargets();
+
+      expect(targets).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error getting Podman machines for certificate sync: podman machine command failed',
+      );
+    });
   });
 
   describe('synchronize', () => {

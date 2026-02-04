@@ -53,6 +53,12 @@ export class PodmanCertificateSync implements CertificateSyncTargetProvider {
 
     try {
       const machineListOutput = await this.getMachineList();
+
+      // Log error if present (getMachineList can return error without throwing)
+      if (machineListOutput.error) {
+        console.error(`Error getting Podman machines for certificate sync: ${machineListOutput.error}`);
+      }
+
       const machines = machineListOutput.list;
 
       for (const machine of machines) {
