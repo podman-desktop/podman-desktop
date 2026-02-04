@@ -183,7 +183,7 @@
     "js-yaml": "^4.1.1",
     "lint-staged": "^16.2.7",
     "minimist": "^1.2.8",
-    "msw": "^2.12.7",
+    "msw": "^2.12.8",
     "prettier": "^3.8.1",
     "proxy": "^2.2.0",
     "typescript": "5.9.3",
