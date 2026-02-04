@@ -153,6 +153,7 @@ import { Container } from 'inversify';
 
 import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
+import { DashboardInit } from '/@/plugin/dashboard/dashboard-init.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
