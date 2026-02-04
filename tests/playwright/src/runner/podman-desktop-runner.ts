@@ -163,7 +163,7 @@ export class Runner {
 
   public async startTracing(): Promise<void> {
     await this.getPage().context().tracing.start({ screenshots: true, snapshots: true, sources: true });
-    await this.getPage().evaluate(() => new Promise(requestAnimationFrame));
+    await this.getPage().screenshot();
   }
 
   public async stopTracing(): Promise<void> {
