@@ -51,6 +51,7 @@ import { Container } from 'inversify';
 
 import { IPCHandle, IPCMainOn } from '/@/plugin/api.js';
 import { ContainerfileParser } from '/@/plugin/containerfile-parser.js';
+import { DashboardInit } from '/@/plugin/dashboard/dashboard-init.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionWatcher } from '/@/plugin/extension/extension-watcher.js';
@@ -571,6 +572,10 @@ export class PluginSystem {
     container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
     const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
     statusbarProviders.init();
+
+    container.bind<DashboardInit>(DashboardInit).toSelf().inSingletonScope();
+    const dashboard = container.get<DashboardInit>(DashboardInit);
+    dashboard.init();
 
     container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
     const helpMenu = container.get<HelpMenu>(HelpMenu);
