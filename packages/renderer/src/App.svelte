@@ -227,28 +227,6 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             engineId={decodeURI(meta.params.engineId)}
             base64RepoTag={meta.params.base64RepoTag} />
         </Route>
-        <Route
-          path="/images/:id/:engineId/:base64RepoTag/*"
-          breadcrumb="Image Details"
-          let:meta
-          navigationHint="details">
-          <ImageDetails
-            imageID={meta.params.id}
-            engineId={decodeURI(meta.params.engineId)}
-            base64RepoTag={meta.params.base64RepoTag} />
-        </Route>
-        <Route path="/images/pull" breadcrumb="Pull an Image">
-          <PullImage />
-        </Route>
-        <Route path="/images/import" breadcrumb="Import Containers">
-          <ImportContainersImages />
-        </Route>
-        <Route path="/images/save" breadcrumb="Save Images">
-          <SaveImages />
-        </Route>
-        <Route path="/images/load" breadcrumb="Load Images">
-          <LoadImages />
-        </Route>
 
         <Route path="/networks/*" breadcrumb="Networks" navigationHint="root" firstmatch>
           <Route path="/" breadcrumb="Networks" navigationHint="root">
