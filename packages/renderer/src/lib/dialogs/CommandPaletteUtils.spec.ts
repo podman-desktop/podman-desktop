@@ -20,7 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { faCube, faImage } from '@fortawesome/free-solid-svg-icons';
 import type { Component } from 'svelte';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import type { ContainerInfo } from '/@api/container-info';
@@ -153,8 +153,8 @@ const mockNavigationEntries: NavigationRegistryEntry[] = [
 ];
 
 describe('createGoToItems', () => {
-  test('should create GoToInfo items for all resource types', () => {
-    const items = createGoToItems([mockImageInfo], [mockContainerInfo], [mockPodInfo], [mockVolumeInfo]);
+  test('should create GoToInfo items for all resource types', async () => {
+    const items = await createGoToItems([mockImageInfo], [mockContainerInfo], [mockPodInfo], [mockVolumeInfo]);
 
     expect(items).toHaveLength(4);
 
@@ -187,29 +187,29 @@ describe('createGoToItems', () => {
     expect(volumeItem?.type).toBe('Volume');
   });
 
-  test('should handle empty arrays', () => {
-    const items = createGoToItems([], [], [], []);
+  test('should handle empty arrays', async () => {
+    const items = await createGoToItems([], [], [], []);
 
     expect(items).toHaveLength(0);
   });
 
-  test('should handle image without RepoTags', () => {
+  test('should handle image without RepoTags', async () => {
     const imageWithoutTags = { ...mockImageInfo, RepoTags: undefined };
-    const items = createGoToItems([imageWithoutTags], [], [], []);
+    const items = await createGoToItems([imageWithoutTags], [], [], []);
 
     const imageItem = items.find(item => item.type === 'Image');
     expect(getGoToDisplayText(imageItem!)).toBe('sha256:abc123def456');
   });
 
-  test('should handle image with empty RepoTags', () => {
+  test('should handle image with empty RepoTags', async () => {
     const imageWithEmptyTags = { ...mockImageInfo, RepoTags: [] };
-    const items = createGoToItems([imageWithEmptyTags], [], [], []);
+    const items = await createGoToItems([imageWithEmptyTags], [], [], []);
 
     const imageItem = items.find(item => item.type === 'Image');
     expect(getGoToDisplayText(imageItem!)).toBe('sha256:abc123def456');
   });
 
-  test('should handle multiple volumes', () => {
+  test('should handle multiple volumes', async () => {
     const multipleVolumes: VolumeInfo[] = [
       {
         Name: 'volume1',
@@ -223,7 +223,7 @@ describe('createGoToItems', () => {
       },
     ] as unknown as VolumeInfo[];
 
-    const items = createGoToItems([], [], [], multipleVolumes);
+    const items = await createGoToItems([], [], [], multipleVolumes);
 
     const volumeItems = items.filter(item => item.type === 'Volume');
     expect(volumeItems).toHaveLength(2);
@@ -233,54 +233,54 @@ describe('createGoToItems', () => {
 });
 
 describe('getShortId function behavior through createGoToItems', () => {
-  test('should handle sha256: prefix correctly', () => {
+  test('should handle sha256: prefix correctly', async () => {
     const imageWithSha256 = {
       ...mockImageInfo,
       RepoTags: ['registry.com/image:tag@sha256:abc123def456789012345678901234567890123456789012345678901234567890'],
     };
 
-    const items = createGoToItems([imageWithSha256], [], [], []);
+    const items = await createGoToItems([imageWithSha256], [], [], []);
     const imageItem = items.find(item => item.type === 'Image');
 
     // The name should be the RepoTag with sha256: prefix and 12 chars after
     expect(getGoToDisplayText(imageItem!)).toBe('registry.com/image:tag@sha256:abc123def456');
   });
 
-  test('should handle image ID without sha256: prefix', () => {
+  test('should handle image ID without sha256: prefix', async () => {
     const imageWithoutSha256 = {
       ...mockImageInfo,
       Id: 'abc123def456789012345678901234567890123456789012345678901234567890',
       RepoTags: undefined,
     };
 
-    const items = createGoToItems([imageWithoutSha256], [], [], []);
+    const items = await createGoToItems([imageWithoutSha256], [], [], []);
     const imageItem = items.find(item => item.type === 'Image');
 
     // Should return the full ID since no sha256: prefix
     expect(getGoToDisplayText(imageItem!)).toBe('abc123def456789012345678901234567890123456789012345678901234567890');
   });
 
-  test('should handle sha256: at the beginning', () => {
+  test('should handle sha256: at the beginning', async () => {
     const imageWithSha256AtStart = {
       ...mockImageInfo,
       RepoTags: ['sha256:abc123def456789012345678901234567890123456789012345678901234567890'],
     };
 
-    const items = createGoToItems([imageWithSha256AtStart], [], [], []);
+    const items = await createGoToItems([imageWithSha256AtStart], [], [], []);
     const imageItem = items.find(item => item.type === 'Image');
 
     // Should return sha256: + 12 chars
     expect(getGoToDisplayText(imageItem!)).toBe('sha256:abc123def456');
   });
 
-  test('should handle volume names correctly', () => {
+  test('should handle volume names correctly', async () => {
     const volumeWithLongName: VolumeInfo = {
       engineId: 'podman',
       engineName: 'Podman',
       Name: 'very-long-volume-name-that-exceeds-twelve-characters',
     } as unknown as VolumeInfo;
 
-    const items = createGoToItems([], [], [], [volumeWithLongName]);
+    const items = await createGoToItems([], [], [], [volumeWithLongName]);
     const volumeItem = items.find(item => item.type === 'Volume');
 
     // Volume names should be truncated to 12 characters
@@ -289,33 +289,33 @@ describe('getShortId function behavior through createGoToItems', () => {
 });
 
 describe('getGoToDisplayText function behavior', () => {
-  test('should handle image correctly', () => {
+  test('should handle image correctly', async () => {
     const image = {
       ...mockImageInfo,
       RepoTags: ['registry.com/image:tag@sha256:abc123def456789012345678901234567890123456789012345678901234567890'],
     };
-    const items = createGoToItems([image], [], [], []);
+    const items = await createGoToItems([image], [], [], []);
     const imageItem = items.find(item => item.type === 'Image');
     expect(getGoToDisplayText(imageItem!)).toBe('registry.com/image:tag@sha256:abc123def456');
   });
 
-  test('should handle container correctly', () => {
+  test('should handle container correctly', async () => {
     const container = { ...mockContainerInfo, Names: ['test-container'] };
-    const items = createGoToItems([], [container], [], []);
+    const items = await createGoToItems([], [container], [], []);
     const containerItem = items.find(item => item.type === 'Container');
     expect(getGoToDisplayText(containerItem!)).toBe('test-container');
   });
 
-  test('should handle pod correctly', () => {
+  test('should handle pod correctly', async () => {
     const pod = { ...mockPodInfo, Name: 'test-pod' };
-    const items = createGoToItems([], [], [pod], []);
+    const items = await createGoToItems([], [], [pod], []);
     const podItem = items.find(item => item.type === 'Pod');
     expect(getGoToDisplayText(podItem!)).toBe('test-pod');
   });
 
-  test('should handle volume correctly', () => {
+  test('should handle volume correctly', async () => {
     const volume = { ...mockVolumeInfo, Name: 'my-volume' };
-    const items = createGoToItems([], [], [], [volume]);
+    const items = await createGoToItems([], [], [], [volume]);
     const volumeItem = items.find(item => item.type === 'Volume');
     expect(getGoToDisplayText(volumeItem!)).toBe('my-volume');
   });
@@ -328,8 +328,8 @@ describe('getGoToDisplayText function behavior', () => {
 });
 
 describe('Navigation Items', () => {
-  test('should handle all navigation entry types correctly', () => {
-    const items = createGoToItems([], [], [], [], mockNavigationEntries);
+  test('should handle all navigation entry types correctly', async () => {
+    const items = await createGoToItems([], [], [], [], mockNavigationEntries);
     const navigationItems = items.filter(item => item.type === 'Navigation');
 
     // Should have 5 visible items: Images (5), Settings, Extensions children (2), Kubernetes (8)
@@ -385,10 +385,7 @@ describe('Navigation Routes', () => {
       routeId: 'ailab.models',
       commandId: 'ailab.open-models',
       title: 'View Models',
-      icon: {
-        light: 'data:image/png;base64,light',
-        dark: 'data:image/png;base64,dark',
-      },
+      icon: { light: 'data:image/png;base64,light', dark: 'data:image/png;base64,dark' },
       extensionId: 'AI Lab',
     },
     {
@@ -396,31 +393,35 @@ describe('Navigation Routes', () => {
       commandId: 'kubernetes.open-dashboard',
       title: 'Open Dashboard',
       extensionId: 'Kubernetes',
-      // No icon
     },
     {
       routeId: 'extension.hidden-route',
       commandId: 'extension.hidden-command',
-      // No title - should be skipped
       extensionId: 'Extension',
+      // No title - should be skipped
     },
   ];
 
-  test('should create Navigation items from navigation routes', () => {
-    const items = createGoToItems([], [], [], [], [], mockNavigationRoutes);
-    const navigationItems = items.filter(item => item.type === 'Navigation');
+  test('should create Navigation items from navigation routes', async () => {
+    vi.mocked(window.getNavigationRoutes).mockResolvedValue(mockNavigationRoutes);
+    vi.mocked(window.listExtensions).mockResolvedValue([]);
+    vi.mocked(window.listWebviews).mockResolvedValue([]);
+    vi.mocked(window.executeCommand).mockResolvedValue([]);
+
+    const items = await createGoToItems([], [], [], [], []);
+    const navigationItems = items.filter((item: GoToInfo) => item.type === 'Navigation');
 
     // Should have 3 items (route without title is skipped)
     expect(navigationItems).toHaveLength(3);
 
     // Route with string icon
-    const downloadsItem = navigationItems.find(item => item.name === 'AI Lab: Open Downloads');
+    const downloadsItem = navigationItems.find(item => item.name === 'AI Lab > Open Downloads');
     expect(downloadsItem).toBeDefined();
     expect(downloadsItem?.link).toBe('ailab.downloads');
     expect(downloadsItem?.icon?.iconImage).toBe('data:image/png;base64,abc123');
 
     // Route with light/dark icon object
-    const modelsItem = navigationItems.find(item => item.name === 'AI Lab: View Models');
+    const modelsItem = navigationItems.find(item => item.name === 'AI Lab > View Models');
     expect(modelsItem).toBeDefined();
     expect(modelsItem?.link).toBe('ailab.models');
     expect(modelsItem?.icon?.iconImage).toEqual({
@@ -429,7 +430,7 @@ describe('Navigation Routes', () => {
     });
 
     // Route without icon
-    const dashboardItem = navigationItems.find(item => item.name === 'Kubernetes: Open Dashboard');
+    const dashboardItem = navigationItems.find(item => item.name === 'Kubernetes > Open Dashboard');
     expect(dashboardItem).toBeDefined();
     expect(dashboardItem?.link).toBe('kubernetes.dashboard');
     expect(dashboardItem?.icon?.iconImage).toBeUndefined();
