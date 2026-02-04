@@ -104,7 +104,7 @@ export default function Home(): JSX.Element {
             </div>
 
             {/* Application video */}
-            <div className="my-12 rounded-xl from-purple-500 bg-linear-to-r to-fuschia-500">
+            <div className="my-12 rounded-xl from-purple-500 bg-linear-to-r to-fuchsia-500">
               <div className="p-8">
                 <video className="rounded-xl w-full h-full" controls>
                   <source

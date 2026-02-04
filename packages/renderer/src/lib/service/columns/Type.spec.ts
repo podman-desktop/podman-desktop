@@ -81,5 +81,5 @@ test('Expect column styling NodePort', async () => {
 
   const dot = text.parentElement?.children[0];
   expect(dot).toBeInTheDocument();
-  expect(dot).toHaveClass('text-[var(--pd-badge-fuschia)]');
+  expect(dot).toHaveClass('text-[var(--pd-badge-fuchsia)]');
 });
