@@ -71,7 +71,7 @@ export async function isDisguisedPodmanPath(socketPath: string, timeout?: number
 
 // Function that checks whether you are running windows, mac or linux and returns back
 // the correct Docker socket location
-export function getSocketPath(): string {
+function getSocketPath(): string {
   let socketPath: string = defaultSocketPath;
   if (os.platform() === 'win32') {
     socketPath = windowsSocketPath;

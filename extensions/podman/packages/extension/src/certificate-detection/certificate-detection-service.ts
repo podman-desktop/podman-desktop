@@ -44,7 +44,7 @@ export interface CertificateDetectionConfig {
   followSymlinks: boolean;
 }
 
-export const DEFAULT_CONFIG: CertificateDetectionConfig = {
+const DEFAULT_CONFIG: CertificateDetectionConfig = {
   enableTelemetry: true,
   scanTimeoutMs: 10000,
   excludedExtensions: ['.pem', '.cer'],
