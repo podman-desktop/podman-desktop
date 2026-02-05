@@ -16,11 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface OnboardingCommandResponse {
-  status: 'succeeded' | 'failed';
-  body: unknown;
-}
-
 export interface OnboardingStepItem {
   value: string;
   highlight?: boolean;

@@ -25,14 +25,14 @@ import type {
 import type { IDisposable } from '../disposable.js';
 import type { Event } from '../event.js';
 
-export interface IExperimentalConfiguration {
+interface IExperimentalConfiguration {
   // href to the discussion
   githubDiscussionLink?: string;
   // path to image or gif
   image?: string;
 }
 
-export type IConfigurationPropertySchemaType =
+type IConfigurationPropertySchemaType =
   | 'markdown'
   | 'string'
   | 'number'

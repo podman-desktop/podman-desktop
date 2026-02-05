@@ -32,7 +32,7 @@ export type KubernetesGeneratorArgument = {
 
 export type KubernetesGeneratorSelector = KubernetesGeneratorType | ReadonlyArray<KubernetesGeneratorType>;
 
-export type KubernetesGeneratorType = 'Compose' | 'Pod' | 'Container';
+type KubernetesGeneratorType = 'Compose' | 'Pod' | 'Container';
 
 export interface GenerateKubeResult {
   yaml: string;
