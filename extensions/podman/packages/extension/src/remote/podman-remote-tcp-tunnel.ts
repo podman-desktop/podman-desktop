@@ -19,7 +19,7 @@ import * as net from 'node:net';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
 
-export class PodmanRemoteDirectTunnel {
+export class PodmanRemoteTcpTunnel {
   // local server for listening on the local file socket
   #server: net.Server | undefined;
 
@@ -59,63 +59,79 @@ export class PodmanRemoteDirectTunnel {
       this.#resolveConnected = resolve;
     });
 
-    // Create a local server to listen on the local file socket
-    this.#server = net.createServer(localSocket => {
-      // Create a connection to the remote socket via TCP
-      const remoteSocket = net.createConnection({ host: this.host, port: this.port });
+    // First, verify the remote TCP server is reachable before starting the local server
+    const testSocket = net.createConnection({ host: this.host, port: this.port });
 
-      remoteSocket.on('connect', () => {
-        // Forward data from local to remote
-        localSocket.on('data', data => {
-          remoteSocket.write(data);
+    testSocket.on('connect', () => {
+      // Remote is reachable, close the test connection
+      testSocket.end();
+
+      // Now create the local server to listen on the local file socket
+      this.#server = net.createServer(localSocket => {
+        // Create a connection to the remote socket via TCP
+        const remoteSocket = net.createConnection({ host: this.host, port: this.port });
+
+        remoteSocket.on('connect', () => {
+          // Forward data from local to remote
+          localSocket.on('data', data => {
+            remoteSocket.write(data);
+          });
+
+          // Forward data from remote to local
+          remoteSocket.on('data', (data: string | Uint8Array) => {
+            localSocket.write(data);
+          });
         });
 
-        // Forward data from remote to local
-        remoteSocket.on('data', (data: string | Uint8Array) => {
-          localSocket.write(data);
+        // Handle local socket close
+        localSocket.on('close', () => {
+          remoteSocket.end();
+        });
+
+        // Handle remote socket close
+        remoteSocket.on('close', () => {
+          localSocket.end();
+        });
+
+        // Handle local socket error
+        localSocket.on('error', err => {
+          console.error('Podman tcp tunnel local socket error', err);
+          remoteSocket.end();
+        });
+
+        // Handle remote socket error
+        remoteSocket.on('error', (err: unknown) => {
+          console.error(`Podman tcp tunnel remote socket error ${this.host}:${this.port}`, err);
+          localSocket.end();
         });
       });
 
-      // Handle local socket close
-      localSocket.on('close', () => {
-        remoteSocket.end();
+      // Listen on the local file socket
+      this.#server.listen(this.localPath, () => {
+        this.#listening = true;
       });
 
-      // Handle remote socket close
-      remoteSocket.on('close', () => {
-        localSocket.end();
+      // Handle server error
+      this.#server.on('error', err => {
+        console.error('Server error:', err);
+        this.#status = 'unknown';
+        this.handleReconnect();
       });
 
-      // Handle local socket error
-      localSocket.on('error', err => {
-        console.error('Podman tcp tunnel local socket error', err);
-        remoteSocket.end();
+      // when closed, reconnect
+      this.#server.on('close', () => {
+        this.#status = 'stopped';
+        this.handleReconnect();
       });
 
-      // Handle remote socket error
-      remoteSocket.on('error', (err: unknown) => {
-        console.error(`Podman tcp tunnel remote socket error ${this.host}:${this.port}`, err);
-        localSocket.end();
-      });
-    });
-
-    // Listen on the local file socket
-    this.#server.listen(this.localPath, () => {
-      this.#listening = true;
+      // Mark as connected after verifying remote is reachable
       this.#status = 'started';
       this.#resolveConnected(true);
     });
 
-    // Handle server error
-    this.#server.on('error', err => {
-      console.error('Server error:', err);
+    testSocket.on('error', (err: unknown) => {
+      console.error(`Podman tcp tunnel remote socket error ${this.host}:${this.port}`, err);
       this.#status = 'unknown';
-      this.handleReconnect();
-    });
-
-    // when closed, reconnect
-    this.#server.on('close', () => {
-      this.#status = 'stopped';
       this.handleReconnect();
     });
   }
