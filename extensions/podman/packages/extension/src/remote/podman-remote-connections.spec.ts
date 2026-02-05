@@ -22,8 +22,8 @@ import * as extensionApi from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteConnections } from './podman-remote-connections';
-import type { PodmanRemoteDirectTunnel } from './podman-remote-direct-tunnel';
 import type { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
+import type { PodmanRemoteTcpTunnel } from './podman-remote-tcp-tunnel';
 
 vi.mock('node:fs');
 
@@ -46,8 +46,8 @@ class TestPodmanRemoteConnections extends PodmanRemoteConnections {
     return super.createSshTunnel(host, port, username, privateKey, remotePath, localPath);
   }
 
-  createDirectTunnel(host: string, port: number, localPath: string): PodmanRemoteDirectTunnel {
-    return super.createDirectTunnel(host, port, localPath);
+  createTcpTunnel(host: string, port: number, localPath: string): PodmanRemoteTcpTunnel {
+    return super.createTcpTunnel(host, port, localPath);
   }
 
   async refreshRemoteConnections(): Promise<void> {
