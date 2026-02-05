@@ -17,10 +17,11 @@
  ***********************************************************************/
 import { expect, test, vi } from 'vitest';
 
+import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import { ENHANCED_DASHBOARD_CONFIGURATION_KEY } from '/@api/dashboard-info.js';
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
-import { DashboardInit } from './dashboard-init.js';
 
 const registerConfigurationsMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();
@@ -36,8 +37,8 @@ const apiSenderMock = {
 } as unknown as ApiSenderType;
 
 test('should register a configuration', async () => {
-  const dashboardInit = new DashboardInit(configurationRegistryMock, apiSenderMock);
-  dashboardInit.init();
+  const dashboardService = new DashboardService(configurationRegistryMock, apiSenderMock);
+  dashboardService.init();
 
   expect(configurationRegistryMock.registerConfigurations).toBeCalled();
   const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
@@ -45,12 +46,12 @@ test('should register a configuration', async () => {
   expect(configurationNode?.title).toBe('Experimental (Enhanced Dashboard)');
   expect(configurationNode?.properties).toBeDefined();
   expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(1);
-  expect(configurationNode?.properties?.['dashboard.enhancedDashboard']).toBeDefined();
-  expect(configurationNode?.properties?.['dashboard.enhancedDashboard']?.type).toBe('object');
-  expect(configurationNode?.properties?.['dashboard.enhancedDashboard']?.description).toBe(
+  expect(configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]).toBeDefined();
+  expect(configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]?.type).toBe('object');
+  expect(configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]?.description).toBe(
     'Enhanced dashboard with more features and improved user experience',
   );
-  expect(configurationNode?.properties?.['dashboard.enhancedDashboard']?.experimental?.githubDiscussionLink).toBe(
-    'https://github.com/podman-desktop/podman-desktop/discussions/16055',
-  );
+  expect(
+    configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]?.experimental?.githubDiscussionLink,
+  ).toBe('https://github.com/podman-desktop/podman-desktop/discussions/16055');
 });

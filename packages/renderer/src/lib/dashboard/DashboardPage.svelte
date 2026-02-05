@@ -7,7 +7,7 @@ import {
   convertFromListOrganizerItems,
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
-  defaultSectionNames,
+  defaultSection,
   setupDashboardPageRegistry,
 } from '/@/stores/dashboard/dashboard-page-registry.svelte';
 
@@ -60,7 +60,7 @@ function filterListOrganizerItems(items: ListOrganizerItem[]): ListOrganizerItem
 async function loadDashboardConfiguration(): Promise<ListOrganizerItem[]> {
   if (!tablePersistence.storage) return getDefaultDashboardItems();
   const loadedItems = filterListOrganizerItems(
-    await tablePersistence.storage.load('dashboard', $state.snapshot(defaultSectionNames)),
+    await tablePersistence.storage.load('dashboard', $state.snapshot(defaultSection.names)),
   );
 
   if (loadedItems.length > 0) {
@@ -123,7 +123,7 @@ async function resetDashboardLayout(): Promise<void> {
   try {
     // Reset using the persistence callbacks (clears saved config)
     dashboardSections = filterListOrganizerItems(
-      await tablePersistence.storage.reset('dashboard', $state.snapshot(defaultSectionNames)),
+      await tablePersistence.storage.reset('dashboard', $state.snapshot(defaultSection.names)),
     );
     dashboardOrdering.clear();
 

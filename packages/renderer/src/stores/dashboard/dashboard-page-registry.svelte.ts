@@ -66,7 +66,7 @@ export async function setupDashboardPageRegistry(): Promise<void> {
 }
 
 // Get default section names in their registry order
-export const defaultSectionNames = $state(getDashboardPageRegistry().map(entry => entry.id));
+export const defaultSection: { names: string[] } = $state({ names: getDashboardPageRegistry().map(entry => entry.id) });
 
 // Helper function to convert ListOrganizerItems back to dashboard registry entries
 export function convertFromListOrganizerItems(

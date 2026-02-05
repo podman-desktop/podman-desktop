@@ -20,11 +20,10 @@ import { inject, injectable } from 'inversify';
 
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-
-const ENHANCED_DASHBOARD_FULL_KEY = 'dashboard.enhancedDashboard';
+import { ENHANCED_DASHBOARD_CONFIGURATION_KEY } from '/@api/dashboard-info.js';
 
 @injectable()
-export class DashboardInit {
+export class DashboardService {
   constructor(
     @inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry,
     @inject(ApiSenderType)
@@ -37,7 +36,7 @@ export class DashboardInit {
       title: 'Experimental (Enhanced Dashboard)',
       type: 'object',
       properties: {
-        [ENHANCED_DASHBOARD_FULL_KEY]: {
+        [ENHANCED_DASHBOARD_CONFIGURATION_KEY]: {
           description: 'Enhanced dashboard with more features and improved user experience',
           type: 'object',
           default: false,
@@ -51,7 +50,10 @@ export class DashboardInit {
     this.configurationRegistry.registerConfigurations([dashboardConfiguration]);
 
     this.configurationRegistry.onDidChangeConfiguration(async e => {
-      if (e.key === ENHANCED_DASHBOARD_FULL_KEY && (typeof e.value === 'object' || typeof e.value === 'undefined')) {
+      if (
+        e.key === ENHANCED_DASHBOARD_CONFIGURATION_KEY &&
+        (typeof e.value === 'object' || typeof e.value === 'undefined')
+      ) {
         this.apiSender.send('enhanced-dashboard-enabled', typeof e.value === 'object');
       }
     });
