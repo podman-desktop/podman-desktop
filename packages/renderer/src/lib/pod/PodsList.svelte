@@ -3,7 +3,6 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
-  Link,
   NavPage,
   Table,
   TableColumn,
@@ -112,10 +111,6 @@ async function deleteSelectedPods(): Promise<void> {
   bulkDeleteInProgress = false;
 }
 
-async function openKubePods(): Promise<void> {
-  await window.navigateToRoute('kubernetes', { kind: 'Pod' });
-}
-
 let selectedItemsNumber: number = $state(0);
 
 let statusColumn = new TableColumn<PodInfoUI>('Status', {
@@ -202,10 +197,6 @@ function label(pod: PodInfoUI): string {
   {/snippet}
 
   {#snippet tabs()}
-    <div class="flex flex-col gap-3">
-      <div class="self-center text-[var(--pd-table-body-text)]">Looking for pods running on a Kubernetes cluster? We have moved them to the <Link on:click={openKubePods}>Kubernetes &gt; Pods</Link> page.</div>
-
-      <div class="flex flex-row">
         <Button
           type="tab"
           on:click={(): void => {
@@ -239,8 +230,6 @@ function label(pod: PodInfoUI): string {
             searchTerm = temp ? `${temp} is:stopped` : 'is:stopped';
           }}
           selected={searchTerm.includes('is:stopped')}>Stopped</Button>
-      </div>
-    </div>
   {/snippet}
 
   {#snippet content()}
