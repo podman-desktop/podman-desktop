@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import type { PropSidebarItem, PropSidebarItemCategory, PropSidebarItemLink } from '@docusaurus/plugin-content-docs';
 import type { LoadContext, Plugin, PluginOptions as DocusaurusOptions } from '@docusaurus/types';
 
-export interface PluginOptions extends DocusaurusOptions {
+interface PluginOptions extends DocusaurusOptions {
   id: string;
   // Folder where to write the sidebar
   output: string;
@@ -30,7 +30,7 @@ export interface PluginOptions extends DocusaurusOptions {
   storybookStatic: string;
 }
 
-export interface StorybookItem {
+interface StorybookItem {
   type: 'story' | 'docs';
   id: string;
   name: string;

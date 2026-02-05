@@ -2,7 +2,7 @@ import { faCircleUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 
-export type TestimonialCardProps = {
+type TestimonialCardProps = {
   username: string;
   text: string;
   source?: string;
