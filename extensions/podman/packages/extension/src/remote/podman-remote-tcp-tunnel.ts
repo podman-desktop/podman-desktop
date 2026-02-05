@@ -105,7 +105,7 @@ export class PodmanRemoteTcpTunnel {
           localSocket.end();
           // Update status and trigger reconnect when remote becomes unreachable
           this.#status = 'unknown';
-          this.handleReconnect();
+          this.#server?.close();
         });
       });
 
@@ -123,7 +123,10 @@ export class PodmanRemoteTcpTunnel {
 
       // when closed, reconnect
       this.#server.on('close', () => {
-        this.#status = 'stopped';
+        if (this.#status !== 'unknown') {
+          this.#status = 'stopped';
+        }
+        this.#listening = false;
         this.handleReconnect();
       });
 
