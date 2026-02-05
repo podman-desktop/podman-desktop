@@ -24,8 +24,8 @@ import * as extensionApi from '@podman-desktop/api';
 
 import { getPodmanCli } from '/@/utils/podman-cli';
 
-import { PodmanRemoteDirectTunnel } from './podman-remote-direct-tunnel';
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
+import { PodmanRemoteTcpTunnel } from './podman-remote-tcp-tunnel';
 
 interface ConnectionListFormatJson {
   Name: string;
@@ -36,7 +36,7 @@ interface ConnectionListFormatJson {
 
 interface RemoteSystemConnection {
   name: string;
-  tunnel: PodmanRemoteSshTunnel | PodmanRemoteDirectTunnel;
+  tunnel: PodmanRemoteSshTunnel | PodmanRemoteTcpTunnel;
   connectionDisposable: extensionApi.Disposable;
 }
 
@@ -158,11 +158,7 @@ export class PodmanRemoteConnections {
       // read the content of the private key
       let privateKey: string | undefined;
       if (privateKeyFile) {
-        try {
-          privateKey = readFileSync(privateKeyFile, 'utf8');
-        } catch (error) {
-          // ignore the error if the file does not exist
-        }
+        privateKey = readFileSync(privateKeyFile, 'utf8');
       }
       const remotePath = uri.pathname;
 
@@ -175,18 +171,21 @@ export class PodmanRemoteConnections {
         localPath = join(tmpdir(), `podman-remote-${connection.Name}.sock`);
       }
 
-      let tunnel: PodmanRemoteSshTunnel | PodmanRemoteDirectTunnel;
-      if (uri.protocol === 'ssh:') {
-        if (!privateKey) {
-          console.error(`Error reading private key for connection ${connection.Name}`);
+      let tunnel: PodmanRemoteSshTunnel | PodmanRemoteTcpTunnel;
+      switch (uri.protocol) {
+        case 'ssh:':
+          if (!privateKey) {
+            console.error(`Error reading private key for connection ${connection.Name}`);
+            continue;
+          }
+          tunnel = this.createSshTunnel(host, port, username, privateKey, remotePath, localPath);
+          break;
+        case 'tcp:':
+          tunnel = this.createTcpTunnel(host, port, localPath);
+          break;
+        default:
+          console.error(`Unsupported protocol ${uri.protocol} for connection ${connection.Name}`);
           continue;
-        }
-        tunnel = this.createSshTunnel(host, port, username, privateKey, remotePath, localPath);
-      } else if (uri.protocol === 'tcp:') {
-        tunnel = this.createDirectTunnel(host, port, localPath);
-      } else {
-        console.error(`Unsupported protocol ${uri.protocol} for connection ${connection.Name}`);
-        continue;
       }
 
       // connect the tunnel
@@ -240,8 +239,8 @@ export class PodmanRemoteConnections {
     return new PodmanRemoteSshTunnel(host, port, username, privateKey, remotePath, localPath);
   }
 
-  protected createDirectTunnel(host: string, port: number, localPath: string): PodmanRemoteDirectTunnel {
-    return new PodmanRemoteDirectTunnel(host, port, localPath);
+  protected createTcpTunnel(host: string, port: number, localPath: string): PodmanRemoteTcpTunnel {
+    return new PodmanRemoteTcpTunnel(host, port, localPath);
   }
 
   stop(): void {
