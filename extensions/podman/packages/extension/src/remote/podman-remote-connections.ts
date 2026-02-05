@@ -31,7 +31,7 @@ interface ConnectionListFormatJson {
   Name: string;
   IsMachine?: boolean;
   URI: string;
-  Identity: string;
+  Identity?: string;
 }
 
 interface RemoteSystemConnection {
