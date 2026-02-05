@@ -95,11 +95,6 @@ export interface InternalContainerProvider {
   libpodApi?: LibPod;
 }
 
-export interface InternalContainerProviderLifecycle {
-  internal: containerDesktopAPI.ProviderLifecycle;
-  status: string;
-}
-
 interface JSONEvent {
   type: string;
   status: string;

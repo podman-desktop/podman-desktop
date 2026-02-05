@@ -69,12 +69,12 @@ export interface SessionRequest {
 
 export type MenuInfo = AuthenticationRequestMenuInfo | AuthenticationSessionMenuInfo;
 
-export interface AuthenticationRequestMenuInfo {
+interface AuthenticationRequestMenuInfo {
   label: string;
   requestId: string;
 }
 
-export interface AuthenticationSessionMenuInfo {
+interface AuthenticationSessionMenuInfo {
   label: string;
   providerId: string;
   sessionId: string;
