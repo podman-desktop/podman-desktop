@@ -51,10 +51,6 @@ module.exports = {
         300: tailwindColors.zinc[300],
         700: tailwindColors.zinc[700],
       },
-      violet: {
-        600: tailwindColors.violet[600],
-        700: tailwindColors.violet[700],
-      },
     },
   },
   plugins: [],
