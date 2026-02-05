@@ -103,6 +103,9 @@ export class PodmanRemoteTcpTunnel {
         remoteSocket.on('error', (err: unknown) => {
           console.error(`Podman tcp tunnel remote socket error ${this.host}:${this.port}`, err);
           localSocket.end();
+          // Update status and trigger reconnect when remote becomes unreachable
+          this.#status = 'unknown';
+          this.handleReconnect();
         });
       });
 
