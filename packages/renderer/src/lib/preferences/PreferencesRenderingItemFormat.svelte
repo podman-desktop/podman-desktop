@@ -89,8 +89,16 @@ $effect(() => {
     initialValue
       .then(value => {
         recordValue = value;
-        if (record.type === 'boolean' || record.type === 'object') {
+        if (record.type === 'boolean') {
           recordValue = !!value;
+        } else if (record.type === 'object') {
+          if (value && typeof value === 'object' && 'enabled' in value) {
+            // There is an enabled property in the object (for experimental features)
+            recordValue = !!value.enabled;
+          } else {
+            // There is no enabled property in the object (legacy support for experimental features)
+            recordValue = !!value;
+          }
         }
       })
       .catch((err: unknown) => console.error('Error getting initial value', err));
@@ -104,12 +112,22 @@ async function update(record: IConfigurationPropertyRecordedSchema): Promise<voi
   // save the value
   if (record.id && isEqual(currentRecord, record)) {
     try {
-      // HACK: when setting `{}` as value we need to stringify and parse the svelte state
-      let settings = recordValue;
-      if (typeof recordValue === 'object') {
-        settings = JSON.parse(JSON.stringify(recordValue));
+      // For experimental features, use the dedicated enable/disable methods
+      if (record.experimental && record.type === 'object') {
+        // recordValue is already a boolean at this point (converted by the reading logic)
+        if (recordValue) {
+          await window.enableExperimentalConfiguration(record.id, record.scope);
+        } else {
+          await window.disableExperimentalConfiguration(record.id, record.scope);
+        }
+      } else {
+        // HACK: when setting `{}` as value we need to stringify and parse the svelte state
+        let settings = recordValue;
+        if (typeof recordValue === 'object') {
+          settings = JSON.parse(JSON.stringify(recordValue));
+        }
+        await window.updateConfigurationValue(record.id, settings, record.scope);
       }
-      await window.updateConfigurationValue(record.id, settings, record.scope);
     } catch (error) {
       invalidText = String(error);
       invalidRecord(invalidText);

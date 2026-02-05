@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,7 +166,7 @@ describe('init', () => {
   });
 
   test('should load existing configurations and show dialog', async () => {
-    const conf = { remindAt: 123456, disabled: false };
+    const conf = { remindAt: 123456, dialogDisabled: false, enabled: true };
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
@@ -197,6 +197,46 @@ describe('init', () => {
     expect(saveSpy).toHaveBeenCalledWith('feat.feature1');
     expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toBe(undefined);
   });
+
+  test('should migrate legacy disabled property to dialogDisabled', async () => {
+    const conf = { remindAt: 123456, disabled: true };
+    configurationGetMock.mockReturnValue(conf);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    const saveSpy = vi.spyOn(feedbackForm, 'save');
+
+    await feedbackForm.init();
+
+    // Should have set the configuration with migrated property
+    expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual({
+      remindAt: 123456,
+      dialogDisabled: true,
+      enabled: true,
+    });
+
+    // Should have triggered save to persist the migration
+    expect(saveSpy).toHaveBeenCalledWith('feat.feature1');
+  });
+
+  test('should not trigger migration if dialogDisabled already exists', async () => {
+    const conf = { remindAt: 123456, dialogDisabled: true, enabled: true };
+    configurationGetMock.mockReturnValue(conf);
+    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
+    vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
+    const saveSpy = vi.spyOn(feedbackForm, 'save');
+
+    await feedbackForm.init();
+
+    // Should have set the configuration
+    expect(feedbackForm.experimentalFeatures.get('feat.feature1')).toEqual({
+      remindAt: 123456,
+      dialogDisabled: true,
+      enabled: true,
+    });
+
+    // Should not have triggered save for migration (no migration needed)
+    expect(saveSpy).not.toHaveBeenCalledWith('feat.feature1');
+  });
 });
 
 describe('save', () => {
@@ -206,7 +246,7 @@ describe('save', () => {
   });
 
   test('should call update with valid data for enabled experimental config', async () => {
-    const conf = { remindAt: 123456, disabled: false };
+    const conf = { remindAt: 123456, dialogDisabled: false, enabled: true };
     vi.spyOn(feedbackForm.experimentalFeatures, 'get').mockReturnValue(conf);
 
     await feedbackForm.save('feat.feature1');
@@ -250,7 +290,11 @@ describe('setTimestamp', () => {
     feedbackForm.setTimestamp('feature1', days);
 
     expect(setSpy).toHaveBeenCalledTimes(1);
-    expect(setSpy).toHaveBeenCalledWith('feature1', { remindAt: expectedTimestamp, disabled: false });
+    expect(setSpy).toHaveBeenCalledWith('feature1', {
+      remindAt: expectedTimestamp,
+      dialogDisabled: false,
+      enabled: true,
+    });
   });
 
   test('should set timestamp when days are not defined', () => {
@@ -298,7 +342,7 @@ describe('showFeedbackDialog', () => {
 
   test('should open external link when user clicks "Share Feedback"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: false, enabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 1 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -317,7 +361,7 @@ describe('showFeedbackDialog', () => {
 
   test('should set timestamp for 1 day when user selects "Remind me tomorrow"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: false, enabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 0 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -335,7 +379,7 @@ describe('showFeedbackDialog', () => {
 
   test('should set timestamp for 2 days when user selects "Remind me in 2 days"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: false, enabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 1 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -353,7 +397,7 @@ describe('showFeedbackDialog', () => {
 
   test('should call disableFeature when user selects "Dont show again"', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: false, enabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 2 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -373,7 +417,7 @@ describe('showFeedbackDialog', () => {
 
   test('should NOT show a dialog if the timestamp is in the future', async () => {
     const futureTimestamp = new Date('2100-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: futureTimestamp, disabled: true };
+    const existingTimestamps = { remindAt: futureTimestamp, dialogDisabled: true, enabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
 
@@ -383,9 +427,9 @@ describe('showFeedbackDialog', () => {
     expect(telemetry.track).not.toHaveBeenCalled();
   });
 
-  test('should NOT show dialog when is a feature disabled', async () => {
+  test('should NOT show dialog when is a feature dialog disabled', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: true };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: true, enabled: true };
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
 
@@ -399,7 +443,7 @@ describe('showFeedbackDialog', () => {
 
   test('should NOT show dialog when feedback is globally disabled', async () => {
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: false, enabled: true };
     configurationGetMock.mockReturnValue(false);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
@@ -415,18 +459,18 @@ describe('showFeedbackDialog', () => {
 });
 
 describe('disableFeature', () => {
-  test('should set disable of enabled feature', () => {
+  test('should set dialogDisabled of enabled feature', () => {
     const feat = 'feat.feature1';
     const pastTimestamp = new Date('2020-01-01T00:00:00.000Z').getTime();
-    const existingTimestamps = { remindAt: pastTimestamp, disabled: false };
+    const existingTimestamps = { remindAt: pastTimestamp, dialogDisabled: false, enabled: true };
     feedbackForm.experimentalFeatures = new Map([[feat, existingTimestamps]]);
     const setSpy = vi.spyOn(feedbackForm.experimentalFeatures, 'set');
     feedbackForm.disableFeature(feat);
 
-    expect(setSpy).toHaveBeenCalledWith(feat, { remindAt: pastTimestamp, disabled: true });
+    expect(setSpy).toHaveBeenCalledWith(feat, { remindAt: pastTimestamp, dialogDisabled: true, enabled: true });
   });
 
-  test('should NOT set disable of feature that is not enabled', () => {
+  test('should NOT set dialogDisabled of feature that is not enabled', () => {
     const feat = 'feat.feature1';
     const setSpy = vi.spyOn(feedbackForm.experimentalFeatures, 'set');
     feedbackForm.disableFeature(feat);

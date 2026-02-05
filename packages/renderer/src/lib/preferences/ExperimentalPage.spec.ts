@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,9 +80,9 @@ test('Enable all should update all configuration', async () => {
     return enableAll as HTMLInputElement;
   });
 
-  // the component should have used the getInitialValue on each property
+  // the component should have used isExperimentalConfigurationEnabled for experimental features
   for (const configuration of generated) {
-    expect(window.getConfigurationValue).toHaveBeenCalledWith(configuration.id, configuration.scope);
+    expect(window.isExperimentalConfigurationEnabled).toHaveBeenCalledWith(configuration.id, configuration.scope);
   }
 
   // let's check the box
@@ -90,11 +90,39 @@ test('Enable all should update all configuration', async () => {
 
   await vi.waitFor(() => {
     for (const configuration of generated) {
-      expect(window.updateExperimentalConfigurationValue).toHaveBeenCalledWith(
-        configuration.id,
-        {},
-        configuration.scope,
-      );
+      expect(window.enableExperimentalConfiguration).toHaveBeenCalledWith(configuration.id, configuration.scope);
+    }
+  });
+});
+
+test('Disable all should update all configuration', async () => {
+  // Start with all features enabled
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+
+  const generated: IConfigurationPropertyRecordedSchema[] = Array.from({ length: 10 }, (_, index) => ({
+    ...EXPERIMENTAL_CONFIG,
+    title: `Config ${index}`,
+    id: `dummy-${index}`,
+  }));
+
+  const { container } = render(ExperimentalPage, {
+    properties: generated,
+  });
+
+  // Get the input element
+  const enableAll: HTMLInputElement = await vi.waitFor(() => {
+    const enableAll = container.querySelector('#input-experimental-enable-all');
+    expect(enableAll).toBeInstanceOf(HTMLInputElement);
+    expect(enableAll).toBeChecked();
+    return enableAll as HTMLInputElement;
+  });
+
+  // let's uncheck the box
+  await fireEvent.click(enableAll);
+
+  await vi.waitFor(() => {
+    for (const configuration of generated) {
+      expect(window.disableExperimentalConfiguration).toHaveBeenCalledWith(configuration.id, configuration.scope);
     }
   });
 });
@@ -113,7 +141,8 @@ test('all value checked should check the enable all', async () => {
     return enableAll as HTMLInputElement;
   });
 
-  expect(window.updateExperimentalConfigurationValue).not.toBeCalled();
+  expect(window.enableExperimentalConfiguration).not.toBeCalled();
+  expect(window.disableExperimentalConfiguration).not.toBeCalled();
 
   await vi.waitFor(() => {
     expect(enableAll).toBeChecked();

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,16 @@ import { Telemetry } from './telemetry/telemetry.js';
 
 export type Timestamp = number | undefined;
 
+/**
+ * Configuration for an experimental feature
+ * @property remindAt - Timestamp when the feature should be reminded again
+ * @property dialogDisabled - Whether the experimental feature feedback dialog should be disabled
+ * @property enabled - Whether the experimental feature is enabled
+ */
 export interface ExperimentalConfiguration {
   remindAt: Timestamp;
-  disabled: boolean;
+  dialogDisabled: boolean;
+  enabled: boolean;
 }
 
 type RemindOption = 'Remind me tomorrow' | 'Remind me in 2 days' | `Don't show again`;
@@ -113,23 +120,50 @@ export class ExperimentalFeatureFeedbackHandler {
         continue;
       }
 
-      let optionDisabled = false;
+      let optionDialogDisabled = false;
       let optionRemindAt: Timestamp = undefined;
-      if (typeof conf === 'object' && 'disabled' in conf && 'remindAt' in conf) {
-        if (typeof conf.disabled === 'boolean') optionDisabled = conf.disabled;
-        if (typeof conf.remindAt === 'number') optionRemindAt = conf.remindAt;
+      let optionEnabled = true;
+      let needsMigration = false;
+
+      if (typeof conf === 'object') {
+        // Handle legacy 'disabled' property (renamed to 'dialogDisabled')
+        if ('disabled' in conf && typeof conf.disabled === 'boolean') {
+          optionDialogDisabled = conf.disabled;
+          // If dialogDisabled doesn't exist, we need to migrate
+          if (!('dialogDisabled' in conf)) {
+            needsMigration = true;
+          }
+        }
+        if ('dialogDisabled' in conf && typeof conf.dialogDisabled === 'boolean') {
+          optionDialogDisabled = conf.dialogDisabled;
+        }
+        if ('enabled' in conf && typeof conf.enabled === 'boolean') {
+          optionEnabled = conf.enabled;
+        }
+        if ('remindAt' in conf && typeof conf.remindAt === 'number') {
+          optionRemindAt = conf.remindAt;
+        }
       }
 
-      if (optionRemindAt) {
-        const configuration: ExperimentalConfiguration = {
-          remindAt: optionRemindAt,
-          disabled: optionDisabled,
-        };
+      // First, set the configuration with the values we read from settings.json
+      const configuration: ExperimentalConfiguration = {
+        remindAt: optionRemindAt,
+        dialogDisabled: optionDialogDisabled,
+        enabled: optionEnabled,
+      };
+      this.experimentalFeatures.set(configurationKey, configuration);
 
-        this.experimentalFeatures.set(configurationKey, configuration);
-      } else {
-        // when started for first time, we need to set the timetamps for each experimental feature
+      // If remindAt is not set, we need to initialize it
+      if (!optionRemindAt) {
+        // when started for first time, we need to set the timestamps for each experimental feature
         this.setReminder(configurationKey);
+      }
+
+      // If we detected legacy 'disabled' property, migrate it to 'dialogDisabled'
+      if (needsMigration) {
+        this.save(configurationKey).catch((e: unknown) =>
+          console.error(`Got error when migrating legacy disabled property for ${configurationKey}: ${e}`),
+        );
       }
     }
     // When are all features set, show dialog
@@ -148,7 +182,11 @@ export class ExperimentalFeatureFeedbackHandler {
     }
     // update configuration
     const conf = this.experimentalFeatures.get(feature);
-    this.experimentalFeatures.set(feature, { remindAt: date, disabled: conf ? conf.disabled : false });
+    this.experimentalFeatures.set(feature, {
+      remindAt: date,
+      dialogDisabled: conf ? conf.dialogDisabled : false,
+      enabled: conf ? conf.enabled : true,
+    });
     this.save(feature).catch((e: unknown) =>
       console.error(`Got error when saving timestamps for experimental features: ${e}`),
     );
@@ -174,7 +212,7 @@ export class ExperimentalFeatureFeedbackHandler {
   protected disableFeature(id: string): void {
     const conf = this.experimentalFeatures.get(id);
     if (conf) {
-      this.experimentalFeatures.set(id, { ...conf, disabled: true });
+      this.experimentalFeatures.set(id, { ...conf, dialogDisabled: true });
       this.save(id).catch((e: unknown) =>
         console.error(`Got error when saving timestamps for experimental features: ${e}`),
       );
@@ -195,7 +233,7 @@ export class ExperimentalFeatureFeedbackHandler {
     for (const [key, configuration] of this.experimentalFeatures) {
       const featureGitHubLink = configurationProperties[key]?.experimental?.githubDiscussionLink;
       // If the feature does not have a link or the dialog is disabled
-      if (!featureGitHubLink || configuration.disabled) continue;
+      if (!featureGitHubLink || configuration.dialogDisabled) continue;
 
       // Compare timestamp of each experimental feature
       const date = new Date();
