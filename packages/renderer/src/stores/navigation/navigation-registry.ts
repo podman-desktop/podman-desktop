@@ -105,7 +105,7 @@ const grabList = async (): Promise<NavigationRegistryEntry[]> => {
   return values;
 };
 
-export const navigationRegistryEventStore = new EventStore<NavigationRegistryEntry[]>(
+const navigationRegistryEventStore = new EventStore<NavigationRegistryEntry[]>(
   'navigation-registry',
   navigationRegistry,
   // should initialize when app is initializing
