@@ -254,7 +254,8 @@
       "cheerio>undici": "^7.18.2",
       "minimatch>@isaacs/brace-expansion": "^5.0.1",
       "lodash-es": "^4.17.23",
-      "lodash": "^4.17.23"
+      "lodash": "^4.17.23",
+      "@docusaurus/types>webpack": "^5.105.0"
     },
     "patchedDependencies": {
       "dmg-builder": "patches/dmg-builder.patch",
