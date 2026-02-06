@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ENHANCED_DASHBOARD_CONFIGURATION_KEY } from '@podman-desktop/core-api';
+import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_CONFIGURATION_KEY } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
@@ -42,6 +42,11 @@ export class DashboardService {
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
           },
+        },
+        [SYSTEM_OVERVIEW_CONFIGURATION_KEY]: {
+          type: 'boolean',
+          hidden: true,
+          default: false,
         },
       },
     };

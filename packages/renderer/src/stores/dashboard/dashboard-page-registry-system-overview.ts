@@ -16,5 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const ENHANCED_DASHBOARD_CONFIGURATION_KEY = 'dashboard.enhancedDashboard';
-export const SYSTEM_OVERVIEW_CONFIGURATION_KEY = 'systemOverview.expanded';
+import SystemOverview from '/@/lib/dashboard/SystemOverview.svelte';
+
+import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelte';
+
+export function createSystemOverview(): DashboardPageRegistryEntry {
+  // order should be same as providers, since we should show this instead of provider cards if enhanced dashboard is enabled
+  return {
+    id: 'System Overview',
+    originalOrder: 1,
+    component: SystemOverview,
+  };
+}

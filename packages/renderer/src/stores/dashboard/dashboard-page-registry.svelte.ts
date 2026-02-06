@@ -19,6 +19,8 @@
 import type { ListOrganizerItem } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
 
+import { createSystemOverview } from '/@/stores/dashboard/dashboard-page-registry-system-overview';
+
 import { createExploreFeatures } from './dashboard-page-registry-explore-features';
 import { createExtensionBanners } from './dashboard-page-registry-extension-banners.svelte';
 import { createLearningCenter } from './dashboard-page-registry-learning-center.svelte';
@@ -38,8 +40,10 @@ const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
 
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
   const providers = !enhancedDashboard.enabled ? [createProviders()] : [];
+  const systemOverview = enhancedDashboard.enabled ? [createSystemOverview()] : [];
   return [
     createReleaseNotesBox(),
+    ...systemOverview,
     createExtensionBanners(),
     createExploreFeatures(),
     createLearningCenter(),
