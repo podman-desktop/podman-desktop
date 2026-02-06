@@ -114,7 +114,7 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
-    svelte({ configFile: '../svelte.config.js', hot: true }),
+    svelte({ configFile: '../svelte.config.js', compilerOptions: { hmr: true } }),
     svelteTesting(),
     colorRegistryWatcher(),
   ],
