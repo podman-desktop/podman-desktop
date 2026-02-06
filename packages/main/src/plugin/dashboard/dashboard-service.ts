@@ -20,7 +20,7 @@ import { inject, injectable } from 'inversify';
 
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { ENHANCED_DASHBOARD_CONFIGURATION_KEY } from '/@api/dashboard-info.js';
+import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_CONFIGURATION_KEY } from '/@api/dashboard-info.js';
 
 @injectable()
 export class DashboardService {
@@ -43,6 +43,11 @@ export class DashboardService {
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
           },
+        },
+        [SYSTEM_OVERVIEW_CONFIGURATION_KEY]: {
+          type: 'boolean',
+          hidden: true,
+          default: false,
         },
       },
     };

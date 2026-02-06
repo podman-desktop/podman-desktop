@@ -64,12 +64,24 @@ async function loadDashboardConfiguration(): Promise<ListOrganizerItem[]> {
   );
 
   if (loadedItems.length > 0) {
-    // Ensure loaded items have proper originalOrder from defaults if missing
     const defaultItems = getDefaultDashboardItems();
-    const items = loadedItems.map((item: ListOrganizerItem) => ({
+    const loadedItemsMap = new Map(loadedItems.map(item => [item.id, item]));
+    const defaultItemsMap = new Map(defaultItems.map(item => [item.id, item]));
+
+    // Start with loaded items that are in persisted storage (preserves user's order and settings)
+    const items: ListOrganizerItem[] = loadedItems.map(item => ({
       ...item,
-      originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+      originalOrder: item.originalOrder ?? defaultItemsMap.get(item.id)?.originalOrder ?? 0,
     }));
+
+    // Add new items from registry that are not in persisted storage
+    defaultItems.forEach(defaultItem => {
+      if (!loadedItemsMap.has(defaultItem.id)) {
+        // New item added to registry that is not in persisted storage - add it to its original order
+        items.splice(defaultItem.originalOrder, 0, defaultItem);
+      }
+    });
+
     // Build ordering map from loaded items
     // Check if items are in a different order than their original order
     const isReordered = items.some((item: ListOrganizerItem, index: number) => item.originalOrder !== index);
