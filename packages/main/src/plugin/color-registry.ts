@@ -334,7 +334,6 @@ export class ColorRegistry {
     this.initTerminal();
     this.initProgressBar();
     this.initBadge();
-    this.initCommon();
   }
 
   protected initDefaults(): void {
@@ -345,6 +344,13 @@ export class ColorRegistry {
       dark: white,
       light: charcoal[900],
     });
+
+    this.registerColorDefinition(
+      this.color('item-disabled')
+        .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
+        .withDark(colorPaletteHelper(stone[300]).withAlpha(0.4))
+        .build(),
+    );
   }
 
   protected initNotificationDot(): void {
@@ -1654,14 +1660,5 @@ export class ColorRegistry {
       dark: gray[600],
       light: gray[600],
     });
-  }
-
-  protected initCommon(): void {
-    this.registerColorDefinition(
-      this.color('item-disabled')
-        .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
-        .withDark(colorPaletteHelper(stone[300]).withAlpha(0.4))
-        .build(),
-    );
   }
 }
