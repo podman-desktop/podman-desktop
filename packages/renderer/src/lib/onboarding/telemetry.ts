@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface OnboardingTelemetryStep {
+interface OnboardingTelemetryStep {
   id: string;
   title: string;
   durationMs: number;

@@ -35,7 +35,7 @@ const characterReferences = new Map([
   ['&gt;', '>'],
 ]);
 
-export function decode(value: string): string {
+function decode(value: string): string {
   return value.replace(/(&quot;|&amp;|&gt;|&lt;)/g, replace);
 
   /**

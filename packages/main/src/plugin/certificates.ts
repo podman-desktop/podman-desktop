@@ -35,19 +35,19 @@ import { spawnWithPromise } from './util/spawn-promise.js';
  * X.500 Distinguished Name OID constants
  * @see https://www.alvestrand.no/objectid/2.5.4.html
  */
-export const OID_COMMON_NAME = '2.5.4.3';
-export const OID_COUNTRY = '2.5.4.6';
-export const OID_LOCALITY = '2.5.4.7';
-export const OID_STATE = '2.5.4.8';
-export const OID_ORGANIZATION = '2.5.4.10';
-export const OID_ORGANIZATIONAL_UNIT = '2.5.4.11';
-export const OID_EMAIL = '1.2.840.113549.1.9.1';
-export const OID_BASIC_CONSTRAINTS = '2.5.29.19';
+const OID_COMMON_NAME = '2.5.4.3';
+const OID_COUNTRY = '2.5.4.6';
+const OID_LOCALITY = '2.5.4.7';
+const OID_STATE = '2.5.4.8';
+const OID_ORGANIZATION = '2.5.4.10';
+const OID_ORGANIZATIONAL_UNIT = '2.5.4.11';
+const OID_EMAIL = '1.2.840.113549.1.9.1';
+const OID_BASIC_CONSTRAINTS = '2.5.29.19';
 
 /**
  * Map of OID to human-readable RDN attribute names
  */
-export const OID_NAME_MAP: Record<string, string> = {
+const OID_NAME_MAP: Record<string, string> = {
   [OID_COMMON_NAME]: 'CN',
   [OID_COUNTRY]: 'C',
   [OID_LOCALITY]: 'L',
