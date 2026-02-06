@@ -78,8 +78,8 @@ function colorRegistryWatcher() {
             await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
             console.log('[color-registry-watcher] themes.css regenerated successfully\n');
 
-            // Trigger full reload
-            server.ws.send({
+            // Trigger full reload using Vite Environment API
+            this.environment.hot.send({
               type: 'full-reload',
               path: '*',
             });
