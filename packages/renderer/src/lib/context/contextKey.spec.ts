@@ -22,9 +22,7 @@
 // based on https://github.com/microsoft/vscode/blob/76415ef0b1f60e0479bdfee173c1a4f97e785b52/src/vs/platform/contextkey/test/common/contextkey.test.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import assert from 'node:assert';
-
-import { suite, test, vi } from 'vitest';
+import { assert, expect, suite, test, vi } from 'vitest';
 
 import { ContextKeyExpr, type ContextKeyExpression, implies, initContextKeysPlatform } from './contextKey.js';
 
@@ -73,15 +71,15 @@ suite('ContextKeyExpr', () => {
       ContextKeyExpr.not('d2'),
     );
     assert(b);
-    assert(a?.equals(b), 'expressions should be equal');
+    expect(a?.equals(b), 'expressions should be equal').toBeTruthy();
   });
 
   test('issue #134942: Equals in comparator expressions', () => {
     function testEquals(expr: ContextKeyExpression | undefined, str: string): void {
       const deserialized = ContextKeyExpr.deserialize(str);
-      assert.ok(expr);
-      assert.ok(deserialized);
-      assert.strictEqual(expr.equals(deserialized), true, str);
+      assert(expr);
+      assert(deserialized);
+      expect(expr.equals(deserialized), str).toBe(true);
     }
     testEquals(ContextKeyExpr.greater('value', 0), 'value > 0');
     testEquals(ContextKeyExpr.greaterEquals('value', 0), 'value >= 0');
@@ -95,10 +93,10 @@ suite('ContextKeyExpr', () => {
     const key1IsFalse = ContextKeyExpr.equals('key1', false);
     const key1IsNotTrue = ContextKeyExpr.notEquals('key1', true);
 
-    assert.ok(key1IsTrue.equals(ContextKeyExpr.has('key1')));
-    assert.ok(key1IsNotFalse.equals(ContextKeyExpr.has('key1')));
-    assert.ok(key1IsFalse.equals(ContextKeyExpr.not('key1')));
-    assert.ok(key1IsNotTrue.equals(ContextKeyExpr.not('key1')));
+    expect(key1IsTrue.equals(ContextKeyExpr.has('key1'))).toBeTruthy();
+    expect(key1IsNotFalse.equals(ContextKeyExpr.has('key1'))).toBeTruthy();
+    expect(key1IsFalse.equals(ContextKeyExpr.not('key1'))).toBeTruthy();
+    expect(key1IsNotTrue.equals(ContextKeyExpr.not('key1'))).toBeTruthy();
   });
 
   test('evaluate', () => {
@@ -110,7 +108,7 @@ suite('ContextKeyExpr', () => {
     });
     function testExpression(expr: string, expected: boolean): void {
       const rules = ContextKeyExpr.deserialize(expr);
-      assert.strictEqual(rules?.evaluate(context), expected, expr);
+      expect(rules?.evaluate(context), expr).toBe(expected);
     }
     function testBatch(expr: string, value: any): void {
       /* eslint-disable eqeqeq */
@@ -154,7 +152,7 @@ suite('ContextKeyExpr', () => {
   test('negate', () => {
     function testNegate(expr: string, expected: string): void {
       const actual = ContextKeyExpr.deserialize(expr)?.negate().serialize();
-      assert.strictEqual(actual, expected);
+      expect(actual).toBe(expected);
     }
     testNegate('true', 'false');
     testNegate('false', 'true');
@@ -176,7 +174,7 @@ suite('ContextKeyExpr', () => {
 
     function testNormalize(expr: string, expected: string): void {
       const actual = ContextKeyExpr.deserialize(expr)?.serialize();
-      assert.strictEqual(actual, expected);
+      expect(actual).toBe(expected);
     }
     testNormalize('true', 'true');
     testNormalize('!true', 'false');
@@ -196,7 +194,7 @@ suite('ContextKeyExpr', () => {
       const e1 = ContextKeyExpr.deserialize(expr1);
       const e2 = ContextKeyExpr.deserialize(expr2);
       const actual = ContextKeyExpr.and(e1, e2)?.serialize();
-      assert.strictEqual(actual, expected);
+      expect(actual).toBe(expected);
     }
     t('a', 'b', 'a && b');
     t('a || b', 'c', 'a && c || b && c');
@@ -207,32 +205,32 @@ suite('ContextKeyExpr', () => {
 
   test('ContextKeyInExpr', () => {
     const ainb = ContextKeyExpr.deserialize('a in b');
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 3, b: [3, 2, 1] })), true);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 3, b: [1, 2, 3] })), true);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 3, b: [1, 2] })), false);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 3 })), false);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 3, b: undefined })), false);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 'x', b: ['x'] })), true);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 'x', b: ['y'] })), false);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 'x', b: {} })), false);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 'x', b: { x: false } })), true);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 'x', b: { x: true } })), true);
-    assert.strictEqual(ainb?.evaluate(createContext({ a: 'prototype', b: {} })), false);
+    expect(ainb?.evaluate(createContext({ a: 3, b: [3, 2, 1] }))).toBe(true);
+    expect(ainb?.evaluate(createContext({ a: 3, b: [1, 2, 3] }))).toBe(true);
+    expect(ainb?.evaluate(createContext({ a: 3, b: [1, 2] }))).toBe(false);
+    expect(ainb?.evaluate(createContext({ a: 3 }))).toBe(false);
+    expect(ainb?.evaluate(createContext({ a: 3, b: undefined }))).toBe(false);
+    expect(ainb?.evaluate(createContext({ a: 'x', b: ['x'] }))).toBe(true);
+    expect(ainb?.evaluate(createContext({ a: 'x', b: ['y'] }))).toBe(false);
+    expect(ainb?.evaluate(createContext({ a: 'x', b: {} }))).toBe(false);
+    expect(ainb?.evaluate(createContext({ a: 'x', b: { x: false } }))).toBe(true);
+    expect(ainb?.evaluate(createContext({ a: 'x', b: { x: true } }))).toBe(true);
+    expect(ainb?.evaluate(createContext({ a: 'prototype', b: {} }))).toBe(false);
   });
 
   test('ContextKeyNotInExpr', () => {
     const aNotInB = ContextKeyExpr.deserialize('a not in b');
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 3, b: [3, 2, 1] })), false);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 3, b: [1, 2, 3] })), false);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 3, b: [1, 2] })), true);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 3 })), true);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 3, b: undefined })), true);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 'x', b: ['x'] })), false);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 'x', b: ['y'] })), true);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 'x', b: {} })), true);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 'x', b: { x: false } })), false);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 'x', b: { x: true } })), false);
-    assert.strictEqual(aNotInB?.evaluate(createContext({ a: 'prototype', b: {} })), true);
+    expect(aNotInB?.evaluate(createContext({ a: 3, b: [3, 2, 1] }))).toBe(false);
+    expect(aNotInB?.evaluate(createContext({ a: 3, b: [1, 2, 3] }))).toBe(false);
+    expect(aNotInB?.evaluate(createContext({ a: 3, b: [1, 2] }))).toBe(true);
+    expect(aNotInB?.evaluate(createContext({ a: 3 }))).toBe(true);
+    expect(aNotInB?.evaluate(createContext({ a: 3, b: undefined }))).toBe(true);
+    expect(aNotInB?.evaluate(createContext({ a: 'x', b: ['x'] }))).toBe(false);
+    expect(aNotInB?.evaluate(createContext({ a: 'x', b: ['y'] }))).toBe(true);
+    expect(aNotInB?.evaluate(createContext({ a: 'x', b: {} }))).toBe(true);
+    expect(aNotInB?.evaluate(createContext({ a: 'x', b: { x: false } }))).toBe(false);
+    expect(aNotInB?.evaluate(createContext({ a: 'x', b: { x: true } }))).toBe(false);
+    expect(aNotInB?.evaluate(createContext({ a: 'prototype', b: {} }))).toBe(true);
   });
 
   test('issue #106524: distributing AND should normalize', () => {
@@ -245,30 +243,30 @@ suite('ContextKeyExpr', () => {
       ContextKeyExpr.and(ContextKeyExpr.has('b'), ContextKeyExpr.has('c')),
     );
     assert(expected);
-    assert.strictEqual(actual?.equals(expected), true);
+    expect(actual?.equals(expected)).toBe(true);
   });
 
   test('issue #129625: Removes duplicated terms in OR expressions', () => {
     const expr = ContextKeyExpr.or(ContextKeyExpr.has('A'), ContextKeyExpr.has('B'), ContextKeyExpr.has('A'));
-    assert.strictEqual(expr?.serialize(), 'A || B');
+    expect(expr?.serialize()).toBe('A || B');
   });
 
   test('Resolves true constant OR expressions', () => {
     const expr = ContextKeyExpr.or(ContextKeyExpr.has('A'), ContextKeyExpr.not('A'));
     assert(expr);
-    assert.strictEqual(expr.serialize(), 'true');
+    expect(expr.serialize()).toBe('true');
   });
 
   test('Resolves false constant AND expressions', () => {
     const expr = ContextKeyExpr.and(ContextKeyExpr.has('A'), ContextKeyExpr.not('A'));
     assert(expr);
-    assert.strictEqual(expr.serialize(), 'false');
+    expect(expr.serialize()).toBe('false');
   });
 
   test('issue #129625: Removes duplicated terms in AND expressions', () => {
     const expr = ContextKeyExpr.and(ContextKeyExpr.has('A'), ContextKeyExpr.has('B'), ContextKeyExpr.has('A'));
     assert(expr);
-    assert.strictEqual(expr.serialize(), 'A && B');
+    expect(expr.serialize()).toBe('A && B');
   });
 
   test('issue #129625: Remove duplicated terms when negating', () => {
@@ -277,37 +275,37 @@ suite('ContextKeyExpr', () => {
       ContextKeyExpr.or(ContextKeyExpr.has('B1'), ContextKeyExpr.has('B2')),
     );
     assert(expr);
-    assert.strictEqual(expr.serialize(), 'A && B1 || A && B2');
-    assert.strictEqual(expr.negate().serialize(), '!A || !A && !B1 || !A && !B2 || !B1 && !B2');
-    assert.strictEqual(expr.negate().negate().serialize(), 'A && B1 || A && B2');
-    assert.strictEqual(expr.negate().negate().negate().serialize(), '!A || !A && !B1 || !A && !B2 || !B1 && !B2');
+    expect(expr.serialize()).toBe('A && B1 || A && B2');
+    expect(expr.negate().serialize()).toBe('!A || !A && !B1 || !A && !B2 || !B1 && !B2');
+    expect(expr.negate().negate().serialize()).toBe('A && B1 || A && B2');
+    expect(expr.negate().negate().negate().serialize()).toBe('!A || !A && !B1 || !A && !B2 || !B1 && !B2');
   });
 
   test('issue #129625: remove redundant terms in OR expressions', () => {
-    assert.strictEqual(strImplies('a && b', 'a'), true);
-    assert.strictEqual(strImplies('a', 'a && b'), false);
+    expect(strImplies('a && b', 'a')).toBe(true);
+    expect(strImplies('a', 'a && b')).toBe(false);
   });
 
   test('implies', () => {
-    assert.strictEqual(strImplies('a', 'a'), true);
-    assert.strictEqual(strImplies('a', 'a || b'), true);
-    assert.strictEqual(strImplies('a', 'a && b'), false);
-    assert.strictEqual(strImplies('a', 'a && b || a && c'), false);
-    assert.strictEqual(strImplies('a && b', 'a'), true);
-    assert.strictEqual(strImplies('a && b', 'b'), true);
-    assert.strictEqual(strImplies('a && b', 'a && b || c'), true);
-    assert.strictEqual(strImplies('a || b', 'a || c'), false);
-    assert.strictEqual(strImplies('a || b', 'a || b'), true);
-    assert.strictEqual(strImplies('a && b', 'a && b'), true);
-    assert.strictEqual(strImplies('a || b', 'a || b || c'), true);
-    assert.strictEqual(strImplies('c && a && b', 'c && a'), true);
+    expect(strImplies('a', 'a')).toBe(true);
+    expect(strImplies('a', 'a || b')).toBe(true);
+    expect(strImplies('a', 'a && b')).toBe(false);
+    expect(strImplies('a', 'a && b || a && c')).toBe(false);
+    expect(strImplies('a && b', 'a')).toBe(true);
+    expect(strImplies('a && b', 'b')).toBe(true);
+    expect(strImplies('a && b', 'a && b || c')).toBe(true);
+    expect(strImplies('a || b', 'a || c')).toBe(false);
+    expect(strImplies('a || b', 'a || b')).toBe(true);
+    expect(strImplies('a && b', 'a && b')).toBe(true);
+    expect(strImplies('a || b', 'a || b || c')).toBe(true);
+    expect(strImplies('c && a && b', 'c && a')).toBe(true);
   });
 
   test('Greater, GreaterEquals, Smaller, SmallerEquals evaluate', () => {
     function checkEvaluate(expr: string, ctx: any, expected: any): void {
       const _expr = ContextKeyExpr.deserialize(expr);
       assert(_expr);
-      assert.strictEqual(_expr.evaluate(createContext(ctx)), expected);
+      expect(_expr.evaluate(createContext(ctx))).toBe(expected);
     }
 
     checkEvaluate('a > 1', {}, false);
@@ -354,7 +352,7 @@ suite('ContextKeyExpr', () => {
       const a = ContextKeyExpr.deserialize(expr);
       assert(a);
       const b = a.negate();
-      assert.strictEqual(b.serialize(), expected);
+      expect(b.serialize()).toBe(expected);
     }
 
     checkNegate('a > 1', 'a <= 1');
@@ -384,12 +382,12 @@ suite('ContextKeyExpr', () => {
     );
     assert(context);
 
-    assert.ok(actual.equals(context));
+    expect(actual.equals(context)).toBeTruthy();
   });
 
   test('ContextKeyEqualsExpr', () => {
     const a_cequalsb = ContextKeyExpr.deserialize('a == b');
     assert(a_cequalsb);
-    assert.strictEqual(a_cequalsb.evaluate(createContext({ a: 'b' })), true);
+    expect(a_cequalsb.evaluate(createContext({ a: 'b' }))).toBe(true);
   });
 });
