@@ -84,10 +84,10 @@ const longText =
 
 {#snippet template({ ...args })}
   {#if args.kind === 'placements'}
-    <div class="bg-(--pd-content-card-bg) p-4">
+    <div class="bg-(--pd-content-card-bg) p-8">
       <div class="flex flex-col gap-4 text-(--pd-content-text)">
         <div class="text-sm font-semibold text-(--pd-content-text)">Placements</div>
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {#each placementVariants as variant (variant.name)}
             <div class="flex flex-col gap-2">
               <div class="text-xs text-(--pd-content-text)">{variant.name}</div>
@@ -103,7 +103,7 @@ const longText =
       </div>
     </div>
   {:else if args.kind === 'long'}
-    <div class="bg-(--pd-content-card-bg) p-4">
+    <div class="bg-(--pd-content-card-bg) p-8">
       <div class="flex flex-row items-center gap-2 text-(--pd-content-text)">
         <span>Long text tooltip example</span>
         <Tooltip top tip={longText}>
@@ -115,7 +115,7 @@ const longText =
       </div>
     </div>
   {:else if args.kind === 'snippet'}
-    <div class="bg-(--pd-content-card-bg) p-4">
+    <div class="bg-(--pd-content-card-bg) p-8">
       <div class="flex flex-row items-center gap-2 text-(--pd-content-text)">
         <span>Snippet tooltip content</span>
         <Tooltip>
@@ -135,7 +135,7 @@ const longText =
       </div>
     </div>
   {:else if args.kind === 'container'}
-    <div class="bg-(--pd-content-card-bg) p-4">
+    <div class="bg-(--pd-content-card-bg) p-8">
       <div class="flex flex-row items-center gap-2 text-(--pd-content-text)">
         <span>Container/class example</span>
         <Tooltip tip="Top-right tooltip with container class applied" topRight containerClass="inline-flex" class="mb-[20px]">
@@ -147,7 +147,7 @@ const longText =
       </div>
     </div>
   {:else}
-    <div class="bg-(--pd-content-card-bg) p-4">
+    <div class="bg-(--pd-content-card-bg) p-8">
       <div class="flex flex-row items-center gap-2 text-(--pd-content-text)">
         <span>Move mouse over the icon to see the tooltip</span>
         <Tooltip {...args}>

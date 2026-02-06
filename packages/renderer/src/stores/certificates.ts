@@ -27,7 +27,7 @@ import { findMatchInLeaves } from './search-util';
 const windowEvents = ['extensions-started'];
 const windowListeners = ['system-ready'];
 
-export async function checkForUpdate(_eventName: string): Promise<boolean> {
+async function checkForUpdate(_eventName: string): Promise<boolean> {
   return true;
 }
 

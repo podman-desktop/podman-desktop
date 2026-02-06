@@ -36,7 +36,7 @@ const {
   black,
   charcoal,
   dustypurple,
-  fuschia,
+  fuchsia,
   gray,
   green,
   neutral,
@@ -1641,9 +1641,14 @@ export class ColorRegistry {
       dark: purple[500],
       light: purple[500],
     });
+    this.registerColor(`${badge}fuchsia`, {
+      dark: fuchsia[600],
+      light: fuchsia[600],
+    });
+    // @deprecated since 2026-02-04. See https://github.com/podman-desktop/podman-desktop/issues/15187
     this.registerColor(`${badge}fuschia`, {
-      dark: fuschia[600],
-      light: fuschia[600],
+      dark: fuchsia[600],
+      light: fuchsia[600],
     });
     this.registerColor(`${badge}gray`, {
       dark: gray[600],

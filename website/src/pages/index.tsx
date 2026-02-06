@@ -78,7 +78,7 @@ function SectionLabel(props: Readonly<{ name: string }>): JSX.Element {
 
 function Testimonials(): JSX.Element {
   return (
-    <section className="relative text-charcoal-300 dark:text-white body-font py-24 dark:bg-fuschia-900 bg-purple-200">
+    <section className="relative text-charcoal-300 dark:text-white body-font py-24 dark:bg-fuchsia-900 bg-purple-200">
       <div className="absolute bg-white/50 dark:bg-black/70 top-0 bottom-0 right-0 left-0 z-0"></div>
       <div className="container mx-auto flex flex-col">
         <h2 className="text-4xl/[1.5] font-bold mb-6 text-charcoal-300 dark:text-white pb-11 z-10">

@@ -103,6 +103,7 @@ async function renameImage(imageName: string, imageTag: string): Promise<void> {
         on:click={closeCallback}>Cancel</Button>
       <Button
         class="col-start-4"
+        type="primary"
         disabled={disableSave(imageName, imageTag)}
         on:click={async (): Promise<void> => {
           await renameImage(imageName, imageTag);

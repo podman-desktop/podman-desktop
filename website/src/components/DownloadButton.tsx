@@ -26,7 +26,7 @@ function getClientPlatform(): {
   return null;
 }
 
-export function MainDownloadButton(): JSX.Element {
+function MainDownloadButton(): JSX.Element {
   const platform = getClientPlatform();
 
   if (!platform) {
@@ -91,7 +91,7 @@ export function HeaderDownloadButton(): JSX.Element {
   );
 }
 
-export function OtherDownloadLink(): JSX.Element {
+function OtherDownloadLink(): JSX.Element {
   const platforms = [
     { name: 'macOS', icon: faApple, url: '/downloads/macos' },
     { name: 'Linux', icon: faLinux, url: '/downloads/linux' },

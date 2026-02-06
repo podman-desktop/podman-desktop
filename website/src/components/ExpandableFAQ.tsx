@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ExpandableFAQProps = {
+type ExpandableFAQProps = {
   title: string;
   text: JSX.Element;
 };

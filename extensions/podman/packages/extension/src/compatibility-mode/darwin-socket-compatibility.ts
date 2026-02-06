@@ -22,7 +22,7 @@ import extensionApi from '@podman-desktop/api';
 
 import { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 import { findRunningMachine } from '/@/extension';
-import { getPodmanCli } from '/@/utils/podman-cli';
+import { execPodman } from '/@/utils/util';
 
 export class DarwinSocketCompatibility extends SocketCompatibility {
   // Shows the details of the compatibility mode on what we do.
@@ -104,8 +104,8 @@ export class DarwinSocketCompatibility extends SocketCompatibility {
       );
       if (result === 'Yes') {
         // Await since we must wait for the machine to stop before starting it again
-        await extensionApi.process.exec(getPodmanCli(), ['machine', 'stop', machine]);
-        await extensionApi.process.exec(getPodmanCli(), ['machine', 'start', machine]);
+        await execPodman(['machine', 'stop', machine]);
+        await execPodman(['machine', 'start', machine]);
       }
     }
   }

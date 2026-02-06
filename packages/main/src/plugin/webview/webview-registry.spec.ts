@@ -125,14 +125,14 @@ function getRouterFunction(path: string): (req: unknown, res: unknown) => void {
   expect(map.size).toBe(1);
 
   // check the mapping is correct
-  expect(map.get('/*')).toBeDefined();
+  expect(map.get('/{*splat}')).toBeDefined();
 
   // get the function
   return map.get(path)!;
 }
 
 test('check configureRouter with missing referrer', async () => {
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     headers: {
@@ -157,7 +157,7 @@ test('check configureRouter with missing referrer', async () => {
 });
 
 test('check configureRouter with root access', async () => {
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     path: '/',
@@ -180,7 +180,7 @@ test('check configureRouter with root access', async () => {
 });
 
 test('check configureRouter with invalid uuid', async () => {
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     hostname: '123',
@@ -206,7 +206,7 @@ test('check configureRouter with invalid uuid', async () => {
 });
 
 test('check configureRouter with valid uuid but no matching webview', async () => {
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     path: '/my-requested-folder/my-requested-file.html',
@@ -252,7 +252,7 @@ test('check configureRouter with valid uuid and file exists', async () => {
   const panelImpl = panel as WebviewPanelImpl;
   const uuid = panelImpl.webview.uuid;
 
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     path: '/my-requested-folder/my-requested-file.html',
@@ -276,6 +276,7 @@ test('check configureRouter with valid uuid and file exists', async () => {
   // sendfile to have been called
   expect(res.sendFile).toHaveBeenCalledWith(
     expect.stringContaining(`${path.sep}extensionPath${path.sep}my-requested-folder${path.sep}my-requested-file.html`),
+    { dotfiles: 'allow' },
   );
 });
 
@@ -294,7 +295,7 @@ test('check configureRouter with valid uuid and file does not exist', async () =
   const panelImpl = panel as WebviewPanelImpl;
   const uuid = panelImpl.webview.uuid;
 
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     path: '/my-requested-folder/my-requested-file.html',
@@ -340,7 +341,7 @@ test('check configureRouter with valid uuid and file from another directory', as
   const panelImpl = panel as WebviewPanelImpl;
   const uuid = panelImpl.webview.uuid;
 
-  const func = getRouterFunction('/*');
+  const func = getRouterFunction('/{*splat}');
   // now test the missing referer
   const req = {
     path: '../different-directory',

@@ -132,6 +132,108 @@ describe('dropdown', () => {
       expect(window.setProxyState).toHaveBeenCalledWith(ProxyState.PROXY_MANUAL);
     });
   });
+
+  test('dropdown#onChange should update value to Disabled', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+
+    render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalled();
+    });
+
+    const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
+    const disabledLabel = PROXY_LABELS.get(ProxyState.PROXY_DISABLED);
+
+    onChange?.(disabledLabel as unknown as string);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          value: disabledLabel,
+        }),
+      );
+    });
+  });
+
+  test('dropdown#onChange should update value to System', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_MANUAL);
+
+    render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalled();
+    });
+
+    const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
+    const systemLabel = PROXY_LABELS.get(ProxyState.PROXY_SYSTEM);
+
+    onChange?.(systemLabel as unknown as string);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          value: systemLabel,
+        }),
+      );
+    });
+  });
+
+  test('dropdown#onChange should handle invalid label gracefully', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_DISABLED);
+
+    render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalled();
+    });
+
+    const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
+
+    // call with invalid label
+    expect(() => onChange?.('InvalidLabel')).not.toThrow();
+    expect(() => onChange?.(undefined as unknown as string)).not.toThrow();
+    expect(() => onChange?.(null as unknown as string)).not.toThrow();
+    expect(() => onChange?.('')).not.toThrow();
+
+    // state should remain unchanged (PROXY_DISABLED)
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          value: PROXY_LABELS.get(ProxyState.PROXY_DISABLED),
+        }),
+      );
+    });
+  });
+
+  test('dropdown#onChange should ignore case-mismatched labels', async () => {
+    vi.mocked(window.getProxyState).mockResolvedValue(ProxyState.PROXY_DISABLED);
+
+    render(PreferencesProxiesRendering);
+
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalled();
+    });
+
+    const [, { onChange }] = vi.mocked(Dropdown).mock.calls[0];
+
+    // call with a wrong case (labels are 'Manual', not 'manual' or 'MANUAL')
+    onChange?.('manual'); // lowercase
+    onChange?.('MANUAL'); // uppercase
+
+    // state should remain unchanged because labels don't match
+    await vi.waitFor(() => {
+      expect(Dropdown).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          value: PROXY_LABELS.get(ProxyState.PROXY_DISABLED),
+        }),
+      );
+    });
+  });
 });
 
 describe('managed label', () => {

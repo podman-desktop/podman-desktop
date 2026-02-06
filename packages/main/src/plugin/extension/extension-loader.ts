@@ -425,8 +425,9 @@ export class ExtensionLoader implements IAsyncDisposable {
     if (fs.existsSync(this.pluginsScanDirectory)) {
       // add watcher
       fs.watch(this.pluginsScanDirectory, (_, filename) => {
-        // need to load the file
-        if (filename) {
+        // Only process .cdix extension files
+        // Note: macOS fs.watch can emit an unintended error when watching a newly created directory
+        if (filename?.endsWith('.cdix')) {
           const packagedFile = path.resolve(this.pluginsScanDirectory, filename);
           setTimeout(() => {
             this.loadPackagedFile(packagedFile).catch((error: unknown) => {

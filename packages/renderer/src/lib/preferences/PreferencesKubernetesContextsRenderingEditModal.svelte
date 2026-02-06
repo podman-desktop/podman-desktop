@@ -166,6 +166,7 @@ function onUserStateChange(key: unknown): void {
           on:click={closeCallback}>Cancel</Button>
       <Button
           class="col-start-4"
+          type="primary"
           disabled={disableSave(contextName, contextNamespace)}
           on:click={async (): Promise<void> => {
           await editContext(contextName, contextNamespace, contextUser, contextCluster);

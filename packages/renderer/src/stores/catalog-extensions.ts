@@ -25,7 +25,7 @@ import { EventStore } from './event-store';
 const windowEvents: string[] = ['refresh-catalog'];
 const windowListeners = ['system-ready'];
 
-export async function checkForUpdate(): Promise<boolean> {
+async function checkForUpdate(): Promise<boolean> {
   return true;
 }
 

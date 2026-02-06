@@ -37,7 +37,7 @@ export const LEGACY_PODMAN_REGISTRY_KEY = '\\SOFTWARE\\Red Hat\\Podman';
 export const LEGACY_PODMAN_REGISTRY_ITEM_NAME = 'InstallDir';
 
 // Uninstall
-export const UNINSTALL_REGISTRY_PATH = '\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall';
+const UNINSTALL_REGISTRY_PATH = '\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall';
 export const UNINSTALL_REGISTRY_DISPLAY_NAME_KEY = 'DisplayName';
 export const UNINSTALL_REGISTRY_QUIET_UNINSTALL_STRING_KEY = 'QuietUninstallString';
 

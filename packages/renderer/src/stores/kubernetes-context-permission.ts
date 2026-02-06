@@ -27,7 +27,7 @@ const windowListeners = ['extensions-already-started'];
 
 let readyToUpdate = false;
 
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   // check for update only in experimental states mode
   const enabled = await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');
   if (!enabled) {

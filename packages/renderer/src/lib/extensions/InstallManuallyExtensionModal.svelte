@@ -145,6 +145,7 @@ const showForm = $derived(installInProgress || progressPercent !== 100 || !!inpu
         on:click={closeCallback}>Cancel</Button>
       {#if showForm}
         <Button
+          type="primary"
           icon={faCloudDownload}
           disabled={inputfieldError !== undefined}
           on:click={installExtension}

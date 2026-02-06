@@ -38,7 +38,7 @@ const windowEvents = [
 ];
 const windowListeners = ['extensions-already-started'];
 
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   if ('extensions-already-started' === eventName) {
     readyToUpdate = true;
   }

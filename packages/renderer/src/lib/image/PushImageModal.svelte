@@ -133,6 +133,7 @@ $effect(() => {
       {/if}
       {#if !pushFinished}
         <Button
+          type="primary"
           class="w-auto"
           icon={faCircleArrowUp}
           disabled={!isAuthenticatedForThisImage}
