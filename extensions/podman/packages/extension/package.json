@@ -448,7 +448,7 @@
     "inversify": "^7.11.0",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "semver": "^7.7.3",
+    "semver": "^7.7.4",
     "smol-toml": "1.6.0",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
