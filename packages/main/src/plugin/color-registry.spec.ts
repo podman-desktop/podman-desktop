@@ -87,8 +87,8 @@ class TestColorRegistry extends ColorRegistry {
     super.initLabel();
   }
 
-  override initCommon(): void {
-    super.initCommon();
+  override initDefaults(): void {
+    super.initDefaults();
   }
 }
 
@@ -790,28 +790,47 @@ describe('initTooltip', () => {
   });
 });
 
-describe('initCommon', () => {
+describe('initDefaults', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
   let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
 
   beforeEach(() => {
-    // mock the registerColorDefinition
+    // mock both methods since initDefaults uses both
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
     spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
     spyOnRegisterColorDefinition.mockReturnValue(undefined);
 
-    colorRegistry.initCommon();
+    colorRegistry.initDefaults();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
+  test('registers default-text color using registerColor', () => {
+    // Should call registerColor at least once for default-text
+    expect(spyOnRegisterColor).toHaveBeenCalled();
+
+    // Find the default-text color registration
+    const defaultTextCall = spyOnRegisterColor.mock.calls.find(call => call?.[0] === 'default-text');
+    expect(defaultTextCall).toBeDefined();
+
+    const definition = defaultTextCall?.[1];
+    expect(definition?.light).toBe(tailwindColorPalette.charcoal[900]);
+    expect(definition?.dark).toBe(tailwindColorPalette.white);
+  });
+
   test('registers item-disabled color using registerColorDefinition', () => {
-    expect(spyOnRegisterColorDefinition).toHaveBeenCalledTimes(1);
+    // Should call registerColorDefinition at least once
+    expect(spyOnRegisterColorDefinition).toHaveBeenCalled();
 
-    // check the call
-    const call = spyOnRegisterColorDefinition.mock.calls[0];
-    const definition = call?.[0];
+    // Find the item-disabled color registration
+    const itemDisabledCall = spyOnRegisterColorDefinition.mock.calls.find(call => call?.[0]?.id === 'item-disabled');
+    expect(itemDisabledCall).toBeDefined();
 
+    const definition = itemDisabledCall?.[0];
     expect(definition?.id).toBe('item-disabled');
     expect(definition?.dark).toBeDefined();
     expect(definition?.light).toBeDefined();
