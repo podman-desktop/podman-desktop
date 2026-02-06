@@ -64,36 +64,42 @@ function colorRegistryWatcher() {
 
         isRegenerating = true;
 
-        // Regeneration loop: process until no pending changes remain
-        while (true) {
-          const currentChangedFile = pendingChangedFile || changedFile;
-          pendingChange = false;
-          pendingChangedFile = null;
+        try {
+          // Regeneration loop: process until no pending changes remain
+          while (true) {
+            const currentChangedFile = pendingChangedFile || changedFile;
+            pendingChange = false;
+            pendingChangedFile = null;
 
-          console.log(
-            `\n[color-registry-watcher] ${path.basename(currentChangedFile)} changed, regenerating themes.css...`,
-          );
+            console.log(
+              `\n[color-registry-watcher] ${path.basename(currentChangedFile)} changed, regenerating themes.css...`,
+            );
 
-          try {
-            await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
-            console.log('[color-registry-watcher] themes.css regenerated successfully\n');
+            try {
+              await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR, timeout: 30000 });
+              console.log('[color-registry-watcher] themes.css regenerated successfully\n');
 
-            // Trigger full reload
-            server.ws.send({
-              type: 'full-reload',
-              path: '*',
-            });
-          } catch (error) {
-            console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
+              // Trigger full reload
+              server.ws.send({
+                type: 'full-reload',
+                path: '*',
+              });
+            } catch (error) {
+              if (error.killed && error.signal === 'SIGTERM') {
+                console.error('[color-registry-watcher] CSS regeneration timed out after 30s');
+              } else {
+                console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
+              }
+            }
+
+            // Check if a change arrived during this regeneration
+            if (!pendingChange) {
+              break;
+            }
           }
-
-          // Check if a change arrived during this regeneration
-          if (!pendingChange) {
-            break;
-          }
+        } finally {
+          isRegenerating = false;
         }
-
-        isRegenerating = false;
       });
 
       server.httpServer?.on('close', () => {
