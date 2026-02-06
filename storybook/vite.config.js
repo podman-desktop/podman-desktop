@@ -38,6 +38,8 @@ const ROOT_DIR = path.join(PACKAGE_ROOT, '..');
 // Vite plugin to watch color-registry and regenerate themes.css
 function colorRegistryWatcher() {
   let isRegenerating = false;
+  let pendingChange = false;
+  let pendingChangedFile = null;
 
   return {
     name: 'color-registry-watcher',
@@ -54,25 +56,44 @@ function colorRegistryWatcher() {
       });
 
       watcher.on('change', async changedFile => {
-        if (isRegenerating) return;
+        if (isRegenerating) {
+          pendingChange = true;
+          pendingChangedFile = changedFile;
+          return;
+        }
+
         isRegenerating = true;
 
-        console.log(`\n[color-registry-watcher] ${path.basename(changedFile)} changed, regenerating themes.css...`);
+        // Regeneration loop: process until no pending changes remain
+        while (true) {
+          const currentChangedFile = pendingChangedFile || changedFile;
+          pendingChange = false;
+          pendingChangedFile = null;
 
-        try {
-          await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
-          console.log('[color-registry-watcher] themes.css regenerated successfully\n');
+          console.log(
+            `\n[color-registry-watcher] ${path.basename(currentChangedFile)} changed, regenerating themes.css...`,
+          );
 
-          // Trigger full reload
-          server.ws.send({
-            type: 'full-reload',
-            path: '*',
-          });
-        } catch (error) {
-          console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
-        } finally {
-          isRegenerating = false;
+          try {
+            await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
+            console.log('[color-registry-watcher] themes.css regenerated successfully\n');
+
+            // Trigger full reload
+            server.ws.send({
+              type: 'full-reload',
+              path: '*',
+            });
+          } catch (error) {
+            console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
+          }
+
+          // Check if a change arrived during this regeneration
+          if (!pendingChange) {
+            break;
+          }
         }
+
+        isRegenerating = false;
       });
 
       server.httpServer?.on('close', () => {
