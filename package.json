@@ -248,7 +248,8 @@
       "@kubernetes/client-node>js-yaml": "^4.1.1",
       "tmp-promise>tmp": "^0.2.5",
       "tar": "^7.5.4",
-      "cheerio>undici": "^7.18.2"
+      "cheerio>undici": "^7.18.2",
+      "minimatch>@isaacs/brace-expansion": "^5.0.1"
     },
     "patchedDependencies": {
       "dmg-builder": "patches/dmg-builder.patch"
