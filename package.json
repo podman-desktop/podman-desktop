@@ -247,7 +247,7 @@
       "electron-builder-notarize>js-yaml": "^3.14.2",
       "@kubernetes/client-node>js-yaml": "^4.1.1",
       "tmp-promise>tmp": "^0.2.5",
-      "tar": "^7.5.3",
+      "tar": "^7.5.4",
       "cheerio>undici": "^7.18.2"
     },
     "patchedDependencies": {
