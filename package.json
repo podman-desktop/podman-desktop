@@ -250,7 +250,8 @@
       "tar": "^7.5.4",
       "cheerio>undici": "^7.18.2",
       "minimatch>@isaacs/brace-expansion": "^5.0.1",
-      "lodash-es": "^4.17.23"
+      "lodash-es": "^4.17.23",
+      "@docusaurus/core>webpack": "^5.104.1"
     },
     "patchedDependencies": {
       "dmg-builder": "patches/dmg-builder.patch"
