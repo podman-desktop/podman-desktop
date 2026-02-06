@@ -49,19 +49,15 @@ import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '../types/tel
 import { Identity } from './identity.js';
 import type { TelemetryRule } from './telemetry-api.js';
 
-export const TRACK_EVENT_TYPE = 'track';
-export const PAGE_EVENT_TYPE = 'page';
-export const STARTUP_EVENT_TYPE = 'startup';
-export const SHUTDOWN_EVENT_TYPE = 'shutdown';
-export const FEEDBACK_EVENT_TYPE = 'feedback';
+export const EventType = {
+  TRACK: 'track',
+  PAGE: 'page',
+  STARTUP: 'startup',
+  SHUTDOWN: 'shutdown',
+  FEEDBACK: 'feedback',
+} as const;
 
-export type EventType =
-  | typeof TRACK_EVENT_TYPE
-  | typeof PAGE_EVENT_TYPE
-  | typeof STARTUP_EVENT_TYPE
-  | typeof SHUTDOWN_EVENT_TYPE
-  | typeof FEEDBACK_EVENT_TYPE
-  | string;
+export type EventType = (typeof EventType)[keyof typeof EventType] | string;
 
 /**
  * Handle the telemetry reporting.
@@ -267,7 +263,7 @@ export class Telemetry {
 
     await this.initTelemetry();
 
-    this.internalTrack(STARTUP_EVENT_TYPE).catch((err: unknown) => {
+    this.internalTrack(EventType.STARTUP).catch((err: unknown) => {
       console.log(`Error sending startup event: ${err}`);
     });
     let sendShutdownAnalytics = false;
@@ -276,7 +272,7 @@ export class Telemetry {
       if (!sendShutdownAnalytics && stoppedExtensions.val) {
         e.preventDefault();
         try {
-          this.internalTrack(SHUTDOWN_EVENT_TYPE).catch((err: unknown) => {
+          this.internalTrack(EventType.SHUTDOWN).catch((err: unknown) => {
             console.log(`Error sending shutdown event: ${err}`);
           });
           this.analytics?.closeAndFlush().catch((err: unknown) => {
@@ -317,7 +313,7 @@ export class Telemetry {
       All: true,
     };
 
-    if (event === PAGE_EVENT_TYPE) {
+    if (event === EventType.PAGE) {
       const name: string | undefined = typeof properties['name'] === 'string' ? properties['name'] : undefined;
 
       this.analytics?.page({ anonymousId, name, context, integrations });

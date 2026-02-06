@@ -219,7 +219,7 @@ import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js'
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
-import { PAGE_EVENT_TYPE, Telemetry } from './telemetry/telemetry.js';
+import { EventType, Telemetry } from './telemetry/telemetry.js';
 import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
@@ -3059,7 +3059,7 @@ export class PluginSystem {
     );
 
     this.ipcHandle('telemetry:page', async (_listener, name: string): Promise<void> => {
-      return telemetry.track(PAGE_EVENT_TYPE, { name: name });
+      return telemetry.track(EventType.PAGE, { name: name });
     });
 
     this.ipcHandle('telemetry:configure', async (): Promise<void> => {
