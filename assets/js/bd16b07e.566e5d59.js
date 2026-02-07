@@ -1,0 +1,11 @@
+"use strict";
+(globalThis["webpackChunkdocs"] = globalThis["webpackChunkdocs"] || []).push([[24666],{
+
+/***/ 51311
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"tag":{"label":"adding-certificates","permalink":"/docs/tags/adding-certificates","allTagsPath":"/docs/tags","count":1,"items":[{"id":"podman/adding-certificates-to-a-podman-machine","title":"Adding certificates to a Podman machine","description":"Adding certificates to a Podman machine","permalink":"/docs/podman/adding-certificates-to-a-podman-machine"}],"unlisted":false}}');
+
+/***/ }
+
+}]);
