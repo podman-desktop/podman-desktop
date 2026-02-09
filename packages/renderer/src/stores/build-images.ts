@@ -18,7 +18,7 @@
 
 import type { Terminal } from '@xterm/xterm';
 import type { Writable } from 'svelte/store';
-import { get, writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
 import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
@@ -49,12 +49,6 @@ let taskCounter = 0;
 
 export function getNextTaskId(): number {
   return ++taskCounter;
-}
-
-export function cleanupBuildImageInfo(taskId: number): void {
-  const map = get(buildImagesInfo);
-  map.delete(taskId);
-  buildImagesInfo.set(map);
 }
 
 export function cloneBuildImageInfo(original: BuildImageInfo): BuildImageInfo {

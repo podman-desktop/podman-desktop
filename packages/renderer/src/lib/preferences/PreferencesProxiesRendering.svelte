@@ -49,10 +49,12 @@ onMount(async () => {
   }
 });
 
-function onProxyStateChange(key: unknown): void {
-  const entry = PROXY_LABELS.entries().find(([_, label]) => label === key);
-  if (entry) {
-    proxyState = entry[0];
+function onProxyStateChange(key: string): void {
+  for (const [state, label] of PROXY_LABELS) {
+    if (label === key) {
+      proxyState = state;
+      return;
+    }
   }
 }
 

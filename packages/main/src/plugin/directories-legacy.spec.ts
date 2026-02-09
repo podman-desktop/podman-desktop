@@ -177,6 +177,18 @@ describe('LegacyDirectories', () => {
       expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.linux);
     });
 
+    test('should return flatpak managed folder path when running on Linux in Flatpak', () => {
+      vi.mocked(isMac).mockReturnValue(false);
+      vi.mocked(isWindows).mockReturnValue(false);
+      vi.mocked(isLinux).mockReturnValue(true);
+      // biome-ignore lint/complexity/useLiteralKeys: FLATPAK_ID comes from an index signature
+      process.env['FLATPAK_ID'] = 'io.podman_desktop.PodmanDesktop';
+
+      provider = new LegacyDirectories();
+
+      expect(provider.getManagedDefaultsDirectory()).toBe(product.paths.managed.flatpak);
+    });
+
     test('should fallback to linux managed folder path when platform is unknown', () => {
       vi.mocked(isMac).mockReturnValue(false);
       vi.mocked(isWindows).mockReturnValue(false);

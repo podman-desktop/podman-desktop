@@ -6,7 +6,7 @@ import {
   faQuestionCircle,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import { Fa } from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Label from '/@/lib/ui/Label.svelte';
 
@@ -25,7 +25,7 @@ function getTypeAttributes(type: string): { color: string; icon: IconDefinition 
       return { color: 'text-[var(--pd-badge-purple)]', icon: faBalanceScale };
     case 'NodePort':
       // faPlug: Indicates a connection point, appropriate for NodePort which exposes services on each Node's IP
-      return { color: 'text-[var(--pd-badge-fuschia)]', icon: faPlug };
+      return { color: 'text-[var(--pd-badge-fuchsia)]', icon: faPlug };
     default:
       // faQuestionCircle: Used for unknown or unspecified types
       return { color: 'text-[var(--pd-badge-gray)]', icon: faQuestionCircle };
@@ -34,5 +34,5 @@ function getTypeAttributes(type: string): { color: string; icon: IconDefinition 
 </script>
 
 <Label name={object.type}>
-  <Fa size="1x" icon={getTypeAttributes(object.type).icon} class={getTypeAttributes(object.type).color} />
+  <Icon size="1x" icon={getTypeAttributes(object.type).icon} class={getTypeAttributes(object.type).color} />
 </Label>

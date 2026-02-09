@@ -19,52 +19,13 @@
 import { expect, test, vi } from 'vitest';
 
 import type { IPCHandle } from '/@/plugin/api.js';
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 
 import { HelpMenu } from './help-menu.js';
 
 const ipcHandle: IPCHandle = vi.fn();
 
-const registerConfigurationsMock = vi.fn();
-const configurationRegistryMock = {
-  registerConfigurations: registerConfigurationsMock,
-} as unknown as ConfigurationRegistry;
-
-const productConfigPropertyName = 'helpMenu.useProductConfig';
-test('should register a configuration', async () => {
-  vi.stubEnv('DEV', true);
-  const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
-  helpMenu.init();
-
-  expect(configurationRegistryMock.registerConfigurations).toBeCalled();
-  const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
-  expect(configurationNode?.id).toBe('preferences.experimental.helpMenu');
-  expect(configurationNode?.title).toBe('Experimental (Help menu)');
-  expect(configurationNode?.properties).toBeDefined();
-  expect(Object.keys(configurationNode?.properties ?? {}).length).toBe(1);
-  expect(configurationNode?.properties?.[productConfigPropertyName]).toBeDefined();
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.type).toBe('object');
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.description).toBe(
-    'Replace help menu with the one defined in the product',
-  );
-
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.experimental).toStrictEqual({});
-});
-
-test('Undefined should be default if not in dev env', () => {
-  vi.resetAllMocks();
-  vi.stubEnv('DEV', false);
-  const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
-  helpMenu.init();
-
-  expect(configurationRegistryMock.registerConfigurations).toBeCalled();
-  const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
-
-  expect(configurationNode?.properties?.[productConfigPropertyName]?.default).toBe(undefined);
-});
-
 test('should get the items', async () => {
-  const helpMenu = new HelpMenu(configurationRegistryMock, ipcHandle);
+  const helpMenu = new HelpMenu(ipcHandle);
   helpMenu.init();
 
   const items = helpMenu.getItems();

@@ -21,4 +21,5 @@ export enum ResourceElementActions {
   Restart = 'Restart',
   Stop = 'Stop',
   Delete = 'Delete',
+  Edit = 'Edit',
 }

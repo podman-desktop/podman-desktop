@@ -6,8 +6,8 @@ import {
   faLayerGroup,
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { type Component, onMount } from 'svelte';
-import Fa from 'svelte-fa';
 
 import WebAssemblyIcon from '/@/lib/images/WebAssemblyIcon.svelte';
 
@@ -171,7 +171,7 @@ function addCard(item: { value: string }): void {
       aria-label="Show more options"
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
       onclick={(): boolean => (showMoreOptions = !showMoreOptions)}>
-      <Fa icon={faChevronRight} class=" mr-2 " />
+      <Icon icon={faChevronRight} class=" mr-2 " />
       More Options...
     </button>
   {:else}
@@ -201,7 +201,7 @@ function addCard(item: { value: string }): void {
       aria-label="Show less options"
       class="pt-2 flex items-center cursor-pointer text-[var(--pd-content-text)]"
       onclick={(): boolean => (showMoreOptions = !showMoreOptions)}>
-      <Fa icon={faChevronCircleDown} class=" mr-2 transform rotate-90" />
+      <Icon icon={faChevronCircleDown} class=" mr-2 transform rotate-90" />
       Less Options...
     </button>
   {/if}

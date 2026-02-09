@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 import { type Writable, writable } from 'svelte/store';
 
 import KeyIcon from '/@/lib/images/KeyIcon.svelte';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication';
 
-import type { AuthenticationProviderInfo } from '../../../main/src/plugin/authentication';
 import { EventStore } from './event-store';
 
 const windowEvents = ['authentication-provider-update'];
@@ -28,7 +28,7 @@ const windowListeners = ['extensions-already-started'];
 
 let readyToUpdate = false;
 
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   if ('extensions-already-started' === eventName) {
     readyToUpdate = true;
   }

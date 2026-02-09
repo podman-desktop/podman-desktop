@@ -49,6 +49,7 @@ test('Expect to have the "Try again" and Cancel buttons if the step represent a 
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -81,6 +82,7 @@ test('Expect not to have the "Try again" and "Cancel" buttons if the step repres
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -113,6 +115,7 @@ test('Expect to have the "Step Body" div if the step does not include a componen
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -143,6 +146,7 @@ test('Expect to have the embedded component if the step includes a component', a
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -175,6 +179,7 @@ test('Expect content to show / render when when clause is true', async () => {
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -212,6 +217,7 @@ test('Expect content to NOT show / render when when clause is false', async () =
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -252,6 +258,7 @@ test('Expect content with "when" to change dynamically when setting has been upd
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -303,6 +310,7 @@ test('Expect Step Body to clean up if new step has no content to display.', asyn
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -363,6 +371,7 @@ test('Expect that Esc closes', async () => {
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -414,6 +423,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -448,6 +458,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
       name: 'foobar2',
       displayName: 'FooBar2',
       icon: 'data:image/png;base64,foobar2',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -553,6 +564,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -587,6 +599,7 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
       name: 'foobar2',
       displayName: 'FooBar2',
       icon: 'data:image/png;base64,foobar2',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',
@@ -675,6 +688,44 @@ test('Expect onboarding to handle two extension ids and global onboarding set to
   expect(onboarding).not.toBeInTheDocument();
 });
 
+test('Expect title to display welcome message from onboarding info', async () => {
+  onboardingList.set([
+    {
+      extension: 'id',
+      removable: true,
+      title: 'onboarding',
+      name: 'foobar',
+      displayName: 'FooBar',
+      icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Custom Product Name',
+      steps: [
+        {
+          id: 'step',
+          title: 'step',
+          completionEvents: [],
+          content: [
+            [
+              {
+                value: 'content',
+              },
+            ],
+          ],
+        },
+      ],
+      enablement: 'true',
+    },
+  ]);
+  context.set(new ContextUI());
+  await waitRender({
+    extensionIds: ['id'],
+    global: true,
+  });
+
+  // Verify the welcome message is displayed
+  const title = screen.getByText('Get started with Custom Product Name');
+  expect(title).toBeInTheDocument();
+});
+
 test('Expect onboarding to be reset when starting completed onboarding', async () => {
   onboardingList.set([
     {
@@ -684,6 +735,7 @@ test('Expect onboarding to be reset when starting completed onboarding', async (
       name: 'foobar',
       displayName: 'FooBar',
       icon: 'data:image/png;base64,foobar',
+      welcomeMessage: 'Get started with Podman Desktop',
       steps: [
         {
           id: 'step',

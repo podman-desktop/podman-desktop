@@ -24,6 +24,7 @@ import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
 import DropdownMenu from './dropdownMenu';
+import ChevronExpander from './icons/ChevronExpander.svelte';
 import Input from './inputs/Input.svelte';
 import NumberInput from './inputs/NumberInput.svelte';
 import SearchInput from './inputs/SearchInput.svelte';
@@ -55,6 +56,7 @@ export {
   Button,
   Carousel,
   Checkbox,
+  ChevronExpander,
   CloseButton,
   DetailsPage,
   Dropdown,

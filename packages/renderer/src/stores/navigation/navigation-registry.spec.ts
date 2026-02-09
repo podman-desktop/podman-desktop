@@ -46,7 +46,7 @@ test('check navigation registry items', async () => {
   await fetchNavigationRegistries();
   const registries = get(navigationRegistry);
   // expect 8 items in the registry
-  expect(registries.length).equal(8);
+  expect(registries.length).equal(7);
 });
 
 test('check update properties', async () => {

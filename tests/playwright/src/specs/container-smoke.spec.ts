@@ -120,6 +120,12 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
   });
   test('Open a container details', async ({ navigationBar, page }) => {
     const containers = await navigationBar.openContainers();
+    await playExpect(containers.heading).toBeVisible({ timeout: 10_000 });
+
+    await playExpect
+      .poll(async () => await containers.getContainerEnvironment(containerToRun), { timeout: 10_000 })
+      .toContain('podman');
+
     const containersDetails = await containers.openContainersDetails(containerToRun);
     await playExpect(containersDetails.heading).toBeVisible();
     await playExpect(containersDetails.heading).toContainText(containerToRun);
@@ -148,6 +154,9 @@ test.describe.serial('Verification of container creation workflow', { tag: ['@sm
     await playExpect
       .poll(async () => containersDetails.getCountOfSearchResults(), { timeout: 10_000 })
       .toBeGreaterThanOrEqual(1);
+
+    await containersDetails.clearLogs();
+    await playExpect(containersDetails.terminalContent).not.toContainText('Hello World');
   });
 
   test('Redirecting to image details from a container details', async ({ page, navigationBar }) => {

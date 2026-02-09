@@ -33,7 +33,7 @@ import {
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '/@/utility/operations';
-import { isLinux, isWindows } from '/@/utility/platform';
+import { isCI, isLinux, isWindows } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
@@ -207,6 +207,11 @@ for (const { PODMAN_MACHINE_NAME, MACHINE_VISIBLE_NAME, isRoot, userNet } of mac
     });
 
     test('Restart the machine', async ({ page }) => {
+      test.skip(
+        isCI && userNet,
+        'Restarting podman machine is flaky in cicd pipeline with usermode networking. This issue is tracked in https://github.com/podman-desktop/podman-desktop/issues/15889',
+      );
+
       const machineCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, PODMAN_MACHINE_NAME);
       await machineCard.performConnectionAction(ResourceElementActions.Restart);
 

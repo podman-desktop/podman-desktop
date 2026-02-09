@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 import type { CheckResult } from '@podman-desktop/api';
-import { compareVersions } from 'compare-versions';
 import { inject, injectable } from 'inversify';
+import { compare } from 'semver';
 
 import { BaseCheck } from '/@/checks/base-check';
 import { PodmanBinary } from '/@/utils/podman-binary';
@@ -47,6 +47,6 @@ export class HyperVPodmanVersionCheck extends BaseCheck {
   private async isPodmanVersionSupported(): Promise<boolean> {
     const binaryInfo = await this.podmanBinary.getBinaryInfo();
     if (!binaryInfo) return false;
-    return compareVersions(binaryInfo?.version, HyperVPodmanVersionCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
+    return compare(binaryInfo?.version, HyperVPodmanVersionCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
   }
 }

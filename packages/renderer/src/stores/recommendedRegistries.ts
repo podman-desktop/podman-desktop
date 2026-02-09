@@ -18,8 +18,9 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type { RecommendedRegistry } from '../../../main/src/plugin/recommendations/recommendations-api';
-import { RecommendationsSettings } from '../../../main/src/plugin/recommendations/recommendations-settings.js';
+import type { RecommendedRegistry } from '/@api/recommendations/recommendations';
+import { RecommendationsSettings } from '/@api/recommendations/recommendations-settings';
+
 import { EventStore, fineGrainedEvents } from './event-store';
 
 let readyToUpdate = false;
@@ -37,7 +38,7 @@ const windowEvents = [
 ];
 const windowListeners = ['extensions-already-started'];
 
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   if ('extensions-already-started' === eventName) {
     readyToUpdate = true;
   }

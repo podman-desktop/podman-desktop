@@ -21,8 +21,21 @@ import '@testing-library/jest-dom/vitest';
 import { render } from '@testing-library/svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ActionKind, type ItemInfo } from '/@api/help-menu';
+
 import HelpActionsItems from './HelpActionsItems.svelte';
-import { Items } from './HelpItems';
+
+export const Items: readonly ItemInfo[] = [
+  {
+    title: 'Getting Started',
+    icon: 'fas fa-external-link-alt',
+    enabled: true,
+    action: {
+      kind: ActionKind.LINK,
+      parameter: `example.com/docs/intro`,
+    },
+  },
+];
 
 let toggleMenuCallback: () => void;
 
@@ -97,5 +110,22 @@ describe('HelpActionsItems component', () => {
       const item = await ha.findByTitle(tooltip ?? title);
       expect(item).toBeVisible();
     });
+  });
+
+  test('should dispose of the listener when the component is unmounted', () => {
+    const disposeMock = vi.fn();
+    vi.mocked(window.events.receive).mockReturnValue({
+      dispose: disposeMock,
+    });
+
+    const { unmount } = render(HelpActionsItems, { items: Items });
+
+    expect(window.events.receive).toHaveBeenCalledWith('toggle-help-menu', expect.any(Function));
+
+    expect(disposeMock).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(disposeMock).toHaveBeenCalled();
   });
 });

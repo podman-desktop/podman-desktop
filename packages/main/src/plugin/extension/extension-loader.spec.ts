@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Certificates } from '/@/plugin/certificates.js';
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
+import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
@@ -155,6 +156,10 @@ const configurationRegistry: ConfigurationRegistry = {
 const imageRegistry: ImageRegistry = {
   registerRegistry: vi.fn(),
 } as unknown as ImageRegistry;
+
+const featureRegistry: FeatureRegistry = {
+  registerFeatures: vi.fn(),
+} as unknown as FeatureRegistry;
 
 const apiSender: ApiSenderType = { send: vi.fn() } as unknown as ApiSenderType;
 
@@ -382,6 +387,7 @@ beforeEach(() => {
     extensionDevelopmentFolder,
     extensionAnalyzer,
     extensionApiVersion,
+    featureRegistry,
   );
 });
 
@@ -773,6 +779,40 @@ test('Verify extension do not add configuration to subscriptions', async () => {
 
   await extensionLoader.deactivateExtension(id);
   expect(disposable.dispose).not.toHaveBeenCalled();
+});
+
+test('Verify extension activate registers extension features and the disposable is added to subscriptions', async () => {
+  const id = 'extension.foo';
+  const subscriptions: Disposable[] = [];
+  const disposable = {
+    dispose: vi.fn(),
+  } as unknown as Disposable;
+  vi.mocked(featureRegistry.registerFeatures).mockReturnValue(disposable);
+  const analyzedExtension: AnalyzedExtension = {
+    id: id,
+    name: 'id',
+    path: 'dummy',
+    api: {} as typeof containerDesktopAPI,
+    mainPath: '',
+    removable: false,
+    devMode: false,
+    manifest: {
+      contributes: {
+        features: ['feature1', 'feature2'],
+      },
+    },
+    subscriptions,
+    readme: '',
+    dispose: vi.fn(),
+  };
+
+  expect(featureRegistry.registerFeatures).not.toHaveBeenCalled();
+  expect(subscriptions.length).toBe(0);
+  await extensionLoader.activateExtension(analyzedExtension, {});
+
+  expect(featureRegistry.registerFeatures).toHaveBeenCalledWith(id, ['feature1', 'feature2']);
+  expect(subscriptions.length).greaterThanOrEqual(1);
+  expect(subscriptions[0]).toBe(disposable);
 });
 
 test('Verify disable extension updates configuration', async () => {
@@ -1389,6 +1429,19 @@ describe('Navigation', async () => {
 
     await api.navigation.navigateToContainers();
     expect(sendMock).toBeCalledWith('navigate', { page: NavigationPage.CONTAINERS });
+  });
+
+  test('navigateToImageBuild', async () => {
+    const api = createApi();
+
+    // Spy send method
+    const sendMock = vi.spyOn(apiSender, 'send');
+
+    await api.navigation.navigateToImageBuild();
+    expect(sendMock).toBeCalledWith('navigate', {
+      page: NavigationPage.IMAGE_BUILD,
+      parameters: { taskId: undefined },
+    });
   });
 
   test.each([

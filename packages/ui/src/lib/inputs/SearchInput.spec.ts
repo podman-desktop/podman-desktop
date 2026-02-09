@@ -41,7 +41,7 @@ test('Expect placeholder', async () => {
   renderInput('a-title', 'a search term');
 
   const element = screen.getByRole('textbox');
-  expect(element).toHaveProperty('placeholder', 'Search a-title...');
+  expect(element).toHaveProperty('placeholder', 'Search...');
 });
 
 test('Expect id and name', async () => {

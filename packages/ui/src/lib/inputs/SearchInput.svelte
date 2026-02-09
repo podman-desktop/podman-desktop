@@ -19,7 +19,7 @@ let { title = '', searchTerm = $bindable(''), oninput = bubble('input'), class: 
   class={className}
   id="search-{title}"
   name="search-{title}"
-  placeholder="Search {title}..."
+  placeholder="Search..."
   bind:value={searchTerm}
   aria-label="search {title}"
   clearable

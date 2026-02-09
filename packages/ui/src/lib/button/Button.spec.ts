@@ -182,16 +182,16 @@ test('Button inProgress must have a spinner', async () => {
   // render the component
   render(Button, { inProgress: true });
 
-  const svg = screen.getByRole('img');
-  expect(svg).toBeDefined();
+  const spinner = screen.getByRole('status', { name: 'Loading' });
+  expect(spinner).toBeDefined();
 });
 
 test('Button no progress no icon do not have spinner', async () => {
   // render the component
   render(Button, { inProgress: false });
 
-  const svg = screen.queryByRole('img');
-  expect(svg).toBeNull();
+  const spinner = screen.queryByRole('status', { name: 'Loading' });
+  expect(spinner).toBeNull();
 });
 
 test('Button hidden should be hidden', async () => {

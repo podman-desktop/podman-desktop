@@ -18,13 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { Table, TableColumn, tablePersistence } from '/@/lib';
-import { Icon } from '/@/lib/icons';
 import SimpleColumn from '/@/lib/table/SimpleColumn.svelte';
 import { Column, Row } from '/@/lib/table/table';
 
@@ -472,23 +470,6 @@ describe('Table#collapsed', () => {
   });
 
   describe('collapse icons', () => {
-    let chevronDown: HTMLImageElement;
-    let chevronRight: HTMLImageElement;
-
-    beforeEach(() => {
-      const { container: chevronDownContainer } = render(Icon, {
-        icon: faChevronDown,
-        size: '0.8x',
-        class: 'text-[var(--pd-table-body-text)] cursor-pointer',
-      });
-      chevronDown = within(chevronDownContainer).getByRole('img', { hidden: true });
-
-      const { container: chevronRightContainer } = render(Icon, {
-        icon: faChevronRight,
-      });
-      chevronRight = within(chevronRightContainer).getByRole('img', { hidden: true });
-    });
-
     test('item without name should have correct icon when expanded', async () => {
       const { getByRole } = render(Table<Item>, {
         kind: 'demo',
@@ -505,7 +486,9 @@ describe('Table#collapsed', () => {
       });
 
       const button = getByRole('button', { name: 'Collapse Row' });
-      expect(button).toContainHTML(chevronDown.innerHTML);
+      const chevronIcon = button.querySelector('svg') as SVGElement;
+      expect(chevronIcon).toBeInTheDocument();
+      expect(chevronIcon).toHaveClass('rotate-90');
     });
 
     test('item without name should have correct icon when collapsed', async () => {
@@ -524,7 +507,9 @@ describe('Table#collapsed', () => {
       });
 
       const button = getByRole('button', { name: 'Expand Row' });
-      expect(button).toContainHTML(chevronRight.innerHTML);
+      const chevronIcon = button.querySelector('svg') as SVGElement;
+      expect(chevronIcon).toBeInTheDocument();
+      expect(chevronIcon).toHaveClass('rotate-0');
     });
   });
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 import { faDatabase } from '@fortawesome/free-solid-svg-icons';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
-import Fa from 'svelte-fa';
 
 import type { EventStoreInfo } from '/@/stores/event-store';
 import { allEventStoresInfo } from '/@/stores/event-store-manager';
@@ -28,7 +28,7 @@ onDestroy(() => {
 
 <div class="flex w-full h-fit m-4 flex-col bg-[var(--pd-content-card-bg)] p-4 rounded-lg">
   <div class="flex flex-row align-middle items-center w-full mb-4">
-    <Fa size="1.875x" class="pr-3" icon={faDatabase} />
+    <Icon size="1.875x" class="pr-3" icon={faDatabase} />
     <div role="status" aria-label="stores" class="text-xl">Stores</div>
   </div>
 

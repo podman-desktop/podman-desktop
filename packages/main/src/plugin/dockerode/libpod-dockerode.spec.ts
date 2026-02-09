@@ -30,9 +30,10 @@ import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { DockerodeInternals, LibPod, PlayKubeInfo } from '/@/plugin/dockerode/libpod-dockerode.js';
+import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
 import type { PodmanListImagesOptions } from '/@api/image-info.js';
+import type { PlayKubeInfo } from '/@api/libpod/libpod.js';
 
 import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json' with { type: 'json' };
 
@@ -517,5 +518,33 @@ describe('kube play', () => {
     await expect(() => {
       return playKubePromise;
     }).rejects.toThrowError('The operation was aborted');
+  });
+
+  test('default content-type should be application/yaml', async () => {
+    await libPod.playKube(file, { build: false });
+
+    expect(postHandler).toHaveBeenCalledOnce();
+    const request = vi.mocked(postHandler).mock.calls[0]?.[0]?.request;
+    assert(request);
+
+    expect(request.headers.get('Content-Type')).toBe('application/yaml');
+  });
+
+  test('previous call should not affect Content-Type', async () => {
+    await libPod.playKube(file, { build: true });
+
+    expect(postHandler).toHaveBeenCalledOnce();
+    const request = vi.mocked(postHandler).mock.calls[0]?.[0]?.request;
+    assert(request);
+
+    expect(request.headers.get('Content-Type')).toBe('application/x-tar');
+
+    await libPod.playKube(file, { build: false });
+
+    expect(postHandler).toHaveBeenCalledTimes(2);
+    const second = vi.mocked(postHandler).mock.calls[1]?.[0]?.request;
+    assert(second);
+
+    expect(second.headers.get('Content-Type')).toBe('application/yaml');
   });
 });

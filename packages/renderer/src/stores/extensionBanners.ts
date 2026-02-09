@@ -18,7 +18,8 @@
 
 import { type Writable, writable } from 'svelte/store';
 
-import type { ExtensionBanner } from '../../../main/src/plugin/recommendations/recommendations-api';
+import type { ExtensionBanner } from '/@api/recommendations/recommendations';
+
 import { EventStore } from './event-store';
 
 const windowEvents = [
@@ -32,7 +33,7 @@ const windowEvents = [
 ];
 const windowListeners = ['system-ready'];
 
-export async function checkForUpdate(): Promise<boolean> {
+async function checkForUpdate(): Promise<boolean> {
   return true;
 }
 

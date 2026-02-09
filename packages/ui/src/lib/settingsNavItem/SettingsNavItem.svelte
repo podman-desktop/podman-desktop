@@ -2,6 +2,7 @@
 import type { IconDefinition } from '@fortawesome/free-regular-svg-icons';
 import type { Component } from 'svelte';
 
+import ChevronExpander from '../icons/ChevronExpander.svelte';
 import Icon from '../icons/Icon.svelte';
 
 interface Props {
@@ -11,8 +12,9 @@ interface Props {
   expanded?: boolean;
   child?: boolean;
   selected?: boolean;
-  icon?: IconDefinition | Component;
-  iconPosition?: 'left' | 'right';
+  icon?: IconDefinition | Component | string;
+  iconRight?: IconDefinition | Component | string;
+  iconRightAlign?: 'inline' | 'end';
   onClick?: () => void;
 }
 
@@ -24,7 +26,8 @@ let {
   child = false,
   selected = false,
   icon = undefined,
-  iconPosition = 'left',
+  iconRight = undefined,
+  iconRightAlign = 'end',
   onClick = (): void => {},
 }: Props = $props();
 
@@ -51,22 +54,23 @@ function click(): void {
     class:hover:bg-[var(--pd-secondary-nav-text-hover-bg)]={!selected}
     class:hover:border-[var(--pd-secondary-nav-text-hover-bg)]={!selected}>
     <span
-      class="group-hover:block flex gap-x-2 items-center"
-      class:flex-row={iconPosition === 'left'}
-      class:flex-row-reverse={iconPosition === 'right'}
+      class="group-hover:block flex flex-row gap-x-2 items-center"
       class:capitalize={!child}>
       {#if icon}
           <Icon icon={icon}/>
       {/if}
       <span>{title}</span>
+      {#if iconRight && iconRightAlign === 'inline'}
+        <Icon icon={iconRight}/>
+      {/if}
     </span>
     {#if section}
-      <div class="px-2 relative w-4 h-4 text-[color:var(--pd-secondary-nav-expander)] pointer-events-none">
-        {#if expanded}
-          <Icon icon='fas fa-angle-down' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 -rotate-90" />
-        {:else}
-          <Icon icon='fas fa-angle-right' class="text-md absolute left-0 top-0.5 transform origin-center transition-transform duration-200 rotate-90" />
-        {/if}
+      <div class="px-2 text-[color:var(--pd-secondary-nav-expander)] pointer-events-none">
+        <ChevronExpander expanded={expanded} />
+      </div>
+    {:else if iconRight && iconRightAlign === 'end'}
+      <div class="px-2 flex items-center">
+        <Icon icon={iconRight}/>
       </div>
     {/if}
   </div>

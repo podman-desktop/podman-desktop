@@ -271,3 +271,35 @@ Kubernetes clusters from cloud providers require an executable installed on the 
 1. Move the binary located in your `.kube/config` file to a system bin directory, such as `/usr/local/bin/`.
 
 1. Set the value of the `command` parameter to the full path of the executable in your Kubernetes configuration file. For example, `command: /usr/local/bin/<cloud-provider-binary>`, where `cloud-provider-binary` denotes the binary name, such as `aws` or `oci`.
+
+## Kubernetes clusters with custom CA certificates are not reachable
+
+#### Issue
+
+Podman Desktop might not connect to Kubernetes or OpenShift clusters that use custom certificates. This happens because the connection requires a specific local Certificate Authority (CA). You may see the following errors in the logs:
+
+- `Error: self signed certificate in certificate chain`
+- `x509: certificate signed by unknown authority`
+
+Podman Desktop might not automatically use certificates from your machine's trust store, even if the CA is already installed on your operating system.
+
+#### Solution
+
+To resolve this, explicitly define the CA for the specific cluster in your Kubernetes configuration file.
+
+1. Open your Kubernetes configuration file. The default location is `~/.kube/config`.
+1. Locate the `clusters` entry for the cluster that fails to connect.
+1. Add the `certificate-authority` property with the absolute path to your CA certificate.
+
+   _Example: `~/.kube/config` snippet_:
+
+   ```yaml
+   apiVersion: v1
+   clusters:
+   - cluster:
+         certificate-authority: /home/user/.kube/my-cluster-ca.crt
+         server: https://api.my-cluster.example.com:6443
+      name: my-cluster-alias
+   ```
+
+1. Restart Podman Desktop to ensure the new configuration is loaded.

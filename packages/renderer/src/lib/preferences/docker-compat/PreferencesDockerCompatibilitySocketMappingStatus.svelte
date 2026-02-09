@@ -1,8 +1,8 @@
 <script lang="ts">
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import Label from '/@/lib/ui/Label.svelte';
@@ -89,7 +89,7 @@ onMount(async () => {
           aria-label="{connectionInfo.provider.name} details"
           type="button"
           onclick={(): void => router.goto(connectionInfo.link)}>
-          <Fa icon={faCircleInfo} />
+          <Icon icon={faCircleInfo} />
         </button>
       </Tooltip>
     </div>

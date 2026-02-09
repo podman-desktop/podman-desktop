@@ -21,7 +21,7 @@ import type { Component } from 'svelte';
 
 type NotificationType = 'info' | 'warn' | 'error';
 
-export interface NotificationInfo {
+interface NotificationInfo {
   // title displayed on the top of the notification card
   title: string;
   // description displayed just below the title, it should explain what the notification is about

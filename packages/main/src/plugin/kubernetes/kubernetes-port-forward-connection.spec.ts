@@ -33,6 +33,7 @@ import type { WebSocket } from 'isomorphic-ws';
 import { afterEach, beforeEach, describe, expect, type MockedFunction, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import {
@@ -53,6 +54,7 @@ const telemetry: Telemetry = {} as unknown as Telemetry;
 const experimentalConfigurationManager: ExperimentalConfigurationManager = {
   isExperimentalConfigurationEnabled: vi.fn(),
 } as unknown as ExperimentalConfigurationManager;
+const featureRegistry: FeatureRegistry = {} as unknown as FeatureRegistry;
 
 const mockCoreV1Api = {
   readNamespacedPod: vi.fn(),
@@ -176,6 +178,7 @@ describe('PortForwardConnectionService', () => {
         fileSystemMonitoring,
         telemetry,
         experimentalConfigurationManager,
+        featureRegistry,
       ),
     );
     global.fetch = vi.fn();
@@ -256,6 +259,7 @@ describe('PortForwardConnectionService', () => {
         fileSystemMonitoring,
         telemetry,
         experimentalConfigurationManager,
+        featureRegistry,
       ),
     );
 

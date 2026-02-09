@@ -1,4 +1,5 @@
 {
+  "_comment": "This file is used to define product specific properties. Do not import it directly in renderer package. Only main package should import it.",
   "name": "Podman Desktop",
   "appId": "io.podman_desktop.PodmanDesktop",
   "artifactName": "podman-desktop",
@@ -8,14 +9,21 @@
     "managed": {
       "macOS": "/Library/Application Support/io.podman_desktop.PodmanDesktop",
       "windows": "%PROGRAMDATA%\\Podman Desktop",
-      "linux": "/usr/share/podman-desktop"
+      "linux": "/usr/share/podman-desktop",
+      "flatpak": "/run/host/usr/share/podman-desktop"
     }
   },
   "telemetry": {
     "key": "Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy",
     "acceptMessage": "Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.",
-    "infoLink": "Read our privacy statement",
-    "infoURL": "https://developers.redhat.com/article/tool-data-collection"
+    "info": {
+      "link": "For more information read our statement",
+      "url": "https://developers.redhat.com/article/tool-data-collection"
+    },
+    "privacy": {
+      "link": "Read our privacy statement",
+      "url": "https://www.redhat.com/en/about/privacy-policy"
+    }
   },
   "catalog": {
     "default": "https://registry.podman-desktop.io/api/extensions.json"
@@ -32,7 +40,7 @@
       },
       {
         "title": "Troubleshooting",
-        "icon": "fas fa-lightbulb",
+        "icon": "fas fa-crosshairs",
         "command": "troubleshooting"
       },
       {
@@ -60,7 +68,20 @@
         "tooltip": "Join Slack #podman-desktop channel",
         "icon": "fab fa-slack",
         "link": "https://slack.k8s.io"
+      },
+      {
+        "title": "@podman-desktop",
+        "tooltip": "Follow Podman Desktop LinkedIn account",
+        "icon": "fab fa-linkedin",
+        "link": "https://www.linkedin.com/company/podman-desktop/"
       }
     ]
+  },
+  "releaseNotes": {
+    "url": "",
+    "blog": "",
+    "title": "",
+    "image": "",
+    "summary": ""
   }
 }

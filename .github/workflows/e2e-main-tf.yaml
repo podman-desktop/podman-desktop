@@ -51,9 +51,11 @@ jobs:
         env:
           DEFAULT_NPM_TARGET: 'all'
           DEFAULT_PODMAN_VERSION: 'latest'
+          DEFAULT_NODE_VERSION: 'v24.11.1'
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
           echo "PODMAN_VERSION=${{ github.event.inputs.podman_version || env.DEFAULT_PODMAN_VERSION }}" >> $GITHUB_ENV
+          echo "NODE_VERSION=${{ env.DEFAULT_NODE_VERSION }}" >> $GITHUB_ENV
 
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
         id: run-e2e-tf
@@ -63,7 +65,7 @@ jobs:
           create_github_summary: "false"
           compose: ${{ matrix.fedora-version }}
           tmt_plan_filter: 'name:/tests/tmt/plans/pd-e2e-plan/${{ env.NPM_TARGET }}'
-          variables: COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }}
+          variables: COMPOSE=${{ matrix.fedora-version }};ARCH=x86_64;PODMAN_VERSION=${{ env.PODMAN_VERSION }};NODE_VERSION=${{ env.NODE_VERSION }}
 
       - name: Extract Testing Farm work ID and base URL
         if: always()
@@ -85,7 +87,7 @@ jobs:
 
       - name: Publish test report to PR
         if: always()
-        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc
+        uses: mikepenz/action-junit-report@74626db7353a25a20a72816467ebf035f674c5f8
         with:
           fail_on_failure: true
           include_passed: true

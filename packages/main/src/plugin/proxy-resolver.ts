@@ -77,7 +77,7 @@ export function getOptions(proxy: Proxy, secure: boolean, certificates: Certific
   return options;
 }
 
-export function createHttpPatch(
+function createHttpPatch(
   originals: typeof http | typeof https,
   proxy: Proxy,
   certificates: Certificates,

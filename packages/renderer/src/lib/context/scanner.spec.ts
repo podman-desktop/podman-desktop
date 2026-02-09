@@ -22,9 +22,7 @@
 // based on https://github.com/microsoft/vscode/blob/76415ef0b1f60e0479bdfee173c1a4f97e785b52/src/vs/platform/contextkey/test/common/scanner.test.ts
 /* eslint-disable no-useless-escape */
 
-import * as assert from 'node:assert';
-
-import { test } from 'vitest';
+import { expect, test } from 'vitest';
 
 import { Scanner, type Token, TokenType } from './scanner';
 
@@ -95,7 +93,7 @@ function scan(input: string): { type: string; offset: number; lexeme?: string }[
 
 test('foo.bar<C-shift+2>', () => {
   const input = 'foo.bar<C-shift+2>';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo.bar<C-shift+2>', offset: 0 },
     { type: 'EOF', offset: 18 },
   ]);
@@ -103,7 +101,7 @@ test('foo.bar<C-shift+2>', () => {
 
 test('!foo', () => {
   const input = '!foo';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: '!', offset: 0 },
     { type: 'Str', lexeme: 'foo', offset: 1 },
     { type: 'EOF', offset: 4 },
@@ -112,7 +110,7 @@ test('!foo', () => {
 
 test('foo === bar', () => {
   const input = 'foo === bar';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'foo' },
     { type: '===', offset: 4 },
     { type: 'Str', offset: 8, lexeme: 'bar' },
@@ -122,7 +120,7 @@ test('foo === bar', () => {
 
 test('foo  !== bar', () => {
   const input = 'foo  !== bar';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'foo' },
     { type: '!==', offset: 5 },
     { type: 'Str', offset: 9, lexeme: 'bar' },
@@ -132,7 +130,7 @@ test('foo  !== bar', () => {
 
 test('!(foo && bar)', () => {
   const input = '!(foo && bar)';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: '!', offset: 0 },
     { type: '(', offset: 1 },
     { type: 'Str', lexeme: 'foo', offset: 2 },
@@ -145,7 +143,7 @@ test('!(foo && bar)', () => {
 
 test('=~ ', () => {
   const input = '=~ ';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: '=~', offset: 0 },
     { type: 'EOF', offset: 3 },
   ]);
@@ -153,7 +151,7 @@ test('=~ ', () => {
 
 test('foo =~ /bar/', () => {
   const input = 'foo =~ /bar/';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo', offset: 0 },
     { type: '=~', offset: 4 },
     { type: 'RegexStr', lexeme: '/bar/', offset: 7 },
@@ -163,7 +161,7 @@ test('foo =~ /bar/', () => {
 
 test('foo =~ /zee/i', () => {
   const input = 'foo =~ /zee/i';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo', offset: 0 },
     { type: '=~', offset: 4 },
     { type: 'RegexStr', lexeme: '/zee/i', offset: 7 },
@@ -173,7 +171,7 @@ test('foo =~ /zee/i', () => {
 
 test('foo =~ /zee/gm', () => {
   const input = 'foo =~ /zee/gm';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo', offset: 0 },
     { type: '=~', offset: 4 },
     { type: 'RegexStr', lexeme: '/zee/gm', offset: 7 },
@@ -183,7 +181,7 @@ test('foo =~ /zee/gm', () => {
 
 test('foo in barrr  ', () => {
   const input = 'foo in barrr  ';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo', offset: 0 },
     { type: 'in', offset: 4 },
     { type: 'Str', lexeme: 'barrr', offset: 7 },
@@ -194,7 +192,7 @@ test('foo in barrr  ', () => {
 test('resource =~ //FileCabinet/(SuiteScripts|Templates/(E-mail%20Templates|Marketing%20Templates)|Web%20Site%20Hosting%20Files)(/.*)*$/', () => {
   const input =
     'resource =~ //FileCabinet/(SuiteScripts|Templates/(E-mail%20Templates|Marketing%20Templates)|Web%20Site%20Hosting%20Files)(/.*)*$/';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'resource' },
     { type: '=~', offset: 9 },
     { type: 'RegexStr', offset: 12, lexeme: '//' },
@@ -219,7 +217,7 @@ test('resource =~ //FileCabinet/(SuiteScripts|Templates/(E-mail%20Templates|Mark
 
 test('editorLangId in testely.supportedLangIds && resourceFilename =~ /^.+(.test.(w+))$/gm', () => {
   const input = 'editorLangId in testely.supportedLangIds && resourceFilename =~ /^.+(.test.(w+))$/gm';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'editorLangId', offset: 0 },
     { type: 'in', offset: 13 },
     { type: 'Str', lexeme: 'testely.supportedLangIds', offset: 16 },
@@ -233,7 +231,7 @@ test('editorLangId in testely.supportedLangIds && resourceFilename =~ /^.+(.test
 
 test('!(foo && bar) && baz', () => {
   const input = '!(foo && bar) && baz';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: '!', offset: 0 },
     { type: '(', offset: 1 },
     { type: 'Str', lexeme: 'foo', offset: 2 },
@@ -248,7 +246,7 @@ test('!(foo && bar) && baz', () => {
 
 test('foo.bar:zed==completed - equality with no space', () => {
   const input = 'foo.bar:zed==completed';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo.bar:zed', offset: 0 },
     { type: '==', offset: 11 },
     { type: 'Str', lexeme: 'completed', offset: 13 },
@@ -258,7 +256,7 @@ test('foo.bar:zed==completed - equality with no space', () => {
 
 test('a && b || c', () => {
   const input = 'a && b || c';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'a', offset: 0 },
     { type: '&&', offset: 2 },
     { type: 'Str', lexeme: 'b', offset: 5 },
@@ -270,7 +268,7 @@ test('a && b || c', () => {
 
 test('fooBar && baz.jar && fee.bee<K-loo+1>', () => {
   const input = 'fooBar && baz.jar && fee.bee<K-loo+1>';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'fooBar', offset: 0 },
     { type: '&&', offset: 7 },
     { type: 'Str', lexeme: 'baz.jar', offset: 10 },
@@ -282,7 +280,7 @@ test('fooBar && baz.jar && fee.bee<K-loo+1>', () => {
 
 test('foo.barBaz<C-r> < 2', () => {
   const input = 'foo.barBaz<C-r> < 2';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo.barBaz<C-r>', offset: 0 },
     { type: '<', offset: 16 },
     { type: 'Str', lexeme: '2', offset: 18 },
@@ -292,7 +290,7 @@ test('foo.barBaz<C-r> < 2', () => {
 
 test('foo.bar >= -1', () => {
   const input = 'foo.bar >= -1';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo.bar', offset: 0 },
     { type: '>=', offset: 8 },
     { type: 'Str', lexeme: '-1', offset: 11 },
@@ -302,7 +300,7 @@ test('foo.bar >= -1', () => {
 
 test('foo.bar <= -1', () => {
   const input = 'foo.bar <= -1';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo.bar', offset: 0 },
     { type: '<=', offset: 8 },
     { type: 'Str', lexeme: '-1', offset: 11 },
@@ -312,7 +310,7 @@ test('foo.bar <= -1', () => {
 
 test('resource =~ /\\/Objects\\/.+\\.xml$/', () => {
   const input = 'resource =~ /\\/Objects\\/.+\\.xml$/';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'resource', offset: 0 },
     { type: '=~', offset: 9 },
     { type: 'RegexStr', lexeme: '/\\/Objects\\/.+\\.xml$/', offset: 12 },
@@ -322,7 +320,7 @@ test('resource =~ /\\/Objects\\/.+\\.xml$/', () => {
 
 test('view == vsc-packages-activitybar-folders && vsc-packages-folders-loaded', () => {
   const input = 'view == vsc-packages-activitybar-folders && vsc-packages-folders-loaded';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'view', offset: 0 },
     { type: '==', offset: 5 },
     { type: 'Str', lexeme: 'vsc-packages-activitybar-folders', offset: 8 },
@@ -335,7 +333,7 @@ test('view == vsc-packages-activitybar-folders && vsc-packages-folders-loaded',
 test('sfdx:project_opened && resource =~ /.*\\/functions\\/.*\\/[^\\/]+(\\/[^\\/]+.(ts|js|java|json|toml))?$/ && resourceFilename != package.json && resourceFilename != package-lock.json && resourceFilename != tsconfig.json', () => {
   const input =
     'sfdx:project_opened && resource =~ /.*\\/functions\\/.*\\/[^\\/]+(\\/[^\\/]+.(ts|js|java|json|toml))?$/ && resourceFilename != package.json && resourceFilename != package-lock.json && resourceFilename != tsconfig.json';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'sfdx:project_opened', offset: 0 },
     { type: '&&', offset: 20 },
     { type: 'Str', lexeme: 'resource', offset: 23 },
@@ -359,7 +357,7 @@ test('sfdx:project_opened && resource =~ /.*\\/functions\\/.*\\/[^\\/]+(\\/[^\\/
 
 test(`view =~ '/(servers)/' && viewItem =~ '/^(Starting|Started|Debugging|Stopping|Stopped)/'`, () => {
   const input = `view =~ '/(servers)/' && viewItem =~ '/^(Starting|Started|Debugging|Stopping|Stopped)/'`;
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'view', offset: 0 },
     { type: '=~', offset: 5 },
     { type: 'QuotedStr', lexeme: '/(servers)/', offset: 9 },
@@ -373,7 +371,7 @@ test(`view =~ '/(servers)/' && viewItem =~ '/^(Starting|Started|Debugging|Stoppi
 
 test('resourcePath =~ /.md(.yml|.txt)*$/gim', () => {
   const input = 'resourcePath =~ /.md(.yml|.txt)*$/gim';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'resourcePath' },
     { type: '=~', offset: 13 },
     { type: 'RegexStr', offset: 16, lexeme: '/.md(.yml|.txt)*$/gim' },
@@ -383,7 +381,7 @@ test('resourcePath =~ /.md(.yml|.txt)*$/gim', () => {
 
 test(`foo === bar'`, () => {
   const input = `foo === bar'`;
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'foo' },
     { type: '===', offset: 4 },
     { type: 'Str', offset: 8, lexeme: 'bar' },
@@ -394,7 +392,7 @@ test(`foo === bar'`, () => {
 
 test(`foo === '`, () => {
   const input = `foo === '`;
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'foo' },
     { type: '===', offset: 4 },
     { type: 'ErrorToken', offset: 8, lexeme: `'` },
@@ -404,7 +402,7 @@ test(`foo === '`, () => {
 
 test(`foo && 'bar - unterminated single quote`, () => {
   const input = `foo && 'bar`;
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'foo', offset: 0 },
     { type: '&&', offset: 4 },
     { type: 'ErrorToken', offset: 7, lexeme: `'bar` },
@@ -414,7 +412,7 @@ test(`foo && 'bar - unterminated single quote`, () => {
 
 test('vim<c-r> == 1 && vim<2 <= 3', () => {
   const input = 'vim<c-r> == 1 && vim<2 <= 3';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', lexeme: 'vim<c-r>', offset: 0 },
     { type: '==', offset: 9 },
     { type: 'Str', lexeme: '1', offset: 12 },
@@ -428,7 +426,7 @@ test('vim<c-r> == 1 && vim<2 <= 3', () => {
 
 test('vim<c-r>==1 && vim<2<=3', () => {
   const input = 'vim<c-r>==1 && vim<2<=3';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'vim<c-r>' },
     { type: '==', offset: 8 },
     { type: 'Str', offset: 10, lexeme: '1' },
@@ -442,7 +440,7 @@ test('vim<c-r>==1 && vim<2<=3', () => {
 
 test('foo|bar', () => {
   const input = 'foo|bar';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'foo' },
     { type: 'ErrorToken', offset: 3, lexeme: '|' },
     { type: 'Str', offset: 4, lexeme: 'bar' },
@@ -452,7 +450,7 @@ test('foo|bar', () => {
 
 test('resource =~ //foo/(barr|door/(Foo-Bar%20Templates|Soo%20Looo)|Web%20Site%Jjj%20Llll)(/.*)*$/', () => {
   const input = 'resource =~ //foo/(barr|door/(Foo-Bar%20Templates|Soo%20Looo)|Web%20Site%Jjj%20Llll)(/.*)*$/';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'resource' },
     { type: '=~', offset: 9 },
     { type: 'RegexStr', offset: 12, lexeme: '//' },
@@ -477,7 +475,7 @@ test('resource =~ //foo/(barr|door/(Foo-Bar%20Templates|Soo%20Looo)|Web%20Site%J
 
 test('/((/foo/(?!bar)(.*)/)|((/src/).*/)).*$/', () => {
   const input = '/((/foo/(?!bar)(.*)/)|((/src/).*/)).*$/';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'RegexStr', offset: 0, lexeme: '/((/' },
     { type: 'Str', offset: 4, lexeme: 'foo/' },
     { type: '(', offset: 8 },
@@ -502,7 +500,7 @@ test('/((/foo/(?!bar)(.*)/)|((/src/).*/)).*$/', () => {
 test('resourcePath =~ //foo/barr// || resourcePath =~ //view/(jarrr|doooor|bees)/(web|templates)// && resourceExtname in foo.Bar', () => {
   const input =
     'resourcePath =~ //foo/barr// || resourcePath =~ //view/(jarrr|doooor|bees)/(web|templates)// && resourceExtname in foo.Bar';
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'resourcePath' },
     { type: '=~', offset: 13 },
     { type: 'RegexStr', offset: 16, lexeme: '//' },
@@ -527,7 +525,7 @@ test('resourcePath =~ //foo/barr// || resourcePath =~ //view/(jarrr|doooor|bees)
 
 test('foo =~ /file:// || bar', () => {
   const input = JSON.parse('"foo =~ /file:// || bar"');
-  assert.deepStrictEqual(scan(input), [
+  expect(scan(input)).toStrictEqual([
     { type: 'Str', offset: 0, lexeme: 'foo' },
     { type: '=~', offset: 4 },
     { type: 'RegexStr', offset: 7, lexeme: '/file:/' },

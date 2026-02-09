@@ -76,7 +76,7 @@ export class NotificationRegistry {
     return Disposable.create(() => {
       notificationTask.dispose();
       electronNotification.dispose();
-      this.removeNotificationById(this.notificationId);
+      this.removeNotificationById(notification.id);
     });
   }
 

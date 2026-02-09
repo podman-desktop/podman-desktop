@@ -1,9 +1,8 @@
 <script lang="ts">
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import type { Snippet } from 'svelte';
 import { fade, slide } from 'svelte/transition';
 
-import Icon from '../icons/Icon.svelte';
+import ChevronExpander from '../icons/ChevronExpander.svelte';
 
 interface Props {
   expanded?: boolean;
@@ -29,11 +28,7 @@ function toggle(): void {
 <div class="flex flex-col w-full gap-2">
   <button onclick={(): void => toggle()} aria-expanded="{expanded}">
     <div class="flex flex-row space-x-1 items-center">
-      {#if expanded}
-        <Icon icon={faChevronDown} class='w-4'/>
-      {:else}
-        <Icon icon={faChevronRight} class='w-4'/>
-      {/if}
+      <ChevronExpander expanded={expanded} class="w-4" />
       {@render title?.()}
     </div>
   </button>

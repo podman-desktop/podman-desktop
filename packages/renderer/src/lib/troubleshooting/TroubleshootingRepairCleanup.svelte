@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faBroom, faWarning } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { ProviderInfo } from '/@api/provider-info';
 
@@ -54,7 +54,7 @@ async function cleanup(): Promise<void> {
   <div>
     <div class="text-[var(--pd-content-header)] flex flex-row items-center">Clean / Purge data</div>
     <div class="text-sm flex flex-row items-center pt-1">
-      <Fa class="pr-1" size="0.8x" icon={faWarning} />Proceeding with this action may result in data loss, including
+      <Icon class="pr-1" size="0.8x" icon={faWarning} />Proceeding with this action may result in data loss, including
       existing volumes, containers, images, etc.
     </div>
   </div>
@@ -71,7 +71,7 @@ async function cleanup(): Promise<void> {
   <div>
     {#if cleanupFailures.length > 0}
       <div class="text-[var(--pd-state-error)] text-xs flex flex-row items-center" role="alert" aria-label="error">
-        <Fa class="pr-1" size="1x" icon={faWarning} />{cleanupFailures.length} failures
+        <Icon class="pr-1" size="1x" icon={faWarning} />{cleanupFailures.length} failures
       </div>
     {/if}
   </div>

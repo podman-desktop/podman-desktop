@@ -28,7 +28,7 @@ const windowListeners = ['update-explore-features'];
 
 let readyToUpdate = false;
 
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   if ('explore-features-loaded' === eventName) {
     readyToUpdate = true;
   }

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
@@ -36,15 +36,16 @@ const taskManager: TaskManager = {
 
 let registerNotificationDisposable: Disposable;
 
-/* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
   notificationRegistry = new NotificationRegistry(apiSender, taskManager);
   registerNotificationDisposable = notificationRegistry.registerExtension(extensionId);
+  vi.resetAllMocks();
 });
 
 vi.mock('electron', async () => {
   class Notification {
     show(): void {}
+    close(): void {}
   }
 
   return {
@@ -269,4 +270,51 @@ test('expect same notification to only appear once if added multiple times', asy
   registerNotificationDisposable.dispose();
   queue = notificationRegistry.getNotifications();
   expect(queue.length).toEqual(0);
+});
+
+test('expect correct notification is disposed when multiple are added', async () => {
+  const notificationDisposeMock = vi.fn();
+  const notificationTask = {
+    id: `main-1`,
+    name: 'title',
+    started: 1721656320682,
+    description: 'description',
+    dispose: notificationDisposeMock,
+  };
+  createNotificationtaskMock.mockImplementation(() => notificationTask);
+  const disposable1 = notificationRegistry.addNotification({
+    extensionId,
+    title: 'notification 1',
+    body: 'body 1',
+    type: 'info',
+  });
+
+  notificationRegistry.addNotification({
+    extensionId,
+    title: 'notification 2',
+    body: 'body 2',
+    type: 'info',
+  });
+
+  let queue = notificationRegistry.getNotifications();
+  expect(queue.length).toEqual(2);
+
+  const notif2 = queue[0];
+  const notif1 = queue[1];
+
+  assert(notif1);
+  assert(notif2);
+
+  expect(notif2.title).toEqual('notification 2');
+  expect(notif1.title).toEqual('notification 1');
+
+  disposable1.dispose();
+
+  queue = notificationRegistry.getNotifications();
+
+  // We expect notification 1 to be removed. Notification 2 should remain.
+  const remainingTitles = queue.map(n => n.title);
+  expect(remainingTitles).toContain('notification 2');
+  expect(remainingTitles).not.toContain('notification 1');
+  expect(queue.length).toEqual(1);
 });

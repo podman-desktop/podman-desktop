@@ -2,9 +2,10 @@
 interface Props {
   size?: string;
   solid?: boolean;
+  class?: string;
 }
 
-let { size = '40', solid = false }: Props = $props();
+let { size = '40', solid = false, class: className = '' }: Props = $props();
 
 let baseStyle: string = 'stroke:currentColor;stroke-width:0.3;stroke-linecap:round;';
 let style: string = baseStyle + (solid ? 'fill:currentColor' : 'fill:none');
@@ -13,6 +14,7 @@ let style: string = baseStyle + (solid ? 'fill:currentColor' : 'fill:none');
 <svg
   width={size}
   height={size}
+  class={className}
   viewBox="1 1 6.4666665 6.4666666"
   version="1.1"
   aria-label="Job"

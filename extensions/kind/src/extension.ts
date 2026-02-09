@@ -93,12 +93,15 @@ async function installLatestKind(): Promise<string> {
   return cliPath;
 }
 
-async function registerProvider(
-  extensionContext: extensionApi.ExtensionContext,
+/**
+ * Registers the Kubernetes provider connection factory for creating Kind clusters.
+ * Should only be called when container connections are available.
+ */
+function registerKubernetesFactory(
   provider: extensionApi.Provider,
   telemetryLogger: extensionApi.TelemetryLogger,
-): Promise<void> {
-  const disposable = provider.setKubernetesProviderConnectionFactory(
+): extensionApi.Disposable {
+  return provider.setKubernetesProviderConnectionFactory(
     {
       create: async (params: { [key: string]: unknown }, logger?: Logger, token?: CancellationToken) => {
         // if kind is not installed, let's ask the user to install it
@@ -122,9 +125,43 @@ async function registerProvider(
       },
     },
   );
-  extensionContext.subscriptions.push(disposable);
+}
 
-  // search
+/**
+ * Updates the Kind Kubernetes factory registration based on container connection availability.
+ * Registers factory when running connections exist, unregisters when none are available.
+ */
+function updateKubernetesFactoryRegistration(
+  provider: extensionApi.Provider,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): void {
+  const containerConnections = extensionApi.provider.getContainerConnections();
+  const runningConnections = containerConnections.filter(conn => conn.connection.status() === 'started');
+
+  if (runningConnections.length > 0) {
+    kubernetesFactoryDisposable ??= registerKubernetesFactory(provider, telemetryLogger);
+    provider.updateWarnings([]);
+  } else {
+    if (kubernetesFactoryDisposable) {
+      kubernetesFactoryDisposable.dispose();
+      kubernetesFactoryDisposable = undefined;
+    }
+    provider.updateWarnings([
+      {
+        name: 'Container Engine Required',
+        details: extensionApi.env.isLinux
+          ? 'Install and start a container engine (e.g. Podman) to create Kind clusters'
+          : 'Start your container provider (e.g. Podman) to create Kind clusters',
+      },
+    ]);
+  }
+}
+
+async function registerProvider(
+  provider: extensionApi.Provider,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): Promise<void> {
+  updateKubernetesFactoryRegistration(provider, telemetryLogger);
   await searchKindClusters(provider);
   console.log('kind extension is active');
 }
@@ -282,15 +319,20 @@ async function searchKindClusters(provider: extensionApi.Provider): Promise<void
   await updateClusters(provider, kindContainers);
 }
 
-export function refreshKindClustersOnProviderConnectionUpdate(provider: extensionApi.Provider): void {
+export function refreshKindClustersOnProviderConnectionUpdate(
+  provider: extensionApi.Provider,
+  telemetryLogger: extensionApi.TelemetryLogger,
+): void {
   // when a provider is changing, update the status
   extensionApi.provider.onDidUpdateContainerConnection(async () => {
     // needs to search for kind clusters
     await searchKindClusters(provider);
+    updateKubernetesFactoryRegistration(provider, telemetryLogger);
   });
 }
 
 let currentUpdateDisposable: extensionApi.Disposable | undefined = undefined;
+let kubernetesFactoryDisposable: extensionApi.Disposable | undefined = undefined;
 
 export async function createProvider(
   extensionContext: extensionApi.ExtensionContext,
@@ -316,7 +358,7 @@ export async function createProvider(
   provider = extensionApi.provider.createProvider(providerOptions);
 
   extensionContext.subscriptions.push(provider);
-  await registerProvider(extensionContext, provider, telemetryLogger);
+  await registerProvider(provider, telemetryLogger);
   extensionContext.subscriptions.push(
     extensionApi.commands.registerCommand(KIND_MOVE_IMAGE_COMMAND, async image => {
       telemetryLogger.logUsage('moveImage');
@@ -341,16 +383,18 @@ export async function createProvider(
   });
 
   // when a container provider connection is changing, search for kind clusters
-  refreshKindClustersOnProviderConnectionUpdate(provider);
+  refreshKindClustersOnProviderConnectionUpdate(provider, telemetryLogger);
 
   // search when a new container is updated or removed
   extensionApi.provider.onDidRegisterContainerConnection(async () => {
     await searchKindClusters(provider);
+    updateKubernetesFactoryRegistration(provider, telemetryLogger);
   });
   extensionApi.provider.onDidUnregisterContainerConnection(async () => {
     await searchKindClusters(provider);
+    updateKubernetesFactoryRegistration(provider, telemetryLogger);
   });
-  extensionApi.provider.onDidUpdateProvider(async () => registerProvider(extensionContext, provider, telemetryLogger));
+  extensionApi.provider.onDidUpdateProvider(async () => registerProvider(provider, telemetryLogger));
   // search for kind clusters on boot
   await searchKindClusters(provider);
 }
@@ -645,6 +689,12 @@ async function deleteExecutableAsAdmin(filePath: string): Promise<void> {
 
 export function deactivate(): void {
   console.log('stopping kind extension');
+
+  if (kubernetesFactoryDisposable) {
+    kubernetesFactoryDisposable.dispose();
+    kubernetesFactoryDisposable = undefined;
+  }
+
   kindPath = undefined;
   kindCli = undefined;
 }

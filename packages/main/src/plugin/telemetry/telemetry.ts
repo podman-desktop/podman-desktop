@@ -39,6 +39,7 @@ import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configura
 import type { Event } from '/@api/event.js';
 import type { FeedbackProperties } from '/@api/feedback.js';
 import { TelemetryMessages } from '/@api/telemetry.js';
+import { TelemetrySettings } from '/@api/telemetry/telemetry-settings.js';
 import product from '/@product.json' with { type: 'json' };
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
@@ -47,21 +48,16 @@ import { Emitter } from '../events/emitter.js';
 import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '../types/telemetry.js';
 import { Identity } from './identity.js';
 import type { TelemetryRule } from './telemetry-api.js';
-import { TelemetrySettings } from './telemetry-settings.js';
 
-export const TRACK_EVENT_TYPE = 'track';
-export const PAGE_EVENT_TYPE = 'page';
-export const STARTUP_EVENT_TYPE = 'startup';
-export const SHUTDOWN_EVENT_TYPE = 'shutdown';
-export const FEEDBACK_EVENT_TYPE = 'feedback';
+export const EventType = {
+  TRACK: 'track',
+  PAGE: 'page',
+  STARTUP: 'startup',
+  SHUTDOWN: 'shutdown',
+  FEEDBACK: 'feedback',
+} as const;
 
-export type EventType =
-  | typeof TRACK_EVENT_TYPE
-  | typeof PAGE_EVENT_TYPE
-  | typeof STARTUP_EVENT_TYPE
-  | typeof SHUTDOWN_EVENT_TYPE
-  | typeof FEEDBACK_EVENT_TYPE
-  | string;
+export type EventType = (typeof EventType)[keyof typeof EventType] | string;
 
 /**
  * Handle the telemetry reporting.
@@ -110,17 +106,16 @@ export class Telemetry {
 
   async init(): Promise<void> {
     const telemetryMessages = this.getTelemetryMessages();
-    const telemetryLink =
-      telemetryMessages.infoLink && telemetryMessages.infoURL
-        ? ` [${telemetryMessages.infoLink}](${telemetryMessages.infoURL})`
-        : '';
+    const telemetryInfo = telemetryMessages.info
+      ? ` [${telemetryMessages.info.link}](${telemetryMessages.info.url})`
+      : '';
     const telemetryConfigurationNode: IConfigurationNode = {
       id: 'preferences.telemetry',
       title: 'Telemetry',
       type: 'object',
       properties: {
         [TelemetrySettings.SectionName + '.' + TelemetrySettings.Enabled]: {
-          markdownDescription: `${telemetryMessages.acceptMessage}${telemetryLink}`,
+          markdownDescription: `${telemetryMessages.acceptMessage}${telemetryInfo}`,
           type: 'boolean',
           default: true,
         },
@@ -184,8 +179,18 @@ export class Telemetry {
   getTelemetryMessages(): TelemetryMessages {
     return {
       acceptMessage: product.telemetry.acceptMessage,
-      infoLink: product.telemetry.infoLink,
-      infoURL: product.telemetry.infoURL,
+      info: product.telemetry.info
+        ? {
+            link: product.telemetry.info?.link,
+            url: product.telemetry.info?.url,
+          }
+        : undefined,
+      privacy: product.telemetry.privacy
+        ? {
+            link: product.telemetry.privacy?.link,
+            url: product.telemetry.privacy?.url,
+          }
+        : undefined,
     } as TelemetryMessages;
   }
 
@@ -258,7 +263,7 @@ export class Telemetry {
 
     await this.initTelemetry();
 
-    this.internalTrack(STARTUP_EVENT_TYPE).catch((err: unknown) => {
+    this.internalTrack(EventType.STARTUP).catch((err: unknown) => {
       console.log(`Error sending startup event: ${err}`);
     });
     let sendShutdownAnalytics = false;
@@ -267,7 +272,7 @@ export class Telemetry {
       if (!sendShutdownAnalytics && stoppedExtensions.val) {
         e.preventDefault();
         try {
-          this.internalTrack(SHUTDOWN_EVENT_TYPE).catch((err: unknown) => {
+          this.internalTrack(EventType.SHUTDOWN).catch((err: unknown) => {
             console.log(`Error sending shutdown event: ${err}`);
           });
           this.analytics?.closeAndFlush().catch((err: unknown) => {
@@ -308,7 +313,7 @@ export class Telemetry {
       All: true,
     };
 
-    if (event === PAGE_EVENT_TYPE) {
+    if (event === EventType.PAGE) {
       const name: string | undefined = typeof properties['name'] === 'string' ? properties['name'] : undefined;
 
       this.analytics?.page({ anonymousId, name, context, integrations });

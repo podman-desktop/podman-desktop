@@ -17,54 +17,9 @@
  ***********************************************************************/
 
 import type { Preview } from '@storybook/svelte-vite';
-import { createElement } from 'react';
-import { themes } from 'storybook/theming';
-import { DocsContainer } from '@storybook/addon-docs/blocks';
+import { withThemeByClassName } from '@storybook/addon-themes';
 import './main.css';
 import './themes.css';
-
-let theme: 'dark' | 'light' = 'light';
-
-// Theme logic here (runs in iframe context)
-const applyTheme = () => {
-  try {
-    const isEmbedded = window.parent !== window;
-    let parentTheme: string | undefined;
-    if (isEmbedded) {
-      parentTheme = window.parent.document.documentElement.dataset.theme;
-      if (parentTheme === 'dark' || parentTheme === 'light') {
-        theme = parentTheme;
-      }
-    }
-    if (!parentTheme) {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      theme = isDark ? 'dark' : 'light';
-    }
-    document.body.classList.remove('dark', 'light');
-    document.body.classList.add(theme);
-  } catch (err) {
-    console.warn('Theme detection failed:', err);
-  }
-};
-applyTheme();
-
-// Watch for changes if embedded
-if (window.parent !== window) {
-  try {
-    const observer = new MutationObserver(applyTheme);
-    observer.observe(window.parent.document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
-
-    // Disconnect on iframe unload
-    window.parent.addEventListener('unload', () => {
-      observer.disconnect();
-    });
-  } catch (err) {
-    console.warn('Could not observe parent for theme changes:', err);
-  }
-}
 
 const preview: Preview = {
   parameters: {
@@ -74,12 +29,25 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    docs: {
-      container: props => {
-        const currentProps = { ...props };
-        currentProps.theme = theme === 'light' ? themes.light : themes.dark;
-        return createElement(DocsContainer, currentProps);
+  },
+  decorators: [
+    withThemeByClassName({
+      themes: {
+        light: 'light',
+        dark: 'dark',
       },
+      defaultTheme: 'light',
+      parentSelector: 'body',
+    }),
+  ],
+  a11y: {
+    config: {
+      rules: [
+        {
+          // Disable region rule for component stories as they are isolated components
+          id: 'region',
+        },
+      ],
     },
   },
 };

@@ -407,7 +407,7 @@ test('check that consilience check returns warning message', async () => {
   expect(checks.records.length).toBe(1);
   expect(checks.records[0]).to.contains({
     type: 'info',
-    record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
+    record: 'It is recommended to install Kind on a virtual machine with at least 6GB of memory.',
   } as AuditRecord);
 });
 

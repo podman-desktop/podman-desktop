@@ -25,6 +25,8 @@ import { NetworksPage } from './networks-page';
 
 export class CreateNetworkPage extends BasePage {
   readonly heading: Locator;
+  readonly basicTab: Locator;
+  readonly advancedTab: Locator;
   readonly networkNameBox: Locator;
   readonly subnetBox: Locator;
   readonly createButton: Locator;
@@ -33,25 +35,34 @@ export class CreateNetworkPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.heading = this.page.getByRole('heading', { name: 'Create a network' });
+    this.basicTab = this.page.getByRole('button', { name: 'Basic' });
+    this.advancedTab = this.page.getByRole('button', { name: 'Advanced' });
     this.networkNameBox = this.page.getByRole('textbox', { name: 'Name' });
     this.subnetBox = this.page.getByRole('textbox', { name: 'Subnet' });
     this.createButton = this.page.getByRole('button', { name: 'Create' });
     this.cancelButton = this.page.getByRole('button', { name: 'Cancel' });
   }
 
-  async createNetwork(name: string, subnet: string): Promise<NetworkDetailsPage> {
-    return test.step(`Create network ${name} with subnet ${subnet}`, async () => {
+  async createNetwork(name: string, subnet?: string): Promise<NetworkDetailsPage> {
+    const stepName = subnet ? `Create network ${name} with subnet ${subnet}` : `Create network ${name}`;
+    return test.step(stepName, async () => {
       await playExpect(this.networkNameBox).toBeVisible();
       await this.networkNameBox.clear();
       await playExpect(this.networkNameBox).toHaveValue('');
       await this.networkNameBox.fill(name);
       await playExpect(this.networkNameBox).toHaveValue(name);
 
-      await playExpect(this.subnetBox).toBeVisible();
-      await this.subnetBox.clear();
-      await playExpect(this.subnetBox).toHaveValue('');
-      await this.subnetBox.fill(subnet);
-      await playExpect(this.subnetBox).toHaveValue(subnet);
+      if (subnet) {
+        // Switch to Advanced tab and wait for it to be active
+        await playExpect(this.advancedTab).toBeVisible();
+        await this.advancedTab.click();
+        await playExpect(this.subnetBox).toBeVisible();
+
+        await this.subnetBox.clear();
+        await playExpect(this.subnetBox).toHaveValue('');
+        await this.subnetBox.fill(subnet);
+        await playExpect(this.subnetBox).toHaveValue(subnet);
+      }
 
       await playExpect(this.createButton).toBeEnabled();
       await this.createButton.click();

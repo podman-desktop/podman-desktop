@@ -24,8 +24,7 @@ import { extensionBannerInfos } from '/@/stores/extensionBanners';
 import { providerInfos } from '/@/stores/providers';
 import type { FeaturedExtension } from '/@api/featured/featured-api';
 import type { ProviderInfo } from '/@api/provider-info';
-
-import type { ExtensionBanner } from '../../../../main/src/plugin/recommendations/recommendations-api';
+import type { ExtensionBanner } from '/@api/recommendations/recommendations';
 
 test('multiple banners should be rendered', async () => {
   const banners: ExtensionBanner[] = Array.from({ length: 10 }, (_, i) => ({

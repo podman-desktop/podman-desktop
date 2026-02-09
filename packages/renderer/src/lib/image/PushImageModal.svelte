@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faCheckCircle, faCircleArrowUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
 import { onMount, tick } from 'svelte';
-import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
@@ -96,9 +96,9 @@ $effect(() => {
       <div class="pb-4">
         <label for="modalImageTag" class="block mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Image tag</label>
         {#if isAuthenticatedForThisImage}
-          <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />
+          <Icon class="absolute mt-3 ml-1.5 text-[var(--pd-state-success)]" size="1x" icon={faCheckCircle} />
         {:else}
-          <Fa class="absolute mt-3 ml-1.5 text-[var(--pd-state-warning)]" size="1x" icon={faTriangleExclamation} />
+          <Icon class="absolute mt-3 ml-1.5 text-[var(--pd-state-warning)]" size="1x" icon={faTriangleExclamation} />
         {/if}
 
         <select
@@ -133,6 +133,7 @@ $effect(() => {
       {/if}
       {#if !pushFinished}
         <Button
+          type="primary"
           class="w-auto"
           icon={faCircleArrowUp}
           disabled={!isAuthenticatedForThisImage}

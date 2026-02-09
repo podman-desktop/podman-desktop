@@ -1,18 +1,12 @@
 <script lang="ts">
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
-import type { Component } from 'svelte';
 import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 
-import AuthenticationIcon from '/@/lib/images/AuthenticationIcon.svelte';
-import CLIToolsIcon from '/@/lib/images/CLIToolsIcon.svelte';
-import ExperimentalIcon from '/@/lib/images/ExperimentalIcon.svelte';
-import KubernetesIcon from '/@/lib/images/KubernetesIcon.svelte';
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
-import ProxyIcon from '/@/lib/images/ProxyIcon.svelte';
-import RegistriesIcon from '/@/lib/images/RegistriesIcon.svelte';
-import ResourcesIcon from '/@/lib/images/ResourcesIcon.svelte';
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
+import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
+import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
+import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants';
 import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
 
 import { configurationProperties } from './stores/configurationProperties';
@@ -21,46 +15,24 @@ interface Props {
   meta: TinroRouteMeta;
 }
 
-interface NavItem {
-  id: string;
-  title: string;
-}
-
-interface SettingsNavItemConfig {
-  title: string;
-  href: string;
-  visible?: boolean;
-  icon?: Component;
-}
-
 let { meta }: Props = $props();
 
-let dockerCompatibilityEnabled = $state(false);
 let configProperties: Map<string, NavItem[]> = $state(new Map<string, NavItem[]>());
 let sectionExpanded: { [key: string]: boolean } = $state({});
 
 let experimentalSection: boolean = $state(false);
 
-let settingsNavigationItems = $derived<SettingsNavItemConfig[]>([
-  { title: 'Resources', href: '/preferences/resources', visible: true, icon: ResourcesIcon },
-  { title: 'Proxy', href: '/preferences/proxies', visible: true, icon: ProxyIcon },
-  {
-    title: 'Docker Compatibility',
-    href: '/preferences/docker-compatibility',
-    visible: dockerCompatibilityEnabled,
-  },
-  { title: 'Registries', href: '/preferences/registries', visible: true, icon: RegistriesIcon },
-  { title: 'Authentication', href: '/preferences/authentication-providers', visible: true, icon: AuthenticationIcon },
-  { title: 'CLI Tools', href: '/preferences/cli-tools', visible: true, icon: CLIToolsIcon },
-  { title: 'Kubernetes', href: '/preferences/kubernetes-contexts', visible: true, icon: KubernetesIcon },
-]);
+let settingsNavigationItems: SettingsNavItemConfig[] = $state(settingsNavigationEntries);
 
 function updateDockerCompatibility(): void {
   window
     .getConfigurationValue<boolean>(`${DockerCompatibilitySettings.SectionName}.${DockerCompatibilitySettings.Enabled}`)
     .then(result => {
       if (result !== undefined) {
-        dockerCompatibilityEnabled = result;
+        const index = settingsNavigationEntries.findIndex(entry => entry.title === 'Docker Compatibility');
+        if (index !== -1) {
+          settingsNavigationItems[index].visible = result;
+        }
       }
     })
     .catch((err: unknown) =>
@@ -82,6 +54,11 @@ onMount(() => {
 
     // check for experimental configuration
     experimentalSection = value.some(configuration => !!configuration.experimental);
+
+    const experimentalIndex = settingsNavigationEntries.findIndex(entry => entry.title === 'Experimental');
+    if (experimentalIndex !== -1) {
+      settingsNavigationItems[experimentalIndex].visible = experimentalSection;
+    }
 
     // update config properties
     configProperties = value.reduce((map, current) => {
@@ -127,15 +104,6 @@ onMount(() => {
       {/if}
     {/each}
 
-    {#if experimentalSection}
-      <SettingsNavItem
-        icon={ExperimentalIcon}
-        title="Experimental"
-        href="/preferences/experimental"
-        selected={meta.url === '/preferences/experimental'}
-      />
-    {/if}
-
     <!-- Default configuration properties start -->
     {#each configProperties as [configSection, configItems] (configSection)}
       <SettingsNavItem
@@ -156,5 +124,14 @@ onMount(() => {
       {/if}
     {/each}
     <!-- Default configuration properties end -->
+    <div class="mx-3 my-2 border-t border-(--pd-global-nav-bg-border)"></div>
+    <SettingsNavItem
+      icon='fas fa-crosshairs'
+      iconRight={ShortcutArrowIcon}
+      iconRightAlign="end"
+      title="Troubleshooting"
+      href="/troubleshooting/repair-connections"
+      selected={meta.url === '/troubleshooting/repair-connections'}
+    />
   </div>
 </nav>

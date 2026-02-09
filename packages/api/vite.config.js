@@ -19,6 +19,7 @@
 import { chrome } from '../../.electron-vendors.cache.json';
 import { join } from 'path';
 import { builtinModules } from 'module';
+import dts from 'vite-plugin-dts';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -35,6 +36,13 @@ const config = {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
+  plugins: [
+    dts({
+      entryRoot: 'src',
+      outDir: 'dist',
+      insertTypesEntry: true,
+    }),
+  ],
   build: {
     sourcemap: 'inline',
     target: `chrome${chrome}`,
@@ -42,7 +50,24 @@ const config = {
     assetsDir: '.',
     minify: process.env.MODE !== 'development',
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        'api-sender': 'src/api-sender/api-sender-type.ts',
+        authentication: 'src/authentication/authentication.ts',
+        configuration: 'src/configuration/index.ts',
+        context: 'src/context/index.ts',
+        editor: 'src/editor/editor-settings.ts',
+        'extension-catalog': 'src/extension-catalog/extensions-catalog-api.ts',
+        featured: 'src/featured/featured-api.ts',
+        kubernetes: 'src/kubernetes/kubernetes-generator-api.ts',
+        'learning-center': 'src/learning-center/guide.ts',
+        libpod: 'src/libpod/libpod.ts',
+        recommendations: 'src/recommendations/index.ts',
+        'status-bar': 'src/status-bar/index.ts',
+        telemetry: 'src/telemetry/telemetry-settings.ts',
+        terminal: 'src/terminal/terminal-settings.ts',
+        welcome: 'src/welcome/welcome-settings.ts',
+      },
       formats: ['cjs'],
     },
     rollupOptions: {

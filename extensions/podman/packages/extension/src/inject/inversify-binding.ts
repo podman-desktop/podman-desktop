@@ -41,6 +41,7 @@ import { WinInstaller } from '/@/installer/win-installer';
 import { WinPlatform } from '/@/platforms/win-platform';
 import { PodmanProvider } from '/@/providers/podman-provider';
 import { PodmanBinary } from '/@/utils/podman-binary';
+import { PodmanWindowsLegacyInstaller } from '/@/utils/podman-windows-legacy-installer';
 
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
 
@@ -75,6 +76,7 @@ export class InversifyBinding {
     this.#inversifyContainer.bind(HyperVRunningCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(HyperVInstalledCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(UserAdminCheck).toSelf().inSingletonScope();
+    this.#inversifyContainer.bind(PodmanWindowsLegacyInstaller).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanDesktopElevatedCheck).toSelf().inSingletonScope();
     this.#inversifyContainer.bind(PodmanProvider).toSelf().inSingletonScope();
 

@@ -1,7 +1,7 @@
 import-module au
 
 $version = $env:VERSION
-$releases = 'https://github.com/containers/podman-desktop/releases/expanded_assets/v' + $version
+$apiUrl = 'https://api.github.com/repos/containers/podman-desktop/releases/tags/' + 'v' + $version
 
 function global:au_SearchReplace {
    @{
@@ -17,15 +17,21 @@ function global:au_SearchReplace {
 }
 
 function global:au_GetLatest {
-    $download_page = Invoke-WebRequest -Uri $releases
+    $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ 'User-Agent' = 'PowerShell' }
 
-    $url64   = $download_page.links | ? href -match '-setup.exe$' | % href | select -First 1
-    $version = (Split-Path ( Split-Path $url64 ) -Leaf).Substring(1)
+    $asset = $release.assets | Where-Object { $_.name -match '-setup\.exe$' } | Select-Object -First 1
+
+    if (-not $asset) {
+        throw "no -setup.exe asset found for $version"
+    }
+
+    $url64 = $asset.browser_download_url
+    $releaseNotes = $release.html_url
 
     @{
-        URL64   = 'https://github.com' + $url64
+        URL64   = $url64
         Version = $version
-        ReleaseNotes = $releases
+        ReleaseNotes = $releaseNotes
     }
 }
 

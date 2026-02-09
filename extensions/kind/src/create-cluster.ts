@@ -211,7 +211,7 @@ export async function connectionAuditor(provider: string, items: AuditRequestIte
     if (memTotal < 6000000000) {
       records.push({
         type: 'info',
-        record: 'It is recommend to install Kind on a virtual machine with at least 6GB of memory.',
+        record: 'It is recommended to install Kind on a virtual machine with at least 6GB of memory.',
       });
     }
   }

@@ -32,13 +32,6 @@ export async function updateConfigAndContextComposeBinary(
   await checkAndUpdateComposeBinaryInstalledContexts(detect);
 }
 
-export async function isDockerComposeInstalledSystemWide(
-  extensionContext: extensionApi.ExtensionContext,
-): Promise<boolean> {
-  const detect = new Detect(os, extensionContext.storagePath);
-  return await detect.checkSystemWideDockerCompose();
-}
-
 // Handle configuration changes (for example, when the user toggles the "Install compose system-wide" setting)
 export function handleConfigurationChanges(extensionContext: extensionApi.ExtensionContext): void {
   const detect = new Detect(os, extensionContext.storagePath);

@@ -229,7 +229,7 @@ test('Expect a local image to have an active run image button', async () => {
   expect(selectImagebutton).not.toBeDisabled();
 
   await user.click(selectImagebutton);
-  expect(router.goto).toHaveBeenCalledWith('/image/run/basic');
+  expect(router.goto).toHaveBeenCalledWith('/images/run/basic');
 });
 
 test('Expect no user input to show only local images', async () => {

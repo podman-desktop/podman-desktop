@@ -217,4 +217,16 @@ export class ContainersPage extends MainPage {
       return new SelectImagePage(this.page);
     });
   }
+
+  async getContainerEnvironment(name: string): Promise<string> {
+    return test.step(`Get Container: ${name} environment`, async () => {
+      const containerRow = await this.getContainerRowByName(name);
+      if (containerRow === undefined) {
+        throw Error(`Container: '${name}' does not exist`);
+      }
+      const environmentElement = containerRow.getByTestId('tooltip-trigger');
+      const environment = await environmentElement.textContent();
+      return environment ?? '';
+    });
+  }
 }

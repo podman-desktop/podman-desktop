@@ -1,5 +1,6 @@
 <script lang="ts">
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 
 import { ActionKind, type ItemAction, type ItemInfo } from '/@api/help-menu';
 
@@ -13,7 +14,13 @@ const { items }: Props = $props();
 
 let showMenu = $state(false);
 let outsideWindow = $state<HTMLDivElement | undefined>();
-window.events?.receive('toggle-help-menu', toggleMenu);
+
+onMount(() => {
+  const disposable = window.events?.receive('toggle-help-menu', toggleMenu);
+  return (): void => {
+    disposable?.dispose();
+  };
+});
 
 function toggleMenu(): void {
   showMenu = !showMenu;

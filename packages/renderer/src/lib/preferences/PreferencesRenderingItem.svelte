@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
@@ -73,6 +73,7 @@ function updateResetButtonVisibility(recordValue: unknown): void {
 }
 
 function doResetToDefault(): void {
+  if (record.locked) return;
   resetToDefault = true;
 }
 
@@ -100,13 +101,13 @@ async function openGitHubDiscussion(): Promise<void> {
           {#if record.experimental !== undefined}
             <Label>
               <div class="flex flex-row space-x-1 items-center">
-                <Fa title="experimental" size="xs" icon={faFlask}/>
+                <Icon title="experimental" size="xs" icon={faFlask}/>
                 <span>Experimental</span>
               </div>
             </Label>
           {/if}
         </div>
-        {#if showResetButton}
+        {#if showResetButton && !record.locked}
           <div class="ml-2">
             <RefreshButton label="Reset to default value" onclick={doResetToDefault} />
           </div>

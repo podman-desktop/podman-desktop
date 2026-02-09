@@ -47,6 +47,6 @@ export function getLimactl(): string {
 
 // Get the limactl binary path from configuration lima.binary.path
 // return string or undefined
-export function getCustomBinaryPath(): string | undefined {
+function getCustomBinaryPath(): string | undefined {
   return extensionApi.configuration.getConfiguration('lima').get('binary.path');
 }

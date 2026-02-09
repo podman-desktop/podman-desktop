@@ -18,7 +18,8 @@
 
 import * as extensionApi from '@podman-desktop/api';
 
-import { getSocketCompatibility } from './compatibility-mode';
+import { getSocketCompatibility } from '/@/compatibility-mode/compatibility-mode';
+
 import { isDisguisedPodman } from './warnings';
 
 export class ExtensionNotifications {

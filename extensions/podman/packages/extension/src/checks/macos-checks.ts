@@ -19,7 +19,7 @@
 import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
-import { compare } from 'compare-versions';
+import { compare } from 'semver';
 
 import { BaseCheck } from './base-check';
 
@@ -61,7 +61,7 @@ export class MacVersionCheck extends BaseCheck {
 
   async execute(): Promise<extensionApi.CheckResult> {
     const darwinVersion = os.release();
-    if (compare(darwinVersion, MINIMUM_VERSION, '>=')) {
+    if (compare(darwinVersion, MINIMUM_VERSION) >= 0) {
       return this.createSuccessfulResult();
     }
     return this.createFailureResult({

@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderImages } from '@podman-desktop/api';
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { expect, test } from 'vitest';
 
@@ -50,9 +50,9 @@ test('Expect provider region', async () => {
     installationSupport: false,
     cleanupSupport: false,
   };
-  render(ProviderCard, { provider });
+  const { findByRole } = render(ProviderCard, { provider });
 
-  const region = screen.getByRole('region', { name: provider.name + ' Provider' });
+  const region = await findByRole('region', { name: provider.name + ' Provider' });
   expect(region).toBeInTheDocument();
 });
 
@@ -79,9 +79,9 @@ test('Expect provider name', async () => {
     installationSupport: false,
     cleanupSupport: false,
   };
-  render(ProviderCard, { provider });
+  const { findByLabelText } = render(ProviderCard, { provider });
 
-  const name = screen.getByLabelText('context-name');
+  const name = await findByLabelText('context-name');
   expect(name).toBeInTheDocument();
   expect(name.textContent).toContain(provider.name);
 });
@@ -110,12 +110,12 @@ test('Expect provider icon', async () => {
     cleanupSupport: false,
   };
 
-  render(ProviderCard, { provider });
+  const { findByRole } = render(ProviderCard, { provider });
 
   // allow IconImage to render
   await tick();
 
-  const logo = screen.getByRole('img');
+  const logo = await findByRole('img');
   expect(logo).toBeInTheDocument();
   expect(logo).toHaveAttribute('src', provider.images.icon);
 });
@@ -144,9 +144,9 @@ test('Expect no provider version', async () => {
     cleanupSupport: false,
     // no version
   };
-  render(ProviderCard, { provider });
+  const { queryByLabelText } = render(ProviderCard, { provider });
 
-  const version = screen.queryByLabelText('Provider Version');
+  const version = queryByLabelText('Provider Version');
   expect(version).not.toBeInTheDocument();
 });
 
@@ -174,9 +174,9 @@ test('Expect provider version', async () => {
     version: '1.2.3',
     cleanupSupport: false,
   };
-  render(ProviderCard, { provider });
+  const { findByLabelText } = render(ProviderCard, { provider });
 
-  const version = screen.getByLabelText('Provider Version');
+  const version = await findByLabelText('Provider Version');
   expect(version).toBeInTheDocument();
   expect(version.textContent).toBe('v' + provider.version);
 });
@@ -204,9 +204,9 @@ test('Expect provider state', async () => {
     installationSupport: false,
     cleanupSupport: false,
   };
-  render(ProviderCard, { provider });
+  const { findByLabelText } = render(ProviderCard, { provider });
 
-  const state = screen.getByLabelText('Actual State');
+  const state = await findByLabelText('Actual State');
   expect(state).toBeInTheDocument();
   expect(state.textContent).toContain('NOT-INSTALLED');
 });

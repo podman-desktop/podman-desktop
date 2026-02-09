@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
+import { expect, test, vi } from 'vitest';
+
+import type { TelemetryMessages } from '/@api/telemetry';
 
 import FeedbackForm from './FeedbackForm.svelte';
 
@@ -28,4 +31,35 @@ test('something', () => {
   expect(screen.getByLabelText('content')).toBeInTheDocument();
   expect(screen.getByLabelText('validation and buttons')).toBeInTheDocument();
   expect(screen.getByLabelText('validation')).toBeInTheDocument();
+});
+
+test('Expect privacy statement is missing from the UI when not provided', async () => {
+  render(FeedbackForm);
+
+  await tick();
+
+  const privacyLink = screen.queryByRole('link');
+  expect(privacyLink).not.toBeInTheDocument();
+});
+
+test('Expect privacy statement is included when it exists', async () => {
+  const telem: TelemetryMessages = {
+    acceptMessage: 'Help improve the product',
+    privacy: {
+      link: 'Click here',
+      url: 'privacy-url',
+    },
+  };
+  vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
+
+  render(FeedbackForm);
+
+  await tick();
+
+  const privacyLink = screen.getByRole('link');
+  expect(privacyLink).toBeInTheDocument();
+  expect(privacyLink.textContent).toEqual(telem.privacy?.link);
+
+  await fireEvent.click(privacyLink);
+  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.privacy?.url));
 });

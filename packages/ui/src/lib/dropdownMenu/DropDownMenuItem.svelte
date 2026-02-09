@@ -1,12 +1,13 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+import type { Component } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 
 interface Props {
   title: string;
   tooltip?: string;
-  icon: IconDefinition | string;
+  icon: IconDefinition | Component | string;
   enabled?: boolean;
   hidden?: boolean;
   onClick?: () => void;
@@ -24,13 +25,9 @@ const disabledClasses = 'text-[var(--pd-dropdown-disabled-item-text)] bg-[var(--
   <div class={`p-2.5 ${enabled ? enabledClasses : disabledClasses}`} role="none" onclick={onClick}>
     <span
       title={tooltip !== '' ? tooltip : title}
-      class="group flex items-center no-underline whitespace-nowrap"
+      class="group flex items-center no-underline whitespace-nowrap h-4"
       tabindex="-1">
-      {#if typeof icon === 'string'}
-        <Icon icon={icon} />
-      {:else}
-        <Icon class="h-4 w-4 text-md" icon={icon}/>
-      {/if}
+      <Icon class="w-4 text-md" icon={icon} />
       {#if title}<span class="ml-2">{title}</span>{/if}
     </span>
   </div>

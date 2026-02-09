@@ -90,6 +90,8 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
     }
   }
 }
+
+const showForm = $derived(installInProgress || progressPercent !== 100 || !!inputfieldError);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -102,7 +104,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
       <div>
         <label for="imageName" class="block pb-2 text-[var(--pd-modal-text)]">OCI Image:</label>
         <div class="min-h-14">
-          {#if installInProgress || progressPercent !== 100}
+          {#if showForm}
             <Input
               bind:value={imageName}
               name="imageName"
@@ -141,14 +143,14 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
       <Button
         type="link"
         on:click={closeCallback}>Cancel</Button>
-      {#if installInProgress || progressPercent !== 100}
+      {#if showForm}
         <Button
+          type="primary"
           icon={faCloudDownload}
           disabled={inputfieldError !== undefined}
           on:click={installExtension}
           inProgress={installInProgress}>Install</Button>
-      {/if}
-      {#if !installInProgress && progressPercent === 100}
+      {:else}
         <Button on:click={closeCallback}>Done</Button>
       {/if}
     
