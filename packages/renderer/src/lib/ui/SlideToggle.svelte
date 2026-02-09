@@ -1,15 +1,31 @@
 <script lang="ts">
-import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher, type Snippet } from 'svelte';
 
-export let id: string;
-export let name: string | undefined = undefined;
-export let checked: boolean = false;
-export let readonly: boolean = false;
-export let disabled: boolean = false;
-export let left: boolean = false;
+interface Props {
+  id: string;
+  name?: string;
+  checked?: boolean;
+  readonly?: boolean;
+  disabled?: boolean;
+  left?: boolean;
+  'aria-invalid'?: boolean | 'true' | 'false';
+  'aria-label'?: string;
+  children?: Snippet;
+}
 
-let enabled: boolean;
-$: enabled = !readonly && !disabled;
+let {
+  id,
+  name,
+  checked = $bindable(false),
+  readonly = false,
+  disabled = false,
+  left = false,
+  'aria-invalid': ariaInvalid,
+  'aria-label': ariaLabel,
+  children,
+}: Props = $props();
+
+const enabled = $derived(!readonly && !disabled);
 
 const dispatch = createEventDispatcher();
 
@@ -19,11 +35,11 @@ function onInput(): void {
 </script>
 
 <label class="inline-flex items-center cursor-pointer" for={id}>
-  {#if left && $$slots}
+  {#if left && children}
     <span
       class="mr-3 text-sm"
       class:text-[var(--pd-input-toggle-on-text)]={checked}
-      class:text-[var(--pd-input-toggle-off-text)]={!checked}><slot /></span>
+      class:text-[var(--pd-input-toggle-off-text)]={!checked}>{@render children?.()}</span>
   {/if}
   <div class="relative inline-flex items-center cursor-pointer">
     <input
@@ -31,12 +47,12 @@ function onInput(): void {
       name={name}
       type="checkbox"
       class="sr-only peer"
-      on:input={onInput}
+      oninput={onInput}
       bind:checked={checked}
       readonly={readonly}
       disabled={disabled}
-      aria-invalid={$$props['aria-invalid']}
-      aria-label={$$props['aria-label']} />
+      aria-invalid={ariaInvalid}
+      aria-label={ariaLabel} />
     <div
       class="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:rounded-full after:h-4 after:w-4 after:transition-all"
       class:bg-[var(--pd-input-toggle-off-bg)]={enabled}
@@ -50,11 +66,11 @@ function onInput(): void {
       class:after:bg-[var(--pd-input-toggle-disabled-switch)]={!enabled}>
     </div>
   </div>
-  {#if !left && $$slots}
+  {#if !left && children}
     <span
       class="ml-3"
       class:text-[var(--pd-input-toggle-on-text)]={checked && !disabled}
       class:text-[var(--pd-input-toggle-off-text)]={!checked && !disabled}
-      class:text-[var(--pd-input-toggle-disabled-text)]={disabled}><slot /></span>
+      class:text-[var(--pd-input-toggle-disabled-text)]={disabled}>{@render children?.()}</span>
   {/if}
 </label>
