@@ -134,8 +134,8 @@ importers:
         specifier: ^3.1.7
         version: 3.1.7
       undici:
-        specifier: ^7.20.0
-        version: 7.20.0
+        specifier: ^7.21.0
+        version: 7.21.0
       win-ca:
         specifier: ^3.5.1
         version: 3.5.1
@@ -11576,6 +11576,10 @@ packages:
 
   undici@7.20.0:
     resolution: {integrity: sha512-MJZrkjyd7DeC+uPZh+5/YaMDxFiiEEaDgbUSVMXayofAkDWF1088CDo+2RPg7B1BuS1qf1vgNE7xqwPxE0DuSQ==}
+    engines: {node: '>=20.18.1'}
+
+  undici@7.21.0:
+    resolution: {integrity: sha512-Hn2tCQpoDt1wv23a68Ctc8Cr/BHpUSfaPYrkajTXOS9IKpxVRx/X5m1K2YkbK2ipgZgxXSgsUinl3x+2YdSSfg==}
     engines: {node: '>=20.18.1'}
 
   unicode-canonical-property-names-ecmascript@2.0.1:
@@ -25297,6 +25301,8 @@ snapshots:
   undici@7.19.2: {}
 
   undici@7.20.0: {}
+
+  undici@7.21.0: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
