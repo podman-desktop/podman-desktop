@@ -2760,6 +2760,22 @@ declare module '@podman-desktop/api' {
        */
       Networks?: Array<string>;
     };
+    /**
+     * CPUPeriod contains the CPU period of the pod
+     */
+    cpu_period?: number;
+    /**
+     * CPUQuota contains the CPU quota of the pod
+     */
+    cpu_quota?: number;
+    /**
+     * CPUSetCPUs contains linux specific CPU data for the pod
+     */
+    cpuset_cpus?: string;
+    /**
+     * Mounts contains volume related information for the pod
+     */
+    mounts?: Array<InspectMount>;
   }
 
   interface AuthConfig {
@@ -2958,6 +2974,15 @@ declare module '@podman-desktop/api' {
     Output: string;
   }
 
+  export interface InspectMount {
+    Name?: string;
+    Source: string;
+    Destination: string;
+    Mode: string;
+    RW: boolean;
+    Propagation: string;
+  }
+
   export interface ContainerInspectInfo {
     engineId: string;
     engineName: string;
@@ -3001,14 +3026,7 @@ declare module '@podman-desktop/api' {
         DeviceSize: string;
       };
     };
-    Mounts: Array<{
-      Name?: string;
-      Source: string;
-      Destination: string;
-      Mode: string;
-      RW: boolean;
-      Propagation: string;
-    }>;
+    Mounts: Array<InspectMount>;
     Config: {
       Hostname: string;
       Domainname: string;
