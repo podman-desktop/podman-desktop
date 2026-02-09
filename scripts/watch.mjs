@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**********************************************************************
- * Copyright (C) 2022-2024 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,6 +160,23 @@ const setupUiPackageWatcher = () => {
  * Start or restart App when source files are changed
  * @param {{ws: import('vite').WebSocketServer}} WebSocketServer
  */
+const setupCoreApiPackageWatcher = ({ ws }) =>
+  getWatcher({
+    name: 'reload-page-on-core-api-package-change',
+    configFile: 'packages/api/vite.config.js',
+    writeBundle() {
+      if (ws) {
+        ws.send({
+          type: 'full-reload',
+        });
+      }
+    },
+  });
+
+/**
+ * Start or restart App when source files are changed
+ * @param {{ws: import('vite').WebSocketServer}} WebSocketServer
+ */
 const setupPreloadPackageWatcher = ({ ws }) =>
   getWatcher({
     name: 'reload-page-on-preload-package-change',
@@ -284,6 +301,7 @@ const setupExtensionApiWatcher = name => {
     await setupPreloadDockerExtensionPackageWatcher(viteDevServer);
     await setupPreloadWebviewPackageWatcher(viteDevServer);
     await setupUiPackageWatcher();
+    await setupCoreApiPackageWatcher(viteDevServer);
     await setupMainPackageWatcher(viteDevServer);
   } catch (e) {
     console.error(e);
