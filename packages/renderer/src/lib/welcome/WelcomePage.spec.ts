@@ -36,6 +36,10 @@ import WelcomePage from './WelcomePage.svelte';
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getPodmanDesktopVersion).mockResolvedValue('1.0.0');
+  vi.mocked(window.getWelcomeMessages).mockResolvedValue({
+    getStartedMessage: 'Get started with Podman Desktop',
+    welcomeMessage: 'Welcome to Podman Desktop',
+  });
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
       func();
@@ -97,8 +101,10 @@ test('Expect that telemetry messages is visible', async () => {
 test('Expect that telemetry link opens url', async () => {
   const telem: TelemetryMessages = {
     acceptMessage: 'Help improve the product',
-    infoLink: 'Click here',
-    infoURL: 'privacy-url',
+    info: {
+      link: 'Click here',
+      url: 'info-url',
+    },
   };
   vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
 
@@ -106,23 +112,22 @@ test('Expect that telemetry link opens url', async () => {
   const accept = screen.getByText(telem.acceptMessage);
   expect(accept).toBeInTheDocument();
 
-  const infoLink = screen.getByText(telem.infoLink ?? '');
+  const infoLink = screen.getByText(telem.info?.link ?? '');
   expect(infoLink).toBeInTheDocument();
 
   await fireEvent.click(infoLink);
-  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.infoURL));
+  await vi.waitFor(() => expect(vi.mocked(window.openExternal)).toBeCalledWith(telem.info?.url));
 });
 
-test('Expect that telemetry link is missing when url is not provided', async () => {
+test('Expect that telemetry link is missing when info is not provided', async () => {
   const telem = {
     acceptMessage: 'Help improve the product',
-    infoLink: 'Click here',
   } as TelemetryMessages;
   vi.mocked(window.getTelemetryMessages).mockResolvedValue(telem);
 
   await waitRender({ showWelcome: true, showTelemetry: true });
 
-  const infoLink = screen.queryByText(telem.infoLink ?? '');
+  const infoLink = screen.queryByRole('link');
   expect(infoLink).not.toBeInTheDocument();
 });
 

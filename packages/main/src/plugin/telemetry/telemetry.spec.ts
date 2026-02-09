@@ -399,8 +399,10 @@ describe('aggregateTrack', () => {
     expect(messages.acceptMessage).toBe(
       'Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.',
     );
-    expect(messages.infoLink).toBe('Read our privacy statement');
-    expect(messages.infoURL).toBe('https://developers.redhat.com/article/tool-data-collection');
+    expect(messages.info?.link).toBe('For more information read our statement');
+    expect(messages.info?.url).toBe('https://developers.redhat.com/article/tool-data-collection');
+    expect(messages.privacy?.link).toBe('Read our privacy statement');
+    expect(messages.privacy?.url).toBe('https://www.redhat.com/en/about/privacy-policy');
   });
 
   test('should register telemetry preference correctly', async () => {
@@ -411,7 +413,7 @@ describe('aggregateTrack', () => {
       expect.objectContaining({
         properties: expect.objectContaining({
           'telemetry.enabled': expect.objectContaining({
-            markdownDescription: `${messages.acceptMessage} [${messages.infoLink}](${messages.infoURL})`,
+            markdownDescription: `${messages.acceptMessage} [${messages.info?.link}](${messages.info?.url})`,
           }),
         }),
       }),
@@ -420,13 +422,17 @@ describe('aggregateTrack', () => {
 
   test('should return custom telemetry message', () => {
     vi.mocked(product).telemetry.acceptMessage = 'Accept message';
-    vi.mocked(product).telemetry.infoLink = 'Privacy message';
-    vi.mocked(product).telemetry.infoURL = 'privacy-url';
+    vi.mocked(product).telemetry.info.link = 'Info message';
+    vi.mocked(product).telemetry.info.url = 'info-url';
+    vi.mocked(product).telemetry.privacy.link = 'Privacy message';
+    vi.mocked(product).telemetry.privacy.url = 'privacy-url';
 
     const messages = telemetry.getTelemetryMessages();
     expect(messages.acceptMessage).toBe('Accept message');
-    expect(messages.infoLink).toBe('Privacy message');
-    expect(messages.infoURL).toBe('privacy-url');
+    expect(messages.info?.link).toBe('Info message');
+    expect(messages.info?.url).toBe('info-url');
+    expect(messages.privacy?.link).toBe('Privacy message');
+    expect(messages.privacy?.url).toBe('privacy-url');
   });
 
   test('preference should be formatted correctly when no link is provided', async () => {

@@ -174,7 +174,7 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
  * On a platform where the tmpdir is not on the same device as the destination
  * the rename will fail
  */
-export async function moveSafely(src: string, dest: string): Promise<void> {
+async function moveSafely(src: string, dest: string): Promise<void> {
   try {
     await rename(src, dest);
   } catch (error: unknown) {

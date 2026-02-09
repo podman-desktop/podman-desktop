@@ -42,7 +42,7 @@ const windowEvents = [
 ];
 const windowListeners = ['system-ready', 'provider-lifecycle-change'];
 
-export async function checkForUpdate(): Promise<boolean> {
+async function checkForUpdate(): Promise<boolean> {
   return true;
 }
 

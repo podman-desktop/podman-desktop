@@ -28,7 +28,7 @@ const windowListeners = ['extensions-already-started'];
 
 // Do not update until all extensions are started (since we want to make sure kube-context has been loaded)
 let readyToUpdate = false;
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   if ('extensions-already-started' === eventName) {
     readyToUpdate = true;
   }

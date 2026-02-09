@@ -3,13 +3,14 @@ interface Props {
   size?: string;
   class?: string;
   style?: string;
+  label?: string;
 }
-let { size = '2em', class: className, style }: Props = $props();
+let { size = '2em', class: className, style, label = 'Loading' }: Props = $props();
 </script>
 
 <i
   role="status"
-  aria-label="Loading"
+  aria-label={label}
   aria-live="polite"
   class="flex justify-center items-center {className}"
   style={style}>

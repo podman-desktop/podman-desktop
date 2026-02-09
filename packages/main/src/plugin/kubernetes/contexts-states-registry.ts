@@ -45,7 +45,7 @@ export interface ContextState {
   resources: ContextStateResources;
 }
 
-export type ContextStateResources = {
+type ContextStateResources = {
   [resourceName in ResourceName]: KubernetesObject[];
 };
 

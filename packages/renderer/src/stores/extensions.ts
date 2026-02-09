@@ -33,7 +33,7 @@ const windowEvents = [
 ];
 const windowListeners = ['system-ready'];
 
-export async function checkForUpdate(): Promise<boolean> {
+async function checkForUpdate(): Promise<boolean> {
   return true;
 }
 
@@ -49,7 +49,7 @@ const eventStore = new EventStore<ExtensionInfo[]>(
 );
 eventStore.setup();
 
-export async function fetchExtensions(): Promise<ExtensionInfo[]> {
+async function fetchExtensions(): Promise<ExtensionInfo[]> {
   const result = await window.listExtensions();
   result.sort((a, b) => a.displayName.localeCompare(b.displayName));
   return result;

@@ -18,8 +18,9 @@
 
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
-import type { ResourceElementActions } from '/@/model/core/operations';
+import { ResourceElementActions } from '/@/model/core/operations';
 import { DetailsPage } from '/@/model/pages/details-page';
+import { handleConfirmationDialog } from '/@/utility/operations';
 
 export class ResourceDetailsPage extends DetailsPage {
   readonly resourceStatus: Locator;
@@ -37,6 +38,11 @@ export class ResourceDetailsPage extends DetailsPage {
       });
       await playExpect(button).toBeEnabled({ timeout: timeout });
       await button.click();
+
+      // A confirmation dialog is displayed for deletion
+      if (operation === ResourceElementActions.Delete) {
+        await handleConfirmationDialog(this.page);
+      }
     });
   }
 }

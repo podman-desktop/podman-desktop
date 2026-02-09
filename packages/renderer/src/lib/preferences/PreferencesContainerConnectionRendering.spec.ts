@@ -25,7 +25,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
@@ -58,6 +58,14 @@ const EMPTY_PROVIDER_MOCK: ProviderInfo = {
   extensionId: '',
   cleanupSupport: false,
 };
+
+beforeEach(() => {
+  vi.resetAllMocks();
+
+  vi.mocked(window.showMessageBox).mockResolvedValue({
+    response: 0,
+  });
+});
 
 test('Expect that the right machine is displayed', async () => {
   const socketPath = '/my/common-socket-path';

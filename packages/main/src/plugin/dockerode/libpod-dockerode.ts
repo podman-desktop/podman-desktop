@@ -28,12 +28,6 @@ import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '/@api/libpod/libpod.js';
 import type { LibPodPodInfo, LibPodPodInspectInfo } from '/@api/pod-info.js';
 
-export interface PodContainerInfo {
-  Id: string;
-  Names: string;
-  Status: string;
-}
-
 export interface PodCreateOptions {
   name?: string;
   portmappings?: PodCreatePortOptions[];
@@ -75,7 +69,7 @@ export interface Info {
   version: Version;
 }
 
-export interface Host {
+interface Host {
   arch: string;
   buildahVersion: string;
   cgroupManager: string;
@@ -106,54 +100,54 @@ export interface Host {
   linkmode: string;
 }
 
-export interface Conmon {
+interface Conmon {
   package: string;
   path: string;
   version: string;
 }
 
-export interface CpuUtilization {
+interface CpuUtilization {
   userPercent: number;
   systemPercent: number;
   idlePercent: number;
 }
 
-export interface Distribution {
+interface Distribution {
   distribution: string;
   variant: string;
   version: string;
 }
 
-export interface IdMappings {
+interface IdMappings {
   gidmap: Gidmap[];
   uidmap: Uidmap[];
 }
 
-export interface Gidmap {
+interface Gidmap {
   container_id: number;
   host_id: number;
   size: number;
 }
 
-export interface Uidmap {
+interface Uidmap {
   container_id: number;
   host_id: number;
   size: number;
 }
 
-export interface OciRuntime {
+interface OciRuntime {
   name: string;
   package: string;
   path: string;
   version: string;
 }
 
-export interface RemoteSocket {
+interface RemoteSocket {
   path: string;
   exists: boolean;
 }
 
-export interface Security {
+interface Security {
   apparmorEnabled: boolean;
   capabilities: string;
   rootless: boolean;
@@ -162,13 +156,13 @@ export interface Security {
   selinuxEnabled: boolean;
 }
 
-export interface Slirp4netns {
+interface Slirp4netns {
   executable: string;
   package: string;
   version: string;
 }
 
-export interface Store {
+interface Store {
   configFile: string;
   containerStore: ContainerStore;
   graphDriverName: string;
@@ -184,7 +178,7 @@ export interface Store {
   transientStore: boolean;
 }
 
-export interface ContainerStore {
+interface ContainerStore {
   number: number;
   paused: number;
   running: number;
@@ -192,31 +186,31 @@ export interface ContainerStore {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface GraphOptions {}
+interface GraphOptions {}
 
-export interface GraphStatus {
+interface GraphStatus {
   'Backing Filesystem': string;
   'Native Overlay Diff': string;
   'Supports d_type': string;
   'Using metacopy': string;
 }
 
-export interface ImageStore {
+interface ImageStore {
   number: number;
 }
 
-export interface Registries {
+interface Registries {
   search: string[];
 }
 
-export interface Plugins {
+interface Plugins {
   volume: string[];
   network: string[];
   log: string[];
   authorization: unknown;
 }
 
-export interface Version {
+interface Version {
   APIVersion: string;
   Version: string;
   GoVersion: string;
@@ -721,30 +715,12 @@ export class LibpodDockerode {
           204: true,
           500: 'server error',
         },
+        headers: {
+          // if we don't build - we should send Content-Type application/yaml
+          // application/tar is not supported
+          'Content-Type': options?.build ? 'application/x-tar' : 'application/yaml',
+        },
         options: {},
-      };
-
-      // if we don't build - we should send Content-Type application/yaml
-      // application/tar is not supported
-      const contentType = options?.build ? 'application/x-tar' : 'application/yaml';
-
-      // patch the modem to not send x-tar header as content-type
-      const originalBuildRequest = this.modem.buildRequest;
-      this.modem.buildRequest = function (
-        options: RequestOptions,
-        context: DialOptions,
-        data?: string | Buffer | NodeJS.ReadableStream,
-        callback?: DockerModem.RequestCallback,
-      ): void {
-        // in case of kube play, docker-modem will send the header application/tar while it's basically the content of the file so it should be application/yaml
-        if (context && typeof context === 'object' && 'path' in context) {
-          if (String(context.path).includes('/libpod/play/kube')) {
-            if (options && typeof options === 'object' && 'headers' in options) {
-              options.headers = { 'Content-Type': contentType };
-            }
-          }
-        }
-        originalBuildRequest.call(this, options, context, data, callback);
       };
 
       return new Promise((resolve, reject) => {

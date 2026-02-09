@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, Link } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
@@ -72,7 +72,7 @@ async function ondetails(extensionId: string): Promise<void> {
           class="flex items-center"
           aria-label={label}
         >
-          <Fa icon="{faPlusCircle}" size="1.2x" class="mr-1"/>
+          <Icon icon="{faPlusCircle}" size="1.2x" class="mr-1"/>
           {label}
         </Button>
         </div>

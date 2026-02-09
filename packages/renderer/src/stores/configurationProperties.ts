@@ -25,7 +25,7 @@ import { EventStore } from './event-store';
 const windowEvents = ['extensions-started', 'extension-started', 'extension-stopped', 'configuration-changed'];
 const windowListeners = ['system-ready', 'extensions-already-started'];
 
-export async function checkForUpdate(): Promise<boolean> {
+async function checkForUpdate(): Promise<boolean> {
   return true;
 }
 
@@ -41,7 +41,7 @@ const eventStore = new EventStore<IConfigurationPropertyRecordedSchema[]>(
 );
 eventStore.setup();
 
-export async function fetchConfigurationProperties(): Promise<IConfigurationPropertyRecordedSchema[]> {
+async function fetchConfigurationProperties(): Promise<IConfigurationPropertyRecordedSchema[]> {
   const result: Record<string, IConfigurationPropertyRecordedSchema> = await window.getConfigurationProperties();
   const properties: IConfigurationPropertyRecordedSchema[] = [];
   for (const key in result) {

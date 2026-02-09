@@ -47,6 +47,7 @@ import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
@@ -72,6 +73,7 @@ const configurationRegistry: IConfigurationRegistry = {
   getConfiguration: vi.fn().mockReturnValue({
     get: vi.fn().mockReturnValue(''),
   }),
+  updateConfigurationValue: vi.fn(),
 } as unknown as IConfigurationRegistry;
 
 const fileSystemMonitoring: FilesystemMonitoring = new FilesystemMonitoring();
@@ -85,7 +87,9 @@ const experimentalConfigurationManager: ExperimentalConfigurationManager = {
 } as unknown as ExperimentalConfigurationManager;
 const makeApiClientMock = vi.fn();
 const getContextObjectMock = vi.fn();
-
+const featureRegistry: FeatureRegistry = {
+  onFeaturesUpdated: vi.fn(),
+} as unknown as FeatureRegistry;
 const podAndDeploymentTestYAML = `apiVersion: v1
 kind: Pod
 metadata:
@@ -260,6 +264,14 @@ class TestKubernetesClient extends KubernetesClient {
   public override restartJob(name: string, namespace: string): Promise<void> {
     return super.restartJob(name, namespace);
   }
+
+  public override KubernetesManagerStart(): Promise<void> {
+    return super.KubernetesManagerStart();
+  }
+
+  public override KubernetesManagerStop(): Promise<void> {
+    return super.KubernetesManagerStop();
+  }
 }
 
 function createTestClient(namespace?: string): TestKubernetesClient {
@@ -269,6 +281,7 @@ function createTestClient(namespace?: string): TestKubernetesClient {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   if (namespace) {
     client.setInitialNamespace(namespace);
@@ -476,6 +489,7 @@ test('Check connection to Kubernetes cluster', async () => {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   const result = await client.checkConnection();
   expect(result).toBeTruthy();
@@ -490,6 +504,7 @@ test('Check connection to Kubernetes cluster in error', async () => {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   const result = await client.checkConnection();
   expect(result).toBeFalsy();
@@ -508,6 +523,7 @@ test('Check update with empty kubeconfig file', async () => {
     fileSystemMonitoring,
     telemetry,
     experimentalConfigurationManager,
+    featureRegistry,
   );
   await client.refresh();
   expect(consoleErrorSpy).toBeCalledWith(expect.stringContaining('is empty. Skipping'));
@@ -2641,4 +2657,63 @@ test('expect readNamespacedJob to return the job', async () => {
   const job = await client.readNamespacedJob('foobar', 'default');
   expect(job).toBeDefined();
   expect(job?.metadata?.name).toEqual('foobar');
+});
+
+test('the internal monitoring is stopped when a kubernetes-dashboard feature is registered', async () => {
+  const client = createTestClient('default');
+  expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
+
+  await client.init();
+  expect(featureRegistry.onFeaturesUpdated).toHaveBeenCalledOnce();
+  const callback = vi.mocked(featureRegistry.onFeaturesUpdated).mock.calls[0]?.[0];
+  expect(callback).toBeDefined();
+
+  vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
+  await callback!(['kubernetes-dashboard', 'other-feature']);
+  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
+
+  // should prevent stopping it twice before starting it
+  await callback!(['kubernetes-dashboard', 'other-feature']);
+  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
+});
+
+test('the internal monitoring is started when a kubernetes-dashboard feature is unregistered, only once', async () => {
+  const client = createTestClient('default');
+  expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
+
+  await client.init();
+  expect(featureRegistry.onFeaturesUpdated).toHaveBeenCalledOnce();
+  const callback = vi.mocked(featureRegistry.onFeaturesUpdated).mock.calls[0]?.[0];
+  expect(callback).toBeDefined();
+
+  // first stop the monitoring
+  vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
+  await callback!(['other-feature', 'kubernetes-dashboard']);
+  expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
+
+  // then start the monitoring
+  vi.spyOn(client, 'KubernetesManagerStart').mockResolvedValue();
+  await callback!(['other-feature']);
+  expect(client.KubernetesManagerStart).toHaveBeenCalledOnce();
+
+  // should prevent starting it twice before stopping it
+  await callback!(['other-feature']);
+  expect(client.KubernetesManagerStart).toHaveBeenCalledOnce();
+});
+
+test('useInternalKubernetes configuration is set to false when internal manager is stopped', async () => {
+  const client = createTestClient('default');
+  await client.init();
+  await client.KubernetesManagerStop();
+  expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
+    'kubernetes.useInternalKubernetes',
+    false,
+  );
+});
+
+test('useInternalKubernetes configuration is set to true when internal manager is started', async () => {
+  const client = createTestClient('default');
+  await client.init();
+  await client.KubernetesManagerStart();
+  expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith('kubernetes.useInternalKubernetes', true);
 });

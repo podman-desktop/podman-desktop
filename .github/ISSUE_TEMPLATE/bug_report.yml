@@ -1,7 +1,6 @@
 name: Bug 🐞
 description: Report a bug report
 type: bug
-labels: [kind/bug 🐞]
 projects: ["podman-desktop/4"]
 
 body:

@@ -30,7 +30,6 @@ const PODMAN = 'podman';
 
 test.beforeAll(async ({ runner, welcomePage }) => {
   runner.setVideoAndTraceName('podman-remote-e2e');
-
   await welcomePage.handleWelcomePage(true);
 });
 

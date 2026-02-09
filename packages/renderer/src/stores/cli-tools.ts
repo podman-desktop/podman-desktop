@@ -27,7 +27,7 @@ const windowListeners = ['system-ready', 'extensions-already-started'];
 
 let extensionsStarted = false;
 
-export async function checkForUpdate(eventName: string): Promise<boolean> {
+async function checkForUpdate(eventName: string): Promise<boolean> {
   // trigger update after all extensions started
   if (eventName === 'extensions-already-started') {
     extensionsStarted = true;

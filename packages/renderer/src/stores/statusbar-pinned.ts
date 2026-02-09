@@ -26,7 +26,7 @@ import { EventStore } from './event-store';
 const windowEvents = [STATUS_BAR_PIN_CONSTANTS.PIN_OPTIONS_UPDATE];
 const windowListeners = ['system-ready'];
 
-export async function checkForUpdate(): Promise<boolean> {
+async function checkForUpdate(): Promise<boolean> {
   return true;
 }
 

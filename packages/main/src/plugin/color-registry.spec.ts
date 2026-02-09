@@ -67,6 +67,10 @@ class TestColorRegistry extends ColorRegistry {
     super.initTitlebar();
   }
 
+  override initTooltip(): void {
+    super.initTooltip();
+  }
+
   override initBadge(): void {
     super.initBadge();
   }
@@ -680,6 +684,109 @@ describe('badge', () => {
       dark: tailwindColorPalette.dustypurple[600],
       light: tailwindColorPalette.dustypurple[600],
     });
+  });
+});
+
+describe('initTooltip', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+  let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
+
+  beforeEach(() => {
+    // mock both methods since initTooltip uses both
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
+    spyOnRegisterColorDefinition.mockReturnValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('registers tooltip-bg with alpha transparency', () => {
+    colorRegistry.initTooltip();
+
+    // tooltip-bg should use registerColorDefinition
+    const bgCall = spyOnRegisterColorDefinition.mock.calls.find(call => call?.[0]?.id === 'tooltip-bg');
+    expect(bgCall).toBeDefined();
+
+    const bgDefinition = bgCall?.[0];
+    expect(bgDefinition?.id).toBe('tooltip-bg');
+    expect(bgDefinition?.dark).toBeDefined();
+    expect(bgDefinition?.light).toBeDefined();
+
+    // verify both colors contain alpha (0.8 for dark, 0.9 for light)
+    expect(bgDefinition?.dark).toContain('0.8');
+    expect(bgDefinition?.light).toContain('0.9');
+  });
+
+  test('registers tooltip-text without alpha', () => {
+    colorRegistry.initTooltip();
+
+    // tooltip-text should use registerColor (old method)
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('tooltip-text', {
+      light: tailwindColorPalette.stone[900],
+      dark: tailwindColorPalette.white,
+    });
+  });
+
+  test('registers tooltip-border with deprecation comment', () => {
+    colorRegistry.initTooltip();
+
+    // tooltip-border should still be registered (deprecated but not removed)
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('tooltip-border', {
+      light: tailwindColorPalette.gray[500],
+      dark: tailwindColorPalette.charcoal[500],
+    });
+  });
+
+  test('registers tooltip-inner-border with low opacity', () => {
+    colorRegistry.initTooltip();
+
+    // tooltip-inner-border should use registerColorDefinition with low alpha
+    const innerBorderCall = spyOnRegisterColorDefinition.mock.calls.find(
+      call => call?.[0]?.id === 'tooltip-inner-border',
+    );
+    expect(innerBorderCall).toBeDefined();
+
+    const innerBorderDefinition = innerBorderCall?.[0];
+    expect(innerBorderDefinition?.id).toBe('tooltip-inner-border');
+    expect(innerBorderDefinition?.dark).toBeDefined();
+    expect(innerBorderDefinition?.light).toBeDefined();
+
+    // verify both colors contain alpha (0.33 for both themes)
+    expect(innerBorderDefinition?.dark).toContain('0.33');
+    expect(innerBorderDefinition?.light).toContain('0.33');
+  });
+
+  test('registers tooltip-outer-border with varying opacity', () => {
+    colorRegistry.initTooltip();
+
+    // tooltip-outer-border should use registerColorDefinition with different alpha per theme
+    const outerBorderCall = spyOnRegisterColorDefinition.mock.calls.find(
+      call => call?.[0]?.id === 'tooltip-outer-border',
+    );
+    expect(outerBorderCall).toBeDefined();
+
+    const outerBorderDefinition = outerBorderCall?.[0];
+    expect(outerBorderDefinition?.id).toBe('tooltip-outer-border');
+    expect(outerBorderDefinition?.dark).toBeDefined();
+    expect(outerBorderDefinition?.light).toBeDefined();
+
+    // verify different alpha values (0.33 for light, 0.8 for dark)
+    expect(outerBorderDefinition?.dark).toContain('0.8');
+    expect(outerBorderDefinition?.light).toContain('0.33');
+  });
+
+  test('calls both registerColor and registerColorDefinition', () => {
+    colorRegistry.initTooltip();
+
+    // Should call registerColor 2 times (text and border)
+    expect(spyOnRegisterColor).toHaveBeenCalledTimes(2);
+
+    // Should call registerColorDefinition 3 times (bg, inner-border, outer-border)
+    expect(spyOnRegisterColorDefinition).toHaveBeenCalledTimes(3);
   });
 });
 

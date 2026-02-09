@@ -16,8 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { compareVersions } from 'compare-versions';
 import { inject, injectable } from 'inversify';
+import { compare } from 'semver';
 
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -153,7 +153,7 @@ export class ExtensionsUpdater {
         }
         // now, compare versions
         // if installed version is greater or equal to latest available version, skip
-        if (compareVersions(installedVersion, latestAvailableVersion.version) >= 0) {
+        if (compare(installedVersion, latestAvailableVersion.version) >= 0) {
           console.log(
             `Skipping update for extension ${installedExtension.id} because installed version ${installedVersion} is greater or equal to latest available version ${latestAvailableVersion.version}`,
           );

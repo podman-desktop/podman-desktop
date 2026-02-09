@@ -48,3 +48,8 @@ describe('parent attributes should be propagate', () => {
     expect(spinner.classList).toContain('dummy-class');
   });
 });
+
+test('should use custom label', () => {
+  const { getByRole } = render(Spinner, { label: 'Custom Loading' });
+  getByRole('status', { name: 'Custom Loading' });
+});

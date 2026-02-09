@@ -31,8 +31,22 @@ import { colorPaletteHelper } from './color-palette-helper.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
-const { amber, black, charcoal, dustypurple, fuschia, gray, green, purple, red, sky, stone, white, transparent } =
-  tailwindColorPalette;
+const {
+  amber,
+  black,
+  charcoal,
+  dustypurple,
+  fuchsia,
+  gray,
+  green,
+  neutral,
+  purple,
+  red,
+  sky,
+  stone,
+  white,
+  transparent,
+} = tailwindColorPalette;
 
 export type ColorDefinitionWithId = ColorDefinition & { id: string };
 
@@ -1158,18 +1172,37 @@ export class ColorRegistry {
   protected initTooltip(): void {
     const tooltip = 'tooltip-';
 
-    this.registerColor(`${tooltip}bg`, {
-      dark: charcoal[800],
-      light: gray[50],
-    });
+    this.registerColorDefinition(
+      this.color(`${tooltip}bg`)
+        .withLight(colorPaletteHelper(neutral[100]).withAlpha(0.9))
+        .withDark(colorPaletteHelper(neutral[800]).withAlpha(0.8))
+        .build(),
+    );
+
     this.registerColor(`${tooltip}text`, {
+      light: stone[900],
       dark: white,
-      light: black,
     });
+
     this.registerColor(`${tooltip}border`, {
+      // @deprecated since 2025-11-12. See https://github.com/podman-desktop/podman-desktop/pull/14819
       dark: charcoal[500],
       light: gray[500],
     });
+
+    this.registerColorDefinition(
+      this.color(`${tooltip}inner-border`)
+        .withLight(colorPaletteHelper(white).withAlpha(0.33))
+        .withDark(colorPaletteHelper(white).withAlpha(0.33))
+        .build(),
+    );
+
+    this.registerColorDefinition(
+      this.color(`${tooltip}outer-border`)
+        .withLight(colorPaletteHelper(black).withAlpha(0.33))
+        .withDark(colorPaletteHelper(black).withAlpha(0.8))
+        .build(),
+    );
   }
 
   protected initDropdown(): void {
@@ -1608,9 +1641,14 @@ export class ColorRegistry {
       dark: purple[500],
       light: purple[500],
     });
+    this.registerColor(`${badge}fuchsia`, {
+      dark: fuchsia[600],
+      light: fuchsia[600],
+    });
+    // @deprecated since 2026-02-04. See https://github.com/podman-desktop/podman-desktop/issues/15187
     this.registerColor(`${badge}fuschia`, {
-      dark: fuschia[600],
-      light: fuschia[600],
+      dark: fuchsia[600],
+      light: fuchsia[600],
     });
     this.registerColor(`${badge}gray`, {
       dark: gray[600],

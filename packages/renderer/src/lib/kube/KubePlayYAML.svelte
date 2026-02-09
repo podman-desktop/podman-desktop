@@ -2,7 +2,7 @@
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
 import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
-import Fa from 'svelte-fa';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
@@ -221,7 +221,7 @@ function toggle(choice: 'podman' | 'custom'): void {
               class="text-2xl pr-2"
               class:text-[var(--pd-content-card-border-selected)]={userChoice === 'podman'}
               class:text-[var(--pd-content-card-border)]={userChoice !== 'podman'}>
-              <Fa icon={faCircleCheck} />
+              <Icon icon={faCircleCheck} />
             </div>
             <FileInput
               name="containerFilePath"
@@ -266,7 +266,7 @@ function toggle(choice: 'podman' | 'custom'): void {
               class="text-2xl"
               class:text-[var(--pd-content-card-border-selected)]={userChoice === 'custom'}
               class:text-[var(--pd-content-card-border)]={userChoice !== 'custom'}>
-              <Fa icon={faCircleCheck} />
+              <Icon icon={faCircleCheck} />
             </div>
             <div
               class="pl-2"

@@ -8,12 +8,11 @@
 <script lang="ts" generics="T extends { selected?: boolean; name?: string }">
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
-import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { onMount, tick } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
-import Icon from '../icons/Icon.svelte';
+import ChevronExpander from '../icons/ChevronExpander.svelte';
 import type { ListOrganizerItem } from '../layouts/ListOrganizer';
 import ListOrganizer from '../layouts/ListOrganizer.svelte';
 /* eslint-enable import/no-duplicates */
@@ -461,9 +460,10 @@ async function resetColumns(): Promise<void> {
                 aria-expanded={!collapsed.includes(itemKey)}
                 on:click={toggleChildren.bind(undefined, itemKey)}
               >
-                <Icon size="0.8x"
-                  class="text-[var(--pd-table-body-text)] cursor-pointer"
-                  icon={!collapsed.includes(itemKey) ? faChevronDown : faChevronRight}/>
+                <ChevronExpander
+                  expanded={!collapsed.includes(itemKey)}
+                  size="0.8x"
+                  class="text-[var(--pd-table-body-text)] cursor-pointer" />
               </button>
             {/if}
           </div>

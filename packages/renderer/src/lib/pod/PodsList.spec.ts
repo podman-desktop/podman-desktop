@@ -544,7 +544,7 @@ test('Expect tab filtering to not duplicate filter condition in the search bar',
   await userEvent.click(runningTab);
   await userEvent.click(runningTab);
 
-  const searchInput = screen.getByPlaceholderText('Search pods...') as HTMLInputElement;
+  const searchInput = screen.getByPlaceholderText('Search...') as HTMLInputElement;
   expect(searchInput.value).toBe('is:running');
 });
 

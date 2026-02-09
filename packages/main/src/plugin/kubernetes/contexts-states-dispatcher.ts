@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { IDisposable } from '/@api/disposable.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
@@ -28,29 +29,41 @@ import type { ContextPermissionResult } from './context-permissions-checker.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';
 import type { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 
-export class ContextsStatesDispatcher {
+export class ContextsStatesDispatcher implements IDisposable {
+  #disposables: IDisposable[] = [];
+
   constructor(
     private manager: ContextsManagerExperimental,
     private apiSender: ApiSenderType,
   ) {}
 
   init(): void {
-    this.manager.onContextHealthStateChange((_state: ContextHealthState) => this.updateHealthStates());
-    this.manager.onOfflineChange(() => {
-      this.updateHealthStates();
-      this.updateResourcesCount();
-      this.updateActiveResourcesCount();
-    });
-    this.manager.onContextPermissionResult((_permissions: ContextPermissionResult) => this.updatePermissions());
-    this.manager.onContextDelete((_state: DispatcherEvent) => {
-      this.updateHealthStates();
-      this.updatePermissions();
-    });
-    this.manager.onResourceCountUpdated(() => this.updateResourcesCount());
-    this.manager.onResourceUpdated(event => {
-      this.updateResource(event.resourceName);
-      this.updateActiveResourcesCount();
-    });
+    this.#disposables.push(
+      this.manager.onContextHealthStateChange((_state: ContextHealthState) => this.updateHealthStates()),
+    );
+    this.#disposables.push(
+      this.manager.onOfflineChange(() => {
+        this.updateHealthStates();
+        this.updateResourcesCount();
+        this.updateActiveResourcesCount();
+      }),
+    );
+    this.#disposables.push(
+      this.manager.onContextPermissionResult((_permissions: ContextPermissionResult) => this.updatePermissions()),
+    );
+    this.#disposables.push(
+      this.manager.onContextDelete((_state: DispatcherEvent) => {
+        this.updateHealthStates();
+        this.updatePermissions();
+      }),
+    );
+    this.#disposables.push(this.manager.onResourceCountUpdated(() => this.updateResourcesCount()));
+    this.#disposables.push(
+      this.manager.onResourceUpdated(event => {
+        this.updateResource(event.resourceName);
+        this.updateActiveResourcesCount();
+      }),
+    );
   }
 
   updateHealthStates(): void {
@@ -105,5 +118,12 @@ export class ContextsStatesDispatcher {
 
   getTroubleshootingInformation(): KubernetesTroubleshootingInformation {
     return this.manager.getTroubleshootingInformation();
+  }
+
+  dispose(): void {
+    for (const disposable of this.#disposables) {
+      disposable.dispose();
+    }
+    this.#disposables = [];
   }
 }

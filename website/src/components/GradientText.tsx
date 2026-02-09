@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type GradientTextProps = {
+type GradientTextProps = {
   content: string;
   colorFrom: string;
   colorTo: string;

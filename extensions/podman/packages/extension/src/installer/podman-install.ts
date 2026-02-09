@@ -20,8 +20,8 @@ import { mkdir, readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
-import { compare } from 'compare-versions';
 import { inject, injectable, optional } from 'inversify';
+import { compare } from 'semver';
 
 import { getDetectionChecks } from '/@/checks/detection-checks';
 import {
@@ -274,7 +274,7 @@ export class PodmanInstall {
       if (
         extensionApi.env.isWindows &&
         updateInfo.installedVersion === '5.3.1' &&
-        compare(updateInfo.bundledVersion, '5.4.0', '>=')
+        compare(updateInfo.bundledVersion, '5.4.0') >= 0
       ) {
         // The updating from 5.3.1 -> 5.4.X have failed on Windows
         const result = await extensionApi.window.showInformationMessage(

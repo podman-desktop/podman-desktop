@@ -117,7 +117,7 @@ export class WebviewRegistry {
   }
 
   protected configureRouter(router: express.Router): void {
-    router.get('/*', (req, res) => {
+    router.get('/{*splat}', (req, res) => {
       // no referrer, reject request
       if (!req.headers.referer) {
         res.status(500).send('invalid request');
@@ -175,7 +175,7 @@ export class WebviewRegistry {
       }
 
       // send content of absolute path with express
-      res.sendFile(absolutePath);
+      res.sendFile(absolutePath, { dotfiles: 'allow' });
     });
   }
 

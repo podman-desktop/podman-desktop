@@ -72,6 +72,7 @@ import type { WebSocket } from 'ws';
 import type { Tags } from 'yaml';
 import { parseAllDocuments } from 'yaml';
 
+import { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
@@ -190,7 +191,7 @@ export class KubernetesClient {
    */
   private apiResources = new Map<string, Array<V1APIResource>>();
 
-  private contextsState: ContextsManagerInterface;
+  private contextsState?: ContextsManagerInterface;
   private contextsStatesDispatcher: ContextsStatesDispatcher | undefined;
 
   private readonly _onDidUpdateKubeconfig = new Emitter<containerDesktopAPI.KubeconfigUpdateEvent>();
@@ -206,6 +207,8 @@ export class KubernetesClient {
     { stdout: ExecStreamWriter; stderr: ExecStreamWriter; stdin: StringLineReader; conn: WebSocket }
   > = new Map();
 
+  #managerStarted: boolean = true;
+
   constructor(
     @inject(ApiSenderType)
     private readonly apiSender: ApiSenderType,
@@ -217,6 +220,8 @@ export class KubernetesClient {
     private readonly telemetry: Telemetry,
     @inject(ExperimentalConfigurationManager)
     private readonly experimentalConfigurationManager: ExperimentalConfigurationManager,
+    @inject(FeatureRegistry)
+    private readonly featureRegistry: FeatureRegistry,
   ) {
     this.kubeConfig = new KubeConfig();
     this.contextsState = new ContextsManager(this.apiSender);
@@ -241,6 +246,12 @@ export class KubernetesClient {
         },
         ['kubernetes.statesExperimental']: {
           description: 'Use new version of Kubernetes contexts monitoring (needs restart)',
+          type: 'boolean',
+          default: true,
+        },
+        ['kubernetes.useInternalKubernetes']: {
+          description: 'Use internal Kubernetes',
+          hidden: true,
           type: 'boolean',
           default: true,
         },
@@ -284,6 +295,22 @@ export class KubernetesClient {
         }
         await this.setKubeconfig(Uri.file(val));
         this.setupWatcher(val);
+      }
+    });
+
+    this.#managerStarted = true;
+    this.featureRegistry.onFeaturesUpdated(async features => {
+      const kubeDashboardRegistered = features.includes('kubernetes-dashboard');
+      if (kubeDashboardRegistered) {
+        if (this.#managerStarted) {
+          await this.KubernetesManagerStop();
+          this.#managerStarted = false;
+        }
+      } else {
+        if (!this.#managerStarted) {
+          await this.KubernetesManagerStart();
+          this.#managerStarted = true;
+        }
       }
     });
   }
@@ -615,7 +642,7 @@ export class KubernetesClient {
     this.apiSender.send('kubeconfig-update');
     const configCopy = new KubeConfig();
     configCopy.loadFromString(this.kubeConfig.exportConfig());
-    await this.contextsState.update(configCopy);
+    await this.contextsState?.update(configCopy);
   }
 
   newError(message: string, cause: Error): Error {
@@ -1125,7 +1152,7 @@ export class KubernetesClient {
       users: this.kubeConfig.users,
       currentContext: this.kubeConfig.currentContext,
     });
-    await this.contextsState.update(newConfig);
+    await this.contextsState?.update(newConfig);
     this.apiSender.send('kubernetes-context-update');
   }
 
@@ -1406,23 +1433,28 @@ export class KubernetesClient {
   }
 
   public getContextsGeneralState(): Map<string, ContextGeneralState> {
-    return this.contextsState.getContextsGeneralState();
+    return this.contextsState?.getContextsGeneralState() ?? new Map();
   }
 
   public getCurrentContextGeneralState(): ContextGeneralState {
-    return this.contextsState.getCurrentContextGeneralState();
+    return (
+      this.contextsState?.getCurrentContextGeneralState() ?? {
+        reachable: false,
+        resources: { pods: 0, deployments: 0 },
+      }
+    );
   }
 
   public registerGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[] {
-    return this.contextsState.registerGetCurrentContextResources(resourceName);
+    return this.contextsState?.registerGetCurrentContextResources(resourceName) ?? [];
   }
 
   public unregisterGetCurrentContextResources(resourceName: ResourceName): KubernetesObject[] {
-    return this.contextsState.unregisterGetCurrentContextResources(resourceName);
+    return this.contextsState?.unregisterGetCurrentContextResources(resourceName) ?? [];
   }
 
   public dispose(): void {
-    this.contextsState.dispose();
+    this.contextsState?.dispose();
   }
 
   async execIntoContainer(
@@ -1780,7 +1812,7 @@ export class KubernetesClient {
    * @returns
    */
   public async refreshContextState(context: string): Promise<void> {
-    return this.contextsState.refreshContextState(context);
+    return this.contextsState?.refreshContextState(context);
   }
 
   protected ensurePortForwardService(): KubernetesPortForwardService {
@@ -1811,48 +1843,60 @@ export class KubernetesClient {
   }
 
   public getContextsHealths(): ContextHealth[] {
-    if (!this.contextsStatesDispatcher) {
-      throw new Error('contextsStatesDispatcher is undefined. This should not happen in Kubernetes experimental');
-    }
-    return this.contextsStatesDispatcher?.getContextsHealths();
+    return this.contextsStatesDispatcher?.getContextsHealths() ?? [];
   }
 
   public getContextsPermissions(): ContextPermission[] {
-    if (!this.contextsStatesDispatcher) {
-      throw new Error('contextsStatesDispatcher is undefined. This should not happen in Kubernetes experimental');
-    }
-    return this.contextsStatesDispatcher.getContextsPermissions();
+    return this.contextsStatesDispatcher?.getContextsPermissions() ?? [];
   }
 
   public getResourcesCount(): ResourceCount[] {
-    if (!this.contextsStatesDispatcher) {
-      throw new Error('contextsStatesDispatcher is undefined. This should not happen in Kubernetes experimental');
-    }
-    return this.contextsStatesDispatcher.getResourcesCount();
+    return this.contextsStatesDispatcher?.getResourcesCount() ?? [];
   }
 
   public getActiveResourcesCount(): ResourceCount[] {
-    if (!this.contextsStatesDispatcher) {
-      throw new Error('contextsStatesDispatcher is undefined. This should not happen in Kubernetes experimental');
-    }
-    return this.contextsStatesDispatcher.getActiveResourcesCount();
+    return this.contextsStatesDispatcher?.getActiveResourcesCount() ?? [];
   }
 
   public getResources(contextNames: string[], resourceName: string): KubernetesContextResources[] {
-    if (!this.contextsStatesDispatcher) {
-      throw new Error(
-        `contextsStatesDispatcher is undefined when getting ${resourceName}. This should not happen in Kubernetes experimental`,
-      );
-    }
-    return this.contextsStatesDispatcher.getResources(contextNames, resourceName);
+    return this.contextsStatesDispatcher?.getResources(contextNames, resourceName) ?? [];
   }
 
   public getTroubleshootingInformation(): KubernetesTroubleshootingInformation {
-    if (!this.contextsStatesDispatcher) {
-      throw new Error(
-        `contextsStatesDispatcher is undefined when getting troubleshooting information. This should not happen in Kubernetes experimental`,
-      );
+    return (
+      this.contextsStatesDispatcher?.getTroubleshootingInformation() ?? {
+        healthCheckers: [],
+        permissionCheckers: [],
+        informers: [],
+      }
+    );
+  }
+
+  // This method is called when an extension providing the Kubernetes feature is enabled
+  protected async KubernetesManagerStop(): Promise<void> {
+    const emptyKubeConfig = new KubeConfig();
+    await this.contextsState?.update(emptyKubeConfig);
+    this.contextsState?.dispose();
+    this.contextsState = undefined;
+    this.contextsStatesDispatcher?.dispose();
+    this.contextsStatesDispatcher = undefined;
+    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', false);
+  }
+
+  // This method is called when an extension providing Kubernetes feature is disabled
+  protected async KubernetesManagerStart(): Promise<void> {
+    const statesExperimental = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
+      'kubernetes.statesExperimental',
+    );
+    if (statesExperimental) {
+      const manager = new ContextsManagerExperimental();
+      this.contextsState = manager;
+      this.contextsStatesDispatcher = new ContextsStatesDispatcher(manager, this.apiSender);
+      this.contextsStatesDispatcher.init();
+    } else {
+      this.contextsState = new ContextsManager(this.apiSender);
     }
-    return this.contextsStatesDispatcher.getTroubleshootingInformation();
+    await this.contextsState?.update(this.kubeConfig);
+    await this.configurationRegistry.updateConfigurationValue('kubernetes.useInternalKubernetes', true);
   }
 }

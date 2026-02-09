@@ -62,8 +62,10 @@ import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
+import { Welcome } from '/@/plugin/welcome.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
 import type { CliToolInfo } from '/@api/cli-tool-info.js';
 import type { ColorInfo } from '/@api/color-info.js';
 import type { CommandInfo } from '/@api/command-info.js';
@@ -100,7 +102,12 @@ import type { ImageFilesInfo } from '/@api/image-files-info.js';
 import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
-import type { ImageSearchOptions, ImageSearchResult, ImageTagsListOptions } from '/@api/image-registry.js';
+import type {
+  ImageSearchOptions,
+  ImageSearchResult,
+  ImageTagsListOptions,
+  ImageUpdateStatus,
+} from '/@api/image-registry.js';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
@@ -142,6 +149,7 @@ import type { TelemetryMessages } from '/@api/telemetry.js';
 import type { ViewInfoUI } from '/@api/view-info.js';
 import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 import type { WebviewInfo } from '/@api/webview-info.js';
+import type { WelcomeMessages } from '/@api/welcome-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';
@@ -159,7 +167,7 @@ import { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ConfirmationInit } from './confirmation-init.js';
-import { ContainerProviderRegistry, LatestImageError } from './container-registry.js';
+import { ContainerProviderRegistry } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
@@ -211,7 +219,7 @@ import { StatusbarProvidersInit } from './statusbar/statusbar-providers-init.js'
 import { StatusBarRegistry } from './statusbar/statusbar-registry.js';
 import { NotificationRegistry } from './tasks/notification-registry.js';
 import { ProgressImpl } from './tasks/progress-impl.js';
-import { PAGE_EVENT_TYPE, Telemetry } from './telemetry/telemetry.js';
+import { EventType, Telemetry } from './telemetry/telemetry.js';
 import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
@@ -554,11 +562,10 @@ export class PluginSystem {
     container.bind<FilesystemMonitoring>(FilesystemMonitoring).toSelf().inSingletonScope();
     container.bind<CustomPickRegistry>(CustomPickRegistry).toSelf().inSingletonScope();
     container.bind<OnboardingRegistry>(OnboardingRegistry).toSelf().inSingletonScope();
+    container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
     container.bind<KubernetesClient>(KubernetesClient).toSelf().inSingletonScope();
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
     await kubernetesClient.init();
-
-    container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
 
     container.bind<CloseBehavior>(CloseBehavior).toSelf().inSingletonScope();
     const closeBehaviorConfiguration = container.get<CloseBehavior>(CloseBehavior);
@@ -639,7 +646,7 @@ export class PluginSystem {
       0,
       undefined,
       'Troubleshooting',
-      'fa fa-lightbulb',
+      'fa fa-crosshairs',
       true,
       'troubleshooting',
     );
@@ -680,6 +687,9 @@ export class PluginSystem {
     container.bind<TerminalInit>(TerminalInit).toSelf().inSingletonScope();
     const terminalInit = container.get<TerminalInit>(TerminalInit);
     terminalInit.init();
+
+    container.bind<Welcome>(Welcome).toSelf().inSingletonScope();
+    const welcome = container.get<Welcome>(Welcome);
 
     container.bind<NavigationItemsInit>(NavigationItemsInit).toSelf().inSingletonScope();
     const navigationItems = container.get<NavigationItemsInit>(NavigationItemsInit);
@@ -1272,25 +1282,14 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'container-provider-registry:updateImage',
-      async (_listener, engineId: string, imageId: string, tag: string): Promise<void> => {
-        const task = taskManager.createTask({
-          title: `Updating image '${tag}'`,
-        });
-        try {
-          await containerProviderRegistry.updateImage(engineId, imageId, tag);
-          task.status = 'success';
-        } catch (error: unknown) {
-          // "Image is already the latest version" is not a breaking error, treat as success
-          if (error instanceof LatestImageError) {
-            task.name = `Image '${tag}' is already up to date`;
-            task.status = 'success';
-            return;
-          }
-          task.error = String(error);
-          task.status = 'failure';
-          throw error;
-        }
+      'image-registry:checkImageUpdateStatus',
+      async (
+        _listener,
+        imageReference: string,
+        imageTag: string,
+        localDigests: string[],
+      ): Promise<ImageUpdateStatus> => {
+        return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
       },
     );
 
@@ -2419,6 +2418,10 @@ export class PluginSystem {
       return proxy.getState();
     });
 
+    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
+      return certificates.getAllCertificateInfos();
+    });
+
     this.ipcHandle(
       'provider-registry:startProviderConnectionLifecycle',
       async (
@@ -3056,7 +3059,7 @@ export class PluginSystem {
     );
 
     this.ipcHandle('telemetry:page', async (_listener, name: string): Promise<void> => {
-      return telemetry.track(PAGE_EVENT_TYPE, { name: name });
+      return telemetry.track(EventType.PAGE, { name: name });
     });
 
     this.ipcHandle('telemetry:configure', async (): Promise<void> => {
@@ -3138,6 +3141,10 @@ export class PluginSystem {
         return;
       }
       window.close();
+    });
+
+    this.ipcHandle('welcome:getWelcomeMessages', async (): Promise<WelcomeMessages> => {
+      return welcome.getWelcomeMessages();
     });
 
     this.ipcHandle(

@@ -16,8 +16,14 @@
   "telemetry": {
     "key": "Mhl7GXADk5M1vG6r9FXztbCqWRQY8XPy",
     "acceptMessage": "Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.",
-    "infoLink": "Read our privacy statement",
-    "infoURL": "https://developers.redhat.com/article/tool-data-collection"
+    "info": {
+      "link": "For more information read our statement",
+      "url": "https://developers.redhat.com/article/tool-data-collection"
+    },
+    "privacy": {
+      "link": "Read our privacy statement",
+      "url": "https://www.redhat.com/en/about/privacy-policy"
+    }
   },
   "catalog": {
     "default": "https://registry.podman-desktop.io/api/extensions.json"
@@ -34,7 +40,7 @@
       },
       {
         "title": "Troubleshooting",
-        "icon": "fas fa-lightbulb",
+        "icon": "fas fa-crosshairs",
         "command": "troubleshooting"
       },
       {

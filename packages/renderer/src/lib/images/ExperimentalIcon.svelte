@@ -13,7 +13,7 @@ let { size = '14', class: className = '', style: styleName = '' }: Props = $prop
   height={size}
   class={className}
   style={styleName}
-  viewBox="0 0 12.7279 12.7279"
+  viewBox="0 0 10 12.7279"
   version="1.1"
   aria-label="Experimental"
   xml:space="preserve"

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2023 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, expect, test, vi } from 'vitest';
+import { DarwinSocketCompatibility } from '/@/compatibility-mode/darwin-socket-compatibility';
+import { LinuxSocketCompatibility } from '/@/compatibility-mode/linux-socket-compatibility';
+import type { SocketCompatibility } from '/@/compatibility-mode/socket-compatibility';
 
-import { urlValidator } from './FieldValidation';
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
-test('Should expect invalid domain', async () => {
-  const result = urlValidator()('my_invalid_domain');
-  expect(result[1]).toBe('Please enter a valid URL');
-});
-
-test('Should expect valid domain', async () => {
-  const result = urlValidator()('valid.com');
-  expect(result[0]).toBe(true);
-});
-
-test('Should expect valid TLD domain with more than 3 char domains', async () => {
-  const result = urlValidator()('foobar.mydomain.science');
-  expect(result[0]).toBe(true);
-});
+// TODO: Windows
+export function getSocketCompatibility(): SocketCompatibility {
+  switch (process.platform) {
+    case 'darwin':
+      return new DarwinSocketCompatibility();
+    case 'linux':
+      return new LinuxSocketCompatibility();
+    default:
+      throw new Error(`Unsupported platform ${process.platform}`);
+  }
+}

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface FontSource {
+interface FontSource {
   readonly location: string;
   readonly browserURL: string;
   readonly format: string;
@@ -25,9 +25,4 @@ export interface FontSource {
 export interface FontDefinition {
   readonly fontId: string;
   readonly src: FontSource[];
-}
-
-export interface FontInfo {
-  id: string;
-  definition: FontDefinition;
 }
