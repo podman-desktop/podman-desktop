@@ -634,10 +634,14 @@ importers:
         version: 4.0.10(@types/debug@4.1.12)(@types/node@25.2.1)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.1)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/api:
-    devDependencies:
+    dependencies:
       hosted-git-info:
         specifier: ^9.0.2
         version: 9.0.2
+    devDependencies:
+      '@types/hosted-git-info':
+        specifier: ^3.0.5
+        version: 3.0.5
       vite-plugin-dts:
         specifier: ^4.3.0
         version: 4.5.4(@types/node@25.2.1)(rollup@4.55.1)(typescript@5.9.3)(vite@7.3.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -646,6 +650,195 @@ importers:
         version: 4.0.10(@types/debug@4.1.12)(@types/node@25.2.1)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.1)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/extension-api: {}
+
+  packages/main:
+    dependencies:
+      '@expo/sudo-prompt':
+        specifier: ^9.3.2
+        version: 9.3.2
+      '@kubernetes/client-node':
+        specifier: ^1.4.0
+        version: 1.4.0(encoding@0.1.13)
+      '@segment/analytics-node':
+        specifier: ^2.3.0
+        version: 2.3.0(encoding@0.1.13)
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.16
+      asn1js:
+        specifier: ^3.0.5
+        version: 3.0.7
+      check-disk-space:
+        specifier: ^3.4.0
+        version: 3.4.0
+      chokidar:
+        specifier: ^3.6.0
+        version: 3.6.0
+      culori:
+        specifier: ^4.0.2
+        version: 4.0.2
+      date.js:
+        specifier: ^0.3.3
+        version: 0.3.3
+      dockerode:
+        specifier: ^4.0.9
+        version: 4.0.9
+      electron:
+        specifier: 40.2.1
+        version: 40.2.1
+      electron-context-menu:
+        specifier: 4.1.1
+        version: 4.1.1
+      electron-updater:
+        specifier: 6.7.3
+        version: 6.7.3
+      electron-util:
+        specifier: ^1.0.0
+        version: 1.0.0
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      fzstd:
+        specifier: ^0.1.1
+        version: 0.1.1
+      get-tsconfig:
+        specifier: ^4.13.6
+        version: 4.13.6
+      getos:
+        specifier: ^3.2.1
+        version: 3.2.1
+      got:
+        specifier: ^14.4.2
+        version: 14.4.6
+      hpagent:
+        specifier: ^1.2.0
+        version: 1.2.0
+      inversify:
+        specifier: ^7.11.0
+        version: 7.11.0(reflect-metadata@0.2.2)
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
+      minimist:
+        specifier: ^1.2.8
+        version: 1.2.8
+      moment:
+        specifier: ^2.30.1
+        version: 2.30.1
+      os-locale:
+        specifier: ^6.0.2
+        version: 6.0.2
+      pkijs:
+        specifier: ^3.2.4
+        version: 3.3.3
+      proxy:
+        specifier: ^2.2.0
+        version: 2.2.0
+      semver:
+        specifier: ^7.7.4
+        version: 7.7.4
+      stream-json:
+        specifier: ^1.9.1
+        version: 1.9.1
+      tar:
+        specifier: ^7.5.3
+        version: 7.5.7
+      tar-fs:
+        specifier: ^3.1.1
+        version: 3.1.1
+      tar-stream:
+        specifier: ^3.1.7
+        version: 3.1.7
+      undici:
+        specifier: ^7.21.0
+        version: 7.21.0
+      validator:
+        specifier: ^13.15.26
+        version: 13.15.26
+      win-ca:
+        specifier: ^3.5.1
+        version: 3.5.1
+      winreg:
+        specifier: ^1.2.5
+        version: 1.2.5
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
+    devDependencies:
+      '@docker/extension-api-client-types':
+        specifier: 0.4.2
+        version: 0.4.2
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.7
+      '@types/culori':
+        specifier: ^4.0.1
+        version: 4.0.1
+      '@types/dockerode':
+        specifier: ^3.3.47
+        version: 3.3.47
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/getos':
+        specifier: ^3.0.4
+        version: 3.0.4
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
+      '@types/minimist':
+        specifier: ^1.2.5
+        version: 1.2.5
+      '@types/node':
+        specifier: ^24
+        version: 24.10.11
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
+      '@types/stream-json':
+        specifier: ^1.7.8
+        version: 1.7.8
+      '@types/tar':
+        specifier: ^6.1.13
+        version: 6.1.13
+      '@types/tar-fs':
+        specifier: ^2.0.4
+        version: 2.0.4
+      '@types/validator':
+        specifier: ^13.15.10
+        version: 13.15.10
+      '@types/winreg':
+        specifier: ^1.2.36
+        version: 1.2.36
+      msw:
+        specifier: ^2.12.9
+        version: 2.12.9(@types/node@24.10.11)(typescript@5.9.3)
+      vitest:
+        specifier: ^4.0.10
+        version: 4.0.10(@types/debug@4.1.12)(@types/node@24.10.11)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@24.10.11)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/preload:
+    dependencies:
+      electron:
+        specifier: 40.2.1
+        version: 40.2.1
+    devDependencies:
+      vitest:
+        specifier: ^4.0.10
+        version: 4.0.10(@types/debug@4.1.12)(@types/node@25.2.1)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.1)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/preload-docker-extension:
+    dependencies:
+      electron:
+        specifier: 40.2.1
+        version: 40.2.1
+    devDependencies:
+      '@docker/extension-api-client-types':
+        specifier: 0.4.2
+        version: 0.4.2
+      vitest:
+        specifier: ^4.0.10
+        version: 4.0.10(@types/debug@4.1.12)(@types/node@25.2.1)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.1)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/preload-webview:
     devDependencies:
@@ -11570,14 +11763,6 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
-  undici@7.19.2:
-    resolution: {integrity: sha512-4VQSpGEGsWzk0VYxyB/wVX/Q7qf9t5znLRgs0dzszr9w9Fej/8RVNQ+S20vdXSAyra/bJ7ZQfGv6ZMj7UEbzSg==}
-    engines: {node: '>=20.18.1'}
-
-  undici@7.20.0:
-    resolution: {integrity: sha512-MJZrkjyd7DeC+uPZh+5/YaMDxFiiEEaDgbUSVMXayofAkDWF1088CDo+2RPg7B1BuS1qf1vgNE7xqwPxE0DuSQ==}
-    engines: {node: '>=20.18.1'}
-
   undici@7.21.0:
     resolution: {integrity: sha512-Hn2tCQpoDt1wv23a68Ctc8Cr/BHpUSfaPYrkajTXOS9IKpxVRx/X5m1K2YkbK2ipgZgxXSgsUinl3x+2YdSSfg==}
     engines: {node: '>=20.18.1'}
@@ -14999,6 +15184,13 @@ snapshots:
 
   '@inquirer/ansi@1.0.2': {}
 
+  '@inquirer/confirm@5.1.21(@types/node@24.10.11)':
+    dependencies:
+      '@inquirer/core': 10.3.2(@types/node@24.10.11)
+      '@inquirer/type': 3.0.10(@types/node@24.10.11)
+    optionalDependencies:
+      '@types/node': 24.10.11
+
   '@inquirer/confirm@5.1.21(@types/node@24.6.2)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@24.6.2)
@@ -15012,6 +15204,19 @@ snapshots:
       '@inquirer/type': 3.0.10(@types/node@25.2.1)
     optionalDependencies:
       '@types/node': 25.2.1
+
+  '@inquirer/core@10.3.2(@types/node@24.10.11)':
+    dependencies:
+      '@inquirer/ansi': 1.0.2
+      '@inquirer/figures': 1.0.15
+      '@inquirer/type': 3.0.10(@types/node@24.10.11)
+      cli-width: 4.1.0
+      mute-stream: 2.0.0
+      signal-exit: 4.1.0
+      wrap-ansi: 6.2.0
+      yoctocolors-cjs: 2.1.3
+    optionalDependencies:
+      '@types/node': 24.10.11
 
   '@inquirer/core@10.3.2(@types/node@24.6.2)':
     dependencies:
@@ -15040,6 +15245,10 @@ snapshots:
       '@types/node': 25.2.1
 
   '@inquirer/figures@1.0.15': {}
+
+  '@inquirer/type@3.0.10(@types/node@24.10.11)':
+    optionalDependencies:
+      '@types/node': 24.10.11
 
   '@inquirer/type@3.0.10(@types/node@24.6.2)':
     optionalDependencies:
@@ -16291,7 +16500,7 @@ snapshots:
 
   '@types/adm-zip@0.5.7':
     dependencies:
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
 
   '@types/argparse@1.0.38': {}
 
@@ -16465,7 +16674,7 @@ snapshots:
   '@types/dockerode@3.3.47':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
       '@types/ssh2': 1.15.5
 
   '@types/eslint-scope@3.7.7':
@@ -16706,12 +16915,12 @@ snapshots:
 
   '@types/stream-json@1.7.8':
     dependencies:
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
       '@types/stream-chain': 2.1.0
 
   '@types/tar-fs@2.0.4':
     dependencies:
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
       '@types/tar-stream': 3.1.3
 
   '@types/tar-stream@3.1.3':
@@ -16720,7 +16929,7 @@ snapshots:
 
   '@types/tar@6.1.13':
     dependencies:
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
       minipass: 4.2.8
 
   '@types/trusted-types@2.0.7':
@@ -17100,6 +17309,15 @@ snapshots:
     optionalDependencies:
       msw: 2.12.9(@types/node@25.2.1)(typescript@5.9.3)
       vite: 7.3.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  '@vitest/mocker@4.0.10(msw@2.12.9(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))':
+    dependencies:
+      '@vitest/spy': 4.0.10
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      msw: 2.12.9(@types/node@24.10.11)(typescript@5.9.3)
+      vite: 7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/mocker@4.0.10(msw@2.12.9(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
@@ -17982,7 +18200,7 @@ snapshots:
   builder-util-runtime@9.5.1:
     dependencies:
       debug: 4.4.3
-      sax: 1.4.3
+      sax: 1.4.4
     transitivePeerDependencies:
       - supports-color
 
@@ -18222,7 +18440,7 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 7.19.2
+      undici: 7.21.0
       whatwg-mimetype: 4.0.0
 
   chevrotain-allstar@0.3.1(chevrotain@11.0.3):
@@ -21323,7 +21541,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.0
-      undici: 7.20.0
+      undici: 7.21.0
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -22489,6 +22707,31 @@ snapshots:
   ms@2.0.0: {}
 
   ms@2.1.3: {}
+
+  msw@2.12.9(@types/node@24.10.11)(typescript@5.9.3):
+    dependencies:
+      '@inquirer/confirm': 5.1.21(@types/node@24.10.11)
+      '@mswjs/interceptors': 0.41.2
+      '@open-draft/deferred-promise': 2.2.0
+      '@types/statuses': 2.0.6
+      cookie: 1.1.1
+      graphql: 16.12.0
+      headers-polyfill: 4.0.3
+      is-node-process: 1.2.0
+      outvariant: 1.4.3
+      path-to-regexp: 6.3.0
+      picocolors: 1.1.1
+      rettime: 0.10.1
+      statuses: 2.0.2
+      strict-event-emitter: 0.5.1
+      tough-cookie: 6.0.0
+      type-fest: 5.4.4
+      until-async: 3.0.2
+      yargs: 17.7.2
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - '@types/node'
 
   msw@2.12.9(@types/node@24.6.2)(typescript@5.9.3):
     dependencies:
@@ -25298,10 +25541,6 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici@7.19.2: {}
-
-  undici@7.20.0: {}
-
   undici@7.21.0: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
@@ -25563,6 +25802,23 @@ snapshots:
       - rollup
       - supports-color
 
+  vite@7.3.1(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2):
+    dependencies:
+      esbuild: 0.25.12
+      fdir: 6.5.0(picomatch@4.0.3)
+      picomatch: 4.0.3
+      postcss: 8.5.6
+      rollup: 4.55.1
+      tinyglobby: 0.2.15
+    optionalDependencies:
+      '@types/node': 24.10.11
+      fsevents: 2.3.3
+      jiti: 2.6.1
+      lightningcss: 1.30.2
+      terser: 5.36.0
+      tsx: 4.21.0
+      yaml: 2.8.2
+
   vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.25.12
@@ -25606,6 +25862,46 @@ snapshots:
       cssfontparser: 1.2.1
       moo-color: 1.0.3
       vitest: 4.0.10(@types/debug@4.1.12)(@types/node@25.2.1)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.1)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  vitest@4.0.10(@types/debug@4.1.12)(@types/node@24.10.11)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@24.10.11)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2):
+    dependencies:
+      '@vitest/expect': 4.0.10
+      '@vitest/mocker': 4.0.10(msw@2.12.9(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@vitest/pretty-format': 4.0.10
+      '@vitest/runner': 4.0.10
+      '@vitest/snapshot': 4.0.10
+      '@vitest/spy': 4.0.10
+      '@vitest/utils': 4.0.10
+      debug: 4.4.3
+      es-module-lexer: 1.7.0
+      expect-type: 1.2.2
+      magic-string: 0.30.21
+      pathe: 2.0.3
+      picomatch: 4.0.3
+      std-env: 3.10.0
+      tinybench: 2.9.0
+      tinyexec: 0.3.2
+      tinyglobby: 0.2.15
+      tinyrainbow: 3.0.3
+      vite: 7.3.1(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/debug': 4.1.12
+      '@types/node': 24.10.11
+      jsdom: 28.0.0
+    transitivePeerDependencies:
+      - jiti
+      - less
+      - lightningcss
+      - msw
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
 
   vitest@4.0.10(@types/debug@4.1.12)(@types/node@24.6.2)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.9(@types/node@24.6.2)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
@@ -26048,7 +26344,7 @@ snapshots:
 
   xml-js@1.6.11:
     dependencies:
-      sax: 1.4.3
+      sax: 1.4.4
 
   xml-name-validator@5.0.0: {}
 
