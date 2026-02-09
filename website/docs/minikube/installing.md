@@ -35,7 +35,7 @@ _Using the Status Bar_
 
 #### Verification
 
-1. Verify that your cluster is active on the **minikube** tile.
+1. Under **Settings > Resources**, verify your cluster is active on the **minikube** tile.
    ![Minikube resource tile](img/minikube-resource.png)
 1. Open a terminal, and run the `minikube` CLI:
 

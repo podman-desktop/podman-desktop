@@ -31,7 +31,7 @@ _Using the Status Bar_
 
 #### Verification
 
-1. Verify that your cluster is active on the **kind** tile.
+1. Under **Settings > Resources**, verify your cluster is active on the **Kind** tile.
    ![Kind resource tile](img/kind-resource.png)
 1. Open a terminal, and run the `kind` CLI:
 
