@@ -32,8 +32,7 @@ let {
   type = 'primary',
   icon,
   selected,
-  padding = 'px-4 ' +
-    (type === 'tab' ? 'pb-1' : type === 'secondary' ? 'py-[4px]' : type === 'danger' ? 'py-[3px]' : 'py-[5px]'),
+  padding = 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]'),
   class: classNames,
   hidden,
   'aria-label': ariaLabel,
@@ -44,21 +43,22 @@ let {
 let classes = $derived.by(() => {
   let result: string = '';
   if (disabled || inProgress) {
-    result = 'bg-[var(--pd-button-disabled-bg)] text-[var(--pd-button-disabled-label)]';
+    result = 'bg-[var(--pd-button-disabled-bg)] text-[var(--pd-button-disabled-text)]';
   } else if (type === 'primary') {
     result =
-      'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-primary-label)] border-[var(--pd-button-primary-border)] hover:bg-[var(--pd-button-primary-hover)] focus-visible:outline-[var(--pd-focus-ring)]';
+      'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-primary-text)] border border-[var(--pd-button-primary-border)] hover:bg-[var(--pd-button-primary-hover-bg)] shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1)] focus-visible:outline-[var(--pd-focus-ring)]';
   } else if (type === 'secondary') {
     result =
-      'bg-[var(--pd-button-secondary-bg)] text-[var(--pd-button-secondary-label)] border-[var(--pd-button-secondary-border)] hover:bg-[var(--pd-button-secondary-hover)] focus-visible:outline-[var(--pd-focus-ring)]';
+      'bg-[var(--pd-button-secondary-bg)] text-[var(--pd-button-secondary-text)] border border-[var(--pd-button-secondary-border)] hover:bg-[var(--pd-button-secondary-hover-bg)] shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1)] focus-visible:outline-[var(--pd-focus-ring)]';
   } else if (type === 'danger') {
     result =
-      'bg-[var(--pd-button-danger-bg)] text-[var(--pd-button-danger-label)] border-[var(--pd-button-danger-border)] hover:bg-[var(--pd-button-danger-hover)] focus-visible:outline-[var(--pd-focus-ring)]';
+      'bg-[var(--pd-button-danger-bg)] text-[var(--pd-button-danger-text)] border border-[var(--pd-button-danger-border)] hover:bg-[var(--pd-button-danger-hover-bg)] shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1)] focus-visible:outline-[var(--pd-focus-ring)]';
   } else if (type === 'tab') {
     result = 'border-b-[3px] border-[var(--pd-button-tab-border)]';
   } else {
     // link
-    result = 'border-none text-[var(--pd-button-link-text)] hover:bg-[var(--pd-button-link-hover-bg)]';
+    result =
+      'bg-[var(--pd-button-link-bg)] text-[var(--pd-button-link-text)] border border-transparent hover:bg-[var(--pd-button-link-hover-bg)] focus-visible:outline-[var(--pd-focus-ring)]';
   }
 
   // Set cursor states
@@ -71,7 +71,7 @@ let classes = $derived.by(() => {
   }
 
   if (type !== 'tab') {
-    result += ' rounded-[4px]';
+    result += ' rounded-[6px]';
   }
 
   return result;
@@ -88,7 +88,7 @@ onMount(() => {
 
 <button
   type="button"
-  class="relative {padding} motion-reduce:transition-none min-h-[24px] min-w-[24px] {classes} {classNames}"
+  class="relative {padding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] {classes} {classNames}"
   class:border-[var(--pd-button-tab-border-selected)]={type === 'tab' && selected}
   class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected}
   class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected}

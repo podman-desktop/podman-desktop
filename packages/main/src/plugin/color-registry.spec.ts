@@ -90,6 +90,10 @@ class TestColorRegistry extends ColorRegistry {
   override initCommon(): void {
     super.initCommon();
   }
+
+  override initDefaults(): void {
+    super.initDefaults();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -197,9 +201,9 @@ test('init', async () => {
 });
 
 test('initColors', async () => {
-  // mock the registerColor
+  // spy on registerColor but let it actually register colors
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
-  spyOnRegisterColor.mockReturnValue(undefined);
+  // Don't mock it - let it call through to the real implementation
 
   colorRegistry.initColors();
 
@@ -790,7 +794,7 @@ describe('initTooltip', () => {
   });
 });
 
-describe('initCommon', () => {
+describe('initDefaults', () => {
   let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
 
   beforeEach(() => {
@@ -798,7 +802,7 @@ describe('initCommon', () => {
     spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
     spyOnRegisterColorDefinition.mockReturnValue(undefined);
 
-    colorRegistry.initCommon();
+    colorRegistry.initDefaults();
   });
 
   afterEach(() => {
@@ -806,13 +810,17 @@ describe('initCommon', () => {
   });
 
   test('registers item-disabled color using registerColorDefinition', () => {
-    expect(spyOnRegisterColorDefinition).toHaveBeenCalledTimes(1);
+    // initDefaults registers 2 colors using registerColorDefinition: item-disabled and item-hover
+    expect(spyOnRegisterColorDefinition).toHaveBeenCalledTimes(2);
 
-    // check the call
-    const call = spyOnRegisterColorDefinition.mock.calls[0];
-    const definition = call?.[0];
+    // check the item-disabled call
+    const itemDisabledCall = spyOnRegisterColorDefinition.mock.calls.find(
+      call => call?.[0]?.id === 'default-item-disabled',
+    );
+    expect(itemDisabledCall).toBeDefined();
 
-    expect(definition?.id).toBe('item-disabled');
+    const definition = itemDisabledCall?.[0];
+    expect(definition?.id).toBe('default-item-disabled');
     expect(definition?.dark).toBeDefined();
     expect(definition?.light).toBeDefined();
 
