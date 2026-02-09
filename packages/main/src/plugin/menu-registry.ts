@@ -17,7 +17,7 @@
  ***********************************************************************/
 import { inject, injectable } from 'inversify';
 
-import type { Menu } from '/@api/menu.js';
+import type { Menu, MenuRecord } from '/@api/menu.js';
 
 import { CommandRegistry } from './command-registry.js';
 import { Disposable } from './types/disposable.js';
@@ -28,7 +28,7 @@ export class MenuRegistry {
 
   constructor(@inject(CommandRegistry) private commandRegisty: CommandRegistry) {}
 
-  registerMenus(menus: { [key: string]: Menu[] }): Disposable {
+  registerMenus(menus: MenuRecord): Disposable {
     for (const name in menus) {
       const contextMenus = menus[name];
       contextMenus?.forEach(menu => this.registerMenu(name, menu));
@@ -39,7 +39,7 @@ export class MenuRegistry {
     });
   }
 
-  unregisterMenus(menus: { [key: string]: Menu[] }): void {
+  unregisterMenus(menus: MenuRecord): void {
     for (const name in menus) {
       const contextMenus = menus[name];
       contextMenus?.forEach(menu => this.unregisterMenu(name, menu));

@@ -23,7 +23,7 @@ import { inject, injectable } from 'inversify';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type { FontDefinition } from '/@api/font-info.js';
-import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
+import type { IconDefinition, IconInfo, IconsContribution } from '/@api/icon-info.js';
 
 import { isWindows } from '../util.js';
 
@@ -55,10 +55,7 @@ export class IconRegistry {
     this.apiSender.send('font-update');
   }
 
-  public registerIconContribution(
-    extension: AnalyzedExtension,
-    icons: { [key: string]: { description?: string; default?: { fontPath?: string; fontCharacter: string } } },
-  ): void {
+  public registerIconContribution(extension: AnalyzedExtension, icons: IconsContribution): void {
     // register each font and icon
     Object.entries(icons).forEach(([iconId, iconContribution]) => {
       // is there any default icon?

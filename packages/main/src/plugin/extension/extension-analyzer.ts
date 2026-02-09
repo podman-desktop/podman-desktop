@@ -22,14 +22,55 @@ import path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { injectable } from 'inversify';
+import { z } from 'zod';
+
+import { RawCommandSchema } from '/@/plugin/command-registry.js';
+import { IConfigurationNodeSchema } from '/@api/configuration/models.js';
+import { IconsContributionSchema } from '/@api/icon-info.js';
+import { MenuRecordSchema } from '/@api/menu.js';
+import { OnboardingSchema } from '/@api/onboarding.js';
+import { RawThemeContributionSchema } from '/@api/theme-info.js';
+import { ViewContributionRecordSchema } from '/@api/view-info.js';
+
+export const ExtensionManifestSchema = z
+  .object({
+    name: z.string(),
+    displayName: z.string(),
+    version: z.string(),
+    publisher: z.string(),
+    description: z.string(),
+    main: z.string().optional(),
+    icon: z.union([z.string(), z.object({ light: z.string(), dark: z.string() })]).optional(),
+    extensionDependencies: z.array(z.string()).optional(),
+    extensionPack: z.array(z.string()).optional(),
+    engines: z
+      .object({
+        'podman-desktop': z.string().optional(),
+      })
+      .optional(),
+    contributes: z
+      .object({
+        configuration: IConfigurationNodeSchema.optional(),
+        commands: z.array(RawCommandSchema).optional(),
+        menus: MenuRecordSchema.optional(),
+        icons: IconsContributionSchema.optional(),
+        themes: z.array(RawThemeContributionSchema).optional(),
+        views: ViewContributionRecordSchema.optional(),
+        onboarding: OnboardingSchema.optional(),
+        features: z.array(z.string()).optional(),
+      })
+      .optional(),
+  })
+  .loose();
+
+export type ExtensionManifest = z.infer<typeof ExtensionManifestSchema>;
 
 export interface AnalyzedExtension {
   id: string;
   name: string;
   // root folder (where is package.json)
   path: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  manifest: any;
+  manifest: ExtensionManifest;
   // main entry
   mainPath?: string;
   api?: typeof containerDesktopAPI;
@@ -75,7 +116,7 @@ export class ExtensionAnalyzer {
         id: '<unknown>',
         name: '<unknown>',
         path: resolvedExtensionPath,
-        manifest: undefined,
+        manifest: {} as unknown as ExtensionManifest,
         readme: '',
         api: <typeof containerDesktopAPI>{},
         removable: removable,
@@ -124,15 +165,31 @@ export class ExtensionAnalyzer {
     return analyzedExtension;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async loadManifest(extensionPath: string): Promise<any> {
+  async loadManifest(extensionPath: string): Promise<ExtensionManifest> {
     const manifestPath = path.join(extensionPath, 'package.json');
     return new Promise((resolve, reject) => {
       fs.readFile(manifestPath, 'utf8', (err, data) => {
         if (err) {
           reject(err);
         } else {
-          resolve(JSON.parse(data));
+          try {
+            const manifest = JSON.parse(data);
+            // try to parse using zod
+            const result = ExtensionManifestSchema.safeParse(manifest);
+            if (result.success) {
+              resolve(result.data);
+            } else {
+              console.error(
+                `Error while parsing manifest for extension ${extensionPath}. ${result.error.issues
+                  .map(issue => issue.message)
+                  .join(', ')}`,
+              );
+              // return the manifest as it is, even if it is not valid
+              resolve(manifest as ExtensionManifest);
+            }
+          } catch (error) {
+            reject(error);
+          }
         }
       });
     });

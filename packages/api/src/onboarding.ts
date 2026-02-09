@@ -16,47 +16,76 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface OnboardingStepItem {
-  value: string;
-  highlight?: boolean;
-  when?: string;
-}
+import { z } from 'zod';
 
-export type OnboardingStatus = 'completed' | 'failed' | 'skipped';
-export type OnboardingState = 'completed' | 'failed';
-export type OnboardingEmbeddedComponentType =
-  | 'createContainerProviderConnection'
-  | 'createKubernetesProviderConnection';
+export const OnboardingStepItemSchema = z.object({
+  value: z.string(),
+  highlight: z.boolean().optional(),
+  when: z.string().optional(),
+});
 
-export interface OnboardingStep {
-  id: string;
-  title: string;
-  description?: string;
-  media?: { path: string; altText: string };
-  command?: string;
-  completionEvents?: string[];
-  content?: OnboardingStepItem[][];
-  component?: OnboardingEmbeddedComponentType;
-  when?: string;
-  status?: OnboardingStatus;
-  state?: OnboardingState;
-}
+export type OnboardingStepItem = z.output<typeof OnboardingStepItemSchema>;
 
-export interface Onboarding {
-  title: string;
-  priority?: number;
-  description?: string;
-  media?: { path: string; altText: string };
-  steps: OnboardingStep[];
-  enablement: string;
-}
+export const OnboardingStatusSchema = z.enum(['completed', 'failed', 'skipped']);
 
-export interface OnboardingInfo extends Onboarding {
-  extension: string;
-  removable: boolean;
-  name: string;
-  displayName: string;
-  icon: string;
-  welcomeMessage?: string;
-  status?: OnboardingStatus;
-}
+export type OnboardingStatus = z.output<typeof OnboardingStatusSchema>;
+
+export const OnboardingStateSchema = z.enum(['completed', 'failed']);
+
+export type OnboardingState = z.output<typeof OnboardingStateSchema>;
+
+export const OnboardingEmbeddedComponentTypeSchema = z.enum([
+  'createContainerProviderConnection',
+  'createKubernetesProviderConnection',
+]);
+
+export type OnboardingEmbeddedComponentType = z.output<typeof OnboardingEmbeddedComponentTypeSchema>;
+
+export const OnboardingStepSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  media: z
+    .object({
+      path: z.string(),
+      altText: z.string(),
+    })
+    .optional(),
+  command: z.string().optional(),
+  completionEvents: z.array(z.string()).optional(),
+  content: z.array(z.array(OnboardingStepItemSchema)).optional(),
+  component: OnboardingEmbeddedComponentTypeSchema.optional(),
+  when: z.string().optional(),
+  status: OnboardingStatusSchema.optional(),
+  state: OnboardingStateSchema.optional(),
+});
+
+export type OnboardingStep = z.output<typeof OnboardingStepSchema>;
+
+export const OnboardingSchema = z.object({
+  title: z.string(),
+  priority: z.number().optional(),
+  description: z.string().optional(),
+  media: z
+    .object({
+      path: z.string(),
+      altText: z.string(),
+    })
+    .optional(),
+  steps: z.array(OnboardingStepSchema),
+  enablement: z.string(),
+});
+
+export type Onboarding = z.output<typeof OnboardingSchema>;
+
+export const OnboardingInfoSchema = OnboardingSchema.extend({
+  extension: z.string(),
+  removable: z.boolean(),
+  name: z.string(),
+  displayName: z.string(),
+  icon: z.string(),
+  welcomeMessage: z.string().optional(),
+  status: OnboardingStatusSchema.optional(),
+});
+
+export type OnboardingInfo = z.output<typeof OnboardingInfoSchema>;
