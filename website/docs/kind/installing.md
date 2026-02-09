@@ -15,7 +15,7 @@ Install the `kind` CLI using one of these ways:
 _Using the CLI Page_
 
 1. Go to **Settings > CLI tools**.
-1. Click the **Install** link on the **kind** tile.
+1. Click the **Install** link on the **Kind** tile.
 
 _Using the Resources Page_
 
