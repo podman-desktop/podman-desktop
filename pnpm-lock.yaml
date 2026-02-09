@@ -288,8 +288,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1
       get-tsconfig:
-        specifier: ^4.13.3
-        version: 4.13.3
+        specifier: ^4.13.6
+        version: 4.13.6
       globals:
         specifier: ^17.3.0
         version: 17.3.0
@@ -7364,8 +7364,8 @@ packages:
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
-  get-tsconfig@4.13.3:
-    resolution: {integrity: sha512-vp8Cj/+9Q/ibZUrq1rhy8mCTQpCk31A3uu9wc1C50yAb3x2pFHOsGdAZQ7jD86ARayyxZUViYeIztW+GE8dcrg==}
+  get-tsconfig@4.13.6:
+    resolution: {integrity: sha512-shZT/QMiSHc/YBLxxOkMtgSid5HFoauqCE3/exfsEcwg1WkeqjG+V40yBbBrsD+jW2HDXcs28xOfcbm2jI8Ddw==}
 
   getos@3.2.1:
     resolution: {integrity: sha512-U56CfOK17OKgTVqozZjUKNdkfEv6jk5WISBJ8SHoagjE6L69zOwl3Z+O8myjY9MEW3i2HPWQBt/LTbCgcC973Q==}
@@ -19622,7 +19622,7 @@ snapshots:
 
   eslint-import-context@0.1.9(unrs-resolver@1.9.2):
     dependencies:
-      get-tsconfig: 4.13.3
+      get-tsconfig: 4.13.6
       stable-hash-x: 0.2.0
     optionalDependencies:
       unrs-resolver: 1.9.2
@@ -19646,7 +19646,7 @@ snapshots:
       debug: 4.4.1
       eslint: 9.39.2(jiti@2.6.1)
       eslint-import-context: 0.1.9(unrs-resolver@1.9.2)
-      get-tsconfig: 4.13.3
+      get-tsconfig: 4.13.6
       is-bun-module: 2.0.0
       stable-hash-x: 0.2.0
       tinyglobby: 0.2.14
@@ -20344,7 +20344,7 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  get-tsconfig@4.13.3:
+  get-tsconfig@4.13.6:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
