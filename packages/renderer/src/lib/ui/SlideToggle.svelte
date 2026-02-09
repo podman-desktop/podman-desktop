@@ -8,7 +8,7 @@ interface Props {
   readonly?: boolean;
   disabled?: boolean;
   left?: boolean;
-  'aria-invalid'?: boolean | 'true' | 'false';
+  'aria-invalid'?: boolean | 'grammar' | 'spelling';
   'aria-label'?: string;
   children?: Snippet;
 }
