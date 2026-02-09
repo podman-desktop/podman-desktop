@@ -2769,9 +2769,25 @@ declare module '@podman-desktop/api' {
      */
     cpu_quota?: number;
     /**
+     * CPUShares contains the cpu shares for the pod
+     */
+    cpu_shares?: number;
+    /**
      * CPUSetCPUs contains linux specific CPU data for the pod
      */
     cpuset_cpus?: string;
+    /**
+     * CPUSetMems contains linux specific CPU data for the pod
+     */
+    cpuset_mems?: string;
+    /**
+     * MemoryLimit contains the specified cgroup memory limit for the pod
+     */
+    memory_limit?: number;
+    /**
+     * MemorySwap contains the specified memory swap limit for the pod
+     */
+    memory_swap?: number;
     /**
      * Mounts contains volume related information for the pod
      */
