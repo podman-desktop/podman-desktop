@@ -81,8 +81,8 @@ let classes = $derived.by(() => {
 });
 
 onMount(() => {
-  // If is the icon defined and the title not (icon button)
-  if (icon !== undefined && !title) {
+  // Icon-only button: icon is present, no title, and no visible children/slot content
+  if (icon !== undefined && !title && !children) {
     // Check if is the ariaLabel defined
     if (!ariaLabel) console.warn('Icon buttons should have defined visible aria-label');
   }
