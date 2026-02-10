@@ -1153,6 +1153,13 @@ export class ColorRegistry {
       light: red[700],
     });
 
+    // deprecated since 2026-02-06. See https://github.com/podman-desktop/podman-desktop/pull/14876
+    // Unused color (disabled buttons always use `button-disabled-bg`)
+    this.registerColor(`${button}danger-disabled-bg`, {
+      dark: transparent,
+      light: transparent,
+    });
+
     this.registerColor(`${button}disabled-bg`, {
       dark: stone[700],
       light: stone[300],
