@@ -92,9 +92,9 @@ onMount(() => {
 <button
   type="button"
   class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] select-none {classes} {classNames}"
-  class:border-[var(--pd-button-tab-border-selected)]={type === 'tab' && selected}
-  class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected}
-  class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected}
+  class:border-[var(--pd-button-tab-border-selected)]={type === 'tab' && selected && !disabled && !inProgress}
+  class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected && !disabled && !inProgress}
+  class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected && !disabled && !inProgress}
   class:text-[var(--pd-button-tab-text)]={type === 'tab' && !selected}
   hidden={hidden}
   title={title}
