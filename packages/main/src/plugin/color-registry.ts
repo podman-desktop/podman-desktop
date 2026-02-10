@@ -1028,7 +1028,9 @@ export class ColorRegistry {
     const hoverItem = this.#definitions.get('default-item-hover');
 
     if (!itemDisabled || !textLink || !hoverItem) {
-      throw new Error('item-disabled, text-link and hover-item colors must be defined before button colors');
+      throw new Error(
+        'default-item-disabled, default-text-link and default-item-hover colors must be defined before button colors',
+      );
     }
 
     const button = 'button-';
