@@ -19,6 +19,7 @@ import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScr
 import PodIcon from '/@/lib/images/PodIcon.svelte';
 import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { filtered, podsInfos, searchPattern } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 
@@ -36,12 +37,20 @@ interface Props {
 
 let { searchTerm = $bindable('') }: Props = $props();
 
+let selectedEnvironment = $state('');
+
 $effect(() => {
   searchPattern.set(searchTerm);
 });
 
 let pods: PodInfoUI[] = $state([]);
 let enginesList: EngineInfoUI[] = $state([]);
+
+// Filter pods by selected environment
+const filteredPods = $derived.by(() => {
+  if (!selectedEnvironment) return pods;
+  return pods.filter(pod => pod.engineId === selectedEnvironment);
+});
 
 const providerConnections = $derived(
   $providerInfos
@@ -182,6 +191,7 @@ function label(pod: PodInfoUI): string {
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
+    <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber > 0}
       <Button
         on:click={(): void =>
@@ -237,7 +247,7 @@ function label(pod: PodInfoUI): string {
 
     {#if providerConnections.length === 0}
       <NoContainerEngineEmptyScreen />
-    {:else if $filtered.length === 0}
+    {:else if filteredPods.length === 0}
       {#if searchTerm}
         <FilteredEmptyScreen
           icon={PodIcon}
@@ -254,7 +264,7 @@ function label(pod: PodInfoUI): string {
       <Table
         kind="pod"
         bind:selectedItemsNumber={selectedItemsNumber}
-        data={pods}
+        data={filteredPods}
         columns={columns}
         row={row}
         defaultSortColumn="Name"

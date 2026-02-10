@@ -22,6 +22,7 @@ import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScr
 import SolidPodIcon from '/@/lib/images/SolidPodIcon.svelte';
 import { PodUtils } from '/@/lib/pod/pod-utils';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { CONTAINER_LIST_VIEW } from '/@/lib/view/views';
 import { handleNavigation } from '/@/navigation';
 import { containersInfos } from '/@/stores/containers';
@@ -48,6 +49,8 @@ interface Props {
 }
 
 let { searchTerm = '' }: Props = $props();
+
+let selectedEnvironment = $state('');
 
 function fromExistingImage(): void {
   openChoiceModal = false;
@@ -250,6 +253,10 @@ let containerGroups = $derived.by(() => {
           return containerInfo.state !== 'RUNNING';
         }
         return true;
+      })
+      .filter(containerInfo => {
+        if (!selectedEnvironment) return true;
+        return containerInfo.engineId === selectedEnvironment;
       });
   });
   // Remove groups with all containers filtered
@@ -392,6 +399,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
     <Button on:click={toggleCreateContainer} icon={faPlusCircle} title="Create a container">Create</Button>
   {/snippet}
   {#snippet bottomAdditionalActions()}
+    <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber && selectedItemsNumber > 0}
       <div class="inline-flex space-x-2">
         <Button
