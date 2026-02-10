@@ -764,7 +764,7 @@ export class ColorRegistry {
     const sNav = 'input-checkbox-';
 
     this.registerColor(`${sNav}disabled`, {
-      dark: gray[700],
+      dark: gray[600],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}indeterminate`, {
@@ -1136,7 +1136,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ab}disabled-text`, {
-      dark: gray[900],
+      dark: gray[700],
       light: gray[900],
     });
 
@@ -1154,7 +1154,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ab}details-disabled-text`, {
-      dark: gray[900],
+      dark: gray[700],
       light: gray[900],
     });
     this.registerColor(`${ab}details-disabled-bg`, {
@@ -1246,7 +1246,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${dropdown}disabled-item-text`, {
-      dark: gray[900],
+      dark: gray[700],
       light: charcoal[100],
     });
     this.registerColor(`${dropdown}disabled-item-bg`, {
@@ -1263,7 +1263,7 @@ export class ColorRegistry {
       light: charcoal[900],
     });
     this.registerColor(`${input}${select}hover-text`, {
-      dark: gray[900],
+      dark: gray[400],
       light: charcoal[200],
     });
   }
