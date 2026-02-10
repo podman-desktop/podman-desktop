@@ -85,7 +85,7 @@ describe('CertificateSyncTargetRegistry', () => {
       registry.registerProvider(extensionInfo, 'provider1', provider1);
 
       expect(() => registry.registerProvider(extensionInfo, 'provider1', provider2)).toThrow(
-        "Certificate sync target provider 'provider1' is already registered by trusted-ext",
+        `Certificate sync target provider 'provider1' is already registered by trusted-ext`,
       );
     });
 
@@ -235,7 +235,7 @@ describe('CertificateSyncTargetRegistry', () => {
     });
 
     test('should throw error for non-existent target', async () => {
-      await expect(registry.synchronize('non-existent')).rejects.toThrow("Target 'non-existent' not found");
+      await expect(registry.synchronize('non-existent')).rejects.toThrow(`Target 'non-existent' not found`);
     });
 
     test('should pass certificates from Certificates service', async () => {
