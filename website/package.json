@@ -49,11 +49,11 @@
     "markdownlint": "^0.40.0",
     "markdownlint-cli2": "^0.20.0",
     "markdownlint-cli2-formatter-summarize": "^0.0.8",
-    "msw": "^2.12.8",
+    "msw": "^2.12.9",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "typedoc": "^0.28.16",
-    "typedoc-plugin-markdown": "^4.9.0",
+    "typedoc-plugin-markdown": "^4.10.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.10"
   },

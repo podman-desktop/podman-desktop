@@ -20,13 +20,13 @@ import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import type { OnboardingInfo, OnboardingStatus, OnboardingStep } from '/@api/onboarding';
 
-export const SCOPE_ONBOARDING = 'onboarding';
+const SCOPE_ONBOARDING = 'onboarding';
 
 export const STATUS_COMPLETED = 'completed';
 export const STATUS_SKIPPED = 'skipped';
 
-export const ON_COMMAND_PREFIX = 'onCommand:';
-export const ONBOARDING_CONTEXT_PREFIX = 'onboardingContext:';
+const ON_COMMAND_PREFIX = 'onCommand:';
+const ONBOARDING_CONTEXT_PREFIX = 'onboardingContext:';
 
 const ONBOARDING_CONTEXT_PREFIX_REGEX = new RegExp(/^!*onboardingContext:/);
 

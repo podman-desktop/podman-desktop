@@ -40,7 +40,7 @@ export function splitSpacesHandlingDoubleQuotes(inputString: string): string[] {
   return tokens;
 }
 
-export function quote(str: string): string {
+function quote(str: string): string {
   if (str.indexOf(' ') !== -1 && str.at(0) !== '"' && str.at(str.length - 1) !== '"') {
     return '"' + str + '"';
   }

@@ -1,9 +1,10 @@
 {
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
+    "module": "NodeNext",
     "target": "esnext",
     "sourceMap": false,
-    "moduleResolution": "Node",
+    "moduleResolution": "node16",
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,

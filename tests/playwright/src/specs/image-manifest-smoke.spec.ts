@@ -30,6 +30,7 @@ import { SettingsBar } from '/@/model/pages/settings-bar';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteRegistry } from '/@/utility/operations';
 import { isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
@@ -75,8 +76,14 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   imagesPage = await navigationBar.openImages();
 });
 
-test.afterAll(async ({ runner }) => {
-  await runner.close();
+test.afterAll(async ({ runner, page }) => {
+  try {
+    await deleteRegistry(page, 'GitHub').catch((error: unknown) => {
+      console.log('Failed to delete registry:', error);
+    });
+  } finally {
+    await runner.close();
+  }
 });
 
 test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {

@@ -56,7 +56,7 @@ onMount(async () => {
   <Route path="/default/:key/*" breadcrumb="Preferences" let:meta>
     <PreferencesRendering key={meta.params.key} properties={properties} />
   </Route>
-  <Route path="/provider/:providerInternalId/*" breadcrumb="Resources" let:meta navigationHint="details">
+  <Route path="/provider/:providerInternalId/*" breadcrumb="Resources" let:meta navigationHint="root">
     <PreferencesProviderRendering providerInternalId={meta.params.providerInternalId} properties={properties} />
   </Route>
   <Route path="/provider-task/:providerInternalId/:taskId/*" breadcrumb="Resources" let:meta>
