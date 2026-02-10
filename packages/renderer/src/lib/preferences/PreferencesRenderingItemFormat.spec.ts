@@ -22,9 +22,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, type RenderResult, screen } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { type Component, type ComponentProps, tick } from 'svelte';
+import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
@@ -37,17 +37,13 @@ beforeAll(() => {
   (window as any).getConfigurationValue = vi.fn().mockResolvedValue(undefined);
 });
 
-async function awaitRender(
-  record: IConfigurationPropertyRecordedSchema,
-  customProperties: any,
-): Promise<RenderResult<Component<ComponentProps<typeof PreferencesRenderingItemFormat>>>> {
-  const RenderResult = render(PreferencesRenderingItemFormat, {
+async function awaitRender(record: IConfigurationPropertyRecordedSchema, customProperties: any): Promise<void> {
+  render(PreferencesRenderingItemFormat, {
     record,
     initialValue: getInitialValue(record),
     ...customProperties,
   });
   await tick();
-  return RenderResult;
 }
 
 test('Expect to see checkbox enabled', async () => {
@@ -306,34 +302,6 @@ test('Expect enum to have the givenValue selected', async () => {
   expect(input).toBeInTheDocument();
   expect(input.children[0]).toHaveAttribute('name', 'record');
   expect(input).toHaveTextContent('second');
-});
-
-test('Expect reset enum value to update dropdown value', async () => {
-  const record: IConfigurationPropertyRecordedSchema = {
-    id: 'record',
-    title: 'record',
-    parentId: 'parent.record',
-    description: 'record-description',
-    type: 'string',
-    enum: ['first', 'second'],
-    default: 'first',
-  };
-  const { rerender } = await awaitRender(record, { givenValue: 'first' });
-  const dropdown = screen.getByRole('button', { name: 'first' });
-  expect(dropdown).toBeInTheDocument();
-  await userEvent.click(dropdown);
-
-  const nonDefaultValue = screen.getByRole('button', { name: 'second' });
-  expect(nonDefaultValue).toBeInTheDocument();
-  await userEvent.click(nonDefaultValue);
-
-  let dropdownValue = screen.getByLabelText('hidden input');
-  expect(dropdownValue).toHaveValue('second');
-
-  await rerender({ ...record, resetToDefault: true });
-
-  dropdownValue = screen.getByLabelText('hidden input');
-  expect(dropdownValue).toHaveValue('first');
 });
 
 test('Expect a text input when record is type string', async () => {

@@ -18,7 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render } from '@testing-library/svelte';
+import { fireEvent, render, waitFor } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
@@ -135,4 +136,38 @@ test('locked record should not show reset to default button', async () => {
   // Verify reset button is not present
   const resetButton = queryByRole('button', { name: 'Reset to default value' });
   expect(resetButton).not.toBeInTheDocument();
+});
+
+test('Expect reset enum value to update dropdown value', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'record',
+    title: 'record',
+    parentId: 'parent.record',
+    description: 'record-description',
+    type: 'string',
+    enum: ['first', 'second'],
+    default: 'first',
+  };
+  const { getByRole, getByLabelText } = render(PreferencesRenderingItem, { record: record });
+  const dropdown = getByRole('button', { name: 'first' });
+  expect(dropdown).toBeInTheDocument();
+  await userEvent.click(dropdown);
+
+  const nonDefaultValue = getByRole('button', { name: 'second' });
+  expect(nonDefaultValue).toBeInTheDocument();
+  await userEvent.click(nonDefaultValue);
+
+  let dropdownValue = getByLabelText('hidden input');
+  expect(dropdownValue).toHaveValue('second');
+
+  const resetButton = getByRole('button', { name: 'Reset to default value' });
+  expect(resetButton).toBeInTheDocument();
+  await userEvent.click(resetButton);
+
+  await waitFor(() => {
+    expect(resetButton).not.toBeInTheDocument();
+  });
+
+  dropdownValue = getByLabelText('hidden input');
+  expect(dropdownValue).toHaveValue('first');
 });
