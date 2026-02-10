@@ -120,6 +120,9 @@ let podmanBinary: PodmanBinary;
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
 
+// Certificate sync provider instance - used by startMachine/stopMachine to notify target changes
+let podmanCertificateSync: PodmanCertificateSync | undefined;
+
 const wslHelper = new WslHelper();
 const qemuHelper = new QemuHelper();
 const krunkitHelper = new KrunkitHelper();
@@ -870,6 +873,8 @@ export async function startMachine(
       logger: new LoggerDelegator(context, logger),
     });
     provider.updateStatus('started');
+    // Notify certificate sync about machine status change
+    podmanCertificateSync?.notifyTargetsChanged();
   } catch (err) {
     telemetryRecords.error = err;
     if (skipHandleError) {
@@ -901,6 +906,8 @@ export async function stopMachine(
       logger: new LoggerDelegator(context, logger),
     });
     provider.updateStatus('stopped');
+    // Notify certificate sync about machine status change
+    podmanCertificateSync?.notifyTargetsChanged();
   } catch (err: unknown) {
     telemetryRecords.error = err;
     throw err;
@@ -1421,7 +1428,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   });
 
   // Register certificate sync target provider for Podman machines
-  const podmanCertificateSync = new PodmanCertificateSync(getJSONMachineList);
+  podmanCertificateSync = new PodmanCertificateSync(getJSONMachineList);
   extensionContext.subscriptions.push(
     extensionApi.certificates.registerSyncTargetProvider('podman-machines', podmanCertificateSync),
   );

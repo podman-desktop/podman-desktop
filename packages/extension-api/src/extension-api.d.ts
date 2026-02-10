@@ -4385,6 +4385,31 @@ declare module '@podman-desktop/api' {
   }
 
   /**
+   * Information about a certificate sync target provider.
+   */
+  export interface CertificateSyncTargetProviderInformation {
+    /**
+     * Unique provider identifier.
+     */
+    readonly id: string;
+
+    /**
+     * Human-readable label for the provider.
+     */
+    readonly label: string;
+  }
+
+  /**
+   * Event fired when a certificate sync target provider's targets change.
+   */
+  export interface CertificateSyncTargetProviderChangeEvent {
+    /**
+     * Information about the provider whose targets changed.
+     */
+    provider: CertificateSyncTargetProviderInformation;
+  }
+
+  /**
    * Provider interface for extensions that contribute certificate sync targets.
    */
   export interface CertificateSyncTargetProvider {
@@ -4400,6 +4425,12 @@ declare module '@podman-desktop/api' {
      * @param certificates Array of PEM-encoded certificates to synchronize.
      */
     synchronize(targetId: string, certificates: string[]): Promise<void>;
+
+    /**
+     * Event fired when the available targets change.
+     * Extensions must fire this event when targets are added, removed, or modified.
+     */
+    onDidChangeTargets: Event<CertificateSyncTargetProviderChangeEvent>;
   }
 
   /**
@@ -4481,6 +4512,12 @@ declare module '@podman-desktop/api' {
      * An event that fires when the certificates change.
      */
     export const onDidChangeCertificates: Event<void>;
+
+    /**
+     * An event that fires when a provider's available sync targets change.
+     * Extensions can listen to this event to refresh their UI when targets are added, removed, or modified.
+     */
+    export const onDidChangeTargets: Event<CertificateSyncTargetProviderChangeEvent>;
   }
 
   /**

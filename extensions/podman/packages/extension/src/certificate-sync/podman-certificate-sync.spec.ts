@@ -33,6 +33,11 @@ vi.mock('@podman-desktop/api', async () => ({
   window: {
     withProgress: vi.fn(),
   },
+  EventEmitter: class {
+    event = vi.fn();
+    fire = vi.fn();
+    dispose = vi.fn();
+  },
 }));
 
 vi.mock('../utils/util', () => ({
@@ -516,6 +521,35 @@ describe('PodmanCertificateSync', () => {
 
       expect(fingerprints.size).toBe(0);
       expect(consoleSpy).toHaveBeenCalledWith('Failed to list existing certificates on VM:', expect.any(Error));
+    });
+  });
+
+  describe('notifyTargetsChanged', () => {
+    let mockFire: Mock;
+
+    beforeEach(() => {
+      vi.resetAllMocks();
+
+      // Create a shared mock for fire
+      mockFire = vi.fn();
+
+      // Mock EventEmitter to use our tracked fire function
+      // @ts-expect-error - mocking class
+      extensionApi.EventEmitter = class {
+        event = vi.fn();
+        fire = mockFire;
+        dispose = vi.fn();
+      };
+    });
+
+    test('should fire onDidChangeTargets when notifyTargetsChanged is called', () => {
+      const sync = new PodmanCertificateSync(vi.fn());
+
+      sync.notifyTargetsChanged();
+
+      expect(mockFire).toHaveBeenCalledWith({
+        provider: { id: 'podman-machines', label: 'Podman' },
+      });
     });
   });
 });

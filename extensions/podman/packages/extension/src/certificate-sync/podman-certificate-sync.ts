@@ -22,6 +22,8 @@ import type {
   CancellationToken,
   CertificateSyncTarget,
   CertificateSyncTargetProvider,
+  CertificateSyncTargetProviderChangeEvent,
+  Event,
   Progress,
   RunError,
 } from '@podman-desktop/api';
@@ -42,7 +44,18 @@ export type GetMachineListFn = () => Promise<MachineJSONListOutput>;
  * Uploads certificates to /etc/pki/ca-trust/source/anchors/ and updates the trust store.
  */
 export class PodmanCertificateSync implements CertificateSyncTargetProvider {
+  private readonly _onDidChangeTargets = new extensionApi.EventEmitter<CertificateSyncTargetProviderChangeEvent>();
+  readonly onDidChangeTargets: Event<CertificateSyncTargetProviderChangeEvent> = this._onDidChangeTargets.event;
+
   constructor(private readonly getMachineList: GetMachineListFn) {}
+
+  /**
+   * Notify that sync targets have changed (e.g., machine started/stopped).
+   * Called from startMachine/stopMachine handlers.
+   */
+  notifyTargetsChanged(): void {
+    this._onDidChangeTargets.fire({ provider: { id: 'podman-machines', label: 'Podman' } });
+  }
 
   /**
    * Get available Podman machines that support certificate synchronization.

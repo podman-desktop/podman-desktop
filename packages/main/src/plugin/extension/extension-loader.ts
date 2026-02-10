@@ -1412,6 +1412,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         return Promise.resolve(certificatesService.getAllCertificateInfos());
       },
       onDidChangeCertificates: certificatesService.onDidChangeCertificates,
+      onDidChangeTargets: certificateSyncTargetRegistry.onDidChangeTargets,
     };
 
     const authenticationProviderRegistry = this.authenticationProviderRegistry;

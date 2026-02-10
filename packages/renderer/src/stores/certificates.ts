@@ -64,11 +64,7 @@ const getCertificateSyncTargets = (): Promise<CertificateSyncTargetInfo[]> => {
 };
 
 // Sync targets need to update when extensions start/stop, targets change, or machine state changes
-const syncTargetsWindowEvents = [
-  'extensions-started',
-  'certificate-sync-targets-update',
-  'provider-container-connection-update-status',
-];
+const syncTargetsWindowEvents = ['extensions-started', 'certificate-sync-targets-update'];
 
 export const certificateSyncTargetsEventStore = new EventStore<CertificateSyncTargetInfo[]>(
   'certificate-sync-targets',
