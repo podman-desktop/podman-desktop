@@ -367,7 +367,7 @@ export class ColorRegistry {
       light: gray[300],
     });
     this.registerColor(`${glNav}icon`, {
-      dark: gray[600],
+      dark: gray[400],
       light: charcoal[200],
     });
     this.registerColor(`${glNav}icon-hover`, {
@@ -545,7 +545,7 @@ export class ColorRegistry {
   protected initContent(): void {
     const ct = 'content-';
     this.registerColor(`${ct}breadcrumb`, {
-      dark: gray[600],
+      dark: gray[400],
       light: purple[900],
     });
 
@@ -560,17 +560,17 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}text`, {
-      dark: gray[700],
+      dark: gray[400],
       light: gray[900],
     });
 
     this.registerColor(`${ct}sub-header`, {
-      dark: gray[900],
+      dark: gray[400],
       light: purple[900],
     });
 
     this.registerColor(`${ct}header-icon`, {
-      dark: gray[600],
+      dark: gray[400],
       light: purple[700],
     });
 
@@ -605,7 +605,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}card-light-title`, {
-      dark: gray[800],
+      dark: gray[500],
       light: purple[900],
     });
 
@@ -655,12 +655,12 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}card-carousel-nav`, {
-      dark: gray[800],
+      dark: gray[500],
       light: gray[300],
     });
 
     this.registerColor(`${ct}card-carousel-hover-nav`, {
-      dark: gray[600],
+      dark: gray[400],
       light: gray[500],
     });
 
@@ -718,11 +718,11 @@ export class ColorRegistry {
       light: gray[700],
     });
     this.registerColor(`${sNav}hover-text`, {
-      dark: gray[700],
+      dark: gray[400],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}placeholder-text`, {
-      dark: gray[700],
+      dark: gray[500],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}stroke`, {
@@ -742,7 +742,7 @@ export class ColorRegistry {
       light: charcoal[100],
     });
     this.registerColor(`${sNav}icon`, {
-      dark: gray[700],
+      dark: gray[400],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}focused-icon`, {
@@ -754,7 +754,7 @@ export class ColorRegistry {
       light: gray[700],
     });
     this.registerColor(`${sNav}hover-icon`, {
-      dark: gray[700],
+      dark: gray[400],
       light: purple[600],
     });
   }
@@ -851,7 +851,7 @@ export class ColorRegistry {
     const tab = 'table-';
     // color of columns names
     this.registerColor(`${tab}header-text`, {
-      dark: gray[600],
+      dark: gray[400],
       light: charcoal[200],
     });
     // color of up/down arrows when column is not the ordered one
@@ -862,7 +862,7 @@ export class ColorRegistry {
 
     // color for most text in tables
     this.registerColor(`${tab}body-text`, {
-      dark: gray[700],
+      dark: gray[400],
       light: charcoal[100],
     });
     // color for the text in the main column of the table (generally Name)
@@ -889,7 +889,7 @@ export class ColorRegistry {
       light: charcoal[500],
     });
     this.registerColor(`${details}empty-icon`, {
-      dark: gray[600],
+      dark: gray[400],
       light: charcoal[200],
     });
     this.registerColor(`${details}empty-header`, {
@@ -897,7 +897,7 @@ export class ColorRegistry {
       light: charcoal[500],
     });
     this.registerColor(`${details}empty-sub-header`, {
-      dark: gray[600],
+      dark: gray[400],
       light: charcoal[500],
     });
     this.registerColor(`${details}empty-cmdline-bg`, {
@@ -917,7 +917,7 @@ export class ColorRegistry {
       light: gray[300],
     });
     this.registerColor(`${details}card-header`, {
-      dark: gray[700],
+      dark: gray[400],
       light: charcoal[300],
     });
     this.registerColor(`${details}card-text`, {
@@ -929,7 +929,7 @@ export class ColorRegistry {
   protected initTab(): void {
     const tab = 'tab-';
     this.registerColor(`${tab}text`, {
-      dark: gray[600],
+      dark: gray[400],
       light: charcoal[200],
     });
     this.registerColor(`${tab}text-highlight`, {
@@ -1077,7 +1077,7 @@ export class ColorRegistry {
       light: gray[600],
     });
     this.registerColor(`${button}tab-text`, {
-      dark: gray[600],
+      dark: gray[400],
       light: charcoal[200],
     });
     this.registerColor(`${button}tab-text-selected`, {
@@ -1277,7 +1277,7 @@ export class ColorRegistry {
       light: purple[200],
     });
     this.registerColor(`${label}text`, {
-      dark: gray[500],
+      dark: gray[400],
       light: charcoal[300],
     });
 
@@ -1350,7 +1350,7 @@ export class ColorRegistry {
       light: charcoal[200],
     });
     this.registerColor(`${status}not-running`, {
-      dark: gray[700],
+      dark: gray[500],
       light: gray[900],
     });
     // "Warning"
@@ -1440,7 +1440,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${onboarding}inactive-dot-border`, {
-      dark: gray[700],
+      dark: gray[500],
       light: gray[700],
     });
   }
