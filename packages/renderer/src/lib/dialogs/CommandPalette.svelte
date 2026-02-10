@@ -168,6 +168,11 @@ function displaySearchBar(): void {
 }
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
+  // open palette only if F1 key is pressed when palette is not already visible
+  if (!display && e.key !== `${F1}`) {
+    return;
+  }
+
   // toggle display using F1 or ESC keys
   if (e.key === `${F1}` || e.key === '>') {
     selectedFilteredIndex = 0;
@@ -194,11 +199,6 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
       displaySearchBar();
       e.preventDefault();
     }
-  }
-
-  // for other keys, only check if it's being displayed
-  if (!display) {
-    return;
   }
 
   // no items, abort

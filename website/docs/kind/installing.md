@@ -10,15 +10,30 @@ tags: [installing-the-kind-CLI, kind]
 
 #### Procedure
 
-- In the status bar, click on **Kind**, and follow the prompts.
+Install the `kind` CLI using one of these ways:
+
+_Using the CLI Page_
+
+1. Go to **Settings > CLI tools**.
+1. Click the **Install** link on the **Kind** tile.
+
+_Using the Resources Page_
+
+1. Go to **Settings > Resources**.
+1. Click the **Create new…** link on the **Kind** tile. A pop-up window opens to confirm the installation of the latest version of Kind.
+1. Click **Confirm** to proceed.
+1. Click **Go back to resources** after cluster creation.
+
+_Using the Status Bar_
+
+- In the status bar, click **Kind** and follow the on-screen prompts.
   ![Kind in the status bar](img/kind-status-bar.png)
 
 #### Verification
 
-1. The status bar does not display **Kind**.
-1. **<Icon icon="fa-solid fa-cog" size="lg" /> Settings > Resources** contain a **Kind** tile.
+1. Under **Settings > Resources**, verify your cluster is active on the **Kind** tile.
    ![Kind resource tile](img/kind-resource.png)
-1. You can run the `kind` CLI:
+1. Open a terminal, and run the `kind` CLI:
 
    ```shell-session
    $ kind get clusters

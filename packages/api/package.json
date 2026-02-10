@@ -15,8 +15,11 @@
     "test": "vitest run --coverage --passWithNoTests",
     "test:watch": "vitest watch --coverage --passWithNoTests"
   },
+  "dependencies": {
+    "hosted-git-info": "^9.0.2"
+  },
   "devDependencies": {
-    "hosted-git-info": "^9.0.2",
+    "@types/hosted-git-info": "^3.0.5",
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^4.0.10"
   },
