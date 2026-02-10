@@ -1212,6 +1212,16 @@ export class ColorRegistry {
       light: hoverItem.light,
     });
 
+    this.registerColor(`${button}focus-ring`, {
+      dark: textLink.dark,
+      light: textLink.light,
+    });
+
+    this.registerColor(`${button}focus-ring-danger`, {
+      dark: red[500],
+      light: red[700],
+    });
+
     // deprecated since 2026-02-06. See https://github.com/podman-desktop/podman-desktop/pull/14876
     // Unused color
     this.registerColor(`${button}help-link-text`, {
