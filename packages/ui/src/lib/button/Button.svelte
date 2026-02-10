@@ -32,13 +32,15 @@ let {
   type = 'primary',
   icon,
   selected,
-  padding = 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]'),
+  padding,
   class: classNames,
   hidden,
   'aria-label': ariaLabel,
   onclick = dispatch.bind(undefined, 'click'),
   children,
 }: Props = $props();
+
+let actualPadding = $derived(padding ?? 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]'));
 
 let classes = $derived.by(() => {
   let result: string = '';
@@ -88,7 +90,7 @@ onMount(() => {
 
 <button
   type="button"
-  class="relative {padding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] {classes} {classNames}"
+  class="relative {actualPadding} motion-reduce:transition-none min-h-[28px] min-w-[28px] leading-[15px] {classes} {classNames}"
   class:border-[var(--pd-button-tab-border-selected)]={type === 'tab' && selected}
   class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected}
   class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected}
