@@ -124,9 +124,9 @@ function isEqual(first: IConfigurationPropertyRecordedSchema, second: IConfigura
 
 function autoSave(): Promise<void> {
   if (enableAutoSave) {
-    return new Promise((resolve, reject) => {
+    return new Promise((_, reject) => {
       recordUpdateTimeout = setTimeout(() => {
-        update(record).then(resolve, (err: unknown) => reject(err));
+        update(record).catch((err: unknown) => reject(err));
       }, 1000);
     });
   }
