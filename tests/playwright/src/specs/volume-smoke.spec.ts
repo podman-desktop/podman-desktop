@@ -119,6 +119,7 @@ test.describe.serial('Volume workflow verification', { tag: ['@smoke', '@windows
 
     const volumeDetails = await volumesPage.openVolumeDetails(volumeName);
     volumesPage = await volumeDetails.deleteVolume();
+    await playExpect(volumesPage.heading).toBeVisible({ timeout: 10_000 });
 
     await playExpect
       .poll(async () => await volumesPage.waitForVolumeDelete(volumeName), {
@@ -132,6 +133,8 @@ test.describe.serial('Volume workflow verification', { tag: ['@smoke', '@windows
 
     //count the number of existing volumes
     let volumesPage = await navigationBar.openVolumes();
+    await playExpect(volumesPage.heading).toBeVisible({ timeout: 10_000 });
+
     let previousVolumes = await volumesPage.countVolumesFromTable();
 
     //if there are volumes, check how many are used

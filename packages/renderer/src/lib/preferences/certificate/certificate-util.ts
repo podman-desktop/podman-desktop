@@ -28,14 +28,14 @@ export function getSubjectDisplayName(cert: CertificateInfo): string {
 /**
  * Get display name for certificate issuer (CN → Full DN → 'Unknown')
  */
-export function getIssuerDisplayName(cert: CertificateInfo): string {
+function getIssuerDisplayName(cert: CertificateInfo): string {
   return cert.issuerCommonName || cert.issuer || 'Unknown';
 }
 
 /**
  * Check if certificate is self-signed (subject === issuer)
  */
-export function isSelfSigned(cert: CertificateInfo): boolean {
+function isSelfSigned(cert: CertificateInfo): boolean {
   return cert.subject === cert.issuer;
 }
 

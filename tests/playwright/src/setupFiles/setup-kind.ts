@@ -18,7 +18,7 @@
 
 import { isLinux, isMac, isWindows } from '/@/utility/platform';
 
-export function setupKind(): boolean[] {
+function setupKind(): boolean[] {
   const rootfulMode = process.env.ROOTFUL_MODE === 'true'; // undefined or "false" => false
   const runKindTests = process.env.RUN_KIND_TESTS === 'true';
   return [rootfulMode, runKindTests];

@@ -51,7 +51,7 @@ function collectAndSendCount(callback: (activeResourcesCount: ResourceCount[]) =
     });
 }
 
-export async function isKubernetesExperimentalMode(): Promise<boolean> {
+async function isKubernetesExperimentalMode(): Promise<boolean> {
   try {
     return await window.isExperimentalConfigurationEnabled('kubernetes.statesExperimental');
   } catch {

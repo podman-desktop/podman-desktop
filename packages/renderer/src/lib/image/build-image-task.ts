@@ -27,7 +27,7 @@ export interface BuildImageCallback {
   onEnd: () => void;
 }
 
-export interface BuildReplay {
+interface BuildReplay {
   // stream replay
   stream: string;
 
@@ -54,7 +54,7 @@ export function startBuild(buildImageCallback: BuildImageCallback): symbol {
 
 // clear all data related to the given build
 // even if build did not started once
-export function clearBuildTask(key: symbol = Symbol()): void {
+function clearBuildTask(key: symbol = Symbol()): void {
   buildCallbacks.delete(key);
 }
 
@@ -109,7 +109,7 @@ export function eventCollect(key: symbol, eventName: 'finish' | 'stream' | 'erro
   }
 }
 
-export function deleteBuildImageTask(taskId: number): void {
+function deleteBuildImageTask(taskId: number): void {
   const id = taskId as number;
   // remove task from buildImagesInfo
   buildImagesInfo.update(map => {

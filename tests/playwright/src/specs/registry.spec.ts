@@ -19,6 +19,7 @@
 import { RegistriesPage } from '/@/model/pages/registries-page';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteRegistry } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 let registryUrl: string;
@@ -36,8 +37,14 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner }) => {
-  await runner.close();
+test.afterAll(async ({ runner, page }) => {
+  try {
+    await deleteRegistry(page, 'GitHub').catch((error: unknown) => {
+      console.log('Failed to delete registry:', error);
+    });
+  } finally {
+    await runner.close();
+  }
 });
 
 test.describe.serial('Registries handling verification', { tag: '@smoke' }, () => {
@@ -99,7 +106,7 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
         const registryPage = new RegistriesPage(page);
 
         await registryPage.editRegistry(registryName, 'invalidName', 'invalidPswd');
-        const errorMsg = page.getByLabel('Error Message Content');
+        const errorMsg = page.getByLabel('Error Message Content').first();
         await playExpect(errorMsg).toBeVisible({ timeout: 30_000 });
         await playExpect(errorMsg).toContainText('Wrong Username or Password', { ignoreCase: true });
 

@@ -41,8 +41,8 @@ interface ButtonElement {
 
 const BASE_BUTTON_CSS =
   'flex flex-row items-center justify-center px-4 py-[6px] max-w-[200px] rounded-[4px] text-white text-[13px] whitespace-nowrap no-underline';
-export const NORMAL_MODE_CSS = `${BASE_BUTTON_CSS} bg-purple-600 hover:bg-purple-500`;
-export const ERROR_MODE_CSS = `${BASE_BUTTON_CSS} text-gray-400 bg-red-900 hover:bg-red-700`;
+const NORMAL_MODE_CSS = `${BASE_BUTTON_CSS} bg-purple-600 hover:bg-purple-500`;
+const ERROR_MODE_CSS = `${BASE_BUTTON_CSS} text-gray-400 bg-red-900 hover:bg-red-700`;
 
 /**
  * it creates a new button by associating the command to it and returns its new generated button id
