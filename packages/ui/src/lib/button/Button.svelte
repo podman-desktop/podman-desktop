@@ -100,7 +100,7 @@ onMount(() => {
   aria-label={ariaLabel}
   onclick={onclick}
   disabled={disabled || inProgress}
-  aria-disabled={disabled}
+  aria-disabled={disabled || inProgress}
   aria-busy={inProgress}>
   {#if icon ?? inProgress}
     <div
