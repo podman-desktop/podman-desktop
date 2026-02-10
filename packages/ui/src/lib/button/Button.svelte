@@ -58,10 +58,11 @@ let classes = $derived.by(() => {
   } else if (type === 'tab') {
     result =
       'border-b-[3px] border-[var(--pd-button-tab-border)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]';
-  } else {
-    // link
+  } else if (type === 'link') {
     result =
       'bg-[var(--pd-button-link-bg)] text-[var(--pd-button-link-text)] border border-transparent hover:bg-[var(--pd-button-link-hover-bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]';
+  } else {
+    console.warn(`Unknown button type: ${type}`);
   }
 
   // Set cursor states
@@ -95,7 +96,7 @@ onMount(() => {
   class:border-[var(--pd-button-tab-border-selected)]={type === 'tab' && selected && !disabled && !inProgress}
   class:hover:border-[var(--pd-button-tab-hover-border)]={type === 'tab' && !selected && !disabled && !inProgress}
   class:text-[var(--pd-button-tab-text-selected)]={type === 'tab' && selected && !disabled && !inProgress}
-  class:text-[var(--pd-button-tab-text)]={type === 'tab' && !selected}
+  class:text-[var(--pd-button-tab-text)]={type === 'tab' && !selected && !disabled && !inProgress}
   hidden={hidden}
   title={title}
   aria-label={ariaLabel}
