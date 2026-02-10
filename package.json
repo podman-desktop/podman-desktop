@@ -165,7 +165,7 @@
     "cross-env": "10.1.0",
     "dts-for-context-bridge": "0.7.1",
     "electron": "40.3.0",
-    "electron-builder": "26.0.12",
+    "electron-builder": "26.7.0",
     "electron-builder-notarize": "^1.5.2",
     "eslint": "^9.39.2",
     "eslint-import-resolver-custom-alias": "^1.3.2",
@@ -261,7 +261,6 @@
       "@docusaurus/types>webpack": "^5.105.0"
     },
     "patchedDependencies": {
-      "dmg-builder": "patches/dmg-builder.patch",
       "docker-modem": "patches/docker-modem.patch"
     }
   },

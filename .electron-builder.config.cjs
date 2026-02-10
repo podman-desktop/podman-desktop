@@ -262,7 +262,7 @@ const config = {
     },
   },
   dmg: {
-    background: 'buildResources/dmg-background@2x.png',
+    background: 'buildResources/dmg-background.png',
     window: {
       width: 540,
       height: 380,
