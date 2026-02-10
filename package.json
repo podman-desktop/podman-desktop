@@ -64,7 +64,7 @@
     "test:e2e:update": "pnpm run test:e2e:build && pnpm run test:e2e:update:run",
     "test:e2e:update:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/special-specs/installation/ -g @update-install",
     "test:e2e:managed-configuration": "pnpm run test:e2e:build && pnpm run test:e2e:managed-configuration:run",
-    "test:e2e:managed-configuration:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/special-specs/managed-configuration/ -g @managed-configuration",
+    "test:e2e:managed-configuration:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/special-specs/managed-configuration/managed-configuration-combined.spec.ts",
     "test:main": "vitest --run --project=main --passWithNoTests",
     "test:preload": "vitest --run --project=preload --passWithNoTests",
     "test:preload-docker-extension": "vitest --run --project=preload-docker-extension --passWithNoTests",
