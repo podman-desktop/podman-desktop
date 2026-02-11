@@ -21,7 +21,7 @@ import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 
 let rateLimitReachedFlag = false;
-let composeOnboardingStatusText: string | null = null;
+let composeOnboardingStatusText: string | undefined;
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {
@@ -79,7 +79,6 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await playExpect(welcomePage.onboardingMessageStatus).toContainText(/Compose (installed|download)/, {
       timeout: 10_000,
     });
-    // Use innerText() so we get visible text; textContent() can differ from what toContainText sees
     composeOnboardingStatusText = await welcomePage.onboardingMessageStatus.innerText();
 
     if (composeOnboardingStatusText?.toLowerCase().includes('compose installed')) {
