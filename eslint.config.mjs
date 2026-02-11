@@ -35,6 +35,7 @@ import redundantUndefined from 'eslint-plugin-redundant-undefined';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import fileProgress from 'eslint-plugin-file-progress';
 import vitest from '@vitest/eslint-plugin';
+import nodePlugin from 'eslint-plugin-n';
 import svelteConfig from './svelte.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -96,6 +97,7 @@ export default [
       // compliant v9 plug-ins
       unicorn,
       'file-progress': fileProgress,
+      n: nodePlugin,
       // non-compliant v9 plug-ins
       etc: fixupPluginRules(etc),
       import: fixupPluginRules(importPlugin),
@@ -193,6 +195,9 @@ export default [
 
       // unicorn custom rules
       'unicorn/prefer-node-protocol': 'error',
+
+      // node custom rules
+      'n/no-sync': 'warn',
 
       // sonarjs custom rules
       'sonarjs/cognitive-complexity': 'off',

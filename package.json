@@ -173,6 +173,7 @@
     "eslint-plugin-etc": "^2.0.3",
     "eslint-plugin-file-progress": "^3.0.2",
     "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-redundant-undefined": "^1.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
