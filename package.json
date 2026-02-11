@@ -176,7 +176,7 @@
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-redundant-undefined": "^1.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-sonarjs": "^3.0.6",
+    "eslint-plugin-sonarjs": "^3.0.7",
     "eslint-plugin-unicorn": "^63.0.0",
     "fzstd": "^0.1.1",
     "get-tsconfig": "^4.13.6",
