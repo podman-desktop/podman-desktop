@@ -50,16 +50,13 @@ $effect(() => {
 });
 
 let selectedEnvironment = $state('');
-
-// Re-filter images when environment selection changes
-$effect(() => {
-  // Access selectedEnvironment to track changes
-  selectedEnvironment;
-  if (storeImages.length > 0) {
-    updateImages(globalContext);
-  }
-});
 let images: ImageInfoUI[] = $state([]);
+
+// Filter images by selected environment
+let filteredImages = $derived.by(() => {
+  if (!selectedEnvironment) return images;
+  return images.filter(image => image.engineId === selectedEnvironment);
+});
 let enginesList: EngineInfoUI[] = $state([]);
 
 let providerConnections = $derived(
@@ -108,10 +105,6 @@ function updateImages(globalContext: ContextUI): void {
   images = computedImages;
   if (imageEngineId) {
     images = images.filter(image => image.engineId === imageEngineId);
-  }
-  // Filter by selected environment
-  if (selectedEnvironment) {
-    images = images.filter(image => image.engineId === selectedEnvironment);
   }
 
   // Map engineName, engineId and engineType from currentContainers to EngineInfoUI[]
@@ -204,7 +197,7 @@ function loadImages(): void {
 // delete the items selected in the list
 let bulkDeleteInProgress = $state(false);
 async function deleteSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = filteredImages.filter(image => image.selected);
   if (selectedImages.length === 0) {
     return;
   }
@@ -224,7 +217,7 @@ async function deleteSelectedImages(): Promise<void> {
 
 // save the items selected in the list
 async function saveSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = filteredImages.filter(image => image.selected);
   if (selectedImages.length === 0) {
     return;
   }
@@ -370,7 +363,7 @@ function label(item: ImageInfoUI): string {
       <Table
         kind="image"
         bind:selectedItemsNumber={selectedItemsNumber}
-        data={images}
+        data={filteredImages}
         columns={columns}
         row={row}
         defaultSortColumn="Age"
