@@ -104,7 +104,6 @@ async function handleActionButtonClick(connection: ProviderConnectionInfo): Prom
     } else {
       errorMessage = String(error);
     }
-    console.log('errorMessage', errorMessage);
   }
 }
 </script>
