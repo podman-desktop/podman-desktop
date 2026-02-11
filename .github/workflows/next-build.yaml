@@ -85,8 +85,8 @@ jobs:
           name: ${{ steps.TAG_UTIL.outputs.githubTag }}
           draft: true
           prerelease: true
-          owner: containers
-          repo: podman-desktop-prereleases
+          owner: podman-desktop
+          repo: prereleases
           token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
 
   build:
