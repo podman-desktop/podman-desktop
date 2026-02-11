@@ -20,9 +20,11 @@ import { DashboardPage } from '/@/model/pages/dashboard-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { createPodmanMachineFromCLI } from '/@/utility/operations';
+import { isMac } from '/@/utility/platform';
 
 let rateLimitReachedFlag = false;
 let composeOnboardingStatusText: string | undefined;
+let kubectlOnboardingStatusText: string | undefined;
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {
@@ -37,6 +39,8 @@ test.beforeAll(async ({ runner, page }) => {
     }
   });
 });
+
+test.skip(!!isMac, 'This test is not supported on Mac due to requiring admin permissions to install tools');
 
 test.afterAll(async ({ runner }) => {
   await runner.close();
@@ -68,8 +72,39 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await welcomePage.nextStepButton.click();
   });
 
-  test('Check k8s is installed', async ({ welcomePage }) => {
-    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 10_000 });
+  test('Check k8s step (kubectl installed or download)', async ({ welcomePage }) => {
+    await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText(/kubectl (installed|download)/, {
+      timeout: 10_000,
+    });
+    kubectlOnboardingStatusText = await welcomePage.onboardingMessageStatus.innerText();
+
+    if (kubectlOnboardingStatusText?.toLowerCase().includes('kubectl installed')) {
+      await playExpect(welcomePage.nextStepButton).toBeEnabled();
+      await welcomePage.nextStepButton.click();
+      return;
+    }
+
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl download', { timeout: 10_000 });
+    await playExpect(welcomePage.nextStepButton).toBeEnabled();
+    await welcomePage.nextStepButton.click();
+  });
+
+  test('Download and install kubectl', async ({ welcomePage }) => {
+    test.setTimeout(130_000);
+
+    if (!kubectlOnboardingStatusText?.toLowerCase().includes('kubectl download')) {
+      test.skip(true, 'kubectl already installed; see "Check k8s step" test');
+      return;
+    }
+
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl successfully downloaded', {
+      timeout: 120_000,
+    });
+    await playExpect(welcomePage.nextStepButton).toBeEnabled();
+    await welcomePage.nextStepButton.click();
+
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 60_000 });
     await playExpect(welcomePage.nextStepButton).toBeEnabled();
     await welcomePage.nextStepButton.click();
   });
