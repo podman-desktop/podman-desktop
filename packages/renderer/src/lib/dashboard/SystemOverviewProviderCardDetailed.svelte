@@ -1,5 +1,4 @@
 <script lang="ts">
-import { faXmarkCircle } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
 import { Button, type ButtonType } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
@@ -34,6 +33,8 @@ let displayName = $derived.by(() => {
   }
   return connection.name;
 });
+
+let errorState = $derived(errorMessage ?? connectionStatus.status === 'critical');
 
 function getVmTypeName(connection: ProviderConnectionInfo): string | undefined {
   if (connection.connectionType === 'container') {
@@ -108,9 +109,15 @@ async function handleActionButtonClick(connection: ProviderConnectionInfo): Prom
 }
 </script>
 
-<div class="flex items-center gap-3 py-2 bg-[var(--pd-content-card-carousel-card-bg)] rounded-lg p-4">
+<div class="flex items-center gap-3 py-2 rounded-lg p-4"
+  class:bg-[var(--pd-system-overview-critical-bg)]={errorState}
+  class:bg-[var(--pd-content-card-carousel-card-bg)]={!errorState}
+  >
   <!-- Provider Logo -->
-  <div class="flex-shrink-0 rounded-md bg-[var(--pd-content-card-bg)] p-2">
+  <div class="flex-shrink-0 rounded-md p-2"
+    class:bg-[var(--pd-content-card-bg)]={!errorState}
+    class:bg-[var(--pd-system-overview-critical-bg)]={errorState}
+  >
     <Icon icon={connection.connectionType === 'container' ? PodIcon : KubernetesIcon } size={24} />
   </div>
 
@@ -161,14 +168,14 @@ async function handleActionButtonClick(connection: ProviderConnectionInfo): Prom
     </div>
 
     <!-- Error/Warning Messages -->
-    {#if provider.warnings && provider.warnings.length > 0}
-      <div class="flex items-center gap-1.5 mt-0.5">
-        <Icon icon={faXmarkCircle} size={12} class="text-[var(--pd-status-terminated)]" />
-        <span class="text-sm text-[var(--pd-status-terminated)]">
-          {#each provider.warnings as warning, index (index)}
-            {warning.details ?? warning.name}
-          {/each}
-        </span>
+    {#if provider.warnings.length || errorMessage}
+      <div class="flex items-center gap-1.5 mt-0.5 text-sm text-[var(--pd-status-terminated)]">
+        {#each provider.warnings as warning, index (index)}
+          {warning.details ?? warning.name}
+        {/each}
+        {#if errorMessage}
+          {errorMessage}
+        {/if}
       </div>
     {/if}
   </div>
