@@ -1614,10 +1614,27 @@ export class ExtensionLoader implements IAsyncDisposable {
       navigate: async (routeId: string, ...args: unknown[]): Promise<void> => {
         return this.navigationManager.navigateToRoute(`${extensionInfo.id}.${routeId}`, args);
       },
-      register: (routeId: string, commandId: string): Disposable => {
+      register: (
+        routeId: string,
+        commandId: string,
+        options?: containerDesktopAPI.NavigationRouteOptions,
+      ): Disposable => {
+        // Try to find webview for this extension to get its display name
+        // Same logic as in navigation-registry-extension.svelte.ts
+        const webviews = webviewRegistry.listWebviews();
+        const extensionWebview = webviews.find(w => w.sourcePath === extensionInfo.extensionPath);
+
+        let displayName: string = extensionInfo.label;
+        if (extensionWebview) {
+          displayName = extensionWebview.name;
+        }
+
         const disposable = this.navigationManager.registerRoute({
-          routeId: `${extensionInfo.id}.${routeId}`,
+          routeId: routeId,
           commandId: commandId,
+          extensionId: displayName,
+          title: options?.title,
+          icon: options?.icon,
         });
 
         disposables.push(disposable);

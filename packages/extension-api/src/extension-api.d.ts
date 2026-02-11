@@ -5077,8 +5077,10 @@ declare module '@podman-desktop/api' {
      *   // todo: do something with the trackingId
      * });
      *
-     * // register the route
-     * navigation.register('download-page', 'redirect-download-command');
+     * // register the route with metadata
+     * navigation.register('download-page', 'redirect-download-command', {
+     *   title: 'Open Download Page'
+     * });
      *
      * // when needed call the navigate with the route id registered to
      * // trigger the command
@@ -5087,8 +5089,9 @@ declare module '@podman-desktop/api' {
      *
      * @param routeId a unique string value that could be used in {@link navigation.navigate}
      * @param commandId the command that will be executed on navigate
+     * @param options optional metadata for the route (title, icon)
      */
-    export function register(routeId: string, commandId: string): Disposable;
+    export function register(routeId: string, commandId: string, options?: NavigationRouteOptions): Disposable;
 
     /**
      * Allow extension to navigate to a custom route.
@@ -5098,6 +5101,21 @@ declare module '@podman-desktop/api' {
      * @param args the arguments to provide to the command linked to the routeId
      */
     export function navigate(routeId: string, ...args: unknown[]): Promise<void>;
+  }
+
+  /**
+   * Options for registering a navigation route with metadata.
+   */
+  export interface NavigationRouteOptions {
+    /**
+     * A human-readable title for this route that will appear in the command palette
+     */
+    title: string;
+
+    /**
+     * Optional base64 PNG image (for transparency / non vector icons)
+     */
+    icon?: string | { light: string; dark: string };
   }
 
   /**

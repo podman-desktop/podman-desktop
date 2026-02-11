@@ -307,6 +307,63 @@ test('check navigateToExtensionsCatalog', async () => {
   });
 });
 
+describe('getNavigationRoutes', () => {
+  test('should return empty array when no routes are registered', () => {
+    const routes = navigationManager.getNavigationRoutes();
+    expect(routes).toEqual([]);
+  });
+
+  test('should return all registered routes with metadata', () => {
+    // Register multiple routes with different metadata
+    navigationManager.registerRoute({
+      routeId: 'route1',
+      commandId: 'command1',
+      title: 'Route One',
+      icon: 'icon1',
+      extensionId: 'Extension 1',
+    });
+
+    navigationManager.registerRoute({
+      routeId: 'route2',
+      commandId: 'command2',
+      title: 'Route Two',
+      icon: { light: 'light-icon', dark: 'dark-icon' },
+      extensionId: 'Extension 2',
+    });
+
+    navigationManager.registerRoute({
+      routeId: 'route3',
+      commandId: 'command3',
+      // No title, icon, or extensionId
+    });
+
+    const routes = navigationManager.getNavigationRoutes();
+
+    expect(routes).toHaveLength(3);
+    expect(routes[0]).toEqual({
+      routeId: 'route1',
+      commandId: 'command1',
+      title: 'Route One',
+      icon: 'icon1',
+      extensionId: 'Extension 1',
+    });
+    expect(routes[1]).toEqual({
+      routeId: 'route2',
+      commandId: 'command2',
+      title: 'Route Two',
+      icon: { light: 'light-icon', dark: 'dark-icon' },
+      extensionId: 'Extension 2',
+    });
+    expect(routes[2]).toEqual({
+      routeId: 'route3',
+      commandId: 'command3',
+      title: undefined,
+      icon: undefined,
+      extensionId: undefined,
+    });
+  });
+});
+
 describe('register navigation commands', () => {
   beforeEach(() => {
     navigationManager.init();

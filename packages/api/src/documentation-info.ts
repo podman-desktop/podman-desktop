@@ -40,7 +40,16 @@ export type GoToInfo =
   | (ContainerInfo & { type: 'Container'; icon: GoToIcon })
   | (ImageInfo & { type: 'Image'; icon: GoToIcon })
   | (VolumeInfo & { type: 'Volume'; icon: GoToIcon })
-  | (NavigationInfo & { type: 'Navigation'; icon: GoToIcon });
+  | (NavigationInfo & { type: 'Navigation'; icon: GoToIcon })
+  // For commands that are registered as navigation routes (e.g. navigating to extensionresources)
+  | (NavigationCommandInfo & { type: 'NavigationCommand'; icon: GoToIcon });
+
+export interface NavigationCommandInfo {
+  name: string;
+  command: string;
+  id: string;
+  hidden?: boolean;
+}
 
 export interface NavigationInfo {
   name: string;
