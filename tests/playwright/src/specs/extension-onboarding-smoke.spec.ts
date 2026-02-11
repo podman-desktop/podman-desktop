@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { DashboardPage } from '/@/model/pages/dashboard-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isCI, isLinux } from '/@/utility/platform';
 
 let rateLimitReachedFlag = false;
+let composeOnboardingStatusText: string | null = null;
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {
@@ -37,8 +38,6 @@ test.beforeAll(async ({ runner, page }) => {
 test.afterAll(async ({ runner }) => {
   await runner.close();
 });
-
-test.skip(!isCI || !isLinux, 'This test suite should run only on Ubuntu platform in Github Actions');
 
 test.describe.serial('Verify onboarding experience for compose versioning', { tag: '@smoke' }, () => {
   test('Welcome message available and handle telemetry', async ({ welcomePage }) => {
@@ -73,6 +72,21 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
   });
 
   test('Check other versions for compose', async ({ welcomePage, page }) => {
+    await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
+    await playExpect.poll(async () => welcomePage.onboardingMessageStatus).toBeTruthy();
+
+    // Wait for compose step to be shown (either "Compose installed" or "Compose download")
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText(/Compose (installed|download)/, {
+      timeout: 10_000,
+    });
+    // Use innerText() so we get visible text; textContent() can differ from what toContainText sees
+    composeOnboardingStatusText = await welcomePage.onboardingMessageStatus.innerText();
+
+    if (composeOnboardingStatusText?.toLowerCase().includes('compose installed')) {
+      test.skip(true, 'Compose already installed; see "Compose already installed" test');
+      return;
+    }
+
     await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
     await playExpect(welcomePage.otherVersionButton).toBeVisible();
 
@@ -90,5 +104,17 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
     await playExpect(welcomePage.latestVersionFromDropDown).toBeEnabled();
     await welcomePage.latestVersionFromDropDown.click();
+  });
+
+  test('Compose already installed', async ({ welcomePage, page }) => {
+    if (!composeOnboardingStatusText?.toLowerCase().includes('compose installed')) {
+      test.skip(true, 'Compose download path; handled by "Check other versions for compose" test');
+    }
+
+    await playExpect(welcomePage.nextStepButton).toBeEnabled({ timeout: 10_000 });
+    await welcomePage.nextStepButton.click();
+
+    const dashboardPage = new DashboardPage(page);
+    await playExpect(dashboardPage.heading).toBeVisible({ timeout: 10_000 });
   });
 });
