@@ -63,7 +63,7 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
       await button.click();
 
       // A confirmation dialog is displayed for deletion
-      if (operation === ResourceElementActions.Delete) {
+      if (String(operation) === ResourceElementActions.Delete) {
         await handleConfirmationDialog(this.page);
       }
     });
