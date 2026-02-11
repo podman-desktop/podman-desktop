@@ -197,9 +197,9 @@ test('init', async () => {
 });
 
 test('initColors', async () => {
-  // mock the registerColor
+  // spy on registerColor but let it actually register colors
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
-  spyOnRegisterColor.mockReturnValue(undefined);
+  // Don't mock it - let it call through to the real implementation
 
   colorRegistry.initColors();
 

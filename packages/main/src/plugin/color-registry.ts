@@ -39,8 +39,10 @@ const {
   fuchsia,
   gray,
   green,
+  slate,
   neutral,
   purple,
+  violet,
   red,
   sky,
   stone,
@@ -1005,101 +1007,132 @@ export class ColorRegistry {
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
-      dark: purple[600],
-      light: purple[600],
+      dark: violet[600],
+      light: violet[700],
     });
+
     this.registerColor(`${button}primary-hover-bg`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: violet[500],
+      light: violet[600],
     });
+
     this.registerColor(`${button}secondary`, {
-      dark: gray[200],
-      light: purple[600],
+      dark: transparent,
+      light: violet[200],
     });
+
     this.registerColor(`${button}secondary-hover`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: slate[700],
+      light: violet[100],
     });
+
     this.registerColor(`${button}text`, {
       dark: white,
       light: white,
     });
+
     this.registerColor(`${button}disabled`, {
-      dark: charcoal[300],
-      light: gray[600],
+      dark: stone[700],
+      light: stone[300],
     });
+
     this.registerColor(`${button}disabled-text`, {
       dark: charcoal[50],
       light: gray[900],
     });
-    this.registerColor(`${button}danger-border`, {
-      dark: red[500],
-      light: red[700],
-    });
+
+    this.registerColorDefinition(
+      this.color(`${button}danger-border`)
+        .withLight(colorPaletteHelper(red[700]))
+        .withDark(colorPaletteHelper(red[200]).withAlpha(0.4))
+        .build(),
+    );
+
     this.registerColor(`${button}danger-bg`, {
-      dark: transparent,
-      light: transparent,
+      dark: red[600],
+      light: red[200],
     });
+
     this.registerColor(`${button}danger-text`, {
-      dark: red[500],
+      dark: white,
       light: red[700],
     });
+
+    // deprecated since 2026-02-06. See https://github.com/podman-desktop/podman-desktop/pull/14876
+    // Use `button-danger-text` instead
     this.registerColor(`${button}danger-hover-text`, {
       dark: white,
-      light: white,
+      light: red[700],
     });
+
     this.registerColor(`${button}danger-hover-bg`, {
-      dark: red[600],
-      light: red[600],
+      dark: red[500],
+      light: red[100],
     });
+
     this.registerColor(`${button}danger-disabled-border`, {
-      dark: charcoal[50],
-      light: gray[900],
+      dark: red[600],
+      light: red[200],
     });
+
+    // deprecated since 2026-02-06. See https://github.com/podman-desktop/podman-desktop/pull/14876
+    // Unused color (danger buttons always use `button-danger-text`)
     this.registerColor(`${button}danger-disabled-text`, {
-      dark: charcoal[50],
-      light: gray[900],
+      dark: white,
+      light: red[700],
     });
+
     this.registerColor(`${button}danger-disabled-bg`, {
       dark: transparent,
       light: transparent,
     });
+
     this.registerColor(`${button}tab-border`, {
       dark: transparent,
       light: transparent,
     });
+
     this.registerColor(`${button}tab-border-selected`, {
       dark: purple[500],
       light: purple[600],
     });
+
     this.registerColor(`${button}tab-hover-border`, {
-      dark: charcoal[100],
-      light: gray[600],
+      dark: slate[700],
+      light: violet[100],
     });
+
     this.registerColor(`${button}tab-text`, {
       dark: gray[400],
       light: charcoal[200],
     });
+
     this.registerColor(`${button}tab-text-selected`, {
       dark: white,
       light: black,
     });
+
     this.registerColorDefinition(
       this.color(`${button}close-hover-bg`)
         .withLight(colorPaletteHelper(black).withAlpha(0.13))
         .withDark(colorPaletteHelper(white).withAlpha(0.13))
         .build(),
     );
+
     this.registerColor(`${button}link-text`, {
       dark: purple[400],
       light: purple[700],
     });
+
     this.registerColorDefinition(
       this.color(`${button}link-hover-bg`)
         .withLight(colorPaletteHelper(black).withAlpha(0.13))
         .withDark(colorPaletteHelper(white).withAlpha(0.13))
         .build(),
     );
+
+    // deprecated since 2026-02-06. See https://github.com/podman-desktop/podman-desktop/pull/14876
+    // Unused color
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
