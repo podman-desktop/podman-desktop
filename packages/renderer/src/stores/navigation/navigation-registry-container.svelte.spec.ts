@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ContainerInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containersInfos } from '/@/stores/containers';
-import type { ContainerInfo } from '/@api/container-info';
 
 import { createNavigationContainerEntry } from './navigation-registry-container.svelte';
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
@@ -10,7 +11,6 @@ import { router } from 'tinro';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { getExistingTerminal, registerTerminal } from '/@/stores/container-terminal-store';
-import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 import NoLogIcon from '../ui/NoLogIcon.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';

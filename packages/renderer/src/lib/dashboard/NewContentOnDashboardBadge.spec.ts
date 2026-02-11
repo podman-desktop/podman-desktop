@@ -18,6 +18,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
+import type { NotificationCard, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { router } from 'tinro';
@@ -25,8 +26,6 @@ import { expect, test } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
 import { providerInfos } from '/@/stores/providers';
-import type { NotificationCard } from '/@api/notification';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import NewContentOnDashboardBadge from './NewContentOnDashboardBadge.svelte';
 

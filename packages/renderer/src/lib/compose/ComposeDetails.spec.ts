@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContainerInfo, ContainerInspectInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -28,9 +29,6 @@ import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
-import type { ContainerInfo } from '/@api/container-info';
-import type { ContainerInspectInfo } from '/@api/container-inspect-info';
-import { type ProviderInfo } from '/@api/provider-info';
 
 import ComposeDetails from './ComposeDetails.svelte';
 

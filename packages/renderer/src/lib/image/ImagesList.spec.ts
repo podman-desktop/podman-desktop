@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
@@ -32,7 +33,6 @@ import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE
 import { imagesInfos } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { viewsContributions } from '/@/stores/views';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import ImagesList from './ImagesList.svelte';
 

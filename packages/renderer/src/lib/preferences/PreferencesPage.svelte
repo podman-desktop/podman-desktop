@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { onMount } from 'svelte';
 
 import Onboarding from '/@/lib/onboarding/Onboarding.svelte';
@@ -6,7 +7,6 @@ import ExperimentalPage from '/@/lib/preferences/ExperimentalPage.svelte';
 import PreferencesContainerConnectionEdit from '/@/lib/preferences/PreferencesContainerConnectionEdit.svelte';
 import Route from '/@/Route.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import CertificateList from './certificate/CertificateList.svelte';
 import PreferencesDockerCompatibilityRendering from './docker-compat/PreferencesDockerCompatibilityRendering.svelte';

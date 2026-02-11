@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { KubeContext } from '@podman-desktop/core-api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
-import type { KubeContext } from '/@api/kubernetes-context';
 
 import { listenResourcePermitted } from './resource-permission';
 

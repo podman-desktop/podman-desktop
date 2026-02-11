@@ -1,8 +1,8 @@
 <script lang="ts">
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import type { Snippet } from 'svelte';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import ProviderButtonStatus from './ProviderButtonStatus.svelte';
 

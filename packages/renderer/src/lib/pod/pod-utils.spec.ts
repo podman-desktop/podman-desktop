@@ -18,10 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { PodInfo } from '@podman-desktop/core-api';
 import { expect, test } from 'vitest';
 
 import { ensureRestrictedSecurityContext, PodUtils } from '/@/lib/pod/pod-utils';
-import type { PodInfo } from '/@api/pod-info';
 
 function verifyPodSecurityContext(containers: any[], type = 'RuntimeDefault'): void {
   containers.forEach(container => {

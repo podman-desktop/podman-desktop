@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { StatusBarEntry } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-
-import type { StatusBarEntry } from '/@api/status-bar';
 
 import { iconClass } from './StatusBarItem';
 import StatusBarItem from './StatusBarItem.svelte';

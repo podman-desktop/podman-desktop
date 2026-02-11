@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faPen } from '@fortawesome/free-solid-svg-icons';
+import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
 import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
-import { PROXY_CONFIG_KEYS, ProxyState } from '/@api/proxy';
 
 import PreferencesManagedInput from './PreferencesManagedInput.svelte';
 import SettingsPage from './SettingsPage.svelte';

@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { render, type RenderResult, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { type Component, tick } from 'svelte';
@@ -29,7 +30,6 @@ import BuildImageFromContainerfile from '/@/lib/image/BuildImageFromContainerfil
 import { buildImagesInfo, getNextTaskId } from '/@/stores/build-images';
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 // xterm is used in the UI, but not tested, added in order to avoid the multiple warnings being shown during the test.
 vi.mock(import('@xterm/xterm'));

@@ -18,6 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
+import { STATUS_BAR_PIN_CONSTANTS } from '@podman-desktop/core-api/status-bar';
 import { fireEvent, render, type RenderResult, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import type { Component, ComponentProps } from 'svelte';
@@ -27,8 +29,6 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
-import type { ProviderInfo } from '/@api/provider-info';
-import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
 
 const CONTAINER_CONNECTION_PROVIDER = {
   name: 'podman',

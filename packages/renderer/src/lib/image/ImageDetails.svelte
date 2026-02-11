@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { ImageInfo } from '@podman-desktop/api';
+import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
@@ -19,7 +20,6 @@ import { imageCheckerProviders } from '/@/stores/image-checker-providers';
 import { imageFilesProviders } from '/@/stores/image-files-providers';
 import { imagesInfos } from '/@/stores/images';
 import { viewsContributions } from '/@/stores/views';
-import type { ViewInfoUI } from '/@api/view-info';
 
 import { ImageUtils } from './image-utils';
 import ImageActions from './ImageActions.svelte';

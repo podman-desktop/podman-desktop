@@ -19,12 +19,12 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject } from '@kubernetes/client-node';
+import { type PortMapping, WorkloadKind } from '@podman-desktop/core-api';
 import { fireEvent, render } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as store from '/@/stores/kubernetes-contexts-state'; // Adjust the import path as necessary
-import { type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import PodNameColumn from './PortForwardNameColumn.svelte';
 

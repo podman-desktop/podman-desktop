@@ -22,6 +22,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -29,7 +30,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 

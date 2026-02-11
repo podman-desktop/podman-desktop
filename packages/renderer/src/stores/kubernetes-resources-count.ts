@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ResourceCount } from '@podman-desktop/core-api';
 import { type Writable, writable } from 'svelte/store';
-
-import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
 import { EventStore } from './event-store';
 

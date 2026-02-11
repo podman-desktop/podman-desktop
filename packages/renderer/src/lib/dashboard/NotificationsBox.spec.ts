@@ -17,11 +17,11 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import type { NotificationCard } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
 import { notificationQueue } from '/@/stores/notifications';
-import type { NotificationCard } from '/@api/notification';
 
 import NotificationsBox from './NotificationsBox.svelte';
 

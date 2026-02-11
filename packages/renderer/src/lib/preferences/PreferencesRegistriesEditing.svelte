@@ -1,6 +1,8 @@
 <script lang="ts">
 import { faPlusCircle, faTrash, faUser, faUserPen } from '@fortawesome/free-solid-svg-icons';
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button, DropdownMenu, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
@@ -9,8 +11,6 @@ import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { registriesInfos, registriesSuggestedInfos } from '/@/stores/registries';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
-import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
 
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';

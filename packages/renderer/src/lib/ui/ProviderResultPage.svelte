@@ -7,12 +7,11 @@ import {
   type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
 import type { ImageCheck } from '@podman-desktop/api';
+import type { ImageCheckerInfo } from '@podman-desktop/core-api';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Snippet } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
-
-import type { ImageCheckerInfo } from '/@api/image-checker-info';
 
 import type { ProviderUI } from './ProviderResultPage';
 import SlideToggle from './SlideToggle.svelte';

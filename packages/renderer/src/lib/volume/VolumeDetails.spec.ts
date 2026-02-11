@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { VolumeListInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -25,7 +26,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { volumeListInfos } from '/@/stores/volumes';
-import type { VolumeListInfo } from '/@api/volume-info';
 
 import VolumeDetails from './VolumeDetails.svelte';
 

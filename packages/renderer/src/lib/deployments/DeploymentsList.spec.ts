@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject, V1Deployment } from '@kubernetes/client-node';
+import type { IDisposable } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -26,7 +27,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
 import * as resourcesListen from '/@/lib/kube/resources-listen';
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { IDisposable } from '/@api/disposable.js';
 
 import DeploymentsList from './DeploymentsList.svelte';
 

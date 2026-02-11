@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { TASK_STATUSES } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
-
-import { TASK_STATUSES } from '/@api/taskInfo';
 
 import TaskManagerTabs from './TaskManagerTabs.svelte';
 

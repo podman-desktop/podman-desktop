@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 
 export interface NumericValue {
   valid: boolean;

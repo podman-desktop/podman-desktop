@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { CoreV1Event, KubernetesObject, V1Deployment } from '@kubernetes/client-node';
+import type { IDisposable } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
@@ -17,7 +18,6 @@ import {
   kubernetesCurrentContextDeployments,
   kubernetesCurrentContextEvents,
 } from '/@/stores/kubernetes-contexts-state';
-import type { IDisposable } from '/@api/disposable.js';
 
 import { DeploymentUtils } from './deployment-utils';
 import DeploymentActions from './DeploymentActions.svelte';

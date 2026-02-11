@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ExtensionBanner } from '@podman-desktop/core-api/recommendations';
 import { type Writable, writable } from 'svelte/store';
-
-import type { ExtensionBanner } from '/@api/recommendations/recommendations';
 
 import { EventStore } from './event-store';
 

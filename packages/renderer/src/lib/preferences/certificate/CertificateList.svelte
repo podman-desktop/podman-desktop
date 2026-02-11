@@ -1,10 +1,10 @@
 <script lang="ts">
+import type { CertificateInfo } from '@podman-desktop/core-api';
 import { FilteredEmptyScreen, SearchInput, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 import { certificatesInfos, filtered, searchPattern } from '/@/stores/certificates';
-import type { CertificateInfo } from '/@api/certificate-info';
 
 import { getIssuerDisplayNameWithSelfSigned, getSubjectDisplayName } from './certificate-util';
 import CertificateColumnExpires from './CertificateColumnExpires.svelte';

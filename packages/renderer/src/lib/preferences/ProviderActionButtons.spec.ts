@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
@@ -25,7 +26,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContextUI } from '/@/lib/context/context';
 import ProviderUpdateButton from '/@/lib/dashboard/ProviderUpdateButton.svelte';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import ProviderActionButtons from './ProviderActionButtons.svelte';
 

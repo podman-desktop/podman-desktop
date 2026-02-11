@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CertificateInfo } from '/@api/certificate-info';
+import type { CertificateInfo } from '@podman-desktop/core-api';
 
 import { formatExpirationDate, isExpired } from './certificate-util';
 import CertificateExpirationIcon from './CertificateExpirationIcon.svelte';

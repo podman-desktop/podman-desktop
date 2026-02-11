@@ -1,14 +1,13 @@
 <script lang="ts">
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import type { OnboardingEmbeddedComponentType, ProviderInfo } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
 
 import PreferencesConnectionCreationOrEditRendering from '/@/lib/preferences/PreferencesConnectionCreationOrEditRendering.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { providerInfos } from '/@/stores/providers';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
-import type { OnboardingEmbeddedComponentType } from '/@api/onboarding';
-import type { ProviderInfo } from '/@api/provider-info';
 
 export let component: OnboardingEmbeddedComponentType;
 export let extensionId: string;

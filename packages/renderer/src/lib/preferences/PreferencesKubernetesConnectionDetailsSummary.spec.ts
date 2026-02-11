@@ -22,10 +22,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderKubernetesConnectionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
-
-import type { ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 
 import PreferencesKubernetesConnectionDetailsSummary from './PreferencesKubernetesConnectionDetailsSummary.svelte';
 

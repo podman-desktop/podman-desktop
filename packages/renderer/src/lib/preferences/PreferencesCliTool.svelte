@@ -1,11 +1,11 @@
 <script lang="ts">
 import { faCircleArrowDown, faCircleArrowUp, faCircleXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { CliToolInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
-import type { CliToolInfo } from '/@api/cli-tool-info';
 
 import {
   type ConnectionCallback,

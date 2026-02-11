@@ -29,10 +29,9 @@
 /* eslint-disable sonarjs/updated-loop-counter */
 /* eslint-disable sonarjs/function-return-type */
 import type { Event } from '@podman-desktop/api';
-
-import { CharCode } from '/@api/context/charCode.js';
-import type { ContextKeyValue, IContext } from '/@api/context/context.js';
-import type { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '@podman-desktop/core-api';
+import type { ContextKeyValue, IContext } from '@podman-desktop/core-api/context';
+import { CharCode } from '@podman-desktop/core-api/context';
 
 import type { LexingError, Token } from './scanner.js';
 import { Scanner, TokenType } from './scanner.js';

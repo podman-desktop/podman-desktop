@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { ForwardConfig } from '@podman-desktop/core-api';
 import { StatusIcon } from '@podman-desktop/ui-svelte';
-
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
 import EthernetIcon from './EthernetIcon.svelte';
 

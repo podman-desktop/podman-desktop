@@ -1,5 +1,7 @@
 <script lang="ts">
 import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { Menu } from '@podman-desktop/core-api';
+import { MenuContext } from '@podman-desktop/core-api';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -10,8 +12,6 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { context } from '/@/stores/context';
 import { runImageInfo } from '/@/stores/run-image-store';
 import { saveImagesInfo } from '/@/stores/save-images-store';
-import type { Menu } from '/@api/menu.js';
-import { MenuContext } from '/@api/menu-context.js';
 
 import ActionsWrapper from './ActionsMenu.svelte';
 import { ImageUtils } from './image-utils';

@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ExploreFeature } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { exploreFeaturesInfo } from '/@/stores/explore-features';
-import type { ExploreFeature } from '/@api/explore-feature';
 
 import ExploreFeatures from './ExploreFeatures.svelte';
 

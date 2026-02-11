@@ -1,5 +1,7 @@
 <script lang="ts">
 import { faPlay, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { ContainerInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -29,8 +31,6 @@ import { podsInfos } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
 import { findMatchInLeaves } from '/@/stores/search-util';
 import { viewsContributions } from '/@/stores/views';
-import type { ContainerInfo } from '/@api/container-info';
-import { NavigationPage } from '/@api/navigation-page';
 
 import { ContainerUtils } from './container-utils';
 import ContainerColumnActions from './ContainerColumnActions.svelte';

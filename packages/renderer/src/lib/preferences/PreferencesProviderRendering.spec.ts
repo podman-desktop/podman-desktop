@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import * as PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 import PreferencesProviderRendering from './PreferencesProviderRendering.svelte';

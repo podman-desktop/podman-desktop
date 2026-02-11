@@ -17,11 +17,11 @@
  ***********************************************************************/
 
 import type { KubernetesObject } from '@kubernetes/client-node';
+import type { KubernetesContextResources } from '@podman-desktop/core-api';
 import { writable } from 'svelte/store';
 import { beforeAll, expect, type Mock, test, vi } from 'vitest';
 
 import * as contexts from '/@/stores/kubernetes-contexts';
-import type { KubernetesContextResources } from '/@api/kubernetes-resources';
 
 import { listenResources } from './resources-listen';
 

@@ -19,6 +19,8 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
+import type { Menu, OnboardingInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
@@ -27,10 +29,6 @@ import { assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vites
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
-import type { Menu } from '/@api/menu.js';
-import type { OnboardingInfo } from '/@api/onboarding';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import PreferencesResourcesRendering from './PreferencesResourcesRendering.svelte';
 

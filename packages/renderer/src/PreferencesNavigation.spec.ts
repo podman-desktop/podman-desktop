@@ -18,12 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import PreferencesNavigation from './PreferencesNavigation.svelte';
 import { configurationProperties } from './stores/configurationProperties';

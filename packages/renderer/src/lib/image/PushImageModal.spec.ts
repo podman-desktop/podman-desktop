@@ -18,12 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { ImageInspectInfo } from '/@api/image-inspect-info';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 import PushImageModal from './PushImageModal.svelte';

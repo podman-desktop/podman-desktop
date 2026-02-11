@@ -1,5 +1,11 @@
 <script lang="ts">
 import { faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import type {
+  NetworkCreateFormInfo,
+  NetworkCreateOptions,
+  ProviderContainerConnectionInfo,
+} from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Checkbox, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
@@ -13,9 +19,6 @@ import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { networksListInfo } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
-import type { NetworkCreateFormInfo, NetworkCreateOptions } from '/@api/container-info';
-import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 let networkInfo: NetworkCreateFormInfo = $state({
   networkName: '',

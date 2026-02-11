@@ -16,6 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import {
+  type ContainerInfo,
+  type ImageInfo,
+  isViewContributionBadge,
+  isViewContributionIcon,
+  type ViewContributionBadgeValue,
+  type ViewInfoUI,
+} from '@podman-desktop/core-api';
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer } from 'buffer';
 import { filesize } from 'filesize';
@@ -26,14 +34,6 @@ import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import ManifestIcon from '/@/lib/images/ManifestIcon.svelte';
-import type { ContainerInfo } from '/@api/container-info';
-import type { ImageInfo } from '/@api/image-info';
-import {
-  isViewContributionBadge,
-  isViewContributionIcon,
-  type ViewContributionBadgeValue,
-  type ViewInfoUI,
-} from '/@api/view-info';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 

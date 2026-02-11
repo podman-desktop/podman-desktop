@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { ColorInfo } from '@podman-desktop/core-api';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import { colorsInfos } from '/@/stores/colors';
-import type { ColorInfo } from '/@api/color-info';
 
 let style: HTMLStyleElement;
 

@@ -1,4 +1,7 @@
 <script lang="ts">
+import type { ProviderConnectionInfo, ProviderInfo, ProviderKubernetesConnectionInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Tab } from '@podman-desktop/ui-svelte';
 import { Buffer } from 'buffer';
 import { onDestroy, onMount } from 'svelte';
@@ -13,9 +16,6 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { providerInfos } from '/@/stores/providers';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderConnectionInfo, ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info';
 
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';

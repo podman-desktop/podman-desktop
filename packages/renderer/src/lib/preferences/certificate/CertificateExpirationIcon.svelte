@@ -1,8 +1,7 @@
 <script lang="ts">
 import { faCircleCheck, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import type { CertificateInfo } from '@podman-desktop/core-api';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-
-import type { CertificateInfo } from '/@api/certificate-info';
 
 import { isExpired } from './certificate-util';
 

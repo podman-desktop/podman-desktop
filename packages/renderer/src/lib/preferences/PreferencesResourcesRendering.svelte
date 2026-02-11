@@ -1,6 +1,9 @@
 <script lang="ts">
 import { faCircleInfo, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import type { ContainerProviderConnection } from '@podman-desktop/api';
+import type { CheckStatus, Menu, ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { MenuContext } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
@@ -25,10 +28,6 @@ import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-import type { Menu } from '/@api/menu.js';
-import { MenuContext } from '/@api/menu-context.js';
-import type { CheckStatus, ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import { PeerProperties } from './PeerProperties';
 import { eventCollect } from './preferences-connection-rendering-task';

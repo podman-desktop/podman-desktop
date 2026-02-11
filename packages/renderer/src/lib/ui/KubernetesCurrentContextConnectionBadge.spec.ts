@@ -20,6 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContextGeneralState, ContextHealth, KubeContext } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { readable, type Writable, writable } from 'svelte/store';
@@ -30,9 +31,6 @@ import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrent
 import * as health from '/@/stores/kubernetes-context-health';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts';
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { KubeContext } from '/@api/kubernetes-context';
-import type { ContextHealth } from '/@api/kubernetes-contexts-healths';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 vi.mock('/@/stores/kubernetes-contexts-state');
 vi.mock('/@/stores/kubernetes-contexts');

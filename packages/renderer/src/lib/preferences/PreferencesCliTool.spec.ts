@@ -20,11 +20,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { CliToolInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { CliToolInfo } from '/@api/cli-tool-info';
 
 import PreferencesCliTool from './PreferencesCliTool.svelte';
 

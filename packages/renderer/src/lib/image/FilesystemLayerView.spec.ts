@@ -18,10 +18,9 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageFile } from '@podman-desktop/api';
+import { FilesystemNode } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
-
-import { FilesystemNode } from '/@api/filesystem-tree';
 
 import FilesystemLayerView from './FilesystemLayerView.svelte';
 

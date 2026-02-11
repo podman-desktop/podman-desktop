@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CertificateInfo } from '/@api/certificate-info';
+import type { CertificateInfo } from '@podman-desktop/core-api';
 
 import { getIssuerDisplayNameWithSelfSigned } from './certificate-util';
 

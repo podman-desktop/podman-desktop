@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo, TelemetryMessages } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -27,8 +28,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
-import type { TelemetryMessages } from '/@api/telemetry';
 
 import WelcomePage from './WelcomePage.svelte';
 

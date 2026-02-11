@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import type { ContainerInfo, ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -28,9 +29,6 @@ import { filtered, imagesInfos, searchPattern } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import { viewsContributions } from '/@/stores/views';
-import type { ContainerInfo } from '/@api/container-info';
-import type { ImageInfo } from '/@api/image-info';
-import type { ViewInfoUI } from '/@api/view-info';
 
 import { ImageUtils } from './image-utils';
 import ImageColumnActions from './ImageColumnActions.svelte';

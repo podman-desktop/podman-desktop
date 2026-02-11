@@ -1,12 +1,12 @@
 <script lang="ts">
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
+import type { ProviderInfo } from '@podman-desktop/core-api';
+import { STATUS_BAR_PIN_CONSTANTS } from '@podman-desktop/core-api/status-bar';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
-import type { ProviderInfo } from '/@api/provider-info';
-import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
 
 import PinMenu from './PinMenu.svelte';
 

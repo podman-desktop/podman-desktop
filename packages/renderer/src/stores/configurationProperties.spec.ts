@@ -18,9 +18,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { IConfigurationChangeEvent } from '/@api/configuration/models';
 
 import { onDidChangeConfiguration, setupConfigurationChange } from './configurationProperties';
 

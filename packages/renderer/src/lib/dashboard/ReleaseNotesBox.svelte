@@ -1,12 +1,12 @@
 <script lang="ts">
 import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
+import type { ReleaseNotes } from '@podman-desktop/core-api';
 import { Button, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { updateAvailable } from '/@/stores/update-store';
-import type { ReleaseNotes } from '/@api/release-notes-info';
 
 let showBanner = $state(false);
 let notesAvailable = $state(false);

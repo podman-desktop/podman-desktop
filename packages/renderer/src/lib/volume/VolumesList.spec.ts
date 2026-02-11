@@ -20,6 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { type ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
@@ -30,7 +31,6 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos, volumesEventStore } from '/@/stores/volumes';
-import { type ProviderInfo } from '/@api/provider-info';
 
 import VolumesList from './VolumesList.svelte';
 

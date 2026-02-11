@@ -1,11 +1,10 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
-
-import { NavigationPage } from '/@api/navigation-page';
 
 import { AppearanceSettings } from '../../main/src/plugin/appearance-settings';
 import AuthActions from './lib/authentication/AuthActions.svelte';

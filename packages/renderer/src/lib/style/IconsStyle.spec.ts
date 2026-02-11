@@ -20,12 +20,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IconInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { iconsInfos } from '/@/stores/icons';
-import type { IconInfo } from '/@api/icon-info';
 
 import IconsStyle from './IconsStyle.svelte';
 

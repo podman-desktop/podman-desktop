@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { NumberInput, Tooltip } from '@podman-desktop/ui-svelte';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number | undefined;

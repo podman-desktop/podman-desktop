@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, type Mock, test, vi } from 'vitest';
-
-import type { DockerSocketMappingStatusInfo, DockerSocketServerInfoType } from '/@api/docker-compatibility-info';
 
 import PreferencesDockerCompatibilitySocketMappingStatus from './PreferencesDockerCompatibilitySocketMappingStatus.svelte';
 

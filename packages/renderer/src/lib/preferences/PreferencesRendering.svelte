@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { SearchInput } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
@@ -6,7 +7,6 @@ import { type Unsubscriber } from 'svelte/store';
 import type { ContextUI } from '/@/lib/context/context';
 import Route from '/@/Route.svelte';
 import { context } from '/@/stores/context';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import PreferencesRenderingItem from './PreferencesRenderingItem.svelte';
 import SettingsPage from './SettingsPage.svelte';

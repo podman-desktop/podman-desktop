@@ -20,15 +20,14 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
-
 import type {
   ProviderConnectionInfo,
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+} from '@podman-desktop/core-api';
+import { render, screen } from '@testing-library/svelte';
+import { expect, test } from 'vitest';
 
 import TroubleshootingContainerEngines from './TroubleshootingContainerEngines.svelte';
 

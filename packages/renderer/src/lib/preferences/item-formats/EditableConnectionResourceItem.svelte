@@ -1,8 +1,8 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { filesize } from 'filesize';
 
 import { getNormalizedDefaultNumberValue } from '/@/lib/preferences/Util';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import EditableItem from './EditableItem.svelte';
 

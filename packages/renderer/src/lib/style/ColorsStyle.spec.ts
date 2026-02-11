@@ -20,11 +20,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ColorInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { colorsInfos } from '/@/stores/colors';
-import type { ColorInfo } from '/@api/color-info';
 
 import ColorsStyle from './ColorsStyle.svelte';
 

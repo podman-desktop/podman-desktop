@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ExtensionInfo } from '/@api/extension-info';
 
 import ExtensionIcon from './ExtensionIcon.svelte';
 

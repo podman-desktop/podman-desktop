@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faArrowUpRightFromSquare, faFlask } from '@fortawesome/free-solid-svg-icons';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -7,7 +8,6 @@ import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import Label from '/@/lib/ui/Label.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import PreferencesManagedLabel from './PreferencesManagedLabel.svelte';
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';

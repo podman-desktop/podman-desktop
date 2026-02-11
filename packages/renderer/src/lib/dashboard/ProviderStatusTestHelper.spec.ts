@@ -17,12 +17,12 @@
  ***********************************************************************/
 
 import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import type { Component } from 'svelte';
 import { expect, test } from 'vitest';
 
 import { type InitializationContext, InitializeAndStartMode } from '/@/lib/dashboard/ProviderInitUtils';
-import type { ProviderInfo } from '/@api/provider-info';
 
 export async function verifyStatus<
   C extends Component<{ provider: ProviderInfo; initializationContext: InitializationContext }>,

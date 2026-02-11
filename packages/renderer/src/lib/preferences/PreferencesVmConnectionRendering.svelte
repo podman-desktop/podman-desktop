@@ -1,4 +1,6 @@
 <script lang="ts">
+import type { ProviderConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Tab } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -12,8 +14,6 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { providerInfos } from '/@/stores/providers';
-import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
 
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';

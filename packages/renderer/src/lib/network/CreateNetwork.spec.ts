@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
+import type { NetworkInspectInfo, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
@@ -28,8 +29,6 @@ import CreateNetwork from '/@/lib/network/CreateNetwork.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { networksListInfo } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
-import type { NetworkInspectInfo } from '/@api/network-info';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 beforeEach(() => {
   vi.resetAllMocks();

@@ -8,6 +8,8 @@ import {
   faStop,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import type { Menu } from '@podman-desktop/core-api';
+import { MenuContext } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher, onMount } from 'svelte';
 import { router } from 'tinro';
@@ -17,8 +19,6 @@ import { ContainerUtils } from '/@/lib/container/container-utils';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
-import type { Menu } from '/@api/menu.js';
-import { MenuContext } from '/@api/menu-context.js';
 
 import type { PodInfoUI } from './PodInfoUI';
 

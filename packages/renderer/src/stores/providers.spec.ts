@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import { containerConnectionCount, eventStore, providerInfos } from './providers';
 

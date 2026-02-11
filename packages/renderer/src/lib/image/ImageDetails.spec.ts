@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContainerInfo, ImageInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -36,8 +37,6 @@ import { containersInfos } from '/@/stores/containers';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
 import { imagesInfos } from '/@/stores/images';
 import { viewsContributions } from '/@/stores/views';
-import type { ContainerInfo } from '/@api/container-info';
-import type { ImageInfo } from '/@api/image-info';
 
 import ImageDetails from './ImageDetails.svelte';
 

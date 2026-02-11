@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ImageInfo, ProviderStatus } from '@podman-desktop/api';
+import type { ImageSearchResult, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -27,8 +28,6 @@ import { router } from 'tinro';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ImageSearchResult } from '/@api/image-registry';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import CreateContainerFromExistingImage from './CreateContainerFromExistingImage.svelte';
 

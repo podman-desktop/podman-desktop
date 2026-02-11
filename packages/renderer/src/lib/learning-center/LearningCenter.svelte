@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { Guide } from '@podman-desktop/core-api/learning-center';
 import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import type { Guide } from '/@api/learning-center/guide';
 
 import GuideCard from './GuideCard.svelte';
 

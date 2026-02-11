@@ -19,15 +19,11 @@
 import '@testing-library/jest-dom/vitest';
 
 import { faCube, faImage } from '@fortawesome/free-solid-svg-icons';
+import type { ContainerInfo, GoToInfo, ImageInfo, PodInfo, VolumeInfo } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 import { describe, expect, test } from 'vitest';
 
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
-import type { ContainerInfo } from '/@api/container-info';
-import type { GoToInfo } from '/@api/documentation-info';
-import type { ImageInfo } from '/@api/image-info';
-import type { PodInfo } from '/@api/pod-info';
-import type { VolumeInfo } from '/@api/volume-info';
 
 import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 
