@@ -49,6 +49,7 @@ export function convertProviderStatusToSystemOverviewStatus(status: ProviderStat
       return SYSTEM_OVERVIEW_STATUS.healthy;
     case 'not-installed':
     case 'installed':
+    case 'configured':
     case 'stopped':
       return SYSTEM_OVERVIEW_STATUS.stable;
     case 'error':
@@ -80,6 +81,17 @@ export function getSystemOverviewStatus(): Status {
   // If no connections exist, return healthy status
   if (allConnections.length === 0) {
     return SYSTEM_OVERVIEW_STATUS.critical;
+  }
+
+  // If no connections exist, or no container connections for podman
+  const noConnections =
+    allConnections.length === 0 || (providers.find(p => p.id === 'podman')?.containerConnections.length ?? 0) === 0;
+  if (noConnections) {
+    // Show progressing when a provider is configuring or starting (e.g. during setup)
+    const isConfiguringOrStarting = providers.some(
+      p => p.status === 'configuring' || p.status === 'starting' || p.status === 'stopping',
+    );
+    return isConfiguringOrStarting ? SYSTEM_OVERVIEW_STATUS.progressing : SYSTEM_OVERVIEW_STATUS.critical;
   }
 
   // Convert all connection statuses to system overview statuses

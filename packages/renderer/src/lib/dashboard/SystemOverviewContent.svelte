@@ -1,11 +1,11 @@
 <script lang="ts">
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import SystemOverviewProviderCardDetailed from '/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte';
 import SystemOverviewProviderCardMinimal from '/@/lib/dashboard/SystemOverviewProviderCardMinimal.svelte';
+import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
 import {
   convertProviderStatusToSystemOverviewStatus,
   getSystemOverviewStatus,
@@ -14,6 +14,9 @@ import {
 } from '/@/stores/dashboard/system-overview.svelte';
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
+
+import SystemOverviewProviderNotCreated from './SystemOverviewProviderNotConfigured.svelte';
+import SystemOverviewProviderNotInstalled from './SystemOverviewProviderNotInstalled.svelte';
 
 let providers = $derived($providerInfos);
 
@@ -63,12 +66,22 @@ let detailedConnections = $derived(
   }),
 );
 
+let podmanProvider = $derived(providers.find(p => p.id === 'podman'));
+
+// Check Podman provider states
+let podmanProviderNotInstalled = $derived(podmanProvider?.status === 'not-installed');
+let podmanProviderConfigured = $derived(
+  podmanProvider &&
+    (podmanProvider.status === 'configured' || podmanProvider.status === 'installed') &&
+    podmanProvider.containerConnections.length === 0,
+);
 function navigateToResources(): void {
   router.goto('/preferences/resources');
 }
 
-function setupPodmanContainerEngine(): void {
-  router.goto(`/preferences/provider/podman`);
+function goToProviderPreferences(provider?: ProviderInfo): void {
+  if (!provider) return;
+  router.goto(`/preferences/provider/${provider.internalId}`);
 }
 </script>
 
@@ -94,11 +107,21 @@ function setupPodmanContainerEngine(): void {
   </button>
 
   <div class="flex flex-col gap-2 pt-2">
+    <!-- Podman provider states: not installed or needs machine creation -->
+    {#if podmanProviderNotInstalled && podmanProvider}
+      <SystemOverviewProviderNotInstalled provider={podmanProvider} />
+    {/if}
+    {#if podmanProviderConfigured && podmanProvider}
+      <SystemOverviewProviderNotCreated
+        provider={podmanProvider}
+        onCreate={(): void => goToProviderPreferences(podmanProvider)} />
+    {/if}
+
     <!-- Detailed connections (vertical stack) -->
     {#each detailedConnections as { connection, provider }, index (index)}
       <SystemOverviewProviderCardDetailed connection={connection} provider={provider} />
     {/each}
-    
+
     <!-- Minimal connections (horizontal wrap) -->
     {#if minimalConnections.length > 0}
       <div class="flex flex-wrap gap-2">
@@ -108,25 +131,7 @@ function setupPodmanContainerEngine(): void {
       </div>
     {/if}
 
-    <!-- Show message if no connections and no providers -->
-    {#if allConnectionsWithProvider.length === 0}
-      <div class="p-2 text-center bg-[var(--pd-content-card-carousel-card-bg)] rounded-lg">
-        {#if !providers.some(p => p.id === 'podman') || providers.filter(p => p.id === 'podman').every(p => p.containerConnections.length === 0)}
-          <span class="text-[var(--pd-content-text-sub)]">No Podman container engine available</span>
-          <div class="mt-2">
-            <Button type="primary" onclick={setupPodmanContainerEngine}>
-              Set up Podman container engine
-            </Button>
-          </div>
-        {:else}
-          <span class="text-[var(--pd-content-text-sub)]">No connections available</span>
-          <div class="mt-2">
-            <Button type="primary" onclick={navigateToResources}>
-              Set up connections
-            </Button>
-          </div>
-        {/if}
-      </div>
-    {/if}
+    <!-- Podman Resource Usage -->
+    <SystemOverviewResourceUsage {providers} />
   </div>
 </div>
