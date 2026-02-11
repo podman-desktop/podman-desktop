@@ -74,7 +74,7 @@ export class OnboardingRegistry {
       if (base64Image) {
         onboarding.media.path = base64Image;
       }
-    } else if (extension.manifest?.icon) {
+    } else if (typeof extension.manifest?.icon === 'string') {
       const base64Image = getBase64Image(path.resolve(extension.path, extension.manifest.icon));
       if (base64Image) {
         // if no image has been set for the onboarding, it uses the extension icon

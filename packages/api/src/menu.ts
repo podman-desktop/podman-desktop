@@ -16,10 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface Menu {
-  command: string;
-  title: string;
-  when?: string;
-  disabled?: string;
-  icon?: string;
-}
+import { z } from 'zod';
+
+export const MenuSchema = z.object({
+  command: z.string(),
+  title: z.string(),
+  when: z.string().optional(),
+  disabled: z.string().optional(),
+  icon: z.string().optional(),
+});
+
+export type Menu = z.output<typeof MenuSchema>;
+
+export const MenuRecordSchema = z.record(z.string(), z.array(MenuSchema));
+
+export type MenuRecord = z.output<typeof MenuRecordSchema>;

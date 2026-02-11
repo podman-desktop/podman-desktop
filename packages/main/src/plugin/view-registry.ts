@@ -17,7 +17,7 @@
  ***********************************************************************/
 import { injectable } from 'inversify';
 
-import type { ViewContribution, ViewInfoUI } from '/@api/view-info.js';
+import type { ViewContribution, ViewContributionRecord, ViewInfoUI } from '/@api/view-info.js';
 
 import { Disposable } from './types/disposable.js';
 
@@ -37,7 +37,7 @@ export class ViewRegistry {
     this.extViewContribution.set(extensionId, view);
   }
 
-  registerViews(extensionId: string, views: { [key: string]: ViewContribution[] }): Disposable {
+  registerViews(extensionId: string, views: ViewContributionRecord): Disposable {
     // register each view contribution
     Object.entries(views).forEach(([viewId, viewContributions]) => {
       viewContributions.forEach(viewContribution => {

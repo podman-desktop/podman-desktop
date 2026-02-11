@@ -24,6 +24,7 @@ import * as path from 'node:path';
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ExtensionManifest } from './extension-analyzer.js';
 import { ExtensionAnalyzer } from './extension-analyzer.js';
 
 let extensionAnalyzer: ExtensionAnalyzer;
@@ -52,7 +53,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       main: 'main-entry.js',
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -88,7 +89,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       main: 'main-entry.js',
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -120,7 +121,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       // no main entry
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -152,7 +153,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       // no main entry
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');

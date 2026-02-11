@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { z } from 'zod';
+
 import type { FontDefinition } from './font-info.js';
 
 export interface IconDefinition {
@@ -28,3 +30,18 @@ export interface IconInfo {
   id: string;
   definition: IconDefinition;
 }
+
+export const IconsContributionSchema = z.record(
+  z.string(),
+  z.object({
+    description: z.string().optional(),
+    default: z
+      .object({
+        fontPath: z.string().optional(),
+        fontCharacter: z.string(),
+      })
+      .optional(),
+  }),
+);
+
+export type IconsContribution = z.output<typeof IconsContributionSchema>;
