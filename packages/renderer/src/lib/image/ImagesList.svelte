@@ -22,6 +22,7 @@ import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
@@ -48,6 +49,16 @@ $effect(() => {
   searchPattern.set(searchTerm);
 });
 
+let selectedEnvironment = $state('');
+
+// Re-filter images when environment selection changes
+$effect(() => {
+  // Access selectedEnvironment to track changes
+  selectedEnvironment;
+  if (storeImages.length > 0) {
+    updateImages(globalContext);
+  }
+});
 let images: ImageInfoUI[] = $state([]);
 let enginesList: EngineInfoUI[] = $state([]);
 
@@ -97,6 +108,10 @@ function updateImages(globalContext: ContextUI): void {
   images = computedImages;
   if (imageEngineId) {
     images = images.filter(image => image.engineId === imageEngineId);
+  }
+  // Filter by selected environment
+  if (selectedEnvironment) {
+    images = images.filter(image => image.engineId === selectedEnvironment);
   }
 
   // Map engineName, engineId and engineType from currentContainers to EngineInfoUI[]
@@ -320,6 +335,7 @@ function label(item: ImageInfoUI): string {
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
+    <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber && selectedItemsNumber > 0}
       <Button
         on:click={(): void => {
