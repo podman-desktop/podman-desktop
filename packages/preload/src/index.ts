@@ -43,13 +43,13 @@ import type {
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type';
-import type { AuthenticationProviderInfo } from '/@api/authentication/authentication';
-import type { CertificateInfo } from '/@api/certificate-info';
-import type { CliToolInfo } from '/@api/cli-tool-info';
-import type { ColorInfo } from '/@api/color-info';
-import type { CommandInfo } from '/@api/command-info';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
+import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
+import type { CertificateInfo } from '/@api/certificate-info.js';
+import type { CliToolInfo } from '/@api/cli-tool-info.js';
+import type { ColorInfo } from '/@api/color-info.js';
+import type { CommandInfo } from '/@api/command-info.js';
+import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 import type {
   ContainerCreateOptions,
   ContainerExportOptions,
@@ -61,62 +61,62 @@ import type {
   NetworkCreateResult,
   SimpleContainerInfo,
   VolumeCreateOptions,
-} from '/@api/container-info';
-import type { ContainerInspectInfo } from '/@api/container-inspect-info';
-import type { ContainerStatsInfo } from '/@api/container-stats-info';
-import type { ContainerfileInfo } from '/@api/containerfile-info';
-import type { ContextInfo } from '/@api/context/context';
-import type { ContributionInfo } from '/@api/contribution-info';
-import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog';
-import type { IDisposable } from '/@api/disposable';
-import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
-import type { DocumentationInfo } from '/@api/documentation-info';
-import type { ExploreFeature } from '/@api/explore-feature';
-import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
-import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
-import type { ExtensionInfo } from '/@api/extension-info';
-import type { FeaturedExtension } from '/@api/featured/featured-api';
-import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback';
-import type { ItemInfo } from '/@api/help-menu';
-import type { HistoryInfo } from '/@api/history-info';
-import type { IconInfo } from '/@api/icon-info';
-import type { ImageCheckerInfo } from '/@api/image-checker-info';
-import type { ImageFilesInfo } from '/@api/image-files-info';
-import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers';
-import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info';
-import type { ImageInspectInfo } from '/@api/image-inspect-info';
+} from '/@api/container-info.js';
+import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
+import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
+import type { ContainerfileInfo } from '/@api/containerfile-info.js';
+import type { ContextInfo } from '/@api/context/context.js';
+import type { ContributionInfo } from '/@api/contribution-info.js';
+import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
+import type { IDisposable } from '/@api/disposable.js';
+import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
+import type { DocumentationInfo } from '/@api/documentation-info.js';
+import type { ExploreFeature } from '/@api/explore-feature.js';
+import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
+import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
+import type { ExtensionInfo } from '/@api/extension-info.js';
+import type { FeaturedExtension } from '/@api/featured/featured-api.js';
+import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
+import type { ItemInfo } from '/@api/help-menu.js';
+import type { HistoryInfo } from '/@api/history-info.js';
+import type { IconInfo } from '/@api/icon-info.js';
+import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
+import type { ImageFilesInfo } from '/@api/image-files-info.js';
+import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
+import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
+import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import type {
   ImageSearchOptions,
   ImageSearchResult,
   ImageTagsListOptions,
   ImageUpdateStatus,
-} from '/@api/image-registry';
+} from '/@api/image-registry.js';
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
   KubernetesGeneratorInfo,
   KubernetesGeneratorSelector,
-} from '/@api/kubernetes/kubernetes-generator-api';
-import type { KubeContext } from '/@api/kubernetes-context';
-import type { ContextHealth } from '/@api/kubernetes-contexts-healths';
-import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
-import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states';
-import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model';
-import type { ResourceCount } from '/@api/kubernetes-resource-count';
-import type { KubernetesContextResources } from '/@api/kubernetes-resources';
-import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
-import type { Guide } from '/@api/learning-center/guide';
-import type { ContainerCreateOptions as PodmanContainerCreateOptions, PlayKubeInfo } from '/@api/libpod/libpod';
-import type { ListOrganizerItem } from '/@api/list-organizer';
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info';
+} from '/@api/kubernetes/kubernetes-generator-api.js';
+import type { KubeContext } from '/@api/kubernetes-context.js';
+import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
+import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
+import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
+import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
+import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
+import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
+import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
+import type { Guide } from '/@api/learning-center/guide.js';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions, PlayKubeInfo } from '/@api/libpod/libpod.js';
+import type { ListOrganizerItem } from '/@api/list-organizer.js';
+import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
 import type { Menu } from '/@api/menu.js';
-import { NavigationPage } from '/@api/navigation-page';
-import type { NavigationRequest } from '/@api/navigation-request';
-import type { NetworkInspectInfo } from '/@api/network-info';
-import type { NotificationCard, NotificationCardOptions } from '/@api/notification';
-import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding';
-import type { V1Route } from '/@api/openshift-types';
-import type { PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info';
+import { NavigationPage } from '/@api/navigation-page.js';
+import type { NavigationRequest } from '/@api/navigation-request.js';
+import type { NetworkInspectInfo } from '/@api/network-info.js';
+import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
+import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
+import type { V1Route } from '/@api/openshift-types.js';
+import type { PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info.js';
 import type {
   PreflightCheckEvent,
   PreflightChecksCallback,
@@ -124,18 +124,18 @@ import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
-import type { ProxyState } from '/@api/proxy';
-import type { PullEvent } from '/@api/pull-event';
-import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations';
-import type { ReleaseNotesInfo } from '/@api/release-notes-info';
-import type { StatusBarEntryDescriptor } from '/@api/status-bar';
-import type { PinOption } from '/@api/status-bar/pin-option';
-import type { TelemetryMessages } from '/@api/telemetry';
-import type { ViewInfoUI } from '/@api/view-info';
-import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info';
-import type { WebviewInfo } from '/@api/webview-info';
-import type { WelcomeMessages } from '/@api/welcome-info';
+} from '/@api/provider-info.js';
+import type { ProxyState } from '/@api/proxy.js';
+import type { PullEvent } from '/@api/pull-event.js';
+import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations.js';
+import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
+import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
+import type { PinOption } from '/@api/status-bar/pin-option.js';
+import type { TelemetryMessages } from '/@api/telemetry.js';
+import type { ViewInfoUI } from '/@api/view-info.js';
+import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
+import type { WebviewInfo } from '/@api/webview-info.js';
+import type { WelcomeMessages } from '/@api/welcome-info.js';
 
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;
 

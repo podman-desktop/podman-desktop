@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "module": "esnext",
+    "module": "NodeNext",
     "target": "esnext",
     "sourceMap": false,
-    "moduleResolution": "Node",
+    "moduleResolution": "nodenext",
     "skipLibCheck": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,

@@ -23,10 +23,10 @@ import type { IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
+import type { ForwardConfig } from '/@api/kubernetes-port-forward-model.js';
+import { WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
-import { buildApiSender, initExposure } from '.';
+import { buildApiSender, initExposure } from './index.js';
 
 vi.mock('electron', async () => {
   return {
