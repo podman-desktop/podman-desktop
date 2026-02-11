@@ -18,6 +18,7 @@
 
 // Top-level API files
 export * from './async-disposable.js';
+export * from './certificate-info.js';
 export * from './cli-tool-info.js';
 export * from './color-info.js';
 export * from './command-info.js';
@@ -85,3 +86,4 @@ export * from './tray-menu-info.js';
 export * from './view-info.js';
 export * from './volume-info.js';
 export * from './webview-info.js';
+export * from './welcome-info.js';
