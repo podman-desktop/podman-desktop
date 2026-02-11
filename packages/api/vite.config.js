@@ -68,12 +68,12 @@ const config = {
         'terminal/terminal-settings': 'src/terminal/terminal-settings.ts',
         'welcome/welcome-settings': 'src/welcome/welcome-settings.ts',
       },
-      formats: ['cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       external: ['electron', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
-        entryFileNames: '[name].cjs',
+        entryFileNames: '[name].js',
       },
     },
     emptyOutDir: true,

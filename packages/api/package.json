@@ -26,67 +26,67 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "default": "./dist/index.js"
     },
     "./api-sender": {
       "types": "./dist/api-sender/api-sender-type.d.ts",
-      "default": "./dist/api-sender/api-sender-type.cjs"
+      "default": "./dist/api-sender/api-sender-type.js"
     },
     "./authentication": {
       "types": "./dist/authentication/authentication.d.ts",
-      "default": "./dist/authentication/authentication.cjs"
+      "default": "./dist/authentication/authentication.js"
     },
     "./configuration": {
       "types": "./dist/configuration/index.d.ts",
-      "default": "./dist/configuration/index.cjs"
+      "default": "./dist/configuration/index.js"
     },
     "./context": {
       "types": "./dist/context/index.d.ts",
-      "default": "./dist/context/index.cjs"
+      "default": "./dist/context/index.js"
     },
     "./editor": {
       "types": "./dist/editor/editor-settings.d.ts",
-      "default": "./dist/editor/editor-settings.cjs"
+      "default": "./dist/editor/editor-settings.js"
     },
     "./extension-catalog": {
       "types": "./dist/extension-catalog/extensions-catalog-api.d.ts",
-      "default": "./dist/extension-catalog/extensions-catalog-api.cjs"
+      "default": "./dist/extension-catalog/extensions-catalog-api.js"
     },
     "./featured": {
       "types": "./dist/featured/featured-api.d.ts",
-      "default": "./dist/featured/featured-api.cjs"
+      "default": "./dist/featured/featured-api.js"
     },
     "./kubernetes": {
       "types": "./dist/kubernetes/kubernetes-generator-api.d.ts",
-      "default": "./dist/kubernetes/kubernetes-generator-api.cjs"
+      "default": "./dist/kubernetes/kubernetes-generator-api.js"
     },
     "./learning-center": {
       "types": "./dist/learning-center/guide.d.ts",
-      "default": "./dist/learning-center/guide.cjs"
+      "default": "./dist/learning-center/guide.js"
     },
     "./libpod": {
       "types": "./dist/libpod/libpod.d.ts",
-      "default": "./dist/libpod/libpod.cjs"
+      "default": "./dist/libpod/libpod.js"
     },
     "./recommendations": {
       "types": "./dist/recommendations/index.d.ts",
-      "default": "./dist/recommendations/index.cjs"
+      "default": "./dist/recommendations/index.js"
     },
     "./status-bar": {
       "types": "./dist/status-bar/index.d.ts",
-      "default": "./dist/status-bar/index.cjs"
+      "default": "./dist/status-bar/index.js"
     },
     "./telemetry": {
       "types": "./dist/telemetry/telemetry-settings.d.ts",
-      "default": "./dist/telemetry/telemetry-settings.cjs"
+      "default": "./dist/telemetry/telemetry-settings.js"
     },
     "./terminal": {
       "types": "./dist/terminal/terminal-settings.d.ts",
-      "default": "./dist/terminal/terminal-settings.cjs"
+      "default": "./dist/terminal/terminal-settings.js"
     },
     "./welcome": {
       "types": "./dist/welcome/welcome-settings.d.ts",
-      "default": "./dist/welcome/welcome-settings.cjs"
+      "default": "./dist/welcome/welcome-settings.js"
     }
   }
 }
