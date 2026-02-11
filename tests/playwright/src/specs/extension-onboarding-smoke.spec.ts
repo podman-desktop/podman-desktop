@@ -73,7 +73,6 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
 
   test('Check other versions for compose', async ({ welcomePage, page }) => {
     await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
-    await playExpect.poll(async () => welcomePage.onboardingMessageStatus).toBeTruthy();
 
     // Wait for compose step to be shown (either "Compose installed" or "Compose download")
     await playExpect(welcomePage.onboardingMessageStatus).toContainText(/Compose (installed|download)/, {
