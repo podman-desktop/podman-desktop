@@ -19,6 +19,7 @@
 import { DashboardPage } from '/@/model/pages/dashboard-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
+import { createPodmanMachineFromCLI } from '/@/utility/operations';
 
 let rateLimitReachedFlag = false;
 let composeOnboardingStatusText: string | undefined;
@@ -26,6 +27,8 @@ let composeOnboardingStatusText: string | undefined;
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {
   runner.setVideoAndTraceName('compose-onboarding');
+
+  await createPodmanMachineFromCLI();
 
   page.on('console', msg => {
     if (msg.text().includes('API rate limit exceeded')) {
