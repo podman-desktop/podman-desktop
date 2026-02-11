@@ -65,6 +65,20 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await playExpect(welcomePage.nextStepButton).toBeEnabled();
     await welcomePage.nextStepButton.click();
 
+    const podmanInstalledMessage = welcomePage.onboardingMessageStatus.filter({
+      hasText: 'Podman installed',
+    });
+    const noMachineMessage = welcomePage.onboardingMessageStatus.filter({
+      hasText: 'We could not find any Podman machine',
+    });
+
+    await playExpect(podmanInstalledMessage.or(noMachineMessage)).toBeVisible({ timeout: 10_000 });
+
+    if (await noMachineMessage.isVisible()) {
+      await playExpect(welcomePage.nextStepButton).toBeEnabled();
+      await welcomePage.nextStepButton.click();
+    }
+
     await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman installed', {
       timeout: 10_000,
     });
