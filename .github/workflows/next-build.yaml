@@ -174,5 +174,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
         with:
           id: ${{ needs.tag.outputs.releaseId}}
-          repo: podman-desktop-prereleases
+          repo: prereleases
           owner: podman-desktop
