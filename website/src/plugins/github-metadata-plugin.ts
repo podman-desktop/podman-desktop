@@ -18,9 +18,9 @@
 
 import type { Plugin } from '@docusaurus/types';
 
-import { GITHUB_OWNER, GITHUB_REPOSITORY } from '../../../packages/api/src/repository-infos';
 import type { GitHubMetadata } from './github-metadata';
 import { GitHubService } from './github-service';
+import { GITHUB_OWNER, GITHUB_REPOSITORY } from './repository-info/repository-infos';
 
 export default async function githubMetadataPlugin(): Promise<Plugin<GitHubMetadata>> {
   const githubService = new GitHubService(GITHUB_OWNER, GITHUB_REPOSITORY);

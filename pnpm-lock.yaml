@@ -631,10 +631,6 @@ importers:
         version: 4.0.18(@types/node@25.2.3)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.10(@types/node@25.2.3)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/api:
-    dependencies:
-      hosted-git-info:
-        specifier: ^9.0.2
-        version: 9.0.2
     devDependencies:
       '@types/hosted-git-info':
         specifier: ^3.0.5
@@ -1252,6 +1248,9 @@ importers:
       docusaurus-plugin-typedoc:
         specifier: ^1.4.2
         version: 1.4.2(typedoc-plugin-markdown@4.10.0(typedoc@0.28.16(typescript@5.9.3)))
+      hosted-git-info:
+        specifier: ^9.0.2
+        version: 9.0.2
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@18.2.0)
@@ -8783,10 +8782,6 @@ packages:
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
-
-  lru-cache@11.2.2:
-    resolution: {integrity: sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg==}
-    engines: {node: 20 || >=22}
 
   lru-cache@11.2.5:
     resolution: {integrity: sha512-vFrFJkWtJvJnD5hg+hJvVE8Lh/TcMzKnTgCWmtBipwI5yLX/iX+5UB2tfuyODF5E7k9xEzMdYgGqaSb1c0c5Yw==}
@@ -20883,7 +20878,7 @@ snapshots:
 
   hosted-git-info@9.0.2:
     dependencies:
-      lru-cache: 11.2.2
+      lru-cache: 11.2.5
 
   hpack.js@2.1.6:
     dependencies:
@@ -21826,8 +21821,6 @@ snapshots:
   lowercase-keys@3.0.0: {}
 
   lru-cache@10.4.3: {}
-
-  lru-cache@11.2.2: {}
 
   lru-cache@11.2.5: {}
 

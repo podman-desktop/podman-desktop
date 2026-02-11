@@ -42,7 +42,6 @@ import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/e
 import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
 import { PodInfo } from '/@api/pod-info.js';
-import { RepositoryInfoParser } from '/@api/repository-info-parser.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
@@ -1666,7 +1665,6 @@ export class ExtensionLoader implements IAsyncDisposable {
       cli,
       imageChecker,
       navigation,
-      RepositoryInfoParser,
       net,
     };
   }
