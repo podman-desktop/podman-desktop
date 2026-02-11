@@ -3,9 +3,9 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCheck, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import type { Component, Snippet } from 'svelte';
 
-import Icon from '../icons/Icon.svelte';
-import Spinner from '../progress/Spinner.svelte';
-import type { ButtonType } from './Button';
+import type { ButtonType } from '/@/lib/button/Button';
+import Icon from '/@/lib/icons/Icon.svelte';
+import Spinner from '/@/lib/progress/Spinner.svelte';
 
 export interface SplitButtonOption {
   id: string;
@@ -79,8 +79,6 @@ const isMainDisabled = $derived(disabled || isEmpty || (selectedOption?.disabled
 const isDropdownDisabled = $derived(disabled || isEmpty);
 // Show "no action" mode when options exist but none are actionable
 const isNoActionMode = $derived(!isEmpty && !hasActionableOption);
-// Show "no selection" mode when options exist and are actionable but none selected
-const isNoSelectionMode = $derived(hasNoSelection);
 
 function handleEscape({ key }: KeyboardEvent): void {
   if (key === 'Escape') {
@@ -98,7 +96,7 @@ function handleMainClick(): void {
   if (inProgress) return;
 
   // In "no action" or "no selection" mode, clicking main button opens dropdown
-  if (isNoActionMode || isNoSelectionMode) {
+  if (isNoActionMode || hasNoSelection) {
     showDropdown = !showDropdown;
     return;
   }
@@ -178,7 +176,7 @@ const currentStyle = $derived(styles[type]);
 
 // Main button styling (enabled in "no action" or "no selection" mode to allow opening dropdown)
 const mainClasses = $derived(
-  (isMainDisabled && !isNoActionMode && !isNoSelectionMode) || inProgress
+  (isMainDisabled && !isNoActionMode && !hasNoSelection) || inProgress
     ? currentStyle.button.disabled
     : currentStyle.button.enabled,
 );
@@ -204,7 +202,7 @@ const containerBgClasses = $derived(
 const buttonLabel = $derived.by(() => {
   if (isEmpty) return emptyLabel;
   if (isNoActionMode) return noActionLabel;
-  if (isNoSelectionMode) return noSelectionLabel;
+  if (hasNoSelection) return noSelectionLabel;
   if (!children && selectedOption) return selectedOption.label;
   return undefined;
 });
@@ -222,7 +220,7 @@ const buttonLabel = $derived.by(() => {
       title={title}
       aria-label={ariaLabel}
       onclick={handleMainClick}
-      disabled={(isMainDisabled && !isNoActionMode && !isNoSelectionMode) || inProgress}>
+      disabled={(isMainDisabled && !isNoActionMode && !hasNoSelection) || inProgress}>
       <div class="flex flex-row items-center gap-2">
         {#if inProgress}
           <Spinner size="1em" />
