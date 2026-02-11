@@ -20,6 +20,7 @@
     "vitest": "^4.0.10"
   },
   "dependencies": {
+    "@podman-desktop/core-api": "workspace:*",
     "electron": "40.3.0"
   }
 }

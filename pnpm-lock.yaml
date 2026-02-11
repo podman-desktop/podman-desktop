@@ -659,6 +659,9 @@ importers:
       '@kubernetes/client-node':
         specifier: ^1.4.0
         version: 1.4.0(encoding@0.1.13)
+      '@podman-desktop/core-api':
+        specifier: workspace:*
+        version: link:../api
       '@segment/analytics-node':
         specifier: ^2.3.0
         version: 2.3.0(encoding@0.1.13)
@@ -819,6 +822,9 @@ importers:
 
   packages/preload:
     dependencies:
+      '@podman-desktop/core-api':
+        specifier: workspace:*
+        version: link:../api
       electron:
         specifier: 40.3.0
         version: 40.3.0
@@ -829,6 +835,9 @@ importers:
 
   packages/preload-docker-extension:
     dependencies:
+      '@podman-desktop/core-api':
+        specifier: workspace:*
+        version: link:../api
       electron:
         specifier: 40.3.0
         version: 40.3.0
@@ -842,6 +851,9 @@ importers:
 
   packages/preload-webview:
     devDependencies:
+      '@podman-desktop/core-api':
+        specifier: workspace:*
+        version: link:../api
       '@podman-desktop/webview-api':
         specifier: workspace:*
         version: link:../webview-api
@@ -854,6 +866,9 @@ importers:
 
   packages/renderer:
     dependencies:
+      '@podman-desktop/core-api':
+        specifier: workspace:*
+        version: link:../api
       '@podman-desktop/ui-svelte':
         specifier: workspace:*
         version: link:../ui
