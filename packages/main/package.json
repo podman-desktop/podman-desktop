@@ -46,7 +46,7 @@
     "culori": "^4.0.2",
     "date.js": "^0.3.3",
     "dockerode": "^4.0.9",
-    "electron": "40.2.1",
+    "electron": "40.3.0",
     "electron-context-menu": "4.1.1",
     "electron-updater": "6.7.3",
     "electron-util": "^1.0.0",
