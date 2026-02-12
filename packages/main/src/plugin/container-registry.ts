@@ -81,8 +81,8 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { isWindows } from '/@/util.js';
 
-import { isWindows } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { LibPod } from './dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from './dockerode/libpod-dockerode.js';

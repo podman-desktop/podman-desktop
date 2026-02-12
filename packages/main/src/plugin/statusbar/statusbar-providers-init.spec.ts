@@ -17,7 +17,8 @@
  ***********************************************************************/
 import { expect, test, vi } from 'vitest';
 
-import type { ConfigurationRegistry } from '../configuration-registry.js';
+import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+
 import { StatusbarProvidersInit } from './statusbar-providers-init.js';
 
 const registerConfigurationsMock = vi.fn();

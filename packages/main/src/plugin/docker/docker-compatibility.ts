@@ -27,10 +27,9 @@ import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop
 import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 
+import type { LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { isMac, isWindows } from '/@/util.js';
-
-import type { LibPod } from '../dockerode/libpod-dockerode.js';
-import { ProviderRegistry } from '../provider-registry.js';
 
 @injectable()
 export class DockerCompatibility {

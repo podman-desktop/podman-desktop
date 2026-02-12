@@ -19,7 +19,8 @@ import type { CustomPick, CustomPickItem, Event } from '@podman-desktop/api';
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
-import { Emitter } from '../events/emitter.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
+
 import type { CustomPickRegistry } from './custompick-registry.js';
 
 type IconClassType = string | { light: string; dark: string } | undefined;

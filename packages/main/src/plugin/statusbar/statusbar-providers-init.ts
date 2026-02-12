@@ -19,7 +19,7 @@
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
-import statusbarImage from '../../assets/statusbarProviders.showProviders.webp';
+import statusbarImage from '/@/assets/statusbarProviders.showProviders.webp';
 
 @injectable()
 export class StatusbarProvidersInit {

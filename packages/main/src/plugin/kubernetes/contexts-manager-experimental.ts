@@ -27,7 +27,8 @@ import type {
   ResourceName,
 } from '@podman-desktop/core-api';
 
-import { Emitter } from '../events/emitter.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
+
 import { ConfigmapsResourceFactory } from './configmaps-resource-factory.js';
 import type { ContextHealthState } from './context-health-checker.js';
 import { ContextHealthChecker } from './context-health-checker.js';

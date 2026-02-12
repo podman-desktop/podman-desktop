@@ -21,7 +21,8 @@ import * as fs from 'node:fs';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import wincaAPI from 'win-ca/api';
 
-import { isLinux, isMac, isWindows } from '../util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
+
 import { Certificates } from './certificates.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
 

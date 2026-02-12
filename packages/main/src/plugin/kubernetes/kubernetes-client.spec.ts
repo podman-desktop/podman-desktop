@@ -50,15 +50,15 @@ import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
+import { Emitter } from '/@/plugin/events/emitter.js';
+import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
+import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { Uri } from '/@/plugin/types/uri.js';
 
-import { Emitter } from '../events/emitter.js';
-import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
-import { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
-import { Uri } from '../types/uri.js';
 import type { PodCreationSource, ScalableControllerType } from './kubernetes-client.js';
 import { KubernetesClient } from './kubernetes-client.js';
 import { ResizableTerminalWriter } from './kubernetes-exec-transmitter.js';

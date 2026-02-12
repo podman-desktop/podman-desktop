@@ -48,8 +48,8 @@ import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import * as util from '/@/util.js';
 
-import * as util from '../util.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { LibPod } from './dockerode/libpod-dockerode.js';

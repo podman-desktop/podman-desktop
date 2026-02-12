@@ -25,7 +25,8 @@ import { AuthorizationV1Api } from '@kubernetes/client-node';
 import type { Disposable } from '@podman-desktop/api';
 import type { Event } from '@podman-desktop/core-api';
 
-import { Emitter } from '../events/emitter.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
+
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 
 export interface ContextPermissionsRequest {

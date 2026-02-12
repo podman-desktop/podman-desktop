@@ -28,8 +28,8 @@ import express from 'express';
 import { inject, injectable } from 'inversify';
 
 import { Uri } from '/@/plugin/types/uri.js';
+import { getFreePort } from '/@/plugin/util/port.js';
 
-import { getFreePort } from '../util/port.js';
 import { DevToolsManager } from './devtools-manager.js';
 import { WebviewImpl } from './webview-impl.js';
 import { WebviewPanelImpl } from './webview-panel-impl.js';

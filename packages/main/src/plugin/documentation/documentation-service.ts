@@ -22,8 +22,8 @@ import { DocumentationBaseInfo, DocumentationInfo } from '@podman-desktop/core-a
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
-import fallbackDocumentation from '../../assets/fallback-documentation.json' with { type: 'json' };
-import { Disposable } from '../types/disposable.js';
+import fallbackDocumentation from '/@/assets/fallback-documentation.json' with { type: 'json' };
+import { Disposable } from '/@/plugin/types/disposable.js';
 
 @injectable()
 export class DocumentationService extends Disposable {

@@ -20,12 +20,12 @@ import type { Cluster, Context, KubeConfig, User } from '@kubernetes/client-node
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
+import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
-import type { ConfigurationRegistry } from '../configuration-registry.js';
-import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
-import { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
 import { KubernetesClient } from './kubernetes-client.js';
 
 // WARNING: Do not import anything from kubernetes-client.spec.ts
