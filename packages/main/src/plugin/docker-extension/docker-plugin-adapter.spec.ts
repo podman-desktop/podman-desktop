@@ -20,8 +20,9 @@ import type { SimpleContainerInfo } from '@podman-desktop/core-api';
 import type { IpcMainEvent } from 'electron';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { ContributionManager } from '../contribution-manager.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+
 import { DockerPluginAdapter } from './docker-plugin-adapter.js';
 
 let dockerPluginAdapter: TestDockerPluginAdapter;

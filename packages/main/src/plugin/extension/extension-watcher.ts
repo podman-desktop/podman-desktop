@@ -22,8 +22,9 @@ import { IDisposable } from '@podman-desktop/core-api';
 import type { FileMatcher } from 'get-tsconfig';
 import { inject, injectable } from 'inversify';
 
-import { Emitter } from '../events/emitter.js';
-import { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
+import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
+
 import type { AnalyzedExtension } from './extension-analyzer.js';
 import type { ActivatedExtension } from './extension-loader.js';
 import { ExtensionTypeScriptConfigParser } from './extension-tsconfig-parser.js';

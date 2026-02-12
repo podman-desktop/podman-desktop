@@ -40,7 +40,8 @@ import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import validator from 'validator';
 
-import { isMac, isWindows } from '../util.js';
+import { isMac, isWindows } from '/@/util.js';
+
 import { Certificates } from './certificates.js';
 import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';

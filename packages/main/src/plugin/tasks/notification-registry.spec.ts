@@ -19,7 +19,8 @@
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { assert, beforeEach, expect, test, vi } from 'vitest';
 
-import { Disposable } from '../types/disposable.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
+
 import { NotificationRegistry } from './notification-registry.js';
 import type { TaskManager } from './task-manager.js';
 

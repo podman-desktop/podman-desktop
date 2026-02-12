@@ -20,7 +20,8 @@ import type { FileSystemWatcher } from '@podman-desktop/api';
 import type { FileMatcher } from 'get-tsconfig';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { FilesystemMonitoring } from '../filesystem-monitoring.js';
+import type { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
+
 import type { AnalyzedExtension } from './extension-analyzer.js';
 import type { ActivatedExtension } from './extension-loader.js';
 import { ExtensionWatcher } from './extension-watcher.js';

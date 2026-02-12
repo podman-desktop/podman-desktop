@@ -25,7 +25,8 @@ import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
 
-import { isMac, isUnixLike, isWindows } from '../util.js';
+import { isMac, isUnixLike, isWindows } from '/@/util.js';
+
 import { ContainerProviderRegistry } from './container-registry.js';
 import { Directories } from './directories.js';
 import { Exec } from './util/exec.js';

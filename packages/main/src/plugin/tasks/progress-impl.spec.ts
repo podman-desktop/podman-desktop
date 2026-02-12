@@ -21,11 +21,11 @@
 import type { TaskState, TaskStatus } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { CancellationTokenSource } from '/@/plugin/cancellation-token.js';
+import type { CancellationTokenRegistry } from '/@/plugin/cancellation-token-registry.js';
 import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { TaskAction } from '/@/plugin/tasks/tasks.js';
 
-import { CancellationTokenSource } from '../cancellation-token.js';
-import type { CancellationTokenRegistry } from '../cancellation-token-registry.js';
 import { ProgressImpl, ProgressLocation } from './progress-impl.js';
 import { TaskImpl } from './task-impl.js';
 import type { TaskManager } from './task-manager.js';

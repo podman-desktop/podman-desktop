@@ -32,9 +32,9 @@ import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } 
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
+import type { TrayMenu } from '/@/tray-menu.js';
 
-import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
-import type { TrayMenu } from '../tray-menu.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';

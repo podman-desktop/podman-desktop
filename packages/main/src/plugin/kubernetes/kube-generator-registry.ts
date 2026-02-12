@@ -23,7 +23,7 @@ import type {
 } from '@podman-desktop/core-api/kubernetes';
 import { injectable } from 'inversify';
 
-import { Disposable } from '../types/disposable.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
 
 export interface KubernetesGeneratorProvider {
   readonly name: string;

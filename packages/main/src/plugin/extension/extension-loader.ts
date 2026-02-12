@@ -34,66 +34,66 @@ import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
 import { inject, injectable, preDestroy } from 'inversify';
 
+import { AuthenticationImpl } from '/@/plugin/authentication.js';
+import { CancellationTokenSource } from '/@/plugin/cancellation-token.js';
+import { Certificates } from '/@/plugin/certificates.js';
+import { CliToolRegistry } from '/@/plugin/cli-tool-registry.js';
 import { ColorRegistry } from '/@/plugin/color-registry.js';
+import { CommandRegistry } from '/@/plugin/command-registry.js';
+import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import { Context } from '/@/plugin/context/context.js';
+import { CustomPickRegistry } from '/@/plugin/custompick/custompick-registry.js';
+import { DialogRegistry } from '/@/plugin/dialog-registry.js';
+import { Directories } from '/@/plugin/directories.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
-import {
-  KubeGeneratorRegistry,
-  type KubernetesGeneratorProvider,
-} from '/@/plugin/kubernetes/kube-generator-registry.js';
-import { MenuRegistry } from '/@/plugin/menu-registry.js';
-import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
-import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
-import product from '/@product.json' with { type: 'json' };
-
-import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';
-import { getBase64Image, isLinux, isMac, isWindows } from '../../util.js';
-import { AuthenticationImpl } from '../authentication.js';
-import { CancellationTokenSource } from '../cancellation-token.js';
-import { Certificates } from '../certificates.js';
-import { CliToolRegistry } from '../cli-tool-registry.js';
-import { CommandRegistry } from '../command-registry.js';
-import { ContainerProviderRegistry } from '../container-registry.js';
-import { Context } from '../context/context.js';
-import { CustomPickRegistry } from '../custompick/custompick-registry.js';
-import { DialogRegistry } from '../dialog-registry.js';
-import { Directories } from '../directories.js';
-import { Emitter } from '../events/emitter.js';
-import { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import { IconRegistry } from '../icon-registry.js';
-import { ImageCheckerImpl } from '../image-checker.js';
-import { ImageFilesRegistry } from '../image-files-registry.js';
-import { ImageRegistry } from '../image-registry.js';
+import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
+import { IconRegistry } from '/@/plugin/icon-registry.js';
+import { ImageCheckerImpl } from '/@/plugin/image-checker.js';
+import { ImageFilesRegistry } from '/@/plugin/image-files-registry.js';
+import { ImageRegistry } from '/@/plugin/image-registry.js';
 import {
   InputBoxValidationSeverity,
   InputQuickPickRegistry,
   QuickPickItemKind,
-} from '../input-quickpick/input-quickpick-registry.js';
-import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
-import { MessageBox } from '../message-box.js';
-import { ModuleLoader } from '../module-loader.js';
-import { OnboardingRegistry } from '../onboarding-registry.js';
-import { ProviderRegistry } from '../provider-registry.js';
-import { Proxy } from '../proxy.js';
-import { createHttpPatchedModules } from '../proxy-resolver.js';
-import { SafeStorageRegistry } from '../safe-storage/safe-storage-registry.js';
+} from '/@/plugin/input-quickpick/input-quickpick-registry.js';
+import {
+  KubeGeneratorRegistry,
+  type KubernetesGeneratorProvider,
+} from '/@/plugin/kubernetes/kube-generator-registry.js';
+import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
+import { MenuRegistry } from '/@/plugin/menu-registry.js';
+import { MessageBox } from '/@/plugin/message-box.js';
+import { ModuleLoader } from '/@/plugin/module-loader.js';
+import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
+import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { Proxy } from '/@/plugin/proxy.js';
+import { createHttpPatchedModules } from '/@/plugin/proxy-resolver.js';
+import { SafeStorageRegistry } from '/@/plugin/safe-storage/safe-storage-registry.js';
 import {
   StatusBarAlignLeft,
   StatusBarAlignRight,
   StatusBarItemDefaultPriority,
   StatusBarItemImpl,
-} from '../statusbar/statusbar-item.js';
-import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';
-import { NotificationRegistry } from '../tasks/notification-registry.js';
-import { ProgressImpl, ProgressLocation } from '../tasks/progress-impl.js';
-import { Telemetry } from '../telemetry/telemetry.js';
-import { TrayMenuRegistry } from '../tray-menu-registry.js';
-import { Disposable } from '../types/disposable.js';
-import { TelemetryTrustedValue } from '../types/telemetry.js';
-import { Uri } from '../types/uri.js';
-import { Exec } from '../util/exec.js';
-import { getFreePort } from '../util/port.js';
-import { ViewRegistry } from '../view-registry.js';
+} from '/@/plugin/statusbar/statusbar-item.js';
+import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
+import { NotificationRegistry } from '/@/plugin/tasks/notification-registry.js';
+import { ProgressImpl, ProgressLocation } from '/@/plugin/tasks/progress-impl.js';
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { TrayMenuRegistry } from '/@/plugin/tray-menu-registry.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
+import { TelemetryTrustedValue } from '/@/plugin/types/telemetry.js';
+import { Uri } from '/@/plugin/types/uri.js';
+import { Exec } from '/@/plugin/util/exec.js';
+import { getFreePort } from '/@/plugin/util/port.js';
+import { ViewRegistry } from '/@/plugin/view-registry.js';
+import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
+import { getBase64Image, isLinux, isMac, isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
+
 import { type AnalyzedExtension, ExtensionAnalyzer, ExtensionAnalyzerOptions } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import { ExtensionWatcher } from './extension-watcher.js';

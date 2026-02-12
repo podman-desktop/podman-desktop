@@ -19,7 +19,7 @@
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
-import { isUnixLike } from '../util.js';
+import { isUnixLike } from '/@/util.js';
 
 @injectable()
 export class CloseBehavior {

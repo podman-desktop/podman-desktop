@@ -24,12 +24,13 @@ import type { DockerSocketServerInfoType, ProviderInfo } from '@podman-desktop/c
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import * as util from '../../util.js';
-import { ConfigurationRegistry } from '../configuration-registry.js';
-import type { DefaultConfiguration } from '../default-configuration.js';
-import type { Directories } from '../directories.js';
-import type { LockedConfiguration } from '../locked-configuration.js';
-import type { ProviderRegistry } from '../provider-registry.js';
+import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
+import type { Directories } from '/@/plugin/directories.js';
+import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import * as util from '/@/util.js';
+
 import { DockerCompatibility } from './docker-compatibility.js';
 
 let configurationRegistry: ConfigurationRegistry;
