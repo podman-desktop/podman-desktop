@@ -139,7 +139,7 @@ As an administrator, you can set up a Podman machine using Hyper-V as the provid
 - Enhance security through environment isolation.
 - Simplify management using native Windows tools and PowerShell.
 
-You must enable the Hyper-V feature. This is required by Podman Desktop to create the `Hyperv` Podman machine.
+You must enable the Hyper-V feature. This is required by Podman Desktop to create the `Hyper-V` Podman machine.
 
 #### Prerequisites
 
@@ -195,7 +195,7 @@ When the Podman Desktop installation completes, the **Get started with Podman De
 
 #### Procedure
 
-1. On the Get started with Podman Desktop screen, click **Start Onboarding**.
+1. On the **Get started with Podman Desktop** screen, click **Start Onboarding**.
 1. Perform the following steps to install Podman:
    1. Click **Next**. A confirmation notification opens.
    1. Click **Yes**. The **Podman Setup** screen opens with the default WSLv2 virtualization provider selected.
