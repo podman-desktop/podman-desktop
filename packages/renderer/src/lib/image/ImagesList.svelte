@@ -359,6 +359,8 @@ function label(item: ImageInfoUI): string {
       {:else}
         <ImageEmptyScreen />
       {/if}
+    {:else if filteredImages.length === 0 && selectedEnvironment}
+      <FilteredEmptyScreen icon={ImageIcon} kind="images" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
         kind="image"

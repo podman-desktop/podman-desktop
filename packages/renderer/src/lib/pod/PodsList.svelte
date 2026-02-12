@@ -257,6 +257,8 @@ function label(pod: PodInfoUI): string {
             searchTerm = podUtils.filterResetSearchTerm(searchTerm);
             e.preventDefault();
           }} />
+      {:else if selectedEnvironment && pods.length > 0}
+        <FilteredEmptyScreen icon={PodIcon} kind="pods" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
       {:else}
         <PodEmptyScreen />
       {/if}

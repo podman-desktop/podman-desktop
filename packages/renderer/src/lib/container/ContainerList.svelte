@@ -459,6 +459,8 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
               e.preventDefault();
             }}
             searchTerm={containerUtils.filterSearchTerm(searchTerm)} />
+        {:else if selectedEnvironment && currentContainers.length > 0}
+          <FilteredEmptyScreen icon={ContainerIcon} kind="containers" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
         {:else}
           <ContainerEmptyScreen
             runningOnly={containerUtils.filterIsRunning(searchTerm)}
