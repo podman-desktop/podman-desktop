@@ -56,6 +56,14 @@ const environmentOptions = $derived.by(() => {
 // Only show dropdown when there are multiple environments to choose from
 const showDropdown = $derived(runningConnections.length > 1);
 
+// Reset selectedEnvironment if the currently selected value no longer exists
+$effect(() => {
+  if (selectedEnvironment && !environmentOptions.some(opt => opt.value === selectedEnvironment)) {
+    selectedEnvironment = '';
+    onChange('');
+  }
+});
+
 // Find the longest option label to set consistent width
 const longestLabel = $derived(
   environmentOptions.reduce((longest, option) => (option.label.length > longest.length ? option.label : longest), ''),

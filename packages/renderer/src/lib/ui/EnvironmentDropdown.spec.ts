@@ -327,3 +327,202 @@ test('Expect dropdown to be hidden when only one running connection among mixed'
   const dropdown = screen.queryByLabelText('Environment');
   expect(dropdown).not.toBeInTheDocument();
 });
+
+test('Expect selectedEnvironment to reset when selected connection stops', async () => {
+  const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+  vi.mocked(providers).providerInfos = providerStore;
+
+  const onChangeMock = vi.fn();
+  render(EnvironmentDropdown, { onChange: onChangeMock });
+
+  // Select Docker environment
+  const dropdown = screen.getByRole('button');
+  await fireEvent.click(dropdown);
+  const dockerOption = screen.getByRole('button', { name: 'Docker' });
+  await fireEvent.click(dockerOption);
+
+  expect(onChangeMock).toHaveBeenCalledWith('docker.docker-context');
+  onChangeMock.mockClear();
+
+  // Docker connection stops
+  const stoppedDockerProvider: ProviderInfo = {
+    ...DOCKER_PROVIDER,
+    containerConnections: [
+      {
+        ...DOCKER_PROVIDER.containerConnections[0],
+        status: 'stopped',
+      },
+    ],
+  } as unknown as ProviderInfo;
+
+  providerStore.set([PODMAN_PROVIDER, stoppedDockerProvider]);
+
+  // Wait for effect to run
+  await vi.waitFor(() => {
+    expect(onChangeMock).toHaveBeenCalledWith('');
+  });
+});
+
+test('Expect selectedEnvironment to reset when selected connection is removed', async () => {
+  const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+  vi.mocked(providers).providerInfos = providerStore;
+
+  const onChangeMock = vi.fn();
+  render(EnvironmentDropdown, { onChange: onChangeMock });
+
+  // Select Docker environment
+  const dropdown = screen.getByRole('button');
+  await fireEvent.click(dropdown);
+  const dockerOption = screen.getByRole('button', { name: 'Docker' });
+  await fireEvent.click(dockerOption);
+
+  expect(onChangeMock).toHaveBeenCalledWith('docker.docker-context');
+  onChangeMock.mockClear();
+
+  // Docker provider is removed entirely
+  providerStore.set([PODMAN_PROVIDER]);
+
+  // Wait for effect to run - onChange should be called with '' to reset
+  await vi.waitFor(() => {
+    expect(onChangeMock).toHaveBeenCalledWith('');
+  });
+});
+
+test('Expect selectedEnvironment to NOT reset when a different connection stops', async () => {
+  const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+  vi.mocked(providers).providerInfos = providerStore;
+
+  const onChangeMock = vi.fn();
+  render(EnvironmentDropdown, { onChange: onChangeMock });
+
+  // Select Podman environment
+  const dropdown = screen.getByRole('button');
+  await fireEvent.click(dropdown);
+  const podmanOption = screen.getByRole('button', { name: 'Podman' });
+  await fireEvent.click(podmanOption);
+
+  expect(onChangeMock).toHaveBeenCalledWith('podman.podman-machine-default');
+  onChangeMock.mockClear();
+
+  // Docker connection stops (but Podman is still selected)
+  const stoppedDockerProvider: ProviderInfo = {
+    ...DOCKER_PROVIDER,
+    containerConnections: [
+      {
+        ...DOCKER_PROVIDER.containerConnections[0],
+        status: 'stopped',
+      },
+    ],
+  } as unknown as ProviderInfo;
+
+  providerStore.set([PODMAN_PROVIDER, stoppedDockerProvider]);
+
+  // Give time for any effects to run
+  await new Promise(resolve => setTimeout(resolve, 50));
+
+  // onChange should NOT have been called since the selected environment is still valid
+  expect(onChangeMock).not.toHaveBeenCalled();
+});
+
+test('Expect selectedEnvironment to reset when all connections stop except one', async () => {
+  const providerStore = writable([PODMAN_PROVIDER_WITH_MULTIPLE_CONNECTIONS]);
+  vi.mocked(providers).providerInfos = providerStore;
+
+  const onChangeMock = vi.fn();
+  render(EnvironmentDropdown, { onChange: onChangeMock });
+
+  // Select the remote podman machine
+  const dropdown = screen.getByRole('button');
+  await fireEvent.click(dropdown);
+  const remoteOption = screen.getByRole('button', { name: 'Podman Remote' });
+  await fireEvent.click(remoteOption);
+
+  expect(onChangeMock).toHaveBeenCalledWith('podman.podman-machine-remote');
+  onChangeMock.mockClear();
+
+  // Remote connection stops - only one running connection remains
+  const partiallyStoppedProvider: ProviderInfo = {
+    ...PODMAN_PROVIDER_WITH_MULTIPLE_CONNECTIONS,
+    containerConnections: [
+      PODMAN_PROVIDER_WITH_MULTIPLE_CONNECTIONS.containerConnections[0],
+      {
+        ...PODMAN_PROVIDER_WITH_MULTIPLE_CONNECTIONS.containerConnections[1],
+        status: 'stopped',
+      },
+    ],
+  } as unknown as ProviderInfo;
+
+  providerStore.set([partiallyStoppedProvider]);
+
+  // Wait for effect to run - onChange should be called with '' to reset
+  await vi.waitFor(() => {
+    expect(onChangeMock).toHaveBeenCalledWith('');
+  });
+});
+
+test('Expect dropdown to disappear when connections reduce from multiple to one', async () => {
+  const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+  vi.mocked(providers).providerInfos = providerStore;
+
+  render(EnvironmentDropdown);
+
+  // Initially dropdown should be visible
+  const dropdown = screen.getByLabelText('Environment');
+  expect(dropdown).toBeInTheDocument();
+
+  // Docker connection stops - only Podman remains
+  const stoppedDockerProvider: ProviderInfo = {
+    ...DOCKER_PROVIDER,
+    containerConnections: [
+      {
+        ...DOCKER_PROVIDER.containerConnections[0],
+        status: 'stopped',
+      },
+    ],
+  } as unknown as ProviderInfo;
+
+  providerStore.set([PODMAN_PROVIDER, stoppedDockerProvider]);
+
+  // Wait for re-render - dropdown should disappear
+  await vi.waitFor(() => {
+    expect(screen.queryByLabelText('Environment')).not.toBeInTheDocument();
+  });
+});
+
+test('Expect dropdown to disappear when all connections stop', async () => {
+  const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
+  vi.mocked(providers).providerInfos = providerStore;
+
+  render(EnvironmentDropdown);
+
+  // Initially dropdown should be visible
+  expect(screen.getByLabelText('Environment')).toBeInTheDocument();
+
+  // All connections stop
+  const stoppedPodmanProvider: ProviderInfo = {
+    ...PODMAN_PROVIDER,
+    containerConnections: [
+      {
+        ...PODMAN_PROVIDER.containerConnections[0],
+        status: 'stopped',
+      },
+    ],
+  } as unknown as ProviderInfo;
+
+  const stoppedDockerProvider: ProviderInfo = {
+    ...DOCKER_PROVIDER,
+    containerConnections: [
+      {
+        ...DOCKER_PROVIDER.containerConnections[0],
+        status: 'stopped',
+      },
+    ],
+  } as unknown as ProviderInfo;
+
+  providerStore.set([stoppedPodmanProvider, stoppedDockerProvider]);
+
+  // Wait for re-render - dropdown should disappear
+  await vi.waitFor(() => {
+    expect(screen.queryByLabelText('Environment')).not.toBeInTheDocument();
+  });
+});
