@@ -35,7 +35,7 @@ describe('SplitButton', () => {
     vi.resetAllMocks();
   });
 
-  test('renders with first option as default selected option', () => {
+  test('renders with noSelectionLabel when no option is selected', () => {
     render(SplitButton, { props: { options: mockOptions, noSelectionLabel: 'Select...' } });
     expect(screen.getByText('Select...')).toBeInTheDocument();
   });
