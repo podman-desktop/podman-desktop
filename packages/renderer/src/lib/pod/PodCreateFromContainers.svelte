@@ -14,9 +14,8 @@ import SolidPodIcon from '/@/lib/images/SolidPodIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
+import { type PodCreation, podCreationHolder } from '/@/stores/creation-from-containers-store';
 import { providerInfos } from '/@/stores/providers';
-
-import { type PodCreation, podCreationHolder } from '../../stores/creation-from-containers-store';
 
 let podCreation: PodCreation;
 let createInProgress = false;
