@@ -1,5 +1,7 @@
 <script lang="ts">
 /* eslint-disable import/no-duplicates */
+import type { ExtensionInfo } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber, type Writable } from 'svelte/store';
@@ -12,8 +14,6 @@ import { isPropertyValidInContext } from '/@/lib/preferences/Util';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { extensionInfos } from '/@/stores/extensions';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-import type { ExtensionInfo } from '/@api/extension-info';
 
 const DOCKER_COMPAT_SCOPE = 'DockerCompatibility';
 

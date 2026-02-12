@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import KubernetesEmptyPage from './KubernetesEmptyPage.svelte';
 

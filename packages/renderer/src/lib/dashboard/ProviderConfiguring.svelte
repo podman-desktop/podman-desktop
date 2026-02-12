@@ -1,14 +1,14 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
+import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
-import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
-import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 import Steps from '../ui/Steps.svelte';
 import PreflightChecks from './PreflightChecks.svelte';

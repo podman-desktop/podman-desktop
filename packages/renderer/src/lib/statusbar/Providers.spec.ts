@@ -17,6 +17,12 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import type {
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+  ProviderKubernetesConnectionInfo,
+} from '@podman-desktop/core-api';
+import { STATUS_BAR_PIN_CONSTANTS } from '@podman-desktop/core-api/status-bar';
 import { fireEvent, render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -24,12 +30,6 @@ import Providers from '/@/lib/statusbar/Providers.svelte';
 import ProviderWidget from '/@/lib/statusbar/ProviderWidget.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
-import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
 
 // mock provider widget
 vi.mock(import('./ProviderWidget.svelte'));

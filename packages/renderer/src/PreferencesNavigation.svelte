@@ -1,4 +1,6 @@
 <script lang="ts">
+import { DockerCompatibilitySettings } from '@podman-desktop/core-api';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { SettingsNavItem } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import type { TinroRouteMeta } from 'tinro';
@@ -6,8 +8,6 @@ import type { TinroRouteMeta } from 'tinro';
 import PreferencesIcon from '/@/lib/images/PreferencesIcon.svelte';
 import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants';
-import { DockerCompatibilitySettings } from '/@api/docker-compatibility-info';
 
 import { configurationProperties } from './stores/configurationProperties';
 

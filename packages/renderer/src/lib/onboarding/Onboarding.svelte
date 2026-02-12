@@ -28,6 +28,7 @@
 <script lang="ts">
 import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faForward } from '@fortawesome/free-solid-svg-icons';
+import type { OnboardingInfo, OnboardingStepItem } from '@podman-desktop/core-api';
 import { Button, Link, Spinner } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
@@ -39,7 +40,6 @@ import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { lastPage } from '/@/stores/breadcrumb';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
-import type { OnboardingInfo, OnboardingStepItem } from '/@api/onboarding';
 
 import {
   type ActiveOnboardingStep,

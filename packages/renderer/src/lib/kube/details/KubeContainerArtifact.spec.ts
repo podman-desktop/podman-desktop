@@ -19,12 +19,12 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { V1Container } from '@kubernetes/client-node';
+import { WorkloadKind } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state'; // Adjust the import path as necessary
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import KubeContainerArtifact from './KubeContainerArtifact.svelte';
 

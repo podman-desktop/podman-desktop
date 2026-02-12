@@ -17,8 +17,7 @@
  ***********************************************************************/
 
 import type { Context } from '@kubernetes/client-node';
-
-import type { KubeContext } from '/@api/kubernetes-context';
+import type { KubeContext } from '@podman-desktop/core-api';
 
 import { kubernetesIconBase64 } from './KubeIcon';
 

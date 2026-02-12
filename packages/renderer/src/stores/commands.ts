@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { CommandInfo } from '@podman-desktop/core-api';
 import { type Writable, writable } from 'svelte/store';
-
-import type { CommandInfo } from '/@api/command-info';
 
 import { EventStore } from './event-store';
 

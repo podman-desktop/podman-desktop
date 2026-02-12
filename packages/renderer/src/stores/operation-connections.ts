@@ -16,15 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Writable } from 'svelte/store';
-import { writable } from 'svelte/store';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+} from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type { Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
 interface OperationConnectionInfo {
   operationKey: symbol;

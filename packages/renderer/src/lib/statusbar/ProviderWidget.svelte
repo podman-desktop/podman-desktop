@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import ProviderWidgetStatus from './ProviderWidgetStatus.svelte';
 import ProviderWidgetStatusStyle from './ProviderWidgetStatusStyle.svelte';

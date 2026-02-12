@@ -1,10 +1,10 @@
 <script lang="ts">
 import type { V1ServiceSpec } from '@kubernetes/client-node';
+import { WorkloadKind } from '@podman-desktop/core-api';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
 import KubePorts from '/@/lib/kube/details/KubePortsList.svelte';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 interface Props {
   artifact?: V1ServiceSpec;

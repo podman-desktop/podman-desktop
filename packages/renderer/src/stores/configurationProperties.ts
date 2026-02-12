@@ -16,9 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type {
+  IConfigurationChangeEvent,
+  IConfigurationPropertyRecordedSchema,
+} from '@podman-desktop/core-api/configuration';
 import { type Writable, writable } from 'svelte/store';
-
-import type { IConfigurationChangeEvent, IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import { EventStore } from './event-store';
 

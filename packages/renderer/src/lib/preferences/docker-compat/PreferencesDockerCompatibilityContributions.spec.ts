@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -26,7 +27,6 @@ import { ContextUI } from '/@/lib/context/context';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { extensionInfos } from '/@/stores/extensions';
-import type { ExtensionInfo } from '/@api/extension-info';
 
 import PreferencesDockerCompatibilityContributions from './PreferencesDockerCompatibilityContributions.svelte';
 

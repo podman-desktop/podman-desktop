@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import type { CoreV1Event, KubernetesObject } from '@kubernetes/client-node';
+import type { IDisposable } from '@podman-desktop/core-api';
 import type { Readable, Unsubscriber } from 'svelte/store';
-
-import type { IDisposable } from '/@api/disposable.js';
 
 import { isKubernetesExperimentalMode, listenResources } from './resources-listen';
 

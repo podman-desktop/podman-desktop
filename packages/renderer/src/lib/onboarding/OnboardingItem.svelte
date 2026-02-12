@@ -1,4 +1,7 @@
 <script lang="ts">
+import type { OnboardingStepItem } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import { CONFIGURATION_ONBOARDING_SCOPE } from '@podman-desktop/core-api/configuration';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
@@ -8,9 +11,6 @@ import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingIte
 import { isTargetScope } from '/@/lib/preferences/Util';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
-import { CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-import type { OnboardingStepItem } from '/@api/onboarding';
 
 import { replaceContextKeyPlaceholders, replaceContextKeyPlaceHoldersByRegex } from './onboarding-utils';
 

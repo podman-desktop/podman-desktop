@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ViewInfoUI } from '/@api/view-info';
 
 import { fetchViews, viewsContributions, viewsEventStore } from './views';
 

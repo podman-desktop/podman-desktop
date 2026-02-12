@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { Dropdown } from '@podman-desktop/ui-svelte';
-
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 interface Props {
   connections: ProviderContainerConnectionInfo[];

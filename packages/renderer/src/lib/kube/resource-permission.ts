@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ContextPermission, IDisposable } from '@podman-desktop/core-api';
+
 import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
-import type { IDisposable } from '/@api/disposable';
-import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
 
 export async function listenResourcePermitted(
   resourceName: string,

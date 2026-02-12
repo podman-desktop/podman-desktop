@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { OnboardingInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
-
-import type { OnboardingInfo } from '/@api/onboarding';
 
 import { EventStore } from './event-store';
 

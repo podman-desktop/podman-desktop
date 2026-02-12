@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { render } from '@testing-library/svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
@@ -25,7 +26,6 @@ import { writable } from 'svelte/store';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
-import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 vi.mock(import('@xterm/xterm'));
 vi.mock(import('@xterm/addon-fit'));

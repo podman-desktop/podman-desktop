@@ -18,6 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -26,8 +28,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
-import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import PullImage from './PullImage.svelte';
 

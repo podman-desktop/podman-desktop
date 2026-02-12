@@ -1,8 +1,8 @@
 <script lang="ts">
+import type { ImageInspectInfo } from '@podman-desktop/core-api';
 import { onMount } from 'svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
-import type { ImageInspectInfo } from '/@api/image-inspect-info';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 

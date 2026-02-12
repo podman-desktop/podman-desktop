@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faKey, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 
 import { handleNavigation } from '/@/navigation';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
-import { NavigationPage } from '/@api/navigation-page';
 
 export let onBeforeToggle = (): void => {};
 let showMenu = false;

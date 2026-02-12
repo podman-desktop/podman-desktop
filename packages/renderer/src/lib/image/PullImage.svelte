@@ -1,5 +1,7 @@
 <script lang="ts">
 import { faArrowCircleDown, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
+import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
@@ -14,10 +16,6 @@ import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { providerInfos } from '/@/stores/providers';
-import type { ImageSearchOptions } from '/@api/image-registry';
-import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-import type { PullEvent } from '/@api/pull-event';
 
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 

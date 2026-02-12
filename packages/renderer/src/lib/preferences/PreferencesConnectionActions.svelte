@@ -1,12 +1,12 @@
 <script lang="ts">
 import { faEdit, faPlay, faRotateRight, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { Buffer } from 'buffer';
 import type { Snippet } from 'svelte';
 import { router } from 'tinro';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
-import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import {
   type ConnectionCallback,

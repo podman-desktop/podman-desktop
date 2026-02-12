@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { KubernetesObject } from '@kubernetes/client-node';
+import type { IDisposable, ResourceCount } from '@podman-desktop/core-api';
 import { Expandable, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
@@ -24,8 +25,6 @@ import {
 import { isKubernetesExperimentalModeStore } from '/@/stores/kubernetes-experimental';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
-import type { IDisposable } from '/@api/disposable';
-import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';

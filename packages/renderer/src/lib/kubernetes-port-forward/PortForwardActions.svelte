@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faSquareUpRight, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { type ForwardConfig } from '@podman-desktop/core-api';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
-import { type ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
 interface Props {
   object: ForwardConfig;

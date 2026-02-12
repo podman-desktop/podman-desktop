@@ -18,13 +18,13 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import ProviderButton from '/@/lib/statusbar/ProviderButton.svelte';
 import ProviderButtonStatus from '/@/lib/statusbar/ProviderButtonStatus.svelte';
-import type { ProviderInfo } from '/@api/provider-info';
 
 vi.mock(import('/@/lib/statusbar/ProviderButtonStatus.svelte'));
 

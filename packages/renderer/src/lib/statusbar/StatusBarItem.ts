@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { StatusBarEntry } from '/@api/status-bar';
+import type { StatusBarEntry } from '@podman-desktop/core-api';
 
 export function iconClass(entry: StatusBarEntry): string | undefined {
   let iconClass = undefined;

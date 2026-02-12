@@ -1,8 +1,7 @@
 <script lang="ts">
 import { faRocket } from '@fortawesome/free-solid-svg-icons';
+import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
-
-import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 export let provider: ProviderInfo;
 

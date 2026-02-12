@@ -18,14 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
+} from '@podman-desktop/core-api';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import type { IConnectionStatus } from './Util';

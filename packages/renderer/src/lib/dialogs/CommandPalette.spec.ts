@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContainerInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -26,7 +27,6 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { commandsInfos } from '/@/stores/commands';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
-import type { ContainerInfo } from '/@api/container-info';
 
 import CommandPalette from './CommandPalette.svelte';
 

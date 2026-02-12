@@ -1,8 +1,7 @@
 <script lang="ts">
+import type { TelemetryMessages } from '@podman-desktop/core-api';
 import { Link } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
-
-import type { TelemetryMessages } from '/@api/telemetry';
 
 let telemetryMessages: TelemetryMessages;
 

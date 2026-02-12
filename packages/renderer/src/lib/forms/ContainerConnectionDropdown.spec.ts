@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
@@ -25,7 +26,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
 import ContainerConnectionDropdownTest from '/@/lib/forms/ContainerConnectionDropdownTest.svelte';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 vi.mock('@podman-desktop/ui-svelte');
 

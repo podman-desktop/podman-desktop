@@ -17,11 +17,11 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import type { OnboardingInfo, OnboardingStep } from '@podman-desktop/core-api';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr, type ContextKeyExpression } from '/@/lib/context/contextKey';
-import type { OnboardingInfo, OnboardingStep } from '/@api/onboarding';
 
 import {
   type ActiveOnboardingStep,

@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { CertificateInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { certificatesInfos, searchPattern } from '/@/stores/certificates';
-import type { CertificateInfo } from '/@api/certificate-info';
 
 import CertificateList from './CertificateList.svelte';
 

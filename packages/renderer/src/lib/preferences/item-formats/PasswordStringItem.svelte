@@ -1,6 +1,7 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+
 import PasswordInput from '/@/lib/ui/PasswordInput.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 interface Props {
   record: IConfigurationPropertyRecordedSchema;

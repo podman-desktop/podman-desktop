@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
   id: 'hello.world.fooBar',

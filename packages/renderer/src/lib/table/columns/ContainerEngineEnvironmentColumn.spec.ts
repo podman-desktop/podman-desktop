@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { readable, writable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -26,7 +27,6 @@ import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import EnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import * as providers from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 vi.mock(import('/@/stores/providers'));
 

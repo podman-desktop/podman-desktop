@@ -17,12 +17,11 @@
  ***********************************************************************/
 
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
+import type { ContributionInfo, WebviewInfo } from '@podman-desktop/core-api';
 
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { contributions } from '/@/stores/contribs';
 import { webviews } from '/@/stores/webviews';
-import type { ContributionInfo } from '/@api/contribution-info';
-import type { WebviewInfo } from '/@api/webview-info';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
 

@@ -18,11 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { imagesInfos } from '/@/stores/images';
-import type { ImageInfo } from '/@api/image-info';
 
 import ManifestDetails from './ManifestDetails.svelte';
 

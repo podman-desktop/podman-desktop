@@ -18,16 +18,16 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type {
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+  ProviderKubernetesConnectionInfo,
+} from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerTerminals } from '/@/stores/provider-terminal-store';
-import type {
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info';
 
 import PreferencesConnectionDetailsTerminal from './PreferencesConnectionDetailsTerminal.svelte';
 

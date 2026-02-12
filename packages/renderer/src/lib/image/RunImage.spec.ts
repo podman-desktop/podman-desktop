@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -28,7 +29,6 @@ import RunImage from '/@/lib/image/RunImage.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { mockBreadcrumb } from '/@/stores/breadcrumb.spec';
 import { runImageInfo } from '/@/stores/run-image-store';
-import type { ImageInspectInfo } from '/@api/image-inspect-info';
 
 const originalConsoleDebug = console.debug;
 

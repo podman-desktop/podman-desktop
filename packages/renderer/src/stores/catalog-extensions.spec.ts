@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 
 import {
   catalogExtensionEventStore,

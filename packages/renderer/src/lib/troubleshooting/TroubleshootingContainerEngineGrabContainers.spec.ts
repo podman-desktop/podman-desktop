@@ -20,10 +20,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import TroubleshootingContainerEngineGrabContainers from './TroubleshootingContainerEngineGrabContainers.svelte';
 

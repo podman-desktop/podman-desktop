@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import type { Terminal } from '@xterm/xterm';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import {
   calcHalfCpuCores,

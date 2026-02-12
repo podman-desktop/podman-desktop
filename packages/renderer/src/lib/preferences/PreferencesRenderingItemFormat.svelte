@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
@@ -10,7 +11,6 @@ import NumberItem from '/@/lib/preferences/item-formats/NumberItem.svelte';
 import SliderItem from '/@/lib/preferences/item-formats/SliderItem.svelte';
 import StringItem from '/@/lib/preferences/item-formats/StringItem.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import PasswordStringItem from './item-formats/PasswordStringItem.svelte';
 import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';

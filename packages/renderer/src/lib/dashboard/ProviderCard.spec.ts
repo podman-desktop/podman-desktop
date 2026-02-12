@@ -19,11 +19,10 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderImages } from '@podman-desktop/api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { expect, test } from 'vitest';
-
-import type { ProviderInfo } from '/@api/provider-info';
 
 import ProviderCard from './ProviderCard.svelte';
 

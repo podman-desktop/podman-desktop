@@ -1,4 +1,7 @@
 <script lang="ts">
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
+import type { PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import { Button, Checkbox, ErrorMessage, Input, StatusIcon } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
@@ -12,9 +15,6 @@ import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
-import type { PodCreatePortOptions } from '/@api/libpod/libpod';
-import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import { type PodCreation, podCreationHolder } from '../../stores/creation-from-containers-store';
 

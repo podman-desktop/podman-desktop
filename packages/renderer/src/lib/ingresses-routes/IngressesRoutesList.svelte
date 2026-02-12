@@ -1,5 +1,6 @@
 <script lang="ts">
 import { type KubernetesObject } from '@kubernetes/client-node';
+import type { V1Route } from '@podman-desktop/core-api';
 import { TableColumn, TableDurationColumn, TableRow } from '@podman-desktop/ui-svelte';
 import moment from 'moment';
 
@@ -13,7 +14,6 @@ import {
   kubernetesCurrentContextRoutesFiltered,
   routeSearchPattern,
 } from '/@/stores/kubernetes-contexts-state';
-import type { V1Route } from '/@api/openshift-types';
 
 import ActionsColumn from './columns/Actions.svelte';
 import BackendColumn from './columns/Backend.svelte';

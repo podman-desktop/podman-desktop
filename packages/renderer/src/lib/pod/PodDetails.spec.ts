@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { PodInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
@@ -25,7 +26,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { podsInfos } from '/@/stores/pods';
-import type { PodInfo } from '/@api/pod-info';
 
 import PodDetails from './PodDetails.svelte';
 

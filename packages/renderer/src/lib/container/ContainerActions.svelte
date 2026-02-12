@@ -11,6 +11,8 @@ import {
   faTerminal,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import type { Menu } from '@podman-desktop/core-api';
+import { MenuContext, NavigationPage } from '@podman-desktop/core-api';
 import { DropdownMenu } from '@podman-desktop/ui-svelte';
 import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -22,9 +24,6 @@ import FlatMenu from '/@/lib/ui/FlatMenu.svelte';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { handleNavigation } from '/@/navigation';
 import { context } from '/@/stores/context';
-import type { Menu } from '/@api/menu.js';
-import { MenuContext } from '/@api/menu-context.js';
-import { NavigationPage } from '/@api/navigation-page';
 
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
 

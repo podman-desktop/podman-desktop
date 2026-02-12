@@ -8,6 +8,16 @@ import {
   faMagnifyingGlass,
   faTerminal,
 } from '@fortawesome/free-solid-svg-icons';
+import type {
+  CommandInfo,
+  ContainerInfo,
+  DocumentationInfo,
+  GoToInfo,
+  ImageInfo,
+  PodInfo,
+  VolumeInfo,
+} from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { type Component, onMount, tick } from 'svelte';
@@ -26,13 +36,6 @@ import { imagesInfos } from '/@/stores/images';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import { podsInfos } from '/@/stores/pods';
 import { volumeListInfos } from '/@/stores/volumes';
-import type { CommandInfo } from '/@api/command-info';
-import type { ContainerInfo } from '/@api/container-info';
-import type { DocumentationInfo, GoToInfo } from '/@api/documentation-info';
-import type { ImageInfo } from '/@api/image-info';
-import { NavigationPage } from '/@api/navigation-page';
-import type { PodInfo } from '/@api/pod-info';
-import type { VolumeInfo } from '/@api/volume-info';
 
 import { createGoToItems, getGoToDisplayText } from './CommandPaletteUtils';
 import TextHighLight from './TextHighLight.svelte';

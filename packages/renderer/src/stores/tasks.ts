@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatus } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
-
-import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo, type TaskStatus } from '/@api/taskInfo';
 
 import { findMatchInLeaves } from './search-util';
 

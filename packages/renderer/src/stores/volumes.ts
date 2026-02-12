@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { VolumeListInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
-import type { VolumeListInfo } from '/@api/volume-info';
 
 import { EventStore } from './event-store';
 import { findMatchInLeaves } from './search-util';

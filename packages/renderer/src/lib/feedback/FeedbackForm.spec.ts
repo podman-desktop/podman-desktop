@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { TelemetryMessages } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { expect, test, vi } from 'vitest';
-
-import type { TelemetryMessages } from '/@api/telemetry';
 
 import FeedbackForm from './FeedbackForm.svelte';
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { EditorSettings } from '@podman-desktop/core-api/editor';
 import type monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
@@ -7,7 +8,6 @@ import type { Unsubscriber } from 'svelte/store';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { isDark } from '/@/stores/appearance';
-import { EditorSettings } from '/@api/editor/editor-settings';
 
 let divEl: HTMLDivElement;
 let editor: monaco.editor.IStandaloneCodeEditor;

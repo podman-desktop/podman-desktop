@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Input } from '@podman-desktop/ui-svelte';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string | undefined;

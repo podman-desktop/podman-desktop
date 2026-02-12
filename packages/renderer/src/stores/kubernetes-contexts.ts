@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { KubeContext } from '@podman-desktop/core-api';
 import { type Writable, writable } from 'svelte/store';
 
 import { addIconToContexts } from '/@/lib/kube/KubeContextUI';
-import type { KubeContext } from '/@api/kubernetes-context';
 
 import { EventStore } from './event-store';
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
@@ -9,7 +10,6 @@ import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngi
 import { handleNavigation } from '/@/navigation';
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
-import { NavigationPage } from '/@api/navigation-page';
 
 import NetworkColumnDriver from './columns/NetworkColumnDriver.svelte';
 import NetworkColumnId from './columns/NetworkColumnId.svelte';

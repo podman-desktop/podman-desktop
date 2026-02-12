@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faStethoscope } from '@fortawesome/free-solid-svg-icons';
 import type { ImageInfo } from '@podman-desktop/api';
+import type { ImageCheckerInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
@@ -9,7 +10,6 @@ import type { Unsubscriber } from 'svelte/store';
 import type { CheckUI, ProviderUI } from '/@/lib/ui/ProviderResultPage';
 import ProviderResultPage from '/@/lib/ui/ProviderResultPage.svelte';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
-import type { ImageCheckerInfo } from '/@api/image-checker-info';
 
 const orderStatus = ['failed', 'success'];
 const orderSeverity = ['critical', 'high', 'medium', 'low', undefined];

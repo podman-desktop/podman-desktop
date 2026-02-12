@@ -1,10 +1,9 @@
 <script lang="ts">
 import { faCirclePlay, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import type { ExploreFeature } from '@podman-desktop/core-api';
 import { Button, CloseButton, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
-
-import type { ExploreFeature } from '/@api/explore-feature';
 
 interface Props {
   feature: ExploreFeature;

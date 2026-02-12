@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContextGeneralState, KubeContext } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -27,8 +28,6 @@ import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-perm
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import * as kubernetesContextsState from '/@/stores/kubernetes-contexts-state';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
-import type { KubeContext } from '/@api/kubernetes-context';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import PreferencesKubernetesContextsRendering from './PreferencesKubernetesContextsRendering.svelte';
 

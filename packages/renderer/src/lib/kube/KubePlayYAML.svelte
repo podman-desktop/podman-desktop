@@ -1,6 +1,8 @@
 <script lang="ts">
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -13,8 +15,6 @@ import FileInput from '/@/lib/ui/FileInput.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { handleNavigation } from '/@/navigation';
 import { providerInfos } from '/@/stores/providers';
-import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 let runStarted = $state(false);
 let runFinished = $state(false);

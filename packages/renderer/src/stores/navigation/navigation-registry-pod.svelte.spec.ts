@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { PodInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { podsInfos } from '/@/stores/pods';
-import type { PodInfo } from '/@api/pod-info';
 
 import { createNavigationPodEntry } from './navigation-registry-pod.svelte';
 

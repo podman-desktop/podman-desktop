@@ -16,12 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ColorInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { EventStore } from '/@/stores/event-store';
-import type { ColorInfo } from '/@api/color-info';
 
 const windowEvents = ['color-updated', 'extension-stopped', 'extensions-started'];
 const windowListeners = ['appearance-changed', 'extensions-already-started', 'system-ready'];

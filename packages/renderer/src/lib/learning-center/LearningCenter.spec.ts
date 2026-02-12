@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { Guide } from '@podman-desktop/core-api/learning-center';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-
-import type { Guide } from '/@api/learning-center/guide';
 
 import LearningCenter from './LearningCenter.svelte';
 

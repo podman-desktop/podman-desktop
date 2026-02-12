@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -25,7 +26,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { networksListInfo } from '/@/stores/networks';
-import type { NetworkInspectInfo } from '/@api/network-info';
 
 import NetworkDetails from './NetworkDetails.svelte';
 

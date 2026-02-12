@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { fireEvent, render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import ExperimentalPage from '/@/lib/preferences/ExperimentalPage.svelte';
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 beforeEach(() => {
   vi.resetAllMocks();

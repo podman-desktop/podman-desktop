@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { WebviewInfo } from '/@api/webview-info';
+import type { WebviewInfo } from '@podman-desktop/core-api';
 
 import { type IpcApi, type WebviewElement, WebviewLifecycleManager } from './webview-lifecycle-manager';
 

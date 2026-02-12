@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
@@ -8,7 +9,6 @@ import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
 import { handleNavigation } from '/@/navigation';
 import { containersInfos } from '/@/stores/containers';
-import { NavigationPage } from '/@api/navigation-page';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 

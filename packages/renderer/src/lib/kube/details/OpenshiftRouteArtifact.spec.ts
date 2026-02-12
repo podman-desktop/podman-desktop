@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { V1Route } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
-
-import type { V1Route } from '/@api/openshift-types';
 
 import OpenshiftRouteArtifact from './OpenshiftRouteArtifact.svelte';
 

@@ -1,6 +1,15 @@
 <script lang="ts">
 import { faMinusCircle, faPlay, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import type { OpenDialogOptions } from '@podman-desktop/api';
+import type {
+  ContainerCreateOptions,
+  DeviceMapping,
+  HostConfig,
+  HostConfigPortBinding,
+  ImageInspectInfo,
+  NetworkInspectInfo,
+} from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Checkbox, Dropdown, ErrorMessage, Input, NumberInput, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
@@ -16,10 +25,6 @@ import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
 import { runImageInfo } from '/@/stores/run-image-store';
-import type { ContainerCreateOptions, DeviceMapping, HostConfig, HostConfigPortBinding } from '/@api/container-info';
-import type { ImageInspectInfo } from '/@api/image-inspect-info';
-import { NavigationPage } from '/@api/navigation-page';
-import type { NetworkInspectInfo } from '/@api/network-info';
 
 interface PortInfo {
   port: string;

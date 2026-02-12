@@ -18,12 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { FeedbackCategory } from '@podman-desktop/core-api';
 import { render, type RenderResult } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { FeedbackCategory } from '/@api/feedback';
 
 import GitHubIssueFeedback from './GitHubIssueFeedback.svelte';
 

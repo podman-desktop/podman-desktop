@@ -2,6 +2,8 @@
 /* eslint-disable import/no-duplicates */
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+/* eslint-enable import/no-duplicates */
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
@@ -10,8 +12,6 @@ import { router } from 'tinro';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
-/* eslint-enable import/no-duplicates */
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 let providers: ProviderInfo[] = [];
 let providerConnections: ProviderContainerConnectionInfo[] = [];

@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { onDestroy, onMount } from 'svelte';
 import { type Unsubscriber } from 'svelte/store';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import TroubleshootingContainerEngines from './TroubleshootingContainerEngines.svelte';
 import TroubleshootingRepair from './TroubleshootingRepair.svelte';

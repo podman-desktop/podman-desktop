@@ -1,11 +1,11 @@
 <script lang="ts">
+import type { TaskInfo } from '@podman-desktop/core-api';
+import { ExperimentalTasksSettings } from '@podman-desktop/core-api';
 import { type SvelteToastOptions, toast } from '@zerodevx/svelte-toast';
 import { type ComponentType, onMount } from 'svelte';
 
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { tasksInfo } from '/@/stores/tasks';
-import type { TaskInfo } from '/@api/taskInfo';
-import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
 
 import ToastCustomUi from './ToastCustomUi.svelte';
 
