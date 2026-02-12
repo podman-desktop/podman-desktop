@@ -42,7 +42,7 @@ const environmentOptions = $derived.by(() => {
     const label =
       runningConnectionCount[connection.type] > 1
         ? connection.displayName
-        : connection.type.charAt(0).toUpperCase() + connection.type.slice(1);
+        :  capitalize(connection.type);
 
     options.push({
       label,
