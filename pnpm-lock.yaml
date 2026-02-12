@@ -240,8 +240,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 40.3.0
-        version: 40.3.0
+        specifier: 40.4.0
+        version: 40.4.0
       electron-builder:
         specifier: 26.7.0
         version: 26.7.0(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.7.0))
@@ -680,8 +680,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       electron:
-        specifier: 40.3.0
-        version: 40.3.0
+        specifier: 40.4.0
+        version: 40.4.0
       electron-context-menu:
         specifier: 4.1.1
         version: 4.1.1
@@ -819,8 +819,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 40.3.0
-        version: 40.3.0
+        specifier: 40.4.0
+        version: 40.4.0
     devDependencies:
       vitest:
         specifier: ^4.0.18
@@ -832,8 +832,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 40.3.0
-        version: 40.3.0
+        specifier: 40.4.0
+        version: 40.4.0
     devDependencies:
       '@docker/extension-api-client-types':
         specifier: 0.4.2
@@ -851,8 +851,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 40.3.0
-        version: 40.3.0
+        specifier: 40.4.0
+        version: 40.4.0
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.2.3)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.30.2)(msw@2.12.10(@types/node@25.2.3)(typescript@5.9.3))(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -1195,8 +1195,8 @@ importers:
         specifier: ^24
         version: 24.6.2
       electron:
-        specifier: 40.3.0
-        version: 40.3.0
+        specifier: 40.4.0
+        version: 40.4.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -6819,8 +6819,8 @@ packages:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
     engines: {node: '>=20'}
 
-  electron@40.3.0:
-    resolution: {integrity: sha512-ZaDkTZpNHr863tyZHieoqbaiLI0e3RVCXoEC5y1Ld70/Q5H1mPV9d5TK0h1dWtaSFVOW0w8iDvtdLwAXtasXpg==}
+  electron@40.4.0:
+    resolution: {integrity: sha512-31l4V7Ys4oUuXyaN/cCNnyBdDXN9RwOVOG+JhiHCf4zx5tZkHd43PKGY6KLEWpeYCxaphsuGSEjagJLfPqKj8g==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -19586,7 +19586,7 @@ snapshots:
       electron-is-dev: 3.0.1
       new-github-issue-url: 1.1.0
 
-  electron@40.3.0:
+  electron@40.4.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.11
