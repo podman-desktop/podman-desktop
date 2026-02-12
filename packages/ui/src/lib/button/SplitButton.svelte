@@ -3,9 +3,9 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCheck, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import type { Component, Snippet } from 'svelte';
 
-import type { ButtonType } from '/@/lib/button/Button';
-import Icon from '/@/lib/icons/Icon.svelte';
-import Spinner from '/@/lib/progress/Spinner.svelte';
+import type { ButtonType } from '/@svelte-ui/button/Button';
+import Icon from '/@svelte-ui/icons/Icon.svelte';
+import Spinner from '/@svelte-ui/progress/Spinner.svelte';
 
 export interface SplitButtonOption {
   id: string;
