@@ -61,7 +61,7 @@
     "js-yaml": "^4.1.1",
     "minimist": "^1.2.8",
     "moment": "^2.30.1",
-    "os-locale": "^6.0.2",
+    "os-locale": "^8.0.0",
     "pkijs": "^3.2.4",
     "proxy": "^2.2.0",
     "semver": "^7.7.4",
