@@ -34,8 +34,8 @@ window.events?.receive('dev-tools:open-extension', (extensionId: unknown) => {
 
   // Check that the element contains "openDevTools" method, which is only available on Electron WebviewTag
   // we cannot use `instanceof` as Electron does not "contain" the WebviewTag class at run time.
-  if (extensionElement && 'openDevTools' in extensionElement) {
-    (extensionElement as Electron.WebviewTag).openDevTools();
+  if (extensionElement && 'openDevTools' in extensionElement && typeof extensionElement.openDevTools === 'function') {
+    extensionElement.openDevTools();
   } else {
     // Warn if unable
     console.warn(`Element with ID dd-webview-${extensionId} is not an Electron WebviewTag.`);
