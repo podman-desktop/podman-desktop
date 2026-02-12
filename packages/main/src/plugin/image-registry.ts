@@ -182,6 +182,12 @@ export class ImageRegistry {
     });
     this.apiSender.send('registry-register', registry);
     this._onDidRegisterRegistry.fire(Object.freeze({ ...registry }));
+
+    // after registering, check if the registry info is valid, and if not, it will be unregistered
+    this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(() => {
+      this.unregisterRegistry(registry);
+      console.log(`Error while checking registry credentials ${registry.serverUrl}, unregistering`);
+    });
     return Disposable.create(() => {
       this.unregisterRegistry(registry);
     });
