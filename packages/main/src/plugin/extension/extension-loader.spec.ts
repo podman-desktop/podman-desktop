@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -82,6 +80,18 @@ import type { ExtensionDevelopmentFolders } from './extension-development-folder
 import type { ActivatedExtension, AnalyzedExtensionWithApi, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
+
+interface HelloProvider {
+  hello(): string;
+}
+
+interface FooProvider {
+  foo: string;
+}
+
+interface FooPackageProvider {
+  packageJSON: FooProvider;
+}
 
 class TestExtensionLoader extends ExtensionLoader {
   public override async setupScanningDirectory(): Promise<void> {
@@ -1403,22 +1413,22 @@ test('Verify exports and packageJSON', async () => {
   expect(myActivatedExtension).toBeDefined();
 
   expect(myActivatedExtension?.exports).toBeDefined();
-  expect(myActivatedExtension?.exports.hello()).toBe('world');
+  expect((myActivatedExtension?.exports as HelloProvider).hello()).toBe('world');
 
   expect(myActivatedExtension?.packageJSON).toBeDefined();
-  expect((myActivatedExtension?.packageJSON as any)?.foo).toBe('bar');
+  expect((myActivatedExtension?.packageJSON as FooProvider)?.foo).toBe('bar');
 
   const exposed = extensionLoader.getExposedExtension(id);
   expect(exposed).toBeDefined();
-  expect(exposed?.exports.hello()).toBe('world');
-  expect((exposed as any).packageJSON.foo).toBe('bar');
+  expect((exposed?.exports as HelloProvider).hello()).toBe('world');
+  expect((exposed as FooPackageProvider).packageJSON.foo).toBe('bar');
 
   const allExtensions = extensionLoader.getAllExposedExtensions();
   expect(allExtensions).toBeDefined();
   // 1 item
   expect(allExtensions.length).toBe(1);
-  expect(allExtensions[0]?.exports.hello()).toBe('world');
-  expect((allExtensions[0] as any).packageJSON.foo).toBe('bar');
+  expect((allExtensions[0]?.exports as HelloProvider).hello()).toBe('world');
+  expect((allExtensions[0] as FooPackageProvider).packageJSON.foo).toBe('bar');
 });
 
 describe('Navigation', async () => {
