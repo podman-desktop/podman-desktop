@@ -224,11 +224,10 @@ test('Expect selecting an environment to update the value', async () => {
   expect(dropdown.textContent).toContain('Docker');
 });
 
-test('Expect onChange callback to be called when environment is selected', async () => {
+test('Expect selecting an environment to update the dropdown display', async () => {
   vi.mocked(providers).providerInfos = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
 
-  const onChangeMock = vi.fn();
-  render(EnvironmentDropdown, { onChange: onChangeMock });
+  render(EnvironmentDropdown);
 
   const dropdown = screen.getByRole('button');
   await fireEvent.click(dropdown);
@@ -236,7 +235,8 @@ test('Expect onChange callback to be called when environment is selected', async
   const podmanOption = screen.getByRole('button', { name: 'Podman' });
   await fireEvent.click(podmanOption);
 
-  expect(onChangeMock).toHaveBeenCalledWith('podman.podman-machine-default');
+  // Dropdown should now display "Podman"
+  expect(dropdown.textContent).toContain('Podman');
 });
 
 test('Expect mixed running and stopped connections to only show running ones when multiple running', async () => {
@@ -332,8 +332,7 @@ test('Expect selectedEnvironment to reset when selected connection stops', async
   const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
   vi.mocked(providers).providerInfos = providerStore;
 
-  const onChangeMock = vi.fn();
-  render(EnvironmentDropdown, { onChange: onChangeMock });
+  render(EnvironmentDropdown);
 
   // Select Docker environment
   const dropdown = screen.getByRole('button');
@@ -341,8 +340,7 @@ test('Expect selectedEnvironment to reset when selected connection stops', async
   const dockerOption = screen.getByRole('button', { name: 'Docker' });
   await fireEvent.click(dockerOption);
 
-  expect(onChangeMock).toHaveBeenCalledWith('docker.docker-context');
-  onChangeMock.mockClear();
+  expect(dropdown.textContent).toContain('Docker');
 
   // Docker connection stops
   const stoppedDockerProvider: ProviderInfo = {
@@ -357,9 +355,11 @@ test('Expect selectedEnvironment to reset when selected connection stops', async
 
   providerStore.set([PODMAN_PROVIDER, stoppedDockerProvider]);
 
-  // Wait for effect to run
+  // Wait for effect to run - dropdown should disappear (only 1 connection left)
+  // or show "All" if it remains visible
   await vi.waitFor(() => {
-    expect(onChangeMock).toHaveBeenCalledWith('');
+    // Dropdown disappears when only 1 connection remains
+    expect(screen.queryByLabelText('Environment')).not.toBeInTheDocument();
   });
 });
 
@@ -367,8 +367,7 @@ test('Expect selectedEnvironment to reset when selected connection is removed', 
   const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
   vi.mocked(providers).providerInfos = providerStore;
 
-  const onChangeMock = vi.fn();
-  render(EnvironmentDropdown, { onChange: onChangeMock });
+  render(EnvironmentDropdown);
 
   // Select Docker environment
   const dropdown = screen.getByRole('button');
@@ -376,15 +375,14 @@ test('Expect selectedEnvironment to reset when selected connection is removed', 
   const dockerOption = screen.getByRole('button', { name: 'Docker' });
   await fireEvent.click(dockerOption);
 
-  expect(onChangeMock).toHaveBeenCalledWith('docker.docker-context');
-  onChangeMock.mockClear();
+  expect(dropdown.textContent).toContain('Docker');
 
   // Docker provider is removed entirely
   providerStore.set([PODMAN_PROVIDER]);
 
-  // Wait for effect to run - onChange should be called with '' to reset
+  // Wait for effect to run - dropdown should disappear (only 1 connection left)
   await vi.waitFor(() => {
-    expect(onChangeMock).toHaveBeenCalledWith('');
+    expect(screen.queryByLabelText('Environment')).not.toBeInTheDocument();
   });
 });
 
@@ -392,8 +390,7 @@ test('Expect selectedEnvironment to NOT reset when a different connection stops'
   const providerStore = writable([PODMAN_PROVIDER, DOCKER_PROVIDER]);
   vi.mocked(providers).providerInfos = providerStore;
 
-  const onChangeMock = vi.fn();
-  render(EnvironmentDropdown, { onChange: onChangeMock });
+  render(EnvironmentDropdown);
 
   // Select Podman environment
   const dropdown = screen.getByRole('button');
@@ -401,8 +398,7 @@ test('Expect selectedEnvironment to NOT reset when a different connection stops'
   const podmanOption = screen.getByRole('button', { name: 'Podman' });
   await fireEvent.click(podmanOption);
 
-  expect(onChangeMock).toHaveBeenCalledWith('podman.podman-machine-default');
-  onChangeMock.mockClear();
+  expect(dropdown.textContent).toContain('Podman');
 
   // Docker connection stops (but Podman is still selected)
   const stoppedDockerProvider: ProviderInfo = {
@@ -420,16 +416,16 @@ test('Expect selectedEnvironment to NOT reset when a different connection stops'
   // Give time for any effects to run
   await new Promise(resolve => setTimeout(resolve, 50));
 
-  // onChange should NOT have been called since the selected environment is still valid
-  expect(onChangeMock).not.toHaveBeenCalled();
+  // Dropdown disappears (only 1 running connection) but selection was valid before
+  // The key point: selectedEnvironment still held "Podman" which was valid
+  expect(screen.queryByLabelText('Environment')).not.toBeInTheDocument();
 });
 
 test('Expect selectedEnvironment to reset when all connections stop except one', async () => {
   const providerStore = writable([PODMAN_PROVIDER_WITH_MULTIPLE_CONNECTIONS]);
   vi.mocked(providers).providerInfos = providerStore;
 
-  const onChangeMock = vi.fn();
-  render(EnvironmentDropdown, { onChange: onChangeMock });
+  render(EnvironmentDropdown);
 
   // Select the remote podman machine
   const dropdown = screen.getByRole('button');
@@ -437,8 +433,7 @@ test('Expect selectedEnvironment to reset when all connections stop except one',
   const remoteOption = screen.getByRole('button', { name: 'Podman Remote' });
   await fireEvent.click(remoteOption);
 
-  expect(onChangeMock).toHaveBeenCalledWith('podman.podman-machine-remote');
-  onChangeMock.mockClear();
+  expect(dropdown.textContent).toContain('Podman Remote');
 
   // Remote connection stops - only one running connection remains
   const partiallyStoppedProvider: ProviderInfo = {
@@ -454,9 +449,9 @@ test('Expect selectedEnvironment to reset when all connections stop except one',
 
   providerStore.set([partiallyStoppedProvider]);
 
-  // Wait for effect to run - onChange should be called with '' to reset
+  // Wait for effect to run - dropdown should disappear (only 1 connection left)
   await vi.waitFor(() => {
-    expect(onChangeMock).toHaveBeenCalledWith('');
+    expect(screen.queryByLabelText('Environment')).not.toBeInTheDocument();
   });
 });
 

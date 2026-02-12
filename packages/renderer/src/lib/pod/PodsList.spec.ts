@@ -26,7 +26,7 @@ import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
 } from '@podman-desktop/core-api';
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -634,4 +634,133 @@ test('Expect environment column sorted by engineId', async () => {
   const cells = screen.getAllByRole('cell', { name: /pod-/ });
   expect(cells[0]).toHaveTextContent('pod-bbb');
   expect(cells[1]).toHaveTextContent('pod-aaa');
+});
+
+test('Expect environment dropdown to appear with multiple running connections', async () => {
+  getProvidersInfoMock.mockResolvedValue([
+    {
+      ...provider,
+      id: 'podman',
+      name: 'podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+    {
+      ...provider,
+      id: 'docker',
+      name: 'docker',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  const podmanPod = {
+    ...pod1,
+    Name: 'podman-pod',
+    engineId: 'podman.podman-machine-default',
+    engineName: 'Podman Machine',
+  };
+  const dockerPod = { ...pod2, Name: 'docker-pod', engineId: 'docker.docker-context', engineName: 'Docker Desktop' };
+
+  listPodsMock.mockResolvedValue([podmanPod, dockerPod]);
+
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  await waitFor(() => {
+    expect(get(providerInfos)).toHaveLength(2);
+    expect(get(podsInfos)).toHaveLength(2);
+  });
+
+  render(PodsList);
+  await tick();
+
+  // Environment dropdown should be visible
+  const environmentDropdown = screen.getByLabelText('Environment');
+  expect(environmentDropdown).toBeInTheDocument();
+});
+
+test('Expect environment dropdown to filter pods by selected environment', async () => {
+  getProvidersInfoMock.mockResolvedValue([
+    {
+      ...provider,
+      id: 'podman',
+      name: 'podman',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+    {
+      ...provider,
+      id: 'docker',
+      name: 'docker',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  const podmanPod = {
+    ...pod1,
+    Name: 'podman-pod',
+    engineId: 'podman.podman-machine-default',
+    engineName: 'Podman Machine',
+  };
+  const dockerPod = { ...pod2, Name: 'docker-pod', engineId: 'docker.docker-context', engineName: 'Docker Desktop' };
+
+  listPodsMock.mockResolvedValue([podmanPod, dockerPod]);
+
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+
+  await waitFor(() => {
+    expect(get(providerInfos)).toHaveLength(2);
+    expect(get(podsInfos)).toHaveLength(2);
+  });
+
+  render(PodsList);
+  await tick();
+
+  // Both pods should be visible initially
+  expect(screen.getByText('podman-pod')).toBeInTheDocument();
+  expect(screen.getByText('docker-pod')).toBeInTheDocument();
+
+  // Select Podman environment from dropdown
+  const dropdownContainer = screen.getByLabelText('Environment');
+  const dropdownButton = within(dropdownContainer).getByRole('button');
+  await fireEvent.click(dropdownButton);
+
+  const podmanOption = await waitFor(async () => {
+    await tick();
+    return screen.getByRole('button', { name: 'Podman' });
+  });
+  await fireEvent.click(podmanOption);
+
+  // Only podman pod should be visible
+  await waitFor(() => {
+    expect(screen.getByText('podman-pod')).toBeInTheDocument();
+    expect(screen.queryByText('docker-pod')).not.toBeInTheDocument();
+  });
 });

@@ -3,12 +3,13 @@ import { Dropdown } from '@podman-desktop/ui-svelte';
 
 import { providerInfos } from '/@/stores/providers';
 
+import { capitalize } from './Util';
+
 interface Props {
   selectedEnvironment?: string;
-  onChange?: (value: string) => void;
 }
 
-let { selectedEnvironment = $bindable(''), onChange = (): void => {} }: Props = $props();
+let { selectedEnvironment = $bindable('') }: Props = $props();
 
 // Get all running container connections
 const runningConnections = $derived(
@@ -39,10 +40,7 @@ const environmentOptions = $derived.by(() => {
 
   runningConnections.forEach(connection => {
     // Show connection type if there's only one of that type, otherwise show displayName
-    const label =
-      runningConnectionCount[connection.type] > 1
-        ? connection.displayName
-        :  capitalize(connection.type);
+    const label = runningConnectionCount[connection.type] > 1 ? connection.displayName : capitalize(connection.type);
 
     options.push({
       label,
@@ -60,7 +58,6 @@ const showDropdown = $derived(runningConnections.length > 1);
 $effect(() => {
   if (selectedEnvironment && !environmentOptions.some(opt => opt.value === selectedEnvironment)) {
     selectedEnvironment = '';
-    onChange('');
   }
 });
 
@@ -71,7 +68,6 @@ const longestLabel = $derived(
 
 function handleChange(value: string): void {
   selectedEnvironment = value;
-  onChange(value);
 }
 </script>
 
