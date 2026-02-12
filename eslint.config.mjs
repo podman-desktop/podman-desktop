@@ -320,6 +320,18 @@ export default [
 
       // reactive statements are not expressions
       'sonarjs/no-unused-expressions': 'off',
+
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../*'],
+              message: 'Parent relative imports are not allowed. Use path aliases (e.g. /@/) instead.',
+            },
+          ],
+        },
+      ],
     },
   },
 

@@ -9,8 +9,8 @@ import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
+import Steps from '/@/lib/ui/Steps.svelte';
 
-import Steps from '../ui/Steps.svelte';
 import PreflightChecks from './PreflightChecks.svelte';
 import ProviderCard from './ProviderCard.svelte';
 import { type InitializationContext, InitializationSteps, InitializeAndStartMode } from './ProviderInitUtils';

@@ -10,9 +10,9 @@ import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
+import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import { getExistingTerminal, registerTerminal } from '/@/stores/container-terminal-store';
 
-import NoLogIcon from '../ui/NoLogIcon.svelte';
 import type { ContainerInfoUI } from './ContainerInfoUI';
 
 interface ContainerDetailsTerminalProps {
