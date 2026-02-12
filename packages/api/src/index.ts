@@ -60,6 +60,7 @@ export * from './kubernetes-resource-count.js';
 export * from './kubernetes-resources.js';
 export * from './kubernetes-troubleshooting.js';
 export * from './list-organizer.js';
+export * from './log-type.js';
 export * from './manifest-info.js';
 export * from './menu.js';
 export * from './menu-context.js';

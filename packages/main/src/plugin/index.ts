@@ -84,6 +84,7 @@ import type {
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
   ListOrganizerItem,
+  LogType,
   ManifestCreateOptions,
   ManifestInspectInfo,
   ManifestPushOptions,
@@ -252,8 +253,6 @@ import { WelcomeInit } from './welcome/welcome-init.js';
 const checkDiskSpace: (path: string) => Promise<{ free: number }> = checkDiskSpacePkg as unknown as (
   path: string,
 ) => Promise<{ free: number }>;
-
-type LogType = 'log' | 'warn' | 'trace' | 'debug' | 'error';
 
 export const UPDATER_UPDATE_AVAILABLE_ICON = 'fa fa-exclamation-triangle';
 

@@ -86,6 +86,7 @@ import type {
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
   ListOrganizerItem,
+  LogType,
   ManifestCreateOptions,
   ManifestInspectInfo,
   ManifestPushOptions,
@@ -150,7 +151,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 export type OpenSaveDialogResultCallback = (result: string | string[] | undefined) => void;
 
-export type LogType = 'log' | 'warn' | 'trace' | 'debug' | 'error';
 const originalConsole = console;
 const memoryLogs: { logType: LogType; date: Date; message: string }[] = [];
 
