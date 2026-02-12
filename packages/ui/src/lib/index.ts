@@ -21,6 +21,8 @@ import Button from './button/Button.svelte';
 import CloseButton from './button/CloseButton.svelte';
 import Expandable from './button/Expandable.svelte';
 import ButtonRow from './buttonRow/ButtonRow.svelte';
+import type { SplitButtonOption } from './button/SplitButton.svelte';
+import SplitButton from './button/SplitButton.svelte';
 import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
@@ -54,7 +56,11 @@ import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
+<<<<<<< HEAD
 export type { ButtonType, IconType, ListOrganizerItem, TablePersistence, ThemedIconImage };
+=======
+export type { ButtonType, ListOrganizerItem, SplitButtonOption, TablePersistence };
+>>>>>>> 6c34d9b1aabe (feat(split-button): add SplitButton component with unit tests)
 export {
   Button,
   ButtonRow,
@@ -82,6 +88,7 @@ export {
   SearchInput,
   SettingsNavItem,
   Spinner,
+  SplitButton,
   StatusIcon,
   Tab,
   Table,
