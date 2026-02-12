@@ -73,8 +73,8 @@ const isOptionSelected = (optionId: string): boolean => selectedOptionIds.includ
 const hasActionableOption = $derived(options.some(o => !o.disabled));
 // Check if no option is selected (for button display purposes)
 const hasNoSelection = $derived(!isEmpty && hasActionableOption && selectedOptionIds.length === 0);
-// Main action is disabled if no valid selection or selected option is disabled
-const isMainDisabled = $derived(disabled || isEmpty || (selectedOption?.disabled ?? false));
+// Main action is disabled when explicitly disabled or no options exist
+const isMainDisabled = $derived(disabled || isEmpty);
 // Dropdown can be opened even if selected option is disabled (to see/change options)
 const isDropdownDisabled = $derived(disabled || isEmpty);
 // Show "no action" mode when options exist but none are actionable
