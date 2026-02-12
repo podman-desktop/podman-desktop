@@ -20,6 +20,8 @@ import type { ButtonType } from './button/Button';
 import Button from './button/Button.svelte';
 import CloseButton from './button/CloseButton.svelte';
 import Expandable from './button/Expandable.svelte';
+import type { SplitButtonOption } from './button/SplitButton.svelte';
+import SplitButton from './button/SplitButton.svelte';
 import Carousel from './carousel/Carousel.svelte';
 import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
@@ -51,7 +53,7 @@ import { tablePersistence } from './table/table-persistence-store.svelte';
 import Tooltip from './tooltip/Tooltip.svelte';
 import { isFontAwesomeIcon } from './utils/icon-utils';
 
-export type { ButtonType, ListOrganizerItem, TablePersistence };
+export type { ButtonType, ListOrganizerItem, SplitButtonOption, TablePersistence };
 export {
   Button,
   Carousel,
@@ -77,6 +79,7 @@ export {
   SearchInput,
   SettingsNavItem,
   Spinner,
+  SplitButton,
   StatusIcon,
   Tab,
   Table,

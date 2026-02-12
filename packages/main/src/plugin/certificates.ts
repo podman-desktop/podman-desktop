@@ -21,6 +21,7 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
+import type { Event } from '@podman-desktop/api';
 import type { CertificateInfo } from '@podman-desktop/core-api';
 import * as asn1js from 'asn1js';
 import { injectable } from 'inversify';
@@ -29,6 +30,7 @@ import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '/@/util.js';
 
+import { Emitter } from './events/emitter.js';
 import { spawnWithPromise } from './util/spawn-promise.js';
 
 /**
@@ -64,6 +66,9 @@ const OID_NAME_MAP: Record<string, string> = {
 @injectable()
 export class Certificates {
   private allCertificates: string[] = [];
+
+  private readonly _onDidChangeCertificates = new Emitter<void>();
+  readonly onDidChangeCertificates: Event<void> = this._onDidChangeCertificates.event;
 
   /**
    * Setup all certificates globally depending on the platform.

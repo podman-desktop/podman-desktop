@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CertificateInfo } from '@podman-desktop/core-api';
+import type { CertificateInfo, CertificateSyncTargetInfo } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 
@@ -52,3 +52,24 @@ export const searchPattern = writable('');
 export const filtered = derived([searchPattern, certificatesInfos], ([$searchPattern, $certificatesInfos]) =>
   $certificatesInfos.filter(certificateInfo => findMatchInLeaves(certificateInfo, $searchPattern.toLowerCase())),
 );
+
+// Certificate sync targets store
+export const certificateSyncTargets: Writable<CertificateSyncTargetInfo[]> = writable([]);
+
+// use helper here as window methods are initialized after the store in tests
+const getCertificateSyncTargets = (): Promise<CertificateSyncTargetInfo[]> => {
+  return window.getCertificateSyncTargets();
+};
+
+// Sync targets need to update when extensions start/stop, targets change, or machine state changes
+const syncTargetsWindowEvents = ['extensions-started', 'certificate-sync-targets-update'];
+
+export const certificateSyncTargetsEventStore = new EventStore<CertificateSyncTargetInfo[]>(
+  'certificate-sync-targets',
+  certificateSyncTargets,
+  checkForUpdate,
+  syncTargetsWindowEvents,
+  windowListeners,
+  getCertificateSyncTargets,
+);
+certificateSyncTargetsEventStore.setupWithDebounce();
