@@ -22,7 +22,8 @@ import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { Notification } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import { Disposable } from '../types/disposable.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
+
 import { TaskManager } from './task-manager.js';
 
 @injectable()

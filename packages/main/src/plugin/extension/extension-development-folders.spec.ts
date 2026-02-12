@@ -20,7 +20,8 @@ import { ExtensionDevelopmentFolderInfoSettings } from '@podman-desktop/core-api
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ConfigurationRegistry } from '../configuration-registry.js';
+import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+
 import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.js';
 import { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 

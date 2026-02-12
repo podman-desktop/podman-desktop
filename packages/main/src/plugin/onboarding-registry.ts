@@ -22,9 +22,9 @@ import type { Onboarding, OnboardingInfo, OnboardingStatus } from '@podman-deskt
 import { inject, injectable } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import { getBase64Image } from '/@/util.js';
 import productJSONFile from '/@product.json' with { type: 'json' };
 
-import { getBase64Image } from '../util.js';
 import { Context } from './context/context.js';
 import { Disposable } from './types/disposable.js';
 

@@ -21,7 +21,8 @@ import { IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import { formatName } from '../util.js';
+import { formatName } from '/@/util.js';
+
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { MessageBox } from './message-box.js';
 import { Telemetry } from './telemetry/telemetry.js';

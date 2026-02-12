@@ -28,9 +28,10 @@ import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { ContributionManager } from '../contribution-manager.js';
-import type { Directories } from '../directories.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import type { Directories } from '/@/plugin/directories.js';
+
 import { DockerDesktopInstallation } from './docker-desktop-installation.js';
 
 let dockerDesktopInstallation: TestDockerDesktopInstallation;
