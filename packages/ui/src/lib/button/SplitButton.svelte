@@ -147,6 +147,7 @@ const styles = {
     divider: 'bg-[var(--pd-button-text)]',
     border: 'border-[var(--pd-button-primary-bg)]',
     containerBg: 'bg-[var(--pd-button-primary-bg)]',
+    focusOutline: 'focus:outline-[var(--pd-button-primary-hover-bg)]',
   },
   secondary: {
     button: {
@@ -158,6 +159,7 @@ const styles = {
     divider: 'bg-[var(--pd-button-secondary)]',
     border: 'border-[var(--pd-button-secondary)]',
     containerBg: 'bg-[var(--pd-button-disabled)]',
+    focusOutline: 'focus:outline-[var(--pd-button-secondary)]',
   },
   danger: {
     button: {
@@ -169,6 +171,7 @@ const styles = {
     divider: 'bg-[var(--pd-button-danger-text)]',
     border: 'border-[var(--pd-button-danger-border)]',
     containerBg: 'bg-[var(--pd-button-danger-bg)]',
+    focusOutline: 'focus:outline-[var(--pd-button-danger-hover-bg)]',
   },
 };
 
@@ -216,7 +219,7 @@ const buttonLabel = $derived.by(() => {
     <!-- Main action button -->
     <button
       type="button"
-      class="relative px-4 py-[5px] whitespace-nowrap select-none transition-all outline-transparent focus:outline-[var(--pd-button-primary-hover-bg)] rounded-l-[4px] {mainClasses}"
+      class="relative px-4 py-[5px] whitespace-nowrap select-none transition-all outline-transparent {currentStyle.focusOutline} rounded-l-[4px] {mainClasses}"
       title={title}
       aria-label={ariaLabel}
       onclick={handleMainClick}
@@ -242,7 +245,7 @@ const buttonLabel = $derived.by(() => {
     <!-- Dropdown toggle button -->
     <button
       type="button"
-      class="px-2 py-[5px] self-stretch flex items-center transition-all outline-transparent focus:outline-[var(--pd-button-primary-hover-bg)] rounded-r-[4px] {dropdownClasses}"
+      class="px-2 py-[5px] self-stretch flex items-center transition-all outline-transparent {currentStyle.focusOutline} rounded-r-[4px] {dropdownClasses}"
       aria-label="Select action"
       aria-haspopup="listbox"
       aria-expanded={showDropdown}
