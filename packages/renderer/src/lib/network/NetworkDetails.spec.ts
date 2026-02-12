@@ -29,6 +29,8 @@ import { networksListInfo } from '/@/stores/networks';
 
 import NetworkDetails from './NetworkDetails.svelte';
 
+vi.mock(import('/@/lib/editor/MonacoEditor.svelte'));
+
 const network1: NetworkInspectInfo = {
   engineId: 'podman1',
   engineName: 'Podman 1',
