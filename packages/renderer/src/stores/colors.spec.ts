@@ -23,6 +23,8 @@ import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
+
 import { colorsEventStore, colorsInfos } from './colors';
 
 const callbacks = new Map<string, any>();
@@ -32,13 +34,7 @@ const eventEmitter = {
   },
 };
 
-vi.mock('../lib/appearance/appearance-util', () => {
-  return {
-    AppearanceUtil: class {
-      getTheme = async (): Promise<string> => 'light';
-    },
-  };
-});
+vi.mock(import('/@/lib/appearance/appearance-util'));
 
 const listColorsMock: Mock<() => Promise<ColorInfo[]>> = vi.fn();
 
@@ -56,6 +52,7 @@ Object.defineProperty(global, 'window', {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(AppearanceUtil.prototype.getTheme).mockResolvedValue('light');
 });
 
 test('grab colors', async () => {
