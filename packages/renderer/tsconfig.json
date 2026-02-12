@@ -11,7 +11,8 @@
     "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"],
-      "/@api/*": ["../api/src/*"]
+      "/@api/*": ["../api/src/*"],
+      "/@svelte-ui/*": ["../ui/dist/*"]
     },
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.

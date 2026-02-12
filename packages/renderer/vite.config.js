@@ -36,6 +36,7 @@ export default defineConfig({
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
       '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
+      '/@svelte-ui/': join(PACKAGE_ROOT, '../ui/dist') + '/',
     },
   },
   plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js', hot: !process.env.VITEST }), svelteTesting()],
