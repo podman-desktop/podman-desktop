@@ -22,15 +22,14 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import type { v1 } from '@docker/extension-api-client-types';
+import type { PullEvent } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
 import type { Method, OptionsOfTextResponseBody } from 'got';
 import got, { RequestError } from 'got';
 import * as tarFs from 'tar-fs';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { PullEvent } from '/@api/pull-event.js';
 
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { ContributionManager } from '../contribution-manager.js';

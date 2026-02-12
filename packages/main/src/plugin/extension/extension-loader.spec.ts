@@ -22,6 +22,16 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type {
+  BuildImageOptions as InternalBuildImageOptions,
+  ContributionInfo,
+  IDisposable,
+  OnboardingInfo,
+  PodInspectInfo,
+  WebviewInfo,
+} from '@podman-desktop/core-api';
+import { ExtensionLoaderSettings, NavigationPage } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { app } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -32,15 +42,6 @@ import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { KubeGeneratorRegistry } from '/@/plugin/kubernetes/kube-generator-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ContributionInfo } from '/@api/contribution-info.js';
-import type { IDisposable } from '/@api/disposable.js';
-import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
-import type { BuildImageOptions as InternalBuildImageOptions } from '/@api/image-info.js';
-import { NavigationPage } from '/@api/navigation-page.js';
-import type { OnboardingInfo } from '/@api/onboarding.js';
-import type { PodInspectInfo } from '/@api/pod-info.js';
-import type { WebviewInfo } from '/@api/webview-info.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { getBase64Image } from '../../util.js';

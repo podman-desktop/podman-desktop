@@ -18,8 +18,9 @@
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
 
+import type { ForwardConfig } from '@podman-desktop/core-api';
+
 import type { Directories } from '/@/plugin/directories.js';
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model.js';
 
 /**
  * Interface for forward configuration storage.

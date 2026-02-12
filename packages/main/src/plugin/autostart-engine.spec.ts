@@ -17,11 +17,10 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
+import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '@podman-desktop/core-api/configuration';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
-import type { IConfigurationNode } from '/@api/configuration/models.js';
 
 import { AutostartEngine } from './autostart-engine.js';
 import { ConfigurationRegistry } from './configuration-registry.js';

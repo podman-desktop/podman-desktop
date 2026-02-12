@@ -18,8 +18,7 @@
 
 import type { KubernetesListObject } from '@kubernetes/client-node';
 import { CustomObjectsApi } from '@kubernetes/client-node';
-
-import type { V1Route } from '/@api/openshift-types.js';
+import type { V1Route } from '@podman-desktop/core-api';
 
 import type { KubeConfigSingleContext } from './kubeconfig-single-context.js';
 import type { ResourceFactory } from './resource-factory.js';

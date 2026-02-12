@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
-
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { PreferredRegistriesSettings } from '/@api/prefered-registries-info.js';
 
 @injectable()
 export class RegistryInit {

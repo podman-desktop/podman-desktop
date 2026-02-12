@@ -18,10 +18,9 @@
 
 import { createHash } from 'node:crypto';
 
+import { DocumentationBaseInfo, DocumentationInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { DocumentationBaseInfo, DocumentationInfo } from '/@api/documentation-info.js';
 
 import fallbackDocumentation from '../../assets/fallback-documentation.json' with { type: 'json' };
 import { Disposable } from '../types/disposable.js';

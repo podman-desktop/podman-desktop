@@ -19,10 +19,10 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Event, Webview, WebviewOptions } from '@podman-desktop/api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { Uri } from '/@/plugin/types/uri.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 export class WebviewImpl implements Webview {
   readonly #apiSender: ApiSenderType;

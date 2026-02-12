@@ -17,11 +17,10 @@
  ***********************************************************************/
 
 import type * as extensionApi from '@podman-desktop/api';
+import type { ColorDefinition, ColorInfo, RawThemeContribution } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ColorDefinition, ColorInfo } from '/@api/color-info.js';
-import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import { isWindows } from '../util.js';

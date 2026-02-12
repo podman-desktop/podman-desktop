@@ -17,14 +17,13 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
-import type { BrowserWindow } from 'electron';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-
 import type {
   IConfigurationChangeEvent,
   IConfigurationPropertyRecordedSchema,
   IConfigurationRegistry,
-} from '/@api/configuration/models.js';
+} from '@podman-desktop/core-api/configuration';
+import type { BrowserWindow } from 'electron';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { AppearanceSettings } from './appearance-settings.js';
 import { Emitter } from './events/emitter.js';

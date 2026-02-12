@@ -21,13 +21,13 @@ import type * as http from 'node:http';
 import { resolve } from 'node:path';
 
 import type * as podmanDesktopAPI from '@podman-desktop/api';
+import type { WebviewInfo, WebviewSimpleInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { Application } from 'express';
 import express from 'express';
 import { inject, injectable } from 'inversify';
 
 import { Uri } from '/@/plugin/types/uri.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { WebviewInfo, WebviewSimpleInfo } from '/@api/webview-info.js';
 
 import { getFreePort } from '../util/port.js';
 import { DevToolsManager } from './devtools-manager.js';

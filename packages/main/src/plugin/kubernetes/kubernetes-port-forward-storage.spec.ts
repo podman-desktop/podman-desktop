@@ -19,6 +19,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
+import type { ForwardConfig } from '@podman-desktop/core-api';
+import { WorkloadKind } from '@podman-desktop/core-api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Directories } from '/@/plugin/directories.js';
@@ -30,8 +32,6 @@ import {
   MemoryBasedStorage,
   PreferenceFolderBasedStorage,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-storage.js';
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model.js';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
 vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn(),

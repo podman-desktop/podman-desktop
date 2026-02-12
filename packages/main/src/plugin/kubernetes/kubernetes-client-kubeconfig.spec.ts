@@ -17,10 +17,10 @@
  ***********************************************************************/
 
 import type { Cluster, Context, KubeConfig, User } from '@kubernetes/client-node';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';

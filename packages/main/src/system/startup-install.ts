@@ -18,7 +18,8 @@
 
 import * as os from 'node:os';
 
-import type { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+
 import product from '/@product.json' with { type: 'json' };
 
 import { MacosStartup } from './macos-startup.js';

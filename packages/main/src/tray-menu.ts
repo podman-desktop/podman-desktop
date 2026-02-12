@@ -17,10 +17,9 @@
  ***********************************************************************/
 
 import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import type { MenuItemConstructorOptions, NativeImage, Tray } from 'electron';
 import { app, ipcMain, Menu, nativeImage } from 'electron';
-
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
 
 import statusBusy from './assets/status-busy.png';
 import statusStarted from './assets/status-started.png';

@@ -19,12 +19,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { Router } from 'express';
 import type express from 'express';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import type { DevToolsManager } from './devtools-manager.js';
 import type { WebviewPanelImpl } from './webview-panel-impl.js';

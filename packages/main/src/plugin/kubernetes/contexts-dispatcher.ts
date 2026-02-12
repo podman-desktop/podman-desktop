@@ -17,8 +17,7 @@
  ***********************************************************************/
 
 import type { KubeConfig } from '@kubernetes/client-node';
-
-import type { Event } from '/@api/event.js';
+import type { Event } from '@podman-desktop/core-api';
 
 import { Emitter } from '../events/emitter.js';
 import { KubeConfigSingleContext } from './kubeconfig-single-context.js';

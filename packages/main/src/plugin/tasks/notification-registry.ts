@@ -17,11 +17,10 @@
  ***********************************************************************/
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type { NotificationCard, NotificationCardOptions } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { Notification } from 'electron';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
 
 import { Disposable } from '../types/disposable.js';
 import { TaskManager } from './task-manager.js';

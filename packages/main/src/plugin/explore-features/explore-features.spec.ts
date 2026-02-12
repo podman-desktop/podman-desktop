@@ -20,13 +20,16 @@ import { existsSync, promises } from 'node:fs';
 import path from 'node:path';
 
 import type { Configuration } from '@podman-desktop/api';
+import type {
+  ContainerInfo,
+  ExploreFeature,
+  ExtensionInfo,
+  ProviderInfo,
+  ProviderKubernetesConnectionInfo,
+} from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { Context } from '/@/plugin/context/context.js';
-import type { ContainerInfo } from '/@api/container-info.js';
-import type { ExploreFeature } from '/@api/explore-feature.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { ProviderInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info.js';
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';
 import type { ContainerProviderRegistry } from '../container-registry.js';

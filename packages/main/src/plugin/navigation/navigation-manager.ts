@@ -17,16 +17,15 @@
  ***********************************************************************/
 
 import type { NavigateToExtensionsCatalogOptions, ProviderContainerConnection } from '@podman-desktop/api';
+import type { NavigationRequest } from '@podman-desktop/core-api';
+import { IDisposable, NavigationPage } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { ContributionManager } from '/@/plugin/contribution-manager.js';
 import { OnboardingRegistry } from '/@/plugin/onboarding-registry.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { IDisposable } from '/@api/disposable.js';
-import { NavigationPage } from '/@api/navigation-page.js';
-import type { NavigationRequest } from '/@api/navigation-request.js';
 
 import { ProviderRegistry } from '../provider-registry.js';
 import { Disposable } from '../types/disposable.js';

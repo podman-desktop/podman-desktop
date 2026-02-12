@@ -25,6 +25,10 @@ import type {
   TelemetrySender,
   TelemetryTrustedValue,
 } from '@podman-desktop/api';
+import type { Event, FeedbackProperties } from '@podman-desktop/core-api';
+import { TelemetryMessages } from '@podman-desktop/core-api';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { TelemetrySettings } from '@podman-desktop/core-api/telemetry';
 import type { EventProperties } from '@segment/analytics-core';
 import { Analytics, type UserTraits } from '@segment/analytics-node';
 import { app } from 'electron';
@@ -35,11 +39,6 @@ import * as osLocale from 'os-locale';
 
 import { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { Event } from '/@api/event.js';
-import type { FeedbackProperties } from '/@api/feedback.js';
-import { TelemetryMessages } from '/@api/telemetry.js';
-import { TelemetrySettings } from '/@api/telemetry/telemetry-settings.js';
 import product from '/@product.json' with { type: 'json' };
 
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };

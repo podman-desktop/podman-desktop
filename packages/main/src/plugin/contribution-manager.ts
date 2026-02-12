@@ -20,11 +20,10 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { RunResult } from '@podman-desktop/api';
+import type { ContributionInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ContributionInfo } from '/@api/contribution-info.js';
 
 import { isMac, isUnixLike, isWindows } from '../util.js';
 import { ContainerProviderRegistry } from './container-registry.js';

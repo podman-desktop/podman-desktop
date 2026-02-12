@@ -19,15 +19,14 @@
 import * as fs from 'node:fs';
 
 import type { RequestConfig } from '@docker/extension-api-client-types/dist/v1/http-service.js';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
 import type { Method } from 'got';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 
 import type { ContainerProviderRegistry } from '../container-registry.js';
 import type { ContributionManager } from '../contribution-manager.js';

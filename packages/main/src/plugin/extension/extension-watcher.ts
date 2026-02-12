@@ -17,11 +17,10 @@
  ***********************************************************************/
 
 import type { FileSystemWatcher, Uri } from '@podman-desktop/api';
+import type { Event } from '@podman-desktop/core-api';
+import { IDisposable } from '@podman-desktop/core-api';
 import type { FileMatcher } from 'get-tsconfig';
 import { inject, injectable } from 'inversify';
-
-import { IDisposable } from '/@api/disposable.js';
-import type { Event } from '/@api/event.js';
 
 import { Emitter } from '../events/emitter.js';
 import { FilesystemMonitoring } from '../filesystem-monitoring.js';

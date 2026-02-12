@@ -45,15 +45,14 @@ import {
 } from '@kubernetes/client-node';
 import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
+import type { type ForwardConfig, type ForwardOptions, V1Route, WorkloadKind } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { type ForwardConfig, type ForwardOptions, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
-import type { V1Route } from '/@api/openshift-types.js';
 
 import { Emitter } from '../events/emitter.js';
 import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';

@@ -20,13 +20,12 @@ import { cpSync, existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import type { Event, NotificationCardOptions } from '@podman-desktop/core-api';
 import { safeStorage } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { Directories } from '/@/plugin/directories.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
-import type { Event } from '/@api/event.js';
-import type { NotificationCardOptions } from '/@api/notification.js';
 
 /**
  * Manage the storage of string being encrypted on disk

@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import type { App } from 'electron';
 import { app, BrowserWindow, Menu } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import type { IConfigurationChangeEvent, IConfigurationRegistry } from '/@api/configuration/models.js';
 
 import { mainWindowDeferred } from './index.js';
 import { Emitter } from './plugin/events/emitter.js';

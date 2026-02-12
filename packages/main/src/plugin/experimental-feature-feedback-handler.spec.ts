@@ -17,10 +17,9 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { shell } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { ExperimentalConfiguration, Timestamp } from './experimental-feature-feedback-handler.js';

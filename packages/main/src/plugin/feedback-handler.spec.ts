@@ -18,13 +18,12 @@
 
 import { release } from 'node:os';
 
+import type { ExtensionInfo, GitHubIssue } from '@podman-desktop/core-api';
 import { shell } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { GitHubIssue } from '/@api/feedback.js';
 import productJSONFile from '/@product.json' with { type: 'json' };
 
 import { FeedbackHandler } from './feedback-handler.js';

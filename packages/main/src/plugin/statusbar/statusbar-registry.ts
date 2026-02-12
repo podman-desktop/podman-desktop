@@ -16,11 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { IDisposable } from '@podman-desktop/core-api';
+import {
+  STATUS_BAR_UPDATED_EVENT_NAME,
+  type StatusBarEntry,
+  type StatusBarEntryDescriptor,
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { IDisposable } from '/@api/disposable.js';
-import { STATUS_BAR_UPDATED_EVENT_NAME, type StatusBarEntry, type StatusBarEntryDescriptor } from '/@api/status-bar.js';
 
 @injectable()
 export class StatusBarRegistry implements IDisposable {

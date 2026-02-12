@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
+import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
@@ -23,8 +25,6 @@ import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-c
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import { ExtensionsUpdater } from './extensions-updater.js';
 

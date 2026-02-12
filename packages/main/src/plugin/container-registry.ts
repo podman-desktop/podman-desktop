@@ -25,6 +25,51 @@ import { Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type {
+  BuildImageOptions,
+  ContainerCreateOptions,
+  ContainerExportOptions,
+  ContainerImportOptions,
+  ContainerInfo,
+  ContainerInspectInfo,
+  ContainerPortInfo,
+  ContainerStatsInfo,
+  Event,
+  HistoryInfo,
+  ImageInfo,
+  ImageInspectInfo,
+  ImageLoadOptions,
+  ImagesSaveOptions,
+  LibPodPodInfo,
+  ListImagesOptions,
+  ManifestCreateOptions,
+  ManifestInspectInfo,
+  ManifestPushOptions,
+  NetworkCreateOptions,
+  NetworkCreateResult,
+  NetworkInspectInfo,
+  PodCreateOptions,
+  PodInfo,
+  PodInspectInfo,
+  PodmanListImagesOptions,
+  ProviderContainerConnectionInfo,
+  PullEvent,
+  SimpleContainerInfo,
+  VolumeCreateOptions,
+  VolumeCreateResponseInfo,
+  VolumeInfo,
+  VolumeInspectInfo,
+  VolumeListInfo,
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type {
+  ContainerCreateMountOption,
+  ContainerCreateNetNSOption,
+  ContainerCreateOptions as PodmanContainerCreateOptions,
+  ContainerCreatePortMappingOption,
+  PodmanDevice,
+} from '@podman-desktop/core-api/libpod';
+import { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import datejs from 'date.js';
 import type { ContainerAttachOptions, ImageBuildOptions } from 'dockerode';
 import Dockerode from 'dockerode';
@@ -36,41 +81,6 @@ import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type {
-  ContainerCreateOptions,
-  ContainerExportOptions,
-  ContainerImportOptions,
-  ContainerInfo,
-  ContainerPortInfo,
-  ImageLoadOptions,
-  ImagesSaveOptions,
-  NetworkCreateOptions,
-  NetworkCreateResult,
-  SimpleContainerInfo,
-  VolumeCreateOptions,
-  VolumeCreateResponseInfo,
-} from '/@api/container-info.js';
-import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
-import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
-import type { Event } from '/@api/event.js';
-import type { HistoryInfo } from '/@api/history-info.js';
-import type { BuildImageOptions, ImageInfo, ListImagesOptions, PodmanListImagesOptions } from '/@api/image-info.js';
-import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
-import type {
-  ContainerCreateMountOption,
-  ContainerCreateNetNSOption,
-  ContainerCreateOptions as PodmanContainerCreateOptions,
-  ContainerCreatePortMappingOption,
-  PodmanDevice,
-} from '/@api/libpod/libpod.js';
-import { PlayKubeInfo } from '/@api/libpod/libpod.js';
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
-import type { NetworkInspectInfo } from '/@api/network-info.js';
-import type { LibPodPodInfo, PodCreateOptions, PodInfo, PodInspectInfo } from '/@api/pod-info.js';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
-import type { PullEvent } from '/@api/pull-event.js';
-import type { VolumeInfo, VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
 
 import { isWindows } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';

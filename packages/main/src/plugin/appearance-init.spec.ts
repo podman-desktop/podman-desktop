@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
 import { nativeTheme } from 'electron';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
 
 import { AppearanceInit } from './appearance-init.js';
 import { AppearanceSettings } from './appearance-settings.js';

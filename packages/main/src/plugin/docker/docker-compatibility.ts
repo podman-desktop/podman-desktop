@@ -18,16 +18,16 @@
 
 import { promises } from 'node:fs';
 
-import Dockerode from 'dockerode';
-import { inject, injectable } from 'inversify';
-
-import { isMac, isWindows } from '/@/util.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
 import {
   DockerCompatibilitySettings,
   type DockerSocketMappingStatusInfo,
   type DockerSocketServerInfoType,
-} from '/@api/docker-compatibility-info.js';
+} from '@podman-desktop/core-api';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import Dockerode from 'dockerode';
+import { inject, injectable } from 'inversify';
+
+import { isMac, isWindows } from '/@/util.js';
 
 import type { LibPod } from '../dockerode/libpod-dockerode.js';
 import { ProviderRegistry } from '../provider-registry.js';

@@ -15,9 +15,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import { WelcomeMessages } from '@podman-desktop/core-api';
 import { injectable } from 'inversify';
 
-import { WelcomeMessages } from '/@api/welcome-info.js';
 import productJSONFile from '/@product.json' with { type: 'json' };
 
 @injectable()

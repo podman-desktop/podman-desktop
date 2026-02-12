@@ -18,10 +18,10 @@
 
 import * as path from 'node:path';
 
+import type { Onboarding, OnboardingInfo, OnboardingStatus } from '@podman-desktop/core-api';
 import { inject, injectable } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
-import type { Onboarding, OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
 import productJSONFile from '/@product.json' with { type: 'json' };
 
 import { getBase64Image } from '../util.js';

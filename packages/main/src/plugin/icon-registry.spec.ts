@@ -18,10 +18,10 @@
 
 import path from 'node:path';
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import { IconRegistry } from './icon-registry.js';
 

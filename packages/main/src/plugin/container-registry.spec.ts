@@ -24,6 +24,15 @@ import { PassThrough, Readable } from 'node:stream';
 import * as streamPromises from 'node:stream/promises';
 
 import type * as podmanDesktopAPI from '@podman-desktop/api';
+import type {
+  ContainerCreateOptions,
+  ContainerInspectInfo,
+  HostConfig,
+  ImageInfo,
+  ProviderContainerConnectionInfo,
+} from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '@podman-desktop/core-api/libpod';
 import Dockerode from 'dockerode';
 import moment from 'moment';
 import { http, HttpResponse } from 'msw';
@@ -39,12 +48,6 @@ import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ContainerCreateOptions, HostConfig } from '/@api/container-info.js';
-import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
-import type { ImageInfo } from '/@api/image-info.js';
-import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '/@api/libpod/libpod.js';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
 
 import * as util from '../util.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';

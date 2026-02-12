@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { CatalogExtension, CatalogFetchableExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
 import got from 'got';
 import { HttpProxyAgent, HttpsProxyAgent } from 'hpagent';
@@ -25,9 +28,6 @@ import { coerce, satisfies } from 'semver';
 import { Certificates } from '/@/plugin/certificates.js';
 import { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import { Proxy } from '/@/plugin/proxy.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { CatalogExtension, CatalogFetchableExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { ExtensionsCatalogSettings } from './extensions-catalog-settings.js';

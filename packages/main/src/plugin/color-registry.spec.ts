@@ -16,6 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ColorDefinition, RawThemeContribution } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -23,10 +26,6 @@ import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ColorDefinition } from '/@api/color-info.js';
-import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
-import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';

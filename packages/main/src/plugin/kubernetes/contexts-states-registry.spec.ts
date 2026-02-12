@@ -15,9 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { describe, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import { ContextsStatesRegistry, isSecondaryResourceName } from './contexts-states-registry.js';
 

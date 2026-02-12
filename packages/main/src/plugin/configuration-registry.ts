@@ -22,24 +22,21 @@ import * as path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import {
-  CONFIGURATION_DEFAULT_SCOPE,
-  CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
-  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
-} from '/@api/configuration/constants.js';
+import type { Event, IDisposable, NotificationCardOptions } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type {
   ConfigurationScope,
   IConfigurationChangeEvent,
   IConfigurationNode,
   IConfigurationPropertyRecordedSchema,
   IConfigurationRegistry,
-} from '/@api/configuration/models.js';
-import type { IDisposable } from '/@api/disposable.js';
-import type { Event } from '/@api/event.js';
-import type { NotificationCardOptions } from '/@api/notification.js';
+} from '@podman-desktop/core-api/configuration';
+import {
+  CONFIGURATION_DEFAULT_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
+  CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
+} from '@podman-desktop/core-api/configuration';
+import { inject, injectable } from 'inversify';
 
 import { ConfigurationImpl } from './configuration-impl.js';
 import { DefaultConfiguration } from './default-configuration.js';

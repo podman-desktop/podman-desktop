@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Configuration, ProxySettings } from '@podman-desktop/api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { delay, http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -26,7 +27,6 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
 import type { Proxy } from '/@/plugin/proxy.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import { ExtensionsCatalog } from './extensions-catalog.js';
 

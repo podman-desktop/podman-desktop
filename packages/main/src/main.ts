@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { IDisposable } from '@podman-desktop/core-api';
 import type { App as ElectronApp, BrowserWindow } from 'electron';
 
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
@@ -22,7 +23,6 @@ import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-clie
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
-import type { IDisposable } from '/@api/disposable.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';

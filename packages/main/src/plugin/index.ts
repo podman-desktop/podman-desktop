@@ -42,6 +42,107 @@ import type {
   V1Service,
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type {
+  CertificateInfo,
+  CliToolInfo,
+  ColorInfo,
+  CommandInfo,
+  ContainerCreateOptions,
+  ContainerExportOptions,
+  ContainerImportOptions,
+  ContainerInfo,
+  ContainerInspectInfo,
+  ContainerStatsInfo,
+  ContextGeneralState,
+  ContextHealth,
+  ContextPermission,
+  ContributionInfo,
+  DockerSocketMappingStatusInfo,
+  DocumentationInfo,
+  ExtensionDevelopmentFolderInfo,
+  ExtensionInfo,
+  FeedbackMessages,
+  FeedbackProperties,
+  ForwardConfig,
+  ForwardOptions,
+  GitHubIssue,
+  HistoryInfo,
+  IconInfo,
+  IDisposable,
+  ImageCheckerInfo,
+  ImageFilesInfo,
+  ImageFilesystemLayersUI,
+  ImageInfo,
+  ImageInspectInfo,
+  ImageLoadOptions,
+  ImageSearchOptions,
+  ImageSearchResult,
+  ImagesSaveOptions,
+  ImageTagsListOptions,
+  ImageUpdateStatus,
+  KubeContext,
+  KubernetesContextResources,
+  KubernetesTroubleshootingInformation,
+  ListOrganizerItem,
+  ManifestCreateOptions,
+  ManifestInspectInfo,
+  ManifestPushOptions,
+  Menu,
+  MessageBoxOptions,
+  MessageBoxReturnValue,
+  NetworkCreateOptions,
+  NetworkCreateResult,
+  NetworkInspectInfo,
+  NotificationCard,
+  NotificationCardOptions,
+  OnboardingInfo,
+  OnboardingStatus,
+  PodInfo,
+  PodInspectInfo,
+  PodmanListImagesOptions,
+  PreflightCheckEvent,
+  PreflightChecksCallback,
+  ProviderConnectionInfo,
+  ProviderContainerConnectionInfo,
+  ProviderInfo,
+  ProviderKubernetesConnectionInfo,
+  ProxyState,
+  PullEvent,
+  ReleaseNotesInfo,
+  ResourceCount,
+  ResourceName,
+  SimpleContainerInfo,
+  StatusBarEntryDescriptor,
+  TelemetryMessages,
+  V1Route,
+  ViewInfoUI,
+  VolumeCreateOptions,
+  VolumeCreateResponseInfo,
+  VolumeInspectInfo,
+  VolumeListInfo,
+  WebviewInfo,
+  WelcomeMessages,
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { AuthenticationProviderInfo } from '@podman-desktop/core-api/authentication';
+import {
+  type IConfigurationPropertyRecordedSchema,
+  IConfigurationRegistry,
+} from '@podman-desktop/core-api/configuration';
+import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
+import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
+import type {
+  GenerateKubeResult,
+  KubernetesGeneratorArgument,
+  KubernetesGeneratorInfo,
+  KubernetesGeneratorSelector,
+} from '@podman-desktop/core-api/kubernetes';
+import type {
+  ContainerCreateOptions as PodmanContainerCreateOptions,
+  PlayKubeInfo,
+} from '@podman-desktop/core-api/libpod';
+import type { ExtensionBanner, RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
+import type { PinOption } from '@podman-desktop/core-api/status-bar';
 import checkDiskSpacePkg from 'check-disk-space';
 import type Dockerode from 'dockerode';
 import type { IpcMainEvent, WebContents } from 'electron';
@@ -63,93 +164,6 @@ import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Uri } from '/@/plugin/types/uri.js';
 import { Updater } from '/@/plugin/updater.js';
 import { Welcome } from '/@/plugin/welcome.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { AuthenticationProviderInfo } from '/@api/authentication/authentication.js';
-import type { CertificateInfo } from '/@api/certificate-info.js';
-import type { CliToolInfo } from '/@api/cli-tool-info.js';
-import type { ColorInfo } from '/@api/color-info.js';
-import type { CommandInfo } from '/@api/command-info.js';
-import { type IConfigurationPropertyRecordedSchema, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type {
-  ContainerCreateOptions,
-  ContainerExportOptions,
-  ContainerImportOptions,
-  ContainerInfo,
-  ImageLoadOptions,
-  ImagesSaveOptions,
-  NetworkCreateOptions,
-  NetworkCreateResult,
-  SimpleContainerInfo,
-  VolumeCreateOptions,
-  VolumeCreateResponseInfo,
-} from '/@api/container-info.js';
-import type { ContainerInspectInfo } from '/@api/container-inspect-info.js';
-import type { ContainerStatsInfo } from '/@api/container-stats-info.js';
-import type { ContributionInfo } from '/@api/contribution-info.js';
-import type { MessageBoxOptions, MessageBoxReturnValue } from '/@api/dialog.js';
-import type { IDisposable } from '/@api/disposable.js';
-import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info.js';
-import type { DocumentationInfo } from '/@api/documentation-info.js';
-import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
-import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { FeaturedExtension } from '/@api/featured/featured-api.js';
-import type { FeedbackMessages, FeedbackProperties, GitHubIssue } from '/@api/feedback.js';
-import type { HistoryInfo } from '/@api/history-info.js';
-import type { IconInfo } from '/@api/icon-info.js';
-import type { ImageCheckerInfo } from '/@api/image-checker-info.js';
-import type { ImageFilesInfo } from '/@api/image-files-info.js';
-import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
-import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
-import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
-import type {
-  ImageSearchOptions,
-  ImageSearchResult,
-  ImageTagsListOptions,
-  ImageUpdateStatus,
-} from '/@api/image-registry.js';
-import type {
-  GenerateKubeResult,
-  KubernetesGeneratorArgument,
-  KubernetesGeneratorInfo,
-  KubernetesGeneratorSelector,
-} from '/@api/kubernetes/kubernetes-generator-api.js';
-import type { KubeContext } from '/@api/kubernetes-context.js';
-import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
-import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
-import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
-import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
-import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
-import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
-import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
-import type { ContainerCreateOptions as PodmanContainerCreateOptions, PlayKubeInfo } from '/@api/libpod/libpod.js';
-import type { ListOrganizerItem } from '/@api/list-organizer.js';
-import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '/@api/manifest-info.js';
-import type { Menu } from '/@api/menu.js';
-import type { NetworkInspectInfo } from '/@api/network-info.js';
-import type { NotificationCard, NotificationCardOptions } from '/@api/notification.js';
-import type { OnboardingInfo, OnboardingStatus } from '/@api/onboarding.js';
-import type { V1Route } from '/@api/openshift-types.js';
-import type { PodInfo, PodInspectInfo } from '/@api/pod-info.js';
-import type {
-  PreflightCheckEvent,
-  PreflightChecksCallback,
-  ProviderConnectionInfo,
-  ProviderContainerConnectionInfo,
-  ProviderInfo,
-  ProviderKubernetesConnectionInfo,
-} from '/@api/provider-info.js';
-import type { ProxyState } from '/@api/proxy.js';
-import type { PullEvent } from '/@api/pull-event.js';
-import type { ExtensionBanner, RecommendedRegistry } from '/@api/recommendations/recommendations.js';
-import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
-import type { StatusBarEntryDescriptor } from '/@api/status-bar.js';
-import type { PinOption } from '/@api/status-bar/pin-option.js';
-import type { TelemetryMessages } from '/@api/telemetry.js';
-import type { ViewInfoUI } from '/@api/view-info.js';
-import type { VolumeInspectInfo, VolumeListInfo } from '/@api/volume-info.js';
-import type { WebviewInfo } from '/@api/webview-info.js';
-import type { WelcomeMessages } from '/@api/welcome-info.js';
 
 import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
 import { TrayMenu } from '../tray-menu.js';

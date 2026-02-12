@@ -56,11 +56,8 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { Event } from '/@api/event.js';
 import type {
+  Event,
   LifecycleMethod,
   PreflightChecksCallback,
   ProviderCleanupActionInfo,
@@ -69,7 +66,9 @@ import type {
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
-} from '/@api/provider-info.js';
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { inject, injectable } from 'inversify';
 
 import type { AutostartEngine } from './autostart-engine.js';
 import { ContainerProviderRegistry } from './container-registry.js';

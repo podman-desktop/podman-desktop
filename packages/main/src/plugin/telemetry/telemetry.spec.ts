@@ -17,14 +17,13 @@
  ***********************************************************************/
 
 import type { TelemetrySender } from '@podman-desktop/api';
+import type { ExtensionInfo, TelemetryMessages } from '@podman-desktop/core-api';
+import { TelemetrySettings } from '@podman-desktop/core-api/telemetry';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { TelemetryMessages } from '/@api/telemetry.js';
-import { TelemetrySettings } from '/@api/telemetry/telemetry-settings.js';
 import product from '/@product.json' with { type: 'json' };
 
 import type { ConfigurationRegistry } from '../configuration-registry.js';

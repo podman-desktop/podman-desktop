@@ -15,14 +15,13 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { injectable } from 'inversify';
-
 import type {
   GenerateKubeResult,
   KubernetesGeneratorArgument,
   KubernetesGeneratorInfo,
   KubernetesGeneratorSelector,
-} from '/@api/kubernetes/kubernetes-generator-api.js';
+} from '@podman-desktop/core-api/kubernetes';
+import { injectable } from 'inversify';
 
 import { Disposable } from '../types/disposable.js';
 

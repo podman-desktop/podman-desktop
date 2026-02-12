@@ -21,6 +21,8 @@ import { cp } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IpcMainEvent } from 'electron';
 import { inject, injectable } from 'inversify';
 
@@ -29,8 +31,6 @@ import { Directories } from '/@/plugin/directories.js';
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
 
 import { ContributionManager } from '../contribution-manager.js';
 import { DockerDesktopContribution, DockerDesktopInstaller } from '../docker-extension/docker-desktop-installer.js';

@@ -19,14 +19,12 @@
 import type { RequestOptions } from 'node:http';
 
 import type { ManifestCreateOptions, ManifestInspectInfo, ManifestPushOptions } from '@podman-desktop/api';
+import type { ImageInfo, LibPodPodInfo, LibPodPodInspectInfo, PodmanListImagesOptions } from '@podman-desktop/core-api';
+import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';
 import type { DialOptions } from 'docker-modem';
 import type { VolumeCreateOptions, VolumeCreateResponse } from 'dockerode';
 import Dockerode from 'dockerode';
-
-import type { ImageInfo, PodmanListImagesOptions } from '/@api/image-info.js';
-import type { ContainerCreateOptions, PlayKubeInfo, PodCreatePortOptions } from '/@api/libpod/libpod.js';
-import type { LibPodPodInfo, LibPodPodInspectInfo } from '/@api/pod-info.js';
 
 export interface PodCreateOptions {
   name?: string;

@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { inject, injectable } from 'inversify';
-
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { TerminalSettings } from '/@api/terminal/terminal-settings.js';
 
 @injectable()
 export class TerminalInit {

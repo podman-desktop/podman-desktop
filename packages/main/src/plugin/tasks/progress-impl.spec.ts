@@ -18,11 +18,11 @@
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 
+import type { TaskState, TaskStatus } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { TaskAction } from '/@/plugin/tasks/tasks.js';
-import type { TaskState, TaskStatus } from '/@api/taskInfo.js';
 
 import { CancellationTokenSource } from '../cancellation-token.js';
 import type { CancellationTokenRegistry } from '../cancellation-token-registry.js';

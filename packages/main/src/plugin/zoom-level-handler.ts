@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IDisposable } from '@podman-desktop/core-api';
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import type { BrowserWindow } from 'electron';
-
-import type { IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { IDisposable } from '/@api/disposable.js';
 
 import { AppearanceSettings } from './appearance-settings.js';
 

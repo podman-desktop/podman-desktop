@@ -17,12 +17,12 @@
  ***********************************************************************/
 
 import type { Event, ProxySettings } from '@podman-desktop/api';
+import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 import { Agent, ProxyAgent } from 'undici';
 
 import { Certificates } from '/@/plugin/certificates.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { PROXY_CONFIG_KEYS, ProxyState } from '/@api/proxy.js';
 
 import { Emitter } from './events/emitter.js';
 import { getProxyUrl } from './proxy-resolver.js';

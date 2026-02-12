@@ -20,6 +20,16 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type {
+  Event,
+  ExtensionError,
+  ExtensionInfo,
+  ExtensionUpdateInfo,
+  ImageInspectInfo,
+} from '@podman-desktop/core-api';
+import { DEFAULT_TIMEOUT, ExtensionLoaderSettings, IAsyncDisposable, PodInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import AdmZip from 'adm-zip';
 import { app, clipboard as electronClipboard } from 'electron';
 import { inject, injectable, preDestroy } from 'inversify';
@@ -34,14 +44,6 @@ import {
 import { MenuRegistry } from '/@/plugin/menu-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import { WebviewRegistry } from '/@/plugin/webview/webview-registry.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { IAsyncDisposable } from '/@api/async-disposable.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { Event } from '/@api/event.js';
-import type { ExtensionError, ExtensionInfo, ExtensionUpdateInfo } from '/@api/extension-info.js';
-import { DEFAULT_TIMEOUT, ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
-import type { ImageInspectInfo } from '/@api/image-inspect-info.js';
-import { PodInfo } from '/@api/pod-info.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { securityRestrictionCurrentHandler } from '../../security-restrictions-handler.js';

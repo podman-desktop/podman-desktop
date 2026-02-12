@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ImageInfo } from '@podman-desktop/core-api';
 import { describe, expect, test } from 'vitest';
-
-import type { ImageInfo } from '/@api/image-info.js';
 
 import { guessIsManifest } from './manifest.js';
 

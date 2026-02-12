@@ -17,16 +17,16 @@
  ***********************************************************************/
 
 import type { NotificationOptions } from '@podman-desktop/api';
+import type { NotificationTaskInfo, TaskInfo } from '@podman-desktop/core-api';
+import { ExperimentalTasksSettings } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
 import { NotificationImpl } from '/@/plugin/tasks/notification-impl.js';
 import type { NotificationTask } from '/@/plugin/tasks/notifications.js';
 import { TaskImpl } from '/@/plugin/tasks/task-impl.js';
 import type { Task, TaskAction, TaskUpdateEvent } from '/@/plugin/tasks/tasks.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { NotificationTaskInfo, TaskInfo } from '/@api/taskInfo.js';
-import { ExperimentalTasksSettings } from '/@api/tasks-preferences.js';
 
 import { CommandRegistry } from '../command-registry.js';
 import { StatusBarRegistry } from '../statusbar/statusbar-registry.js';

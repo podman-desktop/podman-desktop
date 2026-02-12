@@ -23,12 +23,10 @@ import type {
   ImageFilesProviderMetadata,
   ImageInfo,
 } from '@podman-desktop/api';
+import type { ImageFilesExtensionInfo, ImageFilesInfo, ImageFilesystemLayersUI } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { ImageFilesExtensionInfo, ImageFilesInfo } from '/@api/image-files-info.js';
-import type { ImageFilesystemLayersUI } from '/@api/image-filesystem-layers.js';
 
 import { Context } from './context/context.js';
 import { toImageFilesystemLayerUIs } from './image-details-files.js';

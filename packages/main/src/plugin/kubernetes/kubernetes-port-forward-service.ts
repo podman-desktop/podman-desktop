@@ -18,6 +18,8 @@
 import { randomUUID } from 'node:crypto';
 
 import type { KubeConfig } from '@kubernetes/client-node';
+import type { ForwardConfig, ForwardOptions, IDisposable } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import { PortForwardConnectionService } from '/@/plugin/kubernetes/kubernetes-port-forward-connection.js';
@@ -25,9 +27,6 @@ import { ConfigManagementService, MemoryBasedStorage } from '/@/plugin/kubernete
 import { ForwardConfigRequirements } from '/@/plugin/kubernetes/kubernetes-port-forward-validation.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { isFreePort } from '/@/plugin/util/port.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
-import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 
 /**
  * Service provider for Kubernetes port forwarding.

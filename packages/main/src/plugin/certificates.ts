@@ -21,13 +21,13 @@ import * as https from 'node:https';
 import * as path from 'node:path';
 import * as tls from 'node:tls';
 
+import type { CertificateInfo } from '@podman-desktop/core-api';
 import * as asn1js from 'asn1js';
 import { injectable } from 'inversify';
 import * as pkijs from 'pkijs';
 import wincaAPI from 'win-ca/api';
 
 import { isLinux, isMac, isWindows } from '/@/util.js';
-import type { CertificateInfo } from '/@api/certificate-info.js';
 
 import { spawnWithPromise } from './util/spawn-promise.js';
 

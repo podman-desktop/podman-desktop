@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ForwardConfigRequirements } from '/@/plugin/kubernetes/kubernetes-port-forward-validation.js';
-import { type ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
 describe('ForwardConfigRequirements', () => {
   const validConfig: ForwardConfig = {

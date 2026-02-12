@@ -20,7 +20,7 @@
 import { existsSync, unlink } from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
-import type { IConfigurationRegistry } from '/@api/configuration/models.js';
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 
 /**
  * On Windows, launching program automatically on startup is done via %APPDATA%\Roaming\Microsoft\Windows\Start Menu\Programs\Startup folder

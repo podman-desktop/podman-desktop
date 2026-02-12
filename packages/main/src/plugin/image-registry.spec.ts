@@ -24,13 +24,12 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import type { Registry } from '@podman-desktop/api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
 import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import imageRegistryConfigJson from '../../tests/resources/data/plugin/image-registry-config.json' with {
   type: 'json',
