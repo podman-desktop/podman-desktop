@@ -14,8 +14,8 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.a711169c.css">
-<script src="/assets/js/runtime~main.e1a5c09a.js" defer="defer"></script>
-<script src="/assets/js/main.2ba42532.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.4e23d497.js" defer="defer"></script>
+<script src="/assets/js/main.f5748b17.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -26,7 +26,7 @@
 <p>You can install Podman Desktop on macOS by using:</p>
 <ul>
 <li class="">
-<p>The .dmg installer file: This is the recommended way to install Podman Desktop, Podman, and Podman CLI smoothly.</p>
+<p>The .dmg installer file: This is the recommended way to install Podman Desktop, Podman, and Podman CLI smoothly. The <code>.dmg</code> installer provides the most stable experience by bundling the required components. This avoids the path conflicts and stability issues common with package managers like Homebrew.</p>
 </li>
 <li class="">
 <p>Homebrew: This is an alternative way, but it is not recommended, as there is no guarantee of the stability of Brew installs of Podman and Podman Desktop.</p>
@@ -37,38 +37,51 @@
 </li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="installing-podman-desktop-using-the-dmg-file-recommended">Installing Podman Desktop using the .dmg file: Recommended<a href="#installing-podman-desktop-using-the-dmg-file-recommended" class="hash-link" aria-label="Direct link to Installing Podman Desktop using the .dmg file: Recommended" title="Direct link to Installing Podman Desktop using the .dmg file: Recommended" translate="no">​</a></h2>
+<p>The <strong>Get started with Podman Desktop</strong> screen helps you start the onboarding process. Alternatively, you can completely skip this onboarding setup. You can always complete the setup later by using one of the following ways:</p>
+<ul>
+<li class="">Use the <strong>Set up</strong> button in the notification on the <strong>Dashboard</strong> page.</li>
+<li class="">Use the <strong>Setup Podman</strong> button on the Podman tile, located on the <strong>Settings &gt; Resources</strong> page.</li>
+</ul>
+<h4 class="anchor anchorTargetStickyNavbar_tleR" id="procedure">Procedure<a href="#procedure" class="hash-link" aria-label="Direct link to Procedure" title="Direct link to Procedure" translate="no">​</a></h4>
 <ol>
 <li class="">
 <p>Download the <code>.dmg</code> file from the <a class="" href="/downloads/macos">Downloads</a> section of the website.</p>
 <div class="theme-admonition theme-admonition-note admonition_WCGJ alert alert--secondary"><div class="admonitionHeading_GCBg"><span class="admonitionIcon_L39b"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg></span>note</div><div class="admonitionContent_pbrs"><p>While we recommend getting the &quot;universal&quot; binary file, which will work irrespective of the chip architecture your Mac possesses, you also have the option to download the applicable .dmg file depending on your Mac hardware architecture (that is, Intel or Apple M1).</p></div></div>
 </li>
 <li class="">
-<p>Locate the downloaded file, and double-click on it. Usually, you will find the downloaded file in the Downloads folder.</p>
+<p>Locate the downloaded file, and double-click it. Usually, you will find the downloaded file in the <code>Downloads</code> folder.</p>
 </li>
 <li class="">
 <p>Drag the Podman Desktop application and drop it to the <code>Applications</code> folder.</p>
 <p><img decoding="async" loading="lazy" alt="drag and drop the Podman Desktop application" src="/assets/images/click-and-drag-5d76d30e2c48a81289b30e677c8c0f06.png" width="843" height="590" class="img_SS3x"></p>
 </li>
 <li class="">
-<p>Start Podman Desktop from the &#x27;Launchpad&#x27; or Mac&#x27;s <code>Applications</code> directory. The Dashboard page opens with a notification to set up Podman.</p>
+<p>Start Podman Desktop from the <code>Launchpad</code> or Mac&#x27;s <code>Applications</code> directory. The <strong>Get started with Podman Desktop</strong> screen opens.</p>
 </li>
 <li class="">
-<p>Click <strong>Set up</strong> to install Podman from Podman Desktop.
-<img decoding="async" loading="lazy" alt="set up button" src="/assets/images/podman-set-up-button-c8a23f530b8730833879d0981af22cae.png" width="1316" height="357" class="img_SS3x"></p>
+<p>Click <strong>Start Onboarding</strong>.</p>
 </li>
 <li class="">
-<p>Click <strong>Next</strong>. A confirmation notification to install Podman opens.</p>
+<p>Perform the following steps to install Podman:</p>
+<ol>
+<li class="">
+<p>Click <strong>Next</strong>. A confirmation notification opens.</p>
 </li>
 <li class="">
-<p>Click <strong>Yes</strong>. The Podman Installer screen opens.</p>
+<p>Click <strong>Yes</strong>. The <strong>Podman Setup</strong> screen opens.</p>
 </li>
 <li class="">
 <p>Follow the instructions on the screen, enter your system password when prompted, and click <strong>Install Software</strong>.</p>
 <p><img decoding="async" loading="lazy" alt="system password to install Podman" src="/assets/images/system-password-31a209293b94ed724ccaf50b1dd2130e.png" width="1016" height="806" class="img_SS3x"></p>
 </li>
 <li class="">
-<p>Click <strong>Close</strong> on the screen. A page notifying that Podman has been set up correctly opens.</p>
+<p>Click <strong>Close</strong>. A page notifying that Podman is set up correctly opens.</p>
 </li>
+</ol>
+</li>
+<li class="">
+<p>Perform the following steps to create a Podman machine:</p>
+<ol>
 <li class="">
 <p>Click <strong>Next</strong>. A page notifying you to create a Podman machine opens.
 <img decoding="async" loading="lazy" alt="podman installed correctly notification" src="/assets/images/podman-installed-successfully-888b099b4ab5da13cd44d1d692b43d16.png" width="1128" height="1022" class="img_SS3x"></p>
@@ -76,12 +89,22 @@
 <li class="">
 <p>Click <strong>Next</strong>, and then click <strong>Create</strong>.
 <img decoding="async" loading="lazy" alt="notification to create a podman machine" src="/assets/images/notification-to-create-podman-machine-ca7dedfa6fe6172d6bf5c821dbde633b.png" width="1139" height="1022" class="img_SS3x"></p>
-</li>
-<li class="">
-<p>Click <strong>Next</strong> to navigate back to the Dashboard page.</p>
+<div class="theme-admonition theme-admonition-note admonition_WCGJ alert alert--secondary"><div class="admonitionHeading_GCBg"><span class="admonitionIcon_L39b"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg></span>note</div><div class="admonitionContent_pbrs"><p>You can also create additional Podman machines of any provider type later. For more details, refer to <a class="" href="/docs/podman/creating-a-podman-machine">Creating a Podman machine</a>.</p></div></div>
 </li>
 </ol>
-<p>Podman Desktop installation is now complete. The Podman engine is installed, and the Podman machine is created. You are ready to use the application.</p>
+</li>
+<li class="">
+<p>Click <strong>Next</strong>, and follow the instructions on the screen to install the <code>kubectl</code> and <code>compose</code> CLIs.</p>
+</li>
+<li class="">
+<p>After installing the CLIs, click <strong>Next</strong> to go to the <strong>Dashboard</strong> page.</p>
+</li>
+</ol>
+<h4 class="anchor anchorTargetStickyNavbar_tleR" id="verification">Verification<a href="#verification" class="hash-link" aria-label="Direct link to Verification" title="Direct link to Verification" translate="no">​</a></h4>
+<ul>
+<li class="">Go to the <strong>Settings &gt; Resources</strong> page to check the Podman machine is running.</li>
+</ul>
+<p>You are ready to use the application.</p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="installing-podman-desktop-using-homebrew-not-recommended">Installing Podman Desktop using Homebrew: Not recommended<a href="#installing-podman-desktop-using-homebrew-not-recommended" class="hash-link" aria-label="Direct link to Installing Podman Desktop using Homebrew: Not recommended" title="Direct link to Installing Podman Desktop using Homebrew: Not recommended" translate="no">​</a></h2>
 <div class="theme-admonition theme-admonition-info admonition_WCGJ alert alert--info"><div class="admonitionHeading_GCBg"><span class="admonitionIcon_L39b"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>Prerequisite</div><div class="admonitionContent_pbrs"><ul>
 <li class=""><a href="https://brew.sh/" target="_blank" rel="noopener noreferrer" class="">Homebrew</a></li>
