@@ -361,7 +361,7 @@ async function searchFunction(value: string): Promise<void> {
       <div class="self-center text-[var(--pd-table-body-text)] pb-4">Specify preferred registries for pulling images in <Link on:click={gotoManageRegistries}>Settings &gt; Registries</Link>.</div>
 
       <label for="imageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Image to Pull</label>
+        >Image to pull</label>
       <div class="flex flex-col">
         <Typeahead
           id="imageName"
