@@ -24,6 +24,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
+import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
 
 import PreferencesAuthenticationProvidersRendering from './PreferencesAuthenticationProvidersRendering.svelte';
@@ -35,15 +36,8 @@ class ResizeObserver {
 }
 
 const configMock = vi.fn();
-const getImageMock = vi.fn();
 
-vi.mock('../appearance/appearance-util', () => {
-  return {
-    AppearanceUtil: class {
-      getImage = getImageMock;
-    },
-  };
-});
+vi.mock(import('/@/lib/appearance/appearance-util'));
 
 beforeAll(() => {
   (window as any).ResizeObserver = ResizeObserver;
@@ -233,7 +227,7 @@ test('Expects images.icon option to be used when no themes are present', async (
       sessionRequests: [],
     },
   ];
-  getImageMock.mockResolvedValue('./icon.png');
+  vi.mocked(AppearanceUtil.prototype.getImage).mockResolvedValue('./icon.png');
   authenticationProviders.set(providerWithImageIcon);
   render(PreferencesAuthenticationProvidersRendering, {});
 
@@ -260,7 +254,7 @@ test('Expects images.icon.dark option to be used when theme is dark', async () =
       sessionRequests: [],
     },
   ];
-  getImageMock.mockResolvedValue('./icon-dark.png');
+  vi.mocked(AppearanceUtil.prototype.getImage).mockResolvedValue('./icon-dark.png');
   authenticationProviders.set(providerWithImageIcon);
 
   configMock.mockReturnValue('dark');
