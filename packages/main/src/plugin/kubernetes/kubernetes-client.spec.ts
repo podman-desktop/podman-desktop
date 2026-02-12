@@ -45,7 +45,7 @@ import {
 } from '@kubernetes/client-node';
 import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
-import type { type ForwardConfig, type ForwardOptions, V1Route, WorkloadKind } from '@podman-desktop/core-api';
+import { type ForwardConfig, type ForwardOptions, type V1Route, WorkloadKind } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';

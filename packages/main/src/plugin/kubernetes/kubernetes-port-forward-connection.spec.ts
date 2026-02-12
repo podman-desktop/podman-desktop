@@ -29,7 +29,7 @@ import {
 } from '@kubernetes/client-node';
 import type { ApiType } from '@kubernetes/client-node/dist/config.js';
 import type { V1PodList } from '@kubernetes/client-node/dist/gen/models/V1PodList.js';
-import type { type ForwardConfig, IDisposable, type PortMapping, WorkloadKind } from '@podman-desktop/core-api';
+import { type ForwardConfig, type IDisposable, type PortMapping, WorkloadKind } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { WebSocket } from 'isomorphic-ws';
 import { afterEach, beforeEach, describe, expect, type MockedFunction, test, vi } from 'vitest';
