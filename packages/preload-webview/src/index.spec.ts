@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { init } from '.';
-import * as webviewPreload from './webview-preload';
-import { WebviewPreload } from './webview-preload';
+import { init } from './index.js';
+import * as webviewPreload from './webview-preload.js';
+import { WebviewPreload } from './webview-preload.js';
 
-vi.mock(import('./webview-preload'));
+vi.mock(import('./webview-preload.js'));
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { AppearanceSettings } from '/@api/appearance/appearance-settings';
-import type { ColorInfo } from '/@api/color-info';
-import type { WebviewInfo } from '/@api/webview-info';
+import { AppearanceSettings } from '/@api/appearance/appearance-settings.js';
+import type { ColorInfo } from '/@api/color-info.js';
+import type { WebviewInfo } from '/@api/webview-info.js';
 
 interface ErrorMessage {
   name: string;
