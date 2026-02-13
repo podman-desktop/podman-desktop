@@ -28,10 +28,8 @@ import type {
   NavigationIntents,
   RequestConfig,
 } from '@docker/extension-api-client-types/dist/v1/index.js';
+import type { ImageInfo, SimpleContainerInfo } from '@podman-desktop/core-api';
 import { contextBridge, ipcRenderer } from 'electron';
-
-import type { SimpleContainerInfo } from '/@api/container-info.js';
-import type { ImageInfo } from '/@api/image-info.js';
 
 import { lines, parseJsonLines, parseJsonObject } from './exec-result-helper.js';
 
