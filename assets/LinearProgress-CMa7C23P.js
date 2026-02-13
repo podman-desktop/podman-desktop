@@ -1,0 +1,1 @@
+import{f as s,c as a}from"./iframe-BzfG5bFM.js";import"./create-runtime-stories-BQlbvVWR.js";var o=s('<progress class="w-full appearance-none border-none h-0.5 text-purple-500 text-base pure-material-progress-linear svelte-ovl9e6"></progress>');function p(e){var r=o();a(e,r)}p.__docgen={data:[],name:"LinearProgress.svelte"};export{p as L};
