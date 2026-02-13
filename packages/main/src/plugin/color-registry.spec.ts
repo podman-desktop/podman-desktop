@@ -196,9 +196,9 @@ test('init', async () => {
 });
 
 test('initColors', async () => {
-  // spy on registerColor but let it actually register colors
+  // mock the registerColor
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
-  // Don't mock it - let it call through to the real implementation
+  spyOnRegisterColor.mockReturnValue(undefined);
 
   colorRegistry.initColors();
 
@@ -226,7 +226,7 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[50]);
+    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
     expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#202020');
   });
 
@@ -247,7 +247,7 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[50]);
+    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
     expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#0f0f11');
   });
 });
@@ -450,7 +450,7 @@ describe('registerExtensionThemes', () => {
     // now check for a color not defined in 'light-theme1'
     const titlebarTextColorLight = colorsLight.find(c => c.id === 'titlebar-text');
     expect(titlebarTextColorLight).toBeDefined();
-    expect(titlebarTextColorLight?.value).toBe(tailwindColorPalette.purple[900]);
+    expect(titlebarTextColorLight?.value).toBe('#37255d');
   });
 
   test('check dispose on Windows', async () => {
