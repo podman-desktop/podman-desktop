@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { NetworkInspectInfo, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import type { NetworkContainer } from 'dockerode';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
@@ -248,4 +248,153 @@ test('Expect environment column sorted by engineId', async () => {
   const cells = screen.getAllByRole('cell', { name: /Network/ });
   expect(cells[0]).toHaveTextContent('Network 2');
   expect(cells[1]).toHaveTextContent('Network 1');
+});
+
+test('Expect environment dropdown to appear with multiple running connections', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      id: 'podman',
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  const podmanNetwork: NetworkInspectInfo = {
+    ...network1,
+    Name: 'podman-network',
+    engineId: 'podman.podman-machine-default',
+    engineName: 'Podman Machine',
+  };
+  const dockerNetwork: NetworkInspectInfo = {
+    ...network2,
+    Name: 'docker-network',
+    engineId: 'docker.docker-context',
+    engineName: 'Docker Desktop',
+  };
+
+  vi.mocked(window.listNetworks).mockResolvedValue([podmanNetwork, dockerNetwork]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  await waitFor(
+    () => {
+      expect(get(providerInfos)).toHaveLength(2);
+      expect(get(networksListInfo)).not.toHaveLength(0);
+    },
+    { timeout: 2000 },
+  );
+
+  render(NetworksList);
+  await tick();
+
+  // Environment dropdown should be visible
+  const environmentDropdown = screen.getByLabelText('Environment');
+  expect(environmentDropdown).toBeInTheDocument();
+});
+
+test('Expect environment dropdown to filter networks by selected environment', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      id: 'podman',
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  const podmanNetwork: NetworkInspectInfo = {
+    ...network1,
+    Name: 'podman-network',
+    engineId: 'podman.podman-machine-default',
+    engineName: 'Podman Machine',
+  };
+  const dockerNetwork: NetworkInspectInfo = {
+    ...network2,
+    Name: 'docker-network',
+    engineId: 'docker.docker-context',
+    engineName: 'Docker Desktop',
+  };
+
+  vi.mocked(window.listNetworks).mockResolvedValue([podmanNetwork, dockerNetwork]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  await waitFor(
+    () => {
+      expect(get(providerInfos)).toHaveLength(2);
+      expect(get(networksListInfo)).not.toHaveLength(0);
+    },
+    { timeout: 2000 },
+  );
+
+  render(NetworksList);
+  await tick();
+
+  // Both networks should be visible initially
+  expect(screen.getByText('podman-network')).toBeInTheDocument();
+  expect(screen.getByText('docker-network')).toBeInTheDocument();
+
+  // Select Podman environment from dropdown
+  const dropdownContainer = screen.getByLabelText('Environment');
+  const dropdownButton = within(dropdownContainer).getByRole('button');
+  await fireEvent.click(dropdownButton);
+
+  const podmanOption = await waitFor(async () => {
+    await tick();
+    return screen.getByRole('button', { name: 'Podman' });
+  });
+  await fireEvent.click(podmanOption);
+
+  // Only podman network should be visible
+  await waitFor(() => {
+    expect(screen.getByText('podman-network')).toBeInTheDocument();
+    expect(screen.queryByText('docker-network')).not.toBeInTheDocument();
+  });
 });

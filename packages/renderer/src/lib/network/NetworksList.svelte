@@ -7,6 +7,7 @@ import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { withBulkConfirmation } from '/@/lib/actions/BulkActions';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { handleNavigation } from '/@/navigation';
 import { filtered, searchPattern } from '/@/stores/networks';
 import { providerInfos } from '/@/stores/providers';
@@ -31,7 +32,15 @@ $effect(() => {
 
 let networkUtils = new NetworkUtils();
 
+let selectedEnvironment = $state('');
+
 let networks: NetworkInfoUI[] = $derived($filtered.map(network => networkUtils.toNetworkInfoUI(network)));
+
+// Filter networks by selected environment
+let filteredNetworks = $derived.by(() => {
+  if (!selectedEnvironment) return networks;
+  return networks.filter(network => network.engineId === selectedEnvironment);
+});
 
 let providerConnections = $derived(
   $providerInfos
@@ -125,6 +134,7 @@ function key(network: NetworkInfoUI): string {
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
+    <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber > 0}
       <Button
         onclick={(): void =>
@@ -150,11 +160,13 @@ function key(network: NetworkInfoUI): string {
         {:else}
           <NetworkEmptyScreen />
         {/if}
+    {:else if filteredNetworks.length === 0 && selectedEnvironment}
+      <FilteredEmptyScreen icon={ContainerIcon} kind="networks" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
         kind="network"
         bind:selectedItemsNumber={selectedItemsNumber}
-        data={networks}
+        data={filteredNetworks}
         columns={columns}
         row={row}
         key={key}

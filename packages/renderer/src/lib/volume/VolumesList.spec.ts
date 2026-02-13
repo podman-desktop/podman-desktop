@@ -20,8 +20,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { type ProviderInfo } from '@podman-desktop/core-api';
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -31,6 +30,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { volumeListInfos, volumesEventStore } from '/@/stores/volumes';
+import { type ProviderContainerConnectionInfo, type ProviderInfo } from '/@api/provider-info';
 
 import VolumesList from './VolumesList.svelte';
 
@@ -512,4 +512,205 @@ test('Expect environment column sorted by engineId', async () => {
   const cells = screen.getAllByRole('cell', { name: /volume-/ });
   expect(cells[0]).toHaveTextContent('volume-bbb');
   expect(cells[1]).toHaveTextContent('volume-aaa');
+});
+
+test('Expect environment dropdown to appear with multiple running connections', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      id: 'podman',
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+    } as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listVolumes).mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/volumes/podman-volume',
+          Name: 'podman-volume',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Podman Machine',
+          engineId: 'podman.podman-machine-default',
+          UsageData: { RefCount: 0, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: 'podman.podman-machine-default',
+      engineName: 'Podman Machine',
+    },
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/volumes/docker-volume',
+          Name: 'docker-volume',
+          Options: {},
+          Scope: 'local',
+          engineName: 'Docker Desktop',
+          engineId: 'docker.docker-context',
+          UsageData: { RefCount: 0, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: 'docker.docker-context',
+      engineName: 'Docker Desktop',
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  const volumesEventStoreInfo = volumesEventStore.setup();
+  await volumesEventStoreInfo.fetch();
+
+  await waitFor(() => {
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).toHaveLength(2);
+  });
+
+  await waitRender({});
+
+  // Environment dropdown should be visible
+  const environmentDropdown = screen.getByLabelText('Environment');
+  expect(environmentDropdown).toBeInTheDocument();
+});
+
+test('Expect environment dropdown to filter volumes by selected environment', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      id: 'podman',
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listVolumes).mockResolvedValue([
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/containers/storage/volumes/podman/_data',
+          Name: 'podman-volume',
+          Options: {},
+          Scope: 'local',
+          engineId: 'podman.podman-machine-default',
+          engineName: 'Podman Machine',
+          UsageData: { RefCount: 1, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: 'podman.podman-machine-default',
+      engineName: 'Podman Machine',
+    },
+    {
+      Volumes: [
+        {
+          Driver: 'local',
+          Labels: {},
+          Mountpoint: '/var/lib/docker/volumes/docker/_data',
+          Name: 'docker-volume',
+          Options: {},
+          Scope: 'local',
+          engineId: 'docker.docker-context',
+          engineName: 'Docker Desktop',
+          UsageData: { RefCount: 1, Size: -1 },
+          containersUsage: [],
+          CreatedAt: '',
+        },
+      ],
+      Warnings: [],
+      engineId: 'docker.docker-context',
+      engineName: 'Docker Desktop',
+    },
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+
+  await waitFor(() => {
+    expect(get(providerInfos)).toHaveLength(2);
+    expect(get(volumeListInfos)).not.toHaveLength(0);
+  });
+
+  render(VolumesList);
+  await tick();
+
+  // Both volumes should be visible initially
+  expect(screen.getByText('podman-volume')).toBeInTheDocument();
+  expect(screen.getByText('docker-volume')).toBeInTheDocument();
+
+  // Select Podman environment from dropdown
+  const dropdownContainer = screen.getByLabelText('Environment');
+  const dropdownButton = within(dropdownContainer).getByRole('button');
+  await fireEvent.click(dropdownButton);
+
+  const podmanOption = await waitFor(async () => {
+    await tick();
+    return screen.getByRole('button', { name: 'Podman' });
+  });
+  await fireEvent.click(podmanOption);
+
+  // Only podman volume should be visible
+  await waitFor(() => {
+    expect(screen.getByText('podman-volume')).toBeInTheDocument();
+    expect(screen.queryByText('docker-volume')).not.toBeInTheDocument();
+  });
 });

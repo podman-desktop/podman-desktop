@@ -21,6 +21,7 @@ import Prune from '/@/lib/engine/Prune.svelte';
 import NoContainerEngineEmptyScreen from '/@/lib/image/NoContainerEngineEmptyScreen.svelte';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { fetchVolumesWithData, filtered, searchPattern, volumeListInfos } from '/@/stores/volumes';
 
@@ -34,8 +35,12 @@ import type { VolumeInfoUI } from './VolumeInfoUI';
 export let searchTerm = '';
 $: searchPattern.set(searchTerm);
 
+let selectedEnvironment = '';
 let volumes: VolumeInfoUI[] = [];
 let enginesList: EngineInfoUI[];
+
+// Filter volumes by selected environment
+$: filteredVolumes = selectedEnvironment ? volumes.filter(v => v.engineId === selectedEnvironment) : volumes;
 
 $: providerConnections = $providerInfos
   .map(provider => provider.containerConnections)
@@ -208,6 +213,7 @@ function label(obj: VolumeInfoUI): string {
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
+    <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber > 0}
       <Button
         on:click={(): void =>
@@ -233,11 +239,13 @@ function label(obj: VolumeInfoUI): string {
       {:else}
         <VolumeEmptyScreen />
       {/if}
+    {:else if filteredVolumes.length === 0 && selectedEnvironment}
+      <FilteredEmptyScreen icon={VolumeIcon} kind="volumes" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
         kind="volume"
         bind:selectedItemsNumber={selectedItemsNumber}
-        data={volumes}
+        data={filteredVolumes}
         columns={columns}
         row={row}
         defaultSortColumn="Name"
