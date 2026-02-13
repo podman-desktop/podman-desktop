@@ -372,4 +372,21 @@ export default [
       'sonarjs/no-unused-collection': 'off',
     },
   },
+
+  {
+    files: ['packages/api/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../**'],
+              message: 'Parent relative imports are not allowed. Use path aliases (e.g. /@/) instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
