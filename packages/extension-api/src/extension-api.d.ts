@@ -4370,6 +4370,157 @@ declare module '@podman-desktop/api' {
   }
 
   /**
+   * A target for certificate synchronization contributed by an extension.
+   */
+  export interface CertificateSyncTarget {
+    /**
+     * Unique identifier for the target within the provider.
+     */
+    id: string;
+
+    /**
+     * Display name for the target.
+     */
+    name: string;
+  }
+
+  /**
+   * Information about a certificate sync target provider.
+   */
+  export interface CertificateSyncTargetProviderInformation {
+    /**
+     * Unique provider identifier.
+     */
+    readonly id: string;
+
+    /**
+     * Human-readable label for the provider.
+     */
+    readonly label: string;
+  }
+
+  /**
+   * Event fired when a certificate sync target provider's targets change.
+   */
+  export interface CertificateSyncTargetProviderChangeEvent {
+    /**
+     * Information about the provider whose targets changed.
+     */
+    provider: CertificateSyncTargetProviderInformation;
+  }
+
+  /**
+   * Provider interface for extensions that contribute certificate sync targets.
+   */
+  export interface CertificateSyncTargetProvider {
+    /**
+     * Get all available sync targets from this provider.
+     * @returns A promise that resolves to an array of sync targets.
+     */
+    getTargets(): Promise<CertificateSyncTarget[]>;
+
+    /**
+     * Synchronize certificates to a specific target.
+     * @param targetId The ID of the target to synchronize to.
+     * @param certificates Array of PEM-encoded certificates to synchronize.
+     */
+    synchronize(targetId: string, certificates: string[]): Promise<void>;
+
+    /**
+     * Event fired when the available targets change.
+     * Extensions must fire this event when targets are added, removed, or modified.
+     */
+    onDidChangeTargets: Event<CertificateSyncTargetProviderChangeEvent>;
+  }
+
+  /**
+   * Information about a certificate from the host system.
+   */
+  export interface CertificateInfo {
+    /**
+     * The certificate subject's common name (CN) with fallback to O or full DN.
+     */
+    subjectCommonName: string;
+
+    /**
+     * The full subject distinguished name (DN).
+     * Example: "CN=example.com, O=Example Inc, C=US"
+     */
+    subject: string;
+
+    /**
+     * The certificate issuer's common name (CN) with fallback to O or full DN.
+     */
+    issuerCommonName: string;
+
+    /**
+     * The full issuer distinguished name (DN).
+     * Example: "CN=DigiCert Global Root CA, O=DigiCert Inc, C=US"
+     */
+    issuer: string;
+
+    /**
+     * The certificate serial number in hexadecimal format.
+     */
+    serialNumber: string;
+
+    /**
+     * The date from which the certificate is valid (notBefore).
+     * ISO 8601 string format.
+     */
+    validFrom?: string;
+
+    /**
+     * The date until which the certificate is valid (notAfter).
+     * ISO 8601 string format.
+     */
+    validTo?: string;
+
+    /**
+     * Indicates whether this is a Certificate Authority (CA) certificate.
+     */
+    isCA: boolean;
+  }
+
+  /**
+   * Namespace for certificate management and synchronization.
+   */
+  export namespace certificates {
+    /**
+     * Register a certificate sync target provider.
+     *
+     * Extensions can use this to contribute sync targets (e.g., VMs, remote hosts)
+     * where host certificates can be synchronized.
+     *
+     * Note: Only preinstalled extensions (bundled with Podman Desktop) can register
+     * sync targets. User-installed extensions will have their targets excluded from
+     * the UI entirely for security reasons.
+     *
+     * @param id The unique identifier of the provider.
+     * @param provider The certificate sync target provider.
+     * @returns A [disposable](#Disposable) that unregisters this provider when being disposed.
+     */
+    export function registerSyncTargetProvider(id: string, provider: CertificateSyncTargetProvider): Disposable;
+
+    /**
+     * Get all certificates from the host system.
+     * @returns A promise that resolves to an array of certificate information.
+     */
+    export function getCertificates(): Promise<CertificateInfo[]>;
+
+    /**
+     * An event that fires when the certificates change.
+     */
+    export const onDidChangeCertificates: Event<void>;
+
+    /**
+     * An event that fires when a provider's available sync targets change.
+     * Extensions can listen to this event to refresh their UI when targets are added, removed, or modified.
+     */
+    export const onDidChangeTargets: Event<CertificateSyncTargetProviderChangeEvent>;
+  }
+
+  /**
    * Namespace for authentication.
    */
   export namespace authentication {

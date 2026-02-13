@@ -53,6 +53,7 @@ import type { InstalledPodman } from '/@/utils/podman-binary';
 import { PodmanBinary } from '/@/utils/podman-binary';
 
 import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
+import { PodmanCertificateSync } from './certificate-sync/podman-certificate-sync';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
@@ -118,6 +119,9 @@ let podmanBinary: PodmanBinary;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
+
+// Certificate sync provider instance - used by startMachine/stopMachine to notify target changes
+let podmanCertificateSync: PodmanCertificateSync | undefined;
 
 const wslHelper = new WslHelper();
 const qemuHelper = new QemuHelper();
@@ -869,6 +873,8 @@ export async function startMachine(
       logger: new LoggerDelegator(context, logger),
     });
     provider.updateStatus('started');
+    // Notify certificate sync about machine status change
+    podmanCertificateSync?.notifyTargetsChanged();
   } catch (err) {
     telemetryRecords.error = err;
     if (skipHandleError) {
@@ -900,6 +906,8 @@ export async function stopMachine(
       logger: new LoggerDelegator(context, logger),
     });
     provider.updateStatus('stopped');
+    // Notify certificate sync about machine status change
+    podmanCertificateSync?.notifyTargetsChanged();
   } catch (err: unknown) {
     telemetryRecords.error = err;
     throw err;
@@ -1418,6 +1426,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   start(extensionContext, provider, podmanInstall, podmanConfiguration, version).catch((error: unknown) => {
     console.error('Error starting the Podman extension', error);
   });
+
+  // Register certificate sync target provider for Podman machines
+  podmanCertificateSync = new PodmanCertificateSync(getJSONMachineList);
+  extensionContext.subscriptions.push(
+    extensionApi.certificates.registerSyncTargetProvider('podman-machines', podmanCertificateSync),
+  );
 
   return {
     exec,

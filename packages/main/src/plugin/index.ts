@@ -173,6 +173,7 @@ import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
+import { CertificateSyncTargetRegistry } from './certificate-sync-target-registry.js';
 import { Certificates } from './certificates.js';
 import { CliToolRegistry } from './cli-tool-registry.js';
 import { CloseBehavior } from './close-behavior.js';
@@ -538,17 +539,6 @@ export class PluginSystem {
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
     colorRegistry.init();
 
-    container.bind<Certificates>(Certificates).toSelf().inSingletonScope();
-    const certificates = container.get<Certificates>(Certificates);
-    await certificates.init();
-
-    container.bind<Proxy>(Proxy).toSelf().inSingletonScope();
-    const proxy = container.get<Proxy>(Proxy);
-    await proxy.init();
-
-    const exec = new Exec(proxy);
-    container.bind<Exec>(Exec).toConstantValue(exec);
-
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
@@ -559,6 +549,20 @@ export class PluginSystem {
     container.bind<TaskManager>(TaskManager).toSelf().inSingletonScope();
     const taskManager = container.get<TaskManager>(TaskManager);
     taskManager.init();
+
+    // Certificates must be bound after TaskManager (dependency) and before Proxy (dependent)
+    container.bind<Certificates>(Certificates).toSelf().inSingletonScope();
+    const certificates = container.get<Certificates>(Certificates);
+    await certificates.init();
+
+    container.bind<CertificateSyncTargetRegistry>(CertificateSyncTargetRegistry).toSelf().inSingletonScope();
+
+    container.bind<Proxy>(Proxy).toSelf().inSingletonScope();
+    const proxy = container.get<Proxy>(Proxy);
+    await proxy.init();
+
+    const exec = new Exec(proxy);
+    container.bind<Exec>(Exec).toConstantValue(exec);
 
     container.bind<NotificationRegistry>(NotificationRegistry).toSelf().inSingletonScope();
     container.bind<MenuRegistry>(MenuRegistry).toSelf().inSingletonScope();
@@ -2433,6 +2437,24 @@ export class PluginSystem {
 
     this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
       return certificates.getAllCertificateInfos();
+    });
+
+    const certificateSyncTargetRegistry = container.get<CertificateSyncTargetRegistry>(CertificateSyncTargetRegistry);
+
+    this.ipcHandle('certificates:getSyncTargets', async (): Promise<CertificateSyncTargetInfo[]> => {
+      return certificateSyncTargetRegistry.getTargets();
+    });
+
+    this.ipcHandle(
+      'certificates:synchronizeToTargets',
+      async (_listener, targetIds: string[]): Promise<{ errors: { targetId: string; error: string }[] }> => {
+        return certificateSyncTargetRegistry.synchronizeToTargets(targetIds);
+      },
+    );
+
+    // Notify renderer when certificate sync targets change (extension started/stopped)
+    certificateSyncTargetRegistry.onDidChangeTargets(() => {
+      apiSender.send('certificate-sync-targets-update');
     });
 
     this.ipcHandle(

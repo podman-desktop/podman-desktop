@@ -8,7 +8,8 @@
     "preserveValueImports": false,
     "baseUrl": ".",
     "paths": {
-      "/@/*": ["./src/*"]
+      "/@/*": ["./src/*"],
+      "/@svelte-ui/*": ["./src/lib/*"]
     },
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.
