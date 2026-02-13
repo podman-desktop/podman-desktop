@@ -21,7 +21,7 @@ import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Server } from 'ssh2';
+import { Client, Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
@@ -121,4 +121,27 @@ test('should be able to connect', async () => {
 
   client.end();
   npipeServer.close();
+});
+
+test('disconnect should clear pending reconnect timeout', () => {
+  vi.useFakeTimers();
+
+  const clientConnectSpy = vi.spyOn(Client.prototype, 'connect').mockImplementation(function () {
+    return this;
+  });
+
+  try {
+    const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel('localhost', 22, 'foo', '', '/tmp/remote.sock', '/tmp/local.sock');
+    const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
+
+    podmanRemoteSshTunnel.connect();
+    podmanRemoteSshTunnel.handleReconnect();
+    podmanRemoteSshTunnel.disconnect();
+
+    vi.advanceTimersByTime(30000);
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+  } finally {
+    clientConnectSpy.mockRestore();
+    vi.useRealTimers();
+  }
 });
