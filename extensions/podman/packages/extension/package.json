@@ -62,7 +62,7 @@
         "podman.system.connections.remote": {
           "type": "boolean",
           "default": false,
-          "description": "Load remote system connections (ssh)"
+          "description": "Load remote system connections (ssh, tcp)"
         },
         "podman.machine.cpus": {
           "type": "number",
