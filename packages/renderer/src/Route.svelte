@@ -19,7 +19,7 @@ export let requestParser:
 
 let showContent = false;
 let params: Record<string, string> = {};
-let meta: TinroRouteMeta = {} as TinroRouteMeta;
+let meta: TinroRouteMeta = { url: '' } as TinroRouteMeta;
 let request: T | undefined = undefined;
 
 const route = createRouteObject({
