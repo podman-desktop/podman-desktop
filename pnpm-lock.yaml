@@ -48,7 +48,7 @@ importers:
         version: 5.2.1
       isomorphic-ws:
         specifier: 5.0.0
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.19.0)
       ssh2:
         specifier: 1.17.0
         version: 1.17.0
@@ -56,8 +56,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       ws:
-        specifier: 8.18.3
-        version: 8.18.3
+        specifier: 8.19.0
+        version: 8.19.0
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.3.15
@@ -12212,6 +12212,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.19.0:
+    resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   wsl-utils@0.1.0:
     resolution: {integrity: sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==}
     engines: {node: '>=18'}
@@ -21309,6 +21321,10 @@ snapshots:
     dependencies:
       ws: 8.18.3
 
+  isomorphic-ws@5.0.0(ws@8.19.0):
+    dependencies:
+      ws: 8.19.0
+
   istanbul-lib-coverage@3.2.2: {}
 
   istanbul-lib-report@3.0.1:
@@ -26013,7 +26029,7 @@ snapshots:
       sockjs: 0.3.24
       spdy: 4.0.2
       webpack-dev-middleware: 7.4.5(webpack@5.105.0)
-      ws: 8.18.3
+      ws: 8.19.0
     optionalDependencies:
       webpack: 5.105.0
     transitivePeerDependencies:
@@ -26269,6 +26285,8 @@ snapshots:
   ws@7.5.10: {}
 
   ws@8.18.3: {}
+
+  ws@8.19.0: {}
 
   wsl-utils@0.1.0:
     dependencies:
