@@ -185,3 +185,40 @@ describe('input#type', () => {
     expect(textbox).toHaveAttribute('type', 'password');
   });
 });
+
+describe('input constraints attributes', () => {
+  test('expect min, minlength, max and maxlength props to be propagated to input element', () => {
+    const { getByTitle } = render(Input, {
+      title: 'constraints',
+      min: 2,
+      minlength: 3,
+      max: 10,
+      maxlength: 11,
+    });
+
+    const textbox = getByTitle('constraints');
+    expect(textbox).toHaveAttribute('min', '2');
+    expect(textbox).toHaveAttribute('minlength', '3');
+    expect(textbox).toHaveAttribute('max', '10');
+    expect(textbox).toHaveAttribute('maxlength', '11');
+  });
+
+  test('expect pattern props to be propagated to input element', () => {
+    const { getByTitle } = render(Input, {
+      title: 'pattern-prop',
+      pattern: '[a-z]+',
+    });
+
+    const textbox = getByTitle('pattern-prop');
+    expect(textbox).toHaveAttribute('pattern', '[a-z]+');
+  });
+
+  test('expect null pattern to not be rendered on input element', () => {
+    const { getByTitle } = render(Input, {
+      title: 'null-pattern',
+    });
+
+    const textbox = getByTitle('null-pattern');
+    expect(textbox).not.toHaveAttribute('pattern');
+  });
+});
