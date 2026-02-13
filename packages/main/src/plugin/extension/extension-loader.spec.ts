@@ -329,11 +329,7 @@ vi.mock('electron', () => {
   };
 });
 
-vi.mock(import('../../util.js'), async () => {
-  return {
-    getBase64Image: vi.fn(),
-  };
-});
+vi.mock(import('/@/util.js'));
 
 vi.mock(import('node:fs/promises'));
 // mock fs.promises.readdir and use Dirent<string> as return type

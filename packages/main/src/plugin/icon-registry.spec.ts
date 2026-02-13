@@ -28,7 +28,7 @@ import { IconRegistry } from './icon-registry.js';
 let iconRegistry: IconRegistry;
 const apiSenderSendMock = vi.fn();
 
-vi.mock('../util', async () => {
+vi.mock(import('/@/util.js'), async () => {
   return {
     isWindows: (): boolean => false,
   };

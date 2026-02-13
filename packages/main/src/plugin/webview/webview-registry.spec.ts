@@ -46,7 +46,7 @@ vi.mock('express', () => ({
 }));
 
 // provide a custom free port number
-vi.mock('../util/port.js', () => ({
+vi.mock(import('/@/plugin/util/port.js'), () => ({
   getFreePort: (): Promise<number> => Promise.resolve(45678),
 }));
 

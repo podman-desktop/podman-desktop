@@ -37,13 +37,7 @@ vi.mock(import('@expo/sudo-prompt'), async () => {
   };
 });
 
-vi.mock('../../util', async () => {
-  return {
-    isWindows: vi.fn(),
-    isMac: vi.fn(),
-    isLinux: vi.fn(),
-  };
-});
+vi.mock(import('/@/util.js'));
 
 vi.mock('child_process', () => {
   return {

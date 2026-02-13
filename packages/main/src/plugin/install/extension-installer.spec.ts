@@ -84,7 +84,7 @@ const contributionManager = {} as unknown as ContributionManager;
 const ipcMainOnMock = vi.fn();
 
 vi.mock(import('node:fs'));
-vi.mock(import('./../docker-extension/docker-desktop-installer.js'));
+vi.mock(import('/@/plugin/docker-extension/docker-desktop-installer.js'));
 
 beforeEach(() => {
   vi.resetAllMocks();
