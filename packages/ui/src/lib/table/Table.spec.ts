@@ -650,3 +650,112 @@ describe('Table#collapsed', () => {
     expect(layoutButton).not.toBeInTheDocument();
   });
 });
+
+describe('pagination', () => {
+  interface Item {
+    id: string;
+    name?: string;
+  }
+
+  const ROW = new Row<Item>({
+    selectable: (): boolean => true,
+  });
+
+  const SIMPLE_COLUMN = new Column<Item, string>('Name', {
+    width: '3fr',
+    renderMapping: (obj): string => obj.name ?? 'unknown',
+    renderer: SimpleColumn,
+  });
+
+  test('check whole data is displayed if size is lower than page size', async () => {
+    render(Table<Item>, {
+      kind: 'demo',
+      data: [
+        {
+          id: 'foo',
+          name: 'foo',
+        },
+        {
+          id: 'bar',
+          name: 'bar',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      pageSize: 5,
+    });
+
+    // 2 people = header + 2 rows
+    const rows = await screen.findAllByRole('row');
+    expect(rows).toBeDefined();
+    expect(rows.length).toBe(3);
+
+    // first data row should contain John and his age
+    expect(rows[1].textContent).toContain('foo');
+
+    // second data row should contain Henry and his age
+    expect(rows[2].textContent).toContain('bar');
+  });
+
+  test('check first page is displayed if size is greater than page size', async () => {
+    render(Table<Item>, {
+      kind: 'demo',
+      data: [
+        {
+          id: 'id-1',
+          name: 'name-1',
+        },
+        {
+          id: 'id-2',
+          name: 'name-2',
+        },
+        {
+          id: 'id-3',
+          name: 'name-3',
+        },
+        {
+          id: 'id-4',
+          name: 'name-4',
+        },
+        {
+          id: 'id-5',
+          name: 'name-5',
+        },
+        {
+          id: 'id-6',
+          name: 'name-6',
+        },
+        {
+          id: 'id-7',
+          name: 'name-7',
+        },
+        {
+          id: 'id-8',
+          name: 'name-8',
+        },
+        {
+          id: 'id-9',
+          name: 'name-9',
+        },
+        {
+          id: 'id-10',
+          name: 'name-10',
+        },
+      ],
+      columns: [SIMPLE_COLUMN],
+      row: ROW,
+      pageSize: 5,
+    });
+
+    // 5 people = header + 5 rows
+    const rows = await screen.findAllByRole('row');
+    expect(rows).toBeDefined();
+    expect(rows.length).toBe(6);
+
+    // first data row should contain John and his age
+    expect(rows[1].textContent).toContain('name-1');
+
+    // second data row should contain Henry and his age
+    expect(rows[5].textContent).toContain('name-5');
+  });
+});

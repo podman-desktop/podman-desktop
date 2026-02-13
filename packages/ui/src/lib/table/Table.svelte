@@ -41,10 +41,47 @@ export let label: (object: T) => string = item => item.name ?? String(item);
 
 export let enableLayoutConfiguration: boolean = false;
 
+/**
+ * Optional page size for pagination.
+ * Default is -1 which means no pagination.
+ */
+export let pageSize: number = -1;
+
 let columnItems: ListOrganizerItem[] = [];
 let columnOrdering = new SvelteMap<string, number>();
 let isInitialized = false;
 let isLoading = false;
+
+// Pagination state
+let currentPage = 0;
+
+// Calculate total pages based on page size
+let totalPages = 0;
+
+// Get paginated data
+let paginatedData: T[] = [];
+
+// Reset when data changes
+$: {
+  totalPages = pageSize > 0 ? Math.ceil(data.length / pageSize) : 1;
+  paginatedData = pageSize > 0 ? data.slice(currentPage * pageSize, (currentPage + 1) * pageSize) : data;
+
+  if (currentPage >= totalPages) {
+    currentPage = Math.max(0, totalPages - 1);
+  }
+}
+
+function goToPreviousPage(): void {
+  if (currentPage > 0) {
+    currentPage--;
+  }
+}
+
+function goToNextPage(): void {
+  if (currentPage < totalPages - 1) {
+    currentPage++;
+  }
+}
 
 // Initialize default column configuration
 function getDefaultColumnItems(): ListOrganizerItem[] {
@@ -367,6 +404,32 @@ async function resetColumns(): Promise<void> {
 }
 </script>
 
+<div class="flex flex-col items-center w-full">
+<!-- Pagination: Navigation buttons (before table) -->
+{#if pageSize > 0 && data.length > 0}
+  <div class="flex justify-center mb-2">
+    <button
+      class="px-3 py-1 rounded text-[var(--pd-table-body-text)] hover:bg-[var(--pd-content-card-hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={currentPage === 0}
+      on:click={goToPreviousPage}
+      title="Previous page"
+      aria-label="Previous page">
+      <i class="fas fa-backward" aria-hidden="true"></i>
+    </button>
+    <span class="px-4 py-1 text-[var(--pd-table-body-text)]">
+      Page {currentPage + 1} of {totalPages}
+    </span>
+    <button
+      class="px-3 py-1 rounded text-[var(--pd-table-body-text)] hover:bg-[var(--pd-content-card-hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={currentPage >= totalPages - 1}
+      on:click={goToNextPage}
+      title="Next page"
+      aria-label="Next page">
+      <i class="fas fa-forward" aria-hidden="true"></i>
+    </button>
+  </div>
+{/if}
+
 <div
   style="--table-grid-table-columns: {gridTemplateColumns}"
   class="w-full mx-5"
@@ -441,7 +504,7 @@ async function resetColumns(): Promise<void> {
   </div>
   <!-- Table body -->
   <div role="rowgroup">
-    {#each data as object (object)}
+    {#each paginatedData as object (key(object))}
       {@const children = row.info.children?.(object) ?? []}
       {@const itemKey = key(object)}
       <div class="min-h-[48px] h-fit bg-[var(--pd-content-card-bg)] rounded-lg mb-2 border border-[var(--pd-content-table-border)]">
@@ -539,4 +602,30 @@ async function resetColumns(): Promise<void> {
       </div>
     {/each}
   </div>
+</div>
+
+<!-- Pagination: Navigation buttons (after table) -->
+{#if pageSize > 0 && data.length > 0}
+  <div class="flex justify-center mt-2">
+    <button
+      class="px-3 py-1 rounded text-[var(--pd-table-body-text)] hover:bg-[var(--pd-content-card-hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={currentPage === 0}
+      on:click={goToPreviousPage}
+      title="Previous page"
+      aria-label="Previous page">
+      <i class="fas fa-backward" aria-hidden="true"></i>
+    </button>
+    <span class="px-4 py-1 text-[var(--pd-table-body-text)]">
+      Page {currentPage + 1} of {totalPages}
+    </span>
+    <button
+      class="px-3 py-1 rounded text-[var(--pd-table-body-text)] hover:bg-[var(--pd-content-card-hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={currentPage >= totalPages - 1}
+      on:click={goToNextPage}
+      title="Next page"
+      aria-label="Next page">
+      <i class="fas fa-forward" aria-hidden="true"></i>
+    </button>
+  </div>
+{/if}
 </div>

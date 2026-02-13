@@ -467,7 +467,8 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
           key={key}
           label={label}
           enableLayoutConfiguration={true}
-          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}>
+          on:update={(): ContainerGroupInfoUI[] => (containerGroups = [...containerGroups])}
+        pageSize={5}>
         </Table>
       {/if}
     </div>
