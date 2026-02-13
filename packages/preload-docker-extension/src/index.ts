@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2023 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,18 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { v1 as dockerDesktopAPI } from '@docker/extension-api-client-types';
-import type { ExecStreamOptions, NavigationIntents, RequestConfig } from '@docker/extension-api-client-types/dist/v1';
-import type { Dialog, OpenDialogResult } from '@docker/extension-api-client-types/dist/v1/dialog';
+import type { Dialog, OpenDialogResult } from '@docker/extension-api-client-types/dist/v1/dialog.js';
+import type {
+  ExecStreamOptions,
+  NavigationIntents,
+  RequestConfig,
+} from '@docker/extension-api-client-types/dist/v1/index.js';
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { SimpleContainerInfo } from '/@api/container-info';
-import type { ImageInfo } from '/@api/image-info';
+import type { SimpleContainerInfo } from '/@api/container-info.js';
+import type { ImageInfo } from '/@api/image-info.js';
 
-import { lines, parseJsonLines, parseJsonObject } from './exec-result-helper';
+import { lines, parseJsonLines, parseJsonObject } from './exec-result-helper.js';
 
 interface ErrorMessage {
   name: string;
