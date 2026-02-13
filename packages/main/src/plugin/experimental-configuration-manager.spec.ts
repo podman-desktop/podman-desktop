@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,29 +134,65 @@ describe('ExperimentalConfigurationManager', () => {
     test('should enable configuration with single scope', async () => {
       const key = 'kubernetes.statesExperimental';
       const scope = 'DEFAULT';
+      const mockConfig = { get: vi.fn().mockReturnValue(undefined) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       await experimentalConfigurationManager.enableExperimentalConfiguration(key, scope);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, {}, scope);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, { enabled: true }, scope);
     });
 
     test('should enable configuration with array of scopes', async () => {
       const key = 'kubernetes.statesExperimental';
       const scopes = ['DEFAULT', 'ContainerConnection'];
+      const mockConfig = { get: vi.fn().mockReturnValue(undefined) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       await experimentalConfigurationManager.enableExperimentalConfiguration(key, scopes);
 
       expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledTimes(2);
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(1, key, {}, scopes[0]);
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(2, key, {}, scopes[1]);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
+        1,
+        key,
+        { enabled: true },
+        scopes[0],
+      );
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
+        2,
+        key,
+        { enabled: true },
+        scopes[1],
+      );
     });
 
     test('should enable configuration without scope', async () => {
       const key = 'kubernetes.statesExperimental';
+      const mockConfig = { get: vi.fn().mockReturnValue(undefined) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       await experimentalConfigurationManager.enableExperimentalConfiguration(key);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, {}, undefined);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
+        key,
+        { enabled: true },
+        undefined,
+      );
+    });
+
+    test('should preserve existing properties when enabling', async () => {
+      const key = 'kubernetes.statesExperimental';
+      const scope = 'DEFAULT';
+      const existingConfig = { remindAt: 123456, dialogDisabled: false };
+      const mockConfig = { get: vi.fn().mockReturnValue(existingConfig) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      await experimentalConfigurationManager.enableExperimentalConfiguration(key, scope);
+
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
+        key,
+        { remindAt: 123456, dialogDisabled: false, enabled: true },
+        scope,
+      );
     });
   });
 
@@ -164,15 +200,19 @@ describe('ExperimentalConfigurationManager', () => {
     test('should disable configuration with single scope', async () => {
       const key = 'kubernetes.statesExperimental';
       const scope = 'DEFAULT';
+      const mockConfig = { get: vi.fn().mockReturnValue(undefined) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key, scope);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, scope);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, { enabled: false }, scope);
     });
 
     test('should disable configuration with array of scopes', async () => {
       const key = 'kubernetes.statesExperimental';
       const scopes = ['DEFAULT', 'ContainerConnection'];
+      const mockConfig = { get: vi.fn().mockReturnValue(undefined) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key, scopes);
 
@@ -180,28 +220,50 @@ describe('ExperimentalConfigurationManager', () => {
       expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
         1,
         key,
-        undefined,
+        { enabled: false },
         scopes[0],
       );
       expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
         2,
         key,
-        undefined,
+        { enabled: false },
         scopes[1],
       );
     });
 
     test('should disable configuration without scope', async () => {
       const key = 'kubernetes.statesExperimental';
+      const mockConfig = { get: vi.fn().mockReturnValue(undefined) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, undefined);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
+        key,
+        { enabled: false },
+        undefined,
+      );
+    });
+
+    test('should preserve existing properties when disabling', async () => {
+      const key = 'kubernetes.statesExperimental';
+      const scope = 'DEFAULT';
+      const existingConfig = { remindAt: 123456, dialogDisabled: false, enabled: true };
+      const mockConfig = { get: vi.fn().mockReturnValue(existingConfig) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      await experimentalConfigurationManager.disableExperimentalConfiguration(key, scope);
+
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(
+        key,
+        { remindAt: 123456, dialogDisabled: false, enabled: false },
+        scope,
+      );
     });
   });
 
   describe('isExperimentalConfigurationEnabled', () => {
-    test('should return true when configuration is an object', () => {
+    test('should return true when configuration has enabled: true', () => {
       const key = 'kubernetes.statesExperimental';
       const scope = 'DEFAULT';
       const mockConfig = { get: vi.fn().mockReturnValue({ enabled: true }) };
@@ -212,6 +274,28 @@ describe('ExperimentalConfigurationManager', () => {
       expect(result).toBe(true);
       expect(mockedConfigurationRegistry.getConfiguration).toHaveBeenCalledWith('kubernetes', scope);
       expect(mockConfig.get).toHaveBeenCalledWith('statesExperimental');
+    });
+
+    test('should return false when configuration has enabled: false', () => {
+      const key = 'kubernetes.statesExperimental';
+      const scope = 'DEFAULT';
+      const mockConfig = { get: vi.fn().mockReturnValue({ enabled: false }) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      const result = experimentalConfigurationManager.isExperimentalConfigurationEnabled(key, scope);
+
+      expect(result).toBe(false);
+    });
+
+    test('should return true for backward compatibility when object has no enabled property', () => {
+      const key = 'kubernetes.statesExperimental';
+      const scope = 'DEFAULT';
+      const mockConfig = { get: vi.fn().mockReturnValue({ remindAt: 123456, dialogDisabled: false }) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      const result = experimentalConfigurationManager.isExperimentalConfigurationEnabled(key, scope);
+
+      expect(result).toBe(true);
     });
 
     test('should return false when configuration is not an object', () => {
@@ -269,7 +353,7 @@ describe('ExperimentalConfigurationManager', () => {
 
     test('should work without scope', () => {
       const key = 'kubernetes.statesExperimental';
-      const mockConfig = { get: vi.fn().mockReturnValue({}) };
+      const mockConfig = { get: vi.fn().mockReturnValue({ enabled: true }) };
       vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
 
       const result = experimentalConfigurationManager.isExperimentalConfigurationEnabled(key);
@@ -313,5 +397,120 @@ describe('ExperimentalConfigurationManager', () => {
       expect(result).toBe(false);
       expect(mockedConfigurationRegistry.getConfiguration).toHaveBeenCalledTimes(2);
     });
+
+    test.each([
+      {
+        name: 'config not in settings (undefined)',
+        configValue: undefined,
+        expected: false,
+      },
+      {
+        name: 'enabled with true',
+        configValue: { enabled: true },
+        expected: true,
+      },
+      {
+        name: 'disabled with false',
+        configValue: { enabled: false },
+        expected: false,
+      },
+      {
+        name: 'enabled with {}',
+        configValue: {},
+        expected: true,
+      },
+      {
+        name: 'enabled by having some data in object',
+        configValue: { remindAt: 123456, dialogDisabled: false },
+        expected: true,
+      },
+      {
+        name: 'with both disabled and dialogDisabled props',
+        configValue: { disabled: false, dialogDisabled: true, remindAt: 123456 },
+        expected: true,
+      },
+      {
+        name: 'with enabled: true, disabled and dialogDisabled props',
+        configValue: { enabled: true, disabled: false, dialogDisabled: true, remindAt: 123456 },
+        expected: true,
+      },
+      {
+        name: 'with enabled: false, disabled and dialogDisabled props',
+        configValue: { enabled: false, disabled: false, dialogDisabled: true, remindAt: 123456 },
+        expected: false,
+      },
+    ])('should handle $name correctly', ({ configValue, expected }) => {
+      const key = 'kubernetes.statesExperimental';
+      const mockConfig = { get: vi.fn().mockReturnValue(configValue) };
+      vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+      const result = experimentalConfigurationManager.isExperimentalConfigurationEnabled(key);
+
+      expect(result).toBe(expected);
+    });
+  });
+
+  test.each([
+    {
+      name: 'enable when config not in settings (undefined)',
+      currentConfig: undefined,
+      expectedSettings: { enabled: true },
+    },
+    {
+      name: 'enable when config is {}',
+      currentConfig: {},
+      expectedSettings: { enabled: true },
+    },
+    {
+      name: 'enable when config has some data',
+      currentConfig: { remindAt: 123456, dialogDisabled: false },
+      expectedSettings: { remindAt: 123456, dialogDisabled: false, enabled: true },
+    },
+    {
+      name: 'enable when config has enabled: false',
+      currentConfig: { enabled: false, dialogDisabled: false, remindAt: 123456 },
+      expectedSettings: { enabled: true, dialogDisabled: false, remindAt: 123456 },
+    },
+  ])('should $name', async ({ currentConfig, expectedSettings }) => {
+    const key = 'kubernetes.statesExperimental';
+    const scope = 'DEFAULT';
+    const mockConfig = { get: vi.fn().mockReturnValue(currentConfig) };
+    vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+    await experimentalConfigurationManager.enableExperimentalConfiguration(key, scope);
+
+    expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, expectedSettings, scope);
+  });
+
+  test.each([
+    {
+      name: 'disable when config not in settings (undefined)',
+      currentConfig: undefined,
+      expectedSettings: { enabled: false },
+    },
+    {
+      name: 'disable when config is {}',
+      currentConfig: {},
+      expectedSettings: { enabled: false },
+    },
+    {
+      name: 'disable when config has some data',
+      currentConfig: { remindAt: 123456, dialogDisabled: false },
+      expectedSettings: { remindAt: 123456, dialogDisabled: false, enabled: false },
+    },
+    {
+      name: 'disable when config has enabled: true',
+      currentConfig: { enabled: true, dialogDisabled: false, remindAt: 123456 },
+      expectedSettings: { enabled: false, dialogDisabled: false, remindAt: 123456 },
+    },
+  ])('should $name', async ({ currentConfig, expectedSettings }) => {
+    const key = 'kubernetes.statesExperimental';
+    const scope = 'DEFAULT';
+    const mockConfig = { get: vi.fn().mockReturnValue(currentConfig) };
+    vi.mocked(mockedConfigurationRegistry.getConfiguration).mockReturnValue(mockConfig as unknown as Configuration);
+
+    await experimentalConfigurationManager.disableExperimentalConfiguration(key, scope);
+
+    expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, expectedSettings, scope);
   });
 });

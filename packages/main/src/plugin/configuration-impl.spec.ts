@@ -337,7 +337,8 @@ describe('locked configuration handling', () => {
       'telemetry.check': true, // User wants telemetry check enabled
       'statusbarProviders.showProviders': {
         remindAt: 1758312136049,
-        disabled: false,
+        dialogDisabled: false,
+        enabled: true,
       },
       'releaseNotesBanner.show': '1.21.0',
       'compose.binary.installComposeSystemWide': true,

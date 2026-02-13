@@ -27,7 +27,13 @@ function update(propertyId: string, value: unknown): void {
   } else if (typeof value === 'boolean') {
     values[propertyId] = value;
   } else if (typeof value === 'object') {
-    values[propertyId] = true;
+    if (typeof value === 'object' && value && 'enabled' in value) {
+      // There is an enabled property in the object
+      values[propertyId] = !!value.enabled;
+    } else {
+      // There is no enabled property in the object (legacy support)
+      values[propertyId] = !!value;
+    }
   }
 }
 
@@ -53,8 +59,11 @@ async function onCheckedAll(event: { detail: boolean }): Promise<void> {
         continue;
       }
 
-      const settings = event.detail ? {} : undefined;
-      await window.updateExperimentalConfigurationValue(property.id, settings, property.scope);
+      if (event.detail) {
+        await window.enableExperimentalConfiguration(property.id, property.scope);
+      } else {
+        await window.disableExperimentalConfiguration(property.id, property.scope);
+      }
     }
   } finally {
     loading = false;

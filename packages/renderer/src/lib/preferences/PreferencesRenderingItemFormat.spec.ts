@@ -26,7 +26,7 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
@@ -511,4 +511,95 @@ test('Expect a password input when record is type string and format is password'
   // check that the name is properly set and the value too
   expect(passwordInput).toHaveAttribute('name', 'record');
   expect(passwordInput).toHaveValue('foobar');
+});
+
+describe('experimental features', () => {
+  test.each([
+    {
+      name: 'enabled experimental feature',
+      property: {
+        id: 'statusbar.experimental',
+        title: 'Experimental Feature',
+        parentId: 'statusbar',
+        type: 'object',
+        scope: 'DEFAULT',
+        experimental: { githubDiscussionLink: 'https://github.com/test' },
+      } as IConfigurationPropertyRecordedSchema,
+      isEnabled: true,
+      expectedChecked: true,
+    },
+    {
+      name: 'disabled experimental feature',
+      property: {
+        id: 'statusbar.experimental',
+        title: 'Experimental Feature',
+        parentId: 'statusbar',
+        type: 'object',
+        scope: 'DEFAULT',
+        experimental: { githubDiscussionLink: 'https://github.com/test' },
+      } as IConfigurationPropertyRecordedSchema,
+      isEnabled: false,
+      expectedChecked: false,
+    },
+  ])('should display $name correctly', async ({ property, isEnabled, expectedChecked }) => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(isEnabled);
+
+    await awaitRender(property, {});
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeInTheDocument();
+    if (expectedChecked) {
+      expect(checkbox).toBeChecked();
+    } else {
+      expect(checkbox).not.toBeChecked();
+    }
+  });
+
+  test('should call enableExperimentalConfiguration when toggling on', async () => {
+    const property: IConfigurationPropertyRecordedSchema = {
+      id: 'statusbar.experimental',
+      title: 'Experimental Feature',
+      parentId: 'statusbar',
+      type: 'object',
+      scope: 'DEFAULT',
+      experimental: { githubDiscussionLink: 'https://github.com/test' },
+    };
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
+    vi.mocked(window.enableExperimentalConfiguration).mockResolvedValue(undefined);
+
+    await awaitRender(property, { enableAutoSave: true });
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).not.toBeChecked();
+
+    await userEvent.click(checkbox);
+
+    await vi.waitFor(() => {
+      expect(window.enableExperimentalConfiguration).toHaveBeenCalledWith(property.id, property.scope);
+    });
+  });
+
+  test('should call disableExperimentalConfiguration when toggling off', async () => {
+    const property: IConfigurationPropertyRecordedSchema = {
+      id: 'statusbar.experimental',
+      title: 'Experimental Feature',
+      parentId: 'statusbar',
+      type: 'object',
+      scope: 'DEFAULT',
+      experimental: { githubDiscussionLink: 'https://github.com/test' },
+    };
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+    vi.mocked(window.disableExperimentalConfiguration).mockResolvedValue(undefined);
+
+    await awaitRender(property, { enableAutoSave: true });
+
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeChecked();
+
+    await userEvent.click(checkbox);
+
+    await vi.waitFor(() => {
+      expect(window.disableExperimentalConfiguration).toHaveBeenCalledWith(property.id, property.scope);
+    });
+  });
 });

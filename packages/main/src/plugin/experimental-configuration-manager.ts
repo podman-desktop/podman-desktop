@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ export class ExperimentalConfigurationManager {
   }
 
   /**
-   * Enable an experimental configuration by setting it to an object
+   * Enable an experimental configuration by setting enabled to true
    * @param key - Full configuration key (e.g., 'kubernetes.statesExperimental')
    * @param scope - Configuration scope
    */
@@ -68,19 +68,36 @@ export class ExperimentalConfigurationManager {
     key: string,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
-    const settings = {};
+    await this.updateExperimentalEnabled(key, true, scope);
+  }
 
-    if (Array.isArray(scope)) {
-      for (const scopeItem of scope) {
-        await this.configurationRegistry.updateConfigurationValue(key, settings, scopeItem);
-      }
-    } else {
-      await this.configurationRegistry.updateConfigurationValue(key, settings, scope);
+  /**
+   * Helper method to update the enabled property of an experimental configuration
+   * @param key - Full configuration key
+   * @param enabled - New enabled value
+   * @param scope - Configuration scope
+   */
+  private async updateExperimentalEnabled(
+    key: string,
+    enabled: boolean,
+    scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
+  ): Promise<void> {
+    const { section, property } = this.parseKey(key);
+    if (!section || !property) {
+      return;
+    }
+
+    const scopes = Array.isArray(scope) ? scope : [scope];
+    for (const scopeItem of scopes) {
+      const currentConfig = this.configurationRegistry.getConfiguration(section, scopeItem).get(property);
+      const settings =
+        typeof currentConfig === 'object' && currentConfig !== null ? { ...currentConfig, enabled } : { enabled };
+      await this.configurationRegistry.updateConfigurationValue(key, settings, scopeItem);
     }
   }
 
   /**
-   * Disable an experimental configuration by setting it to undefined
+   * Disable an experimental configuration by setting enabled to false
    * @param key - Full configuration key (e.g., 'kubernetes.statesExperimental')
    * @param scope - Configuration scope
    */
@@ -88,20 +105,14 @@ export class ExperimentalConfigurationManager {
     key: string,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
-    if (Array.isArray(scope)) {
-      for (const scopeItem of scope) {
-        await this.configurationRegistry.updateConfigurationValue(key, undefined, scopeItem);
-      }
-    } else {
-      await this.configurationRegistry.updateConfigurationValue(key, undefined, scope);
-    }
+    await this.updateExperimentalEnabled(key, false, scope);
   }
 
   /**
-   * Check if an experimental configuration is enabled (has an object value)
+   * Check if an experimental configuration is enabled (checks the enabled property)
    * @param key - Full configuration key (e.g., 'kubernetes.statesExperimental')
    * @param scope - Configuration scope
-   * @returns true if feature is enabled (has object value), false otherwise
+   * @returns true if feature is enabled, false otherwise
    */
   isExperimentalConfigurationEnabled(
     key: string,
@@ -112,15 +123,27 @@ export class ExperimentalConfigurationManager {
       return false;
     }
 
-    if (Array.isArray(scope)) {
-      for (const scopeItem of scope) {
-        const config = this.configurationRegistry.getConfiguration(section, scopeItem).get(property);
-        if (typeof config === 'object' && config !== null) return true;
+    const scopes = Array.isArray(scope) ? scope : [scope];
+    for (const scopeItem of scopes) {
+      const config = this.configurationRegistry.getConfiguration(section, scopeItem).get(property);
+      if (this.isConfigEnabled(config)) {
+        return true;
       }
-      return false;
-    } else {
-      const config = this.configurationRegistry.getConfiguration(section, scope).get(property);
-      return (typeof config === 'object' && config !== null) || (typeof config === 'boolean' && config);
     }
+    return false;
+  }
+
+  /**
+   * Helper method to check if a configuration value represents an enabled state
+   * @param config - Configuration value to check
+   * @returns true if enabled, false otherwise
+   */
+  private isConfigEnabled(config: unknown): boolean {
+    if (typeof config === 'object' && config !== null && !Array.isArray(config)) {
+      // Check enabled property if it exists, otherwise default to true for backward compatibility
+      return 'enabled' in config ? Boolean(config.enabled) : true;
+    }
+    // Legacy: support boolean true
+    return typeof config === 'boolean' && config;
   }
 }

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,6 +107,11 @@ export function isDefaultScope(scope?: ConfigurationScope | ConfigurationScope[]
 export async function getInitialValue(property: IConfigurationPropertyRecordedSchema): Promise<unknown> {
   if (isDefaultScope(property.scope)) {
     if (property.id) {
+      // For experimental features with object type, use the dedicated method to check enabled status
+      if (property.experimental && property.type === 'object') {
+        return await window.isExperimentalConfigurationEnabled(property.id, property.scope);
+      }
+
       let value = await window.getConfigurationValue(property.id, CONFIGURATION_DEFAULT_SCOPE);
       if (property.type === 'boolean') {
         value = !!value;
