@@ -22,8 +22,8 @@ import type {
   ConfigurationScope as PodmanDesktopApiConfigurationScope,
 } from '@podman-desktop/api';
 
-import type { IDisposable } from '../disposable.js';
-import type { Event } from '../event.js';
+import type { IDisposable } from '/@/disposable.js';
+import type { Event } from '/@/event.js';
 
 interface IExperimentalConfiguration {
   // href to the discussion
