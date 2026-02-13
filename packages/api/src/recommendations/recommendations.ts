@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { FeaturedExtension } from '../featured/featured-api.js';
+import type { FeaturedExtension } from '/@/featured/featured-api.js';
 
 export interface ExtensionBanner {
   extensionId: string;
