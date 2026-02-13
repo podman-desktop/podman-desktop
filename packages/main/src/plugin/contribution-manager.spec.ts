@@ -322,9 +322,7 @@ describe('findComposeBinary', () => {
     };
   });
 
-  vi.mock('../util/exec', () => {
-    return vi.fn();
-  });
+  vi.mock(import('/@/plugin/util/exec.js'));
 
   test('Check findComposeBinary on Windows', async () => {
     vi.mock('node:fs');

@@ -128,13 +128,7 @@ vi.mock('node:tls', () => {
   };
 });
 
-vi.mock('../util.js', () => {
-  return {
-    isWindows: vi.fn(),
-    isMac: vi.fn(),
-    isLinux: vi.fn(),
-  };
-});
+vi.mock(import('/@/util.js'));
 
 interface WincaProcedure {
   exe: () => string;

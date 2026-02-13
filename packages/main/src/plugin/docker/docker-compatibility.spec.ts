@@ -67,14 +67,7 @@ vi.mock('dockerode', async () => {
   return { default: Dockerode };
 });
 
-vi.mock('../../util', () => {
-  return {
-    isWindows: vi.fn(),
-    isMac: vi.fn(),
-    isLinux: vi.fn(),
-    exec: vi.fn(),
-  };
-});
+vi.mock(import('/@/util.js'));
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {
