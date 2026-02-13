@@ -16,14 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ColorInfo, WebviewInfo } from '@podman-desktop/core-api';
 import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { ColorInfo } from '/@api/color-info.js';
-import type { WebviewInfo } from '/@api/webview-info.js';
 
 import { WebviewPreload } from './webview-preload.js';
 
