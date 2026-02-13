@@ -25,6 +25,7 @@ import Checkbox from './checkbox/Checkbox.svelte';
 import Dropdown from './dropdown/Dropdown.svelte';
 import DropdownMenu from './dropdownMenu';
 import ChevronExpander from './icons/ChevronExpander.svelte';
+import Icon from './icons/Icon.svelte';
 import Input from './inputs/Input.svelte';
 import NumberInput from './inputs/NumberInput.svelte';
 import SearchInput from './inputs/SearchInput.svelte';
@@ -66,6 +67,7 @@ export {
   Expandable,
   FilteredEmptyScreen,
   FormPage,
+  Icon,
   Input,
   LinearProgress,
   Link,
