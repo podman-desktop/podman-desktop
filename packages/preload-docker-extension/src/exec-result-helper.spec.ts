@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { lines, parseJsonLines, parseJsonObject } from './exec-result-helper';
+import { lines, parseJsonLines, parseJsonObject } from './exec-result-helper.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
