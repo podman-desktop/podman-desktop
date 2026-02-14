@@ -19,6 +19,8 @@
 import type { ListOrganizerItem } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
 
+import { createSystemOverview } from '/@/stores/dashboard/dashboard-page-registry-system-overview';
+
 import { createExploreFeatures } from './dashboard-page-registry-explore-features';
 import { createExtensionBanners } from './dashboard-page-registry-extension-banners.svelte';
 import { createLearningCenter } from './dashboard-page-registry-learning-center.svelte';
@@ -34,25 +36,41 @@ export interface DashboardPageRegistryEntry {
 
 export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntry[] }>({ entries: [] });
 
+const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
+
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
+  const providers = !enhancedDashboard.enabled ? [createProviders()] : [];
+  const systemOverview = enhancedDashboard.enabled ? [createSystemOverview()] : [];
   return [
     createReleaseNotesBox(),
+    ...systemOverview,
     createExtensionBanners(),
     createExploreFeatures(),
     createLearningCenter(),
-    createProviders(),
+    ...providers,
   ];
 }
 
-setupDashboardPageRegistry();
+setupDashboardPageRegistry().catch((error: unknown) => {
+  console.error(`Failed to setup dashboard page registry: ${error}`);
+});
 
-export function setupDashboardPageRegistry(): void {
-  // Re-initialize with default values
+window.events?.receive('enhanced-dashboard-enabled', (value: unknown) => {
+  if (typeof value === 'boolean') {
+    enhancedDashboard.enabled = value;
+    setupDashboardPageRegistry().catch((error: unknown) => {
+      console.error(`Failed to setup dashboard page registry: ${error}`);
+    });
+  }
+});
+
+export async function setupDashboardPageRegistry(): Promise<void> {
+  enhancedDashboard.enabled = await window.isExperimentalConfigurationEnabled('dashboard.enhancedDashboard');
   dashboardPageRegistry.entries = getDashboardPageRegistry();
 }
 
 // Get default section names in their registry order
-export const defaultSectionNames = getDashboardPageRegistry().map(entry => entry.id);
+export const defaultSection: { names: string[] } = $state({ names: getDashboardPageRegistry().map(entry => entry.id) });
 
 // Helper function to convert ListOrganizerItems back to dashboard registry entries
 export function convertFromListOrganizerItems(

@@ -334,6 +334,7 @@ export class ColorRegistry {
     this.initProgressBar();
     this.initBadge();
     this.initCommon();
+    this.initSystemOverview();
   }
 
   protected initDefaults(): void {
@@ -681,6 +682,49 @@ export class ColorRegistry {
     this.registerColor(`${ct}table-border`, {
       dark: charcoal[400],
       light: gray[300],
+    });
+  }
+
+  protected initSystemOverview(): void {
+    const so = 'system-overview-';
+    this.registerColor(`${so}healthy-bg`, {
+      dark: green[600],
+      light: green[100],
+    });
+
+    this.registerColor(`${so}healthy-text`, {
+      dark: green[100],
+      light: green[900],
+    });
+
+    this.registerColor(`${so}stable-bg`, {
+      dark: charcoal[600],
+      light: gray[100],
+    });
+
+    this.registerColor(`${so}stable-text`, {
+      dark: gray[400],
+      light: charcoal[500],
+    });
+
+    this.registerColor(`${so}critical-bg`, {
+      dark: red[600],
+      light: red[100],
+    });
+
+    this.registerColor(`${so}critical-text`, {
+      dark: red[500],
+      light: red[700],
+    });
+
+    this.registerColor(`${so}progressing-bg`, {
+      dark: purple[600],
+      light: purple[100],
+    });
+
+    this.registerColor(`${so}progressing-text`, {
+      dark: purple[100],
+      light: purple[900],
     });
   }
 

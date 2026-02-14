@@ -1,13 +1,13 @@
 <script lang="ts">
 import { ListOrganizer, type ListOrganizerItem, NavPage, tablePersistence } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
-import { SvelteMap } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import {
   convertFromListOrganizerItems,
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
-  defaultSectionNames,
+  defaultSection,
   setupDashboardPageRegistry,
 } from '/@/stores/dashboard/dashboard-page-registry.svelte';
 
@@ -42,8 +42,7 @@ function getDefaultDashboardItems(): ListOrganizerItem[] {
 async function initializeDashboard(): Promise<void> {
   try {
     if (dashboardPageRegistry.entries.length > 0) {
-      const loadedItems = await loadDashboardConfiguration();
-      dashboardSections = loadedItems;
+      dashboardSections = await loadDashboardConfiguration();
     }
   } catch (error: unknown) {
     console.error(`Failed to load dashboard configuration: ${error}`);
@@ -52,19 +51,36 @@ async function initializeDashboard(): Promise<void> {
   }
 }
 
+function filterListOrganizerItems(items: ListOrganizerItem[]): ListOrganizerItem[] {
+  const registryIds = new SvelteSet(dashboardPageRegistry.entries.map(entry => entry.id));
+  return items.filter((item: ListOrganizerItem) => registryIds.has(item.id));
+}
+
 // Load configuration from settings
 async function loadDashboardConfiguration(): Promise<ListOrganizerItem[]> {
   if (!tablePersistence.storage) return getDefaultDashboardItems();
-
-  const loadedItems = await tablePersistence.storage.load('dashboard', defaultSectionNames);
+  const loadedItems = filterListOrganizerItems(
+    await tablePersistence.storage.load('dashboard', $state.snapshot(defaultSection.names)),
+  );
 
   if (loadedItems.length > 0) {
-    // Ensure loaded items have proper originalOrder from defaults if missing
     const defaultItems = getDefaultDashboardItems();
-    const items = loadedItems.map((item: ListOrganizerItem) => ({
+    const loadedItemsMap = new Map(loadedItems.map(item => [item.id, item]));
+    const defaultItemsMap = new Map(defaultItems.map(item => [item.id, item]));
+
+    // Start with loaded items that are in persisted storage (preserves user's order and settings)
+    const items: ListOrganizerItem[] = loadedItems.map(item => ({
       ...item,
-      originalOrder: item.originalOrder ?? defaultItems.find(d => d.id === item.id)?.originalOrder ?? 0,
+      originalOrder: item.originalOrder ?? defaultItemsMap.get(item.id)?.originalOrder ?? 0,
     }));
+
+    // Add new items from registry that are not in persisted storage
+    defaultItems.forEach(defaultItem => {
+      if (!loadedItemsMap.has(defaultItem.id)) {
+        // New item added to registry that is not in persisted storage - add it to its original order
+        items.splice(defaultItem.originalOrder, 0, defaultItem);
+      }
+    });
 
     // Build ordering map from loaded items
     // Check if items are in a different order than their original order
@@ -75,10 +91,8 @@ async function loadDashboardConfiguration(): Promise<ListOrganizerItem[]> {
         dashboardOrdering.set(item.id, index);
       });
     }
-
     return items;
   }
-
   return getDefaultDashboardItems();
 }
 
@@ -120,11 +134,13 @@ async function resetDashboardLayout(): Promise<void> {
   if (!tablePersistence.storage) return;
   try {
     // Reset using the persistence callbacks (clears saved config)
-    dashboardSections = await tablePersistence.storage.reset('dashboard', defaultSectionNames);
+    dashboardSections = filterListOrganizerItems(
+      await tablePersistence.storage.reset('dashboard', $state.snapshot(defaultSection.names)),
+    );
     dashboardOrdering.clear();
 
     // Reset the registry to default state
-    setupDashboardPageRegistry();
+    await setupDashboardPageRegistry();
 
     // Ensure the registry reflects the reset state
     if (dashboardPageRegistry.entries.length > 0) {
