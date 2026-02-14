@@ -5,6 +5,8 @@ import { router } from 'tinro';
 
 import SystemOverviewProviderCardDetailed from '/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte';
 import SystemOverviewProviderCardMinimal from '/@/lib/dashboard/SystemOverviewProviderCardMinimal.svelte';
+import SystemOverviewProviderConfigured from '/@/lib/dashboard/SystemOverviewProviderConfigured.svelte';
+import SystemOverviewProviderInstalled from '/@/lib/dashboard/SystemOverviewProviderInstalled.svelte';
 import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
 import {
   convertProviderStatusToSystemOverviewStatus,
@@ -15,13 +17,12 @@ import {
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
-import SystemOverviewProviderNotCreated from './SystemOverviewProviderNotConfigured.svelte';
 import SystemOverviewProviderNotInstalled from './SystemOverviewProviderNotInstalled.svelte';
 
 let providers = $derived($providerInfos);
 
 let status: Status = $derived(getSystemOverviewStatus());
-let statusText = $derived(getSystemOverviewText(status));
+let statusText: string = $derived(getSystemOverviewText(status));
 
 // Get all connections from all providers with their provider info
 let allConnectionsWithProvider = $derived.by(() => {
@@ -66,22 +67,13 @@ let detailedConnections = $derived(
   }),
 );
 
-let podmanProvider = $derived(providers.find(p => p.id === 'podman'));
-
 // Check Podman provider states
-let podmanProviderNotInstalled = $derived(podmanProvider?.status === 'not-installed');
-let podmanProviderConfigured = $derived(
-  podmanProvider &&
-    (podmanProvider.status === 'configured' || podmanProvider.status === 'installed') &&
-    podmanProvider.containerConnections.length === 0,
-);
+let providersNotInstalled = $derived(providers.filter(p => p.status === 'not-installed'));
+let providersInstalled = $derived(providers.filter(p => p.status === 'installed'));
+let providersConfigured = $derived(providers.filter(p => p.status === 'configured'));
+
 function navigateToResources(): void {
   router.goto('/preferences/resources');
-}
-
-function goToProviderPreferences(provider?: ProviderInfo): void {
-  if (!provider) return;
-  router.goto(`/preferences/provider/${provider.internalId}`);
 }
 </script>
 
@@ -108,14 +100,16 @@ function goToProviderPreferences(provider?: ProviderInfo): void {
 
   <div class="flex flex-col gap-2 pt-2">
     <!-- Podman provider states: not installed or needs machine creation -->
-    {#if podmanProviderNotInstalled && podmanProvider}
-      <SystemOverviewProviderNotInstalled provider={podmanProvider} />
-    {/if}
-    {#if podmanProviderConfigured && podmanProvider}
-      <SystemOverviewProviderNotCreated
-        provider={podmanProvider}
-        onCreate={(): void => goToProviderPreferences(podmanProvider)} />
-    {/if}
+    {#each providersNotInstalled as provider, index (index)}
+      <SystemOverviewProviderNotInstalled {provider} />
+    {/each}
+    {#each providersInstalled as provider, index (index)}
+      <SystemOverviewProviderInstalled {provider} />
+    {/each}
+
+    {#each providersConfigured as provider, index (index)}
+      <SystemOverviewProviderConfigured {provider} />
+    {/each}
 
     <!-- Detailed connections (vertical stack) -->
     {#each detailedConnections as { connection, provider }, index (index)}

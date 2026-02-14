@@ -7,13 +7,24 @@ import type { ProviderInfo } from '/@api/provider-info';
 
 interface Props {
   provider: ProviderInfo;
-  onCreate: () => void;
 }
 
-let { provider, onCreate }: Props = $props();
+let { provider }: Props = $props();
 
-let isLinux = $derived((await window.getOsPlatform()) === 'linux');
 let createButtonTitle = $derived(`Create new ${provider.containerProviderConnectionCreationDisplayName ?? 'machine'}`);
+
+let initializeInProgress = $state(false);
+function initializeProvider(): void {
+  initializeInProgress = true;
+  window
+    .initializeProvider(provider.internalId)
+    .catch(() => {
+      initializeInProgress = false;
+    })
+    .finally(() => {
+      initializeInProgress = false;
+    });
+}
 </script>
 
 <div class="flex items-center gap-3 py-2 bg-[var(--pd-content-card-carousel-card-bg)] rounded-lg p-4">
@@ -35,9 +46,7 @@ let createButtonTitle = $derived(`Create new ${provider.containerProviderConnect
     </div>
   </div>
 
-  {#if !isLinux}
-    <Button type="primary" onclick={onCreate}>
-      {createButtonTitle}
-    </Button>
-  {/if}
+  <Button type="primary" onclick={initializeProvider} inProgress={initializeInProgress}>
+    {createButtonTitle}
+  </Button>
 </div>
