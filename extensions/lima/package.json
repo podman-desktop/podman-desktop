@@ -40,6 +40,35 @@
           "default": "",
           "description": "Instance name (default is same name as type)"
         },
+        "lima.arch": {
+          "type": "arch",
+          "scope": "ContainerConnection",
+          "description": "Arch",
+          "readonly": true
+        },
+        "lima.cpus": {
+          "type": "number",
+          "format": "cpu",
+          "scope": "ContainerConnection",
+          "description": "CPUs",
+          "readonly": true
+        },
+        "lima.memory": {
+          "type": "number",
+          "format": "memory",
+          "base": 2,
+          "scope": "ContainerConnection",
+          "description": "Memory",
+          "readonly": true
+        },
+        "lima.disk": {
+          "type": "number",
+          "format": "diskSize",
+          "base": 2,
+          "scope": "ContainerConnection",
+          "description": "Disk",
+          "readonly": true
+        },
         "lima.socket": {
           "type": "string",
           "default": "",

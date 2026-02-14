@@ -559,7 +559,7 @@ $effect(() => {
                         <div class="mr-4">
                           <Donut
                             title={connectionSetting.description}
-                            value={filesize(connectionSetting.value)}
+                            value={filesize(connectionSetting.value, connectionSetting.base ? {base: connectionSetting.base} : {})}
                             percent={peerValue} />
                         </div>
                       {/if}

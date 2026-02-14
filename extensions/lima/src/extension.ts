@@ -24,7 +24,7 @@ import * as extensionApi from '@podman-desktop/api';
 import { configuration, ProgressLocation } from '@podman-desktop/api';
 
 import { ImageHandler } from './image-handler';
-import { getLimactl } from './limactl';
+import { getLimactl, getLimaInfo, getLimaInstallation } from './limactl';
 
 type limaProviderType = 'docker' | 'podman' | 'kubernetes';
 
@@ -42,13 +42,28 @@ function prettyInstanceName(instanceName: string): string {
   return name;
 }
 
-function registerProvider(
+async function updateContainerConfiguration(
+  containerProviderConnection: extensionApi.ContainerProviderConnection,
+  instanceName: string,
+): Promise<void> {
+  // get configuration for this connection
+  const containerConfiguration = extensionApi.configuration.getConfiguration('lima', containerProviderConnection);
+
+  const limaInfo = await getLimaInfo(instanceName);
+  containerProviderConnection.vmType = limaInfo?.vmType;
+  await containerConfiguration.update('arch', limaInfo?.arch);
+  await containerConfiguration.update('cpus', limaInfo?.cpus);
+  await containerConfiguration.update('memory', limaInfo?.memory);
+  await containerConfiguration.update('disk', limaInfo?.disk);
+}
+
+async function registerProvider(
   extensionContext: extensionApi.ExtensionContext,
   provider: extensionApi.Provider,
   providerType: limaProviderType,
   providerPath: string,
   instanceName: string,
-): void {
+): Promise<void> {
   let providerState: extensionApi.ProviderConnectionStatus = 'unknown';
   if (providerType === 'podman' || providerType === 'docker') {
     const connection: extensionApi.ContainerProviderConnection = {
@@ -59,6 +74,7 @@ function registerProvider(
         socketPath: providerPath,
       },
     };
+    await updateContainerConfiguration(connection, instanceName);
     providerState = 'started';
     const disposable = provider.registerContainerProviderConnection(connection);
     provider.updateStatus('started');
@@ -101,12 +117,16 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   const socketPath = path.resolve(limaHome ?? '', instanceName + '/sock/' + socketName);
   const configPath = path.resolve(limaHome ?? '', instanceName + '/copied-from-guest/kubeconfig.yaml');
 
+  const installedLima = await getLimaInstallation();
+  const version: string | undefined = installedLima?.version;
+
   let provider;
   if (fs.existsSync(socketPath) || fs.existsSync(configPath)) {
     provider = extensionApi.provider.createProvider({
       name: 'Lima',
       id: 'lima',
       status: 'unknown',
+      version,
       images: {
         icon: './icon.png',
         logo: {
@@ -114,6 +134,12 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
           light: './logo-light.png',
         },
       },
+      links: [
+        {
+          title: 'Website',
+          url: 'https://lima-vm.io/',
+        },
+      ],
     });
     extensionContext.subscriptions.push(provider);
   }
@@ -122,7 +148,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   if (socketName !== 'kubernetes.sock') {
     const providerType = engineType === 'kubernetes' ? 'docker' : (engineType as limaProviderType);
     if (fs.existsSync(socketPath) && provider) {
-      registerProvider(extensionContext, provider, providerType, socketPath, instanceName);
+      await registerProvider(extensionContext, provider, providerType, socketPath, instanceName);
     } else {
       console.debug(`Could not find socket at ${socketPath}`);
     }
@@ -131,7 +157,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   if (engineType === 'kubernetes') {
     const providerType = engineType as limaProviderType;
     if (fs.existsSync(configPath) && provider) {
-      registerProvider(extensionContext, provider, providerType, configPath, instanceName);
+      await registerProvider(extensionContext, provider, providerType, configPath, instanceName);
     } else {
       console.debug(`Could not find config at ${configPath}`);
     }
