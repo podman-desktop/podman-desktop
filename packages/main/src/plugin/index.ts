@@ -186,6 +186,7 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
+import { DashboardService } from './dashboard/dashboard-service.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { DialogRegistry } from './dialog-registry.js';
 import { Directories } from './directories.js';
@@ -591,6 +592,10 @@ export class PluginSystem {
     container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
     const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
     statusbarProviders.init();
+
+    container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
+    const dashboardService = container.get<DashboardService>(DashboardService);
+    dashboardService.init();
 
     container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
     const helpMenu = container.get<HelpMenu>(HelpMenu);
