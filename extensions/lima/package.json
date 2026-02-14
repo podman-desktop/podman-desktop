@@ -9,7 +9,7 @@
   "engines": {
     "podman-desktop": "^0.0.1"
   },
-  "main": "./dist/extension.js",
+  "main": "./dist/extension.cjs",
   "contributes": {
     "configuration": {
       "title": "Lima",
@@ -40,6 +40,35 @@
           "default": "",
           "description": "Instance name (default is same name as type)"
         },
+        "lima.arch": {
+          "type": "arch",
+          "scope": "ContainerConnection",
+          "description": "Arch",
+          "readonly": true
+        },
+        "lima.cpus": {
+          "type": "number",
+          "format": "cpu",
+          "scope": "ContainerConnection",
+          "description": "CPUs",
+          "readonly": true
+        },
+        "lima.memory": {
+          "type": "number",
+          "format": "memory",
+          "base": 2,
+          "scope": "ContainerConnection",
+          "description": "Memory",
+          "readonly": true
+        },
+        "lima.disk": {
+          "type": "number",
+          "format": "diskSize",
+          "base": 2,
+          "scope": "ContainerConnection",
+          "description": "Disk",
+          "readonly": true
+        },
         "lima.socket": {
           "type": "string",
           "default": "",
@@ -69,9 +98,11 @@
     "watch": "vite build --watch"
   },
   "dependencies": {
-    "@podman-desktop/api": "workspace:*"
+    "@podman-desktop/api": "workspace:*",
+    "ssh2": "^1.17.0"
   },
   "devDependencies": {
+    "@types/ssh2": "^1.15.5",
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
     "vite": "^7.3.1",

@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "Node",
     "strict": true,
     "lib": ["ES2017", "webworker"],
     "sourceMap": true,
