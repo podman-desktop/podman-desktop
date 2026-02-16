@@ -79,6 +79,10 @@
       "types": "./dist/icons/ContainerIcon.d.ts",
       "svelte": "./dist/icons/ContainerIcon.svelte"
     },
+    "./icons/Icon": {
+      "types": "./dist/icons/Icon.d.ts",
+      "svelte": "./dist/icons/Icon.svelte"
+    },
     "./icons/StarIcon": {
       "types": "./dist/icons/StarIcon.d.ts",
       "svelte": "./dist/icons/StarIcon.svelte"
