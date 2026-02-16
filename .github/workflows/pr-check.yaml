@@ -377,7 +377,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install latest Podman version using external action
-        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        uses: redhat-actions/podman-install@38597414074271e07efa9fb2292cff7eea8d374d
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
