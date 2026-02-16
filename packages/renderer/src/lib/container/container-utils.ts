@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Port } from '@podman-desktop/api';
+import { type ContainerInfo, isViewContributionIcon, type ViewInfoUI } from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer } from 'buffer';
@@ -26,8 +27,6 @@ import moment from 'moment';
 
 import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
-import type { ContainerInfo } from '/@api/container-info';
-import { isViewContributionIcon, type ViewInfoUI } from '/@api/view-info';
 
 import type { ContainerGroupInfoUI, ContainerGroupPartInfoUI, ContainerInfoUI } from './ContainerInfoUI';
 import { ContainerGroupInfoTypeUI } from './ContainerInfoUI';

@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ResourceCount } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
 import { kubernetesResourcesCount, kubernetesResourcesCountStore } from './kubernetes-resources-count';
 

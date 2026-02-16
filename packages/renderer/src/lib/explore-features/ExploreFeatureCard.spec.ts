@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ExploreFeature } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { ExploreFeature } from '/@api/explore-feature';
 
 import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 

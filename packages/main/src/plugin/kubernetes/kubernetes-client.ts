@@ -66,32 +66,36 @@ import {
 } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware.js';
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type {
+  ContextGeneralState,
+  ContextHealth,
+  ContextPermission,
+  ForwardConfig,
+  ForwardOptions,
+  KubeContext,
+  KubernetesContextResources,
+  KubernetesTroubleshootingInformation,
+  ResourceCount,
+  ResourceName,
+  V1Route,
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 import * as jsYaml from 'js-yaml';
 import type { WebSocket } from 'ws';
 import type { Tags } from 'yaml';
 import { parseAllDocuments } from 'yaml';
 
+import { Emitter } from '/@/plugin/events/emitter.js';
+import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { FeatureRegistry } from '/@/plugin/feature-registry.js';
+import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import type { KubernetesPortForwardService } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import { KubernetesPortForwardServiceProvider } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { KubeContext } from '/@api/kubernetes-context.js';
-import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
-import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
-import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
-import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
-import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
-import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
-import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting.js';
-import type { V1Route } from '/@api/openshift-types.js';
+import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import { Uri } from '/@/plugin/types/uri.js';
 
-import { Emitter } from '../events/emitter.js';
-import { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
-import { FilesystemMonitoring } from '../filesystem-monitoring.js';
-import { Telemetry } from '../telemetry/telemetry.js';
-import { Uri } from '../types/uri.js';
 import { ContextsManager } from './contexts-manager.js';
 import { ContextsManagerExperimental } from './contexts-manager-experimental.js';
 import { ContextsStatesDispatcher } from './contexts-states-dispatcher.js';

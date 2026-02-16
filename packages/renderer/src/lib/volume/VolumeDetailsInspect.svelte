@@ -1,8 +1,8 @@
 <script lang="ts">
+import type { VolumeInspectInfo } from '@podman-desktop/core-api';
 import { onMount } from 'svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
-import type { VolumeInspectInfo } from '/@api/volume-info';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 

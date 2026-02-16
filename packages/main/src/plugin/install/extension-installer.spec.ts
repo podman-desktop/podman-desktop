@@ -19,20 +19,20 @@
 import { rmSync } from 'node:fs';
 import * as path from 'node:path';
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { CatalogFetchableExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { IpcMain, IpcMainEvent } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
+import type { Directories } from '/@/plugin/directories.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { CatalogFetchableExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
+import type { ImageRegistry } from '/@/plugin/image-registry.js';
+import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
-import type { ContributionManager } from '../contribution-manager.js';
-import type { Directories } from '../directories.js';
-import type { ImageRegistry } from '../image-registry.js';
-import type { Telemetry } from '../telemetry/telemetry.js';
 import { ExtensionInstaller } from './extension-installer.js';
 
 let extensionInstaller: ExtensionInstaller;
@@ -84,7 +84,7 @@ const contributionManager = {} as unknown as ContributionManager;
 const ipcMainOnMock = vi.fn();
 
 vi.mock(import('node:fs'));
-vi.mock(import('./../docker-extension/docker-desktop-installer.js'));
+vi.mock(import('/@/plugin/docker-extension/docker-desktop-installer.js'));
 
 beforeEach(() => {
   vi.resetAllMocks();

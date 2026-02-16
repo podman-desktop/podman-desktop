@@ -22,9 +22,9 @@ import * as path from 'node:path';
 
 import { injectable } from 'inversify';
 
+import { isLinux, isMac, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
-import { isLinux, isMac, isWindows } from '../util.js';
 import type { Directories } from './directories.js';
 
 /**

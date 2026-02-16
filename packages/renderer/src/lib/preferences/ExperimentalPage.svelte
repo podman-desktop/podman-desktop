@@ -1,10 +1,11 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import PreferencesRenderingItem from '/@/lib/preferences/PreferencesRenderingItem.svelte';
 import SettingsPage from '/@/lib/preferences/SettingsPage.svelte';
 import { getInitialValue } from '/@/lib/preferences/Util';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 interface Props {
   properties: IConfigurationPropertyRecordedSchema[];

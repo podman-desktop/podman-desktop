@@ -73,6 +73,10 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
     manifestLabelComplex = `localhost/${imageNameComplex}`;
   }
 
+  await deleteRegistry(page, 'GitHub').catch((error: unknown) => {
+    console.log('Error deleting registry:', error);
+  });
+
   imagesPage = await navigationBar.openImages();
 });
 

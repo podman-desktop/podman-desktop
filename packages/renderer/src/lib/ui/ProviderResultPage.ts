@@ -17,8 +17,7 @@
  ***********************************************************************/
 
 import type { ImageCheck } from '@podman-desktop/api';
-
-import type { ImageCheckerInfo } from '/@api/image-checker-info';
+import type { ImageCheckerInfo } from '@podman-desktop/core-api';
 
 export interface ProviderUI {
   info: ImageCheckerInfo;

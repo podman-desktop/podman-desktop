@@ -16,13 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { beforeEach, describe, expect, test } from 'vitest';
-
 import {
   CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
-} from '/@api/configuration/constants.js';
+} from '@podman-desktop/core-api/configuration';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 import { LockedKeys } from './lock-configuration.js';
 

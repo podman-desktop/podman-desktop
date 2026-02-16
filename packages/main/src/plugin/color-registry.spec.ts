@@ -16,17 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ColorDefinition, RawThemeContribution } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
+import type { IConfigurationChangeEvent } from '@podman-desktop/core-api/configuration';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AppearanceSettings } from '/@/plugin/appearance-settings.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ColorDefinition } from '/@api/color-info.js';
-import type { IConfigurationChangeEvent } from '/@api/configuration/models.js';
-import type { RawThemeContribution } from '/@api/theme-info.js';
 
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
 import * as util from '../util.js';
@@ -227,7 +226,7 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[50]);
+    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
     expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#202020');
   });
 
@@ -248,7 +247,7 @@ describe('initTitlebar', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('titlebar-bg');
-    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.gray[50]);
+    expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#f9fafb');
     expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#0f0f11');
   });
 });
@@ -286,7 +285,7 @@ test('initContent', async () => {
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
   expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[600]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[400]);
 });
 
 describe('registerColor', () => {
@@ -451,7 +450,7 @@ describe('registerExtensionThemes', () => {
     // now check for a color not defined in 'light-theme1'
     const titlebarTextColorLight = colorsLight.find(c => c.id === 'titlebar-text');
     expect(titlebarTextColorLight).toBeDefined();
-    expect(titlebarTextColorLight?.value).toBe(tailwindColorPalette.purple[900]);
+    expect(titlebarTextColorLight?.value).toBe('#37255d');
   });
 
   test('check dispose on Windows', async () => {

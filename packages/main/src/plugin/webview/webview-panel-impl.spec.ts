@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import { Uri } from '/@/plugin/types/uri.js';
 
-import { Uri } from '../types/uri.js';
 import type { WebviewImpl } from './webview-impl.js';
 import { WebviewPanelImpl } from './webview-panel-impl.js';
 import type { WebviewRegistry } from './webview-registry.js';

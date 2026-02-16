@@ -1,4 +1,6 @@
 <script lang="ts">
+import type { ExtensionDevelopmentFolderInfo, ExtensionInfo } from '@podman-desktop/core-api';
+import { ExtensionLoaderSettings } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -6,9 +8,6 @@ import type { Unsubscriber } from 'svelte/store';
 import DevelopmentExtensionListTable from '/@/lib/extensions/dev-mode/table/ListTable.svelte';
 import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
 import { extensionInfos } from '/@/stores/extensions';
-import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
-import type { ExtensionInfo } from '/@api/extension-info';
-import { ExtensionLoaderSettings } from '/@api/extension-loader-settings';
 
 import type { SelectableExtensionDevelopmentFolderInfoUI } from './development-folder-info-ui';
 import DevelopmentExtensionEmptyScreen from './DevelopmentExtensionEmptyScreen.svelte';

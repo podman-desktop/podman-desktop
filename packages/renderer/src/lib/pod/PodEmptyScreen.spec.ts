@@ -18,12 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ImageInfo, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ImageInfo } from '/@api/image-info';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import PodEmptyScreen from './PodEmptyScreen.svelte';
 

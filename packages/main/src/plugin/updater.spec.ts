@@ -19,6 +19,7 @@
 import type { IncomingMessage } from 'node:http';
 
 import type { Configuration } from '@podman-desktop/api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { app, shell } from 'electron';
 import { type AppUpdater, autoUpdater, type UpdateCheckResult, type UpdateDownloadedEvent } from 'electron-updater';
 import type { AppUpdaterEvents } from 'electron-updater/out/AppUpdater.js';
@@ -34,7 +35,6 @@ import { Disposable } from '/@/plugin/types/disposable.js';
 import { Updater } from '/@/plugin/updater.js';
 import * as util from '/@/util.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import product from '/@product.json' with { type: 'json' };
 
 import type { TaskManager } from './tasks/task-manager.js';

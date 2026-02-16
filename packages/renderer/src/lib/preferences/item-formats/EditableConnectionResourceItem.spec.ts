@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import EditableConnectionResourceItem from './EditableConnectionResourceItem.svelte';
 

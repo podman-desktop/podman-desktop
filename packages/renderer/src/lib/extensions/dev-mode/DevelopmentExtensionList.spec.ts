@@ -18,13 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
 import { extensionInfos } from '/@/stores/extensions';
-import type { ExtensionInfo } from '/@api/extension-info';
 
 import DevelopmentExtensionList from './DevelopmentExtensionList.svelte';
 

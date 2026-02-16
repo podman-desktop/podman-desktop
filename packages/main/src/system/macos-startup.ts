@@ -20,9 +20,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { app } from 'electron';
-
-import type { IConfigurationRegistry } from '/@api/configuration/models.js';
 
 /**
  * On macOS, startup on login is done via a plist file

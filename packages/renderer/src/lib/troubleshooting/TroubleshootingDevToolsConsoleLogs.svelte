@@ -1,12 +1,11 @@
 <script lang="ts">
 import { faFileLines, faPaste } from '@fortawesome/free-regular-svg-icons';
+import type { LogType } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
-
-import type { LogType } from '../../../../preload/src';
 
 let logs: {
   logType: LogType;

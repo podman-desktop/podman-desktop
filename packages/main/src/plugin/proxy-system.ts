@@ -20,7 +20,8 @@ import { promisify } from 'node:util';
 import { type ProxySettings } from '@podman-desktop/api';
 import WinReg from 'winreg';
 
-import { isMac, isUnixLike, isWindows } from '../util.js';
+import { isMac, isUnixLike, isWindows } from '/@/util.js';
+
 import type { Proxy } from './proxy.js';
 import { Exec } from './util/exec.js';
 

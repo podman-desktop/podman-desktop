@@ -17,15 +17,9 @@
  ***********************************************************************/
 
 import type { Informer, KubernetesObject } from '@kubernetes/client-node';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type {
-  CheckingState,
-  ContextGeneralState,
-  ResourceName,
-  SecondaryResourceName,
-} from '/@api/kubernetes-contexts-states.js';
-import { NO_CURRENT_CONTEXT_ERROR, secondaryResources } from '/@api/kubernetes-contexts-states.js';
+import type { CheckingState, ContextGeneralState, ResourceName, SecondaryResourceName } from '@podman-desktop/core-api';
+import { NO_CURRENT_CONTEXT_ERROR, secondaryResources } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import { dispatchTimeout } from './contexts-constants.js';
 

@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { TaskInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { toast } from '@zerodevx/svelte-toast';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { TaskInfo } from '/@api/taskInfo';
 
 import ToastCustomUi from './ToastCustomUi.svelte';
 

@@ -22,9 +22,8 @@ import type {
   InputBoxValidationMessage,
   QuickPickOptions,
 } from '@podman-desktop/api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 @injectable()
 export class InputQuickPickRegistry {

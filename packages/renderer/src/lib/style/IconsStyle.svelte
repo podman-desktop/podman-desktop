@@ -1,9 +1,8 @@
 <script lang="ts">
+import type { FontDefinition, IconInfo } from '@podman-desktop/core-api';
 import { onDestroy, onMount } from 'svelte';
 
 import { iconsInfos } from '/@/stores/icons';
-import type { FontDefinition } from '/@api/font-info';
-import type { IconInfo } from '/@api/icon-info';
 
 let style: HTMLStyleElement;
 

@@ -1,9 +1,9 @@
 <script lang="ts">
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 export let provider: ProviderInfo;
 

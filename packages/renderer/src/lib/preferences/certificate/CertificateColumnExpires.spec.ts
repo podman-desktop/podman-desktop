@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { CertificateInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
-
-import type { CertificateInfo } from '/@api/certificate-info';
 
 import { formatExpirationDate } from './certificate-util';
 import CertificateColumnExpires from './CertificateColumnExpires.svelte';

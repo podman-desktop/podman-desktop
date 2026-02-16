@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { faPlug } from '@fortawesome/free-solid-svg-icons';
+import type { Menu } from '@podman-desktop/core-api';
 import { onDestroy } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
@@ -10,7 +11,6 @@ import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { transformObjectToContext } from '/@/lib/context/ContextUtils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { context as storeContext } from '/@/stores/context';
-import type { Menu } from '/@api/menu.js';
 
 interface Props {
   args: unknown[];

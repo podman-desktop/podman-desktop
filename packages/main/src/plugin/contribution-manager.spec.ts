@@ -20,15 +20,14 @@ import * as fs from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 
 import type { RunResult } from '@podman-desktop/api';
+import type { ContributionInfo, IDisposable } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as jsYaml from 'js-yaml';
 import { EventEmitter } from 'stream-json/Assembler.js';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ContributionInfo } from '/@api/contribution-info.js';
-import type { IDisposable } from '/@api/disposable.js';
+import * as util from '/@/util.js';
 
-import * as util from '../util.js';
 import type { ContainerProviderRegistry } from './container-registry.js';
 import type { ComposeObject, DockerExtensionMetadata } from './contribution-manager.js';
 import { ContributionManager } from './contribution-manager.js';
@@ -324,9 +323,7 @@ describe('findComposeBinary', () => {
     };
   });
 
-  vi.mock('../util/exec', () => {
-    return vi.fn();
-  });
+  vi.mock(import('/@/plugin/util/exec.js'));
 
   test('Check findComposeBinary on Windows', async () => {
     vi.mock('node:fs');

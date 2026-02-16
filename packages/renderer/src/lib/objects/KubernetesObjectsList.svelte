@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { KubernetesObject } from '@kubernetes/client-node';
+import type { IDisposable } from '@podman-desktop/core-api';
 import type { TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 import { Button, FilteredEmptyScreen, NavPage, Table } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount, type Snippet } from 'svelte';
@@ -11,7 +12,6 @@ import KubeActions from '/@/lib/kube/KubeActions.svelte';
 import NamespaceDropdown from '/@/lib/kube/NamespaceDropdown.svelte';
 import { listenResources } from '/@/lib/kube/resources-listen';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
-import type { IDisposable } from '/@api/disposable.js';
 
 import type { KubernetesObjectUI } from './KubernetesObjectUI';
 

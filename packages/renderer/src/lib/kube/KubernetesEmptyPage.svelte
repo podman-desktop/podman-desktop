@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
@@ -9,7 +10,6 @@ import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogE
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 const kubernetesExternalDocs = 'https://podman-desktop.io/docs/kubernetes';
 

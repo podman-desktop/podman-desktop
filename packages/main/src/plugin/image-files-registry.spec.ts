@@ -24,10 +24,9 @@ import type {
   ImageInfo,
   ProviderResult,
 } from '@podman-desktop/api';
+import type { ImageFilesExtensionInfo } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, expect, suite, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ImageFilesExtensionInfo } from '/@api/image-files-info.js';
 
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import type { Context } from './context/context.js';

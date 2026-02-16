@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import type { V1Ingress } from '@kubernetes/client-node';
+import type { V1Route } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { V1Route } from '/@api/openshift-types';
 
 import { IngressRouteUtils } from './ingress-route-utils';
 import type { IngressUI } from './IngressUI';

@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { type ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-import { type ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import KubePort from './KubePort.svelte';
 

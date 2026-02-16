@@ -1,12 +1,12 @@
 <script lang="ts">
 import type { Cluster, User } from '@kubernetes/client-node';
+import type { KubeContext } from '@podman-desktop/core-api';
 import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
-import type { KubeContext } from '/@api/kubernetes-context';
 
 interface Props {
   detailed?: boolean;

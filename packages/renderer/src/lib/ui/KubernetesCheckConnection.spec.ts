@@ -18,14 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContextGeneralState, KubeContext } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { expect, test, vi } from 'vitest';
 
 import * as kubernetesContextsStore from '/@/stores/kubernetes-contexts';
 import * as kubernetesContextsStateStore from '/@/stores/kubernetes-contexts-state';
-import type { KubeContext } from '/@api/kubernetes-context';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import KubernetesCheckConnection from './KubernetesCheckConnection.svelte';
 

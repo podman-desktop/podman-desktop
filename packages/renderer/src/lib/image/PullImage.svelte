@@ -1,5 +1,7 @@
 <script lang="ts">
 import { faArrowCircleDown, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
+import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
@@ -14,10 +16,6 @@ import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { providerInfos } from '/@/stores/providers';
-import type { ImageSearchOptions } from '/@api/image-registry';
-import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-import type { PullEvent } from '/@api/pull-event';
 
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
@@ -363,7 +361,7 @@ async function searchFunction(value: string): Promise<void> {
       <div class="self-center text-[var(--pd-table-body-text)] pb-4">Specify preferred registries for pulling images in <Link on:click={gotoManageRegistries}>Settings &gt; Registries</Link>.</div>
 
       <label for="imageName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-        >Image to Pull</label>
+        >Image to pull</label>
       <div class="flex flex-col">
         <Typeahead
           id="imageName"

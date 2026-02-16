@@ -1,6 +1,7 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+
 import { uncertainStringToNumber } from '/@/lib/preferences/Util';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: number;

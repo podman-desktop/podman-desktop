@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { FeaturedExtension } from '/@api/featured/featured-api';
 
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 

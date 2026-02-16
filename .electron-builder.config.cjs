@@ -256,13 +256,14 @@ const config = {
     artifactName: `${product.artifactName}${artifactNameSuffix}-\${version}-\${arch}.\${ext}`,
     hardenedRuntime: true,
     entitlements: './node_modules/electron-builder-notarize/entitlements.mac.inherit.plist',
+    x64ArchFiles: 'Contents/Resources/app.asar.unpacked/**/*.node',
     target: {
       target: 'default',
       arch: macosArches,
     },
   },
   dmg: {
-    background: 'buildResources/dmg-background@2x.png',
+    background: 'buildResources/dmg-background.png',
     window: {
       width: 540,
       height: 380,

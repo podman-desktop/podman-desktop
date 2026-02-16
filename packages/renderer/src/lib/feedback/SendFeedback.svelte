@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { FeedbackCategory } from '@podman-desktop/core-api';
 import { CloseButton, Dropdown, Modal } from '@podman-desktop/ui-svelte';
-
-import type { FeedbackCategory } from '/@api/feedback';
 
 import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';

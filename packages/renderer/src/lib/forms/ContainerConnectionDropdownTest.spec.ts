@@ -18,11 +18,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { fireEvent, render } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import ContainerConnectionDropdownTest from '/@/lib/forms/ContainerConnectionDropdownTest.svelte';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 const MULTI_CONNECTIONS: ProviderContainerConnectionInfo[] = Array.from({ length: 5 }).map((_, index) => ({
   connectionType: 'container',

@@ -18,11 +18,9 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { IDisposable, NetworkInspectInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { IDisposable } from '/@api/disposable';
-import type { NetworkInspectInfo } from '/@api/network-info';
 
 import { networksEventStore, networksListInfo } from './networks';
 

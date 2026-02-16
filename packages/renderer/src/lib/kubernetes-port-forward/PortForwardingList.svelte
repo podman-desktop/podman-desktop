@@ -1,11 +1,11 @@
 <script lang="ts">
 import { faEthernet } from '@fortawesome/free-solid-svg-icons';
+import type { ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
 import { EmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 
 import PortForwardActions from '/@/lib/kubernetes-port-forward/PortForwardActions.svelte';
 import PortForwardIcon from '/@/lib/kubernetes-port-forward/PortForwardIcon.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
-import type { ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import PodNameColumn from './PortForwardNameColumn.svelte';
 

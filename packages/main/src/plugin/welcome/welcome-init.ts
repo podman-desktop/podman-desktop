@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { WelcomeSettings } from '@podman-desktop/core-api/welcome';
 import { inject, injectable } from 'inversify';
-
-import { type IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import { WelcomeSettings } from '/@api/welcome/welcome-settings.js';
 
 @injectable()
 export class WelcomeInit {

@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { ImageInfo } from '@podman-desktop/api';
+import type { ViewInfoUI } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
@@ -15,7 +16,6 @@ import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
 import { containersInfos } from '/@/stores/containers';
 import { imagesInfos } from '/@/stores/images';
-import type { ViewInfoUI } from '/@api/view-info';
 
 interface Props {
   imageID: string;

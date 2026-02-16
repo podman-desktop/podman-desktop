@@ -21,6 +21,9 @@ import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 
 import type { PullEvent } from '@podman-desktop/api';
+import type { NotificationCardOptions, ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
@@ -29,13 +32,9 @@ import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } 
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { PlayKubeInfo } from '/@api/libpod/libpod.js';
-import type { NotificationCardOptions } from '/@api/notification.js';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info.js';
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
+import type { TrayMenu } from '/@/tray-menu.js';
 
-import { securityRestrictionCurrentHandler } from '../security-restrictions-handler.js';
-import type { TrayMenu } from '../tray-menu.js';
 import { CancellationTokenRegistry } from './cancellation-token-registry.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';

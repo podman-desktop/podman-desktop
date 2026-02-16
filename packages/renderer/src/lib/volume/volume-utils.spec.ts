@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { VolumeInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import type { VolumeInfo } from '/@api/volume-info';
 
 import { VolumeUtils } from './volume-utils';
 

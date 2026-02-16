@@ -1,4 +1,5 @@
 <script lang='ts'>
+import type { IDisposable } from '@podman-desktop/core-api';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import type { ComponentProps } from 'svelte';
 import { onDestroy, onMount } from 'svelte';
@@ -6,7 +7,6 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import { listenResourcePermitted } from '/@/lib/kube/resource-permission';
 import KubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.svelte';
-import type { IDisposable } from '/@api/disposable';
 
 interface Props extends ComponentProps<EmptyScreen> {
   resources: string[];

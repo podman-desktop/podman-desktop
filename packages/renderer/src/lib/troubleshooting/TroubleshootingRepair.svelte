@@ -1,8 +1,7 @@
 <script lang="ts">
 import { faWrench } from '@fortawesome/free-solid-svg-icons';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-
-import type { ProviderInfo } from '/@api/provider-info';
 
 import TroubleshootingRepairCleanup from './TroubleshootingRepairCleanup.svelte';
 

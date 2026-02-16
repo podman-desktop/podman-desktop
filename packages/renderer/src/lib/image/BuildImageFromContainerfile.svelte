@@ -3,6 +3,8 @@
 // https://github.com/import-js/eslint-plugin-import/issues/1479
 import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { type OpenDialogOptions } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
@@ -21,8 +23,6 @@ import {
   lastUpdatedTaskId,
 } from '/@/stores/build-images';
 import { providerInfos } from '/@/stores/providers';
-import { NavigationPage } from '/@api/navigation-page';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import { type BuildImageCallback, disconnectUI, eventCollect, reconnectUI, startBuild } from './build-image-task';
 import BuildImageFromContainerfileCards from './BuildImageFromContainerfileCards.svelte';

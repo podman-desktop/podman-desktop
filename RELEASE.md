@@ -57,11 +57,18 @@ The release may be tested using the assets generated within the pre-release.
 
 **Cherry picking:**
 
-If there are fixes that need to be made to the release as brought up by QE the following steps need to be completed:
+If there are fixes that need to be made to the release as brought up by QE the following steps need to be completed (using hypothetical release 0.12.0 as an example):
 
-1. Create a branch **FROM THE RELEASE**. Example, 0.12.x of release 0.12.0. **IMPORTANT NOTE:** Literally `0.12.x` not `0.12.1`.
-2. Create PR(s) with the fixes that merge into the main branch and use mergify.io to open a backport PR(s) to the 0.12.x branch by adding the following comment in the main PR(s): `@Mergifyio backport 0.12.x`
-3. Make sure all PR's are merged
+1. Create the cherry-fix branch `0.12.x` from tag `0.12.0`:
+
+```sh
+$ git fetch --tags
+$ git checkout -b 0.12.x v0.12.0
+$ git push origin 0.12.x
+```
+
+2. Create PRs with the fixes that merge into `main` and use Mergify to open backport PRs to `0.12.x` by adding the following comment in the main PRs: `@Mergifyio backport 0.12.x`
+3. Make sure all PRs are merged, before re-spinning a release.
 
 **Re-spin a release:**
 

@@ -18,13 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
 import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import * as preferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesVmConnectionRendering from './PreferencesVmConnectionRendering.svelte';

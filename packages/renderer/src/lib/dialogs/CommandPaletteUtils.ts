@@ -16,6 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type {
+  ContainerInfo,
+  GoToIcon,
+  GoToInfo,
+  ImageInfo,
+  NavigationInfo,
+  PodInfo,
+  VolumeInfo,
+} from '@podman-desktop/core-api';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 import { get } from 'svelte/store';
 
@@ -24,11 +33,6 @@ import PodIcon from '/@/lib/images/PodIcon.svelte';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import { isDark } from '/@/stores/appearance';
 import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
-import type { ContainerInfo } from '/@api/container-info';
-import type { GoToIcon, GoToInfo, NavigationInfo } from '/@api/documentation-info';
-import type { ImageInfo } from '/@api/image-info';
-import type { PodInfo } from '/@api/pod-info';
-import type { VolumeInfo } from '/@api/volume-info';
 
 // Helper function to get short ID (first 12 characters)
 function getShortId(id: string): string {

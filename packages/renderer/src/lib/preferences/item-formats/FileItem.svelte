@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { OpenDialogOptions } from '@podman-desktop/api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 
 import FileInput from '/@/lib/ui/FileInput.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let value: string = '';

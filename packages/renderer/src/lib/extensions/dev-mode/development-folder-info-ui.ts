@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ExtensionDevelopmentFolderInfo } from '/@api/extension-development-folders-info';
+import type { ExtensionDevelopmentFolderInfo } from '@podman-desktop/core-api';
 
 export interface SelectableExtensionDevelopmentFolderInfoUI extends ExtensionDevelopmentFolderInfo {
   selected: boolean;

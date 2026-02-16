@@ -1,12 +1,12 @@
 <script lang="ts">
 import { faGear } from '@fortawesome/free-solid-svg-icons';
+import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
 
 import type { ContextUI } from '/@/lib/context/context';
 import ProviderUpdateButton from '/@/lib/dashboard/ProviderUpdateButton.svelte';
-import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 interface Props {
   provider: ProviderInfo;

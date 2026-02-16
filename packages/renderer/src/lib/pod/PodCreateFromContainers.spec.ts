@@ -19,12 +19,12 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInspectInfo } from '@podman-desktop/api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import { type PodCreation, podCreationHolder } from '/@/stores/creation-from-containers-store';
 import { providerInfos } from '/@/stores/providers';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import PodCreateFromContainers from './PodCreateFromContainers.svelte';
 

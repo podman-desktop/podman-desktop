@@ -19,15 +19,14 @@
 // Import to access mocked functionionalities such as using vi.mock (we don't want to actually call node:fs methods)
 import * as fs from 'node:fs';
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
+import type { IDisposable } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import {
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
-} from '/@api/configuration/constants.js';
-import type { IConfigurationNode } from '/@api/configuration/models.js';
-import type { IDisposable } from '/@api/disposable.js';
+} from '@podman-desktop/core-api/configuration';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';

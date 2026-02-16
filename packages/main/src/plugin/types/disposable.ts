@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '@podman-desktop/core-api';
 
 export class Disposable implements IDisposable {
   private disposable: undefined | (() => void);

@@ -18,6 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -26,8 +28,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
-import { PreferredRegistriesSettings } from '/@api/prefered-registries-info';
-import type { ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import PullImage from './PullImage.svelte';
 
@@ -126,7 +126,7 @@ describe('PullImage', () => {
     expect(button).toBeInTheDocument();
     expect(button).toBeDisabled();
 
-    const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
     await userEvent.paste('some-valid-image');
 
@@ -157,10 +157,10 @@ describe('PullImage', () => {
     expect(errorMesssage).toHaveTextContent('Image does not exists');
   });
 
-  test('Expect that focus is in `Image to Pull` field after page is opened', async () => {
+  test('Expect that focus is in `Image to pull` field after page is opened', async () => {
     render(PullImage);
 
-    const pullImageInput = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const pullImageInput = screen.getByRole('textbox', { name: 'Image to pull' });
     expect(pullImageInput.matches(':focus')).toBe(true);
   });
 
@@ -249,7 +249,7 @@ test('Expect if no docker.io shortname to use Podman FQN', async () => {
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['someregistry/test1']);
   render(PullImage);
 
-  const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+  const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1');
 
@@ -269,7 +269,7 @@ test('Expect if no docker.io shortname but checkbox not checked to use docker hu
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['someregistry/test1']);
   render(PullImage);
 
-  const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+  const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1');
 
@@ -287,7 +287,7 @@ test('Expect if docker.io shortname exists to not use Podman FQN', async () => {
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['someregistry/test1', 'docker.io/test1']);
   render(PullImage);
 
-  const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+  const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1');
 
@@ -305,7 +305,7 @@ test('Expect if docker.io shortname exists to not use Podman FQN', async () => {
 test('Expect not to check not shortname images', async () => {
   render(PullImage);
 
-  const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+  const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
   await userEvent.click(textbox);
   await userEvent.paste('test1/');
 
@@ -463,7 +463,7 @@ describe('container connections', () => {
     });
 
     // type into the textbox
-    const textbox = getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox); // focus
     await userEvent.paste('test1'); // paste
 
@@ -527,7 +527,7 @@ describe('Preferred Registries', () => {
 
     render(PullImage);
 
-    const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
     await userEvent.paste('ngin');
 
@@ -555,7 +555,7 @@ describe('Preferred Registries', () => {
 
     render(PullImage);
 
-    const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
     await userEvent.paste('nginx');
 
@@ -574,7 +574,7 @@ describe('Preferred Registries', () => {
 
     render(PullImage);
 
-    const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
     await userEvent.paste('nginx');
 
@@ -595,7 +595,7 @@ describe('Preferred Registries', () => {
 
     render(PullImage);
 
-    const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
     await userEvent.paste('nginx');
 
@@ -619,7 +619,7 @@ describe('Preferred Registries', () => {
 
     render(PullImage);
 
-    const textbox = screen.getByRole('textbox', { name: 'Image to Pull' });
+    const textbox = screen.getByRole('textbox', { name: 'Image to pull' });
     await userEvent.click(textbox);
     await userEvent.paste('nginx');
 

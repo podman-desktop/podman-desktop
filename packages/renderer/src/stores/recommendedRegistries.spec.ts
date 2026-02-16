@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { RecommendedRegistry } from '@podman-desktop/core-api/recommendations';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { RecommendedRegistry } from '/@api/recommendations/recommendations';
 
 import {
   fetchRecommendedRegistries,

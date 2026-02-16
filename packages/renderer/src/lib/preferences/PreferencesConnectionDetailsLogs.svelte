@@ -1,6 +1,8 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
+import type { ProviderContainerConnectionInfo, ProviderKubernetesConnectionInfo } from '@podman-desktop/core-api';
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
@@ -8,8 +10,6 @@ import { onDestroy, onMount } from 'svelte';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
-import type { ProviderContainerConnectionInfo, ProviderKubernetesConnectionInfo } from '/@api/provider-info';
-import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 import { writeToTerminal } from './Util';
 

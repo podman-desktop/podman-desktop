@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ViewInfoUI } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
-
-import type { ViewInfoUI } from '/@api/view-info';
 
 import { EventStore } from './event-store';
 

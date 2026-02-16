@@ -1,10 +1,10 @@
 <script lang="ts">
 import type { ContainerProviderConnection } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { filesize } from 'filesize';
 
 import Donut from '/@/lib/donut/Donut.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import { PeerProperties } from './PeerProperties';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';

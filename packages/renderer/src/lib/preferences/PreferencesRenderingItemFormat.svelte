@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
@@ -10,7 +11,6 @@ import NumberItem from '/@/lib/preferences/item-formats/NumberItem.svelte';
 import SliderItem from '/@/lib/preferences/item-formats/SliderItem.svelte';
 import StringItem from '/@/lib/preferences/item-formats/StringItem.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import PasswordStringItem from './item-formats/PasswordStringItem.svelte';
 import { getInitialValue, getNormalizedDefaultNumberValue } from './Util';
@@ -227,7 +227,11 @@ function numberItemValue(): number {
         value={typeof givenValue === 'string' ? givenValue : (recordValue ?? '')}
         onChange={onChange} />
     {:else if record.enum && record.enum.length > 0}
-      <EnumItem record={record} value={typeof givenValue === 'string' ? givenValue : recordValue} onChange={onChange} />
+      {#if typeof givenValue === 'string'}
+        <EnumItem record={record} bind:value={givenValue} onChange={onChange} />
+      {:else}
+        <EnumItem record={record} bind:value={recordValue} onChange={onChange} />
+      {/if}
     {:else if record.format === 'password'}
       <PasswordStringItem
         record={record}

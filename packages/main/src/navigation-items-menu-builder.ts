@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import type { ContextMenuParams, MenuItemConstructorOptions } from 'electron';
-
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
 
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 

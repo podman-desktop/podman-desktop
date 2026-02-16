@@ -32,7 +32,6 @@ const config = {
   resolve: {
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
-      '/@api/': join(PACKAGE_ROOT, '../api/src') + '/',
       '/@product.json': `${join(PACKAGE_ROOT, '../../product.json')}`,
     },
   },

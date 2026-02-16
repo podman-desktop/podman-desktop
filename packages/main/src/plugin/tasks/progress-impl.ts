@@ -19,11 +19,11 @@ import type * as extensionApi from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { findWindow } from '/@/electron-util.js';
+import { CancellationTokenImpl } from '/@/plugin/cancellation-token.js';
+import { CancellationTokenRegistry } from '/@/plugin/cancellation-token-registry.js';
 import { NavigationManager } from '/@/plugin/navigation/navigation-manager.js';
 import type { TaskAction } from '/@/plugin/tasks/tasks.js';
 
-import { CancellationTokenImpl } from '../cancellation-token.js';
-import { CancellationTokenRegistry } from '../cancellation-token-registry.js';
 import { TaskManager } from './task-manager.js';
 
 export enum ProgressLocation {

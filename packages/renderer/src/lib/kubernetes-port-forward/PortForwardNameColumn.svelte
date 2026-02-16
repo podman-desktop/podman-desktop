@@ -1,9 +1,9 @@
 <script lang="ts">
 import type { KubernetesObject } from '@kubernetes/client-node';
+import { type ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 
 import { kubernetesCurrentContextPods } from '/@/stores/kubernetes-contexts-state';
-import { type ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 interface Props {
   object: ForwardConfig;

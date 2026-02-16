@@ -1,4 +1,5 @@
 <script lang="ts">
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
 import { type IDisposable, Terminal } from '@xterm/xterm';
@@ -7,7 +8,6 @@ import { router } from 'tinro';
 
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import { terminalStates } from '/@/stores/kubernetes-terminal-state-store';
-import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 export let podName: string;
 export let containerName: string;

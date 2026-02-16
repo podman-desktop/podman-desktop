@@ -15,16 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import { join } from 'path';
-
-const PACKAGE_ROOT = __dirname;
 
 const config = {
-  resolve: {
-    alias: {
-      '/@api/': join(PACKAGE_ROOT, '../packages/api/src') + '/',
-    },
-  },
   test: {
     environment: 'node',
     include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],

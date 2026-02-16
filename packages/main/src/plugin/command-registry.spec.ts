@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, expect, expectTypeOf, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import { CommandRegistry } from './command-registry.js';
 import type { Telemetry } from './telemetry/telemetry.js';

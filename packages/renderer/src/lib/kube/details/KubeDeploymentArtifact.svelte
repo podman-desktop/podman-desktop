@@ -1,10 +1,10 @@
 <script lang="ts">
 import type { V1DeploymentSpec } from '@kubernetes/client-node';
+import { WorkloadKind } from '@podman-desktop/core-api';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import Subtitle from '/@/lib/details/DetailsSubtitle.svelte';
 import Title from '/@/lib/details/DetailsTitle.svelte';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import Container from './KubeContainerArtifact.svelte';
 

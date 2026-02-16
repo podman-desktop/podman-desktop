@@ -32,12 +32,13 @@
     "@types/tar-fs": "^2.0.4",
     "@types/validator": "^13.15.10",
     "@types/winreg": "^1.2.36",
-    "msw": "^2.12.9",
-    "vitest": "^4.0.10"
+    "msw": "^2.12.10",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@expo/sudo-prompt": "^9.3.2",
     "@kubernetes/client-node": "^1.4.0",
+    "@podman-desktop/core-api": "workspace:*",
     "@segment/analytics-node": "^2.3.0",
     "adm-zip": "^0.5.16",
     "asn1js": "^3.0.5",
@@ -46,7 +47,7 @@
     "culori": "^4.0.2",
     "date.js": "^0.3.3",
     "dockerode": "^4.0.9",
-    "electron": "40.2.1",
+    "electron": "40.4.1",
     "electron-context-menu": "4.1.1",
     "electron-updater": "6.7.3",
     "electron-util": "^1.0.0",
@@ -65,7 +66,7 @@
     "proxy": "^2.2.0",
     "semver": "^7.7.4",
     "stream-json": "^1.9.1",
-    "tar": "^7.5.7",
+    "tar": "^7.5.9",
     "tar-fs": "^3.1.1",
     "tar-stream": "^3.1.7",
     "undici": "^7.21.0",

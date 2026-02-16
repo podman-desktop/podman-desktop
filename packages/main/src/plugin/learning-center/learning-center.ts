@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Guide } from '/@api/learning-center/guide.js';
+import type { Guide } from '@podman-desktop/core-api/learning-center';
 
 import guidesJson from './guides.json' with { type: 'json' };
 

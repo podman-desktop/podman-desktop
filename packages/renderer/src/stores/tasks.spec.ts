@@ -16,11 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { type IDisposable, type NotificationTaskInfo, TASK_STATUSES, type TaskInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { IDisposable } from '/@api/disposable';
-import { type NotificationTaskInfo, TASK_STATUSES, type TaskInfo } from '/@api/taskInfo';
 
 import {
   clearNotifications,

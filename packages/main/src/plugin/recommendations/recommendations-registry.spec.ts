@@ -16,15 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ExtensionInfo } from '@podman-desktop/core-api';
+import type { CatalogFetchableExtension } from '@podman-desktop/core-api/extension-catalog';
+import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { Featured } from '/@/plugin/featured/featured.js';
-import type { CatalogFetchableExtension } from '/@api/extension-catalog/extensions-catalog-api.js';
-import type { ExtensionInfo } from '/@api/extension-info.js';
-import type { FeaturedExtension } from '/@api/featured/featured-api.js';
 
 import { RecommendationsRegistry } from './recommendations-registry.js';
 

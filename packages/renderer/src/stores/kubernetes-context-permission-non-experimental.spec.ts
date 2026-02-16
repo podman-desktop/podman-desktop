@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ContextPermission } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
 
 import { kubernetesContextsPermissions, kubernetesContextsPermissionsStore } from './kubernetes-context-permission';
 

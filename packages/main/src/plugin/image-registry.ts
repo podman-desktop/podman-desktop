@@ -24,6 +24,13 @@ import * as path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
+import type {
+  ImageSearchOptions,
+  ImageSearchResult,
+  ImageTagsListOptions,
+  ImageUpdateStatus,
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type * as Dockerode from 'dockerode';
 import * as fzstd from 'fzstd';
 import type { HttpsOptions, OptionsOfTextResponseBody } from 'got';
@@ -33,15 +40,8 @@ import { inject, injectable } from 'inversify';
 import * as nodeTar from 'tar';
 import validator from 'validator';
 
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type {
-  ImageSearchOptions,
-  ImageSearchResult,
-  ImageTagsListOptions,
-  ImageUpdateStatus,
-} from '/@api/image-registry.js';
+import { isMac, isWindows } from '/@/util.js';
 
-import { isMac, isWindows } from '../util.js';
 import { Certificates } from './certificates.js';
 import { Emitter } from './events/emitter.js';
 import { Proxy } from './proxy.js';

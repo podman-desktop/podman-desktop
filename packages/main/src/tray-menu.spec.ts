@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import type { MenuItemConstructorOptions, Tray } from 'electron';
 import { ipcMain, Menu, nativeImage } from 'electron';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-
-import type { ProviderInfo } from '/@api/provider-info.js';
 
 import statusStopped from './assets/status-stopped.png';
 import type { AnimatedTray } from './tray-animate-icon.js';

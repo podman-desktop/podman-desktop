@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import type { ImageFile, ImageFilesystemLayer } from '@podman-desktop/api';
-
-import { FilesystemTree } from '/@api/filesystem-tree.js';
-import type { ImageFilesystemLayerUI } from '/@api/image-filesystem-layers.js';
+import type { ImageFilesystemLayerUI } from '@podman-desktop/core-api';
+import { FilesystemTree } from '@podman-desktop/core-api';
 
 export function toImageFilesystemLayerUIs(layers: ImageFilesystemLayer[]): ImageFilesystemLayerUI[] {
   const result: ImageFilesystemLayerUI[] = [];

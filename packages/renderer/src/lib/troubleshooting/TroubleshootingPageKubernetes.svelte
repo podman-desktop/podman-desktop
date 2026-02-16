@@ -1,10 +1,9 @@
 <script lang="ts">
 import { faDatabase, faRefresh } from '@fortawesome/free-solid-svg-icons';
+import type { KubernetesTroubleshootingInformation } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
-
-import type { KubernetesTroubleshootingInformation } from '/@api/kubernetes-troubleshooting';
 
 let info = $state<KubernetesTroubleshootingInformation>();
 

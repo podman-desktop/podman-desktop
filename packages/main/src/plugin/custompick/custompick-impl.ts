@@ -16,11 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type { CustomPick, CustomPickItem, Event } from '@podman-desktop/api';
+import type { IDisposable } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
 
-import { Emitter } from '../events/emitter.js';
 import type { CustomPickRegistry } from './custompick-registry.js';
 
 type IconClassType = string | { light: string; dark: string } | undefined;

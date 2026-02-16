@@ -20,9 +20,8 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { IAsyncDisposable } from '@podman-desktop/core-api';
 import { injectable, preDestroy } from 'inversify';
-
-import { IAsyncDisposable } from '/@api/async-disposable.js';
 
 /**
  * Service for managing temporary files (YAML, configuration files, etc.)

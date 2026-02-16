@@ -26,8 +26,9 @@ import * as sudo from '@expo/sudo-prompt';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as util from '../../util.js';
-import type { Proxy } from '../proxy.js';
+import type { Proxy } from '/@/plugin/proxy.js';
+import * as util from '/@/util.js';
+
 import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
 
 // Mock sudo-prompt exec to resolve everytime.
@@ -37,13 +38,7 @@ vi.mock(import('@expo/sudo-prompt'), async () => {
   };
 });
 
-vi.mock('../../util', async () => {
-  return {
-    isWindows: vi.fn(),
-    isMac: vi.fn(),
-    isLinux: vi.fn(),
-  };
-});
+vi.mock(import('/@/util.js'));
 
 vi.mock('child_process', () => {
   return {

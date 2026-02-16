@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { FeedbackMessages, GitHubIssue } from '@podman-desktop/core-api';
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { SystemInfo } from '/@/plugin/util/sys-info.js';
 import { getSystemInfo } from '/@/plugin/util/sys-info.js';
-import type { FeedbackMessages, GitHubIssue } from '/@api/feedback.js';
 import productJSONFile from '/@product.json' with { type: 'json' };
 
 @injectable()

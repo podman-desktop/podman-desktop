@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ContextGeneralState, ContextHealth } from '@podman-desktop/core-api';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
@@ -10,8 +11,6 @@ import {
   kubernetesContextsCheckingStateDelayed,
   kubernetesCurrentContextState,
 } from '/@/stores/kubernetes-contexts-state';
-import type { ContextHealth } from '/@api/kubernetes-contexts-healths';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import Label from './Label.svelte';
 

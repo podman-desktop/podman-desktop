@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContainerInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 /* eslint-disable import/no-duplicates */
 import { tick } from 'svelte';
@@ -27,8 +28,6 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
-import type { ContainerInfo } from '/@api/container-info';
-import type { ProviderInfo } from '/@api/provider-info';
 
 import ContainerList from './ContainerList.svelte';
 

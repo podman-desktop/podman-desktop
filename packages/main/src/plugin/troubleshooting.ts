@@ -19,6 +19,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 
+import { LogType } from '@podman-desktop/core-api';
 import AdmZip from 'adm-zip';
 import { injectable } from 'inversify';
 import moment from 'moment';
@@ -29,8 +30,6 @@ export interface TroubleshootingFileMap {
   filename: string;
   content: string;
 }
-
-export type LogType = 'log' | 'warn' | 'trace' | 'debug' | 'error';
 
 @injectable()
 export class Troubleshooting {

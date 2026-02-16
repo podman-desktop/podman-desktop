@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject } from '@kubernetes/client-node';
+import type { V1Route } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -31,7 +32,6 @@ import {
 } from '/@/lib/kube/tests-helpers/init-lists';
 import { lastPage } from '/@/stores/breadcrumb';
 import * as states from '/@/stores/kubernetes-contexts-state';
-import type { V1Route } from '/@api/openshift-types';
 
 import RouteDetails from './RouteDetails.svelte';
 

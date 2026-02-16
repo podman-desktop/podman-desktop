@@ -16,10 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ImageInfo } from '@podman-desktop/core-api';
+
 import { ImageUtils } from '/@/lib/image/image-utils';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import { imagesInfos } from '/@/stores/images';
-import type { ImageInfo } from '/@api/image-info';
 
 import type { NavigationRegistryEntry } from './navigation-registry';
 

@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ContainerInfo, ContainerInspectInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -25,8 +26,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
-import type { ContainerInfo } from '/@api/container-info';
-import type { ContainerInspectInfo } from '/@api/container-inspect-info';
 
 import ContainerDetails from './ContainerDetails.svelte';
 

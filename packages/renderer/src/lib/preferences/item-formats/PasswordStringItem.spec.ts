@@ -18,10 +18,9 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import PasswordStringItem from './PasswordStringItem.svelte';
 

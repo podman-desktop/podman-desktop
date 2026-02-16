@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, CloseButton, Modal } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
-import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 interface Props {
   providerToBeInstalled: { provider: ProviderInfo; displayName: string };

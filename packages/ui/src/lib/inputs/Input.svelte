@@ -31,6 +31,11 @@ interface Props {
   onkeypress?: KeyboardEventHandler<HTMLInputElement>;
   title?: string;
   type?: HTMLInputTypeAttribute;
+  min?: string | number;
+  minlength?: number;
+  max?: string | number;
+  maxlength?: number;
+  pattern?: string;
 }
 
 let {
@@ -55,6 +60,11 @@ let {
   onkeypress = bubble('keypress'),
   title = '',
   type = 'text',
+  min,
+  minlength,
+  max,
+  maxlength,
+  pattern,
 }: Props = $props();
 
 let enabled = $derived(!readonly && !disabled);
@@ -106,6 +116,11 @@ async function onClear(): Promise<void> {
       {placeholder}
       {id}
       {title}
+      {min}
+      {minlength}
+      {max}
+      {maxlength}
+      {pattern}
       aria-label={ariaLabel}
       aria-invalid={ariaInvalid}
       bind:value />

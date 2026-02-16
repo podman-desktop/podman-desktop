@@ -19,14 +19,13 @@
 /* eslint-disable sonarjs/no-unused-collection */
 
 import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
+import type { ForwardConfig } from '@podman-desktop/core-api';
+import { WorkloadKind } from '@podman-desktop/core-api';
 import type { IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
-
-import { buildApiSender, initExposure } from '.';
+import { buildApiSender, initExposure } from './index.js';
 
 vi.mock('electron', async () => {
   return {

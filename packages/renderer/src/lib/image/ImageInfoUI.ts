@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { ViewContributionBadgeValue } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
-
-import type { ViewContributionBadgeValue } from '/@api/view-info';
 
 export interface ImageInfoUI {
   id: string;

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import rootPackage from '../../../package.json' with { type: 'json' };
-import { RepositoryInfoParser } from './repository-info-parser.js';
+import { expect, test } from 'vitest';
 
-export const REPOSITORY_URL = rootPackage.repository;
-export const REPOSITORY_HOMEPAGE = rootPackage.homepage;
+import { GITHUB_OWNER, GITHUB_REPOSITORY, REPOSITORY_HOMEPAGE, REPOSITORY_URL } from './repository-infos.js';
 
-const parser = new RepositoryInfoParser(REPOSITORY_URL);
-
-export const GITHUB_OWNER = parser.owner;
-export const GITHUB_REPOSITORY = parser.repository;
+test('check constants correctly extracted from package.json', async () => {
+  expect(REPOSITORY_URL).toBe('https://github.com/podman-desktop/podman-desktop');
+  expect(REPOSITORY_HOMEPAGE).toBe('https://www.podman-desktop.io');
+  expect(GITHUB_OWNER).toBe('podman-desktop');
+  expect(GITHUB_REPOSITORY).toBe('podman-desktop');
+});

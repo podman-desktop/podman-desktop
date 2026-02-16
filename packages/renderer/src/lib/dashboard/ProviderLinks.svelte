@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Link } from '@podman-desktop/ui-svelte';
-
-import type { ProviderInfo } from '/@api/provider-info';
 
 export let provider: ProviderInfo;
 </script>

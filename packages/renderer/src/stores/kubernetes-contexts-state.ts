@@ -17,10 +17,8 @@
  ***********************************************************************/
 
 import type { CoreV1Event, KubernetesObject } from '@kubernetes/client-node';
+import type { CheckingState, ContextGeneralState, ForwardConfig } from '@podman-desktop/core-api';
 import { derived, type Readable, readable, writable } from 'svelte/store';
-
-import type { CheckingState, ContextGeneralState } from '/@api/kubernetes-contexts-states';
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model';
 
 import { findMatchInLeaves } from './search-util';
 

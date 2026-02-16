@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DocumentationService } from '/@/plugin/documentation/documentation-service.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 const originalConsoleError = console.error;
 

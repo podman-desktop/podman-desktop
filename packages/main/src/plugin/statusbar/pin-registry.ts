@@ -16,16 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import type containerDesktopAPI from '@podman-desktop/api';
+import type { IDisposable } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { PinOption } from '@podman-desktop/core-api/status-bar';
+import { STATUS_BAR_PIN_CONSTANTS } from '@podman-desktop/core-api/status-bar';
 import { inject, injectable } from 'inversify';
 
 import { CommandRegistry } from '/@/plugin/command-registry.js';
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
-import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
-import type { PinOption } from '/@api/status-bar/pin-option.js';
 
 export enum PIN_REGISTRY_TELEMETRY_EVENTS {
   PIN = 'pin-registry:pin',

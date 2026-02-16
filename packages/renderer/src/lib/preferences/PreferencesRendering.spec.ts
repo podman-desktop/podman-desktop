@@ -22,14 +22,14 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 import { context } from '/@/stores/context';
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import PreferencesRendering from './PreferencesRendering.svelte';
 

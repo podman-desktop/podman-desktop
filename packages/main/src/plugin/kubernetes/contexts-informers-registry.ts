@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ResourceName } from '/@api/kubernetes-contexts-states.js';
+import type { ResourceName } from '@podman-desktop/core-api';
 
 import type { CancellableInformer, ContextInternalState } from './contexts-states-registry.js';
 import { isSecondaryResourceName } from './contexts-states-registry.js';

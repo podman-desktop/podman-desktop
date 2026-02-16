@@ -53,12 +53,9 @@ import {
   makeInformer,
   NetworkingV1Api,
 } from '@kubernetes/client-node';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { KubeContext } from '/@api/kubernetes-context.js';
-import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
-import { secondaryResources } from '/@api/kubernetes-contexts-states.js';
-import type { V1Route } from '/@api/openshift-types.js';
+import type { ContextGeneralState, KubeContext, ResourceName, V1Route } from '@podman-desktop/core-api';
+import { secondaryResources } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import { Backoff } from './backoff.js';
 import {

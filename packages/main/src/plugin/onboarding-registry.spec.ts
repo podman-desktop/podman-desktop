@@ -18,11 +18,11 @@
 
 import * as fs from 'node:fs';
 
+import type { OnboardingState } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { OnboardingState } from '/@api/onboarding.js';
 
 import { Context } from './context/context.js';
 import { OnboardingRegistry } from './onboarding-registry.js';

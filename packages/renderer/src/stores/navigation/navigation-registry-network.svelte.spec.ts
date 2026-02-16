@@ -16,10 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { networksListInfo } from '/@/stores/networks';
-import type { NetworkInspectInfo } from '/@api/network-info';
 
 import { createNavigationNetworkEntry } from './navigation-registry-network.svelte';
 

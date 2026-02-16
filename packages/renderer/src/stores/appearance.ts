@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { type Writable, writable } from 'svelte/store';
 
-import { AppearanceSettings } from '../../../main/src/plugin/appearance-settings';
 import { configurationProperties } from './configurationProperties';
 
 export const isDark: Writable<boolean> = writable(false);

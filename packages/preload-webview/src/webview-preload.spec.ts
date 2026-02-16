@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ColorInfo, WebviewInfo } from '@podman-desktop/core-api';
 import type { WebviewApi } from '@podman-desktop/webview-api';
 import type { IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ColorInfo } from '/@api/color-info';
-import type { WebviewInfo } from '/@api/webview-info';
-
-import { WebviewPreload } from './webview-preload';
+import { WebviewPreload } from './webview-preload.js';
 
 let webviewPreload: TestWebwiewPreload;
 

@@ -1,9 +1,8 @@
 <script lang="ts">
 import { faCheck, faPencil, faXmark } from '@fortawesome/free-solid-svg-icons';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 import FloatNumberItem from './FloatNumberItem.svelte';
 

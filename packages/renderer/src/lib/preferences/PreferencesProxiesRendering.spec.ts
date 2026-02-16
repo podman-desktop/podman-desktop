@@ -18,13 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
 import { Dropdown } from '@podman-desktop/ui-svelte';
 import { fireEvent, render } from '@testing-library/svelte';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PreferencesProxiesRendering from '/@/lib/preferences/PreferencesProxiesRendering.svelte';
 import { PROXY_LABELS } from '/@/lib/preferences/proxy-state-labels';
-import { PROXY_CONFIG_KEYS, ProxyState } from '/@api/proxy';
 
 // mock the ui library
 vi.mock(import('@podman-desktop/ui-svelte'), async importOriginal => {

@@ -20,7 +20,7 @@ import {
   CONFIGURATION_LOCKED_KEY,
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
-} from '/@api/configuration/constants.js';
+} from '@podman-desktop/core-api/configuration';
 
 /**
  * Handles any "locked" configuration values managed by the managed-by configuration scopes.

@@ -1,10 +1,10 @@
 <script lang="ts">
 import { faQuestionCircle, faSquareUpRight, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { ForwardConfig, PortMapping, WorkloadKind } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import CopyToClipboard from '/@/lib/ui/CopyToClipboard.svelte';
-import type { ForwardConfig, PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import type { KubePortInfo } from './kube-port';
 

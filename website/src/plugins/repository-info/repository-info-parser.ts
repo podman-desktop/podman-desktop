@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export enum AppearanceSettings {
-  SectionName = 'preferences',
-  Appearance = 'appearance',
-  LightEnumValue = 'light',
-  DarkEnumValue = 'dark',
-  SystemEnumValue = 'system',
-  ZoomLevel = 'zoomLevel',
-  NavigationAppearance = 'navigationBarLayout',
-  Icon = 'icon',
-  IconAndTitle = 'icon + title',
-  SearchBar = 'searchBar',
+import { fromUrl } from 'hosted-git-info';
+
+export class RepositoryInfoParser {
+  public readonly owner: string;
+  public readonly repository: string;
+
+  constructor(private readonly url: string) {
+    const infos = fromUrl(this.url);
+
+    if (!infos) {
+      throw new Error(`Could not parse repository information from URL: ${this.url}`);
+    }
+
+    if (infos.type !== 'github') {
+      throw new Error(`Repository type is not GitHub. Detected type: ${infos.type}. URL: ${this.url}`);
+    }
+
+    this.owner = infos.user;
+    this.repository = infos.project;
+  }
 }

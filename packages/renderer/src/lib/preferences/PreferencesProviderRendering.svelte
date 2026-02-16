@@ -1,5 +1,7 @@
 <script lang="ts">
 import { faHistory, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Button, ErrorMessage, Modal } from '@podman-desktop/ui-svelte';
 import type { Terminal } from '@xterm/xterm';
 import { onMount } from 'svelte';
@@ -10,8 +12,6 @@ import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import Route from '/@/Route.svelte';
 import { operationConnectionsInfo } from '/@/stores/operation-connections';
 import { providerInfos } from '/@/stores/providers';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
-import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import PreferencesConnectionCreationRendering from './PreferencesConnectionCreationOrEditRendering.svelte';
 import { writeToTerminal } from './Util';

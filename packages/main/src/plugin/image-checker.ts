@@ -24,10 +24,9 @@ import type {
   ImageChecks,
   ImageInfo,
 } from '@podman-desktop/api';
+import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ImageCheckerExtensionInfo, ImageCheckerInfo } from '/@api/image-checker-info.js';
 
 export interface ImageCheckerProviderWithMetadata {
   id: string;

@@ -19,12 +19,12 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { V1NamespaceList } from '@kubernetes/client-node';
+import type { ContextGeneralState } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubernetesContextsStateStore from '/@/stores/kubernetes-contexts-state';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
 
 import NamespaceDropdown from './NamespaceDropdown.svelte';
 

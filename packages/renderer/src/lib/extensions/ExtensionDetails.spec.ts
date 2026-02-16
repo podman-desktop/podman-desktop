@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -25,7 +26,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
-import type { CatalogExtension } from '/@api/extension-catalog/extensions-catalog-api';
 
 import ExtensionDetails from './ExtensionDetails.svelte';
 

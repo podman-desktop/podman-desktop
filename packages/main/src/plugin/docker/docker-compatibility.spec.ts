@@ -20,18 +20,17 @@ import type { Stats } from 'node:fs';
 import { promises } from 'node:fs';
 
 import type { ProviderContainerConnection } from '@podman-desktop/api';
+import type { DockerSocketServerInfoType, ProviderInfo } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { DockerSocketServerInfoType } from '/@api/docker-compatibility-info.js';
-import type { ProviderInfo } from '/@api/provider-info.js';
+import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
+import type { Directories } from '/@/plugin/directories.js';
+import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import * as util from '/@/util.js';
 
-import * as util from '../../util.js';
-import { ConfigurationRegistry } from '../configuration-registry.js';
-import type { DefaultConfiguration } from '../default-configuration.js';
-import type { Directories } from '../directories.js';
-import type { LockedConfiguration } from '../locked-configuration.js';
-import type { ProviderRegistry } from '../provider-registry.js';
 import { DockerCompatibility } from './docker-compatibility.js';
 
 let configurationRegistry: ConfigurationRegistry;
@@ -69,14 +68,7 @@ vi.mock('dockerode', async () => {
   return { default: Dockerode };
 });
 
-vi.mock('../../util', () => {
-  return {
-    isWindows: vi.fn(),
-    isMac: vi.fn(),
-    isLinux: vi.fn(),
-    exec: vi.fn(),
-  };
-});
+vi.mock(import('/@/util.js'));
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeAll(() => {

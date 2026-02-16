@@ -106,9 +106,8 @@ test.describe.serial('Registries handling verification', { tag: '@smoke' }, () =
         const registryPage = new RegistriesPage(page);
 
         await registryPage.editRegistry(registryName, 'invalidName', 'invalidPswd');
-        const errorMsg = page.getByLabel('Error Message Content').first();
+        const errorMsg = page.getByText('Wrong Username or Password');
         await playExpect(errorMsg).toBeVisible({ timeout: 30_000 });
-        await playExpect(errorMsg).toContainText('Wrong Username or Password', { ignoreCase: true });
 
         const cancelButton = page.getByRole('button', { name: 'Cancel' });
         await cancelButton.click();

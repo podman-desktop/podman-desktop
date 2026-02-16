@@ -19,13 +19,12 @@
 import { spawn } from 'node:child_process';
 import * as os from 'node:os';
 
+import type { SimpleContainerInfo } from '@podman-desktop/core-api';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
 
-import type { SimpleContainerInfo } from '/@api/container-info.js';
-
-import type { ContainerProviderRegistry } from '../container-registry.js';
-import type { ContributionManager } from '../contribution-manager.js';
+import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
+import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 
 export interface RawExecResult {
   cmd?: string;

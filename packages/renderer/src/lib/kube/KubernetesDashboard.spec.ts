@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { KubernetesObject, V1Deployment } from '@kubernetes/client-node';
+import type { ContextGeneralState, ContextPermission, KubeContext, ResourceCount } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { readable, writable } from 'svelte/store';
@@ -31,10 +32,6 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 import * as kubernetesExperimental from '/@/stores/kubernetes-experimental';
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 import * as kubernetesReourcesCount from '/@/stores/kubernetes-resources-count';
-import type { KubeContext } from '/@api/kubernetes-context';
-import type { ContextPermission } from '/@api/kubernetes-contexts-permissions';
-import type { ContextGeneralState } from '/@api/kubernetes-contexts-states';
-import type { ResourceCount } from '/@api/kubernetes-resource-count';
 
 import KubernetesDashboard from './KubernetesDashboard.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';

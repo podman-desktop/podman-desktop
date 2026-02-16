@@ -1,10 +1,10 @@
 <script lang="ts">
+import type { WebviewInfo } from '@podman-desktop/core-api';
 import { onDestroy, onMount } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
 
 import Route from '/@/Route.svelte';
 import { webviews } from '/@/stores/webviews';
-import type { WebviewInfo } from '/@api/webview-info';
 
 import { webviewLifecycle } from './webview-directive';
 

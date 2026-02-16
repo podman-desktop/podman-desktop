@@ -1,12 +1,11 @@
 <script lang="ts">
 import type { ImageInfo } from '@podman-desktop/api';
+import type { ImageFilesInfo, ImageFilesystemLayersUI, ImageFilesystemLayerUI } from '@podman-desktop/core-api';
 import { Button, Checkbox } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import { imageFilesProviders } from '/@/stores/image-files-providers';
-import type { ImageFilesInfo } from '/@api/image-files-info';
-import type { ImageFilesystemLayersUI, ImageFilesystemLayerUI } from '/@api/image-filesystem-layers';
 
 import FilesystemLayerView from './FilesystemLayerView.svelte';
 import ImageDetailsFilesLayers from './ImageDetailsFilesLayers.svelte';

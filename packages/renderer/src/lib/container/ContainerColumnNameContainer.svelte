@@ -1,6 +1,7 @@
 <script lang="ts">
+import { NavigationPage } from '@podman-desktop/core-api';
+
 import { handleNavigation } from '/@/navigation';
-import { NavigationPage } from '/@api/navigation-page';
 
 import type { ContainerInfoUI } from './ContainerInfoUI';
 

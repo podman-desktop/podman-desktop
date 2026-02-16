@@ -17,14 +17,14 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import type { OnboardingStepItem } from '@podman-desktop/core-api';
+import { CONFIGURATION_ONBOARDING_SCOPE } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import { ContextUI } from '/@/lib/context/context';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
-import { CONFIGURATION_ONBOARDING_SCOPE } from '/@api/configuration/constants.js';
-import type { OnboardingStepItem } from '/@api/onboarding';
 
 import OnboardingItem from './OnboardingItem.svelte';
 

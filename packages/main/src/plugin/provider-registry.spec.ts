@@ -40,16 +40,15 @@ import type {
   UpdateVmConnectionEvent,
   VmProviderConnection,
 } from '@podman-desktop/api';
-import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import type {
   CheckStatus,
   PreflightChecksCallback,
   ProviderContainerConnectionInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
-} from '/@api/provider-info.js';
+} from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AutostartEngine } from './autostart-engine.js';
 import type { ContainerProviderRegistry } from './container-registry.js';

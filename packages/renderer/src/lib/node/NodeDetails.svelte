@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { CoreV1Event, KubernetesObject, V1Node } from '@kubernetes/client-node';
+import type { IDisposable } from '@podman-desktop/core-api';
 import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
@@ -14,7 +15,6 @@ import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
 import { kubernetesCurrentContextEvents, kubernetesCurrentContextNodes } from '/@/stores/kubernetes-contexts-state';
-import type { IDisposable } from '/@api/disposable.js';
 
 import { NodeUtils } from './node-utils';
 import NodeDetailsSummary from './NodeDetailsSummary.svelte';

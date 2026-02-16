@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { FeedbackCategory, GitHubIssue } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
-import type { FeedbackCategory, GitHubIssue } from '/@api/feedback';
 
 interface Props {
   onCloseForm: (confirm: boolean) => void;

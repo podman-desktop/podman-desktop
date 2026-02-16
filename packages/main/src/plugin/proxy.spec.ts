@@ -21,15 +21,15 @@ import * as fs from 'node:fs';
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+import type { IDisposable } from '@podman-desktop/core-api';
+import { ProxyState } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { createProxy, type ProxyServer } from 'proxy';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { ensureURL, Proxy } from '/@/plugin/proxy.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
-import { ProxyState } from '/@api/proxy.js';
 
 import type { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';

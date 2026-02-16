@@ -2,6 +2,8 @@
 import '@xterm/xterm/css/xterm.css';
 
 import type { ProviderConnectionShellDimensions, ProviderConnectionStatus } from '@podman-desktop/api';
+import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '@podman-desktop/core-api';
+import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
@@ -12,8 +14,6 @@ import { onDestroy, onMount } from 'svelte';
 import { getTerminalTheme } from '/@/lib/terminal/terminal-theme';
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 import { getExistingTerminal, registerTerminal } from '/@/stores/provider-terminal-store';
-import type { ProviderContainerConnectionInfo, ProviderInfo, ProviderVmConnectionInfo } from '/@api/provider-info';
-import { TerminalSettings } from '/@api/terminal/terminal-settings';
 
 interface ProviderDetailsTerminalProps {
   provider: ProviderInfo;

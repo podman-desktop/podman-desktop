@@ -16,9 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { KubernetesGeneratorSelector } from '@podman-desktop/core-api/kubernetes';
 import { expect, test, vi } from 'vitest';
-
-import type { KubernetesGeneratorSelector } from '/@api/kubernetes/kubernetes-generator-api.js';
 
 import { KubeGeneratorRegistry } from './kube-generator-registry.js';
 

@@ -18,14 +18,12 @@
 
 import { join } from 'node:path';
 
+import type { FontDefinition, IconDefinition, IconInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { FontDefinition } from '/@api/font-info.js';
-import type { IconDefinition, IconInfo } from '/@api/icon-info.js';
-
-import { isWindows } from '../util.js';
+import { isWindows } from '/@/util.js';
 
 @injectable()
 export class IconRegistry {

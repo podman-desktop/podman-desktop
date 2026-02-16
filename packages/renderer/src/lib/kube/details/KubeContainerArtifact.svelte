@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { V1Container } from '@kubernetes/client-node';
+import type { WorkloadKind } from '@podman-desktop/core-api';
 
 import Cell from '/@/lib/details/DetailsCell.svelte';
-import type { WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import KubePortsList from './KubePortsList.svelte';
 

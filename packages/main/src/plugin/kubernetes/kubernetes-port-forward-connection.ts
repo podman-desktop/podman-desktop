@@ -19,14 +19,13 @@ import net from 'node:net';
 
 import type { V1Deployment, V1Pod, V1Service } from '@kubernetes/client-node';
 import { PortForward } from '@kubernetes/client-node';
+import type { ForwardConfig, IDisposable, PortMapping } from '@podman-desktop/core-api';
+import { WorkloadKind } from '@podman-desktop/core-api';
 
 import type { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
 import type { ForwardConfigRequirements } from '/@/plugin/kubernetes/kubernetes-port-forward-validation.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { requireNonUndefined } from '/@/util.js';
-import type { IDisposable } from '/@api/disposable.js';
-import type { ForwardConfig, PortMapping } from '/@api/kubernetes-port-forward-model.js';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
 /**
  * Internal type for holding forwarding setup information.

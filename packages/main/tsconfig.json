@@ -18,7 +18,6 @@
     "baseUrl": ".",
     "paths": {
       "/@/*": ["./src/*"],
-      "/@api/*": ["../api/src/*"],
       "/@product.json": ["../../product.json"]
     }
   },

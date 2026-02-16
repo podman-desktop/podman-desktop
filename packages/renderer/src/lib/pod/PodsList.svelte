@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { PodInfo } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -20,7 +21,6 @@ import PodmanKubePlay from '/@/lib/kube/PodmanKubePlay.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
 import { filtered, podsInfos, searchPattern } from '/@/stores/pods';
 import { providerInfos } from '/@/stores/providers';
-import type { PodInfo } from '/@api/pod-info';
 
 import { PodUtils } from './pod-utils';
 import PodColumnActions from './PodColumnActions.svelte';

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CertificateInfo } from '/@api/certificate-info';
+import type { CertificateInfo } from '@podman-desktop/core-api';
 
 /**
  * Get display name for certificate subject (CN → Full DN → 'Unknown')

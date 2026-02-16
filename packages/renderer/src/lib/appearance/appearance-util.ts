@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { isDark } from '/@/stores/appearance';
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 
-import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
+import { isDark } from '/@/stores/appearance';
 
 let isDarkTheme = false;
 isDark.subscribe(value => {

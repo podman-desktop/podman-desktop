@@ -16,13 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { IDisposable } from '@podman-desktop/core-api';
+import { IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
 
-import { IConfigurationNode, IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { IDisposable } from '/@api/disposable.js';
+import { formatName } from '/@/util.js';
 
-import { formatName } from '../util.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import { MessageBox } from './message-box.js';
 import { Telemetry } from './telemetry/telemetry.js';

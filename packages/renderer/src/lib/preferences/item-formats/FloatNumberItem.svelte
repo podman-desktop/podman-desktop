@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import { uncertainStringToNumber } from '/@/lib/preferences/Util';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
 
 import { checkNumericValueValid } from './NumberItemUtils';
 

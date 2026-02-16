@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { ExperimentalTasksSettings } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -27,7 +28,6 @@ import StatusBar from '/@/lib/statusbar/StatusBar.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { statusBarEntries } from '/@/stores/statusbar';
 import { tasksInfo } from '/@/stores/tasks';
-import { ExperimentalTasksSettings } from '/@api/tasks-preferences';
 
 // mock providers component
 vi.mock(import('./Providers.svelte'));

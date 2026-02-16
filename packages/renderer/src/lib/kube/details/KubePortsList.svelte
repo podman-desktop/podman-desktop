@@ -1,7 +1,8 @@
 <script lang="ts">
+import type { ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
+
 import Cell from '/@/lib/details/DetailsCell.svelte';
 import { kubernetesCurrentContextPortForwards } from '/@/stores/kubernetes-contexts-state';
-import type { ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import type { KubePortInfo } from './kube-port';
 import KubePort from './KubePort.svelte';

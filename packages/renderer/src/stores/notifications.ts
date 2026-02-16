@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { NotificationCard } from '@podman-desktop/core-api';
 import type { Writable } from 'svelte/store';
 import { writable } from 'svelte/store';
-
-import type { NotificationCard } from '/@api/notification';
 
 import { EventStore } from './event-store';
 

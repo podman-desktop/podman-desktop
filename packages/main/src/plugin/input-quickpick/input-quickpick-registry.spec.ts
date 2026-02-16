@@ -15,9 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 
 import { InputQuickPickRegistry } from './input-quickpick-registry.js';
 

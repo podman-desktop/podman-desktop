@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { OnboardingInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { OnboardingInfo } from '/@api/onboarding';
 
 import { fetchOnboarding, onboardingEventStore, onboardingList } from './onboarding';
 

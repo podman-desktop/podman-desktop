@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faExternalLink, faRocket } from '@fortawesome/free-solid-svg-icons';
 import type { V1NamespaceList, V1Pod } from '@kubernetes/client-node/dist/api';
+import type { V1Route } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Input, Link } from '@podman-desktop/ui-svelte';
 import * as jsYaml from 'js-yaml';
 import { onDestroy, onMount } from 'svelte';
@@ -11,7 +12,6 @@ import { ensureRestrictedSecurityContext } from '/@/lib/pod/pod-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
-import type { V1Route } from '/@api/openshift-types';
 
 export let resourceId: string;
 export let engineId: string;

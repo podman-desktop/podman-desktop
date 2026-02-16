@@ -18,9 +18,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { WelcomeSettings } from '@podman-desktop/core-api/welcome';
 import { beforeEach, expect, test, vi } from 'vitest';
-
-import { WelcomeSettings } from '/@api/welcome/welcome-settings';
 
 import { WelcomeUtils } from './welcome-utils';
 

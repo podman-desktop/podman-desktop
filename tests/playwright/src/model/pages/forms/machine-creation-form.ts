@@ -20,11 +20,14 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { DropdownComponent } from '/@/model/components/dropdown-component';
-import type { PodmanVirtualizationProviders } from '/@/model/core/types';
-import { matchesProviderVariant, PodmanVirtualizationProviderVariants } from '/@/model/core/types';
+import {
+  matchesProviderVariant,
+  PodmanVirtualizationProviders,
+  PodmanVirtualizationProviderVariants,
+} from '/@/model/core/types';
 import { BasePage } from '/@/model/pages/base-page';
 import { isWindows } from '/@/utility/platform';
-import { getDefaultVirtualizationProvider } from '/@/utility/provider';
+import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 
 export class MachineCreationForm extends BasePage {
   readonly podmanMachineConfiguration: Locator;
@@ -92,7 +95,7 @@ export class MachineCreationForm extends BasePage {
       await playExpect(this.podmanMachineName).toHaveValue(machineName);
 
       await this.ensureCheckboxState(isRootful, this.rootPriviledgesCheckbox);
-      if (isWindows) {
+      if (!!isWindows && getVirtualizationProvider() === PodmanVirtualizationProviders.WSL) {
         await this.ensureCheckboxState(enableUserNet, this.userModeNetworkingCheckbox);
       }
       if (virtualizationProvider) {

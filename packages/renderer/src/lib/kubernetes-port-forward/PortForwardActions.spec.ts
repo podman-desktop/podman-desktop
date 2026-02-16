@@ -18,13 +18,13 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { type ForwardConfig, WorkloadKind } from '@podman-desktop/core-api';
 import { fireEvent, render } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import PortForwardActions from '/@/lib/kubernetes-port-forward/PortForwardActions.svelte';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
-import { type ForwardConfig, WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
 

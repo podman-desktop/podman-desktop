@@ -16,11 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { CertificateInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { CertificateInfo } from '/@api/certificate-info';
 
 import { certificatesEventStore, certificatesInfos, filtered, searchPattern } from './certificates';
 

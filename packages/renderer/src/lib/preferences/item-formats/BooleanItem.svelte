@@ -1,6 +1,7 @@
 <script lang="ts">
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models.js';
 
 export let record: IConfigurationPropertyRecordedSchema;
 export let checked = false;

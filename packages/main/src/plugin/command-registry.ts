@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { CommandInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { CommandInfo } from '/@api/command-info.js';
 
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';

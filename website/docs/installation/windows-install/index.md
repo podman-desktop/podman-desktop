@@ -8,28 +8,29 @@ keywords: [podman desktop, containers, podman, installing, installation, windows
 
 # Installing Podman Desktop and Podman on Windows
 
+## Installing Podman Desktop
+
 You can install Podman Desktop by using:
 
 - The Windows installer
 - Windows Package Manager (WinGet)
 - Other alternative methods
 
-During Podman installation, ensure to have administrator privileges for the following tasks:
-
-- Installing or updating Windows Subsystem for Linux version 2 (WSL 2) on a single-user or all-users machine
-- Enabling the WSL feature to allow users to set up Podman
-- Setting up a Podman machine using Hyper-V as the machine provider type
-
-## Installing Podman Desktop
-
 _**Using the Windows installer**_
 
+During setup, you can choose from the following installation scopes:
+
+- Anyone who uses this computer (all users): Installs the application for all users and requires administrative privileges; enter your credentials when prompted.
+- Only for me (Username): Installs the application for the current user only; no administrative privileges required.
+
+#### Procedure
+
 1. [Download the Windows installer](/downloads/windows).
-1. Locate the file in the Downloads folder, and double-click on it. The Podman Desktop Setup screen opens.
-1. Select one of the installation options: `Windows Linux Subsystem (WSLv2)` or `Windows Hyper-V`.
-1. Click **Install**. Wait for the installation to complete.
+1. Locate the file in the `Downloads` folder, and double-click it. The **Podman Desktop Setup** screen opens.
+1. Select whether to install the application for all users or only for the current user.
+1. Click **Install**.
    ![install button](img/install-button-for-podman-desktop.png)
-1. Click **Finish** to close the screen. The **Get started with Podman Desktop** screen opens.
+1. After the installation is complete, click **Finish** to close the screen. The **Get started with Podman Desktop** screen opens.
 
 _**Using WinGet**_
 
@@ -84,31 +85,36 @@ Alternate installation methods:
 
 ## Installing Podman
 
-On Windows, running the Podman container engine requires running a Linux distribution on a virtual machine.
+On Windows, running the Podman container engine requires a Linux distribution to run in a virtual machine. You can use Windows Subsystem for Linux version 2 (WSL 2) or Hyper-V as the machine provider.
+
+During Podman installation, ensure that you have administrator privileges for the following tasks:
+
+- Enable the WSL or Hyper-V feature.
+- Create a Hyper-V Podman machine.
 
 ### Use WSL2 as machine provider
 
-Podman Desktop creates a [Windows Subsystem for Linux version 2 (WSL 2)](https://learn.microsoft.com/en-us/windows/wsl/about#what-is-wsl-2) virtual machine: the Podman Machine.
-
-Main benefits are:
+Podman Desktop creates a [Windows Subsystem for Linux version 2 (WSL 2)](https://learn.microsoft.com/en-us/windows/wsl/about#what-is-wsl-2) virtual machine, also known as the Podman machine. The major benefits are:
 
 - Ease of use.
 - WSL 2 native virtualization performance.
 
+You must enable the WSL feature. This is required by Podman Desktop to create the default `wsl` Podman machine.
+
 #### Prerequisites
 
-Check that your environment has:
+Check that your environment meets the following requirements:
 
-- 6 GB RAM for the Podman Machine.
-- Windows Subsystem for Linux version 2 (WSL 2) prerequisites. See [Enabling WSL 2](https://docs.microsoft.com/en-us/windows/wsl/install), [WSL basic commands](https://learn.microsoft.com/en-us/windows/wsl/basic-commands), and [Troubleshooting WSL 2](https://learn.microsoft.com/en-us/windows/wsl/troubleshooting#error-0x80370102-the-virtual-machine-could-not-be-started-because-a-required-feature-is-not-installed):
-  - The Windows user has administrator privileges.
+- 6 GB of RAM for the Podman machine.
+- Required WSL 2 prerequisites:
+  - Administrator privileges for the Windows user.
   - Windows 64bit.
-  - Windows 10 Build 19043 or greater, or Windows 11.
-  - On a virtual machine: [Nested Virtualization enabled](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/nested-virtualization#configure-nested-virtualization).
+  - All editions: Windows 10 Build 19043 or later, or Windows 11
+  - Enable [nested virtualization](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/nested-virtualization#configure-nested-virtualization) if you are running Windows as a VM on a host hypervisor.
 
-#### Procedure: Enable the WSL feature
+#### Procedure
 
-1. Open the command prompt, and run the following commands to enable the WSL feature without installing the default Ubuntu distribution of Linux.
+1. Run the following commands to enable the WSL feature without installing the default Ubuntu distribution of Linux:
 
    ```shell-session
    > wsl --update
@@ -121,50 +127,94 @@ Check that your environment has:
 
    :::
 
-1. Restart your computer.
-
-#### Procedure: Install Podman Desktop dependencies
-
-After installing Podman Desktop, the **Get started with Podman Desktop** screen opens to help you start onboarding. You can install Podman, `kubectl` CLI and `compose` CLI or completely skip this onboarding setup and do it later by using:
-
-- The **Set up** button shown in the notification on the Dashboard page.
-- The **Setup Podman** button shown in the Podman tile on the Resources page.
-
-Perform the following procedure to set up Podman and create the Podman machine:
-
-1. Click **Set up** in the notification on the Dashboard page.
-   ![set up button](img/podman-set-up-button.png)
-1. Click **Next**. A confirmation notification to install Podman opens.
-1. Click **Yes**. The Podman Setup screen opens with the default WSLv2 virtualization provider selected.
-1. Click **Install**. A notification stating `Installation Successfully Completed` appears on the screen.
-   ![install button for Podman](img/install-podman-through-installer.png)
-1. Click **Close**. A page notifying that Podman has been set up correctly opens.
-1. Click **Next**. A page notifying you to create a Podman machine opens.
-1. Click **Next**, and then click **Create**.
-   ![install button for Podman](img/notification-to-create-podman-machine.png)
-1. Click **Next** to navigate back to the Dashboard page.
-
-To verify that Podman is set up, go to **Settings > Resources** and view the running Podman machine in the **Podman** tile.
-
-![Podman is running screen](img/podman-machine-running.png)
-
-You are now ready to use the application.
+1. Restart your machine.
+1. Run the `wsl --status` command in the CLI to check that WSL 2 is available.
 
 ### Use Hyper-V as machine provider
 
-As an administrator, you can set up a Podman machine using Hyper-V as the machine provider type. To do so, select `hyperv` from the **Provider Type** dropdown list when [creating a Podman machine](/docs/podman/creating-a-podman-machine).
+As an administrator, you can set up a Podman machine using Hyper-V as the provider. Hyper-V on Windows offers the following benefits:
 
-:::note
+- Run multiple operating systems on a single machine.
+- Speed up virtual machine deployment.
+- Enhance security through environment isolation.
+- Simplify management using native Windows tools and PowerShell.
 
-If you already have a running Podman machine with the WSL provider type, you will be prompted to set the Hyper-V machine as the default machine to avoid CLI errors.
+You must enable the Hyper-V feature. This is required by Podman Desktop to create the `Hyper-V` Podman machine.
 
-:::
+#### Prerequisites
+
+Check that your environment meets the following requirements:
+
+- 6 GB of RAM for the Podman machine.
+- Required Hyper-V prerequisites:
+  - Administrator privileges for the Windows user.
+  - Windows 64bit.
+  - Pro or Enterprise edition: Windows 10 Build 19043 or later, or Windows 11
+  - Enable [nested virtualization](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/nested-virtualization#configure-nested-virtualization) if you are running Windows as a VM on a host hypervisor.
+
+#### Procedure
+
+1. Run the following command to enable the Hyper-V feature:
+
+   **Using command prompt**
+
+   ```shell-session
+   > DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V
+   ```
+
+   **Using PowerShell**
+
+   ```shell-session
+   > Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
+   ```
+
+1. Restart your machine.
 
 #### Verification
 
-1. Go to **Settings > Resources**.
-1. View the created machine in the Podman tile.
-   ![Podman machine with the hyperv provide type](img/podman-machine-hyperv.png)
+- Check that Hyper-V is active.
+
+  **Using command prompt**
+
+  ```shell-session
+  > systeminfo
+  ```
+
+  **Using PowerShell**
+
+  ```shell-session
+  > Get-Service vmcompute
+  ```
+
+### Install Podman Desktop dependencies
+
+When the Podman Desktop installation completes, the **Get started with Podman Desktop** screen opens. This screen helps you to start the onboarding process. Alternatively, you can completely skip this onboarding setup. You can always complete the setup later by using one of the following ways:
+
+- Use the **Set up** button in the notification on the **Dashboard** page.
+- Use the **Setup Podman** button on the Podman tile, located on the **Settings > Resources** page.
+
+#### Procedure
+
+1. On the **Get started with Podman Desktop** screen, click **Start Onboarding**.
+1. Perform the following steps to install Podman:
+   1. Click **Next**. A confirmation notification opens.
+   1. Click **Yes**. The **Podman Setup** screen opens with the default WSLv2 virtualization provider selected.
+   1. Optional: Select the **Windows Hyper-V** provider when needed.
+   1. Click **Install**. A notification stating **Installation Successfully Completed** appears on the screen.
+      ![install button for Podman](img/install-podman-through-installer.png)
+   1. Click **Close**. A page notifying that Podman is set up correctly opens.
+1. Perform the following steps to create a Podman machine:
+   1. Click **Next**. A page notifying you to create a Podman machine opens.
+   1. Click **Next**, and then click **Create**.
+
+1. Click **Next**, and follow the instructions on the screen to install the `kubectl` and `compose` CLIs.
+1. After installing the CLIs, click **Next** to go to the **Dashboard** page.
+
+#### Verification
+
+- Go to the **Settings > Resources** page, and view the running Podman machine on the **Podman** tile.
+
+You are ready to use the application.
 
 #### Next steps
 

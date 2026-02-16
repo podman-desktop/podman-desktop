@@ -17,6 +17,9 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import type { ProviderInfo } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { STATUS_BAR_PIN_CONSTANTS } from '@podman-desktop/core-api/status-bar';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { CommandRegistry } from '/@/plugin/command-registry.js';
@@ -24,9 +27,6 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 import { PIN_REGISTRY_TELEMETRY_EVENTS, PinRegistry } from '/@/plugin/statusbar/pin-registry.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ProviderInfo } from '/@api/provider-info.js';
-import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants.js';
 
 const COMMAND_REGISTRY_MOCK: CommandRegistry = {
   registerCommand: vi.fn(),

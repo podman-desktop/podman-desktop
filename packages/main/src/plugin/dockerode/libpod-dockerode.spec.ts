@@ -23,6 +23,8 @@ import type { RequestOptions } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import type { PodmanListImagesOptions } from '@podman-desktop/core-api';
+import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
 import type { DefaultBodyType, HttpResponseResolver, PathParams, ResponseResolverReturnType } from 'msw';
@@ -32,8 +34,6 @@ import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, t
 
 import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
-import type { PodmanListImagesOptions } from '/@api/image-info.js';
-import type { PlayKubeInfo } from '/@api/libpod/libpod.js';
 
 import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json' with { type: 'json' };
 

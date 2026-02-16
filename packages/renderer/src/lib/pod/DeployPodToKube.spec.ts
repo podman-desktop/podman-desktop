@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { V1Pod } from '@kubernetes/client-node';
+import type { SimpleContainerInfo, V1Route } from '@podman-desktop/core-api';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import * as jsYaml from 'js-yaml';
@@ -27,8 +28,6 @@ import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { lastPage } from '/@/stores/breadcrumb';
-import type { SimpleContainerInfo } from '/@api/container-info';
-import type { V1Route } from '/@api/openshift-types';
 
 import DeployPodToKube from './DeployPodToKube.svelte';
 

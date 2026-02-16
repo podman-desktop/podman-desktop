@@ -17,14 +17,15 @@
  ***********************************************************************/
 
 import type { Uri } from '@podman-desktop/api';
+import type {
+  IDisposable,
+  KubernetesNavigationRequest,
+  ProviderContainerConnectionInfo,
+  PullEvent,
+} from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
-
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
-import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info.js';
-import type { PullEvent } from '/@api/pull-event.js';
 
 import { CommandRegistry } from './command-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';

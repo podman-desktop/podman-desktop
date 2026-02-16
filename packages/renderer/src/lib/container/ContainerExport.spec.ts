@@ -19,6 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { Uri } from '@podman-desktop/api';
+import type { ContainerInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -26,7 +27,6 @@ import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containersInfos } from '/@/stores/containers';
-import type { ContainerInfo } from '/@api/container-info';
 
 import ContainerExport from './ContainerExport.svelte';
 

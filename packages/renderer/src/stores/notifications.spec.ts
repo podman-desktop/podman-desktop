@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { NotificationCard } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { NotificationCard } from '/@api/notification';
 
 import { fetchNotifications, notificationEventStore, notificationQueue } from './notifications';
 

@@ -18,11 +18,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { ImageInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-
-import type { ImageInfo } from '/@api/image-info';
 
 import { filtered, imagesEventStore, imagesInfos } from './images';
 

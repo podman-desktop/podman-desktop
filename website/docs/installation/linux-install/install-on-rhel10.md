@@ -28,7 +28,7 @@ You can use the subscription manager package to install Podman Desktop on a Red 
    ```sh
    $ sudo dnf install podman-desktop
    ```
-1. Enter `y` to confirm that the installed size is okay.
+1. Enter `y` to confirm the installed size.
 1. Enter `y` to import the GPG key and complete the installation.
 
 #### Verification

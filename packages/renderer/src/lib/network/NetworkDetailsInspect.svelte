@@ -1,8 +1,8 @@
 <script lang="ts">
+import type { NetworkInspectInfo } from '@podman-desktop/core-api';
 import { onMount } from 'svelte';
 
 import MonacoEditor from '/@/lib/editor/MonacoEditor.svelte';
-import type { NetworkInspectInfo } from '/@api/network-info';
 
 import type { NetworkInfoUI } from './NetworkInfoUI';
 

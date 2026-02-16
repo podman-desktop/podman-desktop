@@ -23,13 +23,13 @@ import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import minimist from 'minimist';
 
 import type { Certificates } from '/@/plugin/certificates.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import type { Proxy } from '/@/plugin/proxy.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
 import product from '/@product.json' with { type: 'json' };
 
 /**

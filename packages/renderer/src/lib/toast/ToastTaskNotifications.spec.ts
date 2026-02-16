@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { TaskInfo } from '@podman-desktop/core-api';
 import { render, waitFor } from '@testing-library/svelte';
 import { toast } from '@zerodevx/svelte-toast';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { tasksInfo } from '/@/stores/tasks';
-import type { TaskInfo } from '/@api/taskInfo';
 
 import ToastTaskNotifications from './ToastTaskNotifications.svelte';
 

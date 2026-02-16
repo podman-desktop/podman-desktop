@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { ExploreFeature } from '@podman-desktop/core-api';
 import { Carousel, Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
@@ -6,7 +7,6 @@ import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { exploreFeaturesInfo } from '/@/stores/explore-features';
-import type { ExploreFeature } from '/@api/explore-feature';
 
 import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 

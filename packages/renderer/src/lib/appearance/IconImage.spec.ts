@@ -19,11 +19,11 @@
 /* eslint-disable no-null/no-null */
 import '@testing-library/jest-dom/vitest';
 
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
-import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
 import IconImage from './IconImage.svelte';
 
 const getConfigurationValueMock = vi.fn();

@@ -14,7 +14,9 @@ iframe,
 /* Different docs last-update dates can alter layout */
 .theme-last-updated,
 /* Mermaid diagrams are rendered client-side and produce layout shifts */
-  .docusaurus-mermaid-container {
+  .docusaurus-mermaid-container,
+/* Mermaid.ink external images can change between renders */
+  img[src*='mermaid.ink'] {
   display: none;
 }
 

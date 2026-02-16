@@ -20,6 +20,9 @@ import type { UUID } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
 
 import type { KubeConfig } from '@kubernetes/client-node';
+import type { ForwardConfig, IDisposable } from '@podman-desktop/core-api';
+import { WorkloadKind } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { PortForwardConnectionService } from '/@/plugin/kubernetes/kubernetes-port-forward-connection.js';
@@ -28,10 +31,6 @@ import {
   KubernetesPortForwardServiceProvider,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import type { ConfigManagementService } from '/@/plugin/kubernetes/kubernetes-port-forward-storage.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
-import type { ForwardConfig } from '/@api/kubernetes-port-forward-model.js';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
 
 vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-connection.js');
 vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-storage.js');

@@ -16,9 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { CONFIGURATION_DEFAULT_SCOPE } from '/@api/configuration/constants.js';
-import { TelemetrySettings } from '/@api/telemetry/telemetry-settings';
-import { WelcomeSettings } from '/@api/welcome/welcome-settings';
+import { CONFIGURATION_DEFAULT_SCOPE } from '@podman-desktop/core-api/configuration';
+import { TelemetrySettings } from '@podman-desktop/core-api/telemetry';
+import { WelcomeSettings } from '@podman-desktop/core-api/welcome';
 
 export class WelcomeUtils {
   async getVersion(): Promise<string | undefined> {

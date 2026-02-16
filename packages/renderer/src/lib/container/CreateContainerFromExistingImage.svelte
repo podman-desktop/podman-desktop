@@ -1,5 +1,11 @@
 <script lang="ts">
 import { faArrowCircleDown, faCircleCheck, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import type {
+  ImageInfo,
+  ImageSearchOptions,
+  ProviderContainerConnectionInfo,
+  PullEvent,
+} from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Terminal } from '@xterm/xterm';
@@ -19,10 +25,6 @@ import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
 import { providerInfos } from '/@/stores/providers';
 import { runImageInfo } from '/@/stores/run-image-store';
-import type { ImageInfo } from '/@api/image-info';
-import type { ImageSearchOptions } from '/@api/image-registry';
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
-import type { PullEvent } from '/@api/pull-event';
 
 const DOCKER_PREFIX = 'docker.io';
 const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';

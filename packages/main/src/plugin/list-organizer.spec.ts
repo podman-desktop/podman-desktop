@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ListOrganizerItem, SavedListOrganizerConfig } from '@podman-desktop/core-api';
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { IConfigurationRegistry } from '/@api/configuration/models.js';
-import type { ListOrganizerItem, SavedListOrganizerConfig } from '/@api/list-organizer.js';
 
 import { ListOrganizerRegistry } from './list-organizer.js';
 

@@ -1,11 +1,10 @@
 <script lang="ts">
+import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import { isDark } from '/@/stores/appearance';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-
-import { AppearanceSettings } from '../../../../main/src/plugin/appearance-settings';
 
 let isDarkUnsubscribe: Unsubscriber;
 let isDarkTheme = false;

@@ -1,11 +1,11 @@
 <script lang="ts">
+import { NavigationPage } from '@podman-desktop/core-api';
 import { Link } from '@podman-desktop/ui-svelte';
 
 import DetailsCell from '/@/lib/details/DetailsCell.svelte';
 import DetailsTable from '/@/lib/details/DetailsTable.svelte';
 import DetailsTitle from '/@/lib/details/DetailsTitle.svelte';
 import { handleNavigation } from '/@/navigation';
-import { NavigationPage } from '/@api/navigation-page';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 

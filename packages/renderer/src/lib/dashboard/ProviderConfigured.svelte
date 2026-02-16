@@ -1,9 +1,9 @@
 <script lang="ts">
+import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Spinner } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
 import Steps from '/@/lib/ui/Steps.svelte';
-import type { CheckStatus, ProviderInfo } from '/@api/provider-info';
 
 import PreflightChecks from './PreflightChecks.svelte';
 import ProviderCard from './ProviderCard.svelte';

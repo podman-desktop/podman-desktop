@@ -23,11 +23,11 @@ import type {
   WebviewPanel,
   WebviewPanelOnDidChangeViewStateEvent,
 } from '@podman-desktop/api';
+import type { NavigationRequest } from '@podman-desktop/core-api';
+import { NavigationPage } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import { NavigationPage } from '/@api/navigation-page.js';
-import type { NavigationRequest } from '/@api/navigation-request.js';
 
 import type { WebviewImpl } from './webview-impl.js';
 import type { WebviewRegistry } from './webview-registry.js';

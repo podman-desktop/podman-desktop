@@ -39,8 +39,7 @@ import type {
   VmProviderConnection,
   VmProviderConnectionFactory,
 } from '@podman-desktop/api';
-
-import type { IDisposable } from '/@api/disposable.js';
+import type { IDisposable } from '@podman-desktop/core-api';
 
 import type { ContainerProviderRegistry } from './container-registry.js';
 import { Emitter } from './events/emitter.js';

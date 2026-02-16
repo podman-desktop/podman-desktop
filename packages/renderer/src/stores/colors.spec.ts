@@ -18,11 +18,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { ColorInfo } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { ColorInfo } from '/@api/color-info';
+import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 
 import { colorsEventStore, colorsInfos } from './colors';
 
@@ -33,13 +34,7 @@ const eventEmitter = {
   },
 };
 
-vi.mock('../lib/appearance/appearance-util', () => {
-  return {
-    AppearanceUtil: class {
-      getTheme = async (): Promise<string> => 'light';
-    },
-  };
-});
+vi.mock(import('/@/lib/appearance/appearance-util'));
 
 const listColorsMock: Mock<() => Promise<ColorInfo[]>> = vi.fn();
 
@@ -57,6 +52,7 @@ Object.defineProperty(global, 'window', {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(AppearanceUtil.prototype.getTheme).mockResolvedValue('light');
 });
 
 test('grab colors', async () => {

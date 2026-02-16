@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 import { faCopy, faPenToSquare, faRightToBracket, faTrash } from '@fortawesome/free-solid-svg-icons';
+import type { KubeContext, SelectedResourceName } from '@podman-desktop/core-api';
 import { Button, EmptyScreen, ErrorMessage, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
@@ -14,8 +15,6 @@ import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-perm
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
 import { kubernetesContextsCheckingStateDelayed, kubernetesContextsState } from '/@/stores/kubernetes-contexts-state';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
-import type { KubeContext } from '/@api/kubernetes-context';
-import type { SelectedResourceName } from '/@api/kubernetes-contexts-states';
 
 import PreferencesKubernetesContextsRenderingEditModal from './PreferencesKubernetesContextsRenderingEditModal.svelte';
 import SettingsPage from './SettingsPage.svelte';

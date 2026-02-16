@@ -1,7 +1,8 @@
 <script lang="ts">
+import { NavigationPage } from '@podman-desktop/core-api';
+
 import Badge from '/@/lib/ui/Badge.svelte';
 import { handleNavigation } from '/@/navigation';
-import { NavigationPage } from '/@api/navigation-page';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 

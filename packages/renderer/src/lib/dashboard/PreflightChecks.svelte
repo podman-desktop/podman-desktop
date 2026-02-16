@@ -1,7 +1,6 @@
 <script lang="ts">
+import type { CheckStatus } from '@podman-desktop/core-api';
 import { Link, Spinner } from '@podman-desktop/ui-svelte';
-
-import type { CheckStatus } from '/@api/provider-info';
 
 export let preflightChecks: CheckStatus[] = [];
 

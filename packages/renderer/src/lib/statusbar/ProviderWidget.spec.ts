@@ -18,17 +18,16 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderStatus } from '@podman-desktop/api';
-import { fireEvent, render, screen } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
-import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
-
 import type {
   ProviderContainerConnectionInfo,
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
   ProviderVmConnectionInfo,
-} from '/@api/provider-info';
+} from '@podman-desktop/core-api';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
+import { router } from 'tinro';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import ProviderWidget from './ProviderWidget.svelte';
 

@@ -29,10 +29,13 @@ import {
 } from '@kubernetes/client-node';
 import type { ApiType } from '@kubernetes/client-node/dist/config.js';
 import type { V1PodList } from '@kubernetes/client-node/dist/gen/models/V1PodList.js';
+import { type ForwardConfig, type IDisposable, type PortMapping, WorkloadKind } from '@podman-desktop/core-api';
+import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { WebSocket } from 'isomorphic-ws';
 import { afterEach, beforeEach, describe, expect, type MockedFunction, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { FeatureRegistry } from '/@/plugin/feature-registry.js';
 import { FilesystemMonitoring } from '/@/plugin/filesystem-monitoring.js';
 import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
@@ -41,11 +44,6 @@ import {
   PortForwardConnectionService,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-connection.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
-import type { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { IDisposable } from '/@api/disposable.js';
-import { type ForwardConfig, type PortMapping, WorkloadKind } from '/@api/kubernetes-port-forward-model.js';
-
-import type { ExperimentalConfigurationManager } from '../experimental-configuration-manager.js';
 
 const apiSender: ApiSenderType = {} as unknown as ApiSenderType;
 const configurationRegistry: ConfigurationRegistry = {} as unknown as ConfigurationRegistry;

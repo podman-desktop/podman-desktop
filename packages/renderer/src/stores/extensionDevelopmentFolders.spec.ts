@@ -18,10 +18,9 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import type { IDisposable } from '@podman-desktop/core-api';
 import { get } from 'svelte/store';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-
-import type { IDisposable } from '/@api/disposable.js';
 
 import {
   extensionDevelopmentFolders,

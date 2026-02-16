@@ -18,9 +18,10 @@
 
 import * as fs from 'node:fs';
 
+import type { LogType } from '@podman-desktop/core-api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import type { LogType, TroubleshootingFileMap } from './troubleshooting.js';
+import type { TroubleshootingFileMap } from './troubleshooting.js';
 import { Troubleshooting } from './troubleshooting.js';
 
 const writeZipMock = vi.fn();

@@ -18,6 +18,8 @@
 
 import * as https from 'node:https';
 
+import type { ReleaseNotesInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { app, shell } from 'electron';
 import {
   autoUpdater,
@@ -37,8 +39,6 @@ import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import type { Task } from '/@/plugin/tasks/tasks.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 import { isLinux, isWindows } from '/@/util.js';
-import { ApiSenderType } from '/@api/api-sender/api-sender-type.js';
-import type { ReleaseNotesInfo } from '/@api/release-notes-info.js';
 import product from '/@product.json' with { type: 'json' };
 
 import rootPackage from '../../../../package.json' with { type: 'json' };

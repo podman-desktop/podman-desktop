@@ -18,6 +18,8 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { OnboardingInfo } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -25,8 +27,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { onboardingList } from '/@/stores/onboarding';
-import type { IConfigurationPropertyRecordedSchema } from '/@api/configuration/models';
-import type { OnboardingInfo } from '/@api/onboarding';
 
 import InstalledExtensionCardLeftOnboardingAndProperties from './InstalledExtensionCardLeftOnboardingAndProperties.svelte';
 

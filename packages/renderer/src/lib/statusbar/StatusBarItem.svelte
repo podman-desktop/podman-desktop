@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { StatusBarEntry } from '/@api/status-bar';
+import type { StatusBarEntry } from '@podman-desktop/core-api';
 
 import { iconClass } from './StatusBarItem';
 

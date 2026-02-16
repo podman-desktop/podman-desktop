@@ -18,12 +18,12 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { WorkloadKind } from '@podman-desktop/core-api';
 import { render, within } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
-import { WorkloadKind } from '/@api/kubernetes-port-forward-model';
 
 import KubePortsList from './KubePortsList.svelte';
 

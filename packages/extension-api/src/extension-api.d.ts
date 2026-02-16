@@ -5141,27 +5141,4 @@ declare module '@podman-desktop/api' {
      */
     onDidChange: Event<SecretStorageChangeEvent>;
   }
-
-  /**
-   * Parses a repository URL to extract owner and repository information.
-   * It currently only supports GitHub repositories.
-   */
-  export class RepositoryInfoParser {
-    /**
-     * The owner of the GitHub repository (e.g., 'microsoft').
-     */
-    public readonly owner: string;
-    /**
-     * The name of the GitHub repository (e.g., 'vscode').
-     */
-    public readonly repository: string;
-
-    /**
-     * Creates an instance of RepositoryInfoParser.
-     * @param url The URL of the repository to parse.
-     * @throws {Error} If the URL cannot be parsed.
-     * @throws {Error} If the repository is not hosted on GitHub.
-     */
-    constructor(url: string);
-  }
 }

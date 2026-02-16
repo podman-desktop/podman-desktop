@@ -1,11 +1,12 @@
 <script lang="ts">
+import type { ExtensionBanner as ExtensionBannerInfo } from '@podman-desktop/core-api/recommendations';
+
 import { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ExtensionBanner from '/@/lib/recommendation/ExtensionBanner.svelte';
 import { isDark } from '/@/stores/appearance';
 import { extensionBannerInfos } from '/@/stores/extensionBanners';
 import { providerInfos } from '/@/stores/providers';
-import type { ExtensionBanner as ExtensionBannerInfo } from '/@api/recommendations/recommendations';
 
 let banners: ExtensionBannerInfo[] = $derived.by(() =>
   $extensionBannerInfos.filter(banner => !banner.when || isBannerVisible(banner)),

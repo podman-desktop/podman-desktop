@@ -29,8 +29,7 @@ import type {
   Event,
   ProviderImages,
 } from '@podman-desktop/api';
-
-import type { CliToolExtensionInfo } from '/@api/cli-tool-info.js';
+import type { CliToolExtensionInfo } from '@podman-desktop/core-api';
 
 import type { CliToolRegistry } from './cli-tool-registry.js';
 import { Emitter } from './events/emitter.js';

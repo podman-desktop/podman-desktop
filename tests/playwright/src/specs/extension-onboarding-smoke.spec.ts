@@ -16,15 +16,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { DashboardPage } from '/@/model/pages/dashboard-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isCI, isLinux } from '/@/utility/platform';
+import { createPodmanMachineFromCLI } from '/@/utility/operations';
+import { isMac } from '/@/utility/platform';
 
 let rateLimitReachedFlag = false;
+let composeOnboardingStatusText: string | undefined;
+let kubectlOnboardingStatusText: string | undefined;
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {
   runner.setVideoAndTraceName('compose-onboarding');
+
+  await createPodmanMachineFromCLI();
 
   page.on('console', msg => {
     if (msg.text().includes('API rate limit exceeded')) {
@@ -34,11 +40,11 @@ test.beforeAll(async ({ runner, page }) => {
   });
 });
 
+test.skip(!!isMac, 'This test is not supported on Mac due to requiring admin permissions to install tools');
+
 test.afterAll(async ({ runner }) => {
   await runner.close();
 });
-
-test.skip(!isCI || !isLinux, 'This test suite should run only on Ubuntu platform in Github Actions');
 
 test.describe.serial('Verify onboarding experience for compose versioning', { tag: '@smoke' }, () => {
   test('Welcome message available and handle telemetry', async ({ welcomePage }) => {
@@ -59,6 +65,20 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await playExpect(welcomePage.nextStepButton).toBeEnabled();
     await welcomePage.nextStepButton.click();
 
+    const podmanInstalledMessage = welcomePage.onboardingMessageStatus.filter({
+      hasText: 'Podman installed',
+    });
+    const noMachineMessage = welcomePage.onboardingMessageStatus.filter({
+      hasText: 'We could not find any Podman machine',
+    });
+
+    await playExpect(podmanInstalledMessage.or(noMachineMessage)).toBeVisible({ timeout: 10_000 });
+
+    if (await noMachineMessage.isVisible()) {
+      await playExpect(welcomePage.nextStepButton).toBeEnabled();
+      await welcomePage.nextStepButton.click();
+    }
+
     await playExpect(welcomePage.onboardingMessageStatus).toContainText('Podman installed', {
       timeout: 10_000,
     });
@@ -66,13 +86,67 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await welcomePage.nextStepButton.click();
   });
 
-  test('Check k8s is installed', async ({ welcomePage }) => {
-    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 10_000 });
+  test('Check k8s step (kubectl installed or download)', async ({ welcomePage }) => {
+    await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText(/kubectl (installed|download)/, {
+      timeout: 10_000,
+    });
+    kubectlOnboardingStatusText = await welcomePage.onboardingMessageStatus.innerText();
+
+    if (kubectlOnboardingStatusText?.toLowerCase().includes('kubectl installed')) {
+      await playExpect(welcomePage.nextStepButton).toBeEnabled();
+      await welcomePage.nextStepButton.click();
+      return;
+    }
+
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl download', { timeout: 10_000 });
+    await playExpect(welcomePage.nextStepButton).toBeEnabled();
+    await welcomePage.nextStepButton.click();
+  });
+
+  test('Download and install kubectl', async ({ welcomePage }) => {
+    test.setTimeout(130_000);
+
+    if (!kubectlOnboardingStatusText?.toLowerCase().includes('kubectl download')) {
+      test.skip(true, 'kubectl already installed; see "Check k8s step" test');
+      return;
+    }
+
+    // Wait for either success or failure (download can fail in CI)
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText(
+      /kubectl successfully downloaded|Failed downloading kubectl/,
+      { timeout: 120_000 },
+    );
+    const statusText = await welcomePage.onboardingMessageStatus.innerText();
+
+    if (statusText.includes('Failed downloading kubectl')) {
+      await playExpect(welcomePage.skipOnBoarding).toBeEnabled();
+      await welcomePage.skipOnBoarding.click();
+      return;
+    }
+
+    await playExpect(welcomePage.nextStepButton).toBeEnabled();
+    await welcomePage.nextStepButton.click();
+
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText('kubectl installed', { timeout: 60_000 });
     await playExpect(welcomePage.nextStepButton).toBeEnabled();
     await welcomePage.nextStepButton.click();
   });
 
   test('Check other versions for compose', async ({ welcomePage, page }) => {
+    await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
+
+    // Wait for compose step to be shown (either "Compose installed" or "Compose download")
+    await playExpect(welcomePage.onboardingMessageStatus).toContainText(/Compose (installed|download)/, {
+      timeout: 10_000,
+    });
+    composeOnboardingStatusText = await welcomePage.onboardingMessageStatus.innerText();
+
+    if (composeOnboardingStatusText?.toLowerCase().includes('compose installed')) {
+      test.skip(true, 'Compose already installed; see "Compose already installed" test');
+      return;
+    }
+
     await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
     await playExpect(welcomePage.otherVersionButton).toBeVisible();
 
@@ -90,5 +164,17 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
     await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
     await playExpect(welcomePage.latestVersionFromDropDown).toBeEnabled();
     await welcomePage.latestVersionFromDropDown.click();
+  });
+
+  test('Compose already installed', async ({ welcomePage, page }) => {
+    if (!composeOnboardingStatusText?.toLowerCase().includes('compose installed')) {
+      test.skip(true, 'Compose download path; handled by "Check other versions for compose" test');
+    }
+
+    await playExpect(welcomePage.nextStepButton).toBeEnabled({ timeout: 10_000 });
+    await welcomePage.nextStepButton.click();
+
+    const dashboardPage = new DashboardPage(page);
+    await playExpect(dashboardPage.heading).toBeVisible({ timeout: 10_000 });
   });
 });

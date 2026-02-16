@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import type { DockerSocketMappingStatusInfo } from '@podman-desktop/core-api';
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onMount } from 'svelte';
@@ -8,7 +9,6 @@ import { router } from 'tinro';
 import Label from '/@/lib/ui/Label.svelte';
 import ProviderInfoCircle from '/@/lib/ui/ProviderInfoCircle.svelte';
 import RefreshButton from '/@/lib/ui/RefreshButton.svelte';
-import type { DockerSocketMappingStatusInfo } from '/@api/docker-compatibility-info';
 
 let isMac = $state(false);
 let isWindows = $state(false);

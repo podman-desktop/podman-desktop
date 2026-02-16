@@ -17,9 +17,8 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import { ExtensionLoaderSettings } from '@podman-desktop/core-api';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-
-import { ExtensionLoaderSettings } from '/@api/extension-loader-settings.js';
 
 import { DevelopmentModeTracker } from './development-mode-tracker.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';

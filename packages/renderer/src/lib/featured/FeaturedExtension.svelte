@@ -1,8 +1,7 @@
 <script lang="ts">
 import { faCheckCircle, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
-
-import type { FeaturedExtension } from '/@api/featured/featured-api';
 
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 

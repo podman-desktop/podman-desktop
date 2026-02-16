@@ -18,11 +18,10 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-
-import type { ProviderInfo } from '/@api/provider-info';
 
 import PreferencesProviderInstallationModal from './PreferencesProviderInstallationModal.svelte';
 

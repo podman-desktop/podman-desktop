@@ -8,12 +8,12 @@ import {
   faSmile,
   faStar,
 } from '@fortawesome/free-solid-svg-icons';
+import type { DirectFeedbackCategory, FeedbackProperties } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
-import type { DirectFeedbackCategory, FeedbackProperties } from '/@api/feedback';
 
 interface Props {
   onCloseForm: (confirmation: boolean) => void;

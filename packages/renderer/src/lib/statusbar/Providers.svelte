@@ -1,9 +1,10 @@
 <script lang="ts">
+import type { ProviderInfo } from '@podman-desktop/core-api';
+import { STATUS_BAR_PIN_CONSTANTS } from '@podman-desktop/core-api/status-bar';
+
 import ProviderWidget from '/@/lib/statusbar/ProviderWidget.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { statusBarPinned } from '/@/stores/statusbar-pinned';
-import type { ProviderInfo } from '/@api/provider-info';
-import { STATUS_BAR_PIN_CONSTANTS } from '/@api/status-bar/pin-constants';
 
 let pinned: Set<string> = $derived(
   new Set($statusBarPinned.filter(option => option.pinned).map(option => option.value)),

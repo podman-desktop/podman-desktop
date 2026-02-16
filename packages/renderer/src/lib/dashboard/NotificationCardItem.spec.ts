@@ -17,10 +17,9 @@
  ***********************************************************************/
 import '@testing-library/jest-dom/vitest';
 
+import type { NotificationCard } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { NotificationCard } from '/@api/notification';
 
 import NotificationCardItem from './NotificationCardItem.svelte';
 

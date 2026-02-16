@@ -17,8 +17,7 @@
  ***********************************************************************/
 
 import type { Disposable, Event } from '@podman-desktop/api';
-
-import type { TaskState, TaskStatus } from '/@api/taskInfo.js';
+import type { TaskState, TaskStatus } from '@podman-desktop/core-api';
 
 export interface TaskAction {
   name: string;

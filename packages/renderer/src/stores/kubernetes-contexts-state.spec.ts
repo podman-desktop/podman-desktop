@@ -19,11 +19,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { KubernetesObject } from '@kubernetes/client-node';
+import type { ResourceName } from '@podman-desktop/core-api';
 import type { Readable } from 'svelte/store';
 import type { Mock } from 'vitest';
 import { beforeAll, expect, test, vi } from 'vitest';
-
-import type { ResourceName } from '/@api/kubernetes-contexts-states';
 
 import {
   kubernetesCurrentContextCronJobs,

@@ -17,10 +17,9 @@
  ***********************************************************************/
 
 import type { CoreV1Event, KubernetesObject } from '@kubernetes/client-node';
+import type { IDisposable } from '@podman-desktop/core-api';
 import { type Writable, writable } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { IDisposable } from '/@api/disposable.js';
 
 import { listenResource } from './resource-listen';
 import * as resourcesListen from './resources-listen';

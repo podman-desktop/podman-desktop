@@ -22,12 +22,11 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { Terminal } from '@xterm/xterm';
 import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-
-import type { ProviderContainerConnectionInfo } from '/@api/provider-info';
 
 import PreferencesConnectionDetailsLogs from './PreferencesConnectionDetailsLogs.svelte';
 

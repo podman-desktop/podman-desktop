@@ -19,18 +19,18 @@
 import { existsSync, promises } from 'node:fs';
 import path from 'node:path';
 
+import { ExploreFeature } from '@podman-desktop/core-api';
+import { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import { app } from 'electron';
 import { inject, injectable } from 'inversify';
 
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
+import { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
 import { Context } from '/@/plugin/context/context.js';
-import { IConfigurationNode } from '/@api/configuration/models.js';
-import { ExploreFeature } from '/@api/explore-feature.js';
+import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { KubernetesClient } from '/@/plugin/kubernetes/kubernetes-client.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
-import { ContainerProviderRegistry } from '../container-registry.js';
-import { ExtensionLoader } from '../extension/extension-loader.js';
-import { KubernetesClient } from '../kubernetes/kubernetes-client.js';
-import { ProviderRegistry } from '../provider-registry.js';
 import featuresJson from './explore-features.json' with { type: 'json' };
 
 @injectable()
