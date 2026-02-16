@@ -16,10 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface RawThemeContribution {
-  id: string;
-  name: string;
-  parent: string;
+import { z } from 'zod';
+
+export const RawThemeContributionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  parent: z.string(),
   // definition of colors
-  colors: { [key: string]: string };
-}
+  colors: z.record(z.string(), z.string()),
+});
+
+export type RawThemeContribution = z.output<typeof RawThemeContributionSchema>;
