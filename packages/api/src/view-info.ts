@@ -15,22 +15,41 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-export type ViewContribution = ViewContributionIcon | ViewContributionBadge;
 
-export interface ViewContributionIcon {
-  when: string | undefined;
-  icon: string;
-}
+import { z } from 'zod';
 
-export interface ViewContributionBadge {
-  when: string | undefined;
-  badge: ViewContributionBadgeValue;
-}
+export const ViewContributionBadgeValueSchema = z.object({
+  label: z.string(),
+  color: z
+    .union([
+      z.string(),
+      z.object({
+        light: z.string(),
+        dark: z.string(),
+      }),
+    ])
+    .optional(),
+});
 
-export interface ViewContributionBadgeValue {
-  label: string;
-  color?: string | { light: string; dark: string };
-}
+export type ViewContributionBadgeValue = z.output<typeof ViewContributionBadgeValueSchema>;
+
+export const ViewContributionIconSchema = z.object({
+  when: z.string().optional(),
+  icon: z.string(),
+});
+
+export type ViewContributionIcon = z.output<typeof ViewContributionIconSchema>;
+
+export const ViewContributionBadgeSchema = z.object({
+  when: z.string().optional(),
+  badge: ViewContributionBadgeValueSchema,
+});
+
+export type ViewContributionBadge = z.output<typeof ViewContributionBadgeSchema>;
+
+export const ViewContributionSchema = z.union([ViewContributionIconSchema, ViewContributionBadgeSchema]);
+
+export type ViewContribution = z.output<typeof ViewContributionSchema>;
 
 export interface ViewInfoUI {
   extensionId: string;
