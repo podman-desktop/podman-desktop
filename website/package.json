@@ -48,7 +48,7 @@
     "@octokit/rest": "^22.0.1",
     "@tailwindcss/postcss": "^4.1.18",
     "markdownlint": "^0.40.0",
-    "markdownlint-cli2": "^0.20.0",
+    "markdownlint-cli2": "^0.21.0",
     "markdownlint-cli2-formatter-summarize": "^0.0.8",
     "msw": "^2.12.10",
     "postcss": "^8.5.6",
