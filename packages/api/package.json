@@ -89,5 +89,8 @@
       "types": "./dist/welcome/welcome-settings.d.ts",
       "default": "./dist/welcome/welcome-settings.js"
     }
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }
