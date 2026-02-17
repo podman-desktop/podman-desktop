@@ -11,7 +11,7 @@ import {
   eventCollect,
   registerConnectionCallback,
 } from '/@/lib/preferences/preferences-connection-rendering-task';
-import { convertProviderStatusToSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
+import { getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
 import type { ProviderConnectionInfo, ProviderContainerConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
 import StatusDotGlow from './StatusDotGlow.svelte';
@@ -24,7 +24,7 @@ interface Props {
 let { connection, provider }: Props = $props();
 let errorMessage = $state<string | undefined>(undefined);
 
-let connectionStatus = $derived(convertProviderStatusToSystemOverviewStatus(connection.status));
+let connectionStatus = $derived(getSystemOverviewStatus(connection.status));
 let vmType = $derived(getVmTypeName(connection));
 let providerVersion = $derived(provider.version);
 let displayName = $derived.by(() => {

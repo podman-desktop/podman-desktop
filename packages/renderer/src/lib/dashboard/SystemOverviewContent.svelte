@@ -8,12 +8,7 @@ import SystemOverviewProviderCardMinimal from '/@/lib/dashboard/SystemOverviewPr
 import SystemOverviewProviderConfigured from '/@/lib/dashboard/SystemOverviewProviderConfigured.svelte';
 import SystemOverviewProviderInstalled from '/@/lib/dashboard/SystemOverviewProviderInstalled.svelte';
 import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
-import {
-  convertProviderStatusToSystemOverviewStatus,
-  getSystemOverviewStatus,
-  getSystemOverviewText,
-  type Status,
-} from '/@/stores/dashboard/system-overview.svelte';
+import { getSystemOverviewStatus, type Status, systemOverview } from '/@/stores/dashboard/system-overview.svelte';
 import { providerInfos } from '/@/stores/providers';
 import type { ProviderConnectionInfo, ProviderInfo } from '/@api/provider-info';
 
@@ -21,8 +16,8 @@ import SystemOverviewProviderNotInstalled from './SystemOverviewProviderNotInsta
 
 let providers = $derived($providerInfos);
 
-let status: Status = $derived(getSystemOverviewStatus());
-let statusText: string = $derived(getSystemOverviewText(status));
+let status: Status = $derived(systemOverview.status);
+let statusText: string = $derived(systemOverview.text);
 
 // Get all connections from all providers with their provider info
 let allConnectionsWithProvider = $derived.by(() => {
@@ -55,14 +50,14 @@ let allConnectionsWithProvider = $derived.by(() => {
 // Separate minimal (healthy non-podman) and detailed connections
 let minimalConnections = $derived(
   allConnectionsWithProvider.filter(({ connection, provider }) => {
-    const status = convertProviderStatusToSystemOverviewStatus(connection.status);
+    const status = getSystemOverviewStatus(connection.status);
     return status.status === 'healthy' && provider.id !== 'podman';
   }),
 );
 
 let detailedConnections = $derived(
   allConnectionsWithProvider.filter(({ connection, provider }) => {
-    const status = convertProviderStatusToSystemOverviewStatus(connection.status);
+    const status = getSystemOverviewStatus(connection.status);
     return !(status.status === 'healthy' && provider.id !== 'podman');
   }),
 );

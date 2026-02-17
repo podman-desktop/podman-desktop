@@ -18,3 +18,26 @@
 
 export const ENHANCED_DASHBOARD_CONFIGURATION_KEY = 'dashboard.enhancedDashboard';
 export const SYSTEM_OVERVIEW_CONFIGURATION_KEY = 'systemOverview.expanded';
+
+export type SystemOverviewStatus =
+  | typeof HEALTHY_STATUS
+  | typeof STABLE_STATUS
+  | typeof PROGRESSING_STATUS
+  | typeof CRITICAL_STATUS;
+export const HEALTHY_STATUS = 'healthy';
+export const STABLE_STATUS = 'stable';
+export const PROGRESSING_STATUS = 'progressing';
+export const CRITICAL_STATUS = 'critical';
+
+// Priority levels for status comparison: higher number = worse status
+export const STATUS_PRIORITY: Record<SystemOverviewStatus, number> = {
+  [HEALTHY_STATUS]: 0,
+  [STABLE_STATUS]: 1,
+  [PROGRESSING_STATUS]: 2,
+  [CRITICAL_STATUS]: 3,
+};
+
+export interface SystemOverviewStatusInfo {
+  status: SystemOverviewStatus;
+  text: string;
+}

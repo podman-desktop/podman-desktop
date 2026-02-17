@@ -18,21 +18,17 @@
 
 import { faCheckCircle, faXmarkCircle } from '@fortawesome/free-regular-svg-icons';
 import { faInfoCircle, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import type { ProviderStatus } from '@podman-desktop/api';
+import type { ProviderConnectionStatus } from '@podman-desktop/api';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
-import { get } from 'svelte/store';
 
-import { providerInfos } from '/@/stores/providers';
-import type { ProviderConnectionInfo } from '/@api/provider-info';
+import type { SystemOverviewStatus } from '/@api/dashboard-info';
 
 export interface Status {
   status: SystemOverviewStatus;
   icon: IconDefinition | Component | string;
   priority: number; // Higher number = worse status
 }
-
-export type SystemOverviewStatus = 'healthy' | 'stable' | 'progressing' | 'critical';
 
 // Priority levels: critical (3) > progressing (2) > stable (1) > healthy (0)
 export const SYSTEM_OVERVIEW_STATUS: Record<SystemOverviewStatus, Status> = {
@@ -42,21 +38,15 @@ export const SYSTEM_OVERVIEW_STATUS: Record<SystemOverviewStatus, Status> = {
   critical: { status: 'critical', icon: faXmarkCircle, priority: 3 },
 };
 
-export function convertProviderStatusToSystemOverviewStatus(status: ProviderStatus): Status {
+export function getSystemOverviewStatus(status: ProviderConnectionStatus): Status {
   switch (status) {
     case 'started':
-    case 'ready':
       return SYSTEM_OVERVIEW_STATUS.healthy;
-    case 'not-installed':
-    case 'installed':
-    case 'configured':
     case 'stopped':
       return SYSTEM_OVERVIEW_STATUS.stable;
-    case 'error':
     case 'unknown':
       return SYSTEM_OVERVIEW_STATUS.critical;
     case 'starting':
-    case 'configuring':
     case 'stopping':
       return SYSTEM_OVERVIEW_STATUS.progressing;
     default:
@@ -64,82 +54,21 @@ export function convertProviderStatusToSystemOverviewStatus(status: ProviderStat
   }
 }
 
-const providers = $derived(get(providerInfos));
-const allConnections: ProviderConnectionInfo[] = $derived(
-  providers.flatMap(provider => [
-    ...provider.containerConnections,
-    ...provider.kubernetesConnections,
-    ...provider.vmConnections,
-  ]),
-);
-
 /**
- * Evaluates all provider connections and returns the worst status based on priority.
- * Priority order: critical > stopped > progressing > healthy
+ * System overview status store - receives computed status from backend
  */
-export function getSystemOverviewStatus(): Status {
-  // If no connections exist, return healthy status
-  if (allConnections.length === 0) {
-    return SYSTEM_OVERVIEW_STATUS.critical;
+export const systemOverview = $state<{ status: Status; text: string }>({
+  status: SYSTEM_OVERVIEW_STATUS.critical,
+  text: 'Loading...',
+});
+
+// Listen for status updates from backend (backend sends status string + text)
+window.events?.receive('dashboard:system-overview-status', (...args: unknown[]) => {
+  const statusInfo = args[0] as { status: SystemOverviewStatus; text: string };
+  const status = SYSTEM_OVERVIEW_STATUS[statusInfo.status];
+  if (status) {
+    // Mutate properties instead of reassigning the entire object
+    systemOverview.status = status;
+    systemOverview.text = statusInfo.text;
   }
-
-  // If no connections exist, or no container connections for podman
-  const noConnections =
-    allConnections.length === 0 || (providers.find(p => p.id === 'podman')?.containerConnections.length ?? 0) === 0;
-  if (noConnections) {
-    // Show progressing when a provider is configuring or starting (e.g. during setup)
-    const isConfiguringOrStarting = providers.some(
-      p => p.status === 'configuring' || p.status === 'starting' || p.status === 'stopping',
-    );
-    return isConfiguringOrStarting ? SYSTEM_OVERVIEW_STATUS.progressing : SYSTEM_OVERVIEW_STATUS.critical;
-  }
-
-  // Convert all connection statuses to system overview statuses
-  const statuses = allConnections
-    .map(connection => convertProviderStatusToSystemOverviewStatus(connection.status))
-    .filter((status): status is Status => status !== undefined);
-
-  // If no valid statuses found, return critical
-  if (statuses.length === 0) {
-    return SYSTEM_OVERVIEW_STATUS.critical;
-  }
-
-  // Find and return the worst status (highest priority number)
-  const worstStatus = statuses.reduce((worst, current) => {
-    return current.priority > worst.priority ? current : worst;
-  }, statuses[0]);
-
-  return worstStatus;
-}
-
-export function getSystemOverviewText(status: Status): string {
-  let text = 'Unknown';
-  const errorConnections = allConnections.filter(connection => connection.status === 'unknown').length;
-  const errorProviders = providers.filter(provider => provider.status === 'error').length;
-  switch (status.status) {
-    case 'healthy':
-      text = 'All systems operational';
-      break;
-    case 'stable':
-      text = 'Some systems are stopped';
-      break;
-    case 'progressing':
-      // Only starting connections
-      if (allConnections.filter(connection => connection.status === 'starting').length) {
-        text = 'Starting up...';
-      } else {
-        // Only stopping connections
-        text = 'Stopping...';
-      }
-      break;
-    case 'critical':
-      if (errorConnections > 1 || errorProviders > 1 || (errorConnections === 1 && errorProviders === 1)) {
-        text = 'Multiple errors detected';
-      } else {
-        text = 'Error detected';
-      }
-      break;
-  }
-
-  return text;
-}
+});
