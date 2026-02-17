@@ -20,14 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
+import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
+import { runImageInfo } from '/@/stores/run-image-store';
 
 import PullImage from './PullImage.svelte';
 
@@ -82,6 +84,7 @@ beforeEach(() => {
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
   vi.mocked(window.pullImage).mockResolvedValue(undefined);
   vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
+  vi.mocked(window.listImages).mockResolvedValue([]);
 
   providerInfos.set([PROVIDER_INFO_MOCK]);
 });
@@ -333,6 +336,80 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
   // expect that the warning message is not displayed
   const errorMesssage = screen.queryByRole('alert', { name: 'Warning Message Content' });
   expect(errorMesssage).toBeNull();
+});
+
+test('Expect done, details and run actions after a successful pull', async () => {
+  render(PullImage, { imageToPull: 'some-valid-image' });
+
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+  await userEvent.click(pullImagebutton);
+
+  const footer = await screen.findByRole('contentinfo');
+  expect(within(footer).getByRole('button', { name: 'View details' })).toBeInTheDocument();
+  expect(within(footer).getByRole('button', { name: 'Run' })).toBeInTheDocument();
+  expect(within(footer).getByRole('button', { name: 'Close' })).toBeInTheDocument();
+});
+
+test('Expect details action to open pulled image summary route', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['docker.io/library/alpine:latest'],
+      Created: 1644009612,
+      Size: 123,
+      engineId: 'podman',
+      engineName: 'podman',
+    } as never,
+  ]);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+  await userEvent.click(pullImagebutton);
+  const detailsButton = await screen.findByRole('button', { name: 'View details' });
+  await userEvent.click(detailsButton);
+
+  await vi.waitFor(() => {
+    expect(window.listImages).toHaveBeenCalledWith({
+      provider: CONTAINER_CONNECTION_MOCK,
+    });
+    expect(gotoSpy).toHaveBeenLastCalledWith(
+      '/images/sha256:1234567890123/podman/ZG9ja2VyLmlvL2xpYnJhcnkvYWxwaW5lOmxhdGVzdA==/summary',
+    );
+  });
+});
+
+test('Expect run action to set image info and go to run page', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
+  const runImageInfoSetSpy = vi.spyOn(runImageInfo, 'set');
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['docker.io/library/alpine:latest'],
+      Created: 1644009612,
+      Size: 123,
+      engineId: 'podman',
+      engineName: 'podman',
+    } as never,
+  ]);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+  await userEvent.click(pullImagebutton);
+  const runButton = await screen.findByRole('button', { name: 'Run' });
+  await userEvent.click(runButton);
+
+  await vi.waitFor(() => {
+    expect(runImageInfoSetSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'sha256:1234567890123',
+        engineId: 'podman',
+        name: 'docker.io/library/alpine',
+        tag: 'latest',
+      }),
+    );
+    expect(gotoSpy).toHaveBeenLastCalledWith('/images/run/basic');
+  });
 });
 
 test('input component should not raise an error when the input is valid', async () => {

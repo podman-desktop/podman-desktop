@@ -10,13 +10,16 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
 import ContainerConnectionDropdown from '/@/lib/forms/ContainerConnectionDropdown.svelte';
+import { ImageUtils } from '/@/lib/image/image-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import TerminalWindow from '/@/lib/ui/TerminalWindow.svelte';
 import type { TypeaheadItem } from '/@/lib/ui/Typeahead';
 import Typeahead from '/@/lib/ui/Typeahead.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { providerInfos } from '/@/stores/providers';
+import { runImageInfo } from '/@/stores/run-image-store';
 
+import type { ImageInfoUI } from './ImageInfoUI';
 import RecommendedRegistry from './RecommendedRegistry.svelte';
 
 const DOCKER_PREFIX = 'docker.io';
@@ -24,6 +27,7 @@ const DOCKER_PREFIX_WITH_SLASH = DOCKER_PREFIX + '/';
 
 // Get the preferred registries from configuration
 let preferredRegistries = $state<string[]>([DOCKER_PREFIX]);
+const imageUtils = new ImageUtils();
 
 let logsPull = $state<Terminal>();
 let pullError = $state('');
@@ -161,6 +165,42 @@ async function pullImage(): Promise<void> {
 
 async function pullImageFinished(): Promise<void> {
   router.goto('/images');
+}
+
+async function getFirstPulledImageInfo(): Promise<ImageInfoUI | undefined> {
+  const dockerLibraryImage =
+    imageToPull?.startsWith('docker.io/') && imageToPull.split('/').length === 2
+      ? `${imageToPull.split('/')[0]}/library/${imageToPull.split('/')[1]}`
+      : undefined;
+
+  const target = usePodmanFQN && podmanFQN ? podmanFQN : (dockerLibraryImage ?? imageToPull);
+  if (!target) return undefined;
+
+  const localImages = (
+    await window.listImages({
+      provider: $state.snapshot(selectedProviderConnection),
+    })
+  ).filter(image => (image.RepoTags ?? []).some(repoTag => repoTag.includes(target)));
+
+  if (localImages.length === 0) return undefined;
+
+  const [first] = imageUtils.getImagesInfoUI(localImages[0], []);
+  return first;
+}
+
+async function gotoImageDetails(): Promise<void> {
+  const image = await getFirstPulledImageInfo();
+  if (image) {
+    router.goto(`/images/${image.id}/${image.engineId}/${image.base64RepoTag}/summary`);
+  }
+}
+
+async function gotoImageRun(): Promise<void> {
+  const image = await getFirstPulledImageInfo();
+  if (image) {
+    runImageInfo.set(image);
+    router.goto('/images/run/basic');
+  }
 }
 
 async function gotoManageRegistries(): Promise<void> {
@@ -425,7 +465,11 @@ async function searchFunction(value: string): Promise<void> {
             Pull image
           </Button>
         {:else}
-          <Button on:click={pullImageFinished}>Done</Button>
+        <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
+          <Button type='secondary' on:click={pullImageFinished}>Close</Button>
+          <Button type='link' on:click={gotoImageDetails}>View details</Button>
+          <Button type='primary' on:click={gotoImageRun}>Run</Button>
+        </div>
         {/if}
         {#if pullError}
           <ErrorMessage error={pullError} />
