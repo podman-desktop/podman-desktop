@@ -104,9 +104,12 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
               extension.extensionFullName,
             );
             await playExpect(extensionDetailsPage.heading).toBeVisible();
-            await test.step.skip('Extension is active - unstable on windows now', async () => {
-              await playExpect.soft(extensionDetailsPage.status).toHaveText(activeExtensionStatus, { timeout: 20_000 });
-            });
+            await test.step
+              .skip('Extension is active - unstable on windows now', async () => {
+                await playExpect
+                  .soft(extensionDetailsPage.status)
+                  .toHaveText(activeExtensionStatus, { timeout: 20_000 });
+              });
           });
         });
       });
