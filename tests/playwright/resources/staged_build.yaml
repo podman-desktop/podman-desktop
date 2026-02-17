@@ -1,0 +1,30 @@
+FROM golang:1.24 AS build
+WORKDIR /src
+COPY <<EOF /src/main.go
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("hello, world")
+}
+EOF
+RUN go build -o /bin/hello ./main.go
+
+
+FROM build AS stage1
+
+RUN echo stage1
+
+
+FROM build AS stage2
+
+RUN echo stage2
+
+FROM build AS stage33
+
+RUN echo stage33
+
+FROM scratch
+COPY --from=build /bin/hello /bin/hello
+CMD ["/bin/hello"]

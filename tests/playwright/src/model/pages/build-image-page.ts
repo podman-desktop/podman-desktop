@@ -41,6 +41,7 @@ export class BuildImagePage extends BasePage {
   readonly archMoreOptionsButton: Locator;
   readonly archLessOptionsButton: Locator;
   readonly terminalContent: Locator;
+  readonly targetDropdownButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -64,6 +65,7 @@ export class BuildImagePage extends BasePage {
     this.archMoreOptionsButton = this.platformRegion.getByRole('button', { name: 'Show more options' });
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
     this.terminalContent = page.locator('.xterm-rows');
+    this.targetDropdownButton = page.getByRole('button', { name: 'target' });
   }
 
   async buildImage(
@@ -71,10 +73,11 @@ export class BuildImagePage extends BasePage {
     containerFilePath: string,
     contextDirectory: string,
     archType: string[] = [ArchitectureType.Default],
-    timeout = 120000,
+    timeout = 120_000,
+    target?: string,
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
-      await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType);
+      await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
       await this.validateBuildLogs();
@@ -91,10 +94,11 @@ export class BuildImagePage extends BasePage {
     containerFilePath: string,
     contextDirectory: string,
     archType: string[] = [ArchitectureType.Default],
-    cancelAfterTimeout = 200,
+    options: { cancelAfterTimeout?: number; target?: string } = {},
   ): Promise<void> {
+    const { cancelAfterTimeout = 200, target } = options;
     return test.step(`Starting and canceling build for image ${imageName}`, async () => {
-      await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType);
+      await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
 
       await playExpect(this.cancelBuildButton).toBeEnabled();
       await this.cancelBuildButton.scrollIntoViewIfNeeded();
@@ -153,6 +157,15 @@ export class BuildImagePage extends BasePage {
     });
   }
 
+  private async selectBuildTarget(target: string): Promise<void> {
+    await playExpect(this.targetDropdownButton).toBeVisible({ timeout: 15_000 });
+    await this.targetDropdownButton.click();
+    await this.page.getByRole('button', { name: target, exact: true }).click();
+    await playExpect(this.targetDropdownButton).toHaveText(new RegExp(target, 'i'), {
+      timeout: 10_000,
+    });
+  }
+
   private async showAllArchOptions(): Promise<void> {
     if ((await this.archMoreOptionsButton.count()) > 0) {
       await playExpect(this.archMoreOptionsButton).toBeEnabled();
@@ -179,6 +192,7 @@ export class BuildImagePage extends BasePage {
     containerFilePath: string,
     contextDirectory: string,
     archType: string[] = [ArchitectureType.Default],
+    target?: string,
   ): Promise<void> {
     if (!containerFilePath) {
       throw Error('Path to containerfile is incorrect or not provided!');
@@ -190,6 +204,10 @@ export class BuildImagePage extends BasePage {
     if (imageName) {
       await this.imageNameInput.clear();
       await this.imageNameInput.pressSequentially(imageName, { delay: 50 });
+    }
+
+    if (target !== undefined) {
+      await this.selectBuildTarget(target);
     }
 
     if (!archType.includes(ArchitectureType.Default)) {

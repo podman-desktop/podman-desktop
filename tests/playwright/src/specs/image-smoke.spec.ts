@@ -146,7 +146,7 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
       dockerfilePath,
       contextDirectory,
       [ArchitectureType.Default],
-      20,
+      { cancelAfterTimeout: 20 },
     );
   });
 
@@ -166,6 +166,31 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
     await playExpect(imageDetailsPage.heading).toBeVisible();
     imagesPage = await imageDetailsPage.deleteImage();
     playExpect(await imagesPage.waitForImageDelete('docker.io/library/build-image-test')).toBeTruthy();
+  });
+
+  test('Build image with stage2 target from staged Containerfile', async ({ navigationBar }) => {
+    let imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const buildImagePage = await imagesPage.openBuildImage();
+    await playExpect(buildImagePage.heading).toBeVisible();
+    const containerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'staged_build.yaml');
+    const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
+
+    imagesPage = await buildImagePage.buildImage(
+      'staged-build-stage2-test',
+      containerfilePath,
+      contextDirectory,
+      [ArchitectureType.Default],
+      120_000,
+      'stage2',
+    );
+    playExpect(await imagesPage.waitForImageExists('docker.io/library/staged-build-stage2-test')).toBeTruthy();
+
+    const imageDetailsPage = await imagesPage.openImageDetails('docker.io/library/staged-build-stage2-test');
+    await playExpect(imageDetailsPage.heading).toBeVisible();
+    imagesPage = await imageDetailsPage.deleteImage();
+    playExpect(await imagesPage.waitForImageDelete('docker.io/library/staged-build-stage2-test')).toBeTruthy();
   });
 
   test('Prune all images', async ({ navigationBar }) => {
