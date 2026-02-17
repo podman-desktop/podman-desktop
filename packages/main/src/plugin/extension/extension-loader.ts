@@ -36,6 +36,7 @@ import { inject, injectable, preDestroy } from 'inversify';
 
 import { AuthenticationImpl } from '/@/plugin/authentication.js';
 import { CancellationTokenSource } from '/@/plugin/cancellation-token.js';
+import { CertificateSyncTargetRegistry } from '/@/plugin/certificate-sync-target-registry.js';
 import { Certificates } from '/@/plugin/certificates.js';
 import { CliToolRegistry } from '/@/plugin/cli-tool-registry.js';
 import { ColorRegistry } from '/@/plugin/color-registry.js';
@@ -214,6 +215,8 @@ export class ExtensionLoader implements IAsyncDisposable {
     private safeStorageRegistry: SafeStorageRegistry,
     @inject(Certificates)
     private certificates: Certificates,
+    @inject(CertificateSyncTargetRegistry)
+    private certificateSyncTargetRegistry: CertificateSyncTargetRegistry,
     @inject(ExtensionWatcher)
     private extensionWatcher: ExtensionWatcher,
     @inject(ExtensionDevelopmentFolders)
@@ -1405,6 +1408,23 @@ export class ExtensionLoader implements IAsyncDisposable {
       },
     };
 
+    // Certificate sync target registry with extension info for trust model
+    const certificateSyncTargetRegistry = this.certificateSyncTargetRegistry;
+    const certificateSyncExtensionInfo = {
+      id: extensionInfo.id,
+      name: extensionInfo.name,
+      removable: analyzedExtension.removable,
+    };
+
+    const certificates: typeof containerDesktopAPI.certificates = {
+      registerSyncTargetProvider: provider => {
+        const registration = certificateSyncTargetRegistry.registerProvider(certificateSyncExtensionInfo, provider);
+        disposables.push(registration);
+        return registration;
+      },
+      onDidChangeTargets: certificateSyncTargetRegistry.onDidChangeTargets,
+    };
+
     const authenticationProviderRegistry = this.authenticationProviderRegistry;
 
     const authentication: typeof containerDesktopAPI.authentication = {
@@ -1678,6 +1698,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       InputBoxValidationSeverity,
       QuickPickItemKind,
       authentication,
+      certificates,
       context: contextAPI,
       cli,
       imageChecker,
