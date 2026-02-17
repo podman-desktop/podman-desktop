@@ -17,4 +17,3 @@
  ***********************************************************************/
 
 export const ENHANCED_DASHBOARD_CONFIGURATION_KEY = 'dashboard.enhancedDashboard';
-export const SYSTEM_OVERVIEW_CONFIGURATION_KEY = 'systemOverview.expanded';

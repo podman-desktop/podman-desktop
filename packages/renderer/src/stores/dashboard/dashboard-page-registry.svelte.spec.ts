@@ -53,20 +53,6 @@ describe('defaultSection', () => {
     const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
     expect(sectionNames).toEqual(['Release Notes', 'Extension Banners', 'Explore Features', 'Learning Center']);
   });
-
-  test('should return section names in correct order when enhanced dashboard is enabled', async () => {
-    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
-    await setupDashboardPageRegistry();
-
-    // Now should have 4 items (without providers)
-    await vi.waitFor(() => {
-      expect(dashboardPageRegistry.entries).toHaveLength(4);
-    });
-
-    // Check the section names from the registry entries
-    const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
-    expect(sectionNames).toEqual(['Release Notes', 'Extension Banners', 'Explore Features', 'Learning Center']);
-  });
 });
 
 describe('convertFromListOrganizerItems', () => {

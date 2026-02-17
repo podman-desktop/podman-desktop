@@ -25,6 +25,7 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
 import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 
 const registerConfigurationsMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();
@@ -49,11 +50,17 @@ const providerRegistryMock = {
   getProviderInfos: getProviderInfosMock,
 } as unknown as ProviderRegistry;
 
+const statusBarRegistryMock = {
+  setEntry: vi.fn(),
+  removeEntry: vi.fn(),
+} as unknown as StatusBarRegistry;
+
 let dashboardService: DashboardService;
 beforeEach(() => {
   vi.resetAllMocks();
   dashboardService = new DashboardService(
     configurationRegistryMock,
+    statusBarRegistryMock,
     providerRegistryMock,
     experimentalConfigurationManagerMock,
     apiSenderMock,
