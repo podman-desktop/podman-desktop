@@ -71,10 +71,8 @@ function handleUpdate(e: boolean): void {
 
     {#if category === 'developers' || category === 'design'}
       <DirectFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate}/>
-    {:else if category === 'bug'}
-      <GitHubIssueFeedback onCloseForm={hideModal} category="bug" contentChange={handleUpdate}/>
-    {:else if category === 'feature'}
-      <GitHubIssueFeedback onCloseForm={hideModal} category="feature" contentChange={handleUpdate}/>
+    {:else if category === 'bug' || category === 'feature'}
+      <GitHubIssueFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate}/>
     {/if}
   </Modal>
 </div>
