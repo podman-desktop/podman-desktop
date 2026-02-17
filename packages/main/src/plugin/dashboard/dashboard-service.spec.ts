@@ -26,6 +26,7 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
 import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import type { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 
 const configurationRegistryMock = {
   registerConfigurations: vi.fn(),
@@ -87,6 +88,10 @@ function triggerProviderChange(): void {
     createProvider('stopped'),
   );
 }
+const statusBarRegistryMock = {
+  setEntry: vi.fn(),
+  removeEntry: vi.fn(),
+} as unknown as StatusBarRegistry;
 
 let dashboardService: DashboardService;
 
@@ -110,6 +115,7 @@ beforeEach(() => {
   setupProviderRegistryMocks();
   dashboardService = new DashboardService(
     configurationRegistryMock,
+    statusBarRegistryMock,
     providerRegistryMock,
     experimentalConfigurationManagerMock,
     apiSenderMock,
