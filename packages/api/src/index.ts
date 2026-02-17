@@ -19,6 +19,7 @@
 // Top-level API files
 export * from './async-disposable.js';
 export * from './certificate-info.js';
+export * from './certificate-sync-target.js';
 export * from './cli-tool-info.js';
 export * from './color-info.js';
 export * from './command-info.js';

@@ -268,7 +268,8 @@ export class Certificates {
       }
 
       // Convert serial number to hex string
-      const serialNumber = Array.from(cert.serialNumber.valueBlock.valueHexView)
+      const hexView = cert.serialNumber.valueBlock.valueHexView;
+      const serialNumber = Array.from(new Uint8Array(hexView))
         .map(b => b.toString(16).padStart(2, '0').toUpperCase())
         .join('');
 
