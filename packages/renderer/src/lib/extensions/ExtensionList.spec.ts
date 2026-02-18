@@ -20,6 +20,7 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -242,4 +243,23 @@ test('Switching tabs keeps only terms in search term', async () => {
   // meaning that `category:bar not:installed` has been removed from search term
   const myExtension1 = screen.getByRole('group', { name: 'A Extension' });
   expect(myExtension1).toBeInTheDocument();
+});
+
+test('Expect install custom button is visble', async () => {
+  render(ExtensionList);
+  await tick();
+
+  const installCustomButton = screen.getByRole('button', { name: 'Install custom' });
+
+  expect(installCustomButton).toBeInTheDocument();
+});
+
+test('Expect install custom button to not be visble if extensions.customExtensions.enabled is false', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+
+  render(ExtensionList);
+
+  const installCustomButton = screen.queryByRole('button', { name: 'Install custom' });
+
+  expect(installCustomButton).not.toBeInTheDocument();
 });

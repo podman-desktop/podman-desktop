@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -23,6 +24,8 @@ interface Props {
 let { searchTerm = '', screen = 'installed' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
+
+let enableCustomExtensions = $state(false);
 
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
   extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm),
@@ -59,17 +62,23 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
   screen = newScreen;
   searchTerm = extensionsUtils.filterTerms(searchTerm).join(' ');
 }
+
+onMount(async () => {
+  enableCustomExtensions = (await window.getConfigurationValue('extensions.customExtensions.enabled')) ?? true;
+});
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="extensions">
   {#snippet additionalActions()}
-    <Button
-      on:click={(): void => {
-        installManualImageModal = true;
-      }}
-      icon={faCloudDownload}
-      title="Install manually an extension"
-      aria-label="Install custom">Install custom...</Button>
+    {#if enableCustomExtensions}
+      <Button
+        on:click={(): void => {
+          installManualImageModal = true;
+        }}
+        icon={faCloudDownload}
+        title="Install manually an extension"
+        aria-label="Install custom">Install custom...</Button>
+    {/if}
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
