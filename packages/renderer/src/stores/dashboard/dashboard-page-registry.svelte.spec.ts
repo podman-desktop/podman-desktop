@@ -61,12 +61,18 @@ describe('defaultSection', () => {
 
     // Now should have 4 items (without providers)
     await vi.waitFor(() => {
-      expect(dashboardPageRegistry.entries).toHaveLength(4);
+      expect(dashboardPageRegistry.entries).toHaveLength(5);
     });
 
     // Check the section names from the registry entries
     const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
-    expect(sectionNames).toEqual(['Release Notes', 'Extension Banners', 'Explore Features', 'Learning Center']);
+    expect(sectionNames).toEqual([
+      'Release Notes',
+      'System Overview',
+      'Extension Banners',
+      'Explore Features',
+      'Learning Center',
+    ]);
   });
 });
 
