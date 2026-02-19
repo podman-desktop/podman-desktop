@@ -17,12 +17,7 @@
  ***********************************************************************/
 
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
-import { inject, injectable } from 'inversify';
-
-import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
-import { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import {
   CRITICAL_STATUS,
   ENHANCED_DASHBOARD_CONFIGURATION_KEY,
@@ -34,7 +29,12 @@ import {
   SystemOverviewStatus,
   SystemOverviewStatusInfo,
 } from '@podman-desktop/core-api';
-import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import { inject, injectable } from 'inversify';
+
+import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
 @injectable()
 export class DashboardService {

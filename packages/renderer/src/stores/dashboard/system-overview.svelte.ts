@@ -19,10 +19,13 @@
 import { faCheckCircle, faXmarkCircle } from '@fortawesome/free-regular-svg-icons';
 import { faInfoCircle, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
+import type {
+  ProviderConnectionInfo,
+  ProviderContainerConnectionInfo,
+  SystemOverviewStatus,
+} from '@podman-desktop/core-api';
 import { Spinner } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
-
-import type { SystemOverviewStatus } from '/@api/dashboard-info';
 
 export interface Status {
   status: SystemOverviewStatus;
@@ -52,6 +55,14 @@ export function getSystemOverviewStatus(status: ProviderConnectionStatus): Statu
     default:
       return SYSTEM_OVERVIEW_STATUS.stable;
   }
+}
+
+export function getConnectionDisplayName(connection: ProviderConnectionInfo): string {
+  if (connection.connectionType === 'container') {
+    const containerConn = connection as ProviderContainerConnectionInfo;
+    return containerConn.displayName ?? connection.name;
+  }
+  return connection.name;
 }
 
 /**

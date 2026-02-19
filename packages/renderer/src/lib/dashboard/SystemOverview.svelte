@@ -1,10 +1,10 @@
 <script lang="ts">
+import { SYSTEM_OVERVIEW_CONFIGURATION_KEY } from '@podman-desktop/core-api';
 import { Expandable } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import SystemOverviewContent from '/@/lib/dashboard/SystemOverviewContent.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
-import { SYSTEM_OVERVIEW_CONFIGURATION_KEY } from '/@api/dashboard-info';
 
 let expanded: boolean = $state(true);
 let initialized: boolean = $state(false);
