@@ -19,11 +19,11 @@
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
-import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
-import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
 import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 export const BACK = 'back';
 export const FORWARD = 'forward';
@@ -455,6 +455,16 @@ export function getForwardEntries(): HistoryEntry[] {
   return getEntries(FORWARD);
 }
 
+/**
+ * Check if a URL is a submenu base route that immediately redirects.
+ * Submenu routes (like /kubernetes) redirect to their first item (like /kubernetes/dashboard)
+ * and should not be added to history to prevent navigation issues when going back.
+ */
+function isSubmenuBaseRoute(url: string): boolean {
+  const registry = get(navigationRegistry);
+  return registry.some(entry => entry.type === 'submenu' && entry.link === url);
+}
+
 // Initialize router subscription
 router.subscribe(navigation => {
   if (navigation.url) {
@@ -479,11 +489,6 @@ router.subscribe(navigation => {
     }
 
     if (!isValidRoute(navigation.url)) {
-      return;
-    }
-
-    // Skip detail page roots (e.g., /containers/abc123/) as they immediately redirect to a tab
-    if (isDetailPageRoot(navigation.url)) {
       return;
     }
 
