@@ -55,6 +55,7 @@ This example shows how to integrate a menu into the Podman Desktop extension thr
 - 'dashboard/image': Item menu on image actions
 - 'dashboard/container': Item menu on container actions
 - 'dashboard/pod': Item menu on pod actions
+- 'dashboard/volume': Item menu on volume actions
 - 'dashboard/compose': Item menu on compose actions
 
 ### Verification
