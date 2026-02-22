@@ -29,7 +29,6 @@
     "src/**/*.svelte",
     "types/**/*.d.ts",
     "../../types/**/*.d.ts",
-    "../preload/exposedInMainWorld.d.ts",
-    "../api/src/**/*.ts"
+    "../preload/exposedInMainWorld.d.ts"
   ]
 }
