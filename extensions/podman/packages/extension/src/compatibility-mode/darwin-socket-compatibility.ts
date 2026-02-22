@@ -27,7 +27,7 @@ import { execPodman } from '/@/utils/util';
 export class DarwinSocketCompatibility extends SocketCompatibility {
   // Shows the details of the compatibility mode on what we do.
   details =
-    'Administrative privlileges are required to start the podman-mac-helper binary to toggle the Docker socket compatibility mode for Podman.';
+    'Administrative privileges are required to start the podman-mac-helper binary to toggle the Docker socket compatibility mode for Podman.';
 
   // This will show the "opposite" of what the current state is
   // "Enable" if it's currently disabled, "Disable" if it's currently enabled
