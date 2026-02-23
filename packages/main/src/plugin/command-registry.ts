@@ -19,19 +19,30 @@
 import type { CommandInfo } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
+import { z } from 'zod';
 
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 
-export interface RawCommand {
-  command?: string;
-  title?: string;
-  category?: string;
-  description?: string;
-  icon?: string | { light: string; dark: string };
-  keybinding?: string;
-  enablement?: string;
-}
+export const RawCommandSchema = z.object({
+  command: z.string().optional(),
+  title: z.string().optional(),
+  category: z.string().optional(),
+  description: z.string().optional(),
+  icon: z
+    .union([
+      z.string(),
+      z.object({
+        light: z.string(),
+        dark: z.string(),
+      }),
+    ])
+    .optional(),
+  keybinding: z.string().optional(),
+  enablement: z.string().optional(),
+});
+
+export type RawCommand = z.output<typeof RawCommandSchema>;
 
 export interface CommandHandler {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
