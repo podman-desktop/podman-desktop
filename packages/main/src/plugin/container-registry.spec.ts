@@ -3663,6 +3663,41 @@ test('check handleEvents with loadArchive', async () => {
   expect(consoleLogSpy).toBeCalledWith('event is', content);
 });
 
+test('check handleEvents with Docker API v1.52+ event shape', async () => {
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  // Docker API v1.52+ no longer sends top-level status/id.
+  passThrough.emit(
+    'data',
+    JSON.stringify({
+      Type: 'container',
+      Action: 'start',
+      Actor: {
+        ID: 'abc123',
+      },
+    }),
+  );
+
+  await vi.waitFor(() => expect(apiSender.send).toBeCalledWith('container-started-event', 'abc123'));
+});
+
 test('check handleEvents is not calling the console.log for health_status event', async () => {
   const consoleLogSpy = vi.spyOn(console, 'log');
   consoleLogSpy.mockClear();
@@ -3693,6 +3728,43 @@ test('check handleEvents is not calling the console.log for health_status event'
   await vi.waitFor(() => expect(eventsMockCallback).toBeDefined());
 
   // check we didn't call the console.log method
+  expect(consoleLogSpy).not.toBeCalled();
+});
+
+test('check handleEvents does not log Docker compound health_status actions', async () => {
+  const consoleLogSpy = vi.spyOn(console, 'log');
+  consoleLogSpy.mockClear();
+
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  passThrough.emit(
+    'data',
+    JSON.stringify({
+      Type: 'container',
+      Action: 'health_status: healthy',
+      Actor: {
+        ID: 'abc123',
+      },
+    }),
+  );
+
+  await vi.waitFor(() => expect(eventsMockCallback).toBeDefined());
   expect(consoleLogSpy).not.toBeCalled();
 });
 

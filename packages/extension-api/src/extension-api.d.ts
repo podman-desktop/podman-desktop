@@ -3116,8 +3116,15 @@ declare module '@podman-desktop/api' {
 
   interface ContainerJSONEvent {
     type: string;
-    status: string;
-    id: string;
+    // Podman events use top-level status/id.
+    // Docker Engine API v1.52+ events use Action/Actor.ID.
+    status?: string;
+    id?: string;
+    Action?: string;
+    Actor?: {
+      ID?: string;
+      Attributes?: Record<string, string>;
+    };
     Type?: string;
   }
 
