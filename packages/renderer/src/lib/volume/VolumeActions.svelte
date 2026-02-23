@@ -27,21 +27,11 @@ onMount(async () => {
   }
 });
 
-function handleError(errorMessage: string): void {
-  volume.actionError = errorMessage;
-  volume.status = 'ERROR';
-  dispatch('update', volume);
-}
-
 async function removeVolume(): Promise<void> {
   volume.status = 'DELETING';
   dispatch('update', volume);
 
-  try {
-    await window.removeVolume(volume.engineId, volume.name);
-  } catch (error) {
-    handleError(String(error));
-  }
+  await window.removeVolume(volume.engineId, volume.name);
 }
 
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
@@ -64,5 +54,5 @@ $: MenuComponent = dropdownMenu ? DropdownMenu : FlatMenu;
     dropdownMenu={dropdownMenu}
     contributions={contributions}
     detailed={detailed}
-    onError={handleError} />
+    onError={(errorMessage: string): void => console.error(errorMessage)} />
 </MenuComponent>
