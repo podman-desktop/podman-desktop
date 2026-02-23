@@ -297,11 +297,11 @@ const setupExtensionApiWatcher = name => {
     for (const extension of extensions) {
       setupExtensionApiWatcher(extension);
     }
+    await setupCoreApiPackageWatcher(viteDevServer);
     await setupPreloadPackageWatcher(viteDevServer);
     await setupPreloadDockerExtensionPackageWatcher(viteDevServer);
     await setupPreloadWebviewPackageWatcher(viteDevServer);
     await setupUiPackageWatcher();
-    await setupCoreApiPackageWatcher(viteDevServer);
     await setupMainPackageWatcher(viteDevServer);
   } catch (e) {
     console.error(e);
