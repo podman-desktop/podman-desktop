@@ -22,7 +22,12 @@ let showUpdateNetworkDialog = $state(false);
 let contributions = $state<Menu[]>([]);
 
 onMount(async () => {
-  contributions = await window.getContributedMenus(MenuContext.DASHBOARD_NETWORK);
+  try {
+    contributions = await window.getContributedMenus(MenuContext.DASHBOARD_NETWORK);
+  } catch (error) {
+    console.error(`error while fetching contributed menus for network ${object.name}`, error);
+    handleError(String(error));
+  }
 });
 
 async function removeNetwork(): Promise<void> {

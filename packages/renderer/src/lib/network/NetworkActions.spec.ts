@@ -26,8 +26,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import NetworkActions from './NetworkActions.svelte';
 import type { NetworkInfoUI } from './NetworkInfoUI';
 
-const getContributedMenusMock = vi.fn();
-
 const network1: NetworkInfoUI = {
   engineId: 'engine1',
   engineName: 'Engine 1',
@@ -60,8 +58,7 @@ const network2: NetworkInfoUI = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock, writable: true });
-  getContributedMenusMock.mockResolvedValue([]);
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
 });
 
 test('Expect non-podman unused network to have delete option and disabled edit', async () => {
