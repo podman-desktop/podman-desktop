@@ -20,7 +20,11 @@ const dispatch = createEventDispatcher<{ update: VolumeInfoUI }>();
 
 let contributions: Menu[] = [];
 onMount(async () => {
-  contributions = await window.getContributedMenus(MenuContext.DASHBOARD_VOLUME);
+  try {
+    contributions = await window.getContributedMenus(MenuContext.DASHBOARD_VOLUME);
+  } catch (error) {
+    console.error('Error fetching contributed menus for volumes:', error);
+  }
 });
 
 function handleError(errorMessage: string): void {
