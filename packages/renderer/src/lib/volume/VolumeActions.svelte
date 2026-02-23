@@ -12,25 +12,13 @@ import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
-interface Props {
-  volume: VolumeInfoUI;
-  dropdownMenu?: boolean;
-  detailed?: boolean;
-  onUpdate?: (update: VolumeInfoUI) => void;
-}
-
-let {
-  volume = $bindable(),
-  dropdownMenu = false,
-  detailed = false,
-  onUpdate = (update): void => {
-    dispatch('update', update);
-  },
-}: Props = $props();
+export let volume: VolumeInfoUI;
+export let dropdownMenu = false;
+export let detailed = false;
 
 const dispatch = createEventDispatcher<{ update: VolumeInfoUI }>();
 
-let contributions = $state<Menu[]>([]);
+let contributions: Menu[] = [];
 onMount(async () => {
   contributions = await window.getContributedMenus(MenuContext.DASHBOARD_VOLUME);
 });
@@ -38,12 +26,12 @@ onMount(async () => {
 function handleError(errorMessage: string): void {
   volume.actionError = errorMessage;
   volume.status = 'ERROR';
-  onUpdate(volume);
+  dispatch('update', volume);
 }
 
 async function removeVolume(): Promise<void> {
   volume.status = 'DELETING';
-  onUpdate(volume);
+  dispatch('update', volume);
 
   try {
     await window.removeVolume(volume.engineId, volume.name);
@@ -54,7 +42,7 @@ async function removeVolume(): Promise<void> {
 
 // If dropdownMenu = true, we'll change style to the imported dropdownMenu style
 // otherwise, leave blank.
-const MenuComponent = $derived(dropdownMenu ? DropdownMenu : FlatMenu);
+$: MenuComponent = dropdownMenu ? DropdownMenu : FlatMenu;
 </script>
 
 {#if volume.status === 'UNUSED'}

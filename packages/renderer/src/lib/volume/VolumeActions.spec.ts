@@ -25,7 +25,6 @@ import VolumeActions from './VolumeActions.svelte';
 import type { VolumeInfoUI } from './VolumeInfoUI';
 
 const removeVolumeMock = vi.fn();
-const getContributedMenusMock = vi.fn();
 
 class VolumeInfoUIImpl {
   #status: string;
@@ -46,11 +45,10 @@ class VolumeInfoUIImpl {
 
 beforeAll(() => {
   Object.defineProperty(window, 'removeVolume', { value: removeVolumeMock });
-  Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
 });
 
 test('Expect prompt dialog and deletion', async () => {
-  getContributedMenusMock.mockResolvedValue([]);
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   // Mock the showMessageBox to return 0 (yes)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
