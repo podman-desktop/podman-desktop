@@ -107,8 +107,12 @@ export interface InternalContainerProvider {
 
 interface JSONEvent {
   type: string;
-  status: string;
-  id: string;
+  // Podman uses 'status', Docker uses 'Action'
+  status?: string;
+  Action?: string;
+  // Podman uses top-level 'id', Docker uses 'Actor.ID'
+  id?: string;
+  Actor?: { ID?: string; Attributes?: Record<string, string> };
   Type?: string;
 }
 
@@ -165,60 +169,70 @@ export class ContainerProviderRegistry {
       nbEvents++;
       // reconnected
       this.notify = true;
+
+      // Normalize event fields: Docker uses 'Action' and 'Actor.ID',
+      // Podman uses 'status' and top-level 'id'.
+      // Docker's Action can be compound like "exec_create: /bin/sh" or
+      // "health_status: healthy", so extract only the base action.
+      const rawStatus = jsonEvent.status ?? jsonEvent.Action;
+      const status = rawStatus?.split(':')[0]?.trim();
+      const id = jsonEvent.id ?? jsonEvent.Actor?.ID;
+      const eventType = jsonEvent.Type;
+
       // do not log healthcheck(health_status) events
       // as it's too verbose/repeating a lot
-      if (jsonEvent.status !== 'health_status') {
+      if (status !== 'health_status') {
         console.log('event is', jsonEvent);
       }
       this._onEvent.fire(jsonEvent);
-      if (jsonEvent.status === 'stop' && jsonEvent?.Type === 'container') {
+      if (status === 'stop' && eventType === 'container') {
         // need to notify that a container has been stopped
-        this.apiSender.send('container-stopped-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'init' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-stopped-event', id);
+      } else if (status === 'init' && eventType === 'container') {
         // need to notify that a container has been started
-        this.apiSender.send('container-init-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'create' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-init-event', id);
+      } else if (status === 'create' && eventType === 'container') {
         // need to notify that a container has been created
-        this.apiSender.send('container-created-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'start' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-created-event', id);
+      } else if (status === 'start' && eventType === 'container') {
         // need to notify that a container has been started
-        this.apiSender.send('container-started-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'destroy' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-started-event', id);
+      } else if (status === 'destroy' && eventType === 'container') {
         // need to notify that a container has been destroyed
-        this.apiSender.send('container-stopped-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'die' && jsonEvent?.Type === 'container') {
-        this.apiSender.send('container-die-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'kill' && jsonEvent?.Type === 'container') {
-        this.apiSender.send('container-kill-event', jsonEvent.id);
-      } else if (jsonEvent?.Type === 'pod') {
+        this.apiSender.send('container-stopped-event', id);
+      } else if (status === 'die' && eventType === 'container') {
+        this.apiSender.send('container-die-event', id);
+      } else if (status === 'kill' && eventType === 'container') {
+        this.apiSender.send('container-kill-event', id);
+      } else if (eventType === 'pod') {
         this.apiSender.send('pod-event');
-      } else if (jsonEvent?.Type === 'volume') {
+      } else if (eventType === 'volume') {
         this.apiSender.send('volume-event');
-      } else if (jsonEvent?.Type === 'network') {
+      } else if (eventType === 'network') {
         this.apiSender.send('network-event');
-      } else if (jsonEvent.status === 'remove' && jsonEvent?.Type === 'container') {
-        this.apiSender.send('container-removed-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'pull' && jsonEvent?.Type === 'image') {
+      } else if (status === 'remove' && eventType === 'container') {
+        this.apiSender.send('container-removed-event', id);
+      } else if (status === 'pull' && eventType === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-pull-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'tag' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-pull-event', id);
+      } else if (status === 'tag' && eventType === 'image') {
         // need to notify that image are being tagged
-        this.apiSender.send('image-tag-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'untag' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-tag-event', id);
+      } else if (status === 'untag' && eventType === 'image') {
         // need to notify that image are being untagged
-        this.apiSender.send('image-untag-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'remove' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-untag-event', id);
+      } else if (status === 'remove' && eventType === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-remove-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'delete' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-remove-event', id);
+      } else if (status === 'delete' && eventType === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-remove-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'build' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-remove-event', id);
+      } else if (status === 'build' && eventType === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-build-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'loadfromarchive' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-build-event', id);
+      } else if (status === 'loadfromarchive' && eventType === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-loadfromarchive-event', jsonEvent.id);
+        this.apiSender.send('image-loadfromarchive-event', id);
       }
     });
 
@@ -2088,7 +2102,7 @@ export class ContainerProviderRegistry {
 
     // handle EnvFile by adding to Env the other variables
     if (options.EnvFiles) {
-      const envFiles = options.EnvFiles || [];
+      const envFiles = options.EnvFiles ?? [];
       const envFileContent = await this.getEnvFileParser().parseEnvFiles(envFiles);
 
       const env = options.Env ?? [];

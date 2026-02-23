@@ -156,6 +156,10 @@ const memoryLogs: { logType: LogType; date: Date; message: string }[] = [];
 
 export const buildApiSender = (): ApiSenderType => {
   const eventEmitter = new EventEmitter();
+  // Many renderer stores register listeners for the same event names
+  // (e.g. 'extensions-started', 'container-started-event', etc.)
+  // Increase the limit to avoid MaxListenersExceededWarning
+  eventEmitter.setMaxListeners(50);
 
   return {
     send: (channel: string, data: unknown): void => {

@@ -407,6 +407,9 @@ export class PluginSystem {
     });
 
     const eventEmitter = new EventEmitter();
+    // Many internal components register listeners for the same event names
+    // Increase the limit to avoid MaxListenersExceededWarning
+    eventEmitter.setMaxListeners(50);
     return {
       send: (channel: string, data: unknown): void => {
         // send only when the UI is ready
