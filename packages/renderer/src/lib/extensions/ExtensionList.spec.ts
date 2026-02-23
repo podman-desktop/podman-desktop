@@ -31,6 +31,7 @@ import ExtensionList from './ExtensionList.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
 });
 
 export const aFakeExtension: CatalogExtension = {
@@ -101,6 +102,8 @@ test('Expect to see extensions', async () => {
 
   render(ExtensionList);
 
+  await tick();
+
   const headingExtensions = screen.getByRole('heading', { name: 'extensions' });
   expect(headingExtensions).toBeInTheDocument();
 
@@ -127,6 +130,8 @@ test('Expect to see empty screen on extension page only', async () => {
 
   render(ExtensionList, { searchTerm: 'A' });
 
+  await tick();
+
   let title = screen.queryByText(`No extensions matching 'A' found`);
   expect(title).toBeInTheDocument();
 
@@ -143,6 +148,8 @@ test('Expect to see empty screen on catalog page only', async () => {
   extensionInfos.set(combined);
 
   render(ExtensionList, { searchTerm: 'A' });
+
+  await tick();
 
   let title = screen.queryByText(`No extensions matching 'A' found`);
   expect(title).not.toBeInTheDocument();
@@ -161,6 +168,8 @@ test('Expect to see empty screens on both pages', async () => {
 
   render(ExtensionList, { searchTerm: 'foo' });
 
+  await tick();
+
   let title = screen.getByText(`No extensions matching 'foo' found`);
   expect(title).toBeInTheDocument();
 
@@ -177,6 +186,8 @@ test('Search extension page searches also description', async () => {
   extensionInfos.set(combined);
 
   render(ExtensionList, { searchTerm: 'bar' });
+
+  await tick();
 
   const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
   expect(myExtension1).toBeInTheDocument();
@@ -201,6 +212,8 @@ test('Search catalog page searches also description', async () => {
 
   render(ExtensionList, { searchTerm: 'bar' });
 
+  await tick();
+
   // Click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
   await fireEvent.click(catalogTab);
@@ -220,6 +233,8 @@ test('Expect to see local extensions tab content', async () => {
 
   render(ExtensionList);
 
+  await tick();
+
   // select the local extensions tab
   const localModeTab = screen.getByRole('button', { name: 'Local Extensions' });
   await fireEvent.click(localModeTab);
@@ -235,6 +250,8 @@ test('Switching tabs keeps only terms in search term', async () => {
 
   render(ExtensionList, { searchTerm: 'bar category:bar not:installed' });
 
+  await tick();
+
   // Click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
   await fireEvent.click(catalogTab);
@@ -245,7 +262,7 @@ test('Switching tabs keeps only terms in search term', async () => {
   expect(myExtension1).toBeInTheDocument();
 });
 
-test('Expect install custom button is visble', async () => {
+test('Expect install custom button is visible', async () => {
   render(ExtensionList);
   await tick();
 
@@ -254,10 +271,12 @@ test('Expect install custom button is visble', async () => {
   expect(installCustomButton).toBeInTheDocument();
 });
 
-test('Expect install custom button to not be visble if extensions.customExtensions.enabled is false', async () => {
+test('Expect install custom button to not be visible if extensions.customExtensions.enabled is false', async () => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
 
   render(ExtensionList);
+
+  await tick();
 
   const installCustomButton = screen.queryByRole('button', { name: 'Install custom' });
 

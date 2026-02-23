@@ -1,7 +1,6 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -25,7 +24,9 @@ let { searchTerm = '', screen = 'installed' }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
-let enableCustomExtensions = $state(false);
+let enableCustomExtensions = $derived(
+  (await window.getConfigurationValue('extensions.customExtensions.enabled')) ?? true,
+);
 
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
   extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm),
@@ -62,10 +63,6 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
   screen = newScreen;
   searchTerm = extensionsUtils.filterTerms(searchTerm).join(' ');
 }
-
-onMount(async () => {
-  enableCustomExtensions = (await window.getConfigurationValue('extensions.customExtensions.enabled')) ?? true;
-});
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="extensions">
