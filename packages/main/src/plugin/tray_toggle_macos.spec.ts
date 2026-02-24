@@ -1,7 +1,7 @@
 import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { TrayToggleMacOS } from './tray_toggle_macos.js';
+import { TrayToggleMacOS } from './tray-toggle-macos.js';
 
 let trayToggleMacOS: TrayToggleMacOS;
 let configurationRegistryMock: IConfigurationRegistry;
@@ -48,4 +48,7 @@ test('Should register configuration with correct properties', async () => {
   const trayToggleProp = properties['preferences.TrayToggle']!;
   expect(trayToggleProp).toBeDefined();
   expect(trayToggleProp.description).toContain('Hide or show the menubar icon on MacOS');
+  expect(trayToggleProp.type).toBe('string');
+  expect(trayToggleProp.enum).toEqual(['show', 'hide']);
+  expect(trayToggleProp.default).toBe('show');
 });

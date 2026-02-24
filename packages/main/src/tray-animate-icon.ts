@@ -35,6 +35,12 @@ export class AnimatedTray {
   private color = 'default'; // default, light, dark
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
 
+  // function reference passed to constructor and destructor
+  // added to ensure that the listener doesn't stay open after removal.
+  private onThemeUpdated = (): void => {
+    this.updateIcon();
+  };
+
   constructor() {
     this.status = 'initialized';
     this.updateIcon();
@@ -145,5 +151,17 @@ export class AnimatedTray {
   setStatus(status: TrayIconStatus): void {
     this.status = status;
     this.updateIcon();
+  }
+
+  // cleans up event listeners and timers as well as set the object as undefined
+  destroyTray(): void {
+    if (this.animatedInterval) {
+      clearInterval(this.animatedInterval);
+      this.animatedInterval = undefined;
+    }
+    // remove event listener
+    nativeTheme.off('updated', this.onThemeUpdated);
+    // stops any updates to the tray
+    this.tray = undefined;
   }
 }

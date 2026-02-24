@@ -244,6 +244,11 @@ export class TrayMenu {
   }
 
   private updateMenu(): void {
+    // if the tray has been disabled in settings, don't update
+    if (!this.tray || this.tray.isDestroyed()) {
+      return;
+    }
+
     const generatedMenuTemplate: MenuItemConstructorOptions[] = [];
     for (const [, item] of this.menuProviderItems) {
       generatedMenuTemplate.push(this.createProviderMenuItem(item));
@@ -284,6 +289,11 @@ export class TrayMenu {
   }
 
   protected updateGlobalStatus(): void {
+    // if the tray has been disabled in settings, don't update
+    if (!this.tray || this.tray.isDestroyed()) {
+      return;
+    }
+
     // do we have any provider or any connection ?
     const hasOneProviderBeingStarted = Array.from(this.menuProviderItems.values()).find(
       item => item.status === 'started',

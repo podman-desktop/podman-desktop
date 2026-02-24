@@ -110,7 +110,8 @@ app.whenReady().then(
       }
       if (isMac()) {
         const trayToggle = configurationRegistry.getConfiguration('preferences').get('TrayToggle');
-        if (trayToggle === 'Hide') {
+        if (trayToggle === 'hide') {
+          animatedTray.destroyTray();
           tray.destroy();
         }
       }

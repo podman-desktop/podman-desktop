@@ -27,14 +27,14 @@ export class TrayToggleMacOS {
     // add configuration
     const trayToggleConfigurationNode: IConfigurationNode = {
       id: 'preferences.traytoggle',
-      title: 'MenuBar Icon',
+      title: 'Menu Bar Icon',
       type: 'object',
       properties: {
         ['preferences.TrayToggle']: {
           description: 'Hide or show the menubar icon on MacOS (Requires restart)',
-          type: 'boolean',
-          enum: ['Show', 'Hide'],
-          default: 'Show',
+          type: 'string',
+          enum: ['show', 'hide'],
+          default: 'show',
         },
       },
     };
