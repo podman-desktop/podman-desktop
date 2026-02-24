@@ -295,7 +295,7 @@ export default [
       ],
     },
   },
-   {
+  {
     files: ['packages/main/**'],
     rules: {
       'no-restricted-imports': [
