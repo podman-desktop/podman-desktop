@@ -26,7 +26,7 @@ import { execPodman } from '/@/utils/util';
 
 export class DarwinSocketCompatibility extends SocketCompatibility {
   // Shows the details of the compatibility mode on what we do.
-  details = 'the podman-mac-helper binary will be run, disconnecting the Docker socket to Podman.';
+  details = 'the podman-mac-helper binary will be run, unlinking the Docker socket from Podman.';
 
   // This will show the "opposite" of what the current state is
   // "Enable" if it's currently disabled, "Disable" if it's currently enabled
