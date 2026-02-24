@@ -108,6 +108,12 @@ app.whenReady().then(
           animatedTray.setColor(color);
         }
       }
+      if (isMac()) {
+        const trayToggle = configurationRegistry.getConfiguration('preferences').get('TrayToggle');
+        if (trayToggle === 'Hide') {
+          tray.destroy();
+        }
+      }
 
       // Share configuration registry with renderer process
       ipcMain.emit('configuration-registry', '', configurationRegistry);

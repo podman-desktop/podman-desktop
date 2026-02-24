@@ -238,6 +238,7 @@ import { ProgressImpl } from './tasks/progress-impl.js';
 import { EventType, Telemetry } from './telemetry/telemetry.js';
 import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
+import { TrayToggleMacOS } from './tray_toggle_macos.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
 import { Troubleshooting } from './troubleshooting.js';
@@ -608,6 +609,12 @@ export class PluginSystem {
       container.bind<TrayIconColor>(TrayIconColor).toSelf().inSingletonScope();
       const trayIconColor = container.get<TrayIconColor>(TrayIconColor);
       await trayIconColor.init();
+    }
+    //Add tray toggle option for Mac only
+    if (isMac()) {
+      container.bind<TrayToggleMacOS>(TrayToggleMacOS).toSelf().inSingletonScope();
+      const trayToggleMacOS = container.get<TrayToggleMacOS>(TrayToggleMacOS);
+      await trayToggleMacOS.init();
     }
 
     // Add all notifications to notification registry
