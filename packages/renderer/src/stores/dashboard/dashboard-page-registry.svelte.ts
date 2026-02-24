@@ -47,10 +47,6 @@ function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
   ];
 }
 
-setupDashboardPageRegistry().catch((error: unknown) => {
-  console.error(`Failed to setup dashboard page registry: ${error}`);
-});
-
 window.events?.receive('enhanced-dashboard-enabled', (value: unknown) => {
   if (typeof value === 'boolean') {
     enhancedDashboard.enabled = value;
