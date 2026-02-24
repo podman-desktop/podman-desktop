@@ -126,12 +126,19 @@ test('should be able to connect', async () => {
 test('disconnect should clear pending reconnect timeout', () => {
   vi.useFakeTimers();
 
-  const clientConnectSpy = vi.spyOn(Client.prototype, 'connect').mockImplementation(function () {
+  const clientConnectSpy = vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client) {
     return this;
   });
 
   try {
-    const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel('localhost', 22, 'foo', '', '/tmp/remote.sock', '/tmp/local.sock');
+    const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+      'localhost',
+      22,
+      'foo',
+      '',
+      '/tmp/remote.sock',
+      '/tmp/local.sock',
+    );
     const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
 
     podmanRemoteSshTunnel.connect();
