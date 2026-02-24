@@ -22,9 +22,10 @@ import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import { isWindows } from '/@/util.js';
 
+// eslint-disable-next-line no-restricted-imports
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
-import { isWindows } from '../util.js';
 import { ColorBuilder } from './color-builder.js';
 import { colorPaletteHelper } from './color-palette-helper.js';
 import type { ConfigurationRegistry } from './configuration-registry.js';

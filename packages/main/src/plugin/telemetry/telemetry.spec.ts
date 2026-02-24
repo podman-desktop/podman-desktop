@@ -22,12 +22,12 @@ import { TelemetrySettings } from '@podman-desktop/core-api/telemetry';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import type { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import type { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { TelemetryTrustedValue } from '/@/plugin/types/telemetry.js';
 import product from '/@product.json' with { type: 'json' };
 
-import type { ConfigurationRegistry } from '../configuration-registry.js';
-import { TelemetryTrustedValue } from '../types/telemetry.js';
 import type { EventType } from './telemetry.js';
 import { Telemetry, TelemetryLoggerImpl } from './telemetry.js';
 

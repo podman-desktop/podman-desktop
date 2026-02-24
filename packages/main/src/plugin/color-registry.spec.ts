@@ -26,9 +26,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
+import * as util from '/@/util.js';
 
+// eslint-disable-next-line no-restricted-imports
 import tailwindColorPalette from '../../../../tailwind-color-palette.json' with { type: 'json' };
-import * as util from '../util.js';
 import { ColorBuilder } from './color-builder.js';
 import { colorPaletteHelper } from './color-palette-helper.js';
 import { type ColorDefinitionWithId, ColorRegistry } from './color-registry.js';
