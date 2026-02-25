@@ -32,23 +32,19 @@ test('Should register configuration with correct properties', async () => {
   const calls = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls;
   expect(calls).toHaveLength(1);
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const configArray = calls[0]![0];
   expect(configArray).toHaveLength(1);
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const configNode = configArray[0]!;
   expect(configNode.id).toBe('preferences.traytoggle');
-  expect(configNode.title).toBe('MenuBar Icon');
+  expect(configNode.title).toBe('Menu Bar Icon');
   expect(configNode.type).toBe('object');
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const properties = configNode.properties!;
   expect(properties['preferences.TrayToggle']).toBeDefined();
   const trayToggleProp = properties['preferences.TrayToggle']!;
   expect(trayToggleProp).toBeDefined();
-  expect(trayToggleProp.description).toContain('Hide or show the menubar icon on MacOS');
-  expect(trayToggleProp.type).toBe('string');
-  expect(trayToggleProp.enum).toEqual(['show', 'hide']);
-  expect(trayToggleProp.default).toBe('show');
+  expect(trayToggleProp.description).toContain('Hide the menubar icon on MacOS');
+  expect(trayToggleProp.type).toBe('boolean');
+  expect(trayToggleProp.default).toBe(false);
 });

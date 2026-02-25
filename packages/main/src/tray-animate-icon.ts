@@ -46,9 +46,8 @@ export class AnimatedTray {
     this.updateIcon();
 
     // refresh icon when theme is being updated (especially for Windows as for macOS we always use template icon and on linux the menu bar is not related to the theme)
-    nativeTheme.on('updated', () => {
-      this.updateIcon();
-    });
+    // updates the same handler for on() and off() values.
+    nativeTheme.on('updated', this.onThemeUpdated);
   }
 
   protected isProd(): boolean {

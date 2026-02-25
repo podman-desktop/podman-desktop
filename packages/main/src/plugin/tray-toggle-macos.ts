@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,9 @@ export class TrayToggleMacOS {
       type: 'object',
       properties: {
         ['preferences.TrayToggle']: {
-          description: 'Hide or show the menubar icon on MacOS (Requires restart)',
-          type: 'string',
-          enum: ['show', 'hide'],
-          default: 'show',
+          description: 'Hide the menubar icon on MacOS (Requires restart)',
+          type: 'boolean',
+          default: false,
         },
       },
     };
