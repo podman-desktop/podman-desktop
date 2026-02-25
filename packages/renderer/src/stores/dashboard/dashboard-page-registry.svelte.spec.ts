@@ -24,7 +24,6 @@ import {
   convertFromListOrganizerItems,
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
-  defaultSection,
   setupDashboardPageRegistry,
 } from './dashboard-page-registry.svelte';
 
@@ -41,20 +40,6 @@ beforeEach(async () => {
 });
 
 describe('defaultSection', () => {
-  test('should return section names in correct order when enhanced dashboard is disabled', async () => {
-    await vi.waitFor(() => {
-      expect(dashboardPageRegistry.entries).toHaveLength(5);
-    });
-
-    expect(defaultSection.names).toEqual([
-      'Release Notes',
-      'Extension Banners',
-      'Explore Features',
-      'Learning Center',
-      'Providers',
-    ]);
-  });
-
   test('should return section names in correct order when enhanced dashboard is enabled', async () => {
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
     await setupDashboardPageRegistry();
