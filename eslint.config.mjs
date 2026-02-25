@@ -295,6 +295,22 @@ export default [
       ],
     },
   },
+  {
+    files: ['packages/main/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../**'],
+              message: 'Parent relative imports are not allowed. Use path aliases (e.g. /@/) instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 
   {
     files: ['packages/renderer/**'],

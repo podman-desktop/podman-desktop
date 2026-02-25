@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,18 +31,17 @@ import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
 import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
-import imageRegistryConfigJson from '../../tests/resources/data/plugin/image-registry-config.json' with {
+import imageRegistryConfigJson from '/@tests/resources/data/plugin/image-registry-config.json' with { type: 'json' };
+import imageRegistryManifestJson from '/@tests/resources/data/plugin/image-registry-manifest-index.json' with {
   type: 'json',
 };
-import imageRegistryManifestJson from '../../tests/resources/data/plugin/image-registry-manifest-index.json' with {
+import imageRegistryManifestZstdJson from '/@tests/resources/data/plugin/image-registry-manifest-index.zstd.json' with {
   type: 'json',
 };
-import imageRegistryManifestZstdJson from '../../tests/resources/data/plugin/image-registry-manifest-index.zstd.json' with {
+import imageRegistryManifestMultiArchJson from '/@tests/resources/data/plugin/image-registry-manifest-multi-arch-index.json' with {
   type: 'json',
 };
-import imageRegistryManifestMultiArchJson from '../../tests/resources/data/plugin/image-registry-manifest-multi-arch-index.json' with {
-  type: 'json',
-};
+
 import type { Certificates } from './certificates.js';
 import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';
