@@ -20,6 +20,8 @@ import { writable } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import {
   getBackEntries,
   getForwardEntries,
@@ -28,8 +30,6 @@ import {
   goToHistoryIndex,
   navigationHistory,
 } from '/@/stores/navigation-history.svelte';
-import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
-import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 let routerSubscribeCallback = vi.hoisted(() => {
   return vi.fn() as unknown as (navigation: TinroRoute) => void;
@@ -96,6 +96,7 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
       }),
       set: vi.fn(),
       update: vi.fn(),
+      unsubscribe: vi.fn(),
     },
   };
 });
@@ -106,7 +107,7 @@ beforeEach(() => {
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
 
-  vi.mocked(navigationRegistry).navigationRegistry = writable([
+  vi.mocked(navigationRegistry).set([
     { type: 'root', link: '/', title: 'Dashboard' } as unknown as NavigationRegistryEntry,
     { type: 'submenu', link: '/kubernetes', title: 'Kubernetes' } as unknown as NavigationRegistryEntry,
     {
@@ -384,17 +385,17 @@ describe('submenu navigation', () => {
 describe('tab navigation for detail pages', () => {
   test('should add new entry for each tab change', () => {
     // Start by navigating to containers list
-    router.goto('/containers');
+    routerSubscribeCallback({ url: '/containers' } as TinroRoute);
     expect(navigationHistory.stack).toEqual(['/containers']);
     expect(navigationHistory.index).toBe(0);
 
     // Navigate to container detail page summary tab (should add new entry)
-    router.goto('/containers/abc123/summary');
+    routerSubscribeCallback({ url: '/containers/abc123/summary' } as TinroRoute);
     expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
     expect(navigationHistory.index).toBe(1);
 
     // Switch to logs tab (should ADD a new entry)
-    router.goto('/containers/abc123/logs');
+    routerSubscribeCallback({ url: '/containers/abc123/logs' } as TinroRoute);
 
     // Stack should now have 3 entries (each tab is a separate history entry)
     expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary', '/containers/abc123/logs']);
