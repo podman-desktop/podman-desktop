@@ -200,6 +200,7 @@ function label(obj: VolumeInfoUI): string {
       <Prune type="volumes" engines={enginesList} />
 
       <Button
+        type="secondary"
         inProgress={fetchDataInProgress}
         on:click={fetchUsageData}
         title="Gather sizes for volumes. It can take a while..."
@@ -207,7 +208,7 @@ function label(obj: VolumeInfoUI): string {
         aria-label="Gather volume sizes">Gather volume sizes</Button>
     {/if}
     {#if providerConnections.length > 0}
-      <Button on:click={gotoCreateVolume} icon={faPlusCircle} title="Create a volume" aria-label="Create"
+      <Button type="primary" on:click={gotoCreateVolume} icon={faPlusCircle} title="Create a volume" aria-label="Create"
         >Create</Button>
     {/if}
   {/snippet}
