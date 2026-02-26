@@ -310,6 +310,7 @@ function label(item: ImageInfoUI): string {
       <Prune type="images" engines={enginesList} />
     {/if}
     <Button
+      type="secondary"
       on:click={loadImages}
       title="Load Images From Tar Archives"
       icon={faUpload}
@@ -317,14 +318,15 @@ function label(item: ImageInfoUI): string {
       Load
     </Button>
     <Button
+      type="secondary"
       on:click={importImage}
       title="Import Containers From Filesystem"
       icon={faArrowCircleDown}
       aria-label="Import Image">
       Import
     </Button>
-    <Button on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
-    <Button on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
+    <Button type="secondary" on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
+    <Button type="primary" on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
