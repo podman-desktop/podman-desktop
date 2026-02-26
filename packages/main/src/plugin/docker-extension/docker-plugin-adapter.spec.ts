@@ -16,6 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
+import { Readable } from 'node:stream';
+
 import type { SimpleContainerInfo } from '@podman-desktop/core-api';
 import type { IpcMainEvent } from 'electron';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -24,6 +29,14 @@ import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js'
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 
 import { DockerPluginAdapter } from './docker-plugin-adapter.js';
+
+vi.mock('node:child_process', async () => {
+  return {
+    spawn: vi.fn(),
+  };
+});
+
+const spawnMock = vi.mocked(spawn);
 
 let dockerPluginAdapter: TestDockerPluginAdapter;
 
@@ -34,7 +47,9 @@ vi.mock('electron', () => {
   return { ipcMain: mockIpcMain };
 });
 
-const contributionManager = {} as unknown as ContributionManager;
+const contributionManager = {
+  getExtensionPath: vi.fn(),
+} as unknown as ContributionManager;
 
 class TestDockerPluginAdapter extends DockerPluginAdapter {
   override async getVmServiceContainer(contributionId: string): Promise<SimpleContainerInfo> {
@@ -364,5 +379,85 @@ describe('handle execWithOptions', async () => {
       error,
     );
     expect(replyMock).toHaveBeenNthCalledWith(2, 'docker-plugin-adapter:execWithOptions-callback-close', callbackId, 1);
+  });
+});
+
+describe('exec mock process', () => {
+  // Helper function for the mock process to simulate the stdout / stderr streams
+  const createMockSpawnProcess = (): ChildProcess => {
+    const mockProcess = new EventEmitter() as ChildProcess;
+    const stdout = new Readable({ read(): void {} });
+    const stderr = new Readable({ read(): void {} });
+    stdout.setEncoding = vi.fn();
+    stderr.setEncoding = vi.fn();
+    mockProcess.stdout = stdout;
+    mockProcess.stderr = stderr;
+    return mockProcess;
+  };
+
+  beforeEach(() => {
+    spawnMock.mockClear();
+  });
+
+  test('handle exec with arguments containing quotes', async () => {
+    const extensionName = 'myExtension';
+    const mockProcess = createMockSpawnProcess();
+
+    spawnMock.mockReturnValue(mockProcess);
+
+    // Start the exec call
+    const execPromise = dockerPluginAdapter.handleExec(extensionName, undefined, 'podman', [
+      'info',
+      '--format',
+      '{{json .}}',
+    ]);
+
+    // Simulate successful execution
+    setTimeout(() => {
+      mockProcess.stdout?.emit('data', '{"test": "value"}');
+      mockProcess.emit('close', 0);
+    }, 10);
+
+    const result = await execPromise;
+
+    // Verify spawn was called without shell: true / no issues when executing command with quotes
+    expect(spawnMock).toHaveBeenCalledTimes(1);
+    const spawnCall = spawnMock.mock.calls[0]!;
+    expect(spawnCall[0]).toBe('podman');
+    expect(spawnCall[1]).toEqual(['info', '--format', '{{json .}}']);
+    expect(spawnCall[2]).toEqual({ env: expect.any(Object) });
+    expect(spawnCall[2]!.shell).toBeUndefined();
+
+    // Expect it to be with the proper values
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe('{"test": "value"}');
+  });
+
+  test('handle exec with arguments containing spaces', async () => {
+    const extensionName = 'myExtension';
+    const mockProcess = createMockSpawnProcess();
+
+    spawnMock.mockReturnValue(mockProcess);
+
+    // If we push with quotes, should be passed as separate arguments, but output as "echo hello world test message"
+    const execPromise = dockerPluginAdapter.handleExec(extensionName, undefined, 'echo', [
+      'hello world',
+      'test message',
+    ]);
+
+    setTimeout(() => {
+      mockProcess.stdout?.emit('data', 'hello world test message\n');
+      mockProcess.emit('close', 0);
+    }, 10);
+
+    const result = await execPromise;
+
+    // Verify arguments with spaces are passed as separate array elements
+    expect(spawnMock).toHaveBeenCalledTimes(1);
+    const spawnCall = spawnMock.mock.calls[0]!;
+    expect(spawnCall[1]).toEqual(['hello world', 'test message']);
+    expect(spawnCall[2]!.shell).toBeUndefined();
+
+    expect(result.code).toBe(0);
   });
 });
