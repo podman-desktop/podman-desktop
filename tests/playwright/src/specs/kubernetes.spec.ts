@@ -47,6 +47,7 @@ const SECRET_NAME: string = 'test-secret-resource';
 const SECRET_POD_NAME: string = 'test-pod-configmaps-secrets';
 const DEPLOYMENT_NAME: string = 'test-deployment-resource';
 const CRON_JOB_NAME: string = 'test-cronjob-resource';
+const POD_LOG_SEARCH_NAME: string = 'test-pod-log-search';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,6 +92,14 @@ const CRON_JOB_YAML_PATH: string = path.resolve(
   'resources',
   'kubernetes',
   `${CRON_JOB_NAME}.yaml`,
+);
+const POD_LOG_SEARCH_YAML_PATH: string = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  'resources',
+  'kubernetes',
+  `${POD_LOG_SEARCH_NAME}.yaml`,
 );
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
@@ -324,6 +333,39 @@ test.describe('Kubernetes resources End-to-End test', { tag: ['@k8s_e2e', '@k8s_
       });
       test('Delete CronJob resource', async ({ page }) => {
         await deleteKubernetesResource(page, KubernetesResources.Cronjobs, CRON_JOB_NAME);
+      });
+    });
+
+  test.describe
+    .serial('Pod logs search test', () => {
+      test('Create a pod with deterministic logs for search', async ({ page }) => {
+        await createKubernetesResource(page, KubernetesResources.Pods, POD_LOG_SEARCH_NAME, POD_LOG_SEARCH_YAML_PATH);
+        await checkKubernetesResourceState(
+          page,
+          KubernetesResources.Pods,
+          POD_LOG_SEARCH_NAME,
+          KubernetesResourceState.Running,
+        );
+      });
+
+      test('Find input and navigation controls are available in pod logs', async ({ navigationBar }) => {
+        const kubernetesBar = await navigationBar.openKubernetes();
+        const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+        const podDetails = await kubernetesPodsPage.openResourceDetails(POD_LOG_SEARCH_NAME, KubernetesResources.Pods);
+        await playExpect(podDetails.heading).toBeVisible();
+        await podDetails.activateTab('Logs');
+
+        const findInLogsInput = podDetails.tabContent.getByLabel('Find');
+        await playExpect(findInLogsInput).toBeVisible();
+        await findInLogsInput.fill('k8s-log-search-token');
+        await playExpect(findInLogsInput).toHaveValue('k8s-log-search-token');
+
+        await playExpect(podDetails.tabContent.getByRole('button', { name: 'Previous Match' })).toBeVisible();
+        await playExpect(podDetails.tabContent.getByRole('button', { name: 'Next Match' })).toBeVisible();
+      });
+
+      test('Delete pod log search fixture', async ({ page }) => {
+        await deleteKubernetesResource(page, KubernetesResources.Pods, POD_LOG_SEARCH_NAME);
       });
     });
 });
