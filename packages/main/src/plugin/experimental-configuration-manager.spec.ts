@@ -167,7 +167,7 @@ describe('ExperimentalConfigurationManager', () => {
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key, scope);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, scope);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, false, scope);
     });
 
     test('should disable configuration with array of scopes', async () => {
@@ -177,18 +177,8 @@ describe('ExperimentalConfigurationManager', () => {
       await experimentalConfigurationManager.disableExperimentalConfiguration(key, scopes);
 
       expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledTimes(2);
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
-        1,
-        key,
-        undefined,
-        scopes[0],
-      );
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
-        2,
-        key,
-        undefined,
-        scopes[1],
-      );
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(1, key, false, scopes[0]);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(2, key, false, scopes[1]);
     });
 
     test('should disable configuration without scope', async () => {
@@ -196,7 +186,7 @@ describe('ExperimentalConfigurationManager', () => {
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, undefined);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, false, undefined);
     });
   });
 

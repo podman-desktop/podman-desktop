@@ -61,11 +61,6 @@ export class ExperimentalFeatureFeedbackHandler {
     const secondPart = parts[1];
     const configuration = this.#configurationRegistry.getConfiguration(firstPart);
     if (secondPart) {
-      // HACK for features that are set as disabled with false (old config)
-      // temporarily enable them and immediately disable, to remove them
-      if (conf === undefined) {
-        await configuration?.update(secondPart, {});
-      }
       await configuration?.update(secondPart, conf);
     }
   }
@@ -106,10 +101,6 @@ export class ExperimentalFeatureFeedbackHandler {
       const conf = this.#configurationRegistry.getConfiguration(firstPart).get(secondPart);
       // Configuration does not exist (feature is not enabled), or is set to false
       if (!conf) {
-        if (typeof conf === 'boolean') {
-          // Remove the feature if has value false using logic in save
-          await this.save(configurationKey);
-        }
         continue;
       }
 

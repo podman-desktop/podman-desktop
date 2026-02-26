@@ -90,10 +90,10 @@ export class ExperimentalConfigurationManager {
   ): Promise<void> {
     if (Array.isArray(scope)) {
       for (const scopeItem of scope) {
-        await this.configurationRegistry.updateConfigurationValue(key, undefined, scopeItem);
+        await this.configurationRegistry.updateConfigurationValue(key, false, scopeItem);
       }
     } else {
-      await this.configurationRegistry.updateConfigurationValue(key, undefined, scope);
+      await this.configurationRegistry.updateConfigurationValue(key, false, scope);
     }
   }
 

@@ -221,7 +221,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
         const configurationValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE);
         if (configurationValue !== undefined) {
           if (
-            configProperty.default &&
+            configProperty.default !== undefined &&
             this.isDefaultScope(configProperty.scope) &&
             configurationValue[key] === undefined
           ) {

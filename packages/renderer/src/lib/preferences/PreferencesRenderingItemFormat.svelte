@@ -159,13 +159,13 @@ async function onChange(recordId: string, value: boolean | string | number): Pro
   clearTimeout(recordUpdateTimeout);
 
   // HACK: when updating experimental features (representated in settings.json by object)
-  // disabling this feature will set undefined as a value
+  // disabling this feature will set false as a value
   // enabling will set empty object
   if (record.type === 'object' && typeof value === 'boolean') {
     if (value) {
       recordValue = {};
     } else {
-      recordValue = undefined;
+      recordValue = false;
     }
   } else {
     // update the value

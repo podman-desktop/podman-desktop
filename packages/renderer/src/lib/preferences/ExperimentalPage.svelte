@@ -53,7 +53,7 @@ async function onCheckedAll(event: { detail: boolean }): Promise<void> {
         continue;
       }
 
-      const settings = event.detail ? {} : undefined;
+      const settings = event.detail ? {} : false;
       await window.updateExperimentalConfigurationValue(property.id, settings, property.scope);
     }
   } finally {
