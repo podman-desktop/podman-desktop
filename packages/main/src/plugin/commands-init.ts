@@ -53,13 +53,13 @@ export class CommandsInit implements IDisposable {
     const commandRegistry = this.getCommandRegistry();
     this.#disposables.push(
       commandRegistry.registerCommand('feedback', () => {
-        this.getApiSender().send('display-feedback', '');
+        this.getApiSender().send('display-feedback');
       }),
     );
 
     this.#disposables.push(
       commandRegistry.registerCommand('help', () => {
-        this.getApiSender().send('toggle-help-menu', '');
+        this.getApiSender().send('toggle-help-menu');
       }),
     );
 
