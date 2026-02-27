@@ -166,6 +166,10 @@ export class PodmanRemoteSshTunnel {
   disconnect(): void {
     // Set the reconnect flag to false to prevent reconnecting
     this.#reconnect = false;
+    if (this.#reconnectTimeout) {
+      clearTimeout(this.#reconnectTimeout);
+      this.#reconnectTimeout = undefined;
+    }
     this.#client?.end();
     this.#server?.close();
   }
