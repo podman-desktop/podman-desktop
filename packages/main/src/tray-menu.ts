@@ -245,7 +245,7 @@ export class TrayMenu {
 
   private updateMenu(): void {
     // if the tray has been disabled in settings, don't update
-    if (!this.tray || this.tray.isDestroyed()) {
+    if (!this.tray) {
       return;
     }
 
@@ -290,7 +290,7 @@ export class TrayMenu {
 
   protected updateGlobalStatus(): void {
     // if the tray has been disabled in settings, don't update
-    if (!this.tray || this.tray.isDestroyed()) {
+    if (!this.tray) {
       return;
     }
 

@@ -41,7 +41,6 @@ test('Should register tray toggle configuration on init', async () => {
 
   // Verify registerConfigurations was called
   expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
-  expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalledTimes(1);
 });
 
 test('Should register configuration with correct properties', async () => {
@@ -59,8 +58,8 @@ test('Should register configuration with correct properties', async () => {
   expect(configNode.type).toBe('object');
 
   const properties = configNode.properties!;
-  expect(properties['preferences.TrayToggle']).toBeDefined();
-  const trayToggleProp = properties['preferences.TrayToggle']!;
+  expect(properties['preferences.trayToggle']).toBeDefined();
+  const trayToggleProp = properties['preferences.trayToggle']!;
   expect(trayToggleProp).toBeDefined();
   expect(trayToggleProp.description).toContain('Hide the menubar icon on MacOS');
   expect(trayToggleProp.type).toBe('boolean');

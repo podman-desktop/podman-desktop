@@ -26,11 +26,11 @@ export class TrayToggleMacOS {
   async init(): Promise<void> {
     // add configuration
     const trayToggleConfigurationNode: IConfigurationNode = {
-      id: 'preferences.trayToggle',
+      id: 'preferences.traytoggle',
       title: 'Menu Bar Icon',
       type: 'object',
       properties: {
-        ['preferences.TrayToggle']: {
+        ['preferences.trayToggle']: {
           description: 'Hide the menubar icon on MacOS (Requires restart)',
           type: 'boolean',
           default: false,
