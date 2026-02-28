@@ -57,6 +57,7 @@ export class TrayMenu {
   constructor(
     private readonly tray: Tray,
     private readonly animatedTray: AnimatedTray,
+    private trayDestroyed = false,
   ) {
     ipcMain.on(
       'tray:add-provider-menu-item',
@@ -245,7 +246,7 @@ export class TrayMenu {
 
   private updateMenu(): void {
     // if the tray has been disabled in settings, don't update
-    if (!this.tray) {
+    if (!this.tray || this.trayDestroyed) {
       return;
     }
 
@@ -290,7 +291,7 @@ export class TrayMenu {
 
   protected updateGlobalStatus(): void {
     // if the tray has been disabled in settings, don't update
-    if (!this.tray) {
+    if (!this.tray || this.trayDestroyed) {
       return;
     }
 
@@ -452,5 +453,9 @@ export class TrayMenu {
     }
     window?.focus();
     window?.moveTop();
+  }
+
+  public destroyTray(): void {
+    this.trayDestroyed = true;
   }
 }

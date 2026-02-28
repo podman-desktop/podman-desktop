@@ -115,6 +115,7 @@ app.whenReady().then(
         // -> enabled (true) = hide menu bar icon
         // -> disabled (false) = show menu bar icon
         if (trayToggle === true) {
+          trayMenu.destroyTray();
           animatedTray.destroyTray();
           tray.destroy();
         }
