@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
-import type { App } from 'electron';
-import { app, BrowserWindow, Menu } from 'electron';
+import type { BrowserWindow } from 'electron';
+import { app, Menu, Tray } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';
 
@@ -27,6 +27,8 @@ import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { mainWindowDeferred } from './index.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
+import { AnimatedTray } from './tray-animate-icon.js';
+import { TrayMenu } from './tray-menu.js';
 import * as util from './util.js';
 
 const consoleLogMock = vi.fn();
@@ -115,6 +117,7 @@ vi.mock('electron', async () => {
     },
     nativeTheme: {
       on: vi.fn(),
+      off: vi.fn(),
     },
     Menu: vi.fn(
       class {
@@ -152,6 +155,7 @@ vi.mock('electron', async () => {
         setImage = vi.fn();
         setToolTip = vi.fn();
         setContextMenu = vi.fn();
+        destroy = vi.fn();
       },
     ),
   };
@@ -181,27 +185,9 @@ test('app-ready event with activate event', async () => {
   vi.mocked(util.isMac).mockReset();
   vi.mocked(util.isMac).mockReturnValue(true);
 
-  // grab all windows
-  const windows = BrowserWindow.getAllWindows();
-  expect(windows).toHaveLength(1);
-
-  const window = windows[0];
-  if (!window) {
-    assert.fail('window is undefined');
-  }
-  const spyShow = vi.spyOn(window, 'show');
-  const spyFocus = vi.spyOn(window, 'focus');
-
-  let activateCallback: ((event: unknown) => void) | undefined = undefined;
-
-  // capture activate event
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  vi.mocked(app.on).mockImplementation((event: string, callback: Function): App => {
-    if (event === 'activate') {
-      activateCallback = callback as (event: unknown) => void;
-    }
-    return app;
-  });
+  const setColorSpy = vi.spyOn(AnimatedTray.prototype, 'setColor');
+  const destroyAnimatedSpy = vi.spyOn(AnimatedTray.prototype, 'destroyTray');
+  const destroyMenuSpy = vi.spyOn(TrayMenu.prototype, 'destroyTray');
 
   if (constants.resolveFn) {
     const appReady: (value: void | Promise<void>) => void = constants.resolveFn;
@@ -211,14 +197,7 @@ test('app-ready event with activate event', async () => {
   } else {
     assert.fail('constants.resolveFn is undefined');
   }
-  // wait activateCallback being set
-  await vi.waitUntil(() => activateCallback !== undefined);
-  // now, check that we called
-  activateCallback!({});
-
-  // expect show and focus have been called
-  expect(spyShow).toHaveBeenCalled();
-  expect(spyFocus).toHaveBeenCalled();
+  await constants.appReadyDeferredPromise;
 
   // capture the pluginSystem.initExtensions call
   const initExtensionsCalls = vi.mocked(PluginSystem.prototype.initExtensions).mock.calls;
@@ -248,7 +227,27 @@ test('app-ready event with activate event', async () => {
   });
   vi.mocked(Menu.buildFromTemplate).mockReturnValue({} as unknown as Menu);
 
-  onDidConfigurationRegistry.fire(configurationRegistryMock);
+  const configurationRegistryWithColor = {
+    ...configurationRegistryMock,
+    getConfiguration: vi.fn().mockReturnValue({
+      get: vi.fn((key: string) => (key === 'TrayIconColor' ? 'light' : undefined)),
+    }),
+  } as unknown as IConfigurationRegistry;
+
+  vi.mocked(util.isMac).mockReturnValue(false);
+  onDidConfigurationRegistry.fire(configurationRegistryWithColor);
+
+  expect(setColorSpy).toHaveBeenCalledWith('light');
+
+  const configurationRegistryWithToggle = {
+    ...configurationRegistryMock,
+    getConfiguration: vi.fn().mockReturnValue({
+      get: vi.fn((key: string) => (key === 'TrayToggle' ? true : undefined)),
+    }),
+  } as unknown as IConfigurationRegistry;
+
+  vi.mocked(util.isMac).mockReturnValue(true);
+  onDidConfigurationRegistry.fire(configurationRegistryWithToggle);
 
   // check we've called Menu.getApplicationMenu
   await vi.waitFor(() => expect(vi.mocked(Menu.getApplicationMenu)).toHaveBeenCalled());
@@ -258,4 +257,9 @@ test('app-ready event with activate event', async () => {
 
   // and Menu.setApplicationMenu
   expect(vi.mocked(Menu.setApplicationMenu)).toHaveBeenCalled();
+
+  const trayInstance = vi.mocked(Tray).mock.instances[0] as { destroy?: ReturnType<typeof vi.fn> } | undefined;
+  expect(destroyMenuSpy).toHaveBeenCalled();
+  expect(destroyAnimatedSpy).toHaveBeenCalled();
+  expect(trayInstance?.destroy).toHaveBeenCalled();
 });

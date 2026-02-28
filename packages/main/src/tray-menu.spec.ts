@@ -18,10 +18,11 @@
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import type { MenuItemConstructorOptions, Tray } from 'electron';
-import { ipcMain, Menu, nativeImage } from 'electron';
+import { app, ipcMain, Menu, nativeImage } from 'electron';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import statusStopped from './assets/status-stopped.png';
+import { findWindow } from './electron-util.js';
 import type { AnimatedTray } from './tray-animate-icon.js';
 import { TrayMenu } from './tray-menu.js';
 import * as util from './util.js';
@@ -35,6 +36,11 @@ vi.mock('electron', async () => {
   Menu['buildFromTemplate'] = vi.fn();
   return {
     Menu,
+    app: {
+      dock: {
+        show: vi.fn().mockResolvedValue(undefined),
+      },
+    },
     ipcMain: {
       emit: vi.fn(),
       on: vi.fn(),
@@ -42,6 +48,12 @@ vi.mock('electron', async () => {
     nativeImage: {
       createFromDataURL: vi.fn(),
     },
+  };
+});
+
+vi.mock('./electron-util.js', async () => {
+  return {
+    findWindow: vi.fn(),
   };
 });
 
@@ -280,4 +292,52 @@ test('should log error if provider not found and no providerInfo provided', () =
   expect(consoleErrorSpy).toHaveBeenCalledWith(
     'No provider registered for providerId "testId", please register a provider before adding a menu item to the tray.',
   );
+});
+
+test('does not update menu when tray is destroyed', () => {
+  const menuBuild = vi.spyOn(Menu, 'buildFromTemplate');
+
+  trayMenu = new TrayMenu(tray, animatedTray);
+  trayMenu.destroyTray();
+  menuBuild.mockClear();
+
+  trayMenu.addProviderItems({
+    id: 'testId',
+    name: 'TestProv',
+    internalId: 'internalId',
+  } as ProviderInfo);
+
+  expect(menuBuild).not.toHaveBeenCalled();
+});
+
+test('updateGlobalStatus returns early when tray is destroyed', () => {
+  trayMenu = new TrayMenu(tray, animatedTray);
+  trayMenu.destroyTray();
+  vi.mocked(animatedTray.setStatus).mockClear();
+
+  (trayMenu as unknown as { updateGlobalStatus: () => void }).updateGlobalStatus();
+
+  expect(vi.mocked(animatedTray.setStatus)).not.toHaveBeenCalled();
+});
+
+test('showMainWindow restores and focuses the window on mac', () => {
+  const windowMock = {
+    isMinimized: vi.fn().mockReturnValue(true),
+    restore: vi.fn(),
+    show: vi.fn(),
+    focus: vi.fn(),
+    moveTop: vi.fn(),
+  };
+
+  vi.spyOn(util, 'isMac').mockReturnValue(true);
+  vi.mocked(findWindow).mockReturnValue(windowMock as unknown as Electron.BrowserWindow);
+
+  trayMenu = new TrayMenu(tray, animatedTray);
+  (trayMenu as unknown as { showMainWindow: () => void }).showMainWindow();
+
+  expect(windowMock.restore).toHaveBeenCalled();
+  expect(windowMock.show).toHaveBeenCalled();
+  expect(app.dock?.show).toHaveBeenCalled();
+  expect(windowMock.focus).toHaveBeenCalled();
+  expect(windowMock.moveTop).toHaveBeenCalled();
 });

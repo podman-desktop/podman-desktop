@@ -18,7 +18,8 @@
 
 import * as path from 'node:path';
 
-import { app } from 'electron';
+import type { Tray } from 'electron';
+import { app, nativeTheme } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { AnimatedTray } from './tray-animate-icon.js';
@@ -42,6 +43,7 @@ vi.mock('electron', async () => {
     },
     nativeTheme: {
       on: vi.fn(),
+      off: vi.fn(),
     },
   };
 });
@@ -60,4 +62,43 @@ test('valid path for icons', () => {
   const assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(appPathValue, AnimatedTray.MAIN_ASSETS_FOLDER));
   expect(spyElectronGetAppPath).toHaveBeenCalled();
+});
+
+test('constructor registers theme update handler', () => {
+  const updateSpy = vi.spyOn(AnimatedTray.prototype as unknown as { updateIcon: () => void }, 'updateIcon');
+  const trayInstance = new TestAnimatedTray();
+
+  expect(updateSpy).toHaveBeenCalled();
+  expect(vi.mocked(nativeTheme.on)).toHaveBeenCalledWith('updated', expect.any(Function));
+
+  const handler = vi.mocked(nativeTheme.on).mock.calls[0]?.[1] as (() => void) | undefined;
+  expect(handler).toBeDefined();
+  handler?.();
+  expect(updateSpy).toHaveBeenCalledTimes(2);
+
+  trayInstance.destroyTray();
+});
+
+test('destroyTray clears timers and unregisters listeners', () => {
+  vi.useFakeTimers();
+  const tray = {
+    setImage: vi.fn(),
+    setToolTip: vi.fn(),
+  } as unknown as Tray;
+
+  testAnimatedTray.setTray(tray);
+  testAnimatedTray.setStatus('updating');
+
+  const clearSpy = vi.spyOn(global, 'clearInterval');
+
+  testAnimatedTray.destroyTray();
+
+  expect(clearSpy).toHaveBeenCalled();
+  expect(vi.mocked(nativeTheme.off)).toHaveBeenCalledWith('updated', expect.any(Function));
+
+  const callsBefore = vi.mocked(tray.setImage).mock.calls.length;
+  testAnimatedTray.setStatus('ready');
+  expect(vi.mocked(tray.setImage).mock.calls.length).toBe(callsBefore);
+
+  vi.useRealTimers();
 });
