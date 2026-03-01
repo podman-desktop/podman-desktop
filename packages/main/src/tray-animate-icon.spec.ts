@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-
+import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 
 import { app, nativeTheme } from 'electron';
@@ -29,17 +29,19 @@ class TestAnimatedTray extends AnimatedTray {
   override getAssetsFolder(): string {
     return super.getAssetsFolder();
   }
-
   override isProd(): boolean {
     return super.isProd();
   }
-
-  override getIconPath(iconName: string): string {
+  override getIconPath(iconName: string): string | Electron.NativeImage {
     return super.getIconPath(iconName);
   }
 }
 
 let testAnimatedTray: TestAnimatedTray;
+
+const mockNativeImage = vi.hoisted(() => ({
+  createFromBuffer: vi.fn().mockReturnValue({ isEmpty: () => false }),
+}));
 
 vi.mock('electron', async () => {
   return {
@@ -51,8 +53,13 @@ vi.mock('electron', async () => {
       off: vi.fn(),
       shouldUseDarkColors: false,
     },
+    nativeImage: mockNativeImage,
   };
 });
+
+vi.mock('node:fs', () => ({
+  readFileSync: vi.fn().mockReturnValue(Buffer.from('')),
+}));
 
 vi.mock('./util.js', () => ({
   isMac: vi.fn(),
@@ -80,11 +87,8 @@ beforeEach(() => {
 });
 
 test('valid path for icons', () => {
-  // ensure we are not in prod mode
   const appPathValue = path.resolve(__dirname, 'appPath-value');
-
   const spyElectronGetAppPath = vi.spyOn(app, 'getAppPath').mockReturnValue(appPathValue);
-
   const assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(appPathValue, AnimatedTray.MAIN_ASSETS_FOLDER));
   expect(spyElectronGetAppPath).toHaveBeenCalled();
@@ -130,50 +134,57 @@ test('Linux should use regular icon for all states', () => {
   expect(testAnimatedTray.getIconPath('default')).not.toContain('Dark');
 });
 
-test('Windows should always use regular icon (ignoring theme)', () => {
+test('Windows should return a NativeImage not a string', () => {
   vi.mocked(util.isWindows).mockReturnValue(true);
-  setShouldUseDarkColors(false);
 
-  const iconPath = testAnimatedTray.getIconPath('default');
+  const result = testAnimatedTray.getIconPath('default');
 
-  // Should use regular icon, NOT template or dark
-  expect(iconPath).toContain('tray-icon.png');
-  expect(iconPath).not.toContain('Template');
-  expect(iconPath).not.toContain('Dark');
+  expect(typeof result).not.toBe('string');
+  expect(mockNativeImage.createFromBuffer).toHaveBeenCalled();
 });
 
-test('Windows should use regular icon even with dark theme', () => {
+test('Windows should load the @2x asset', () => {
   vi.mocked(util.isWindows).mockReturnValue(true);
-  setShouldUseDarkColors(true);
 
-  const iconPath = testAnimatedTray.getIconPath('default');
+  testAnimatedTray.getIconPath('default');
+  const calledPath = vi.mocked(readFileSync).mock.calls[0]?.[0] as string;
 
-  // Should still use regular icon, NOT dark
-  expect(iconPath).toContain('tray-icon.png');
-  expect(iconPath).not.toContain('Template');
-  expect(iconPath).not.toContain('Dark');
+  expect(calledPath).toContain('@2x');
 });
 
-test('Windows should use regular icon for all states', () => {
+test('Windows should call createFromBuffer with correct logical dimensions', () => {
   vi.mocked(util.isWindows).mockReturnValue(true);
 
-  expect(testAnimatedTray.getIconPath('default')).toContain('tray-icon.png');
-  expect(testAnimatedTray.getIconPath('empty')).toContain('tray-icon-empty.png');
-  expect(testAnimatedTray.getIconPath('error')).toContain('tray-icon-error.png');
-  expect(testAnimatedTray.getIconPath('step0')).toContain('tray-icon-step0.png');
+  testAnimatedTray.getIconPath('default');
 
-  // Ensure none contain Template or Dark suffix
-  expect(testAnimatedTray.getIconPath('default')).not.toContain('Template');
-  expect(testAnimatedTray.getIconPath('default')).not.toContain('Dark');
+  expect(mockNativeImage.createFromBuffer).toHaveBeenCalledWith(expect.anything(), {
+    width: 16,
+    height: 16,
+    scaleFactor: 1.0,
+  });
+});
+
+test('Windows should load @2x asset for all states', () => {
+  vi.mocked(util.isWindows).mockReturnValue(true);
+
+  testAnimatedTray.getIconPath('default');
+  testAnimatedTray.getIconPath('empty');
+  testAnimatedTray.getIconPath('error');
+  testAnimatedTray.getIconPath('step0');
+
+  const calledPaths = vi.mocked(readFileSync).mock.calls.map(c => c[0] as string);
+  expect(calledPaths.every(p => p.includes('@2x'))).toBe(true);
 });
 
 test('manual color override to light should use template icon', () => {
   vi.mocked(util.isWindows).mockReturnValue(true);
 
   testAnimatedTray.setColor('light');
-  const iconPath = testAnimatedTray.getIconPath('default');
+  testAnimatedTray.getIconPath('default');
 
-  expect(iconPath).toContain('tray-iconTemplate.png');
+  const calledPath = vi.mocked(readFileSync).mock.calls[0]?.[0] as string;
+  expect(calledPath).toContain('Template');
+  expect(calledPath).toContain('@2x');
 });
 
 test('manual color override to dark should use dark icon', () => {
@@ -181,9 +192,11 @@ test('manual color override to dark should use dark icon', () => {
   setShouldUseDarkColors(false);
 
   testAnimatedTray.setColor('dark');
-  const iconPath = testAnimatedTray.getIconPath('default');
+  testAnimatedTray.getIconPath('default');
 
-  expect(iconPath).toContain('tray-iconDark.png');
+  const calledPath = vi.mocked(readFileSync).mock.calls[0]?.[0] as string;
+  expect(calledPath).toContain('Dark');
+  expect(calledPath).toContain('@2x');
 });
 
 test('dispose should remove nativeTheme listener', () => {
