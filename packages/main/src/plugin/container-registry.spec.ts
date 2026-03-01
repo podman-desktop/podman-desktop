@@ -4778,6 +4778,64 @@ test('expect to get get zero images if podman provider has neither libpod API no
   expect(images).toHaveLength(0);
 });
 
+test('expect podmanListImages to return images from working providers even if one fails', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error');
+
+  const workingProviderImages = [
+    {
+      Id: 'workingImageId',
+      Digest: 'fooDigest',
+    },
+  ];
+
+  // Setup working provider
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/images/json', () => HttpResponse.json(workingProviderImages)),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const workingApi = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  // Add working provider
+  containerRegistry.addInternalProvider('podman-working', {
+    name: 'podman-working',
+    id: 'podman-working',
+    api: workingApi,
+    libpodApi: workingApi,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  // Create failing provider that throws on listImages
+  const failingApi = {
+    podmanListImages: vi.fn().mockRejectedValue(new Error('Connection timeout')),
+    listImages: vi.fn().mockRejectedValue(new Error('Connection timeout')),
+  };
+
+  containerRegistry.addInternalProvider('podman-failing', {
+    name: 'podman-failing',
+    id: 'podman-failing',
+    api: failingApi,
+    libpodApi: failingApi,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  const images = await containerRegistry.podmanListImages();
+
+  // Should return images from working provider
+  expect(images).toBeDefined();
+  expect(images).toHaveLength(1);
+  expect(images[0]?.Id).toBe('sha256:workingImageId');
+  expect(images[0]?.engineId).toBe('podman-working');
+  expect(images[0]?.engineName).toBe('podman-working');
+
+  // Should log error for failing provider
+  expect(consoleErrorSpy).toHaveBeenCalledWith('Error listing images:', expect.any(Error));
+});
+
 test('listInfos without provider', async () => {
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
 
