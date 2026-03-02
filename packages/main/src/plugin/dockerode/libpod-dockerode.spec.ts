@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,7 @@ import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, t
 
 import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
-
-import podmanInfo from '../../../tests/resources/data/plugin/podman-info.json' with { type: 'json' };
+import podmanInfo from '/@tests/resources/data/plugin/podman-info.json' with { type: 'json' };
 
 let server: SetupServerApi | undefined = undefined;
 

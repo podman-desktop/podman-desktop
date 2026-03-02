@@ -23,6 +23,7 @@ import { inject, injectable } from 'inversify';
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 
+// eslint-disable-next-line no-restricted-imports
 import featuredJSONFile from '../../../../../featured.json' with { type: 'json' };
 
 /**

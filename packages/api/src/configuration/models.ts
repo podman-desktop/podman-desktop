@@ -21,26 +21,28 @@ import type {
   ConfigurationChangeEvent,
   ConfigurationScope as PodmanDesktopApiConfigurationScope,
 } from '@podman-desktop/api';
+import { z } from 'zod';
 
 import type { IDisposable } from '/@/disposable.js';
 import type { Event } from '/@/event.js';
 
-interface IExperimentalConfiguration {
+const IExperimentalConfigurationSchema = z.object({
   // href to the discussion
-  githubDiscussionLink?: string;
+  githubDiscussionLink: z.string().optional(),
   // path to image or gif
-  image?: string;
-}
+  image: z.string().optional(),
+});
 
-type IConfigurationPropertySchemaType =
-  | 'markdown'
-  | 'string'
-  | 'number'
-  | 'integer'
-  | 'boolean'
-  | 'null'
-  | 'array'
-  | 'object';
+const IConfigurationPropertySchemaTypeSchema = z.enum([
+  'markdown',
+  'string',
+  'number',
+  'integer',
+  'boolean',
+  'null',
+  'array',
+  'object',
+]);
 
 export interface IConfigurationChangeEvent {
   key: string;
@@ -48,59 +50,66 @@ export interface IConfigurationChangeEvent {
   scope: PodmanDesktopApiConfigurationScope;
 }
 
-export interface IConfigurationPropertyRecordedSchema extends IConfigurationPropertySchema {
-  title: string;
-  parentId: string;
-  extension?: IConfigurationExtensionInfo;
-  // indicates if this configuration value is locked by system management (managed-by profile)
-  locked?: boolean;
-}
+const ConfigurationScopeSchema = z.enum([
+  'DEFAULT',
+  'ContainerConnection',
+  'KubernetesConnection',
+  'VmConnection',
+  'ContainerProviderConnectionFactory',
+  'KubernetesProviderConnectionFactory',
+  'VmProviderConnectionFactory',
+  'DockerCompatibility',
+  'Onboarding',
+]);
 
-export interface IConfigurationPropertySchema {
-  id?: string;
-  type?: IConfigurationPropertySchemaType | IConfigurationPropertySchemaType[];
-  default?: unknown;
-  group?: string;
-  description?: string;
-  placeholder?: string;
-  markdownDescription?: string;
-  minimum?: number;
-  maximum?: number | string;
-  format?: string;
-  step?: number;
-  scope?: ConfigurationScope | ConfigurationScope[];
-  readonly?: boolean;
+export type ConfigurationScope = z.output<typeof ConfigurationScopeSchema>;
+
+const IConfigurationPropertySchemaSchema = z.object({
+  id: z.string().optional(),
+  type: z.union([IConfigurationPropertySchemaTypeSchema, z.array(IConfigurationPropertySchemaTypeSchema)]).optional(),
+  default: z.unknown().optional(),
+  group: z.string().optional(),
+  description: z.string().optional(),
+  placeholder: z.string().optional(),
+  markdownDescription: z.string().optional(),
+  minimum: z.number().optional(),
+  maximum: z.union([z.number(), z.string()]).optional(),
+  format: z.string().optional(),
+  step: z.number().optional(),
+  scope: z.union([ConfigurationScopeSchema, z.array(ConfigurationScopeSchema)]).optional(),
+  readonly: z.boolean().optional(),
   // if hidden is true, the property is not shown in the preferences page. It may still appear in other locations if it uses other scope (like onboarding)
-  hidden?: boolean;
-  enum?: string[];
-  when?: string;
-  experimental?: IExperimentalConfiguration;
-}
+  hidden: z.boolean().optional(),
+  enum: z.array(z.string()).optional(),
+  when: z.string().optional(),
+  experimental: IExperimentalConfigurationSchema.optional(),
+});
 
-export type ConfigurationScope =
-  | 'DEFAULT'
-  | 'ContainerConnection'
-  | 'KubernetesConnection'
-  | 'VmConnection'
-  | 'ContainerProviderConnectionFactory'
-  | 'KubernetesProviderConnectionFactory'
-  | 'VmProviderConnectionFactory'
-  | 'DockerCompatibility'
-  | 'Onboarding';
+const IConfigurationExtensionInfoSchema = z.object({
+  id: z.string(),
+});
 
-export interface IConfigurationExtensionInfo {
-  id: string;
-}
+export const IConfigurationPropertyRecordedSchemaSchema = IConfigurationPropertySchemaSchema.extend({
+  title: z.string(),
+  parentId: z.string(),
+  extension: IConfigurationExtensionInfoSchema.optional(),
+  // indicates if this configuration value is locked by system management (managed-by profile)
+  locked: z.boolean().optional(),
+});
 
-export interface IConfigurationNode {
-  id: string;
-  type?: string | string[];
-  title: string;
-  description?: string;
-  properties?: Record<string, IConfigurationPropertySchema>;
-  scope?: ConfigurationScope;
-  extension?: IConfigurationExtensionInfo;
-}
+export type IConfigurationPropertyRecordedSchema = z.output<typeof IConfigurationPropertyRecordedSchemaSchema>;
+
+export const IConfigurationNodeSchema = z.object({
+  id: z.string(),
+  type: z.union([z.string(), z.array(z.string())]).optional(),
+  title: z.string(),
+  description: z.string().optional(),
+  properties: z.record(z.string(), IConfigurationPropertySchemaSchema).optional(),
+  scope: ConfigurationScopeSchema.optional(),
+  extension: IConfigurationExtensionInfoSchema.optional(),
+});
+
+export type IConfigurationNode = z.output<typeof IConfigurationNodeSchema>;
 
 export const IConfigurationRegistry = Symbol.for('IConfigurationRegistry');
 export interface IConfigurationRegistry {

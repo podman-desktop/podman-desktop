@@ -26,8 +26,8 @@
       "default": "./dist/index.js"
     },
     "./api-sender": {
-      "types": "./dist/api-sender/api-sender-type.d.ts",
-      "default": "./dist/api-sender/api-sender-type.js"
+      "types": "./dist/api-sender/index.d.ts",
+      "default": "./dist/api-sender/index.js"
     },
     "./appearance": {
       "types": "./dist/appearance/appearance-settings.d.ts",

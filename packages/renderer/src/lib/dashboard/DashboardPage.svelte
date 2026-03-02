@@ -41,6 +41,7 @@ function getDefaultDashboardItems(): ListOrganizerItem[] {
 // Initialize dashboard configuration
 async function initializeDashboard(): Promise<void> {
   try {
+    await setupDashboardPageRegistry();
     if (dashboardPageRegistry.entries.length > 0) {
       dashboardSections = await loadDashboardConfiguration();
     }

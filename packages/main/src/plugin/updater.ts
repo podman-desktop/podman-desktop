@@ -41,6 +41,7 @@ import { Disposable } from '/@/plugin/types/disposable.js';
 import { isLinux, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+// eslint-disable-next-line no-restricted-imports
 import rootPackage from '../../../../package.json' with { type: 'json' };
 import { TaskManager } from './tasks/task-manager.js';
 

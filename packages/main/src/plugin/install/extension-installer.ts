@@ -351,7 +351,7 @@ export class ExtensionInstaller {
     await this.extensionLoader.loadExtensions(analyzedExtensions);
 
     sendEnd('Extension Successfully installed.');
-    this.apiSender.send('extension-started', {});
+    this.apiSender.send('extension-started');
   }
 
   async init(): Promise<void> {

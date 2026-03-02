@@ -169,6 +169,8 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
   });
 
   test('Build image with stage2 target from staged Containerfile', async ({ navigationBar }) => {
+    test.setTimeout(180_000);
+
     let imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
 

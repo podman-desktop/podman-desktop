@@ -52,7 +52,7 @@ const config = {
     lib: {
       entry: {
         index: 'src/index.ts',
-        'api-sender/api-sender-type': 'src/api-sender/api-sender-type.ts',
+        'api-sender/index': 'src/api-sender/index.ts',
         'appearance/appearance-settings': 'src/appearance/appearance-settings.ts',
         'authentication/authentication': 'src/authentication/authentication.ts',
         'configuration/index': 'src/configuration/index.ts',
