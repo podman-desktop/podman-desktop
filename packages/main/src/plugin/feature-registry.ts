@@ -19,6 +19,7 @@ import { Event } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
+import { IPCHandle } from '/@/plugin/api.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 
 import { Disposable } from './types/disposable.js';
@@ -31,6 +32,8 @@ export class FeatureRegistry {
   readonly onFeaturesUpdated: Event<string[]> = this._onFeaturesUpdated.event;
 
   constructor(
+    @inject(IPCHandle)
+    private readonly ipcHandle: IPCHandle,
     @inject(ApiSenderType)
     private readonly apiSender: ApiSenderType,
   ) {
@@ -38,6 +41,10 @@ export class FeatureRegistry {
   }
 
   init(): void {
+    this.ipcHandle('feature-registry:getRegisteredFeatures', async (): Promise<string[]> => {
+      return this.listFeatures();
+    });
+
     this.onFeaturesUpdated(features => {
       this.apiSender.send('feature-registry:features-updated', features);
     });

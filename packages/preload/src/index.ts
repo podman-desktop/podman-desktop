@@ -2659,6 +2659,10 @@ export function initExposure(): void {
     return ipcInvoke('help-menu:getItems');
   });
 
+  contextBridge.exposeInMainWorld('getRegisteredFeatures', async (): Promise<string[]> => {
+    return ipcInvoke('feature-registry:getRegisteredFeatures');
+  });
+
   contextBridge.exposeInMainWorld('contextCollectAllValues', async (): Promise<Record<string, unknown>> => {
     return ipcInvoke('context:collectAllValues');
   });
