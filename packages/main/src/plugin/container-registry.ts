@@ -159,8 +159,10 @@ export class ContainerProviderRegistry {
       // reconnected
       this.notify = true;
 
-      const status = jsonEvent.status;
-      const id = jsonEvent.id;
+      // Podman uses top-level `status` and `id`, while Docker API v1.52+ uses `Action` and `Actor.ID`.
+      // Docker can emit compound Action values like "health_status: healthy"; keep only the base action.
+      const status = 'status' in jsonEvent ? jsonEvent.status : jsonEvent.Action?.split(':')[0]?.trim();
+      const id = 'id' in jsonEvent ? jsonEvent.id : jsonEvent.Actor?.ID;
 
       // do not log healthcheck(health_status) events
       // as it's too verbose/repeating a lot
