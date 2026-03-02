@@ -127,14 +127,6 @@ export class ExtensionAnalyzer {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async loadManifest(extensionPath: string): Promise<any> {
     const manifestPath = path.join(extensionPath, 'package.json');
-    return new Promise((resolve, reject) => {
-      fs.readFile(manifestPath, 'utf8', (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(JSON.parse(data));
-        }
-      });
-    });
+    return JSON.parse(await readFile(manifestPath, 'utf8'));
   }
 }
