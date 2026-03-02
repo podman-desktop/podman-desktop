@@ -4832,8 +4832,73 @@ test('expect podmanListImages to return images from working providers even if on
   expect(images[0]?.engineId).toBe('podman-working');
   expect(images[0]?.engineName).toBe('podman-working');
 
-  // Should log error for failing provider
-  expect(consoleErrorSpy).toHaveBeenCalledWith('Error listing images:', expect.any(Error));
+  // Should log error for failing provider with provider context
+  expect(consoleErrorSpy).toHaveBeenCalledWith(
+    'Error listing images from provider podman-failing (podman-failing):',
+    expect.any(Error),
+  );
+});
+
+test('expect podmanListImages to handle provider timeout without blocking working providers', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error');
+
+  const workingProviderImages = [
+    {
+      Id: 'workingImageId',
+      Digest: 'fooDigest',
+    },
+  ];
+
+  // Setup working provider
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/images/json', () => HttpResponse.json(workingProviderImages)),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const workingApi = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  // Add working provider
+  containerRegistry.addInternalProvider('podman-working', {
+    name: 'podman-working',
+    id: 'podman-working',
+    api: workingApi,
+    libpodApi: workingApi,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  // Create provider that THROWS a timeout error (simulates what our timeout wrapper produces)
+  const timeoutError = new Error('Timeout fetching images from provider podman-timeout after 10000ms');
+  const timeoutApi = {
+    podmanListImages: vi.fn().mockRejectedValue(timeoutError),
+    listImages: vi.fn().mockRejectedValue(timeoutError),
+  };
+
+  containerRegistry.addInternalProvider('podman-timeout', {
+    name: 'podman-timeout',
+    id: 'podman-timeout',
+    api: timeoutApi,
+    libpodApi: timeoutApi,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  const images = await containerRegistry.podmanListImages();
+
+  // Should return images from working provider despite the timeout error
+  expect(images).toBeDefined();
+  expect(images).toHaveLength(1);
+  expect(images[0]?.Id).toBe('sha256:workingImageId');
+  expect(images[0]?.engineId).toBe('podman-working');
+  expect(images[0]?.engineName).toBe('podman-working');
+
+  // Should log error for timed-out provider with provider context
+  expect(consoleErrorSpy).toHaveBeenCalledWith(
+    'Error listing images from provider podman-timeout (podman-timeout):',
+    timeoutError,
+  );
 });
 
 test('listInfos without provider', async () => {
