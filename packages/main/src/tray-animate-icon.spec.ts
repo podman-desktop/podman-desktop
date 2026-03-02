@@ -29,9 +29,11 @@ class TestAnimatedTray extends AnimatedTray {
   override getAssetsFolder(): string {
     return super.getAssetsFolder();
   }
+
   override isProd(): boolean {
     return super.isProd();
   }
+
   override getIconPath(iconName: string): string | Electron.NativeImage {
     return super.getIconPath(iconName);
   }
@@ -87,8 +89,11 @@ beforeEach(() => {
 });
 
 test('valid path for icons', () => {
+  // ensure we are not in prod mode
   const appPathValue = path.resolve(__dirname, 'appPath-value');
+
   const spyElectronGetAppPath = vi.spyOn(app, 'getAppPath').mockReturnValue(appPathValue);
+
   const assetFolder = testAnimatedTray.getAssetsFolder();
   expect(assetFolder).toBe(path.resolve(appPathValue, AnimatedTray.MAIN_ASSETS_FOLDER));
   expect(spyElectronGetAppPath).toHaveBeenCalled();
