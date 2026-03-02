@@ -2658,7 +2658,10 @@ test('expect readNamespacedJob to return the job', async () => {
   expect(job?.metadata?.name).toEqual('foobar');
 });
 
-test('the internal monitoring is stopped when a kubernetes-dashboard feature is registered', async () => {
+test.each([
+  'kubernetes-dashboard',
+  'kubernetes-contexts-manager',
+])('the internal monitoring is stopped when a %s feature is registered', async (feature: string) => {
   const client = createTestClient('default');
   expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
 
@@ -2668,15 +2671,18 @@ test('the internal monitoring is stopped when a kubernetes-dashboard feature is 
   expect(callback).toBeDefined();
 
   vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
-  await callback!(['kubernetes-dashboard', 'other-feature']);
+  await callback!([feature, 'other-feature']);
   expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
 
   // should prevent stopping it twice before starting it
-  await callback!(['kubernetes-dashboard', 'other-feature']);
+  await callback!([feature, 'other-feature']);
   expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
 });
 
-test('the internal monitoring is started when a kubernetes-dashboard feature is unregistered, only once', async () => {
+test.each([
+  'kubernetes-dashboard',
+  'kubernetes-contexts-manager',
+])('the internal monitoring is started when a %s feature is unregistered, only once', async (feature: string) => {
   const client = createTestClient('default');
   expect(featureRegistry.onFeaturesUpdated).not.toHaveBeenCalled();
 
@@ -2687,7 +2693,7 @@ test('the internal monitoring is started when a kubernetes-dashboard feature is 
 
   // first stop the monitoring
   vi.spyOn(client, 'KubernetesManagerStop').mockResolvedValue();
-  await callback!(['other-feature', 'kubernetes-dashboard']);
+  await callback!(['other-feature', feature]);
   expect(client.KubernetesManagerStop).toHaveBeenCalledOnce();
 
   // then start the monitoring
