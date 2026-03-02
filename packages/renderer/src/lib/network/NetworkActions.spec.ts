@@ -18,6 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
+import { MenuContext } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
@@ -65,11 +66,14 @@ test('Expect non-podman unused network to have delete option and disabled edit',
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   render(NetworkActions, { object: network1 });
 
-  expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
-  expect(screen.queryByTitle('Update Network')).toBeInTheDocument();
-  expect(screen.queryByTitle('Update Network')).toBeDisabled();
+  // Wait for async $derived to complete
+  const deleteButton = await screen.findByTitle('Delete Network');
+  const updateButton = await screen.findByTitle('Update Network');
 
-  const deleteButton = screen.getByTitle('Delete Network');
+  expect(deleteButton).toBeInTheDocument();
+  expect(updateButton).toBeInTheDocument();
+  expect(updateButton).toBeDisabled();
+
   await fireEvent.click(deleteButton);
   expect(window.removeNetwork).toHaveBeenCalledWith(network1.engineId, network1.id);
 });
@@ -77,11 +81,14 @@ test('Expect non-podman unused network to have delete option and disabled edit',
 test('Expect podman used network to have edit option and disabled delete', async () => {
   render(NetworkActions, { object: network2 });
 
-  expect(screen.queryByTitle('Delete Network')).toBeInTheDocument();
-  expect(screen.queryByTitle('Delete Network')).toBeDisabled();
-  expect(screen.queryByTitle('Update Network')).toBeInTheDocument();
+  // Wait for async $derived to complete
+  const deleteButton = await screen.findByTitle('Delete Network');
+  const updateButton = await screen.findByTitle('Update Network');
 
-  const updateButton = screen.getByTitle('Update Network');
+  expect(deleteButton).toBeInTheDocument();
+  expect(deleteButton).toBeDisabled();
+  expect(updateButton).toBeInTheDocument();
+
   await fireEvent.click(updateButton);
 
   await tick();
@@ -104,4 +111,12 @@ test('Expect podman used network to have edit option and disabled delete', async
 
   expect(window.updateNetwork).toBeCalledWith('podman2', '123456789123456', ['0.0.0.1', '2.1.1.2'], ['1.1.1.1']);
   expect(screen.queryByText('Edit Network Network 2')).not.toBeInTheDocument();
+});
+
+test('Expect getContributedMenus to be called with DASHBOARD_NETWORK context', async () => {
+  render(NetworkActions, { object: network1 });
+
+  await vi.waitFor(() => {
+    expect(window.getContributedMenus).toHaveBeenCalledWith(MenuContext.DASHBOARD_NETWORK);
+  });
 });

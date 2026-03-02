@@ -2,7 +2,6 @@
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext } from '@podman-desktop/core-api';
-import { onMount } from 'svelte';
 
 import ContributionActions from '/@/lib/actions/ContributionActions.svelte';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
@@ -19,16 +18,18 @@ interface Props {
 let { object, detailed = false }: Props = $props();
 
 let showUpdateNetworkDialog = $state(false);
-let contributions = $state<Menu[]>([]);
 
-onMount(async () => {
+async function getContributionsWithErrorHandling(): Promise<Menu[]> {
   try {
-    contributions = await window.getContributedMenus(MenuContext.DASHBOARD_NETWORK);
+    return await window.getContributedMenus(MenuContext.DASHBOARD_NETWORK);
   } catch (error) {
     console.error(`error while fetching contributed menus for network ${object.name}`, error);
     handleError(String(error));
+    return [];
   }
-});
+}
+
+const contributions = $derived(await getContributionsWithErrorHandling());
 
 async function removeNetwork(): Promise<void> {
   const oldStatus = object.status;
@@ -47,7 +48,8 @@ function closeUpdateDialog(): void {
 }
 
 function handleError(error: string): void {
-  console.error(`error in network actions for ${object.name}`, error);
+  object.actionError = error;
+  object.status = 'ERROR';
 }
 </script>
 
