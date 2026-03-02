@@ -652,57 +652,62 @@ export class ContainerProviderRegistry {
 
     const images = await Promise.all(
       providers.map(async provider => {
-        // Initialize an empty array for the case where neither API is available
-        // ignore any warning as we are adding engineId and engineName to the image
-        // and as one of the API uses Dockerode, the other ImageInfo
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let fetchedImages: any[] = [];
+        try {
+          // Initialize an empty array for the case where neither API is available
+          // ignore any warning as we are adding engineId and engineName to the image
+          // and as one of the API uses Dockerode, the other ImageInfo
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let fetchedImages: any[] = [];
 
-        // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
-        if (provider.libpodApi && this.useLibpodApiForImageList()) {
-          fetchedImages = await provider.libpodApi.podmanListImages({
-            all: options?.all,
-            filters: options?.filters,
-          });
-        } else if (provider.api) {
-          fetchedImages = await provider.api.listImages({ all: false });
-        } else {
-          console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
-          return fetchedImages;
-        }
+          // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
+          if (provider.libpodApi && this.useLibpodApiForImageList()) {
+            fetchedImages = await provider.libpodApi.podmanListImages({
+              all: options?.all,
+              filters: options?.filters,
+            });
+          } else if (provider.api) {
+            fetchedImages = await provider.api.listImages({ all: false });
+          } else {
+            console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
+            return fetchedImages;
+          }
 
-        return Promise.all(
-          Array.from(fetchedImages).map(async image => {
-            // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
-            // rather than guessing
-            const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
+          return Promise.all(
+            Array.from(fetchedImages).map(async image => {
+              // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
+              // rather than guessing
+              const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
 
-            // Return the base image with the engineName and engineId as well as our isManifest parameter.
-            const baseImage = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              isManifest,
-              Id: image.Digest ? `sha256:${image.Id}` : image.Id,
-              Digest: image.Digest ?? `sha256:${image.Id}`,
-            };
+              // Return the base image with the engineName and engineId as well as our isManifest parameter.
+              const baseImage = {
+                ...image,
+                engineName: provider.name,
+                engineId: provider.id,
+                isManifest,
+                Id: image.Digest ? `sha256:${image.Id}` : image.Id,
+                Digest: image.Digest ?? `sha256:${image.Id}`,
+              };
 
-            // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
-            // however, we do not **ever** want this to block the UI / operation, so if this fails, output to console and continue
-            if (baseImage.isManifest && provider.libpodApi) {
-              try {
-                const manifestInspectInfo = await provider.libpodApi.podmanInspectManifest(image.Id);
-                if (manifestInspectInfo?.manifests) {
-                  baseImage.manifests = manifestInspectInfo.manifests;
+              // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
+              // however, we do not **ever** want this to block the UI / operation, so if this fails, output to console and continue
+              if (baseImage.isManifest && provider.libpodApi) {
+                try {
+                  const manifestInspectInfo = await provider.libpodApi.podmanInspectManifest(image.Id);
+                  if (manifestInspectInfo?.manifests) {
+                    baseImage.manifests = manifestInspectInfo.manifests;
+                  }
+                } catch (error) {
+                  console.error('Error while inspecting manifest', error);
                 }
-              } catch (error) {
-                console.error('Error while inspecting manifest', error);
               }
-            }
 
-            return baseImage;
-          }),
-        );
+              return baseImage;
+            }),
+          );
+        } catch (error) {
+          console.error(`Error listing images from provider ${provider.name} (${provider.id}):`, error);
+          return [];
+        }
       }),
     );
 
