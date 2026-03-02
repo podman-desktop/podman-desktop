@@ -326,7 +326,7 @@ export class ExtensionLoader implements IAsyncDisposable {
     });
     if (!extension.error) {
       await this.loadExtension(extension);
-      this.apiSender.send('extension-started', {});
+      this.apiSender.send('extension-started');
       this._onDidChange.fire();
     }
   }
@@ -1730,7 +1730,7 @@ export class ExtensionLoader implements IAsyncDisposable {
   async activateExtension(extension: AnalyzedExtension, extensionMain: any | undefined): Promise<void> {
     this.extensionState.set(extension.id, 'starting');
     this.extensionStateErrors.delete(extension.id);
-    this.apiSender.send('extension-starting', {});
+    this.apiSender.send('extension-starting');
 
     const subscriptions: containerDesktopAPI.Disposable[] = extension.subscriptions;
 

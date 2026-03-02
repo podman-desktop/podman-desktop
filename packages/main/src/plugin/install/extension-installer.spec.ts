@@ -138,7 +138,7 @@ test('should install an image if labels are correct', async () => {
   expect(sendEnd).toHaveBeenCalledWith('Extension Successfully installed.');
 
   // extension started
-  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started', {});
+  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started');
 });
 
 test('should install an image (dd extensions) if labels are correct', async () => {
@@ -366,7 +366,7 @@ test('should install an image with extension pack', async () => {
   expect(sendEnd).toHaveBeenCalledWith('Extension Successfully installed.');
 
   // extension started
-  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started', {});
+  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started');
 
   // should have been called to load two extensions (current + extension pack)
   // expect to have 2 arguments in array
@@ -444,7 +444,7 @@ test('should install an image with transitive dependencies', async () => {
   expect(sendEnd).toHaveBeenCalledWith('Extension Successfully installed.');
 
   // extension started
-  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started', {});
+  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started');
 
   // should have been called to load two extensions (current + extension pack)
   // expect to have 2 arguments in array
@@ -517,7 +517,7 @@ test('should install an image with extension pack with an existing dependency al
   expect(sendEnd).toHaveBeenCalledWith('Extension Successfully installed.');
 
   // extension started
-  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started', {});
+  expect(apiSenderSendMock).toHaveBeenCalledWith('extension-started');
 
   // should have been called to load two extensions (current + extension pack)
   // expect to have 2 arguments in array

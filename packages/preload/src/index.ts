@@ -158,7 +158,7 @@ export const buildApiSender = (): ApiSenderType => {
   const eventEmitter = new EventEmitter();
 
   return {
-    send: (channel: string, data: unknown): void => {
+    send: (channel: string, data?: unknown): void => {
       eventEmitter.emit(channel, data);
     },
     receive: (channel: string, func: (...args: unknown[]) => void): IDisposable => {

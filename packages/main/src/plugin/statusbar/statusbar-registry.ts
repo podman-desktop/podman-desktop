@@ -35,7 +35,7 @@ export class StatusBarRegistry implements IDisposable {
     const entry = this.entries.get(id);
     if (entry) {
       this.entries.delete(id);
-      this.apiSender.send(STATUS_BAR_UPDATED_EVENT_NAME, undefined);
+      this.apiSender.send(STATUS_BAR_UPDATED_EVENT_NAME);
     }
   }
 
@@ -89,7 +89,7 @@ export class StatusBarRegistry implements IDisposable {
       entryToUpdate.highlight = highlight;
     }
 
-    this.apiSender.send(STATUS_BAR_UPDATED_EVENT_NAME, undefined);
+    this.apiSender.send(STATUS_BAR_UPDATED_EVENT_NAME);
   }
 
   dispose(): void {
