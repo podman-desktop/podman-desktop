@@ -24,7 +24,6 @@ async function getContributionsWithErrorHandling(): Promise<Menu[]> {
     return await window.getContributedMenus(MenuContext.DASHBOARD_NETWORK);
   } catch (error) {
     console.error(`error while fetching contributed menus for network ${object.name}`, error);
-    handleError(String(error));
     return [];
   }
 }
