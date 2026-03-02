@@ -304,8 +304,9 @@ export class KubernetesClient {
 
     this.#managerStarted = true;
     this.featureRegistry.onFeaturesUpdated(async features => {
-      const kubeDashboardRegistered = features.includes('kubernetes-dashboard');
-      if (kubeDashboardRegistered) {
+      const shouldDisableInternalManager =
+        features.includes('kubernetes-dashboard') || features.includes('kubernetes-contexts-manager');
+      if (shouldDisableInternalManager) {
         if (this.#managerStarted) {
           await this.KubernetesManagerStop();
           this.#managerStarted = false;
