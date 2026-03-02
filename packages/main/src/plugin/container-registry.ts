@@ -105,17 +105,10 @@ export interface InternalContainerProvider {
   libpodApi?: LibPod;
 }
 
-interface JSONEvent {
-  type: string;
-  status: string;
-  id: string;
-  Type?: string;
-}
-
 @injectable()
 export class ContainerProviderRegistry {
-  private readonly _onEvent = new Emitter<JSONEvent>();
-  readonly onEvent: Event<JSONEvent> = this._onEvent.event;
+  private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
+  readonly onEvent: Event<containerDesktopAPI.ContainerJSONEvent> = this._onEvent.event;
 
   private readonly _onApiAttached = new Emitter<string>();
   readonly onApiAttached: Event<string> = this._onApiAttached.event;
@@ -161,7 +154,7 @@ export class ContainerProviderRegistry {
     const startDate = performance.now();
     const eventEmitter = new EventEmitter();
 
-    eventEmitter.on('event', (jsonEvent: JSONEvent) => {
+    eventEmitter.on('event', (jsonEvent: containerDesktopAPI.ContainerJSONEvent) => {
       nbEvents++;
       // reconnected
       this.notify = true;
