@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,19 @@
 
 import type { IDisposable } from '/@/disposable.js';
 
+import type { ApiSenderChannelMap } from './api-sender-channel-map.js';
+
 export const ApiSenderType = Symbol.for('ApiSenderType');
 export type ApiSenderType = {
-  send: (channel: string, data?: unknown) => void;
-  receive: (channel: string, func: (...args: unknown[]) => void) => IDisposable;
+  send<K extends keyof ApiSenderChannelMap>(
+    channel: K,
+    ...args: ApiSenderChannelMap[K] extends never ? [] : [data: ApiSenderChannelMap[K]]
+  ): void;
+  send(channel: string, data?: unknown): void;
+
+  receive<K extends keyof ApiSenderChannelMap>(
+    channel: K,
+    func: ApiSenderChannelMap[K] extends never ? () => void : (data: ApiSenderChannelMap[K]) => void,
+  ): IDisposable;
+  receive(channel: string, func: (...args: unknown[]) => void): IDisposable;
 };

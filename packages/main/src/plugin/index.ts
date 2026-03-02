@@ -124,6 +124,7 @@ import type {
   WebviewInfo,
   WelcomeMessages,
 } from '@podman-desktop/core-api';
+import type { ApiSenderChannelMap } from '@podman-desktop/core-api/api-sender';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo } from '@podman-desktop/core-api/authentication';
 import {
@@ -387,14 +388,14 @@ export class PluginSystem {
   }
 
   getApiSender(webContents: WebContents): ApiSenderType {
-    const queuedEvents: { channel: string; data: unknown }[] = [];
+    const queuedEvents: { channel: string; data: unknown[] }[] = [];
 
     const flushQueuedEvents = (): void => {
       // flush queued events ?
       if (this.uiReady && this.isReady && queuedEvents.length > 0) {
         console.log(`Delayed startup, flushing ${queuedEvents.length} events`);
         queuedEvents.forEach(({ channel, data }) => {
-          webContents.send('api-sender', channel, data);
+          webContents.send('api-sender', channel, ...data);
         });
         queuedEvents.length = 0;
       }
@@ -408,20 +409,26 @@ export class PluginSystem {
 
     const eventEmitter = new EventEmitter();
     return {
-      send: (channel: string, data: unknown): void => {
+      send: <K extends keyof ApiSenderChannelMap>(
+        channel: K,
+        ...data: ApiSenderChannelMap[K] extends never ? [] : [data: ApiSenderChannelMap[K]]
+      ): void => {
         // send only when the UI is ready
         if (this.uiReady && this.isReady) {
           flushQueuedEvents();
           if (!webContents.isDestroyed()) {
-            webContents.send('api-sender', channel, data);
+            webContents.send('api-sender', channel, ...data);
           }
         } else {
           // add to the queue
           queuedEvents.push({ channel, data });
         }
-        eventEmitter.emit(channel, data);
+        eventEmitter.emit(channel, ...data);
       },
-      receive: (channel: string, func: (...args: unknown[]) => void): IDisposable => {
+      receive: <K extends keyof ApiSenderChannelMap>(
+        channel: K,
+        func: ApiSenderChannelMap[K] extends never ? () => void : (data: ApiSenderChannelMap[K]) => void,
+      ): IDisposable => {
         eventEmitter.on(channel, func);
         return {
           dispose: (): void => {

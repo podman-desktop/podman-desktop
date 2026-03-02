@@ -16,4 +16,5 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+export * from './api-sender-channel-map.js';
 export * from './api-sender-type.js';
