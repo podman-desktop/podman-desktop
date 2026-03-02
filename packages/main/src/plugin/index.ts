@@ -577,6 +577,9 @@ export class PluginSystem {
     container.bind<CustomPickRegistry>(CustomPickRegistry).toSelf().inSingletonScope();
     container.bind<OnboardingRegistry>(OnboardingRegistry).toSelf().inSingletonScope();
     container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
+    const featureRegistry = container.get<FeatureRegistry>(FeatureRegistry);
+    featureRegistry.init();
+
     container.bind<KubernetesClient>(KubernetesClient).toSelf().inSingletonScope();
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
     await kubernetesClient.init();

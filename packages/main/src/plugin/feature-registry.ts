@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import { Event } from '@podman-desktop/core-api';
-import { injectable } from 'inversify';
+import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { inject, injectable } from 'inversify';
 
 import { Emitter } from '/@/plugin/events/emitter.js';
 
@@ -29,8 +30,17 @@ export class FeatureRegistry {
   private readonly _onFeaturesUpdated = new Emitter<string[]>();
   readonly onFeaturesUpdated: Event<string[]> = this._onFeaturesUpdated.event;
 
-  constructor() {
+  constructor(
+    @inject(ApiSenderType)
+    private readonly apiSender: ApiSenderType,
+  ) {
     this.extFeaturesContribution = new Map();
+  }
+
+  init(): void {
+    this.onFeaturesUpdated(features => {
+      this.apiSender.send('feature-registry:features-updated', features);
+    });
   }
 
   registerFeatures(extensionId: string, features: string[]): Disposable {
