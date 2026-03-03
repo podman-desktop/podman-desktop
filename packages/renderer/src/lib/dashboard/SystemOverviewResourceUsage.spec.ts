@@ -26,7 +26,7 @@ import { configurationProperties } from '/@/stores/configurationProperties';
 
 import SystemOverviewResourceUsage from './SystemOverviewResourceUsage.svelte';
 
-vi.mock(import('/@/lib/dashboard/ResourceProgressBar.svelte'));
+vi.mock(import('/@/lib/dashboard/SystemOverviewResourceBar.svelte'));
 
 const baseProvider: ProviderInfo = {
   internalId: 'podman-internal',

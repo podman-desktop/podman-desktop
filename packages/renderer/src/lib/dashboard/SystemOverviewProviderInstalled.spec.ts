@@ -20,11 +20,13 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import SystemOverviewProviderInstalled from './SystemOverviewProviderInstalled.svelte';
 
-vi.mock(import('/@/lib/images/PodIcon.svelte'));
+vi.mock(import('tinro'));
+vi.mock(import('/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte'));
 
 const baseProvider: ProviderInfo = {
   internalId: 'podman-internal',
@@ -52,7 +54,6 @@ const baseProvider: ProviderInfo = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.initializeProvider).mockResolvedValue([]);
 });
 
 test('should render provider name and message', async () => {
@@ -66,11 +67,11 @@ test('should render provider name and message', async () => {
   );
 });
 
-test('should render Create new machine button and call initializeProvider on click', async () => {
+test('should render Set up button and navigate to onboarding on click', async () => {
   render(SystemOverviewProviderInstalled, { provider: baseProvider });
 
-  const button = screen.getByRole('button', { name: 'Create new machine' });
+  const button = screen.getByRole('button', { name: 'Set up Podman' });
   await vi.waitFor(() => expect(button).toBeInTheDocument());
   await fireEvent.click(button);
-  await vi.waitFor(() => expect(window.initializeProvider).toHaveBeenCalledWith('podman-internal'));
+  await vi.waitFor(() => expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/onboarding/podman'));
 });

@@ -26,7 +26,6 @@ import { providerInfos } from '/@/stores/providers';
 import SystemOverviewContent from './SystemOverviewContent.svelte';
 
 vi.mock(import('/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte'));
-vi.mock(import('/@/lib/dashboard/SystemOverviewProviderCardMinimal.svelte'));
 vi.mock(import('/@/lib/dashboard/SystemOverviewProviderConfigured.svelte'));
 vi.mock(import('/@/lib/dashboard/SystemOverviewProviderInstalled.svelte'));
 vi.mock(import('/@/lib/dashboard/SystemOverviewProviderNotInstalled.svelte'));

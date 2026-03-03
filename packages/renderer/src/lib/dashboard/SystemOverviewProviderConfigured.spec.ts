@@ -24,7 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import SystemOverviewProviderConfigured from './SystemOverviewProviderConfigured.svelte';
 
-vi.mock(import('/@/lib/images/PodIcon.svelte'));
+vi.mock(import('/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte'));
 
 const baseProvider: ProviderInfo = {
   internalId: 'podman-internal',

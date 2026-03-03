@@ -21,11 +21,10 @@ import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_CONFIGURATION_KEY
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
 import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
-
-import type { ConfigurationRegistry } from '../configuration-registry.js';
 
 const registerConfigurationsMock = vi.fn();
 const onDidChangeConfigurationMock = vi.fn();

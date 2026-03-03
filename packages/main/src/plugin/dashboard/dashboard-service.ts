@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderConnectionStatus } from '@podman-desktop/api';
 import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import {
   CRITICAL_STATUS,
@@ -24,7 +23,6 @@ import {
   HEALTHY_STATUS,
   PROGRESSING_STATUS,
   STABLE_STATUS,
-  STATUS_PRIORITY,
   SYSTEM_OVERVIEW_CONFIGURATION_KEY,
   SystemOverviewStatus,
   SystemOverviewStatusInfo,
@@ -94,72 +92,41 @@ export class DashboardService {
     this.apiSender.receive('provider-change', () => this.updateSystemOverviewStatus());
   }
 
-  private convertConnectionStatusToOverviewStatus(status: ProviderConnectionStatus): SystemOverviewStatus {
-    switch (status) {
-      case 'started':
-        return HEALTHY_STATUS;
-      case 'stopped':
-        return STABLE_STATUS;
-      case 'unknown':
-        return CRITICAL_STATUS;
-      case 'starting':
-      case 'stopping':
-        return PROGRESSING_STATUS;
-      default:
-        return STABLE_STATUS;
-    }
-  }
-
   private getSystemOverviewStatus(): SystemOverviewStatusInfo {
     const providers: ProviderInfo[] = this.providerRegistry.getProviderInfos();
 
-    // Collect all connections from all providers
     const allConnections: ProviderConnectionInfo[] = providers.flatMap(provider => [
       ...provider.containerConnections,
       ...provider.kubernetesConnections,
       ...provider.vmConnections,
     ]);
 
-    // If no connections exist, or no container connections for podman
-    const noConnections =
-      allConnections.length === 0 || (providers.find(p => p.id === 'podman')?.containerConnections.length ?? 0) === 0;
-
-    if (noConnections) {
-      // Show progressing when a provider is configuring or starting (e.g. during setup)
+    if (allConnections.length === 0) {
       const isConfiguringOrStarting = providers.some(
         p => p.status === 'configuring' || p.status === 'starting' || p.status === 'stopping',
       );
 
-      const status: SystemOverviewStatus = isConfiguringOrStarting ? PROGRESSING_STATUS : CRITICAL_STATUS;
+      const status: SystemOverviewStatus = isConfiguringOrStarting ? PROGRESSING_STATUS : STABLE_STATUS;
       return {
         status,
         text: this.getStatusText(status, allConnections, providers),
       };
     }
 
-    // Convert all connection statuses to system overview statuses
-    const statuses = allConnections.map(connection => this.convertConnectionStatusToOverviewStatus(connection.status));
+    const hasCritical = allConnections.some(c => c.status === 'unknown');
+    const hasProgressing = allConnections.some(c => c.status === 'starting' || c.status === 'stopping');
+    const hasContainerStarted = providers.some(p => p.containerConnections.some(c => c.status === 'started'));
 
-    // If no valid statuses found, return critical
-    if (statuses.length === 0) {
-      return {
-        status: CRITICAL_STATUS,
-        text: this.getStatusText(CRITICAL_STATUS, allConnections, providers),
-      };
+    let worstStatus: SystemOverviewStatus;
+    if (hasCritical) {
+      worstStatus = CRITICAL_STATUS;
+    } else if (hasProgressing) {
+      worstStatus = PROGRESSING_STATUS;
+    } else if (hasContainerStarted) {
+      worstStatus = HEALTHY_STATUS;
+    } else {
+      worstStatus = STABLE_STATUS;
     }
-
-    // Find and return the worst status (highest priority number)
-    const firstStatus = statuses[0];
-    if (!firstStatus) {
-      return {
-        status: CRITICAL_STATUS,
-        text: this.getStatusText(CRITICAL_STATUS, allConnections, providers),
-      };
-    }
-
-    const worstStatus = statuses.reduce((worst, current) => {
-      return STATUS_PRIORITY[current] > STATUS_PRIORITY[worst] ? current : worst;
-    }, firstStatus);
 
     return {
       status: worstStatus,

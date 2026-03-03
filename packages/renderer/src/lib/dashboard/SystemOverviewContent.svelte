@@ -5,8 +5,8 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
+import SystemOverviewCardStack from '/@/lib/dashboard/SystemOverviewCardStack.svelte';
 import SystemOverviewProviderCardDetailed from '/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte';
-import SystemOverviewProviderCardMinimal from '/@/lib/dashboard/SystemOverviewProviderCardMinimal.svelte';
 import SystemOverviewProviderConfigured from '/@/lib/dashboard/SystemOverviewProviderConfigured.svelte';
 import SystemOverviewProviderInstalled from '/@/lib/dashboard/SystemOverviewProviderInstalled.svelte';
 import { containersInfos } from '/@/stores/containers';
@@ -109,11 +109,31 @@ let standaloneConnections = $derived(
   ),
 );
 
-// Check Podman provider states
-let providersNotInstalled = $derived(providers.filter(p => p.status === 'not-installed'));
-let providersInstalled = $derived(providers.filter(p => p.status === 'installed'));
+// Container connections shown as detailed cards (started, errored, or progressing)
+let detailedContainerConnections = $derived(
+  containerConnectionsWithChildren.filter(
+    ({ connection, provider }) => connection.status !== 'stopped' || provider.warnings.length > 0,
+  ),
+);
+
+// Container connections shown as minimal cards (stopped, no errors/warnings)
+let minimalContainerConnections = $derived(
+  containerConnectionsWithChildren
+    .filter(({ connection, provider }) => connection.status === 'stopped' && provider.warnings.length === 0)
+    .map(({ connection, provider }) => ({ connection: connection as ProviderConnectionInfo, provider })),
+);
+
+// All connections rendered as minimal stacked cards
+let allMinimalConnections = $derived([...minimalContainerConnections, ...standaloneConnections]);
+
+// Only show not-installed/installed/configured states for container providers
+let containerProviders = $derived(
+  providers.filter(p => p.containerProviderConnectionCreation || p.containerProviderConnectionInitialization),
+);
+let providersNotInstalled = $derived(containerProviders.filter(p => p.status === 'not-installed'));
+let providersInstalled = $derived(containerProviders.filter(p => p.status === 'installed'));
 let providersConfigured = $derived(
-  providers.filter(
+  containerProviders.filter(
     p =>
       p.status === 'configured' &&
       !p.containerConnections.length &&
@@ -121,7 +141,6 @@ let providersConfigured = $derived(
       !p.vmConnections.length,
   ),
 );
-
 function navigateToResources(): void {
   router.goto('/preferences/resources');
 }
@@ -149,29 +168,25 @@ function navigateToResources(): void {
   </button>
 
   <div class="flex flex-col gap-2 pt-2">
-    <!-- Podman provider states: not installed or needs machine creation -->
-    {#each providersNotInstalled as provider, index (index)}
+    {#each providersNotInstalled as provider (provider.id)}
       <SystemOverviewProviderNotInstalled {provider} />
     {/each}
-    {#each providersInstalled as provider, index (index)}
+    {#each providersInstalled as provider (provider.id)}
       <SystemOverviewProviderInstalled {provider} />
     {/each}
-
-    {#each providersConfigured as provider, index (index)}
+    {#each providersConfigured as provider (provider.id)}
       <SystemOverviewProviderConfigured {provider} />
     {/each}
 
-    <!-- Container providers as detailed cards with Kubernetes/VM children nested inside -->
-    {#each containerConnectionsWithChildren as { connection, provider, childConnections }, index (index)}
+    <!-- Container providers as detailed cards (started, error, or progressing) -->
+    {#each detailedContainerConnections as { connection, provider, childConnections } (provider.id + ':' + connection.name)}
       <SystemOverviewProviderCardDetailed {connection} {provider} {childConnections} />
     {/each}
 
-    <!-- Kubernetes/VM connections not linked to any container provider (standalone minimal chips) -->
-    {#if standaloneConnections.length > 0}
-      <div class="flex flex-wrap gap-2">
-        {#each standaloneConnections as { connection, provider }, index (index)}
-          <SystemOverviewProviderCardMinimal {connection} {provider} />
-        {/each}
+    <!-- Standalone K8s/VM connections as stacked minimal cards -->
+    {#if allMinimalConnections.length > 0}
+      <div class="rounded-lg p-2 bg-[var(--pd-content-card-carousel-card-bg)]">
+        <SystemOverviewCardStack connections={allMinimalConnections} />
       </div>
     {/if}
   </div>
