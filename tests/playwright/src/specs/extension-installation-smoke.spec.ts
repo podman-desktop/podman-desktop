@@ -62,193 +62,194 @@ for (const {
   extensionName,
   extensionFullName,
 } of extensionsInstallationSmokeList) {
-  test.describe.serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
-    test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
+  test.describe
+    .serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
+      test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
 
-    test.beforeAll(async () => {
-      await _startup(extensionLabel);
-    });
-    test.afterAll(async () => {
-      await pdRunner.close();
-    });
+      test.beforeAll(async () => {
+        await _startup(extensionLabel);
+      });
+      test.afterAll(async () => {
+        await pdRunner.close();
+      });
 
-    test('Initialize extension type', async () => {
-      initializeLocators(extensionName);
-      await navigationBar.openExtensions();
-    });
+      test('Initialize extension type', async () => {
+        initializeLocators(extensionName);
+        await navigationBar.openExtensions();
+      });
 
-    test('Install extension through Extensions Catalog', async () => {
-      test.skip(extensionName !== imageLayersExplorerExtension.extensionName);
-      test.setTimeout(200_000);
+      test('Install extension through Extensions Catalog', async () => {
+        test.skip(extensionName !== imageLayersExplorerExtension.extensionName);
+        test.setTimeout(200_000);
 
-      const extensionsPage = new ExtensionsPage(page);
-      await playExpect(extensionsPage.heading).toBeVisible();
+        const extensionsPage = new ExtensionsPage(page);
+        await playExpect(extensionsPage.heading).toBeVisible();
 
-      await extensionsPage.openCatalogTab();
-      const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
-      await playExpect(extensionCatalog.parent).toBeVisible();
-
-      await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeFalsy();
-      await extensionCatalog.install(180_000);
-
-      await extensionsPage.openInstalledTab();
-      await playExpect.poll(async () => await extensionsPage.extensionIsInstalled(extensionFullLabel)).toBeTruthy();
-    });
-
-    test('Install extension from OCI Image', async () => {
-      test.skip(extensionName === imageLayersExplorerExtension.extensionName);
-      test.setTimeout(200_000);
-
-      const extensionsPage = new ExtensionsPage(page);
-
-      await extensionsPage.installExtensionFromOCIImage(ociImageUrl, 180_000);
-      if (extensionName !== openshiftDockerExtension.extensionName) {
         await extensionsPage.openCatalogTab();
         const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
         await playExpect(extensionCatalog.parent).toBeVisible();
-        await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
-      }
 
-      await extensionsPage.openInstalledTab();
-      await playExpect
-        .poll(async () => await extensionsPage.extensionIsInstalled(extensionFullLabel), { timeout: 15_000 })
-        .toBeTruthy();
-    });
+        await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeFalsy();
+        await extensionCatalog.install(180_000);
 
-    test.describe
-      .serial('Extension verification after installation', () => {
-        test('Extension details can be opened', async () => {
-          const extensionsPage = await navigationBar.openExtensions();
+        await extensionsPage.openInstalledTab();
+        await playExpect.poll(async () => await extensionsPage.extensionIsInstalled(extensionFullLabel)).toBeTruthy();
+      });
 
-          const extensionDetailsPage = await extensionsPage.openExtensionDetails(
-            extensionLabel,
-            extensionFullLabel,
-            extensionFullName,
-          );
-          await playExpect(extensionDetailsPage.status).toBeVisible({ timeout: 15_000 });
-        });
+      test('Install extension from OCI Image', async () => {
+        test.skip(extensionName === imageLayersExplorerExtension.extensionName);
+        test.setTimeout(200_000);
 
-        test('Extension is active and there are not errors', async () => {
-          const extensionsPage = await navigationBar.openExtensions();
-          const extensionPage = await extensionsPage.openExtensionDetails(
-            extensionLabel,
-            extensionFullLabel,
-            extensionFullName,
-          );
-          await playExpect(extensionPage.heading).toBeVisible();
-          await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 15_000 });
-          // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
-          const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
-          // we would like to propagate the error's stack trace into test failure message
-          let stackTrace = '';
-          if ((await errorTab.count()) > 0) {
-            stackTrace = await errorTab.innerText();
-          }
-          await playExpect(errorTab, `Error Tab was present with stackTrace: ${stackTrace}`).not.toBeVisible();
-        });
+        const extensionsPage = new ExtensionsPage(page);
 
-        test.describe
-          .serial('Extension can be disabled and reenabled', () => {
-            test.skip(
-              extensionName === openshiftDockerExtension.extensionName,
-              'OpenShift Docker extension cannot be disabled',
+        await extensionsPage.installExtensionFromOCIImage(ociImageUrl, 180_000);
+        if (extensionName !== openshiftDockerExtension.extensionName) {
+          await extensionsPage.openCatalogTab();
+          const extensionCatalog = new ExtensionCatalogCardPage(page, extensionName);
+          await playExpect(extensionCatalog.parent).toBeVisible();
+          await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
+        }
+
+        await extensionsPage.openInstalledTab();
+        await playExpect
+          .poll(async () => await extensionsPage.extensionIsInstalled(extensionFullLabel), { timeout: 15_000 })
+          .toBeTruthy();
+      });
+
+      test.describe
+        .serial('Extension verification after installation', () => {
+          test('Extension details can be opened', async () => {
+            const extensionsPage = await navigationBar.openExtensions();
+
+            const extensionDetailsPage = await extensionsPage.openExtensionDetails(
+              extensionLabel,
+              extensionFullLabel,
+              extensionFullName,
             );
-
-            test('Disable extension and verify Navbar and Resources components if present', async () => {
-              const extensionsPage = await navigationBar.openExtensions();
-              const extensionPage = await extensionsPage.openExtensionDetails(
-                extensionLabel,
-                extensionFullLabel,
-                extensionFullName,
-              );
-
-              await extensionPage.disableExtension();
-              await playExpect(extensionPage.status).toHaveText(ExtensionState.Disabled);
-
-              // check that extension navbar icon is hidden/shown
-              if (extensionNavigationBarIcon) {
-                await playExpect(extensionNavigationBarIcon).toBeHidden();
-              }
-
-              // check that the provider card is on Resources Page -> bootc require binary installation, docker doesn't have
-              if (
-                resourceLabel &&
-                extensionName !== openshiftDockerExtension.extensionName &&
-                extensionName !== bootcExtension.extensionName
-              ) {
-                const settingsBar = await goToSettings();
-                const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
-                const extensionResourceBox = resourcesPage.featuredProviderResources.getByRole('region', {
-                  name: resourceLabel,
-                });
-                await playExpect(extensionResourceBox).toBeHidden();
-              }
-            });
-
-            test('Enable extension and verify Navbar and Resources components', async () => {
-              const extensionsPage = await navigationBar.openExtensions();
-              const extensionPage = await extensionsPage.openExtensionDetails(
-                extensionLabel,
-                extensionFullLabel,
-                extensionFullName,
-              );
-
-              await extensionPage.enableExtension();
-              await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10_000 });
-
-              // check that extension navbar icon is hidden/shown
-              if (extensionNavigationBarIcon) {
-                await playExpect(extensionNavigationBarIcon).toBeVisible();
-              }
-
-              // check that the provider card is on Resources Page -> bootc requires binary installation
-              if (
-                resourceLabel &&
-                extensionName !== openshiftDockerExtension.extensionName &&
-                extensionName !== bootcExtension.extensionName
-              ) {
-                const settingsBar = await goToSettings();
-                const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
-                const extensionResourceBox = resourcesPage.featuredProviderResources.getByRole('region', {
-                  name: resourceLabel,
-                });
-                await playExpect(extensionResourceBox).toBeVisible();
-              }
-            });
+            await playExpect(extensionDetailsPage.status).toBeVisible({ timeout: 15_000 });
           });
-      });
 
-    test.describe
-      .serial('Remove extension and verify UI', () => {
-        test('Remove extension and verify components', async () => {
-          let extensionsPage = await navigationBar.openExtensions();
+          test('Extension is active and there are not errors', async () => {
+            const extensionsPage = await navigationBar.openExtensions();
+            const extensionPage = await extensionsPage.openExtensionDetails(
+              extensionLabel,
+              extensionFullLabel,
+              extensionFullName,
+            );
+            await playExpect(extensionPage.heading).toBeVisible();
+            await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 15_000 });
+            // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
+            const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
+            // we would like to propagate the error's stack trace into test failure message
+            let stackTrace = '';
+            if ((await errorTab.count()) > 0) {
+              stackTrace = await errorTab.innerText();
+            }
+            await playExpect(errorTab, `Error Tab was present with stackTrace: ${stackTrace}`).not.toBeVisible();
+          });
 
-          const extensionDetails = await extensionsPage.openExtensionDetails(
-            extensionLabel,
-            extensionFullLabel,
-            extensionFullName,
-          );
-          if (extensionName !== openshiftDockerExtension.extensionName) {
-            await extensionDetails.disableExtension();
-          }
-          await extensionDetails.removeExtension(false);
+          test.describe
+            .serial('Extension can be disabled and reenabled', () => {
+              test.skip(
+                extensionName === openshiftDockerExtension.extensionName,
+                'OpenShift Docker extension cannot be disabled',
+              );
 
-          if (extensionName !== openshiftDockerExtension.extensionName) {
-            // now if deleted from extension details, the page details are still there, just different
-            await playExpect(extensionDetails.status).toHaveText(ExtensionState.Downloadable);
-            await playExpect(
-              extensionDetails.page.getByRole('button', { name: `Install ${extensionFullLabel} Extension` }),
-            ).toBeVisible();
-          }
+              test('Disable extension and verify Navbar and Resources components if present', async () => {
+                const extensionsPage = await navigationBar.openExtensions();
+                const extensionPage = await extensionsPage.openExtensionDetails(
+                  extensionLabel,
+                  extensionFullLabel,
+                  extensionFullName,
+                );
 
-          await goToDashboard();
-          extensionsPage = await navigationBar.openExtensions();
-          await playExpect
-            .poll(async () => extensionsPage.extensionIsInstalled(extensionFullLabel), { timeout: 15_000 })
-            .toBeFalsy();
+                await extensionPage.disableExtension();
+                await playExpect(extensionPage.status).toHaveText(ExtensionState.Disabled);
+
+                // check that extension navbar icon is hidden/shown
+                if (extensionNavigationBarIcon) {
+                  await playExpect(extensionNavigationBarIcon).toBeHidden();
+                }
+
+                // check that the provider card is on Resources Page -> bootc require binary installation, docker doesn't have
+                if (
+                  resourceLabel &&
+                  extensionName !== openshiftDockerExtension.extensionName &&
+                  extensionName !== bootcExtension.extensionName
+                ) {
+                  const settingsBar = await goToSettings();
+                  const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+                  const extensionResourceBox = resourcesPage.featuredProviderResources.getByRole('region', {
+                    name: resourceLabel,
+                  });
+                  await playExpect(extensionResourceBox).toBeHidden();
+                }
+              });
+
+              test('Enable extension and verify Navbar and Resources components', async () => {
+                const extensionsPage = await navigationBar.openExtensions();
+                const extensionPage = await extensionsPage.openExtensionDetails(
+                  extensionLabel,
+                  extensionFullLabel,
+                  extensionFullName,
+                );
+
+                await extensionPage.enableExtension();
+                await playExpect(extensionPage.status).toHaveText(ExtensionState.Active, { timeout: 10_000 });
+
+                // check that extension navbar icon is hidden/shown
+                if (extensionNavigationBarIcon) {
+                  await playExpect(extensionNavigationBarIcon).toBeVisible();
+                }
+
+                // check that the provider card is on Resources Page -> bootc requires binary installation
+                if (
+                  resourceLabel &&
+                  extensionName !== openshiftDockerExtension.extensionName &&
+                  extensionName !== bootcExtension.extensionName
+                ) {
+                  const settingsBar = await goToSettings();
+                  const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+                  const extensionResourceBox = resourcesPage.featuredProviderResources.getByRole('region', {
+                    name: resourceLabel,
+                  });
+                  await playExpect(extensionResourceBox).toBeVisible();
+                }
+              });
+            });
         });
-      });
-  });
+
+      test.describe
+        .serial('Remove extension and verify UI', () => {
+          test('Remove extension and verify components', async () => {
+            let extensionsPage = await navigationBar.openExtensions();
+
+            const extensionDetails = await extensionsPage.openExtensionDetails(
+              extensionLabel,
+              extensionFullLabel,
+              extensionFullName,
+            );
+            if (extensionName !== openshiftDockerExtension.extensionName) {
+              await extensionDetails.disableExtension();
+            }
+            await extensionDetails.removeExtension(false);
+
+            if (extensionName !== openshiftDockerExtension.extensionName) {
+              // now if deleted from extension details, the page details are still there, just different
+              await playExpect(extensionDetails.status).toHaveText(ExtensionState.Downloadable);
+              await playExpect(
+                extensionDetails.page.getByRole('button', { name: `Install ${extensionFullLabel} Extension` }),
+              ).toBeVisible();
+            }
+
+            await goToDashboard();
+            extensionsPage = await navigationBar.openExtensions();
+            await playExpect
+              .poll(async () => extensionsPage.extensionIsInstalled(extensionFullLabel), { timeout: 15_000 })
+              .toBeFalsy();
+          });
+        });
+    });
 }
 
 function initializeLocators(extensionName: string): void {

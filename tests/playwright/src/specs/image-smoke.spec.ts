@@ -45,231 +45,232 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
-  test('Pull image', async ({ navigationBar }) => {
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
+test.describe
+  .serial('Image workflow verification', { tag: '@smoke' }, () => {
+    test('Pull image', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
-    const pullImagePage = await imagesPage.openPullImage();
-    const updatedImages = await pullImagePage.pullImage(helloContainer);
-    await playExpect(updatedImages.heading).toBeVisible({ timeout: 10_000 });
+      const pullImagePage = await imagesPage.openPullImage();
+      const updatedImages = await pullImagePage.pullImage(helloContainer);
+      await playExpect(updatedImages.heading).toBeVisible({ timeout: 10_000 });
 
-    await playExpect
-      .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
-      .toBeTruthy();
+      await playExpect
+        .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
+        .toBeTruthy();
 
-    playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe(ImageState.Unused);
-  });
+      playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe(ImageState.Unused);
+    });
 
-  test('Pull image from search results', async ({ navigationBar }) => {
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
+    test('Pull image from search results', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
-    const pullImagePage = await imagesPage.openPullImage();
-    await playExpect(pullImagePage.heading).toBeVisible();
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
 
-    const searchResults = await pullImagePage.getAllSearchResultsFor(imageToSearch, true);
-    playExpect(searchResults.length).toBeGreaterThan(0);
+      const searchResults = await pullImagePage.getAllSearchResultsFor(imageToSearch, true);
+      playExpect(searchResults.length).toBeGreaterThan(0);
 
-    imagesPage = await pullImagePage.pullImageFromSearchResults(imageToSearch + ':' + imageTagToSearch);
-    await playExpect(imagesPage.heading).toBeVisible();
-    await playExpect.poll(async () => await imagesPage.waitForImageExists(imageToSearch)).toBeTruthy();
+      imagesPage = await pullImagePage.pullImageFromSearchResults(imageToSearch + ':' + imageTagToSearch);
+      await playExpect(imagesPage.heading).toBeVisible();
+      await playExpect.poll(async () => await imagesPage.waitForImageExists(imageToSearch)).toBeTruthy();
 
-    const imageDetailPage = await imagesPage.openImageDetails(imageToSearch);
-    await playExpect(imageDetailPage.heading).toBeVisible();
+      const imageDetailPage = await imagesPage.openImageDetails(imageToSearch);
+      await playExpect(imageDetailPage.heading).toBeVisible();
 
-    imagesPage = await imageDetailPage.deleteImage();
-    await playExpect(imagesPage.heading).toBeVisible({ timeout: 30_000 });
+      imagesPage = await imageDetailPage.deleteImage();
+      await playExpect(imagesPage.heading).toBeVisible({ timeout: 30_000 });
 
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
-      .toBeTruthy();
-  });
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
+        .toBeTruthy();
+    });
 
-  test('Test navigation between pages', async ({ navigationBar }) => {
-    const imagesPage = await navigationBar.openImages();
-    const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
-    await playExpect(imageDetailPage.heading).toBeVisible();
-    await imageDetailPage.backLink.click();
-    await playExpect(imagesPage.heading).toBeVisible();
+    test('Test navigation between pages', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
+      await playExpect(imageDetailPage.heading).toBeVisible();
+      await imageDetailPage.backLink.click();
+      await playExpect(imagesPage.heading).toBeVisible();
 
-    await imagesPage.openImageDetails(helloContainer);
-    await playExpect(imageDetailPage.heading).toBeVisible();
-    await imageDetailPage.closeButton.click();
-    await playExpect(imagesPage.heading).toBeVisible();
-  });
+      await imagesPage.openImageDetails(helloContainer);
+      await playExpect(imageDetailPage.heading).toBeVisible();
+      await imageDetailPage.closeButton.click();
+      await playExpect(imagesPage.heading).toBeVisible();
+    });
 
-  test('Check image details', async ({ navigationBar }) => {
-    const imagesPage = await navigationBar.openImages();
-    const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
+    test('Check image details', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
 
-    await playExpect(imageDetailPage.summaryTab).toBeVisible();
-    await playExpect(imageDetailPage.historyTab).toBeVisible();
-    await playExpect(imageDetailPage.inspectTab).toBeVisible();
-  });
+      await playExpect(imageDetailPage.summaryTab).toBeVisible();
+      await playExpect(imageDetailPage.historyTab).toBeVisible();
+      await playExpect(imageDetailPage.inspectTab).toBeVisible();
+    });
 
-  test('Rename image', async ({ page }) => {
-    const imageDetailsPage = new ImageDetailsPage(page, helloContainer);
-    const editPage = await imageDetailsPage.openEditImage();
-    const imagesPage = await editPage.renameImage('quay.io/podman/hi');
-    playExpect(await imagesPage.waitForImageExists('quay.io/podman/hi')).toBe(true);
-  });
+    test('Rename image', async ({ page }) => {
+      const imageDetailsPage = new ImageDetailsPage(page, helloContainer);
+      const editPage = await imageDetailsPage.openEditImage();
+      const imagesPage = await editPage.renameImage('quay.io/podman/hi');
+      playExpect(await imagesPage.waitForImageExists('quay.io/podman/hi')).toBe(true);
+    });
 
-  test('Delete image', async ({ navigationBar }) => {
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
+    test('Delete image', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
-    await imagesPage.pullImage(helloContainer);
-    await playExpect(imagesPage.heading).toBeVisible();
-    await playExpect.poll(async () => await imagesPage.waitForImageExists(helloContainer)).toBeTruthy();
-
-    const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
-    imagesPage = await imageDetailPage.deleteImage();
-
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageDelete(helloContainer, 60_000), { timeout: 0 })
-      .toBeTruthy();
-    playExpect(await imagesPage.waitForImageExists('quay.io/podman/hi')).toBe(true);
-  });
-
-  test('Cancel build image', async ({ navigationBar }) => {
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const buildImagePage = await imagesPage.openBuildImage();
-    await playExpect(buildImagePage.heading).toBeVisible();
-    const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
-    const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
-
-    await buildImagePage.cancelBuild(
-      'cancel-build-image-test',
-      dockerfilePath,
-      contextDirectory,
-      [ArchitectureType.Default],
-      { cancelAfterTimeout: 20 },
-    );
-  });
-
-  test('Build image', async ({ navigationBar }) => {
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const buildImagePage = await imagesPage.openBuildImage();
-    await playExpect(buildImagePage.heading).toBeVisible();
-    const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
-    const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
-
-    imagesPage = await buildImagePage.buildImage('build-image-test', dockerfilePath, contextDirectory);
-    playExpect(await imagesPage.waitForImageExists('docker.io/library/build-image-test')).toBeTruthy();
-
-    const imageDetailsPage = await imagesPage.openImageDetails('docker.io/library/build-image-test');
-    await playExpect(imageDetailsPage.heading).toBeVisible();
-    imagesPage = await imageDetailsPage.deleteImage();
-    playExpect(await imagesPage.waitForImageDelete('docker.io/library/build-image-test')).toBeTruthy();
-  });
-
-  test('Build image with stage2 target from staged Containerfile', async ({ navigationBar }) => {
-    test.setTimeout(180_000);
-
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const buildImagePage = await imagesPage.openBuildImage();
-    await playExpect(buildImagePage.heading).toBeVisible();
-    const containerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'staged_build.yaml');
-    const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
-
-    imagesPage = await buildImagePage.buildImage(
-      'staged-build-stage2-test',
-      containerfilePath,
-      contextDirectory,
-      [ArchitectureType.Default],
-      120_000,
-      'stage2',
-    );
-    playExpect(await imagesPage.waitForImageExists('docker.io/library/staged-build-stage2-test')).toBeTruthy();
-
-    const imageDetailsPage = await imagesPage.openImageDetails('docker.io/library/staged-build-stage2-test');
-    await playExpect(imageDetailsPage.heading).toBeVisible();
-    imagesPage = await imageDetailsPage.deleteImage();
-    playExpect(await imagesPage.waitForImageDelete('docker.io/library/staged-build-stage2-test')).toBeTruthy();
-  });
-
-  test('Prune all images', async ({ navigationBar }) => {
-    test.setTimeout(240_000);
-
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    for (const image of imageList) {
       await imagesPage.pullImage(helloContainer);
       await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
-        .toBeTruthy();
+      await playExpect.poll(async () => await imagesPage.waitForImageExists(helloContainer)).toBeTruthy();
 
-      await imagesPage.renameImage(helloContainer, image);
+      const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
+      imagesPage = await imageDetailPage.deleteImage();
+
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageDelete(helloContainer, 60_000), { timeout: 0 })
+        .toBeTruthy();
+      playExpect(await imagesPage.waitForImageExists('quay.io/podman/hi')).toBe(true);
+    });
+
+    test('Cancel build image', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const buildImagePage = await imagesPage.openBuildImage();
+      await playExpect(buildImagePage.heading).toBeVisible();
+      const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
+      const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
+
+      await buildImagePage.cancelBuild(
+        'cancel-build-image-test',
+        dockerfilePath,
+        contextDirectory,
+        [ArchitectureType.Default],
+        { cancelAfterTimeout: 20 },
+      );
+    });
+
+    test('Build image', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const buildImagePage = await imagesPage.openBuildImage();
+      await playExpect(buildImagePage.heading).toBeVisible();
+      const dockerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'test-containerfile');
+      const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
+
+      imagesPage = await buildImagePage.buildImage('build-image-test', dockerfilePath, contextDirectory);
+      playExpect(await imagesPage.waitForImageExists('docker.io/library/build-image-test')).toBeTruthy();
+
+      const imageDetailsPage = await imagesPage.openImageDetails('docker.io/library/build-image-test');
+      await playExpect(imageDetailsPage.heading).toBeVisible();
+      imagesPage = await imageDetailsPage.deleteImage();
+      playExpect(await imagesPage.waitForImageDelete('docker.io/library/build-image-test')).toBeTruthy();
+    });
+
+    test('Build image with stage2 target from staged Containerfile', async ({ navigationBar }) => {
+      test.setTimeout(180_000);
+
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const buildImagePage = await imagesPage.openBuildImage();
+      await playExpect(buildImagePage.heading).toBeVisible();
+      const containerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'staged_build.yaml');
+      const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
+
+      imagesPage = await buildImagePage.buildImage(
+        'staged-build-stage2-test',
+        containerfilePath,
+        contextDirectory,
+        [ArchitectureType.Default],
+        120_000,
+        'stage2',
+      );
+      playExpect(await imagesPage.waitForImageExists('docker.io/library/staged-build-stage2-test')).toBeTruthy();
+
+      const imageDetailsPage = await imagesPage.openImageDetails('docker.io/library/staged-build-stage2-test');
+      await playExpect(imageDetailsPage.heading).toBeVisible();
+      imagesPage = await imageDetailsPage.deleteImage();
+      playExpect(await imagesPage.waitForImageDelete('docker.io/library/staged-build-stage2-test')).toBeTruthy();
+    });
+
+    test('Prune all images', async ({ navigationBar }) => {
+      test.setTimeout(240_000);
+
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      for (const image of imageList) {
+        await imagesPage.pullImage(helloContainer);
+        await playExpect(imagesPage.heading).toBeVisible();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
+          .toBeTruthy();
+
+        await imagesPage.renameImage(helloContainer, image);
+        await playExpect(imagesPage.heading).toBeVisible();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
+          .toBeTruthy();
+      }
+
+      await imagesPage.pruneImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      for (const image of imageList) {
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageDelete(image, 180_000), { timeout: 0 })
+          .toBeTruthy();
+      }
+    });
+
+    test('Prune untagged images', async ({ navigationBar }) => {
+      test.setTimeout(240_000);
+
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      for (const image of imageList) {
+        await imagesPage.pullImage(helloContainer);
+        await playExpect(imagesPage.heading).toBeVisible();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
+          .toBeTruthy();
+
+        await imagesPage.renameImage(helloContainer, image);
+        await playExpect(imagesPage.heading).toBeVisible();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
+          .toBeTruthy();
+      }
+
+      await imagesPage.pullImage(imageToSearch);
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
+        .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 120_000), { timeout: 0 })
         .toBeTruthy();
-    }
 
-    await imagesPage.pruneImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    for (const image of imageList) {
+      await untagImagesFromPodman(imageList[0]);
       await playExpect
-        .poll(async () => await imagesPage.waitForImageDelete(image, 180_000), { timeout: 0 })
+        .poll(async () => await imagesPage.waitForImageExists('<none>', 60_000), { timeout: 0 })
         .toBeTruthy();
-    }
+
+      await imagesPage.pruneUntaggedImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageDelete('<none>', 60_000), { timeout: 0 })
+        .toBeTruthy();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 60_000), { timeout: 0 })
+        .toBeTruthy();
+
+      await imagesPage.deleteAllUnusedImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
+        .toBeTruthy();
+    });
   });
-
-  test('Prune untagged images', async ({ navigationBar }) => {
-    test.setTimeout(240_000);
-
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    for (const image of imageList) {
-      await imagesPage.pullImage(helloContainer);
-      await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
-        .toBeTruthy();
-
-      await imagesPage.renameImage(helloContainer, image);
-      await playExpect(imagesPage.heading).toBeVisible();
-      await playExpect
-        .poll(async () => await imagesPage.waitForImageExists(image, 10_000), { timeout: 0 })
-        .toBeTruthy();
-    }
-
-    await imagesPage.pullImage(imageToSearch);
-    await playExpect(imagesPage.heading).toBeVisible();
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 120_000), { timeout: 0 })
-      .toBeTruthy();
-
-    await untagImagesFromPodman(imageList[0]);
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageExists('<none>', 60_000), { timeout: 0 })
-      .toBeTruthy();
-
-    await imagesPage.pruneUntaggedImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageDelete('<none>', 60_000), { timeout: 0 })
-      .toBeTruthy();
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 60_000), { timeout: 0 })
-      .toBeTruthy();
-
-    await imagesPage.deleteAllUnusedImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
-      .toBeTruthy();
-  });
-});

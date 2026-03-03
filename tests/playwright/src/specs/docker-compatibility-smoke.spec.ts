@@ -46,56 +46,57 @@ test.afterAll(async ({ runner, page }) => {
 //Feature unstable on mac and linux atm
 test.skip(!isWindows, 'Testing only on Windows');
 
-test.describe.serial('Verify docker compatibility feature', { tag: '@smoke' }, () => {
-  test('Enable the docker compatibility experimental feature', async ({ navigationBar, page }) => {
-    //Verify Settings
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
+test.describe
+  .serial('Verify docker compatibility feature', { tag: '@smoke' }, () => {
+    test('Enable the docker compatibility experimental feature', async ({ navigationBar, page }) => {
+      //Verify Settings
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
 
-    const DCLink = settingsBar.getLinkLocatorByHref('/preferences/docker-compatibility');
-    await playExpect(DCLink).not.toBeVisible();
+      const DCLink = settingsBar.getLinkLocatorByHref('/preferences/docker-compatibility');
+      await playExpect(DCLink).not.toBeVisible();
 
-    //Enable the feature
-    await setDockerCompatibilityFeature(page, true);
-  });
-  test('Verify Docker Compatibility page', async ({ page }) => {
-    const settingsBar = new SettingsBar(page);
-    const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
-    await playExpect(dockerCompatibilityPage.heading).toBeVisible();
-    await playExpect.poll(async () => await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
-    await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
-  });
-  test('Verify socket reachability is responding to podman machine status', async ({ page }) => {
-    test.setTimeout(180_000);
-    const settingsBar = new SettingsBar(page);
-    await settingsBar.openTabPage(ResourcesPage);
-    const podmanMachineDetails = new PodmanMachineDetails(page, defaultMachine);
-    await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
-    await podmanMachineDetails.podmanMachineStopButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-      timeout: 60_000,
+      //Enable the feature
+      await setDockerCompatibilityFeature(page, true);
     });
-
-    const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
-    await playExpect
-      .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
-      .toBeFalsy();
-    await playExpect(dockerCompatibilityPage.serverInformationBox).not.toBeVisible();
-
-    await settingsBar.openTabPage(ResourcesPage);
-    await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
-    await podmanMachineDetails.podmanMachineStartButton.click();
-    await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
-      timeout: 120_000,
+    test('Verify Docker Compatibility page', async ({ page }) => {
+      const settingsBar = new SettingsBar(page);
+      const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
+      await playExpect(dockerCompatibilityPage.heading).toBeVisible();
+      await playExpect.poll(async () => await dockerCompatibilityPage.socketIsReachable()).toBeTruthy();
+      await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
     });
+    test('Verify socket reachability is responding to podman machine status', async ({ page }) => {
+      test.setTimeout(180_000);
+      const settingsBar = new SettingsBar(page);
+      await settingsBar.openTabPage(ResourcesPage);
+      const podmanMachineDetails = new PodmanMachineDetails(page, defaultMachine);
+      await playExpect(podmanMachineDetails.podmanMachineStopButton).toBeEnabled();
+      await podmanMachineDetails.podmanMachineStopButton.click();
+      await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
+        timeout: 60_000,
+      });
 
-    await settingsBar.openTabPage(DockerCompatibilityPage);
-    await playExpect
-      .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
-      .toBeTruthy();
-    await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
+      const dockerCompatibilityPage = await settingsBar.openTabPage(DockerCompatibilityPage);
+      await playExpect
+        .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
+        .toBeFalsy();
+      await playExpect(dockerCompatibilityPage.serverInformationBox).not.toBeVisible();
+
+      await settingsBar.openTabPage(ResourcesPage);
+      await playExpect(podmanMachineDetails.podmanMachineStartButton).toBeEnabled();
+      await podmanMachineDetails.podmanMachineStartButton.click();
+      await playExpect(podmanMachineDetails.podmanMachineStatus).toHaveText(ResourceElementState.Running, {
+        timeout: 120_000,
+      });
+
+      await settingsBar.openTabPage(DockerCompatibilityPage);
+      await playExpect
+        .poll(async () => await dockerCompatibilityPage.socketIsReachable(), { timeout: 60_000 })
+        .toBeTruthy();
+      await playExpect(dockerCompatibilityPage.serverInformationBox).toBeVisible();
+    });
+    test('Disable docker compatibility', async ({ page }) => {
+      await setDockerCompatibilityFeature(page, false);
+    });
   });
-  test('Disable docker compatibility', async ({ page }) => {
-    await setDockerCompatibilityFeature(page, false);
-  });
-});
