@@ -1022,8 +1022,8 @@ importers:
         specifier: 10.1.0
         version: 10.1.0
       eslint-plugin-storybook:
-        specifier: 10.2.13
-        version: 10.2.13(eslint@9.39.2(jiti@2.6.1))(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3)
+        specifier: 10.2.14
+        version: 10.2.14(eslint@9.39.2(jiti@2.6.1))(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3)
       eslint-plugin-svelte:
         specifier: ^3.15.0
         version: 3.15.0(eslint@9.39.2(jiti@2.6.1))(svelte@5.53.6)
@@ -5476,8 +5476,8 @@ packages:
   brace-expansion@2.0.2:
     resolution: {integrity: sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==}
 
-  brace-expansion@5.0.3:
-    resolution: {integrity: sha512-fy6KJm2RawA5RcHkLa1z/ScpBeA762UF9KmZQxwIbDtRJrgLzM10depAiEQ+CXYcoiqW1/m96OAAoke2nE9EeA==}
+  brace-expansion@5.0.4:
+    resolution: {integrity: sha512-h+DEnpVvxmfVefa4jFbCf5HdH5YMDXRsmKflpf1pILZWRFlTbJpxeU55nJl4Smt5HQaGzg1o6RHFPJaOqnmBDg==}
     engines: {node: 18 || 20 || >=22}
 
   braces@3.0.3:
@@ -7018,11 +7018,11 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0 || ^10.0.0
 
-  eslint-plugin-storybook@10.2.13:
-    resolution: {integrity: sha512-ftNfZVL5zXhGMPEy/7PTCEriVH0zCBI89uiYYgSSTtM1b4l++VP+/MzJ17U1R1/jgENsp9LJm+jwRJnViv79RQ==}
+  eslint-plugin-storybook@10.2.14:
+    resolution: {integrity: sha512-iFHN+hs2DQsY0KZssb9Dse5MVFT22E/f6BK9bShGq21TXv/z2+ix72NfIFTWg3sLFoEXr18uGWZiM5e3jt1EqQ==}
     peerDependencies:
       eslint: '>=8'
-      storybook: ^10.2.13
+      storybook: ^10.2.14
 
   eslint-plugin-svelte@3.15.0:
     resolution: {integrity: sha512-QKB7zqfuB8aChOfBTComgDptMf2yxiJx7FE04nneCmtQzgTHvY8UJkuh8J2Rz7KB9FFV9aTHX6r7rdYGvG8T9Q==}
@@ -14820,7 +14820,7 @@ snapshots:
       debug: 4.4.3
       dir-compare: 4.2.0
       fs-extra: 11.3.3
-      minimatch: 9.0.8
+      minimatch: 9.0.9
       plist: 3.1.0
     transitivePeerDependencies:
       - supports-color
@@ -17059,8 +17059,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.55.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.55.0(typescript@5.9.3)
-      '@typescript-eslint/types': 8.55.0
+      '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@5.9.3)
+      '@typescript-eslint/types': 8.56.1
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -17171,7 +17171,7 @@ snapshots:
       '@typescript-eslint/types': 8.55.0
       '@typescript-eslint/visitor-keys': 8.55.0
       debug: 4.4.3
-      minimatch: 9.0.8
+      minimatch: 9.0.9
       semver: 7.7.4
       tinyglobby: 0.2.15
       ts-api-utils: 2.4.0(typescript@5.9.3)
@@ -18255,7 +18255,7 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
 
-  brace-expansion@5.0.3:
+  brace-expansion@5.0.4:
     dependencies:
       balanced-match: 4.0.4
 
@@ -20074,7 +20074,7 @@ snapshots:
       ts-api-utils: 2.4.0(typescript@5.9.3)
       typescript: 5.9.3
 
-  eslint-plugin-storybook@10.2.13(eslint@9.39.2(jiti@2.6.1))(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3):
+  eslint-plugin-storybook@10.2.14(eslint@9.39.2(jiti@2.6.1))(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3):
     dependencies:
       '@typescript-eslint/utils': 8.56.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.39.2(jiti@2.6.1)
@@ -20778,7 +20778,7 @@ snapshots:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 3.4.3
-      minimatch: 9.0.8
+      minimatch: 9.0.9
       minipass: 7.1.2
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
@@ -22802,11 +22802,11 @@ snapshots:
 
   minimatch@10.2.1:
     dependencies:
-      brace-expansion: 5.0.3
+      brace-expansion: 5.0.4
 
   minimatch@10.2.4:
     dependencies:
-      brace-expansion: 5.0.3
+      brace-expansion: 5.0.4
 
   minimatch@3.1.2:
     dependencies:
@@ -22830,7 +22830,7 @@ snapshots:
 
   minimatch@9.0.8:
     dependencies:
-      brace-expansion: 5.0.3
+      brace-expansion: 5.0.4
 
   minimatch@9.0.9:
     dependencies:
