@@ -30,7 +30,7 @@ export class PullImagePage extends BasePage {
   readonly imageNameInput: Locator;
   readonly tabContent: Locator;
   readonly searchResultsTable: Locator;
-  readonly doneButton: Locator;
+  readonly closeButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -51,7 +51,7 @@ export class PullImagePage extends BasePage {
       exact: true,
     });
     this.searchResultsTable = this.tabContent.getByRole('row');
-    this.doneButton = page.getByRole('button', { name: 'Done', exact: true });
+    this.closeButton = this.tabContent.getByRole('button', { name: 'Close', exact: true });
   }
 
   async pullImage(imageName: string, tag = '', timeout = 60_000): Promise<ImagesPage> {
@@ -61,8 +61,8 @@ export class PullImagePage extends BasePage {
       await playExpect(this.pullImageButton).toBeEnabled();
       await this.pullImageButton.click();
 
-      await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
-      await this.doneButton.click();
+      await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
+      await this.closeButton.click();
       return new ImagesPage(this.page);
     });
   }
@@ -148,8 +148,8 @@ export class PullImagePage extends BasePage {
       await playExpect(this.pullImageButton).toBeEnabled();
       await this.pullImageButton.click();
 
-      await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
-      await this.doneButton.click();
+      await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
+      await this.closeButton.click();
       return new ImagesPage(this.page);
     });
   }
