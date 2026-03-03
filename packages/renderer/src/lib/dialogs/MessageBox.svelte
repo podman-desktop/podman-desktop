@@ -24,6 +24,8 @@ let footerMarkdownDescription: string | undefined = $state();
 
 let display = $state(false);
 
+const DANGER_TYPE = 'danger';
+
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
   currentId = options?.id || 0;
@@ -66,15 +68,14 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
     defaultId = 0;
   }
 
-  // move cancel button to the start/left and default button to the end/right
+  // default layout: cancel at start/left, default at end/right
+  // danger layout: reverse it (default at start/left, cancel at end/right)
+  const firstId = type === DANGER_TYPE ? defaultId : cancelId;
+  const lastId = type === DANGER_TYPE ? cancelId : defaultId;
   buttonOrder.sort((a, b) => {
-    if (a === cancelId || b === defaultId) {
-      return -1;
-    } else if (a === defaultId || b === cancelId) {
-      return 1;
-    } else {
-      return a - b;
-    }
+    if (a === firstId || b === lastId) return -1;
+    if (a === lastId || b === firstId) return 1;
+    return a - b;
   });
 
   display = true;
@@ -107,7 +108,9 @@ async function onClose(): Promise<void> {
 
 function getButtonType(b: boolean): ButtonType {
   // eslint-disable-next-line sonarjs/no-selector-parameter
-  if (b) {
+  if (b && type === DANGER_TYPE) {
+    return 'danger';
+  } else if (b) {
     return 'primary';
   } else {
     return 'secondary';
@@ -119,7 +122,7 @@ function getButtonType(b: boolean): ButtonType {
   <Dialog title={title} onclose={onClose}>
     {#snippet icon()}
       
-        {#if type === 'error'}
+        {#if type === 'error' || type === DANGER_TYPE}
           <Icon class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
         {:else if type === 'warning'}
           <Icon class="h-4 w-4 text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
