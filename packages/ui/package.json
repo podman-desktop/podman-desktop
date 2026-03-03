@@ -149,7 +149,7 @@
     "svelte-fa": "^4.0.0"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.7.5",
+    "@floating-ui/dom": "^1.7.6",
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@fortawesome/free-brands-svg-icons": "^7.2.0",
     "@fortawesome/free-regular-svg-icons": "^7.2.0",
