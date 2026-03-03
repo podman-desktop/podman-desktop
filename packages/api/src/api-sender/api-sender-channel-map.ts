@@ -67,6 +67,7 @@ export interface ApiSenderChannelMap {
   'extensions-development-folders-changed': never;
   'extensions-started': never;
   'extensions-updated': never;
+  'feature-registry:features-updated': string[];
   'font-update': never;
   'icon-update': never;
   'image-build-event': string;
