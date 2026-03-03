@@ -1,9 +1,13 @@
 <script lang="ts">
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faArrowLeft, faArrowRight, faBackward, faForward } from '@fortawesome/free-solid-svg-icons';
+import { Dropdown } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import type { Component } from 'svelte';
 import { onMount } from 'svelte';
+import { get } from 'svelte/store';
 
-import HistoryDropdown from '/@/lib/ui/HistoryDropdown.svelte';
+import { isDark } from '/@/stores/appearance';
 import {
   BACK,
   type Direction,
@@ -14,6 +18,7 @@ import {
   goForward,
   goToHistoryIndex,
   type HistoryEntry,
+  type HistoryEntryIcon,
   navigationHistory,
 } from '/@/stores/navigation-history.svelte';
 
@@ -28,13 +33,65 @@ let { class: className = '' }: Props = $props();
 let showDropdown: Direction | undefined = $state(undefined);
 let dropdownEntries: HistoryEntry[] = $state([]);
 let timeout: ReturnType<typeof setTimeout> | undefined = $state(undefined);
+let navContainer: HTMLElement;
 
 let canGoBack = $derived(navigationHistory.index > 0);
 let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
+
+interface NavButton {
+  direction: Direction;
+  icon: IconDefinition | Component | string;
+  label: string;
+  ariaLabel: string;
+  canNavigate: () => boolean;
+}
+const navButtons: NavButton[] = [
+  {
+    direction: BACK,
+    icon: faArrowLeft,
+    label: 'Back (hold for history)',
+    ariaLabel: 'Back history',
+    canNavigate: (): boolean => canGoBack,
+  },
+  {
+    direction: FORWARD,
+    icon: faArrowRight,
+    label: 'Forward (hold for history)',
+    ariaLabel: 'Forward history',
+    canNavigate: (): boolean => canGoForward,
+  },
+];
 let isMac = $derived((await window.getOsPlatform()) === 'darwin');
 
+function resolveIcon(
+  icon: HistoryEntryIcon | undefined,
+  fallback: IconDefinition,
+): IconDefinition | Component | string {
+  if (!icon) return fallback;
+  if (icon.iconComponent) return icon.iconComponent;
+  if (icon.faIcon) return icon.faIcon.definition;
+  if (icon.iconImage) {
+    if (typeof icon.iconImage === 'string') return icon.iconImage;
+    return get(isDark) ? icon.iconImage.dark : icon.iconImage.light;
+  }
+  return fallback;
+}
+
+function entriesToOptions(
+  entries: HistoryEntry[],
+  fallback: IconDefinition,
+): { value: string; label: string; icon: IconDefinition | Component | string }[] {
+  return entries.map(entry => ({
+    value: String(entry.index),
+    label: entry.name,
+    icon: resolveIcon(entry.icon, fallback),
+  }));
+}
+
+let dropdownOptions = $derived(entriesToOptions(dropdownEntries, showDropdown === BACK ? faBackward : faForward));
+
+// Handle mouse buttons 3/4 for back/forward
 function handleGlobalMouseUp(event: MouseEvent): void {
-  // Handle mouse buttons 3/4 for back/forward
   if (event.button === 3) {
     event.preventDefault();
     goBack();
@@ -59,10 +116,10 @@ function onClick(direction: Direction): void {
   }
 }
 
-function selectEntry(index: number): void {
+function handleHistorySelect(val: string): void {
   window.telemetryTrack('navigation.historySelect', { direction: showDropdown }).catch(console.error);
   closeDropdown();
-  goToHistoryIndex(index);
+  goToHistoryIndex(Number(val));
 }
 
 function closeDropdown(): void {
@@ -71,8 +128,7 @@ function closeDropdown(): void {
 }
 
 function handleClickOutside(event: MouseEvent): void {
-  const target = event.target as HTMLElement;
-  if (!target.closest('.history-dropdown')) {
+  if (showDropdown && navContainer && !navContainer.contains(event.target as Node)) {
     closeDropdown();
   }
 }
@@ -150,34 +206,28 @@ onMount(() => {
 </script>
 
 <div
+    bind:this={navContainer}
     class="relative flex items-center gap-1 text-[color:var(--pd-global-nav-icon)] {className}"
     style="-webkit-app-region: none;">
-    <button
-      class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
-      title="Back (hold for history)"
-      aria-label="Back (hold for history)"
-      onclick={onClick.bind(undefined, BACK)}
-      disabled={!canGoBack}
-      {@attach longPress(onLongPress.bind(undefined, BACK))}>
-      <Icon icon={faArrowLeft} />
-    </button>
-    <HistoryDropdown
-      show={showDropdown === BACK}
-      entries={dropdownEntries}
-      fallbackIcon={faBackward}
-      onSelectEntry={selectEntry} />
-    <button
-      class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
-      title="Forward (hold for history)"
-      aria-label="Forward (hold for history)"
-      onclick={onClick.bind(undefined, FORWARD)}
-      disabled={!canGoForward}
-      {@attach longPress(onLongPress.bind(undefined, FORWARD))}>
-      <Icon icon={faArrowRight} />
-    </button>
-    <HistoryDropdown
-      show={showDropdown === FORWARD}
-      entries={dropdownEntries}
-      fallbackIcon={faForward}
-      onSelectEntry={selectEntry} />
+    {#each navButtons as btn (btn.direction)}
+      <div class="relative">
+        <button
+          class="h-[25px] w-[25px] flex place-items-center justify-center hover:rounded hover:bg-[var(--pd-titlebar-hover-bg)] disabled:opacity-30 disabled:cursor-default disabled:hover:bg-transparent"
+          title={btn.label}
+          aria-label={btn.label}
+          onclick={onClick.bind(undefined, btn.direction)}
+          disabled={!btn.canNavigate()}
+          {@attach longPress(onLongPress.bind(undefined, btn.direction))}>
+          <Icon icon={btn.icon} />
+        </button>
+        <Dropdown
+          triggerless
+          selectOnMouseUp
+          opened={showDropdown === btn.direction}
+          options={dropdownOptions}
+          ariaLabel={btn.ariaLabel}
+          onChange={handleHistorySelect}
+          class="absolute left-0 top-full z-50 mt-1" />
+      </div>
+    {/each}
 </div>
