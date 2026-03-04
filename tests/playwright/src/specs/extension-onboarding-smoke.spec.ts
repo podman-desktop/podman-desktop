@@ -161,6 +161,14 @@ test.describe.serial('Verify onboarding experience for compose versioning', { ta
 
     await welcomePage.otherVersionButton.click();
 
+    const appeared = await welcomePage.dropDownDialog
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!appeared) {
+      await welcomePage.otherVersionButton.click();
+    }
+
     await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
     await playExpect(welcomePage.latestVersionFromDropDown).toBeEnabled();
     await welcomePage.latestVersionFromDropDown.click();
