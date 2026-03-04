@@ -102,9 +102,16 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     await onboardingPage.nextStepButton.click();
 
     const onboardigLocalPage = new ComposeLocalInstallPage(page);
-    await playExpect(onboardigLocalPage.onboardingStatusMessage).toHaveText('Compose successfully Downloaded', {
-      timeout: 50000,
+    const downloadSuccess = onboardigLocalPage.onboardingStatusMessage.filter({
+      hasText: 'Compose successfully Downloaded',
     });
+    const rateLimitExceeded = page.getByText('API rate limit exceeded');
+
+    await playExpect(downloadSuccess.or(rateLimitExceeded)).toBeVisible({ timeout: 50_000 });
+
+    if (await rateLimitExceeded.isVisible()) {
+      test.skip(true, 'Rate limit exceeded; skipping compose download check');
+    }
 
     await onboardingPage.cancelSetupButtion.click();
     const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
