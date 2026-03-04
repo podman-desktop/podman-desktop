@@ -20,7 +20,6 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
@@ -31,7 +30,7 @@ import ExtensionList from './ExtensionList.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 });
 
 export const aFakeExtension: CatalogExtension = {
@@ -102,10 +101,10 @@ test('Expect to see extensions', async () => {
 
   render(ExtensionList);
 
-  await tick();
-
-  const headingExtensions = screen.getByRole('heading', { name: 'extensions' });
-  expect(headingExtensions).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const headingExtensions = screen.getByRole('heading', { name: 'extensions' });
+    expect(headingExtensions).toBeInTheDocument();
+  });
 
   // get first extension
   const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
@@ -130,10 +129,12 @@ test('Expect to see empty screen on extension page only', async () => {
 
   render(ExtensionList, { searchTerm: 'A' });
 
-  await tick();
+  let title: HTMLElement | null;
 
-  let title = screen.queryByText(`No extensions matching 'A' found`);
-  expect(title).toBeInTheDocument();
+  await vi.waitFor(() => {
+    title = screen.queryByText(`No extensions matching 'A' found`);
+    expect(title).toBeInTheDocument();
+  });
 
   // click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
@@ -149,14 +150,16 @@ test('Expect to see empty screen on catalog page only', async () => {
 
   render(ExtensionList, { searchTerm: 'A' });
 
-  await tick();
+  let title: HTMLElement | null;
 
-  let title = screen.queryByText(`No extensions matching 'A' found`);
-  expect(title).not.toBeInTheDocument();
+  await vi.waitFor(async () => {
+    title = screen.queryByText(`No extensions matching 'A' found`);
+    expect(title).not.toBeInTheDocument();
 
-  // click on the catalog
-  const catalogTab = screen.getByRole('button', { name: 'Catalog' });
-  await fireEvent.click(catalogTab);
+    // click on the catalog
+    const catalogTab = screen.getByRole('button', { name: 'Catalog' });
+    await fireEvent.click(catalogTab);
+  });
 
   title = screen.queryByText(`No extensions matching 'A' found`);
   expect(title).toBeInTheDocument();
@@ -168,10 +171,12 @@ test('Expect to see empty screens on both pages', async () => {
 
   render(ExtensionList, { searchTerm: 'foo' });
 
-  await tick();
+  let title: HTMLElement | null;
 
-  let title = screen.getByText(`No extensions matching 'foo' found`);
-  expect(title).toBeInTheDocument();
+  await vi.waitFor(() => {
+    title = screen.getByText(`No extensions matching 'foo' found`);
+    expect(title).toBeInTheDocument();
+  });
 
   // click on the catalog
   const catalogTab = screen.getByRole('button', { name: 'Catalog' });
@@ -187,10 +192,10 @@ test('Search extension page searches also description', async () => {
 
   render(ExtensionList, { searchTerm: 'bar' });
 
-  await tick();
-
-  const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
-  expect(myExtension1).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
+    expect(myExtension1).toBeInTheDocument();
+  });
 
   // second extension should not be there as only in catalog (not installed) and doesn't have "bar" in the description
   const extensionIdB = screen.queryByRole('group', { name: 'B Extension' });
@@ -212,11 +217,11 @@ test('Search catalog page searches also description', async () => {
 
   render(ExtensionList, { searchTerm: 'bar' });
 
-  await tick();
-
-  // Click on the catalog
-  const catalogTab = screen.getByRole('button', { name: 'Catalog' });
-  await fireEvent.click(catalogTab);
+  await vi.waitFor(async () => {
+    // Click on the catalog
+    const catalogTab = screen.getByRole('button', { name: 'Catalog' });
+    await fireEvent.click(catalogTab);
+  });
 
   // Verify that the extension containing "bar" in the description is displayed
   const myExtension1 = screen.getByRole('group', { name: 'A Extension' });
@@ -231,13 +236,15 @@ test('Expect to see local extensions tab content', async () => {
   catalogExtensionInfos.set([]);
   extensionInfos.set([]);
 
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+
   render(ExtensionList);
 
-  await tick();
-
-  // select the local extensions tab
-  const localModeTab = screen.getByRole('button', { name: 'Local Extensions' });
-  await fireEvent.click(localModeTab);
+  await vi.waitFor(async () => {
+    // select the local extensions tab
+    const localModeTab = screen.getByRole('button', { name: 'Local Extensions' });
+    await fireEvent.click(localModeTab);
+  });
 
   // expect to see empty screen
   const emptyText = screen.getByText('Enable Preferences > Extensions > Development Mode to test local extensions');
@@ -250,11 +257,11 @@ test('Switching tabs keeps only terms in search term', async () => {
 
   render(ExtensionList, { searchTerm: 'bar category:bar not:installed' });
 
-  await tick();
-
-  // Click on the catalog
-  const catalogTab = screen.getByRole('button', { name: 'Catalog' });
-  await fireEvent.click(catalogTab);
+  await vi.waitFor(async () => {
+    // Click on the catalog
+    const catalogTab = screen.getByRole('button', { name: 'Catalog' });
+    await fireEvent.click(catalogTab);
+  });
 
   // Verify that the extension containing "bar" in the description is displayed (which is not in bar category and is installed)
   // meaning that `category:bar not:installed` has been removed from search term
