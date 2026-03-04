@@ -388,10 +388,25 @@ export class ExtensionLoader implements IAsyncDisposable {
       },
     };
 
+    const allowCustomExtensions: IConfigurationNode = {
+      id: 'preferences.extensions',
+      title: 'Extensions',
+      type: 'object',
+      properties: {
+        ['extensions.customExtensions.enabled']: {
+          description: 'When Disabled, the `Install custom...` button in the extensions page will not show up',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
+      },
+    };
+
     this.configurationRegistry.registerConfigurations([
       maxActivationTimeConfiguration,
       disabledExtensionConfiguration,
       developmentModeExtensionConfiguration,
+      allowCustomExtensions,
     ]);
   }
 

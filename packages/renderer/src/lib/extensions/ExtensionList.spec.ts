@@ -264,11 +264,11 @@ test('Switching tabs keeps only terms in search term', async () => {
 
 test('Expect install custom button is visible', async () => {
   render(ExtensionList);
-  await tick();
 
-  const installCustomButton = screen.getByRole('button', { name: 'Install custom' });
-
-  expect(installCustomButton).toBeInTheDocument();
+  await vi.waitFor(() => {
+    const installCustomButton = screen.getByRole('button', { name: 'Install custom' });
+    expect(installCustomButton).toBeInTheDocument();
+  });
 });
 
 test('Expect install custom button to not be visible if extensions.customExtensions.enabled is false', async () => {
@@ -276,9 +276,8 @@ test('Expect install custom button to not be visible if extensions.customExtensi
 
   render(ExtensionList);
 
-  await tick();
-
-  const installCustomButton = screen.queryByRole('button', { name: 'Install custom' });
-
-  expect(installCustomButton).not.toBeInTheDocument();
+  await vi.waitFor(() => {
+    const installCustomButton = screen.queryByRole('button', { name: 'Install custom' });
+    expect(installCustomButton).not.toBeInTheDocument();
+  });
 });
