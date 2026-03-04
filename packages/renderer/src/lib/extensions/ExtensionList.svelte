@@ -28,6 +28,10 @@ let enableCustomExtensions = $derived(
   (await window.getConfigurationValue('extensions.customExtensions.enabled')) ?? true,
 );
 
+let enableLocalExtensions = $derived(
+  (await window.getConfigurationValue('extensions.localExtensions.enabled')) ?? true,
+);
+
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
   extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm),
 );
@@ -104,12 +108,14 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         changeScreen('catalog');
       }}
       selected={screen === 'catalog'}>Catalog</Button>
+    {#if enableLocalExtensions}
       <Button
-      type="tab"
-      on:click={(): void => {
-        changeScreen('development');
-      }}
-      selected={screen === 'development'}>Local Extensions</Button>
+        type="tab"
+        on:click={(): void => {
+          changeScreen('development');
+        }}
+        selected={screen === 'development'}>Local Extensions</Button>
+    {/if}
  {/snippet}
 
   {#snippet content()}
@@ -132,7 +138,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
           on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={filteredCatalogExtensions} />
-    {:else if screen === 'development'}
+    {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}
   </div>

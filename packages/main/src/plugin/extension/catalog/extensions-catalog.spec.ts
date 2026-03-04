@@ -163,6 +163,7 @@ const proxy: Proxy = {
 
 const configurationRegistry: ConfigurationRegistry = {
   getConfiguration: vi.fn(),
+  registerConfigurations: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
 const originalConsoleError = console.error;
@@ -397,4 +398,24 @@ test('Should use proxy object if proxySettings is undefined', () => {
   expect(options.agent?.http?.proxy.href).toBe('http://localhost/');
   // @ts-expect-error proxy property exists on https object
   expect(options.agent?.https?.proxy.href).toBe('https://localhost/');
+});
+
+test('should register local extensions enabled configuration property', () => {
+  extensionsCatalog.init();
+
+  expect(configurationRegistry.registerConfigurations).toHaveBeenCalledWith([
+    expect.objectContaining({
+      id: 'preferences.extensions',
+      title: 'Extensions',
+      type: 'object',
+      properties: expect.objectContaining({
+        'extensions.localExtensions.enabled': {
+          description: 'Show the local extensions tab.',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
+      }),
+    }),
+  ]);
 });
