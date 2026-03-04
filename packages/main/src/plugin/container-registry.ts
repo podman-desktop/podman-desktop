@@ -642,6 +642,30 @@ export class ContainerProviderRegistry {
   // Podman list images will prefer to use libpod API of the provider
   // before falling back to using the regular API
   async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+    // Timeout for provider image listing (in milliseconds)
+    const PROVIDER_TIMEOUT_MS = 30_000; // 30 seconds
+
+    // Helper function to add timeout to provider operations
+    function withTimeout<T>(
+      promise: Promise<T>,
+      timeoutMs: number,
+      providerName: string,
+      providerId: string,
+    ): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(`Provider ${providerName} (${providerId}): listing images timed out after ${timeoutMs}ms`),
+              ),
+            timeoutMs,
+          ),
+        ),
+      ]);
+    }
+
     // This gets all the available providers if no provider has been specified
     let providers: InternalContainerProvider[];
     if (options?.provider === undefined) {
@@ -661,12 +685,22 @@ export class ContainerProviderRegistry {
 
           // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
           if (provider.libpodApi && this.useLibpodApiForImageList()) {
-            fetchedImages = await provider.libpodApi.podmanListImages({
-              all: options?.all,
-              filters: options?.filters,
-            });
+            fetchedImages = await withTimeout(
+              provider.libpodApi.podmanListImages({
+                all: options?.all,
+                filters: options?.filters,
+              }),
+              PROVIDER_TIMEOUT_MS,
+              provider.name,
+              provider.id,
+            );
           } else if (provider.api) {
-            fetchedImages = await provider.api.listImages({ all: false });
+            fetchedImages = await withTimeout(
+              provider.api.listImages({ all: false }),
+              PROVIDER_TIMEOUT_MS,
+              provider.name,
+              provider.id,
+            );
           } else {
             console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
             return fetchedImages;
