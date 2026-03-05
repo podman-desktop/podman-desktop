@@ -394,7 +394,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       type: 'object',
       properties: {
         ['extensions.customExtensions.enabled']: {
-          description: 'When Disabled, the `Install custom...` button in the extensions page will not show up',
+          description: 'When disabled, the `Install custom...` button on the Extensions page will not appear.',
           type: 'boolean',
           default: true,
           hidden: true,
