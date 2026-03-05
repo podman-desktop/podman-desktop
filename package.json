@@ -182,7 +182,7 @@
     "xvfb-maybe": "^0.2.1"
   },
   "dependencies": {
-    "@segment/analytics-node": "^2.3.0",
+    "@segment/analytics-node": "^3.0.0",
     "chokidar": "^3.6.0",
     "express": "^5.2.1",
     "isomorphic-ws": "5.0.0",
