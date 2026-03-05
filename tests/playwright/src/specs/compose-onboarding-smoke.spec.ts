@@ -102,10 +102,12 @@ test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke'
     await onboardingPage.nextStepButton.click();
 
     const onboardigLocalPage = new ComposeLocalInstallPage(page);
-    const downloadSuccess = onboardigLocalPage.onboardingStatusMessage.filter({
-      hasText: 'Compose successfully Downloaded',
-    });
-    const rateLimitExceeded = page.getByText('API rate limit exceeded');
+    const downloadSuccess = onboardigLocalPage.onboardingStatusMessage
+      .filter({
+        hasText: 'Compose successfully Downloaded',
+      })
+      .first();
+    const rateLimitExceeded = page.getByText('API rate limit exceeded').first();
 
     await playExpect(downloadSuccess.or(rateLimitExceeded)).toBeVisible({ timeout: 50_000 });
 
