@@ -49,7 +49,8 @@ test.beforeAll(async ({ runner, page, statusBar }) => {
 });
 
 test.afterAll(async ({ runner }) => {
-  await runner.close();
+  test.setTimeout(120_000);
+  await runner.close(45_000);
 });
 
 test.describe.serial('Podman Desktop Update installation', { tag: '@update-install' }, () => {

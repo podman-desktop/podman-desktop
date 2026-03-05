@@ -41,7 +41,8 @@ test.beforeAll(async ({ page, runner, welcomePage }) => {
 });
 
 test.afterAll(async ({ runner }) => {
-  await runner.close();
+  test.setTimeout(120_000);
+  await runner.close(45_000);
 });
 
 test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@update-install' }, () => {
