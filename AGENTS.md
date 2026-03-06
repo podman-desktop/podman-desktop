@@ -187,6 +187,12 @@ Built-in extensions are in `extensions/` and follow the same API as external ext
 - Follow ESLint and Biome rules
 - Tailwind CSS for styling (no custom CSS unless necessary)
 
+### Commits & Pull requests
+
+- We use semantic commits (E.g. `feat(renderer): updating something`)
+- Every commit must be signed
+- AI assisted commit should be mentioned
+- Respect the GitHub template for the pull request body
 ## Resources
 
 - **Comprehensive guidelines:** [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
