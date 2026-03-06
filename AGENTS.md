@@ -120,8 +120,8 @@ packages/
 ├── main/              - Electron main process (backend)
 ├── renderer/          - Svelte UI (frontend)
 ├── ui/                - Shared UI components (@podman-desktop/ui-svelte)
-├── api/               - Extension API types (@podman-desktop/api)
-├── extension-api/     - Extension API implementation
+├── api/               - Types shared between the renderer, main and preloads packages
+├── extension-api/     - Extension API implementation (published as `@podman-desktop/api`)
 ├── preload/           - Main preload bridge
 ├── preload-docker-extension/  - Docker extension preload
 └── preload-webview/   - Webview preload
