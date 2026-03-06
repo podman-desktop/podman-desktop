@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-20265 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,33 @@
  ***********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 
-import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { app } from 'electron';
 
 /**
- * On macOS, startup on login is done via a plist file
- * that is installed in ~/Library/LaunchAgents
- * This class manages the creation and deletion of the plist file
+ * On macOS, startup on login is done via app.setLoginItemSettings().
+ * This uses the macOS SMAppService API, which properly registers
+ * the app bundle so that "Podman Desktop" is displayed in
+ * Login Items & Extensions (rather than "bash").
+ *
+ * Legacy installs used a LaunchAgent plist file — this class
+ * cleans it up when enabling or disabling.
  */
 export class MacosStartup {
-  private podmanDesktopBinaryPath;
-  private plistFile;
-  private configurationRegistry: IConfigurationRegistry;
+  private podmanDesktopBinaryPath: string;
+  private legacyPlistFile: string;
 
-  constructor(configurationRegistry: IConfigurationRegistry) {
-    this.configurationRegistry = configurationRegistry;
-
+  constructor() {
     // grab current path of the binary
     this.podmanDesktopBinaryPath = app.getPath('exe');
 
-    // Check if we already have a plist file ?
-    this.plistFile = path.resolve(app.getPath('home'), 'Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist');
+    // legacy plist file path (used before switching to app.setLoginItemSettings)
+    this.legacyPlistFile = path.resolve(
+      app.getPath('home'),
+      'Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist',
+    );
   }
 
   shouldEnable(): boolean {
@@ -57,60 +60,34 @@ export class MacosStartup {
   }
 
   async enable(): Promise<void> {
-    // Check the preferences for login.minimize has been enabled
-    // as this may change each time it's enabled (changed from true to false, etc.)
-    // it's also to make sure that settings weren't changed while async function was running
-    // so we check the configuration within the function
-    const preferencesConfig = this.configurationRegistry.getConfiguration('preferences');
-    const minimize = preferencesConfig.get<boolean>('login.minimize');
-    const minimizeSettings = minimize ? '--minimize' : '';
-
     // comes from a volume ? do nothing
     if (this.podmanDesktopBinaryPath.startsWith('/Volumes/')) {
       console.warn(`Cannot enable the start on login, running from a volume ${this.podmanDesktopBinaryPath}`);
       return;
     }
 
-    const stdoutPath = `${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stdout.log`;
-    const stderrPath = `${app.getPath('home')}/Library/Logs/Podman Desktop/launchd-stderr.log`;
+    // clean up legacy LaunchAgent plist file if it exists
+    await this.removeLegacyPlist();
 
-    // write the file
-    const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>io.podman_desktop.PodmanDesktop</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/bin/bash</string>
-        <string>-c</string>
-        <string>/usr/bin/truncate -s 0 '${stdoutPath}'; /usr/bin/truncate -s 0 '${stderrPath}'; '${this.podmanDesktopBinaryPath}' ${minimizeSettings}</string>
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>${stdoutPath}</string>
-    <key>StandardErrorPath</key>
-    <string>${stderrPath}</string>
-</dict>
-</plist>
-`;
+    app.setLoginItemSettings({
+      openAtLogin: true,
+    });
 
-    // ensure the parent directory of the plist file exists
-    await mkdir(path.dirname(this.plistFile), { recursive: true });
-
-    // write the file
-    await writeFile(this.plistFile, plistContent, 'utf-8');
-    console.info(
-      `Installing Podman Desktop startup file at ${this.plistFile} using ${this.podmanDesktopBinaryPath} location.`,
-    );
+    console.info(`Registered Podman Desktop as a login item using ${this.podmanDesktopBinaryPath} location.`);
   }
 
   async disable(): Promise<void> {
-    // remove the file at this.podmanDesktopBinaryPath only if it exists
-    if (existsSync(this.plistFile)) {
-      await unlink(this.plistFile);
+    // clean up legacy LaunchAgent plist file if it exists
+    await this.removeLegacyPlist();
+
+    app.setLoginItemSettings({
+      openAtLogin: false,
+    });
+  }
+
+  private async removeLegacyPlist(): Promise<void> {
+    if (existsSync(this.legacyPlistFile)) {
+      await unlink(this.legacyPlistFile);
     }
   }
 }
