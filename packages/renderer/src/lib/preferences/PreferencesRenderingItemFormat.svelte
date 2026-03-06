@@ -109,7 +109,11 @@ async function update(record: IConfigurationPropertyRecordedSchema): Promise<voi
       if (typeof recordValue === 'object') {
         settings = JSON.parse(JSON.stringify(recordValue));
       }
-      await window.updateConfigurationValue(record.id, settings, record.scope);
+      if (record.experimental) {
+        await window.updateExperimentalConfigurationValue(record.id, settings, record.scope);
+      } else {
+        await window.updateConfigurationValue(record.id, settings, record.scope);
+      }
     } catch (error) {
       invalidText = String(error);
       invalidRecord(invalidText);
