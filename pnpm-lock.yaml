@@ -117,8 +117,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 40.4.1
-        version: 40.4.1
+        specifier: 40.7.0
+        version: 40.7.0
       electron-builder:
         specifier: 26.7.0
         version: 26.7.0(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.7.0))
@@ -6769,6 +6769,11 @@ packages:
 
   electron@40.4.1:
     resolution: {integrity: sha512-N1ZXybQZL8kYemO8vAeh9nrk4mSvqlAO8xs0QCHkXIvRnuB/7VGwEehjvQbsU5/f4bmTKpG+2GQERe/zmKpudQ==}
+    engines: {node: '>= 12.20.55'}
+    hasBin: true
+
+  electron@40.7.0:
+    resolution: {integrity: sha512-oQe76S/3V1rcb0+i45hAxnCH8udkRZSaHUNwglzNAEKbB94LSJ1qwbFo8+uRc2UsYZgCqSIMRcyX40GyOkD+Xw==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -19725,6 +19730,14 @@ snapshots:
       new-github-issue-url: 1.1.0
 
   electron@40.4.1:
+    dependencies:
+      '@electron/get': 2.0.3
+      '@types/node': 24.10.11
+      extract-zip: 2.0.1
+    transitivePeerDependencies:
+      - supports-color
+
+  electron@40.7.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.11

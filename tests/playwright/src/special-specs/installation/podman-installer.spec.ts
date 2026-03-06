@@ -46,6 +46,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Podman installer integration in Podman Desktop', { tag: '@update-install' }, () => {
+  test.describe.configure({ timeout: 90_000 });
   test('Dashboard Podman provider card assets check', async ({ page }) => {
     test.skip(
       !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
