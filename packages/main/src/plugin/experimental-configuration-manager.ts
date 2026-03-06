@@ -20,10 +20,14 @@ import type * as containerDesktopAPI from '@podman-desktop/api';
 import { inject, injectable } from 'inversify';
 
 import { ConfigurationRegistry } from './configuration-registry.js';
+import { Telemetry } from './telemetry/telemetry.js';
 
 @injectable()
 export class ExperimentalConfigurationManager {
-  constructor(@inject(ConfigurationRegistry) private configurationRegistry: ConfigurationRegistry) {}
+  constructor(
+    @inject(ConfigurationRegistry) private configurationRegistry: ConfigurationRegistry,
+    @inject(Telemetry) private telemetry: Telemetry,
+  ) {}
 
   /**
    * Parse a configuration key into section and property
@@ -56,6 +60,8 @@ export class ExperimentalConfigurationManager {
     config: unknown,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
+    const enabled = typeof config === 'object' && config !== null;
+    this.telemetry.track('experimentalConfigurationUpdate', { key, enabled });
     await this.configurationRegistry.updateConfigurationValue(key, config, scope);
   }
 
