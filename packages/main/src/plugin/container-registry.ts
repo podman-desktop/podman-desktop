@@ -61,7 +61,9 @@ import type {
   VolumeInspectInfo,
   VolumeListInfo,
 } from '@podman-desktop/core-api';
+import { ContainerRegistrySettings, DEFAULT_PROVIDER_TIMEOUT } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type {
   ContainerCreateMountOption,
   ContainerCreateNetNSOption,
@@ -140,6 +142,25 @@ export class ContainerProviderRegistry {
 
     // setup listeners
     this.setupListeners();
+  }
+
+  init(): void {
+    const providerTimeoutConfiguration: IConfigurationNode = {
+      id: 'preferences.container',
+      title: 'Container',
+      type: 'object',
+      properties: {
+        [`${ContainerRegistrySettings.SectionName}.${ContainerRegistrySettings.ProviderTimeout}`]: {
+          description: 'Timeout in seconds for container provider image listing operations.',
+          type: 'number',
+          default: DEFAULT_PROVIDER_TIMEOUT,
+          minimum: 5,
+          maximum: 120,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([providerTimeoutConfiguration]);
   }
 
   protected containerProviders: Map<string, containerDesktopAPI.ContainerProviderConnection> = new Map();
@@ -642,8 +663,11 @@ export class ContainerProviderRegistry {
   // Podman list images will prefer to use libpod API of the provider
   // before falling back to using the regular API
   async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
-    // Timeout for provider image listing (in milliseconds)
-    const PROVIDER_TIMEOUT_MS = 30_000; // 30 seconds
+    // Get timeout from configuration
+    const timeoutSeconds = this.configurationRegistry
+      .getConfiguration(ContainerRegistrySettings.SectionName)
+      .get<number>(ContainerRegistrySettings.ProviderTimeout, DEFAULT_PROVIDER_TIMEOUT);
+    const PROVIDER_TIMEOUT_MS = timeoutSeconds * 1000;
 
     // Helper function to add timeout to provider operations
     function withTimeout<T>(

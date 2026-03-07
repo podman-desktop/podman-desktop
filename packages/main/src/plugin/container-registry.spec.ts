@@ -32,6 +32,7 @@ import type {
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '@podman-desktop/core-api/libpod';
 import Dockerode from 'dockerode';
 import moment from 'moment';
@@ -6299,5 +6300,47 @@ describe('getNetworkDrivers', () => {
     await expect(containerRegistry.getNetworkDrivers(nonexistentConnectionInfo)).rejects.toThrow(
       'no running provider for the matching container',
     );
+  });
+});
+
+describe('ContainerRegistrySettings', () => {
+  test('init should register provider timeout configuration', () => {
+    const registerConfigurationsMock = vi.fn();
+    const configRegistry = {
+      registerConfigurations: registerConfigurationsMock,
+    } as unknown as ConfigurationRegistry;
+
+    const proxy: Proxy = {
+      onDidStateChange: vi.fn(),
+      onDidUpdateProxy: vi.fn(),
+      isEnabled: vi.fn(),
+    } as unknown as Proxy;
+
+    const imageRegistry = new ImageRegistry(
+      {} as ApiSenderType,
+      { track: vi.fn() } as unknown as Telemetry,
+      {} as Certificates,
+      proxy,
+    );
+
+    const apiSender: ApiSenderType = {
+      send: vi.fn(),
+      receive: vi.fn(),
+    };
+
+    const containerProviderRegistry = new TestContainerProviderRegistry(apiSender, configRegistry, imageRegistry, {
+      track: vi.fn(),
+    } as unknown as Telemetry);
+
+    containerProviderRegistry.init();
+
+    expect(registerConfigurationsMock).toHaveBeenCalledOnce();
+    const registeredConfig = registerConfigurationsMock.mock.calls[0]?.[0]?.[0] as IConfigurationNode | undefined;
+    expect(registeredConfig?.id).toBe('preferences.container');
+    expect(registeredConfig?.properties?.['container.providerTimeout']).toBeDefined();
+    expect(registeredConfig?.properties?.['container.providerTimeout']?.type).toBe('number');
+    expect(registeredConfig?.properties?.['container.providerTimeout']?.default).toBe(30);
+    expect(registeredConfig?.properties?.['container.providerTimeout']?.minimum).toBe(5);
+    expect(registeredConfig?.properties?.['container.providerTimeout']?.maximum).toBe(120);
   });
 });
