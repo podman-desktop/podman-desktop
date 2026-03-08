@@ -21,16 +21,19 @@ import test, { expect as playExpect } from '@playwright/test';
 
 import { SettingsPage } from './settings-page';
 
+export enum PreferenceLabels {
+  APPEARANCE = 'Appearance',
+  FEEDBACK_DIALOG = 'Dialog',
+  TOAST = 'Toast',
+  ZOOM_LEVEL = 'Zoom Level',
+  EXIT_ON_CLOSE = ' Exit On Close',
+  LINE_HEIGHT = 'Line Height',
+}
+
 export class PreferencesPage extends SettingsPage {
   readonly heading: Locator;
   readonly searchbar: Locator;
   readonly kubePathInput: Locator;
-  readonly APPEARANCE_PREFERENCE_LABEL = 'Appearance';
-  readonly FEEDBACK_DIALOG_PREFERENCE_LABEL = 'Dialog';
-  readonly TOAST_PREFERENCE_LABEL = 'Toast';
-  readonly ZOOM_LEVEL_PREFERENCE_LABEL = 'Zoom Level';
-  readonly EXIT_ON_CLOSE_PREFERENCE_LABEL = ' Exit On Close';
-  readonly LINE_HEIGHT_PREFERENCE_LABEL = 'Line Height';
 
   constructor(page: Page) {
     super(page, 'Preferences');
@@ -61,7 +64,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getAppearancePreferenceValue(): Promise<string> {
-    const appearancePreferenceRow = this.getPreferenceRowByName(this.APPEARANCE_PREFERENCE_LABEL);
+    const appearancePreferenceRow = this.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
     await playExpect(appearancePreferenceRow).toBeAttached();
     await appearancePreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(appearancePreferenceRow).toBeVisible();
@@ -72,7 +75,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async setAppearancePreference(value: string): Promise<void> {
-    const appearancePreferenceRow = this.getPreferenceRowByName(this.APPEARANCE_PREFERENCE_LABEL);
+    const appearancePreferenceRow = this.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
     await playExpect(appearancePreferenceRow).toBeAttached();
     await appearancePreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(appearancePreferenceRow).toBeVisible();
@@ -89,7 +92,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getFeedbackDialogPreferenceValue(): Promise<boolean> {
-    const feedbackPreferenceRow = this.getPreferenceRowByName(this.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+    const feedbackPreferenceRow = this.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
     await playExpect(feedbackPreferenceRow).toBeAttached();
     await feedbackPreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(feedbackPreferenceRow).toBeVisible();
@@ -100,7 +103,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async toggleFeedbackDialogPreference(): Promise<void> {
-    const feedbackPreferenceRow = this.getPreferenceRowByName(this.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+    const feedbackPreferenceRow = this.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
     await playExpect(feedbackPreferenceRow).toBeAttached();
     await feedbackPreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(feedbackPreferenceRow).toBeVisible();
@@ -111,7 +114,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getToastPreferenceValue(): Promise<boolean> {
-    const toastPreferenceRow = this.getPreferenceRowByName(this.TOAST_PREFERENCE_LABEL);
+    const toastPreferenceRow = this.getPreferenceRowByName(PreferenceLabels.TOAST);
     await playExpect(toastPreferenceRow).toBeAttached();
     await toastPreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(toastPreferenceRow).toBeVisible();
@@ -122,7 +125,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getZoomLevelPreferenceValue(): Promise<string> {
-    const zoomLevelPreferenceRow = this.getPreferenceRowByName(this.ZOOM_LEVEL_PREFERENCE_LABEL);
+    const zoomLevelPreferenceRow = this.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
     await playExpect(zoomLevelPreferenceRow).toBeAttached();
     await zoomLevelPreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(zoomLevelPreferenceRow).toBeVisible();
@@ -133,7 +136,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async setZoomLevelPreference(value: string): Promise<void> {
-    const zoomLevelPreferenceRow = this.getPreferenceRowByName(this.ZOOM_LEVEL_PREFERENCE_LABEL);
+    const zoomLevelPreferenceRow = this.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
     await playExpect(zoomLevelPreferenceRow).toBeAttached();
     await zoomLevelPreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(zoomLevelPreferenceRow).toBeVisible();
@@ -144,7 +147,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getExitOnClosePreferenceValue(): Promise<boolean> {
-    const exitOnClosePreferenceRow = this.getPreferenceRowByName(this.EXIT_ON_CLOSE_PREFERENCE_LABEL);
+    const exitOnClosePreferenceRow = this.getPreferenceRowByName(PreferenceLabels.EXIT_ON_CLOSE);
     await playExpect(exitOnClosePreferenceRow).toBeAttached();
     await exitOnClosePreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(exitOnClosePreferenceRow).toBeVisible();
@@ -157,7 +160,7 @@ export class PreferencesPage extends SettingsPage {
   }
 
   async getLineHeightPreferenceValue(): Promise<string> {
-    const lineHeightPreferenceRow = this.getPreferenceRowByName(this.LINE_HEIGHT_PREFERENCE_LABEL);
+    const lineHeightPreferenceRow = this.getPreferenceRowByName(PreferenceLabels.LINE_HEIGHT);
     await playExpect(lineHeightPreferenceRow).toBeAttached();
     await lineHeightPreferenceRow.scrollIntoViewIfNeeded();
     await playExpect(lineHeightPreferenceRow).toBeVisible();

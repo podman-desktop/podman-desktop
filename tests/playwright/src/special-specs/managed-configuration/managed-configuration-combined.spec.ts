@@ -19,7 +19,7 @@
 import type { Locator } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { PreferencesPage } from '/@/model/pages/preferences-page';
+import { PreferenceLabels, PreferencesPage } from '/@/model/pages/preferences-page';
 import type { SettingsBar } from '/@/model/pages/settings-bar';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { test } from '/@/utility/fixtures';
@@ -56,10 +56,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       let appearanceRow: Locator;
       let value: string;
       test('Check Appearance preference state', async () => {
-        appearanceRow = preferencesPage.getPreferenceRowByName(preferencesPage.APPEARANCE_PREFERENCE_LABEL);
+        appearanceRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
         await playExpect(appearanceRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.APPEARANCE_PREFERENCE_LABEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.APPEARANCE);
         playExpect(isManaged).toBeFalsy();
 
         value = await preferencesPage.getAppearancePreferenceValue();
@@ -73,7 +73,7 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       });
       test.fail('Reset Appearance preference to default', async () => {
         // Fails because of https://github.com/podman-desktop/podman-desktop/issues/15242
-        await preferencesPage.resetPreference(preferencesPage.APPEARANCE_PREFERENCE_LABEL);
+        await preferencesPage.resetPreference(PreferenceLabels.APPEARANCE);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
         value = await preferencesPage.getAppearancePreferenceValue();
@@ -86,17 +86,17 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       let feedbackDialogRow: Locator;
       let value: boolean;
       test('Check Feedback Dialog preference state', async () => {
-        feedbackDialogRow = preferencesPage.getPreferenceRowByName(preferencesPage.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+        feedbackDialogRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
         await playExpect(feedbackDialogRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.FEEDBACK_DIALOG);
         playExpect(isManaged).toBeFalsy();
 
         value = await preferencesPage.getFeedbackDialogPreferenceValue();
         playExpect(value).toBe(false);
       });
       test('Reset Feedback Dialog preference to default', async () => {
-        await preferencesPage.resetPreference(preferencesPage.FEEDBACK_DIALOG_PREFERENCE_LABEL);
+        await preferencesPage.resetPreference(PreferenceLabels.FEEDBACK_DIALOG);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
         value = await preferencesPage.getFeedbackDialogPreferenceValue();
@@ -115,10 +115,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       let toastRow: Locator;
       let value: boolean;
       test('Check Toast preference state', async () => {
-        toastRow = preferencesPage.getPreferenceRowByName(preferencesPage.TOAST_PREFERENCE_LABEL);
+        toastRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.TOAST);
         await playExpect(toastRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.TOAST_PREFERENCE_LABEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.TOAST);
         playExpect(isManaged).toBeTruthy();
 
         value = await preferencesPage.getToastPreferenceValue();
@@ -139,10 +139,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       let zoomLevelRow: Locator;
       let value: string;
       test('Check Zoom Level preference state', async () => {
-        zoomLevelRow = preferencesPage.getPreferenceRowByName(preferencesPage.ZOOM_LEVEL_PREFERENCE_LABEL);
+        zoomLevelRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
         await playExpect(zoomLevelRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.ZOOM_LEVEL_PREFERENCE_LABEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.ZOOM_LEVEL);
         playExpect(isManaged).toBeFalsy();
 
         value = await preferencesPage.getZoomLevelPreferenceValue();
@@ -156,7 +156,7 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       });
       test.fail('Reset Zoom Level preference to default', async () => {
         // Fails because of https://github.com/podman-desktop/podman-desktop/issues/16000
-        await preferencesPage.resetPreference(preferencesPage.ZOOM_LEVEL_PREFERENCE_LABEL);
+        await preferencesPage.resetPreference(PreferenceLabels.ZOOM_LEVEL);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
         value = await preferencesPage.getZoomLevelPreferenceValue();
@@ -169,10 +169,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       let exitOnCloseRow: Locator;
       let value: boolean;
       test('Check Exit On Close preference state', async () => {
-        exitOnCloseRow = preferencesPage.getPreferenceRowByName(preferencesPage.EXIT_ON_CLOSE_PREFERENCE_LABEL);
+        exitOnCloseRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.EXIT_ON_CLOSE);
         await playExpect(exitOnCloseRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.EXIT_ON_CLOSE_PREFERENCE_LABEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.EXIT_ON_CLOSE);
         playExpect(isManaged).toBeTruthy();
 
         value = await preferencesPage.getExitOnClosePreferenceValue();
@@ -195,10 +195,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
       let lineHeightRow: Locator;
       let value: string;
       test('Check Line Height preference state', async () => {
-        lineHeightRow = preferencesPage.getPreferenceRowByName(preferencesPage.LINE_HEIGHT_PREFERENCE_LABEL);
+        lineHeightRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.LINE_HEIGHT);
         await playExpect(lineHeightRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(preferencesPage.LINE_HEIGHT_PREFERENCE_LABEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.LINE_HEIGHT);
         playExpect(isManaged).toBeTruthy();
 
         value = await preferencesPage.getLineHeightPreferenceValue();
