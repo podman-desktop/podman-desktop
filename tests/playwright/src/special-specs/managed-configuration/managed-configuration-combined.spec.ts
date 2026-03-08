@@ -54,12 +54,12 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Managed Configuration - preference verification', { tag: '@managed-configuration' }, () => {
+test.describe.serial('Managed Configuration - preferences', { tag: '@managed-configuration' }, () => {
   test.describe
-    .serial('Verify [user] Appearance preference', () => {
+    .serial('User preference: Appearance', () => {
       let appearanceRow: Locator;
       let value: string;
-      test('Check Appearance preference state', async () => {
+      test('Expected settings value', async () => {
         appearanceRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
         await playExpect(appearanceRow).toBeAttached();
 
@@ -69,13 +69,13 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
         playExpect(value).toBe('system');
       });
-      test('Change Appearance preference to dark', async () => {
+      test('Preference can be changed', async () => {
         await preferencesPage.setPreferenceDropdownValue(PreferenceLabels.APPEARANCE, 'dark');
 
         value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
         playExpect(value).toBe('dark');
       });
-      test('Reset Appearance preference to default', async () => {
+      test('Reset preference to default', async () => {
         await preferencesPage.resetPreference(PreferenceLabels.APPEARANCE);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
@@ -85,10 +85,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
     });
 
   test.describe
-    .serial('Verify [user + default] Feedback Dialog preference', () => {
+    .serial('User + Defaults preference: Feedback Dialog', () => {
       let feedbackDialogRow: Locator;
       let value: boolean;
-      test('Check Feedback Dialog preference state', async () => {
+      test('Expected settings value', async () => {
         feedbackDialogRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
         await playExpect(feedbackDialogRow).toBeAttached();
 
@@ -101,7 +101,7 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         );
         playExpect(value).toBe(false);
       });
-      test('Reset Feedback Dialog preference to default', async () => {
+      test('Preference can be reset', async () => {
         await preferencesPage.resetPreference(PreferenceLabels.FEEDBACK_DIALOG);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
@@ -111,7 +111,7 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         );
         playExpect(value).toBe(true);
       });
-      test('Toggle Feedback Dialog preference', async () => {
+      test('Preference can be changed', async () => {
         await preferencesPage.togglePreferenceCheckbox(
           PreferenceLabels.FEEDBACK_DIALOG,
           FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
@@ -126,10 +126,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
     });
 
   test.describe
-    .serial('Verify [user + locked] Toast preference', () => {
+    .serial('User + Locked preference: Toast', () => {
       let toastRow: Locator;
       let value: boolean;
-      test('Check Toast preference state', async () => {
+      test('Expected settings value', async () => {
         toastRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.TOAST);
         await playExpect(toastRow).toBeAttached();
 
@@ -139,21 +139,21 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         value = await preferencesPage.getToastPreferenceValue();
         playExpect(value).toBeTruthy();
       });
-      test('Attempt and fail to change Toast preference', async () => {
+      test('Preference can not be changed', async () => {
         const selectionToggle = toastRow.getByLabel('Display a notification toast when task is created');
         await playExpect(selectionToggle).toBeDisabled();
       });
-      test('Attempt and fail to reset managed Toast preference', async () => {
+      test('Preference can not be reset', async () => {
         const resetButton = toastRow.getByRole('button', { name: 'Reset to default value' });
         await playExpect(resetButton).not.toBeAttached();
       });
     });
 
   test.describe
-    .serial('Verify [default] Zoom Level preference', () => {
+    .serial('Defaults preference: Zoom Level', () => {
       let zoomLevelRow: Locator;
       let value: string;
-      test('Check Zoom Level preference state', async () => {
+      test('Expected settings value', async () => {
         zoomLevelRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
         await playExpect(zoomLevelRow).toBeAttached();
 
@@ -166,7 +166,7 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         );
         playExpect(value).toBe('0.5');
       });
-      test('Change Zoom Level preference to 1.0', async () => {
+      test('Preference can be changed', async () => {
         await preferencesPage.setPreferenceNumberInputValue(
           PreferenceLabels.ZOOM_LEVEL,
           ZOOM_LEVEL_NUMBER_INPUT_LABEL,
@@ -179,7 +179,7 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         );
         playExpect(value).toBe('1');
       });
-      test.fail('Reset Zoom Level preference to default', async () => {
+      test.fail('Preference can be reset', async () => {
         // Fails because of https://github.com/podman-desktop/podman-desktop/issues/16000
         await preferencesPage.resetPreference(PreferenceLabels.ZOOM_LEVEL);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
@@ -193,10 +193,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
     });
 
   test.describe
-    .serial('Verify [default + locked] Exit On Close preference', () => {
+    .serial('Defaults + Locked preference: Exit On Close', () => {
       let exitOnCloseRow: Locator;
       let value: boolean;
-      test('Check Exit On Close preference state', async () => {
+      test('Expected settings value', async () => {
         exitOnCloseRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.EXIT_ON_CLOSE);
         await playExpect(exitOnCloseRow).toBeAttached();
 
@@ -206,23 +206,23 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         value = await preferencesPage.getExitOnClosePreferenceValue();
         playExpect(value).toBeFalsy();
       });
-      test('Attempt and fail to change Exit On Close preference', async () => {
+      test('Preference can not be changed', async () => {
         const selectionToggle = exitOnCloseRow.getByLabel(
           'Quit the app when the close button is clicked instead of minimizing to the tray.',
         );
         await playExpect(selectionToggle).toBeDisabled();
       });
-      test('Attempt and fail to reset managed Exit On Close preference', async () => {
+      test('Preference can not be reset', async () => {
         const resetButton = exitOnCloseRow.getByRole('button', { name: 'Reset to default value' });
         await playExpect(resetButton).not.toBeAttached();
       });
     });
 
   test.describe
-    .serial('Verify [locked] Line Height preference', () => {
+    .serial('Locked preference: Line Height', () => {
       let lineHeightRow: Locator;
       let value: string;
-      test('Check Line Height preference state', async () => {
+      test('Expected settings value', async () => {
         lineHeightRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.LINE_HEIGHT);
         await playExpect(lineHeightRow).toBeAttached();
 
@@ -235,13 +235,13 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         );
         playExpect(value).toBe('1');
       });
-      test('Attempt and fail to change Line Height preference', async () => {
+      test('Preference can not be changed', async () => {
         const preferenceInput = lineHeightRow.getByLabel(
           'Line height of the terminal. This number is multiplied by the terminal font size to get the actual terminal height in pixels.',
         );
         await playExpect(preferenceInput).toBeDisabled();
       });
-      test('Attempt and fail to reset managed Line Height preference', async () => {
+      test('Preference can not be reset', async () => {
         const resetButton = lineHeightRow.getByRole('button', { name: 'Reset to default value' });
         await playExpect(resetButton).not.toBeAttached();
       });
