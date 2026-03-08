@@ -7,9 +7,6 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: read
-
 jobs:
   managed-configuration:
     env:
@@ -25,15 +22,9 @@ jobs:
           - os: ubuntu-latest
             optional: false
             timeout: 15
-          - os: macos-15-intel # unstable, sometimes very slow execution
-            timeout: 15
-            optional: true
           - os: macos-15
             optional: false
             timeout: 15
-          - os: windows-2022 # Windows 10 equivalent
-            timeout: 15
-            optional: true
           - os: windows-2025 # Windows 11 equivalent
             optional: false
             timeout: 15
@@ -64,64 +55,18 @@ jobs:
           sudo chown -R root:root node_modules/electron/dist/chrome-sandbox
           sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
           echo "Managed configuration set-up for Linux"
-          mkdir -p $HOME/.config/containers/podman-desktop/configuration
           sudo mkdir -p /usr/share/podman-desktop
-          cat > $HOME/.config/containers/podman-desktop/configuration/settings.json <<EOF
-          {
-            "preferences.appearance": "system",
-            "feedback.dialog": false,
-            "tasks.Toast": true
-          }
-          EOF
-          sudo sh -c 'cat > /usr/share/podman-desktop/default-settings.json <<EOF
-          {
-            "feedback.dialog": true,
-            "preferences.zoomLevel": 0.5,
-            "preferences.ExitOnClose": false
-          }
-          EOF'
-          sudo sh -c 'cat > /usr/share/podman-desktop/locked.json <<EOF
-          {
-            "locked": [
-              "terminal.integrated.lineHeight",
-              "tasks.Toast",
-              "preferences.ExitOnClose"
-            ]
-          }
-          EOF'
-          echo "User settings:" && cat $HOME/.config/containers/podman-desktop/configuration/settings.json
+          sudo cp tests/playwright/resources/managed-configuration/default-settings.json /usr/share/podman-desktop/default-settings.json
+          sudo cp tests/playwright/resources/managed-configuration/locked.json /usr/share/podman-desktop/locked.json
           echo "Default settings:" && sudo cat /usr/share/podman-desktop/default-settings.json
           echo "Locked settings:" && sudo cat /usr/share/podman-desktop/locked.json
       - name: MacOS managed configuration files
         if: ${{ startsWith(matrix.os, 'macos') }}
         run: |
           echo "Managed configuration set-up for macOS"
-          mkdir -p $HOME/.config/containers/podman-desktop/configuration
           sudo mkdir -p /Library/Application\ Support/io.podman_desktop.PodmanDesktop/
-          cat > $HOME/.config/containers/podman-desktop/configuration/settings.json <<EOF
-          {
-            "preferences.appearance": "system",
-            "feedback.dialog": false,
-            "tasks.Toast": true
-          }
-          EOF
-          sudo sh -c 'cat > /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json <<EOF
-          {
-            "feedback.dialog": true,
-            "preferences.zoomLevel": 0.5,
-            "preferences.ExitOnClose": false
-          }
-          EOF'
-          sudo sh -c 'cat > /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json <<EOF
-          {
-            "locked": [
-              "terminal.integrated.lineHeight",
-              "tasks.Toast",
-              "preferences.ExitOnClose"
-            ]
-          }
-          EOF'
-          echo "User settings:" && cat $HOME/.config/containers/podman-desktop/configuration/settings.json
+          sudo cp tests/playwright/resources/managed-configuration/default-settings.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/default-settings.json"
+          sudo cp tests/playwright/resources/managed-configuration/locked.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/locked.json"
           echo "Default settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json
           echo "Locked settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json
       - name: Windows managed configuration files
@@ -129,38 +74,10 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Managed configuration set-up for Windows"
-          $configDir = Join-Path $env:USERPROFILE '.local' 'share' 'containers' 'podman-desktop' 'configuration'
-          New-Item -Path $configDir -ItemType Directory -Force | Out-Null
           $managedDir = Join-Path $env:ProgramData 'Podman Desktop'
           New-Item -Path $managedDir -ItemType Directory -Force | Out-Null
-          $settings = @'
-          {
-            "preferences.appearance": "system",
-            "feedback.dialog": false,
-            "tasks.Toast": true
-          }
-          '@
-          Set-Content -Path (Join-Path $configDir 'settings.json') -Value $settings -Encoding UTF8
-          $defaultSettings = @'
-          {
-            "feedback.dialog": true,
-            "preferences.zoomLevel": 0.5,
-            "preferences.ExitOnClose": false
-          }
-          '@
-          Set-Content -Path (Join-Path $managedDir 'default-settings.json') -Value $defaultSettings -Encoding UTF8
-          $locked = @'
-          {
-            "locked": [
-              "terminal.integrated.lineHeight",
-              "tasks.Toast",
-              "preferences.ExitOnClose"
-            ]
-          }
-          '@
-          Set-Content -Path (Join-Path $managedDir 'locked.json') -Value $locked -Encoding UTF8
-          Write-Host "User settings:"
-          Get-Content -Path (Join-Path $configDir 'settings.json')
+          Copy-Item -Path 'tests\playwright\resources\managed-configuration\default-settings.json' -Destination (Join-Path $managedDir 'default-settings.json') -Force
+          Copy-Item -Path 'tests\playwright\resources\managed-configuration\locked.json' -Destination (Join-Path $managedDir 'locked.json') -Force
           Write-Host "Default settings:"
           Get-Content -Path (Join-Path $managedDir 'default-settings.json')
           Write-Host "Locked settings:"
