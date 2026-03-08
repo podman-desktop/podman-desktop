@@ -24,6 +24,10 @@ import type { SettingsBar } from '/@/model/pages/settings-bar';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { test } from '/@/utility/fixtures';
 
+const FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL: string = 'Show feedback dialog for experimental features';
+const ZOOM_LEVEL_NUMBER_INPUT_LABEL: string = 'preferences.zoomLevel';
+const TERMINAL_LINE_HEIGHT_INPUT_LABEL: string = 'terminal.integrated.lineHeight';
+
 let settingsBar: SettingsBar;
 let preferencesPage: PreferencesPage;
 
@@ -62,21 +66,20 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.APPEARANCE);
         playExpect(isManaged).toBeFalsy();
 
-        value = await preferencesPage.getAppearancePreferenceValue();
+        value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
         playExpect(value).toBe('system');
       });
       test('Change Appearance preference to dark', async () => {
-        await preferencesPage.setAppearancePreference('dark');
+        await preferencesPage.setPreferenceDropdownValue(PreferenceLabels.APPEARANCE, 'dark');
 
-        value = await preferencesPage.getAppearancePreferenceValue();
+        value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
         playExpect(value).toBe('dark');
       });
-      test.fail('Reset Appearance preference to default', async () => {
-        // Fails because of https://github.com/podman-desktop/podman-desktop/issues/15242
+      test('Reset Appearance preference to default', async () => {
         await preferencesPage.resetPreference(PreferenceLabels.APPEARANCE);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
-        value = await preferencesPage.getAppearancePreferenceValue();
+        value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
         playExpect(value).toBe('system');
       });
     });
@@ -92,20 +95,32 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.FEEDBACK_DIALOG);
         playExpect(isManaged).toBeFalsy();
 
-        value = await preferencesPage.getFeedbackDialogPreferenceValue();
+        value = await preferencesPage.getPreferenceCheckboxValue(
+          PreferenceLabels.FEEDBACK_DIALOG,
+          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+        );
         playExpect(value).toBe(false);
       });
       test('Reset Feedback Dialog preference to default', async () => {
         await preferencesPage.resetPreference(PreferenceLabels.FEEDBACK_DIALOG);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
-        value = await preferencesPage.getFeedbackDialogPreferenceValue();
+        value = await preferencesPage.getPreferenceCheckboxValue(
+          PreferenceLabels.FEEDBACK_DIALOG,
+          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+        );
         playExpect(value).toBe(true);
       });
       test('Toggle Feedback Dialog preference', async () => {
-        await preferencesPage.toggleFeedbackDialogPreference();
+        await preferencesPage.togglePreferenceCheckbox(
+          PreferenceLabels.FEEDBACK_DIALOG,
+          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+        );
 
-        value = await preferencesPage.getFeedbackDialogPreferenceValue();
+        value = await preferencesPage.getPreferenceCheckboxValue(
+          PreferenceLabels.FEEDBACK_DIALOG,
+          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+        );
         playExpect(value).toBe(false);
       });
     });
@@ -145,13 +160,23 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.ZOOM_LEVEL);
         playExpect(isManaged).toBeFalsy();
 
-        value = await preferencesPage.getZoomLevelPreferenceValue();
+        value = await preferencesPage.getPreferenceNumberInputValue(
+          PreferenceLabels.ZOOM_LEVEL,
+          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+        );
         playExpect(value).toBe('0.5');
       });
       test('Change Zoom Level preference to 1.0', async () => {
-        await preferencesPage.setZoomLevelPreference('1.0');
+        await preferencesPage.setPreferenceNumberInputValue(
+          PreferenceLabels.ZOOM_LEVEL,
+          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+          '1.0',
+        );
 
-        value = await preferencesPage.getZoomLevelPreferenceValue();
+        value = await preferencesPage.getPreferenceNumberInputValue(
+          PreferenceLabels.ZOOM_LEVEL,
+          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+        );
         playExpect(value).toBe('1');
       });
       test.fail('Reset Zoom Level preference to default', async () => {
@@ -159,7 +184,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         await preferencesPage.resetPreference(PreferenceLabels.ZOOM_LEVEL);
         await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
 
-        value = await preferencesPage.getZoomLevelPreferenceValue();
+        value = await preferencesPage.getPreferenceNumberInputValue(
+          PreferenceLabels.ZOOM_LEVEL,
+          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+        );
         playExpect(value).toBe('0.5');
       });
     });
@@ -201,7 +229,10 @@ test.describe.serial('Managed Configuration - preference verification', { tag: '
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.LINE_HEIGHT);
         playExpect(isManaged).toBeTruthy();
 
-        value = await preferencesPage.getLineHeightPreferenceValue();
+        value = await preferencesPage.getPreferenceNumberInputValue(
+          PreferenceLabels.LINE_HEIGHT,
+          TERMINAL_LINE_HEIGHT_INPUT_LABEL,
+        );
         playExpect(value).toBe('1');
       });
       test('Attempt and fail to change Line Height preference', async () => {
