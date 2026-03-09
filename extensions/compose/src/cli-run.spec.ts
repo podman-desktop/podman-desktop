@@ -35,7 +35,7 @@ vi.mock('node:fs', async () => {
   };
 });
 
-let previousPath: string | undefined;
+const previousPath = process.env.PATH;
 
 beforeEach(() => {
   vi.resetAllMocks();
