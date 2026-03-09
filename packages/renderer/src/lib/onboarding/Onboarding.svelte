@@ -313,7 +313,7 @@ async function skipCurrentOnboarding(): Promise<void> {
 // Below is reactive classes & variables for globalOnboarding, this is needed
 // when doing the "global onboarding" sequence, replacing some UI elements with
 // full-screen ones.
-let globalOnboarding = false;
+let globalOnboarding: boolean;
 $: globalOnboarding = global;
 </script>
 

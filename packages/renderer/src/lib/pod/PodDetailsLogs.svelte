@@ -27,6 +27,7 @@ $: {
     logsTerminal?.clear();
     fetchPodLogs().catch((err: unknown) => console.error(`Error fetching logs for pod ${pod.id}`, err));
   }
+  // eslint-disable-next-line no-useless-assignment
   refPod = pod;
 }
 

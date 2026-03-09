@@ -546,7 +546,7 @@ export class ImageRegistry {
       (layer: any) => layer.mediaType === 'application/vnd.oci.image.layer.v1.tar+zstd',
     );
 
-    let layers: { digest: string; size: number; mediaType: string }[] = [];
+    let layers: { digest: string; size: number; mediaType: string }[];
     if (zstdLayers.length > 0) {
       // using zstd layers
       layers = zstdLayers;

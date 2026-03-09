@@ -120,8 +120,7 @@ onMount(() => {
       // add a class for cursor
       link.classList.add('cursor-pointer');
     } else if (link.getAttribute('href')?.startsWith('podman-desktop://')) {
-      let internalLink = '';
-      internalLink = link.getAttribute('href')?.replace('podman-desktop://', '/') ?? '';
+      let internalLink = link.getAttribute('href')?.replace('podman-desktop://', '/') ?? '';
       link.setAttribute('href', internalLink);
     }
   });
