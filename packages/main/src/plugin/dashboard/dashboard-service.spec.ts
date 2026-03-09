@@ -128,9 +128,10 @@ describe('system overview status', () => {
     const configCallback = vi.mocked(configurationRegistryMock.onDidChangeConfiguration).mock.calls[0]?.[0];
     await configCallback?.({ key: ENHANCED_DASHBOARD_CONFIGURATION_KEY, value: true, scope: 'DEFAULT' });
 
+    expect(apiSenderMock.send).toHaveBeenCalledWith('enhanced-dashboard-enabled', undefined);
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
-      status: 'critical',
-      text: 'Error detected',
+      status: 'stable',
+      text: 'Some systems are stopped',
     });
   });
 
@@ -142,8 +143,8 @@ describe('system overview status', () => {
     receiveCallback?.();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
-      status: 'critical',
-      text: 'Error detected',
+      status: 'stable',
+      text: 'Some systems are stopped',
     });
   });
 });
