@@ -187,6 +187,12 @@ Built-in extensions are in `extensions/` and follow the same API as external ext
 - Follow ESLint and Biome rules
 - Tailwind CSS for styling (no custom CSS unless necessary)
 
+### ESLint Rules
+
+Before writing or modifying code, always check `eslint.config.mjs` to understand which linting rules are active. Rules vary by file type and package — consult the config directly rather than assuming defaults.
+
+Run `pnpm lint:check` to validate your code, or `pnpm lint:fix` to auto-fix where possible. All ESLint errors must be resolved before committing.
+
 ### Svelte Reactive Patterns
 
 When setting a variable reactively, prefer in this order:
