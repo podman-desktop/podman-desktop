@@ -54,7 +54,10 @@ const POD_NAME: string = CONTAINER_NAME;
 const INGRESS_CONTROLLER_COMMAND: string = 'kubectl get pods -n projectcontour';
 const REMOTE_PORT: number = 80;
 const LOCAL_PORT: number = 50000;
+const SECOND_LOCAL_PORT: number = 50001;
+const SERVICE_REMOTE_PORT: number = 8080;
 const PORT_FORWARDING_ADDRESS: string = `http://localhost:${LOCAL_PORT}/`;
+const SERVICE_PORT_ADDRESS: string = `http://localhost:${SECOND_LOCAL_PORT}/`;
 const SERVICE_ADDRESS: string = 'http://localhost:9090/';
 const RESPONSE_MESSAGE: string = 'Welcome to nginx!';
 
@@ -232,4 +235,57 @@ test.describe('Kubernetes networking E2E test', { tag: '@k8s_e2e' }, () => {
         await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE); //expect to contain to pass until #11210 is resolved
       });
     });
+
+    test('Create deployment and service on cluster', async ({ page }) => {
+      test.setTimeout(120_000);
+      await createKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME, DEPLOYMENT_YAML_PATH);
+      await createKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME, SERVICE_YAML_PATH);
+      await checkKubernetesResourceState(
+        page,
+        KubernetesResources.Deployments,
+        DEPLOYMENT_NAME,
+        KubernetesResourceState.Running,
+      );
+    });
+
+    test('Create port forwarding configuration', async ({ page }) => {
+      await configurePortForwarding(page, KubernetesResources.Pods, POD_NAME);
+      await configurePortForwarding(page, KubernetesResources.Services, SERVICE_NAME);
+    });
+
+    test('Verify Kubernetes port forwarding page', async ({ page }) => {
+      await verifyPortForwardingConfiguration(page, POD_NAME, LOCAL_PORT, REMOTE_PORT);
+      await verifyPortForwardingConfiguration(page, SERVICE_NAME, SECOND_LOCAL_PORT, SERVICE_REMOTE_PORT);
+    });
+
+    test('Verify new local port response', async () => {
+      await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE);
+      await verifyLocalPortResponse(SERVICE_PORT_ADDRESS, RESPONSE_MESSAGE);
+    });
+
+    test('Delete configuration', async ({ page }) => {
+      await deleteKubernetesResource(page, KubernetesResources.PortForwarding, POD_NAME);
+      await deleteKubernetesResource(page, KubernetesResources.PortForwarding, SERVICE_NAME);
+    });
+
+    test('Verify UI components after removal', async ({ page, navigationBar }) => {
+      //Verify Kubernetes port forwarding page
+      const noForwardingsMessage = page.getByText('No port forwarding configured');
+      await playExpect(noForwardingsMessage).toBeVisible();
+
+      //Verify Pod details page
+      const kubernetesBar = await navigationBar.openKubernetes();
+      const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+      await playExpect.poll(async () => kubernetesPodsPage.getRowByName(POD_NAME), { timeout: 15_000 }).toBeTruthy();
+      const podDetailPage = await kubernetesPodsPage.openResourceDetails(POD_NAME, KubernetesResources.Pods);
+      await podDetailPage.activateTab('Summary');
+      const forwardButton = page.getByRole('button', { name: 'Forward...' });
+      await playExpect(forwardButton).toBeVisible();
+    });
+
+    test('Verify link response after removal', async () => {
+      await verifyLocalPortResponse(PORT_FORWARDING_ADDRESS, RESPONSE_MESSAGE); //expect to contain to pass until #11210 is resolved
+      await verifyLocalPortResponse(SERVICE_PORT_ADDRESS, RESPONSE_MESSAGE); //expect to contain to pass until #11210 is resolved
+    });
+  });
 });
