@@ -18701,8 +18701,8 @@ init_react();
 
 // src/manager/components/sidebar/TagsFilterPanel.tsx
 init_react();
-var groupByType = (filters) => filters.reduce(
-  (acc, filter) => (acc[filter.type] = acc[filter.type] || [], acc[filter.type].push(filter), acc),
+var groupByType = (filters) => filters.filter(Boolean).reduce(
+  (acc, filter) => (acc[filter.type] ??= [], acc[filter.type].push(filter), acc),
   {}
 ), Wrapper7 = styled.div({
   minWidth: 240,
