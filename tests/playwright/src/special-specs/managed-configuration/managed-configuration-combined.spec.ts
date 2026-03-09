@@ -19,13 +19,10 @@
 import type { Locator } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { PreferenceLabels, PreferencesPage } from '/@/model/pages/preferences-page';
+import { Preferences } from '/@/model/core/settings';
+import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { test } from '/@/utility/fixtures';
-
-const FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL: string = 'Show feedback dialog for experimental features';
-const ZOOM_LEVEL_NUMBER_INPUT_LABEL: string = 'preferences.zoomLevel';
-const TERMINAL_LINE_HEIGHT_INPUT_LABEL: string = 'terminal.integrated.lineHeight';
 
 let preferencesPage: PreferencesPage;
 
@@ -57,27 +54,27 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
     .serial('User preference: Appearance', () => {
       let value: string;
       test('Expected settings value', async () => {
-        const appearanceRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
+        const appearanceRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.APPEARANCE);
         await playExpect(appearanceRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.APPEARANCE);
+        const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.APPEARANCE);
         playExpect(isManaged).toBeFalsy();
 
-        value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
+        value = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
         playExpect(value).toBe('system');
       });
       test('Preference can be changed', async () => {
-        await preferencesPage.setPreferenceDropdownValue(PreferenceLabels.APPEARANCE, 'dark');
+        await preferencesPage.setPreferenceDropdownValue(Preferences.Labels.APPEARANCE, 'dark');
 
-        value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
+        value = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
         playExpect(value).toBe('dark');
       });
       test('Reset preference to default', async () => {
-        await preferencesPage.resetPreference(PreferenceLabels.APPEARANCE);
+        await preferencesPage.resetPreference(Preferences.Labels.APPEARANCE);
         await playExpect
           .poll(
             async () => {
-              return preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
+              return preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
             },
             {
               timeout: 5000,
@@ -92,26 +89,26 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
     .serial('User + Defaults preference: Feedback Dialog', () => {
       let value: boolean;
       test('Expected settings value', async () => {
-        const feedbackDialogRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
+        const feedbackDialogRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.FEEDBACK_DIALOG);
         await playExpect(feedbackDialogRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.FEEDBACK_DIALOG);
+        const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.FEEDBACK_DIALOG);
         playExpect(isManaged).toBeFalsy();
 
         value = await preferencesPage.getPreferenceCheckboxValue(
-          PreferenceLabels.FEEDBACK_DIALOG,
-          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+          Preferences.Labels.FEEDBACK_DIALOG,
+          Preferences.FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
         );
         playExpect(value).toBe(false);
       });
       test('Preference can be reset', async () => {
-        await preferencesPage.resetPreference(PreferenceLabels.FEEDBACK_DIALOG);
+        await preferencesPage.resetPreference(Preferences.Labels.FEEDBACK_DIALOG);
         await playExpect
           .poll(
             async () => {
               return await preferencesPage.getPreferenceCheckboxValue(
-                PreferenceLabels.FEEDBACK_DIALOG,
-                FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+                Preferences.Labels.FEEDBACK_DIALOG,
+                Preferences.FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
               );
             },
             {
@@ -123,13 +120,13 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       });
       test('Preference can be changed', async () => {
         await preferencesPage.togglePreferenceCheckbox(
-          PreferenceLabels.FEEDBACK_DIALOG,
-          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+          Preferences.Labels.FEEDBACK_DIALOG,
+          Preferences.FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
         );
 
         value = await preferencesPage.getPreferenceCheckboxValue(
-          PreferenceLabels.FEEDBACK_DIALOG,
-          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+          Preferences.Labels.FEEDBACK_DIALOG,
+          Preferences.FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
         );
         playExpect(value).toBe(false);
       });
@@ -140,10 +137,10 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       let toastRow: Locator;
       let value: boolean;
       test('Expected settings value', async () => {
-        toastRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.TOAST);
+        toastRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.TOAST);
         await playExpect(toastRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.TOAST);
+        const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.TOAST);
         playExpect(isManaged).toBeTruthy();
 
         value = await preferencesPage.getToastPreferenceValue();
@@ -163,40 +160,40 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
     .serial('Defaults preference: Zoom Level', () => {
       let value: string;
       test('Expected settings value', async () => {
-        const zoomLevelRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
+        const zoomLevelRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.ZOOM_LEVEL);
         await playExpect(zoomLevelRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.ZOOM_LEVEL);
+        const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.ZOOM_LEVEL);
         playExpect(isManaged).toBeFalsy();
 
         value = await preferencesPage.getPreferenceNumberInputValue(
-          PreferenceLabels.ZOOM_LEVEL,
-          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+          Preferences.Labels.ZOOM_LEVEL,
+          Preferences.ZOOM_LEVEL_NUMBER_INPUT_LABEL,
         );
         playExpect(value).toBe('0.5');
       });
       test('Preference can be changed', async () => {
         await preferencesPage.setPreferenceNumberInputValue(
-          PreferenceLabels.ZOOM_LEVEL,
-          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+          Preferences.Labels.ZOOM_LEVEL,
+          Preferences.ZOOM_LEVEL_NUMBER_INPUT_LABEL,
           '1.0',
         );
 
         value = await preferencesPage.getPreferenceNumberInputValue(
-          PreferenceLabels.ZOOM_LEVEL,
-          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+          Preferences.Labels.ZOOM_LEVEL,
+          Preferences.ZOOM_LEVEL_NUMBER_INPUT_LABEL,
         );
         playExpect(value).toBe('1');
       });
       test.fail('Preference can be reset', async () => {
         // Fails because of https://github.com/podman-desktop/podman-desktop/issues/16000
-        await preferencesPage.resetPreference(PreferenceLabels.ZOOM_LEVEL);
+        await preferencesPage.resetPreference(Preferences.Labels.ZOOM_LEVEL);
         await playExpect
           .poll(
             async () => {
               return await preferencesPage.getPreferenceNumberInputValue(
-                PreferenceLabels.ZOOM_LEVEL,
-                ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+                Preferences.Labels.ZOOM_LEVEL,
+                Preferences.ZOOM_LEVEL_NUMBER_INPUT_LABEL,
               );
             },
             {
@@ -213,10 +210,10 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       let exitOnCloseRow: Locator;
       let value: boolean;
       test('Expected settings value', async () => {
-        exitOnCloseRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.EXIT_ON_CLOSE);
+        exitOnCloseRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.EXIT_ON_CLOSE);
         await playExpect(exitOnCloseRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.EXIT_ON_CLOSE);
+        const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.EXIT_ON_CLOSE);
         playExpect(isManaged).toBeTruthy();
 
         value = await preferencesPage.getExitOnClosePreferenceValue();
@@ -239,15 +236,15 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       let lineHeightRow: Locator;
       let value: string;
       test('Expected settings value', async () => {
-        lineHeightRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.LINE_HEIGHT);
+        lineHeightRow = preferencesPage.getPreferenceRowByName(Preferences.Labels.LINE_HEIGHT);
         await playExpect(lineHeightRow).toBeAttached();
 
-        const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.LINE_HEIGHT);
+        const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.LINE_HEIGHT);
         playExpect(isManaged).toBeTruthy();
 
         value = await preferencesPage.getPreferenceNumberInputValue(
-          PreferenceLabels.LINE_HEIGHT,
-          TERMINAL_LINE_HEIGHT_INPUT_LABEL,
+          Preferences.Labels.LINE_HEIGHT,
+          Preferences.TERMINAL_LINE_HEIGHT_INPUT_LABEL,
         );
         playExpect(value).toBe('1');
       });

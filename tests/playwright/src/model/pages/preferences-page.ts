@@ -19,16 +19,9 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
-import { SettingsPage } from './settings-page';
+import { Preferences } from '/@/model/core/settings';
 
-export enum PreferenceLabels {
-  APPEARANCE = 'Appearance',
-  FEEDBACK_DIALOG = 'Dialog',
-  TOAST = 'Toast',
-  ZOOM_LEVEL = 'Zoom Level',
-  EXIT_ON_CLOSE = ' Exit On Close',
-  LINE_HEIGHT = 'Line Height',
-}
+import { SettingsPage } from './settings-page';
 
 export class PreferencesPage extends SettingsPage {
   readonly heading: Locator;
@@ -115,18 +108,21 @@ export class PreferencesPage extends SettingsPage {
 
   async toggleFeedbackDialogPreference(): Promise<void> {
     return this.togglePreferenceCheckbox(
-      PreferenceLabels.FEEDBACK_DIALOG,
+      Preferences.Labels.FEEDBACK_DIALOG,
       'Show feedback dialog for experimental features',
     );
   }
 
   async getToastPreferenceValue(): Promise<boolean> {
-    return this.getPreferenceCheckboxValue(PreferenceLabels.TOAST, 'Display a notification toast when task is created');
+    return this.getPreferenceCheckboxValue(
+      Preferences.Labels.TOAST,
+      'Display a notification toast when task is created',
+    );
   }
 
   async getExitOnClosePreferenceValue(): Promise<boolean> {
     return this.getPreferenceCheckboxValue(
-      PreferenceLabels.EXIT_ON_CLOSE,
+      Preferences.Labels.EXIT_ON_CLOSE,
       'Quit the app when the close button is clicked instead of minimizing to the tray.',
     );
   }
