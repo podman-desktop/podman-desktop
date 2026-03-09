@@ -19,7 +19,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { createEvent, fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import Dropdown from './Dropdown.svelte';
 import DropdownTest from './DropdownTest.svelte';
@@ -184,4 +184,99 @@ test('Left snippet is renderered', async () => {
   const left = screen.getByText('Left:');
   expect(left).toBeInTheDocument();
   expect(left.parentElement).toHaveClass('bg-[var(--pd-input-field-bg)]');
+});
+
+describe('triggerless mode', () => {
+  test('should not render when opened is false', () => {
+    render(Dropdown, {
+      triggerless: true,
+      opened: false,
+      options: [{ value: '0', label: 'Containers' }],
+    });
+
+    expect(screen.queryByText('Containers')).not.toBeInTheDocument();
+  });
+
+  test('should not render when options are empty', () => {
+    render(Dropdown, {
+      triggerless: true,
+      opened: true,
+      options: [],
+    });
+
+    expect(screen.queryByLabelText('dropdown')).not.toBeInTheDocument();
+  });
+
+  test('should render entries when opened and options exist', () => {
+    render(Dropdown, {
+      triggerless: true,
+      opened: true,
+      options: [
+        { value: '0', label: 'Containers' },
+        { value: '1', label: 'Images' },
+      ],
+    });
+
+    expect(screen.getByText('Containers')).toBeInTheDocument();
+    expect(screen.getByText('Images')).toBeInTheDocument();
+  });
+
+  test('should not render trigger button or form inputs', () => {
+    render(Dropdown, {
+      triggerless: true,
+      opened: true,
+      options: [{ value: '0', label: 'Containers' }],
+    });
+
+    expect(screen.queryByLabelText('hidden input')).not.toBeInTheDocument();
+  });
+
+  test('mouseup on entry should call onChange with selectOnMouseUp', async () => {
+    const onChangeMock = vi.fn();
+    render(Dropdown, {
+      triggerless: true,
+      opened: true,
+      selectOnMouseUp: true,
+      options: [
+        { value: '5', label: 'Containers' },
+        { value: '3', label: 'Images' },
+      ],
+      onChange: onChangeMock,
+    });
+
+    const imagesEntry = screen.getByLabelText('Images');
+    await fireEvent.mouseUp(imagesEntry);
+
+    expect(onChangeMock).toHaveBeenCalledWith('3');
+  });
+
+  test('click on entry should call onChange without selectOnMouseUp', async () => {
+    const onChangeMock = vi.fn();
+    render(Dropdown, {
+      triggerless: true,
+      opened: true,
+      selectOnMouseUp: false,
+      options: [
+        { value: '0', label: 'Containers' },
+        { value: '1', label: 'Images' },
+      ],
+      onChange: onChangeMock,
+    });
+
+    const containersEntry = screen.getByLabelText('Containers');
+    await fireEvent.click(containersEntry);
+
+    expect(onChangeMock).toHaveBeenCalledWith('0');
+  });
+
+  test('should use custom ariaLabel', () => {
+    render(Dropdown, {
+      triggerless: true,
+      opened: true,
+      ariaLabel: 'History dropdown',
+      options: [{ value: '0', label: 'Containers' }],
+    });
+
+    expect(screen.getByLabelText('History dropdown')).toBeInTheDocument();
+  });
 });
