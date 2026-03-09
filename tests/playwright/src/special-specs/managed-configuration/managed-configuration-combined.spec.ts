@@ -143,11 +143,14 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
         const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.TOAST);
         playExpect(isManaged).toBeTruthy();
 
-        value = await preferencesPage.getToastPreferenceValue();
+        value = await preferencesPage.getPreferenceCheckboxValue(
+          Preferences.Labels.TOAST,
+          Preferences.TOAST_NOTIFICATION_TOGGLE_BUTTON_LABEL,
+        );
         playExpect(value).toBeTruthy();
       });
       test('Preference can not be changed', async () => {
-        const selectionToggle = toastRow.getByLabel('Display a notification toast when task is created');
+        const selectionToggle = toastRow.getByLabel(Preferences.TOAST_NOTIFICATION_TOGGLE_BUTTON_LABEL);
         await playExpect(selectionToggle).toBeDisabled();
       });
       test('Preference can not be reset', async () => {
@@ -216,13 +219,14 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
         const isManaged = await preferencesPage.isPreferenceManaged(Preferences.Labels.EXIT_ON_CLOSE);
         playExpect(isManaged).toBeTruthy();
 
-        value = await preferencesPage.getExitOnClosePreferenceValue();
+        value = await preferencesPage.getPreferenceCheckboxValue(
+          Preferences.Labels.EXIT_ON_CLOSE,
+          Preferences.EXIT_ON_CLOSE_TOGGLE_BUTTON_LABEL,
+        );
         playExpect(value).toBeFalsy();
       });
       test('Preference can not be changed', async () => {
-        const selectionToggle = exitOnCloseRow.getByLabel(
-          'Quit the app when the close button is clicked instead of minimizing to the tray.',
-        );
+        const selectionToggle = exitOnCloseRow.getByLabel(Preferences.EXIT_ON_CLOSE_TOGGLE_BUTTON_LABEL);
         await playExpect(selectionToggle).toBeDisabled();
       });
       test('Preference can not be reset', async () => {
@@ -249,9 +253,7 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
         playExpect(value).toBe('1');
       });
       test('Preference can not be changed', async () => {
-        const preferenceInput = lineHeightRow.getByLabel(
-          'Line height of the terminal. This number is multiplied by the terminal font size to get the actual terminal height in pixels.',
-        );
+        const preferenceInput = lineHeightRow.locator(`input[name="${Preferences.TERMINAL_LINE_HEIGHT_INPUT_LABEL}"]`);
         await playExpect(preferenceInput).toBeDisabled();
       });
       test('Preference can not be reset', async () => {
