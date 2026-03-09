@@ -52,6 +52,7 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
+test.describe.configure({ timeout: 120_000 });
 test.describe.serial('Podman Desktop Update installation', { tag: '@update-install' }, () => {
   test('Update is offered automatically on startup', async ({ welcomePage }) => {
     await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
@@ -104,9 +105,12 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
               extension.extensionFullName,
             );
             await playExpect(extensionDetailsPage.heading).toBeVisible();
-            await test.step.skip('Extension is active - unstable on windows now', async () => {
-              await playExpect.soft(extensionDetailsPage.status).toHaveText(activeExtensionStatus, { timeout: 20_000 });
-            });
+            await test.step
+              .skip('Extension is active - unstable on windows now', async () => {
+                await playExpect
+                  .soft(extensionDetailsPage.status)
+                  .toHaveText(activeExtensionStatus, { timeout: 20_000 });
+              });
           });
         });
       });

@@ -45,6 +45,7 @@ export class ChromeDevToolsProtocolRunner extends Runner {
 
     try {
       this._running = true;
+      // start the electron binary
 
       this._browser = await chromium.connectOverCDP(this._runnerOptions._cdp.endpointURL, this._runnerOptions._cdp);
       const contexts = this._browser.contexts();
@@ -78,6 +79,8 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       throw Error('Podman Desktop is not running');
     }
 
+    await this._page?.close();
+    await this._browser?.contexts()[0].close();
     await this._browser?.close();
 
     this._running = false;

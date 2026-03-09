@@ -19,7 +19,14 @@
 import { RunnerOptions } from '/@/runner/runner-options';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 
-test.use({ runnerOptions: new RunnerOptions({ customFolder: 'welcome-podman-desktop' }) });
+test.use({
+  runnerOptions: new RunnerOptions({
+    customFolder: 'welcome-podman-desktop',
+    cdp: {
+      endpointURL: 'http://127.0.0.1:9222',
+    },
+  }),
+});
 test.beforeAll(async ({ runner }) => {
   runner.setVideoAndTraceName('welcome-page-e2e');
 });
@@ -57,6 +64,9 @@ test.describe.serial('Basic e2e verification of podman desktop start', { tag: ['
         await playExpect(navigationBar.containersLink).toBeVisible();
         await playExpect(navigationBar.volumesLink).toBeVisible();
         await playExpect(navigationBar.settingsLink).toBeVisible();
+      });
+      test('Gonna fail', async () => {
+        playExpect(1).toBe(2);
       });
     });
 });
