@@ -24,7 +24,6 @@ import { _electron as electron, test } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
 import { isLinux } from '/@/utility/platform';
-import { waitWhile } from '/@/utility/wait';
 
 import { RunnerOptions } from './runner-options';
 
@@ -232,10 +231,15 @@ export class Runner {
       const pid = this.getElectronApp()?.process()?.pid;
       console.log(`Closing Podman Desktop with a timeout of ${timeout} ms`);
       try {
-        await Promise.race([
-          waitWhile(async () => this.isRunning(), { timeout: timeout, diff: 100 }),
+        // Create a timeout promise to limit how long we wait for close
+        const closeWithTimeout = Promise.race([
           this.getElectronApp().close(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Close timeout of ${timeout}ms exceeded`)), timeout),
+          ),
         ]);
+        await closeWithTimeout;
+        console.log('Podman Desktop closed successfully');
       } catch (err: unknown) {
         console.log(`Caught exception in closing: ${err}`);
         console.log('Trying to kill the electron app process');
