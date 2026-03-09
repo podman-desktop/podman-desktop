@@ -66,9 +66,8 @@ export class CertificateSyncTargetRegistry {
   // Flat map with composite keys: extensionId:targetId -> target
   private targetsCache: Map<string, InternalCertificateSyncTargetInfo> = new Map();
 
-  private readonly _onDidChangeTargets = new Emitter<containerDesktopAPI.CertificateSyncTargetProviderChangeEvent>();
-  readonly onDidChangeTargets: containerDesktopAPI.Event<containerDesktopAPI.CertificateSyncTargetProviderChangeEvent> =
-    this._onDidChangeTargets.event;
+  private readonly _onDidChangeTargets = new Emitter<void>();
+  readonly onDidChangeTargets: containerDesktopAPI.Event<void> = this._onDidChangeTargets.event;
 
   constructor(
     @inject(Certificates)
@@ -179,11 +178,6 @@ export class CertificateSyncTargetRegistry {
 
     this.providers.set(extensionId, registered);
 
-    const providerInfo: containerDesktopAPI.CertificateSyncTargetProviderInformation = {
-      extensionId,
-      label: extensionInfo.name,
-    };
-
     // Fetch targets and notify listeners
     const refreshTargets = (): void => {
       this.updateProviderTargets(extensionId, registered)
@@ -191,7 +185,7 @@ export class CertificateSyncTargetRegistry {
           console.error(`Error updating targets for provider (${extensionId}):`, err);
         })
         .finally(() => {
-          this._onDidChangeTargets.fire({ provider: providerInfo });
+          this._onDidChangeTargets.fire();
         });
     };
 
@@ -208,7 +202,7 @@ export class CertificateSyncTargetRegistry {
       // Clear cached targets for this extension
       this.clearProviderTargets(extensionId);
       // Notify listeners that targets have changed
-      this._onDidChangeTargets.fire({ provider: providerInfo });
+      this._onDidChangeTargets.fire();
     });
   }
 

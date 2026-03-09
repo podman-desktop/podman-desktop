@@ -160,9 +160,7 @@ describe('CertificateSyncTargetRegistry', () => {
       registry.registerProvider(extensionInfo, provider);
 
       await vi.waitFor(() => {
-        expect(eventHandler).toHaveBeenCalledWith({
-          provider: { extensionId: 'trusted-ext', label: 'Trusted Extension' },
-        });
+        expect(eventHandler).toHaveBeenCalled();
       });
     });
   });
@@ -437,9 +435,7 @@ describe('CertificateSyncTargetRegistry', () => {
       eventHandler.mockClear();
       disposable.dispose();
 
-      expect(eventHandler).toHaveBeenCalledWith({
-        provider: { extensionId: 'trusted-ext', label: 'Trusted Extension' },
-      });
+      expect(eventHandler).toHaveBeenCalled();
     });
 
     test('should discard stale targets when disposed during in-flight getTargets', async () => {
