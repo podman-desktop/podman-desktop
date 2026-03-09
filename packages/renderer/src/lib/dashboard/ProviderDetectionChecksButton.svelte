@@ -11,7 +11,7 @@ let viewInProgress = false;
 let mode: 'view' | 'hide' = 'view';
 
 async function toggleDetectionChecks(provider: ProviderInfo): Promise<void> {
-  let detectionChecks: ProviderDetectionCheck[] = [];
+  let detectionChecks: ProviderDetectionCheck[];
   if (mode === 'view') {
     viewInProgress = true;
     // needs to ask the provider why it didn't find provider being installed

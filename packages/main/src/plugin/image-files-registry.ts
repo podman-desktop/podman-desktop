@@ -77,7 +77,7 @@ export class ImageFilesRegistry {
   ): ImageFilesProvider {
     const label = metadata?.label ?? extensionInfo.label;
     const idBase = `${extensionInfo.id}-`;
-    let id: string = '';
+    let id: string;
     for (let i = 0; ; i++) {
       const newId = idBase + i;
       if (!this._imageFilesProviders.get(newId)) {

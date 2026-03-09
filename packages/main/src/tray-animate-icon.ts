@@ -76,13 +76,13 @@ export class AnimatedTray {
 
   // provide the path to the icon depending on theme and platform
   protected getIconPath(iconName: string): string {
-    let name;
+    let name: string;
     if (iconName === 'default') {
       name = '';
     } else {
       name = `-${iconName}`;
     }
-    let suffix = '';
+    let suffix: string;
     // on Linux, always pickup dark icon
     if (isLinux()) {
       suffix = 'Dark';

@@ -108,22 +108,10 @@ export class ContextsManager {
   private currentContext: KubeContext | undefined;
   private secondaryWatchers = new ResourceWatchersRegistry();
 
-  private connectTimers = new Map<ResourceName, NodeJS.Timeout | undefined>();
-  private connectionDelayTimers = new Map<string, NodeJS.Timeout | undefined>();
-
   private disposed = false;
 
   constructor(readonly apiSender: ApiSenderType) {
     this.states = new ContextsStatesRegistry(apiSender);
-  }
-
-  setConnectionTimers(
-    resourceName: ResourceName,
-    timer: NodeJS.Timeout | undefined,
-    connectionDelay: NodeJS.Timeout | undefined,
-  ): void {
-    this.connectTimers.set(resourceName, timer);
-    this.connectionDelayTimers.set(resourceName, connectionDelay);
   }
 
   isContextInKubeconfig(context: KubeContext): boolean {
@@ -289,10 +277,6 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1PodList> => k8sApi.listNamespacedPod({ namespace });
     const path = `/api/v1/namespaces/${namespace}/pods`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('pods', timer, connectionDelay);
-
     this.states.setStateAndDispatch(context.name, {
       checkingState: true,
       currentContext: this.kubeConfig.currentContext,
@@ -304,9 +288,9 @@ export class ContextsManager {
     return this.createInformer<V1Pod>(kc, context, path, listFn, {
       checkReachable: true,
       resource: 'pods',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           sendGeneral: true,
@@ -395,14 +379,11 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(AppsV1Api);
     const listFn = (): Promise<V1DeploymentList> => k8sApi.listNamespacedDeployment({ namespace });
     const path = `/apis/apps/v1/namespaces/${namespace}/deployments`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('deployments', timer, connectionDelay);
     return this.createInformer<V1Deployment>(kc, context, path, listFn, {
       resource: 'deployments',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           sendGeneral: true,
@@ -442,14 +423,11 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1ConfigMapList> => k8sApi.listNamespacedConfigMap({ namespace });
     const path = `/api/v1/namespaces/${namespace}/configmaps`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('configmaps', timer, connectionDelay);
     return this.createInformer<V1ConfigMap>(kc, context, path, listFn, {
       resource: 'configmaps',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -484,14 +462,11 @@ export class ContextsManager {
     const batchV1Api = kc.makeApiClient(BatchV1Api);
     const listFn = (): Promise<KubernetesListObject<V1CronJob>> => batchV1Api.listNamespacedCronJob({ namespace });
     const path = `/apis/batch/v1/namespaces/${namespace}/cronjobs`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('cronjobs', timer, connectionDelay);
     return this.createInformer<V1CronJob>(kc, context, path, listFn, {
       resource: 'cronjobs',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -523,14 +498,11 @@ export class ContextsManager {
     const batchV1Api = kc.makeApiClient(BatchV1Api);
     const listFn = (): Promise<KubernetesListObject<V1Job>> => batchV1Api.listNamespacedJob({ namespace });
     const path = `/apis/batch/v1/namespaces/${namespace}/jobs`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('jobs', timer, connectionDelay);
     return this.createInformer<V1Job>(kc, context, path, listFn, {
       resource: 'jobs',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -563,14 +535,11 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1SecretList> => k8sApi.listNamespacedSecret({ namespace });
     const path = `/api/v1/namespaces/${namespace}/secrets`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('secrets', timer, connectionDelay);
     return this.createInformer<V1Secret>(kc, context, path, listFn, {
       resource: 'secrets',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           resources: { secrets: true },
@@ -608,14 +577,11 @@ export class ContextsManager {
     const listFn = (): Promise<V1PersistentVolumeClaimList> =>
       k8sApi.listNamespacedPersistentVolumeClaim({ namespace });
     const path = `/api/v1/namespaces/${namespace}/persistentvolumeclaims`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('persistentvolumeclaims', timer, connectionDelay);
     return this.createInformer<V1PersistentVolumeClaim>(kc, context, path, listFn, {
       resource: 'persistentvolumeclaims',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -652,14 +618,11 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1NodeList> => k8sApi.listNode();
     const path = '/api/v1/nodes';
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('nodes', timer, connectionDelay);
     return this.createInformer<V1Node>(kc, context, path, listFn, {
       resource: 'nodes',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -692,14 +655,11 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(CoreV1Api);
     const listFn = (): Promise<V1ServiceList> => k8sApi.listNamespacedService({ namespace });
     const path = `/api/v1/namespaces/${namespace}/services`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('services', timer, connectionDelay);
     return this.createInformer<V1Service>(kc, context, path, listFn, {
       resource: 'services',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -732,14 +692,11 @@ export class ContextsManager {
     const k8sNetworkingApi = this.kubeConfig.makeApiClient(NetworkingV1Api);
     const listFn = (): Promise<V1IngressList> => k8sNetworkingApi.listNamespacedIngress({ namespace });
     const path = `/apis/networking.k8s.io/v1/namespaces/${namespace}/ingresses`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('ingresses', timer, connectionDelay);
     return this.createInformer<V1Ingress>(kc, context, path, listFn, {
       resource: 'ingresses',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -778,14 +735,11 @@ export class ContextsManager {
         plural: 'routes',
       }) as Promise<KubernetesListObject<V1Route>>;
     const path = `/apis/route.openshift.io/v1/namespaces/${namespace}/routes`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('routes', timer, connectionDelay);
     return this.createInformer<V1Route>(kc, context, path, listFn, {
       resource: 'routes',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -822,14 +776,11 @@ export class ContextsManager {
     const k8sApi = kc.makeApiClient(CoreV1Api);
     const listFn = (): Promise<CoreV1EventList> => k8sApi.listNamespacedEvent({ namespace });
     const path = `/api/v1/namespaces/${namespace}/events`;
-    let timer: NodeJS.Timeout | undefined;
-    let connectionDelay: NodeJS.Timeout | undefined;
-    this.setConnectionTimers('events', timer, connectionDelay);
     return this.createInformer<CoreV1Event>(kc, context, path, listFn, {
       resource: 'events',
-      timer: timer,
+      timer: undefined,
       backoff: this.getBackoffForContext(context.name),
-      connectionDelay: connectionDelay,
+      connectionDelay: undefined,
       onAdd: obj => {
         this.states.setStateAndDispatch(context.name, {
           currentContext: this.kubeConfig.currentContext,
@@ -1098,12 +1049,6 @@ export class ContextsManager {
   public dispose(): void {
     this.disposed = true;
     this.states.dispose();
-    for (const timer of this.connectTimers.values()) {
-      clearTimeout(timer);
-    }
-    for (const timer of this.connectionDelayTimers.values()) {
-      clearTimeout(timer);
-    }
   }
 
   private getBackoffForContext(contextName: string): Backoff {

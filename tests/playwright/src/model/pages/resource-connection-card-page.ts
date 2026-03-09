@@ -83,14 +83,16 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
       const goBackButton = this.page.getByRole('button', { name: 'Go back to resources' });
 
       const desiredState = targetPrivilege === PodmanMachinePrivileges.Rootful;
-      const currentState = await rootPrivilegesCheckbox.isChecked();
 
-      if (desiredState !== currentState) {
-        await rootPrivilegesCheckbox.locator('..').click();
-        await playExpect
-          .poll(async () => await rootPrivilegesCheckbox.isChecked(), { timeout: 10_000 })
-          .toBe(desiredState);
-      }
+      // The edit form is updated asynchronously, so we need to poll for the updated state to be loaded before clicking the checkbox
+      await playExpect
+        .poll(async () => await rootPrivilegesCheckbox.isChecked(), { timeout: 10_000 })
+        .not.toBe(desiredState);
+
+      await rootPrivilegesCheckbox.locator('..').click();
+      await playExpect
+        .poll(async () => await rootPrivilegesCheckbox.isChecked(), { timeout: 10_000 })
+        .toBe(desiredState);
 
       await playExpect(updateButton).toBeEnabled();
       await updateButton.click();

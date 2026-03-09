@@ -1,0 +1,99 @@
+name: Managed configuration tests
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  managed-configuration:
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: Managed configuration tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'ubuntu-latest', 'macos-latest', 'windows-2025' ]
+        timeout: [ 15 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup testenv using external action
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a 
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # --- OS-specific administrative setup ---
+      - name: Linux managed configuration files
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          echo "Managed configuration set-up for Linux"
+          sudo mkdir -p /usr/share/podman-desktop
+          sudo cp tests/playwright/resources/managed-configuration/default-settings.json /usr/share/podman-desktop/default-settings.json
+          sudo cp tests/playwright/resources/managed-configuration/locked.json /usr/share/podman-desktop/locked.json
+          echo "Default settings:" && sudo cat /usr/share/podman-desktop/default-settings.json
+          echo "Locked settings:" && sudo cat /usr/share/podman-desktop/locked.json
+      - name: MacOS managed configuration files
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        run: |
+          echo "Managed configuration set-up for macOS"
+          sudo mkdir -p /Library/Application\ Support/io.podman_desktop.PodmanDesktop/
+          sudo cp tests/playwright/resources/managed-configuration/default-settings.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/default-settings.json"
+          sudo cp tests/playwright/resources/managed-configuration/locked.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/locked.json"
+          echo "Default settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json
+          echo "Locked settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json
+      - name: Windows managed configuration files
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        shell: pwsh
+        run: |
+          Write-Host "Managed configuration set-up for Windows"
+          $managedDir = Join-Path $env:ProgramData 'Podman Desktop'
+          New-Item -Path $managedDir -ItemType Directory -Force | Out-Null
+          Copy-Item -Path 'tests\playwright\resources\managed-configuration\default-settings.json' -Destination (Join-Path $managedDir 'default-settings.json') -Force
+          Copy-Item -Path 'tests\playwright\resources\managed-configuration\locked.json' -Destination (Join-Path $managedDir 'locked.json') -Force
+          Write-Host "Default settings:"
+          Get-Content -Path (Join-Path $managedDir 'default-settings.json')
+          Write-Host "Locked settings:"
+          Get-Content -Path (Join-Path $managedDir 'locked.json')
+      # ========================================
+
+      - name: Run managed configuration spec
+        shell: bash
+        run: |
+          echo "Runner OS: $RUNNER_OS, matrix.os: ${{ matrix.os }}"
+          pnpm test:e2e:managed-configuration
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@74626db7353a25a20a72816467ebf035f674c5f8 # v6.2.0
+        if: always()
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests: true
+          report_paths: '**/*results.xml'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always()
+        with:
+          name: managed-configuration-${{ matrix.os }}
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
