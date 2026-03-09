@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import type { ViewContributionBadgeValue } from '@podman-desktop/core-api';
+import type { ImageUpdateStatus, ViewContributionBadgeValue } from '@podman-desktop/core-api';
 import type { Component } from 'svelte';
 
 export interface ImageInfoUI {
@@ -43,4 +43,7 @@ export interface ImageInfoUI {
   children?: ImageInfoUI[];
   isManifest?: boolean;
   digest?: string;
+  updateStatus?: ImageUpdateStatus;
+  updateCheckInProgress?: boolean;
+  updateInProgress?: boolean;
 }

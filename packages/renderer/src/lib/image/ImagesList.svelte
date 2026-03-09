@@ -1,6 +1,6 @@
 <script lang="ts">
-import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
-import type { ContainerInfo, ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
+import { faArrowCircleDown, faCube, faDownload, faSync, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import type { ContainerInfo, ImageInfo, ImageUpdateStatus, ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
   FilteredEmptyScreen,
@@ -26,15 +26,17 @@ import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
+import { getImageUpdateStatus, setImageUpdateStatus } from '/@/stores/image-update-status-store';
 import { filtered, imagesInfos, searchPattern } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 import { viewsContributions } from '/@/stores/views';
 
-import { ImageUtils } from './image-utils';
+import { getImageRef, ImageUtils, pullImageUpdate } from './image-utils';
 import ImageColumnActions from './ImageColumnActions.svelte';
 import ImageColumnName from './ImageColumnName.svelte';
 import ImageColumnStatus from './ImageColumnStatus.svelte';
+import ImageColumnUpdateStatus from './ImageColumnUpdateStatus.svelte';
 import ImageEmptyScreen from './ImageEmptyScreen.svelte';
 import type { ImageInfoUI } from './ImageInfoUI';
 import NoContainerEngineEmptyScreen from './NoContainerEngineEmptyScreen.svelte';
@@ -78,13 +80,19 @@ function updateImages(globalContext: ContextUI): void {
     )
     .flat();
 
-  // update selected items based on current selected items
+  // Preserve selected state and update status across image list refreshes
   computedImages.forEach(image => {
-    const matchingImage = images.find(
-      currentImage => currentImage.id === image.id && currentImage.engineId === image.engineId,
+    const prev = images.find(
+      c => c.id === image.id && c.engineId === image.engineId && c.name === image.name && c.tag === image.tag,
     );
-    if (matchingImage) {
-      image.selected = matchingImage.selected;
+    if (prev) {
+      image.selected = prev.selected;
+      image.updateStatus = prev.updateStatus;
+      image.updateCheckInProgress = prev.updateCheckInProgress;
+      image.updateInProgress = prev.updateInProgress;
+    } else {
+      const cached = getImageUpdateStatus(image.engineId, image.name, image.id, image.tag);
+      if (cached) image.updateStatus = cached.status;
     }
   });
   computedImages.sort((first, second) => second.createdAt - first.createdAt);
@@ -129,7 +137,9 @@ let viewsUnsubscribe: Unsubscriber;
 let storeContainers: ContainerInfo[] = [];
 let storeImages: ImageInfo[] = [];
 
-onMount(async () => {
+let scanInProgress = $state(false);
+
+onMount(() => {
   containersUnsubscribe = containersInfos.subscribe(value => {
     storeContainers = value;
     updateImages(globalContext);
@@ -228,6 +238,66 @@ async function saveSelectedImages(): Promise<void> {
 
 let selectedItemsNumber: number | undefined = $state();
 
+async function scanForUpdates(): Promise<void> {
+  scanInProgress = true;
+  try {
+    const unchecked = images.filter(
+      img => img.status === 'UNUSED' && !img.isManifest && !img.updateStatus && !img.updateCheckInProgress,
+    );
+    await Promise.all(unchecked.map(img => checkImageForUpdates(img)));
+  } catch (err: unknown) {
+    console.error('Failed to scan images for updates:', err);
+  } finally {
+    scanInProgress = false;
+  }
+}
+
+async function checkImageForUpdates(image: ImageInfoUI): Promise<void> {
+  if (image.updateCheckInProgress || image.updateStatus) return;
+
+  image.updateCheckInProgress = true;
+
+  try {
+    const localDigests =
+      storeImages.find(img => img.Id === image.id && img.engineId === image.engineId)?.RepoDigests ?? [];
+    const status: ImageUpdateStatus = await window.checkImageUpdateStatus(
+      getImageRef(image.name, image.tag),
+      image.tag,
+      localDigests,
+    );
+    image.updateStatus = status;
+    setImageUpdateStatus(image.engineId, image.name, image.id, image.tag, status);
+  } catch (err: unknown) {
+    const errorStatus: ImageUpdateStatus = {
+      status: 'error',
+      updateAvailable: false,
+      message: err instanceof Error ? err.message : String(err),
+    };
+    image.updateStatus = errorStatus;
+    setImageUpdateStatus(image.engineId, image.name, image.id, image.tag, errorStatus);
+  }
+  image.updateCheckInProgress = false;
+}
+
+async function updateSelectedImages(): Promise<void> {
+  const toUpdate = filteredImages.filter(img => img.selected && img.updateStatus?.updateAvailable);
+  await Promise.all(
+    toUpdate.map(async image => {
+      image.updateInProgress = true;
+      try {
+        await pullImageUpdate(image, $providerInfos);
+      } catch (err: unknown) {
+        console.error('Failed to update image:', err);
+      }
+      image.updateInProgress = false;
+    }),
+  );
+}
+
+let updatableSelectedCount = $derived(
+  filteredImages.filter(img => img.selected && img.updateStatus?.updateAvailable).length,
+);
+
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
   align: 'center',
   width: '70px',
@@ -260,10 +330,22 @@ let sizeColumn = new TableColumn<ImageInfoUI, string>('Size', {
 });
 
 let archColumn = new TableColumn<ImageInfoUI, string>('Arch', {
+  width: '1fr',
   align: 'right',
   renderMapping: (image): string => image.arch,
   renderer: TableSimpleColumn,
   comparator: (a, b): number => a.arch.localeCompare(b.arch),
+});
+
+let updateColumn = new TableColumn<ImageInfoUI>('Update Available', {
+  width: '1fr',
+  align: 'right',
+  renderer: ImageColumnUpdateStatus,
+  comparator: (a, b): number => {
+    const aVal = a.updateStatus?.updateAvailable ? 1 : 0;
+    const bVal = b.updateStatus?.updateAvailable ? 1 : 0;
+    return bVal - aVal;
+  },
 });
 
 const columns = [
@@ -273,6 +355,7 @@ const columns = [
   ageColumn,
   sizeColumn,
   archColumn,
+  updateColumn,
   new TableColumn<ImageInfoUI>('Actions', {
     align: 'right',
     width: '150px',
@@ -326,6 +409,15 @@ function label(item: ImageInfoUI): string {
       Import
     </Button>
     <Button type="secondary" on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
+    <Button
+      type="secondary"
+      on:click={scanForUpdates}
+      title="Scan Images for Available Updates"
+      inProgress={scanInProgress}
+      icon={faSync}
+      aria-label="Scan for Updates">
+      Scan for Updates
+    </Button>
     <Button type="primary" on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
   {/snippet}
 
@@ -346,6 +438,13 @@ function label(item: ImageInfoUI): string {
         title="Save {selectedItemsNumber} selected items"
         aria-label="Save images"
         icon={faDownload} />
+      {#if updatableSelectedCount > 0}
+        <Button
+          on:click={updateSelectedImages}
+          title="Update {updatableSelectedCount} image{updatableSelectedCount > 1 ? 's' : ''}"
+          aria-label="Update images"
+          icon={faSync} />
+      {/if}
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
   {/snippet}

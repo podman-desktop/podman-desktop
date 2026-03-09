@@ -21,6 +21,8 @@ import {
   type ImageInfo,
   isViewContributionBadge,
   isViewContributionIcon,
+  type ProviderContainerConnectionInfo,
+  type ProviderInfo,
   type ViewContributionBadgeValue,
   type ViewInfoUI,
 } from '@podman-desktop/core-api';
@@ -34,6 +36,7 @@ import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import ManifestIcon from '/@/lib/images/ManifestIcon.svelte';
+import { clearImageUpdateStatus } from '/@/stores/image-update-status-store';
 
 import type { ImageInfoUI } from './ImageInfoUI';
 
@@ -274,4 +277,45 @@ export class ImageUtils {
       }
     });
   }
+}
+
+export function getImageRef(name: string, tag: string): string {
+  if (name.includes('@sha256:')) return name;
+  return `${name}:${tag}`;
+}
+
+export function findProviderConnection(
+  engineId: string,
+  providers: ProviderInfo[],
+): ProviderContainerConnectionInfo | undefined {
+  const dotIndex = engineId.indexOf('.');
+  if (dotIndex === -1) {
+    const provider = providers.find(p => p.id === engineId);
+    if (provider) return provider.containerConnections.find(conn => conn.status === 'started');
+    return providers
+      .flatMap(p => p.containerConnections)
+      .find(conn => conn.name === engineId && conn.status === 'started');
+  }
+  const provider = providers.find(p => p.id === engineId.substring(0, dotIndex));
+  return provider?.containerConnections.find(
+    conn => conn.name === engineId.substring(dotIndex + 1) && conn.status === 'started',
+  );
+}
+
+export async function pullImageUpdate(image: ImageInfoUI, providers: ProviderInfo[]): Promise<void> {
+  const conn = findProviderConnection(image.engineId, providers);
+  if (!conn) {
+    throw new Error(`No provider connection found for engineId "${image.engineId}"`);
+  }
+  const oldImageId = image.id;
+  await window.pullImage(conn, getImageRef(image.name, image.tag), () => {});
+
+  try {
+    await window.deleteImage(image.engineId, oldImageId);
+  } catch {
+    // Old image may still be in use by a container or already removed
+  }
+
+  image.updateStatus = undefined;
+  clearImageUpdateStatus(image.engineId, image.name, image.id, image.tag);
 }

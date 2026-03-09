@@ -30,22 +30,30 @@ import { router } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
+import { clearAllImageUpdateStatuses } from '/@/stores/image-update-status-store';
 import { imagesInfos } from '/@/stores/images';
 import { providerInfos } from '/@/stores/providers';
 import { viewsContributions } from '/@/stores/views';
 
 import ImagesList from './ImagesList.svelte';
 
-// fake the window.events object
 beforeEach(() => {
+  vi.resetAllMocks();
   providerInfos.set([]);
   imagesInfos.set([]);
   viewsContributions.set([]);
+  clearAllImageUpdateStatuses();
   vi.mocked(window.hasAuthconfigForImage).mockResolvedValue(false);
   vi.mocked(window.listViewsContributions).mockResolvedValue([]);
   vi.mocked(window.getConfigurationProperties).mockResolvedValue({});
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
+  vi.mocked(window.checkImageUpdateStatus).mockResolvedValue({
+    status: 'normal',
+    updateAvailable: false,
+    message: 'Image is up to date',
+  });
+  vi.mocked(window.pullImage).mockResolvedValue(undefined);
 
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
@@ -61,8 +69,7 @@ async function waitRender(customProperties: object): Promise<void> {
 
 test('Expect no container engines being displayed', async () => {
   render(ImagesList);
-  const noEngine = screen.getByRole('heading', { name: 'No Container Engine' });
-  expect(noEngine).toBeInTheDocument();
+  screen.getByRole('heading', { name: 'No Container Engine' });
 });
 
 test('Expect images being ordered by newest first', async () => {
@@ -114,22 +121,13 @@ test('Expect images being ordered by newest first', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  // wait store are populated
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
   await waitRender({});
 
   const fedoraRecent = screen.getByRole('cell', { name: 'fedora 789789123456 recent' });
   const fedoraOld = screen.getByRole('cell', { name: 'fedora 123456789012 old' });
   const veryOld = screen.getByRole('cell', { name: 'veryold 456456456456 image' });
-  expect(fedoraRecent).toBeInTheDocument();
-  expect(fedoraOld).toBeInTheDocument();
-  expect(veryOld).toBeInTheDocument();
 
   expect(fedoraRecent.compareDocumentPosition(fedoraOld)).toBe(4);
   expect(fedoraRecent.compareDocumentPosition(veryOld)).toBe(4);
@@ -167,18 +165,11 @@ test('Expect filter empty screen', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  // wait store are populated
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
   await waitRender({ searchTerm: 'No match' });
 
-  const filterButton = screen.getByRole('button', { name: 'Clear filter' });
-  expect(filterButton).toBeInTheDocument();
+  screen.getByRole('button', { name: 'Clear filter' });
 });
 
 test('Expect two images in list given image id and engine id', async () => {
@@ -248,26 +239,15 @@ test('Expect two images in list given image id and engine id', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  // wait store are populated
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
   await waitRender({ searchTerm: 'sha256:1234567890123', imageEngineId: 'podman' });
 
-  const image1 = screen.queryByRole('cell', { name: 'fedora 123456789012 old' });
-  expect(image1).toBeInTheDocument();
-  const image2 = screen.queryByRole('cell', { name: 'fedora 123456789012 2' });
-  expect(image2).toBeInTheDocument();
-  const image3 = screen.queryByRole('cell', { name: 'fedora 123456789012 1' });
-  expect(image3).not.toBeInTheDocument();
-  const image4 = screen.queryByRole('cell', { name: 'fedora 234567890123 3' });
-  expect(image4).not.toBeInTheDocument();
-  const image5 = screen.queryByRole('cell', { name: 'fedora 345678901234 4' });
-  expect(image5).not.toBeInTheDocument();
+  screen.getByRole('cell', { name: 'fedora 123456789012 old' });
+  screen.getByRole('cell', { name: 'fedora 123456789012 2' });
+  expect(screen.queryByRole('cell', { name: 'fedora 123456789012 1' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('cell', { name: 'fedora 234567890123 3' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('cell', { name: 'fedora 345678901234 4' })).not.toBeInTheDocument();
 });
 
 describe('Contributions', () => {
@@ -326,20 +306,13 @@ describe('Contributions', () => {
     // set viewsContributions
     viewsContributions.set(contribs);
 
-    // wait store are populated
-    while (get(imagesInfos).length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-    while (get(providerInfos).length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
     await waitRender({});
 
     // check image icon of status being overrided due to contributed menu
 
-    const fedoraOld = screen.getByRole('cell', { name: 'fedora 123456789012 old' });
-    expect(fedoraOld).toBeInTheDocument();
+    screen.getByRole('cell', { name: 'fedora 123456789012 old' });
 
     // now check that there is a custom icon for status column
     const statusElement = screen.getByRole('status', { name: 'UNUSED' });
@@ -407,13 +380,7 @@ describe('Contributions', () => {
     // set viewsContributions
     viewsContributions.set(contribs);
 
-    // wait store are populated
-    while (get(imagesInfos).length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-    while (get(providerInfos).length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
     await waitRender({});
 
@@ -423,8 +390,6 @@ describe('Contributions', () => {
     // check badge is being added
 
     const fedoraOld = screen.getByRole('cell', { name: 'fedora badge-my-custom-badge 123456789012 old' });
-    expect(fedoraOld).toBeInTheDocument();
-
     const badge = within(fedoraOld).getByText('my-custom-badge');
 
     // check background color
@@ -438,8 +403,6 @@ test('Expect importImage button redirects to image import page', async () => {
   const goToMock = vi.spyOn(router, 'goto');
   render(ImagesList);
   const btnImportImage = screen.getByRole('button', { name: 'Import Image' });
-  expect(btnImportImage).toBeInTheDocument();
-
   await userEvent.click(btnImportImage);
   expect(goToMock).toBeCalledWith('/images/import');
 });
@@ -495,13 +458,7 @@ test('expect redirect to saveImage page when at least one image is selected and 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  // wait store are populated
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
   await waitRender({});
 
@@ -518,8 +475,6 @@ test('Expect load images button redirects to images load page', async () => {
   const goToMock = vi.spyOn(router, 'goto');
   render(ImagesList);
   const btnLoadImages = screen.getByRole('button', { name: 'Load Images' });
-  expect(btnLoadImages).toBeInTheDocument();
-
   await userEvent.click(btnLoadImages);
   expect(goToMock).toBeCalledWith('/images/load');
 });
@@ -567,18 +522,11 @@ test('Manifest images display without actions', async () => {
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  // wait store are populated
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
   await waitRender({});
 
   const manifestImageRow = screen.getByRole('row', { name: 'manifestimage' });
-  expect(manifestImageRow).toBeInTheDocument();
   // Check that the manifest image is displayed with no:
   // Push Image
   // Edit Image
@@ -597,8 +545,7 @@ test('Manifest images display without actions', async () => {
   expect(showHistoryButton).not.toBeInTheDocument();
 
   // Verify normal image is shown still.
-  const normalImageRow = screen.getByRole('row', { name: 'normalimage' });
-  expect(normalImageRow).toBeInTheDocument();
+  screen.getByRole('row', { name: 'normalimage' });
 });
 
 test('Expect user confirmation to pop up when preferences require', async () => {
@@ -633,13 +580,7 @@ test('Expect user confirmation to pop up when preferences require', async () => 
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('image-build'));
 
-  // wait store are populated
-  while (get(imagesInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  while (get(providerInfos).length === 0) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
+  await vi.waitUntil(() => get(imagesInfos).length > 0 && get(providerInfos).length > 0);
 
   await waitRender({});
 
@@ -699,8 +640,7 @@ test('Expect to see empty page and no table when no container engine is running'
   const table = screen.queryByRole('table');
   expect(table).toBeNull();
 
-  const noContainerEngine = screen.getByText('No Container Engine');
-  expect(noContainerEngine).toBeInTheDocument();
+  screen.getByText('No Container Engine');
 });
 
 test('Expect environment column sorted by engineId', async () => {
@@ -822,9 +762,115 @@ test('Expect environment dropdown to appear with multiple running connections', 
 
   await waitRender({});
 
-  // Environment dropdown should be visible
-  const environmentDropdown = screen.getByLabelText('Environment');
-  expect(environmentDropdown).toBeInTheDocument();
+  screen.getByLabelText('Environment');
+});
+
+test('Expect no automatic checkImageUpdateStatus calls on mount', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      RepoDigests: ['fedora@sha256:abc123'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await waitFor(() => {
+    expect(get(imagesInfos)).toHaveLength(1);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  expect(window.checkImageUpdateStatus).not.toHaveBeenCalled();
+});
+
+test('Expect Scan for Updates button to check images for updates', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      RepoDigests: ['fedora@sha256:abc123'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+    {
+      Id: 'sha256:2345678901234',
+      RepoTags: ['alpine:latest'],
+      RepoDigests: ['alpine@sha256:def456'],
+      Created: 1644009612,
+      Size: 456,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  vi.mocked(window.checkImageUpdateStatus).mockResolvedValue({
+    status: 'normal',
+    updateAvailable: false,
+    message: 'Image is up to date',
+  });
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await waitFor(() => {
+    expect(get(imagesInfos)).toHaveLength(2);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  expect(window.checkImageUpdateStatus).not.toHaveBeenCalled();
+
+  const scanButton = screen.getByRole('button', { name: 'Scan for Updates' });
+  await fireEvent.click(scanButton);
+
+  await waitFor(() => {
+    expect(window.checkImageUpdateStatus).toHaveBeenCalledWith('fedora:latest', 'latest', ['fedora@sha256:abc123']);
+    expect(window.checkImageUpdateStatus).toHaveBeenCalledWith('alpine:latest', 'latest', ['alpine@sha256:def456']);
+  });
 });
 
 test('Expect environment dropdown to filter images by selected environment', async () => {

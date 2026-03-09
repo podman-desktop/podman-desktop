@@ -1,5 +1,13 @@
 <script lang="ts">
-import { faArrowUp, faDownload, faEdit, faLayerGroup, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUp,
+  faDownload,
+  faEdit,
+  faLayerGroup,
+  faPlay,
+  faSync,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import type { Menu } from '@podman-desktop/core-api';
 import { MenuContext } from '@podman-desktop/core-api';
 import { createEventDispatcher, onMount } from 'svelte';
@@ -10,11 +18,12 @@ import { ContextUI } from '/@/lib/context/context';
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ListItemButtonIcon from '/@/lib/ui/ListItemButtonIcon.svelte';
 import { context } from '/@/stores/context';
+import { providerInfos } from '/@/stores/providers';
 import { runImageInfo } from '/@/stores/run-image-store';
 import { saveImagesInfo } from '/@/stores/save-images-store';
 
 import ActionsWrapper from './ActionsMenu.svelte';
-import { ImageUtils } from './image-utils';
+import { ImageUtils, pullImageUpdate } from './image-utils';
 import type { ImageInfoUI } from './ImageInfoUI';
 
 interface Props {
@@ -98,6 +107,19 @@ function saveImage(): void {
   saveImagesInfo.set([image]);
   router.goto('/images/save');
 }
+
+async function updateImage(): Promise<void> {
+  image.updateInProgress = true;
+  dispatch('update', image);
+
+  try {
+    await pullImageUpdate(image, $providerInfos);
+  } catch (err: unknown) {
+    await onError(`Failed to update image: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  image.updateInProgress = false;
+  dispatch('update', image);
+}
 </script>
 
 <ListItemButtonIcon title="Run Image" onClick={(): Promise<void> => runImage(image)} detailed={detailed} icon={faPlay} />
@@ -137,6 +159,17 @@ function saveImage(): void {
       detailed={detailed}
       icon={faLayerGroup} />
   {/if}
+  {#if image.updateStatus?.updateAvailable}
+    <ListItemButtonIcon
+      title="Update Image"
+      tooltip="Pull the latest version of this image"
+      onClick={updateImage}
+      menu={dropdownMenu}
+      detailed={detailed}
+      icon={faSync}
+      inProgress={image.updateInProgress} />
+  {/if}
+
   <ListItemButtonIcon
     title="Save Image"
     tooltip="Save image to a local directory"
