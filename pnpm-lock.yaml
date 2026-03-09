@@ -117,13 +117,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-<<<<<<< HEAD
-        specifier: 40.7.0
-        version: 40.7.0
-=======
         specifier: 40.8.0
         version: 40.8.0
->>>>>>> 2752468450f (chore(deps): bump electron from 40.4.1 to 40.8.0)
       electron-builder:
         specifier: 26.7.0
         version: 26.7.0(electron-builder-squirrel-windows@25.1.8(dmg-builder@26.7.0))
@@ -6777,11 +6772,6 @@ packages:
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
-  electron@40.7.0:
-    resolution: {integrity: sha512-oQe76S/3V1rcb0+i45hAxnCH8udkRZSaHUNwglzNAEKbB94LSJ1qwbFo8+uRc2UsYZgCqSIMRcyX40GyOkD+Xw==}
-    engines: {node: '>= 12.20.55'}
-    hasBin: true
-
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
 
@@ -10349,7 +10339,6 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.14.1:
@@ -19738,14 +19727,6 @@ snapshots:
       new-github-issue-url: 1.1.0
 
   electron@40.8.0:
-    dependencies:
-      '@electron/get': 2.0.3
-      '@types/node': 24.10.11
-      extract-zip: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-
-  electron@40.7.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.11
