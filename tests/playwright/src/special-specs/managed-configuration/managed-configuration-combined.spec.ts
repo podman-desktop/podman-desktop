@@ -20,7 +20,6 @@ import type { Locator } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
 import { PreferenceLabels, PreferencesPage } from '/@/model/pages/preferences-page';
-import type { SettingsBar } from '/@/model/pages/settings-bar';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { test } from '/@/utility/fixtures';
 
@@ -28,7 +27,6 @@ const FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL: string = 'Show feedback dialog for ex
 const ZOOM_LEVEL_NUMBER_INPUT_LABEL: string = 'preferences.zoomLevel';
 const TERMINAL_LINE_HEIGHT_INPUT_LABEL: string = 'terminal.integrated.lineHeight';
 
-let settingsBar: SettingsBar;
 let preferencesPage: PreferencesPage;
 
 test.use({
@@ -46,7 +44,7 @@ test.beforeAll(async ({ runner, welcomePage, navigationBar }) => {
   test.setTimeout(60_000);
   runner.setVideoAndTraceName('managed-configuration-combined-e2e');
   await welcomePage.handleWelcomePage(true);
-  settingsBar = await navigationBar.openSettings();
+  const settingsBar = await navigationBar.openSettings();
   preferencesPage = await settingsBar.openTabPage(PreferencesPage);
 });
 
@@ -57,10 +55,9 @@ test.afterAll(async ({ runner }) => {
 test.describe.serial('Managed Configuration - preferences', { tag: '@managed-configuration' }, () => {
   test.describe
     .serial('User preference: Appearance', () => {
-      let appearanceRow: Locator;
       let value: string;
       test('Expected settings value', async () => {
-        appearanceRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
+        const appearanceRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.APPEARANCE);
         await playExpect(appearanceRow).toBeAttached();
 
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.APPEARANCE);
@@ -77,19 +74,25 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       });
       test('Reset preference to default', async () => {
         await preferencesPage.resetPreference(PreferenceLabels.APPEARANCE);
-        await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
-
-        value = await preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
-        playExpect(value).toBe('system');
+        await playExpect
+          .poll(
+            async () => {
+              return preferencesPage.getPreferenceDropdownValue(PreferenceLabels.APPEARANCE);
+            },
+            {
+              timeout: 5000,
+              message: 'Appearance preference did not reset to default value',
+            },
+          )
+          .toBe('system');
       });
     });
 
   test.describe
     .serial('User + Defaults preference: Feedback Dialog', () => {
-      let feedbackDialogRow: Locator;
       let value: boolean;
       test('Expected settings value', async () => {
-        feedbackDialogRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
+        const feedbackDialogRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.FEEDBACK_DIALOG);
         await playExpect(feedbackDialogRow).toBeAttached();
 
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.FEEDBACK_DIALOG);
@@ -103,13 +106,20 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       });
       test('Preference can be reset', async () => {
         await preferencesPage.resetPreference(PreferenceLabels.FEEDBACK_DIALOG);
-        await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
-
-        value = await preferencesPage.getPreferenceCheckboxValue(
-          PreferenceLabels.FEEDBACK_DIALOG,
-          FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
-        );
-        playExpect(value).toBe(true);
+        await playExpect
+          .poll(
+            async () => {
+              return await preferencesPage.getPreferenceCheckboxValue(
+                PreferenceLabels.FEEDBACK_DIALOG,
+                FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL,
+              );
+            },
+            {
+              timeout: 5000,
+              message: 'Feedback Dialog preference did not reset to default value',
+            },
+          )
+          .toBe(true);
       });
       test('Preference can be changed', async () => {
         await preferencesPage.togglePreferenceCheckbox(
@@ -151,10 +161,9 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
 
   test.describe
     .serial('Defaults preference: Zoom Level', () => {
-      let zoomLevelRow: Locator;
       let value: string;
       test('Expected settings value', async () => {
-        zoomLevelRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
+        const zoomLevelRow = preferencesPage.getPreferenceRowByName(PreferenceLabels.ZOOM_LEVEL);
         await playExpect(zoomLevelRow).toBeAttached();
 
         const isManaged = await preferencesPage.isPreferenceManaged(PreferenceLabels.ZOOM_LEVEL);
@@ -182,13 +191,20 @@ test.describe.serial('Managed Configuration - preferences', { tag: '@managed-con
       test.fail('Preference can be reset', async () => {
         // Fails because of https://github.com/podman-desktop/podman-desktop/issues/16000
         await preferencesPage.resetPreference(PreferenceLabels.ZOOM_LEVEL);
-        await preferencesPage.page.waitForTimeout(1000); // wait for reset to apply
-
-        value = await preferencesPage.getPreferenceNumberInputValue(
-          PreferenceLabels.ZOOM_LEVEL,
-          ZOOM_LEVEL_NUMBER_INPUT_LABEL,
-        );
-        playExpect(value).toBe('0.5');
+        await playExpect
+          .poll(
+            async () => {
+              return await preferencesPage.getPreferenceNumberInputValue(
+                PreferenceLabels.ZOOM_LEVEL,
+                ZOOM_LEVEL_NUMBER_INPUT_LABEL,
+              );
+            },
+            {
+              timeout: 5000,
+              message: 'Zoom Level preference did not reset to default value',
+            },
+          )
+          .toBe('0.5');
       });
     });
 
