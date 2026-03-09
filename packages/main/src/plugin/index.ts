@@ -537,11 +537,6 @@ export class PluginSystem {
       configurationRegistryEmitter,
     );
 
-    container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
-    const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
-      ExperimentalConfigurationManager,
-    );
-
     container.bind<ColorRegistry>(ColorRegistry).to(InjectableColorRegistry).inSingletonScope();
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
     colorRegistry.init();
@@ -560,6 +555,11 @@ export class PluginSystem {
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
+
+    container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
+    const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
+      ExperimentalConfigurationManager,
+    );
 
     container.bind<CommandRegistry>(CommandRegistry).toSelf().inSingletonScope();
     const commandRegistry = container.get<CommandRegistry>(CommandRegistry);

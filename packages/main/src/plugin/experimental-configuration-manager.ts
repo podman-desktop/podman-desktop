@@ -60,9 +60,9 @@ export class ExperimentalConfigurationManager {
     config: unknown,
     scope?: containerDesktopAPI.ConfigurationScope | containerDesktopAPI.ConfigurationScope[],
   ): Promise<void> {
-    const enabled = typeof config === 'object' && config !== null;
-    this.telemetry.track('experimentalConfigurationUpdate', { key, enabled });
     await this.configurationRegistry.updateConfigurationValue(key, config, scope);
+    const enabled = typeof config === 'object' && !!config;
+    this.telemetry.track('experimentalConfigurationUpdate', { key, enabled });
   }
 
   /**
