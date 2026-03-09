@@ -248,6 +248,10 @@ export default [
       // simple-import-sort custom rules
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+
+      // new rule that has been added as a recommended one in eslint v10
+      // but comment it by default until we can fix all the issues in the codebase
+      'preserve-caught-error': 'off',
     },
   },
 
