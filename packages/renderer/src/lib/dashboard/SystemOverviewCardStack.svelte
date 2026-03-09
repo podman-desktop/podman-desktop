@@ -1,10 +1,13 @@
 <script lang="ts">
 import { faChevronLeft, faChevronRight, faPlus } from '@fortawesome/free-solid-svg-icons';
 import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
+import { CONNECTIONS_EXPANDED_CONFIGURATION_KEY } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 
 interface Props {
   connections: Array<{ connection: ProviderConnectionInfo; provider: ProviderInfo }>;
@@ -15,8 +18,27 @@ let { connections, showAddButton = true }: Props = $props();
 
 let expanded = $state(false);
 
-function toggle(): void {
+const listener: EventListener = (obj: object) => {
+  if ('detail' in obj) {
+    const detail = obj.detail as { key: string; value: boolean };
+    if (CONNECTIONS_EXPANDED_CONFIGURATION_KEY === detail?.key) {
+      expanded = detail.value;
+    }
+  }
+};
+
+onMount(async () => {
+  onDidChangeConfiguration.addEventListener(CONNECTIONS_EXPANDED_CONFIGURATION_KEY, listener);
+  expanded = (await window.getConfigurationValue<boolean>(CONNECTIONS_EXPANDED_CONFIGURATION_KEY)) ?? true;
+});
+
+onDestroy(() => {
+  onDidChangeConfiguration.removeEventListener(CONNECTIONS_EXPANDED_CONFIGURATION_KEY, listener);
+});
+
+async function toggle(): Promise<void> {
   expanded = !expanded;
+  await window.updateConfigurationValue(CONNECTIONS_EXPANDED_CONFIGURATION_KEY, expanded);
 }
 
 function goToResources(): void {
