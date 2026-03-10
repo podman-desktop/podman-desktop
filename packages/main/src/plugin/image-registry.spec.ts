@@ -839,7 +839,7 @@ describe('expect checkCredentials', async () => {
     );
   });
 
-  test('should add a registry and return a Disposable when registering a registry', async () => {
+  test('should add a registry and return a Disposable when registering a registry', () => {
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
@@ -855,7 +855,7 @@ describe('expect checkCredentials', async () => {
     expect(newRegistries.length).toBe(1);
   });
 
-  test('should not duplicate a registry, and return a Disposable, when registering a registry twice', async () => {
+  test('should not duplicate a registry, and return a Disposable, when registering a registry twice', () => {
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
