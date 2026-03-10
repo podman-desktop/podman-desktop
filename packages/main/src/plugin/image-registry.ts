@@ -154,7 +154,7 @@ export class ImageRegistry {
     const registryConfig: Dockerode.RegistryConfig = {};
     for (const registry of this.getRegistries()) {
       let addRegistry = true;
-      // before adding the registry, check if the registry information is valid, and if not, it will be unregistered
+      // before adding the registry, check if the registry information is valid
       await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
         () => {
           console.log(`Error while checking registry credentials ${registry.serverUrl}, unregistering`);
