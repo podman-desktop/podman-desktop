@@ -666,7 +666,7 @@ export class ContainerProviderRegistry {
     // Get timeout from configuration
     const timeoutSeconds = this.configurationRegistry
       .getConfiguration(ContainerRegistrySettings.SectionName)
-      .get<number>(ContainerRegistrySettings.ProviderTimeout, DEFAULT_PROVIDER_TIMEOUT);
+      .get<number>(ContainerRegistrySettings.ProviderTimeout);
     const PROVIDER_TIMEOUT_MS = timeoutSeconds * 1000;
 
     // Helper function to add timeout to provider operations
