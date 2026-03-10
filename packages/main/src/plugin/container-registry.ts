@@ -2602,7 +2602,7 @@ export class ContainerProviderRegistry {
       }
 
       // grab auth for all registries
-      const registryconfig = this.imageRegistry.getRegistryConfig();
+      const registryconfig = await this.imageRegistry.getRegistryConfig();
       eventCollect(
         'stream',
         `Uploading the build context from ${containerBuildContextDirectory}...Can take a while...\r\n`,

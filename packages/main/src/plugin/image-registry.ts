@@ -150,14 +150,26 @@ export class ImageRegistry {
   /**
    * Provides authentication information from all registries.
    */
-  getRegistryConfig(): Dockerode.RegistryConfig {
+  async getRegistryConfig(): Promise<Dockerode.RegistryConfig> {
     const registryConfig: Dockerode.RegistryConfig = {};
     for (const registry of this.getRegistries()) {
-      const serveraddress = registry.serverUrl.toLowerCase();
-      registryConfig[serveraddress] = {
-        username: registry.username,
-        password: registry.secret,
-      };
+      let addRegistry = true;
+      // before adding the registry, check if the registry information is valid, and if not, it will be unregistered
+      await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
+        () => {
+          this.unregisterRegistry(registry);
+          console.log(`Error while checking registry credentials ${registry.serverUrl}, unregistering`);
+          addRegistry = false;
+        },
+      );
+
+      if (addRegistry) {
+        const serveraddress = registry.serverUrl.toLowerCase();
+        registryConfig[serveraddress] = {
+          username: registry.username,
+          password: registry.secret,
+        };
+      }
     }
     return registryConfig;
   }
@@ -183,12 +195,6 @@ export class ImageRegistry {
     });
     this.apiSender.send('registry-register', registry);
     this._onDidRegisterRegistry.fire(Object.freeze({ ...registry }));
-
-    // after registering, check if the registry info is valid, and if not, it will be unregistered
-    this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(() => {
-      this.unregisterRegistry(registry);
-      console.log(`Error while checking registry credentials ${registry.serverUrl}, unregistering`);
-    });
     return Disposable.create(() => {
       this.unregisterRegistry(registry);
     });

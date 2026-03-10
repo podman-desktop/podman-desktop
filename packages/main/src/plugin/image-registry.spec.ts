@@ -840,9 +840,6 @@ describe('expect checkCredentials', async () => {
   });
 
   test('should add a registry and return a Disposable when registering a registry', async () => {
-    const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
-    spyCheckCredentials.mockResolvedValue(undefined);
-
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
@@ -859,9 +856,6 @@ describe('expect checkCredentials', async () => {
   });
 
   test('should not duplicate a registry, and return a Disposable, when registering a registry twice', async () => {
-    const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
-    spyCheckCredentials.mockResolvedValue(undefined);
-
     const reg1: Registry = {
       source: 'a-source',
       serverUrl: 'an-url',
@@ -884,9 +878,12 @@ describe('expect checkCredentials', async () => {
   });
 });
 
-test('should unregister a registry with credential or info that does not work', async () => {
+test('getRegistryConfig should return only valid registries and unregister all the non valid ones', async () => {
   const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
-  spyCheckCredentials.mockRejectedValue(new Error('something went wrong'));
+  spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
+  spyCheckCredentials.mockResolvedValueOnce(undefined);
+  spyCheckCredentials.mockResolvedValueOnce(undefined);
+  spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
 
   const unregisterRegistrySpy = vi.spyOn(imageRegistry, 'unregisterRegistry');
 
@@ -896,20 +893,51 @@ test('should unregister a registry with credential or info that does not work', 
   expect(registries.length).toBe(0);
 
   const reg1: Registry = {
-    source: 'a-source',
-    serverUrl: 'an-url',
-    username: 'a-username',
-    secret: 'pass',
+    source: 'a-source-1',
+    serverUrl: 'an-url-1',
+    username: 'a-username-1',
+    secret: 'pass-1',
+  };
+
+  const reg2: Registry = {
+    source: 'a-source-2',
+    serverUrl: 'An-url-2',
+    username: 'a-username-2',
+    secret: 'pass-2',
+  };
+
+  const reg3: Registry = {
+    source: 'a-source-3',
+    serverUrl: 'an-url-3',
+    username: 'a-username-3',
+    secret: 'pass-3',
+  };
+
+  const reg4: Registry = {
+    source: 'a-source-4',
+    serverUrl: 'an-url-4',
+    username: 'a-username-4',
+    secret: 'pass-4',
   };
 
   imageRegistry.registerRegistry(reg1);
+  imageRegistry.registerRegistry(reg2);
+  imageRegistry.registerRegistry(reg3);
+  imageRegistry.registerRegistry(reg4);
 
-  await vi.waitFor(() => expect(unregisterRegistrySpy).toHaveBeenCalledWith(reg1));
+  expect(imageRegistry.getRegistries().length).toBe(4);
 
-  const registries2: Registry[] = [...imageRegistry.getRegistries()];
-  expect(registries2).toBeDefined();
-  expectTypeOf(registries2).toBeArray();
-  expect(registries2.length).toBe(0);
+  const registryConfig = await imageRegistry.getRegistryConfig();
+
+  expect(Object.keys(registryConfig).length).toBe(2);
+  expect(Object.keys(registryConfig)).toContain('an-url-2');
+  expect(Object.keys(registryConfig)).toContain('an-url-3');
+
+  await vi.waitFor(() => {
+    expect(unregisterRegistrySpy).toHaveBeenCalledWith(reg1);
+    expect(unregisterRegistrySpy).toHaveBeenCalledWith(reg4);
+  });
+  expect(imageRegistry.getRegistries().length).toBe(2);
 });
 
 test('findBestManifest returns the expected manifest', () => {
@@ -1145,9 +1173,6 @@ test('getManifestFromUrl returns the expected manifest with docker manifest v2',
 });
 
 test('getAuthconfigForServer returns the expected authconfig', async () => {
-  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
-  spyCheckCredentials.mockResolvedValue(undefined);
-
   imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
@@ -1163,9 +1188,6 @@ test('getAuthconfigForServer returns the expected authconfig', async () => {
 });
 
 test('getAuthconfigForServer returns docker.io authconfig when server is index.docker.io', async () => {
-  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
-  spyCheckCredentials.mockResolvedValue(undefined);
-
   imageRegistry.registerRegistry({
     serverUrl: 'docker.io',
     username: 'foo',
@@ -1181,9 +1203,6 @@ test('getAuthconfigForServer returns docker.io authconfig when server is index.d
 });
 
 test('getToken with registry auth', async () => {
-  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
-  spyCheckCredentials.mockResolvedValue(undefined);
-
   imageRegistry.registerRegistry({
     serverUrl: 'my-podman-desktop-fake-registry.io',
     username: 'foo',
