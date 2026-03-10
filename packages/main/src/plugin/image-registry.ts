@@ -157,7 +157,6 @@ export class ImageRegistry {
       // before adding the registry, check if the registry information is valid, and if not, it will be unregistered
       await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
         () => {
-          this.unregisterRegistry(registry);
           console.log(`Error while checking registry credentials ${registry.serverUrl}, unregistering`);
           addRegistry = false;
         },

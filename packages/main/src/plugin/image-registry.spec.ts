@@ -885,8 +885,6 @@ test('getRegistryConfig should return only valid registries and unregister all t
   spyCheckCredentials.mockResolvedValueOnce(undefined);
   spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
 
-  const unregisterRegistrySpy = vi.spyOn(imageRegistry, 'unregisterRegistry');
-
   const registries: Registry[] = [...imageRegistry.getRegistries()];
   expect(registries).toBeDefined();
   expectTypeOf(registries).toBeArray();
@@ -932,12 +930,7 @@ test('getRegistryConfig should return only valid registries and unregister all t
   expect(Object.keys(registryConfig).length).toBe(2);
   expect(Object.keys(registryConfig)).toContain('an-url-2');
   expect(Object.keys(registryConfig)).toContain('an-url-3');
-
-  await vi.waitFor(() => {
-    expect(unregisterRegistrySpy).toHaveBeenCalledWith(reg1);
-    expect(unregisterRegistrySpy).toHaveBeenCalledWith(reg4);
-  });
-  expect(imageRegistry.getRegistries().length).toBe(2);
+  expect(imageRegistry.getRegistries().length).toBe(4);
 });
 
 test('findBestManifest returns the expected manifest', () => {
