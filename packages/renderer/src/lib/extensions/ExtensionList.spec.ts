@@ -239,8 +239,8 @@ test('Search catalog page searches also description', async () => {
 
 test('Expect to see local extensions tab content', async () => {
   vi.mocked(window.getConfigurationValue).mockImplementation(async (key: string) => {
-    // Return true for local extensions enabled, false for development mode to show empty screen
-    return key === 'extensions.localExtensions.enabled';
+    // Return true for local extensions and catalog enabled
+    return key === 'extensions.localExtensions.enabled' || key === 'extensions.catalog.enabled';
   });
   catalogExtensionInfos.set([]);
   extensionInfos.set([]);
@@ -329,4 +329,29 @@ test('Expect local extensions tab to not be visible if extensions.localExtension
 
   const localExtensionsTab = screen.queryByRole('button', { name: 'Local Extensions' });
   expect(localExtensionsTab).not.toBeInTheDocument();
+});
+
+test('Expect catalog tab is visible', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+  catalogExtensionInfos.set([]);
+  extensionInfos.set([]);
+
+  render(ExtensionList);
+
+  await vi.waitFor(() => {
+    const catalogTab = screen.getByRole('button', { name: 'Catalog' });
+    expect(catalogTab).toBeInTheDocument();
+  });
+});
+
+test('Expect catalog tab to not be visible if extensions.catalog.enabled is false', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  catalogExtensionInfos.set([]);
+  extensionInfos.set([]);
+
+  render(ExtensionList);
+
+  await vi.waitFor(() => {
+    expect(screen.queryByRole('button', { name: 'Catalog' })).not.toBeInTheDocument();
+  });
 });

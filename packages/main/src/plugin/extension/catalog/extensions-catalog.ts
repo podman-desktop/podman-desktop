@@ -75,6 +75,12 @@ export class ExtensionsCatalog {
           default: true,
           hidden: true,
         },
+        [ExtensionsCatalogSettings.SectionName + '.' + ExtensionsCatalogSettings.catalogEnabled]: {
+          description: 'Show the extension catalog in the UI. When disabled, hides the catalog suggestions.',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
       },
     };
 

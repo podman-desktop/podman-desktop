@@ -400,7 +400,7 @@ test('Should use proxy object if proxySettings is undefined', () => {
   expect(options.agent?.https?.proxy.href).toBe('https://localhost/');
 });
 
-test('should register local extensions enabled configuration property', () => {
+test('should register local extensions and catalog enabled configuration properties', () => {
   extensionsCatalog.init();
 
   expect(configurationRegistry.registerConfigurations).toHaveBeenCalledWith([
@@ -411,6 +411,12 @@ test('should register local extensions enabled configuration property', () => {
       properties: expect.objectContaining({
         'extensions.localExtensions.enabled': {
           description: 'Show the local extensions tab.',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
+        'extensions.catalog.enabled': {
+          description: 'Show the extension catalog in the UI. When disabled, hides the catalog suggestions.',
           type: 'boolean',
           default: true,
           hidden: true,
