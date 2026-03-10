@@ -246,7 +246,8 @@ export class Runner {
         if (pid) {
           console.log(`Killing the electron app process with PID: ${pid}`);
           try {
-            process.kill(pid as number);
+            // Use SIGKILL for more forceful termination, especially needed on macOS with Electron 40.8.0+
+            process.kill(pid as number, 'SIGKILL');
           } catch (error: unknown) {
             console.log(`Exception thrown when killing the process: ${error}`);
           }

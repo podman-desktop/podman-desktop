@@ -26,23 +26,29 @@ import { Runner } from '/@/runner/podman-desktop-runner';
 import { RunnerOptions } from '/@/runner/runner-options';
 
 export type TestFixtures = {
-  runner: Runner;
   navigationBar: NavigationBar;
   welcomePage: WelcomePage;
   page: Page;
   statusBar: StatusBar;
 };
 
-export type FixtureOptions = {
+export type WorkerFixtures = {
+  runner: Runner;
+};
+
+export type WorkerOptions = {
   runnerOptions: RunnerOptions;
 };
 
-export const test = base.extend<TestFixtures & FixtureOptions>({
-  runnerOptions: [new RunnerOptions(), { option: true }],
-  runner: async ({ runnerOptions }, use) => {
-    const runner = await Runner.getInstance({ runnerOptions });
-    await use(runner);
-  },
+export const test = base.extend<TestFixtures, WorkerFixtures & WorkerOptions>({
+  runnerOptions: [new RunnerOptions(), { scope: 'worker', option: true }],
+  runner: [
+    async ({ runnerOptions }, use): Promise<void> => {
+      const runner = await Runner.getInstance({ runnerOptions });
+      await use(runner);
+    },
+    { scope: 'worker', timeout: 180_000 },
+  ],
   page: async ({ runner }, use) => {
     await use(runner.getPage());
   },
