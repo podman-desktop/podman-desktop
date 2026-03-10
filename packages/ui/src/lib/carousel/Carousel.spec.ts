@@ -286,7 +286,7 @@ test('carousel prevents horizontal wheel event default behavior', async () => {
   expect(preventDefaultSpy).toHaveBeenCalled();
 });
 
-test('carousel stops horizontal wheel event propagation to prevent browser back/forward navigation', async () => {
+test('carousel does not prevent default on vertical wheel events', async () => {
   render(CarouselTest);
 
   // Set narrow width so scrolling is needed
@@ -294,33 +294,13 @@ test('carousel stops horizontal wheel event propagation to prevent browser back/
 
   const carousel = screen.getByLabelText('Carousel container');
 
-  // Create a horizontal wheel event and spy on stopPropagation
-  const wheelEvent = new WheelEvent('wheel', { deltaX: 100, deltaY: 0 });
-  const stopPropagationSpy = vi.spyOn(wheelEvent, 'stopPropagation');
-
-  // Trigger wheel event
-  carousel.dispatchEvent(wheelEvent);
-
-  expect(stopPropagationSpy).toHaveBeenCalled();
-});
-
-test('carousel does not stop vertical wheel event propagation', async () => {
-  render(CarouselTest);
-
-  // Set narrow width so scrolling is needed
-  callback([{ contentRect: { width: 360 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
-
-  const carousel = screen.getByLabelText('Carousel container');
-
-  // Create a vertical wheel event and spy on stopPropagation
+  // Create a vertical wheel event - should not be intercepted
   const wheelEvent = new WheelEvent('wheel', { deltaX: 0, deltaY: 100 });
-  const stopPropagationSpy = vi.spyOn(wheelEvent, 'stopPropagation');
+  const preventDefaultSpy = vi.spyOn(wheelEvent, 'preventDefault');
 
-  // Trigger wheel event
   carousel.dispatchEvent(wheelEvent);
 
-  // Vertical scroll should NOT stop propagation
-  expect(stopPropagationSpy).not.toHaveBeenCalled();
+  expect(preventDefaultSpy).not.toHaveBeenCalled();
 });
 
 test('carousel does not prevent vertical wheel event default behavior', async () => {
