@@ -210,6 +210,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         formattedBuildArgs,
         buildImageInfo.taskId,
         buildImageInfo.target,
+        validateRegistries,
       )) as BuildOutput;
 
       // Extract and store the build ID as this is required for creating the manifest, only if it is available.

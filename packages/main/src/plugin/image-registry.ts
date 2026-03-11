@@ -155,13 +155,16 @@ export class ImageRegistry {
     await Promise.all(
       this.getRegistries().map(async registry => {
         let addRegistry = true;
-        // before adding the registry, check if the registry information is valid
-        await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
-          () => {
-            console.error(`Error while checking registry credentials ${registry.serverUrl}`);
-            addRegistry = false;
-          },
-        );
+
+        if (validateRegistries) {
+          // before adding the registry, check if the registry information is valid
+          await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
+            () => {
+              console.error(`Error while checking registry credentials ${registry.serverUrl}`);
+              addRegistry = false;
+            },
+          );
+        }
 
         if (addRegistry) {
           const serveraddress = registry.serverUrl.toLowerCase();
