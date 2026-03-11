@@ -22,7 +22,7 @@ import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-client.js';
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
-import { isLinux, isMac, isWindows } from '/@/util.js';
+import { isLinux, isMac, isWindows, quitLog } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';
@@ -150,6 +150,7 @@ export class Main implements IDisposable {
    * Listener for {@link ElectronApp.on('before-quit')} event
    */
   protected onBeforeQuit(): void {
+    quitLog('main.ts: onBeforeQuit fired, calling dispose()');
     this.dispose();
   }
 

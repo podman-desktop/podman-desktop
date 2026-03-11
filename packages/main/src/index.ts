@@ -31,7 +31,7 @@ import { StartupInstall } from './system/startup-install.js';
 import { WindowHandler } from './system/window/window-handler.js';
 import { AnimatedTray } from './tray-animate-icon.js';
 import { TrayMenu } from './tray-menu.js';
-import { isMac, isWindows, stoppedExtensions } from './util.js';
+import { isMac, isWindows, quitLog, stoppedExtensions } from './util.js';
 
 let extensionLoader: ExtensionLoader | undefined;
 let animatedTray: AnimatedTray | undefined;
@@ -56,28 +56,43 @@ app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unk
 });
 
 app.on('will-quit', () => {
-  quitLog('index.ts: will-quit fired');
 
   // Clean up tray resources
   animatedTray?.dispose();
   tray?.destroy();
 });
+  // Diagnostic: log active handles keeping the process alive
+  const handles = (process as any)._getActiveHandles?.() ?? [];
+  const requests = (process as any)._getActiveRequests?.() ?? [];
+  quitLog(`index.ts: active handles=${handles.length}, active requests=${requests.length}`);
+  for (const h of handles) {
+    const extra = h.remoteAddress ? ` remote=${h.remoteAddress}:${h.remotePort}` : '';
+    const local = h.localAddress ? ` local=${h.localAddress}:${h.localPort}` : '';
+    quitLog(`  handle: ${h.constructor?.name} fd=${h.fd ?? ''} timeout=${h._idleTimeout ?? ''}${extra}${local}`);
+  }
+  for (const r of requests) {
+    quitLog(`  request: ${r.constructor?.name}`);
+  }
 app.once('before-quit', event => {
+
   if (!extensionLoader) {
+  quitLog('index.ts: before-quit fired (once)');
     stoppedExtensions.val = true;
+    quitLog('index.ts: no extensionLoader, setting stoppedExtensions=true');
     return;
   }
   event.preventDefault();
   extensionLoader
     .asyncDispose()
     .then(() => {
-      console.log('Stopped all extensions');
+      quitLog('index.ts: extensionLoader.asyncDispose() resolved');
     })
     .catch((error: unknown) => {
-      console.log('Error stopping extensions', error);
+      quitLog(`index.ts: extensionLoader.asyncDispose() error: ${error}`);
     })
     .finally(() => {
       stoppedExtensions.val = true;
+      quitLog('index.ts: setting stoppedExtensions=true, calling app.quit()');
       app.quit();
     });
 });

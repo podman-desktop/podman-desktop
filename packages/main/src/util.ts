@@ -43,6 +43,11 @@ export function isUnixLike(): boolean {
 
 export const stoppedExtensions = { val: false };
 
+export function quitLog(msg: string): void {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  try { fs.appendFileSync('/tmp/podman-desktop-quit.log', line); } catch { /* ignore */ }
+}
+
 export function getBase64Image(imagePath: string): string | undefined {
   try {
     if (fs.existsSync(imagePath)) {

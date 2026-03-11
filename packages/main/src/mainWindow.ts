@@ -29,7 +29,7 @@ import { NavigationItemsMenuBuilder } from './navigation-items-menu-builder.js';
 import { OpenDevTools } from './open-dev-tools.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import type { WindowHandler } from './system/window/window-handler.js';
-import { isLinux, isMac, stoppedExtensions } from './util.js';
+import { isLinux, isMac, quitLog, stoppedExtensions } from './util.js';
 
 const openDevTools = new OpenDevTools();
 let navigationItemsMenuBuilder: NavigationItemsMenuBuilder;
@@ -153,6 +153,7 @@ async function createWindow(): Promise<BrowserWindow> {
   });
 
   browserWindow.on('close', e => {
+    quitLog(`mainWindow.ts: close event fired, quitAfterUpdate=${quitAfterUpdate}`);
     if (quitAfterUpdate) {
       browserWindow.destroy();
       app.quit();
@@ -179,9 +180,11 @@ async function createWindow(): Promise<BrowserWindow> {
 
   let destroyed = false;
   app.on('before-quit', () => {
+    quitLog(`mainWindow.ts: before-quit fired, destroyed=${destroyed}, stoppedExtensions=${stoppedExtensions.val}`);
     if (destroyed || !stoppedExtensions.val) {
       return;
     }
+    quitLog('mainWindow.ts: calling browserWindow.destroy()');
     browserWindow.destroy();
     destroyed = true;
   });

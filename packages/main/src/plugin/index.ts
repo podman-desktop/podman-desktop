@@ -168,7 +168,7 @@ import { Updater } from '/@/plugin/updater.js';
 import { Welcome } from '/@/plugin/welcome.js';
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 import { TrayMenu } from '/@/tray-menu.js';
-import { createHash, isMac } from '/@/util.js';
+import { createHash, isMac, quitLog } from '/@/util.js';
 
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -285,6 +285,7 @@ export class PluginSystem {
     private mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
   ) {
     app.on('before-quit', () => {
+      quitLog('plugin/index.ts: before-quit fired, setting isQuitting=true');
       this.isQuitting = true;
     });
   }

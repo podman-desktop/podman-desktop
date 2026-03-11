@@ -41,7 +41,7 @@ import { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
 import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '/@/plugin/types/telemetry.js';
-import { stoppedExtensions } from '/@/util.js';
+import { quitLog, stoppedExtensions } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
 // eslint-disable-next-line no-restricted-imports
@@ -269,7 +269,9 @@ export class Telemetry {
     let sendShutdownAnalytics = false;
 
     app.on('before-quit', e => {
+      quitLog(`telemetry.ts: before-quit fired, sendShutdownAnalytics=${sendShutdownAnalytics}, stoppedExtensions=${stoppedExtensions.val}`);
       if (!sendShutdownAnalytics && stoppedExtensions.val) {
+        quitLog('telemetry.ts: preventDefault, sending shutdown analytics, then calling app.quit()');
         e.preventDefault();
         try {
           this.internalTrack(EventType.SHUTDOWN).catch((err: unknown) => {
