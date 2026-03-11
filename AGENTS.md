@@ -191,8 +191,6 @@ Built-in extensions are in `extensions/` and follow the same API as external ext
 
 Before writing or modifying code, always check `eslint.config.mjs` to understand which linting rules are active. Rules vary by file type and package — consult the config directly rather than assuming defaults.
 
-Run `pnpm lint:check` to validate your code, or `pnpm lint:fix` to auto-fix where possible. All ESLint errors must be resolved before committing.
-
 ### Svelte Reactive Patterns
 
 When setting a variable reactively, prefer in this order:
@@ -279,6 +277,7 @@ For comprehensive coding and testing guidelines, see [CODE-GUIDELINES.md](CODE-G
 - Every commit must be signed
 - AI assisted commit should be mentioned
 - Respect the GitHub template for the pull request body
+
 ## Resources
 
 - **Comprehensive guidelines:** [CODE-GUIDELINES.md](CODE-GUIDELINES.md)
