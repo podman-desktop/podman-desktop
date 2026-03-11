@@ -130,7 +130,7 @@ test.describe
     });
 
     test('Create volumes from bootc-image-builder', async ({ navigationBar }) => {
-      test.setTimeout(210_000);
+      test.setTimeout(300_000);
 
       //count the number of existing volumes
       let volumesPage = await navigationBar.openVolumes();
@@ -156,7 +156,7 @@ test.describe
       //pull image from quay.io/centos-bootc/bootc-image-builder
       let images = await navigationBar.openImages();
       const pullImagePage = await images.openPullImage();
-      images = await pullImagePage.pullImage(imageToPull, imageTag, 120_000);
+      images = await pullImagePage.pullImage(imageToPull, imageTag, 240_000);
       await playExpect
         .poll(async () => await images.waitForImageExists(imageToPull, 30_000), { timeout: 0 })
         .toBeTruthy();
