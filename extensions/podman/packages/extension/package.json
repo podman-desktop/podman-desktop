@@ -48,6 +48,10 @@
       {
         "command": "podman.uninstallLegacyPodmanInstaller",
         "title": "Podman: Uninstall legacy podman installer"
+      },
+      {
+        "command": "podman.synchronizeCertificates",
+        "title": "Podman: Synchronize certificates to all VMs"
       }
     ],
     "configuration": {
