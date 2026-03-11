@@ -1048,6 +1048,12 @@ export class ContextsManager {
 
   public dispose(): void {
     this.disposed = true;
+    // stop all informers (cancel timers and event listeners)
+    for (const name of this.informers.getContextsNames()) {
+      this.informers.deleteContextInformers(name).catch((err: unknown) => {
+        console.error(`Error stopping informers for context ${String(name)}`, err);
+      });
+    }
     this.states.dispose();
   }
 
