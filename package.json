@@ -219,7 +219,8 @@
       "minimatch@^10": "^10.2.4",
       "serialize-javascript": "^7.0.4",
       "ajv@^6": "^6.14.0",
-      "ajv@^8": "^8.18.0"
+      "ajv@^8": "^8.18.0",
+      "electron-builder-squirrel-windows": "^26.8.2"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"
