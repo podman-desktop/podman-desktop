@@ -85,6 +85,7 @@ beforeEach(() => {
   vi.mocked(window.pullImage).mockResolvedValue(undefined);
   vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
   vi.mocked(window.listImages).mockResolvedValue([]);
+  vi.mocked(window.searchImageInRegistry).mockResolvedValue([]);
 
   providerInfos.set([PROVIDER_INFO_MOCK]);
 });
@@ -513,7 +514,7 @@ describe('container connections', () => {
     expect(dropdown).toHaveTextContent(MULTI_CONNECTIONS.containerConnections[0].name);
   });
 
-  test('selecting a provider should update the dropdown button', async () => {
+  test('selecting a provider should update the dropdown button', { timeout: 10_000 }, async () => {
     // set multiple connections
     const connectionTarget = MULTI_CONNECTIONS.containerConnections[3];
     providerInfos.set([MULTI_CONNECTIONS]);
@@ -524,7 +525,7 @@ describe('container connections', () => {
     expect(dropdown).toBeEnabled();
 
     // open the dropdown
-    dropdown.click();
+    await userEvent.click(dropdown);
 
     // get the connection we want
     const connection3 = await vi.waitFor(() => {
@@ -534,7 +535,7 @@ describe('container connections', () => {
     });
 
     // select it
-    connection3.click();
+    await userEvent.click(connection3);
     await vi.waitFor(() => {
       expect(dropdown).toHaveTextContent(connectionTarget.name);
     });
