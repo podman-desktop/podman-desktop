@@ -61,7 +61,7 @@ import type {
   VolumeInspectInfo,
   VolumeListInfo,
 } from '@podman-desktop/core-api';
-import { ContainerRegistrySettings, DEFAULT_PROVIDER_TIMEOUT } from '@podman-desktop/core-api';
+import { ContainerRegistrySettings } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type {
@@ -97,6 +97,8 @@ import { Disposable } from './types/disposable.js';
 import { guessIsManifest } from './util/manifest.js';
 
 const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } = require('tar-fs');
+
+const DEFAULT_PROVIDER_TIMEOUT = 30;
 
 export interface InternalContainerProvider {
   name: string;
@@ -146,8 +148,8 @@ export class ContainerProviderRegistry {
 
   init(): void {
     const providerTimeoutConfiguration: IConfigurationNode = {
-      id: 'preferences.container',
-      title: 'Container',
+      id: 'preferences.container-registry',
+      title: 'Container registries',
       type: 'object',
       properties: {
         [`${ContainerRegistrySettings.SectionName}.${ContainerRegistrySettings.ProviderTimeout}`]: {
@@ -666,8 +668,8 @@ export class ContainerProviderRegistry {
     // Get timeout from configuration
     const timeoutSeconds = this.configurationRegistry
       .getConfiguration(ContainerRegistrySettings.SectionName)
-      .get<number>(ContainerRegistrySettings.ProviderTimeout);
-    const PROVIDER_TIMEOUT_MS = timeoutSeconds * 1000;
+      .get<number>(ContainerRegistrySettings.ProviderTimeout, DEFAULT_PROVIDER_TIMEOUT);
+    const providerTimeoutMs = timeoutSeconds * 1000;
 
     // Helper function to add timeout to provider operations
     function withTimeout<T>(
@@ -714,14 +716,14 @@ export class ContainerProviderRegistry {
                 all: options?.all,
                 filters: options?.filters,
               }),
-              PROVIDER_TIMEOUT_MS,
+              providerTimeoutMs,
               provider.name,
               provider.id,
             );
           } else if (provider.api) {
             fetchedImages = await withTimeout(
               provider.api.listImages({ all: false }),
-              PROVIDER_TIMEOUT_MS,
+              providerTimeoutMs,
               provider.name,
               provider.id,
             );

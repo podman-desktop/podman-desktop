@@ -16,9 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const DEFAULT_PROVIDER_TIMEOUT = 30;
-
 export enum ContainerRegistrySettings {
-  SectionName = 'container',
+  SectionName = 'container-registry',
   ProviderTimeout = 'providerTimeout',
 }

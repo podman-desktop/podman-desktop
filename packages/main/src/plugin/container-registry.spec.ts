@@ -6336,11 +6336,11 @@ describe('ContainerRegistrySettings', () => {
 
     expect(registerConfigurationsMock).toHaveBeenCalledOnce();
     const registeredConfig = registerConfigurationsMock.mock.calls[0]?.[0]?.[0] as IConfigurationNode | undefined;
-    expect(registeredConfig?.id).toBe('preferences.container');
-    expect(registeredConfig?.properties?.['container.providerTimeout']).toBeDefined();
-    expect(registeredConfig?.properties?.['container.providerTimeout']?.type).toBe('number');
-    expect(registeredConfig?.properties?.['container.providerTimeout']?.default).toBe(30);
-    expect(registeredConfig?.properties?.['container.providerTimeout']?.minimum).toBe(5);
-    expect(registeredConfig?.properties?.['container.providerTimeout']?.maximum).toBe(120);
+    expect(registeredConfig?.id).toBe('preferences.container-registry');
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']).toBeDefined();
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.type).toBe('number');
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.default).toBe(30);
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.minimum).toBe(5);
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.maximum).toBe(120);
   });
 });
