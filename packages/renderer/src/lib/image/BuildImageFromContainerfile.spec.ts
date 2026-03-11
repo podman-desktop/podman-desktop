@@ -663,6 +663,7 @@ describe('Build image that has an intermediate target', () => {
 });
 
 test('Expect to have a checkbox on by default to validate registries before building an images', async () => {
+  setup();
   render(BuildImageFromContainerfile, {});
 
   const validateRegistriesCheckbox = screen.getByRole('checkbox', { name: 'validate registries' });

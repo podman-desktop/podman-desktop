@@ -437,7 +437,7 @@ let hasInvalidFields = $derived(
       </div>
 
       <div hidden={buildImageInfo.buildRunning}>
-        <label for="containerBuildPlatform" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+        <label for="registryValidation" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
           >Registry Validation</label>
         <Checkbox bind:checked={validateRegistries} title='validate registries'>Validate registries before building</Checkbox>
       </div>
