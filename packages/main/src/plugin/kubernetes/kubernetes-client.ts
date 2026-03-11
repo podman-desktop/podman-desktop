@@ -1458,6 +1458,7 @@ export class KubernetesClient {
   }
 
   public dispose(): void {
+    this.kubeConfigWatcher?.dispose();
     this.contextsState?.dispose();
   }
 
