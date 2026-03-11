@@ -311,6 +311,7 @@ jobs:
     name: smoke e2e tests
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         mode: [production, development]
     steps:
