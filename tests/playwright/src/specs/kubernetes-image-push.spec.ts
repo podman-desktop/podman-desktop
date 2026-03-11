@@ -78,10 +78,8 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial(
-  'Kubernetes pushing an image to the cluster and reusing it with a pod E2E Test',
-  { tag: '@k8s_e2e' },
-  () => {
+test.describe
+  .serial('Kubernetes pushing an image to the cluster and reusing it with a pod E2E Test', { tag: '@k8s_e2e' }, () => {
     test('Pull image and push it to the cluster', async ({ navigationBar }) => {
       let imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
@@ -118,5 +116,4 @@ test.describe.serial(
     test('Delete the Kubernetes pod', async ({ page }) => {
       await deleteKubernetesResource(page, KubernetesResources.Pods, DEPLOYMENT_NAME);
     });
-  },
-);
+  });
