@@ -43,7 +43,6 @@ import type {
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
-  CertificateInfo,
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -2444,10 +2443,6 @@ export class PluginSystem {
 
     this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
       return proxy.getState();
-    });
-
-    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
-      return certificates.getAllCertificateInfos();
     });
 
     this.ipcHandle(

@@ -42,7 +42,6 @@ import type {
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
-  CertificateInfo,
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -2710,10 +2709,6 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<void> => {
     return ipcInvoke('statusbar:unpin', optionId);
-  });
-
-  contextBridge.exposeInMainWorld('listCertificates', async (): Promise<CertificateInfo[]> => {
-    return ipcInvoke('certificates:listCertificates');
   });
 }
 
