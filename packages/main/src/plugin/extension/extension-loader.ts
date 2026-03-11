@@ -798,11 +798,14 @@ export class ExtensionLoader implements IAsyncDisposable {
     const extensionConfiguration = extension.manifest?.contributes?.configuration;
     if (extensionConfiguration) {
       // add information about the current extension
-      extensionConfiguration.extension = extension;
-      extensionConfiguration.title = `Extension: ${extensionConfiguration.title}`;
-      extensionConfiguration.id = 'preferences.' + extension.id;
-
-      this.configurationRegistry.registerConfigurations([extensionConfiguration]);
+      this.configurationRegistry.registerConfigurations([
+        {
+          ...extensionConfiguration,
+          id: 'preferences.' + extension.id,
+          extension,
+          title: `Extension: ${extensionConfiguration.title}`,
+        },
+      ]);
     }
 
     const extensionCommands = extension.manifest?.contributes?.commands;
