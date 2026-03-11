@@ -925,7 +925,7 @@ test('getRegistryConfig should return only valid registries if validateRegistrie
 
   expect(imageRegistry.getRegistries().length).toBe(4);
 
-  const registryConfig = await imageRegistry.getRegistryConfig();
+  const registryConfig = await imageRegistry.getRegistryConfig(false);
 
   expect(Object.keys(registryConfig).length).toBe(4);
   expect(Object.keys(registryConfig)).toContain('an-url-1');

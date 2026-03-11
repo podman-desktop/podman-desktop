@@ -150,7 +150,7 @@ export class ImageRegistry {
   /**
    * Provides authentication information from all registries.
    */
-  async getRegistryConfig(validateRegistries?: boolean): Promise<Dockerode.RegistryConfig> {
+  async getRegistryConfig(validateRegistries: boolean = true): Promise<Dockerode.RegistryConfig> {
     const registryConfig: Dockerode.RegistryConfig = {};
     await Promise.all(
       this.getRegistries().map(async registry => {
