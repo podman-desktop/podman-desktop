@@ -50,10 +50,10 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial(
-  `Play yaml file to pull images and create pod for app ${podAppName}`,
-  { tag: ['@smoke', '@windows_sanity'] },
-  () => {
+test.describe
+  .serial(`Play yaml file to pull images and create pod for app ${podAppName}`, {
+    tag: ['@smoke', '@windows_sanity'],
+  }, () => {
     test.describe.configure({ timeout: 150_000 });
 
     test('Playing yaml', async ({ navigationBar }) => {
@@ -137,5 +137,4 @@ test.describe.serial(
           .toBeTruthy();
       });
     });
-  },
-);
+  });
