@@ -51,124 +51,125 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
-  test.beforeEach(async () => {
-    if (cliToolsPage.wasRateLimitReached()) {
-      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
-      test.skip(true, 'Rate limit exceeded; skipping remaining compose onboarding checks');
-    }
+test.describe
+  .serial('Compose onboarding workflow verification', { tag: '@smoke' }, () => {
+    test.beforeEach(async () => {
+      if (cliToolsPage.wasRateLimitReached()) {
+        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+        test.skip(true, 'Rate limit exceeded; skipping remaining compose onboarding checks');
+      }
+    });
+    test.afterEach(async ({ navigationBar }) => {
+      await navigationBar.openDashboard();
+    });
+
+    test('Compose onboarding button Setup is available', async ({ page, navigationBar }) => {
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+
+      await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+      const composeResourceCard = new ResourceCliCardPage(page, RESOURCE_NAME);
+      await composeResourceCard.card.scrollIntoViewIfNeeded();
+      const setupButton = composeResourceCard.setupButton;
+      await playExpect(
+        setupButton,
+        'Compose Setup button is not present, perhaps compose is already installed',
+      ).toBeVisible({ timeout: 10000 });
+    });
+
+    test('Can enter Compose onboarding', async ({ page, navigationBar }) => {
+      const onboardingPage = await openComposeOnboarding(page, navigationBar);
+
+      await playExpect(onboardingPage.heading).toBeVisible();
+
+      const onboardingVersionPage = new ComposeVersionPage(page);
+      await playExpect(onboardingVersionPage.onboardingStatusMessage).toHaveText('Compose download');
+
+      const rateLimitExceededText = '${onboardingContext}';
+      const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
+
+      if ((await rateLimitExceededLocator.count()) > 0 || cliToolsPage.wasRateLimitReached()) {
+        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
+        test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
+      }
+
+      await playExpect(onboardingVersionPage.versionStatusMessage).toBeVisible();
+      composeVersion = await onboardingVersionPage.getVersion();
+    });
+
+    test('Can install Compose locally', async ({ page, navigationBar }) => {
+      const onboardingPage = await openComposeOnboarding(page, navigationBar);
+      await onboardingPage.nextStepButton.click();
+
+      const onboardigLocalPage = new ComposeLocalInstallPage(page);
+      const downloadSuccess = onboardigLocalPage.onboardingStatusMessage
+        .filter({
+          hasText: 'Compose successfully Downloaded',
+        })
+        .first();
+      const rateLimitExceeded = page.getByText('API rate limit exceeded').first();
+
+      await playExpect(downloadSuccess.or(rateLimitExceeded)).toBeVisible({ timeout: 50_000 });
+
+      if (await rateLimitExceeded.isVisible()) {
+        test.skip(true, 'Rate limit exceeded; skipping compose download check');
+      }
+
+      await onboardingPage.cancelSetupButtion.click();
+      const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
+      const skipOkButton = skipDialog.getByRole('button', { name: 'Ok' });
+      await skipOkButton.click();
+    });
+
+    test('Can resume Compose onboarding and it can be canceled', async ({ page, navigationBar }) => {
+      await openComposeOnboarding(page, navigationBar);
+      const onboardingLocalPage = new ComposeLocalInstallPage(page);
+
+      await playExpect(onboardingLocalPage.onboardingStatusMessage).toHaveText('Compose successfully Downloaded');
+      await playExpect(onboardingLocalPage.wideDownloadAvailableMessage).toBeVisible();
+      await playExpect(onboardingLocalPage.nextStepButton).toBeVisible();
+      await onboardingLocalPage.cancelSetupButtion.click();
+
+      const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
+      const skipOkButton = skipDialog.getByRole('button', { name: 'Ok' });
+      await skipOkButton.click();
+    });
+
+    test('Can install Compose system-wide', async ({ page, navigationBar }) => {
+      test.skip(!!composePartialInstallation, 'Partial installation of Compose is enabled');
+
+      const onboardingPage = await openComposeOnboarding(page, navigationBar);
+      await onboardingPage.nextStepButton.click();
+
+      const onboardingWidePage = new ComposeWideInstallPage(page);
+      await playExpect(onboardingWidePage.onboardingStatusMessage).toHaveText('Compose installed', { timeout: 50000 });
+      await playExpect(onboardingWidePage.mainPage.getByRole('heading', { name: 'How To Use Compose' })).toBeVisible();
+      await playExpect(onboardingWidePage.composeCommandMessage).toBeVisible();
+      await playExpect(onboardingWidePage.nextStepButton).toBeEnabled();
+      await onboardingWidePage.nextStepButton.click();
+      // expects redirection to the Resources page
+      const resourcesPage = new ResourcesPage(page);
+      await playExpect(resourcesPage.heading).toBeVisible();
+    });
+
+    test('Verify Compose was installed', async ({ page, navigationBar }) => {
+      test.skip(!!composePartialInstallation, 'Partial installation of Compose is enabled');
+
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+      await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+      const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
+      const setupButton = composeBox.setupButton;
+      await playExpect(setupButton).toBeHidden();
+
+      const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
+      const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
+      const composeVersionInfo = composeRow.getByLabel('cli-version');
+      await playExpect(composeVersionInfo).toContainText('docker-compose ' + composeVersion);
+    });
   });
-  test.afterEach(async ({ navigationBar }) => {
-    await navigationBar.openDashboard();
-  });
-
-  test('Compose onboarding button Setup is available', async ({ page, navigationBar }) => {
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
-
-    await playExpect.poll(async () => resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
-    const composeResourceCard = new ResourceCliCardPage(page, RESOURCE_NAME);
-    await composeResourceCard.card.scrollIntoViewIfNeeded();
-    const setupButton = composeResourceCard.setupButton;
-    await playExpect(
-      setupButton,
-      'Compose Setup button is not present, perhaps compose is already installed',
-    ).toBeVisible({ timeout: 10000 });
-  });
-
-  test('Can enter Compose onboarding', async ({ page, navigationBar }) => {
-    const onboardingPage = await openComposeOnboarding(page, navigationBar);
-
-    await playExpect(onboardingPage.heading).toBeVisible();
-
-    const onboardingVersionPage = new ComposeVersionPage(page);
-    await playExpect(onboardingVersionPage.onboardingStatusMessage).toHaveText('Compose download');
-
-    const rateLimitExceededText = '${onboardingContext}';
-    const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
-
-    if ((await rateLimitExceededLocator.count()) > 0 || cliToolsPage.wasRateLimitReached()) {
-      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
-      test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
-    }
-
-    await playExpect(onboardingVersionPage.versionStatusMessage).toBeVisible();
-    composeVersion = await onboardingVersionPage.getVersion();
-  });
-
-  test('Can install Compose locally', async ({ page, navigationBar }) => {
-    const onboardingPage = await openComposeOnboarding(page, navigationBar);
-    await onboardingPage.nextStepButton.click();
-
-    const onboardigLocalPage = new ComposeLocalInstallPage(page);
-    const downloadSuccess = onboardigLocalPage.onboardingStatusMessage
-      .filter({
-        hasText: 'Compose successfully Downloaded',
-      })
-      .first();
-    const rateLimitExceeded = page.getByText('API rate limit exceeded').first();
-
-    await playExpect(downloadSuccess.or(rateLimitExceeded)).toBeVisible({ timeout: 50_000 });
-
-    if (await rateLimitExceeded.isVisible()) {
-      test.skip(true, 'Rate limit exceeded; skipping compose download check');
-    }
-
-    await onboardingPage.cancelSetupButtion.click();
-    const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
-    const skipOkButton = skipDialog.getByRole('button', { name: 'Ok' });
-    await skipOkButton.click();
-  });
-
-  test('Can resume Compose onboarding and it can be canceled', async ({ page, navigationBar }) => {
-    await openComposeOnboarding(page, navigationBar);
-    const onboardingLocalPage = new ComposeLocalInstallPage(page);
-
-    await playExpect(onboardingLocalPage.onboardingStatusMessage).toHaveText('Compose successfully Downloaded');
-    await playExpect(onboardingLocalPage.wideDownloadAvailableMessage).toBeVisible();
-    await playExpect(onboardingLocalPage.nextStepButton).toBeVisible();
-    await onboardingLocalPage.cancelSetupButtion.click();
-
-    const skipDialog = page.getByRole('dialog', { name: 'Skip Setup Popup', exact: true });
-    const skipOkButton = skipDialog.getByRole('button', { name: 'Ok' });
-    await skipOkButton.click();
-  });
-
-  test('Can install Compose system-wide', async ({ page, navigationBar }) => {
-    test.skip(!!composePartialInstallation, 'Partial installation of Compose is enabled');
-
-    const onboardingPage = await openComposeOnboarding(page, navigationBar);
-    await onboardingPage.nextStepButton.click();
-
-    const onboardingWidePage = new ComposeWideInstallPage(page);
-    await playExpect(onboardingWidePage.onboardingStatusMessage).toHaveText('Compose installed', { timeout: 50000 });
-    await playExpect(onboardingWidePage.mainPage.getByRole('heading', { name: 'How To Use Compose' })).toBeVisible();
-    await playExpect(onboardingWidePage.composeCommandMessage).toBeVisible();
-    await playExpect(onboardingWidePage.nextStepButton).toBeEnabled();
-    await onboardingWidePage.nextStepButton.click();
-    // expects redirection to the Resources page
-    const resourcesPage = new ResourcesPage(page);
-    await playExpect(resourcesPage.heading).toBeVisible();
-  });
-
-  test('Verify Compose was installed', async ({ page, navigationBar }) => {
-    test.skip(!!composePartialInstallation, 'Partial installation of Compose is enabled');
-
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
-    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
-    const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
-    const setupButton = composeBox.setupButton;
-    await playExpect(setupButton).toBeHidden();
-
-    const cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
-    const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
-    const composeVersionInfo = composeRow.getByLabel('cli-version');
-    await playExpect(composeVersionInfo).toContainText('docker-compose ' + composeVersion);
-  });
-});
 
 async function openComposeOnboarding(page: Page, navigationBar: NavigationBar): Promise<ComposeOnboardingPage> {
   await navigationBar.openSettings();

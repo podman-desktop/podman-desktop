@@ -436,36 +436,32 @@ describe.each<{
       expect(vi.mocked(window.startProviderConnectionLifecycle)).toHaveBeenCalled();
     });
 
-    test(
-      'click start and make it fail',
-      {
-        skip: !startFailedImplemented,
-      },
-      async () => {
-        const customProviderInfo: ProviderInfo = { ...providerInfo };
-        setConnectionStatus(customProviderInfo, 0, 'stopped');
-        providerInfos.set([customProviderInfo]);
-        const { getByRole, getByLabelText } = render(PreferencesResourcesRendering, {});
+    test('click start and make it fail', {
+      skip: !startFailedImplemented,
+    }, async () => {
+      const customProviderInfo: ProviderInfo = { ...providerInfo };
+      setConnectionStatus(customProviderInfo, 0, 'stopped');
+      providerInfos.set([customProviderInfo]);
+      const { getByRole, getByLabelText } = render(PreferencesResourcesRendering, {});
 
-        // get the region containing the content for the default connection
-        const region = getByRole('region', { name: defaultName });
+      // get the region containing the content for the default connection
+      const region = getByRole('region', { name: defaultName });
 
-        const startButton = within(region).getByRole('button', { name: 'Start' });
-        expect(startButton).toBeInTheDocument();
-        expect(!startButton.classList.contains('cursor-not-allowed')).toBeTruthy();
-        vi.mocked(window.startProviderConnectionLifecycle).mockClear();
-        await userEvent.click(startButton);
-        expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
-        const call = vi.mocked(window.startProviderConnectionLifecycle).mock.calls[0];
-        const key = call[2];
-        const logger = call[3];
-        assert(!!logger);
-        logger(key, 'error', ['an error']);
-        await vi.waitFor(() => {
-          getByLabelText(/failed/);
-        });
-      },
-    );
+      const startButton = within(region).getByRole('button', { name: 'Start' });
+      expect(startButton).toBeInTheDocument();
+      expect(!startButton.classList.contains('cursor-not-allowed')).toBeTruthy();
+      vi.mocked(window.startProviderConnectionLifecycle).mockClear();
+      await userEvent.click(startButton);
+      expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
+      const call = vi.mocked(window.startProviderConnectionLifecycle).mock.calls[0];
+      const key = call[2];
+      const logger = call[3];
+      assert(!!logger);
+      logger(key, 'error', ['an error']);
+      await vi.waitFor(() => {
+        getByLabelText(/failed/);
+      });
+    });
   });
 
   test('Expect to redirect to create New page if provider is installed', async () => {

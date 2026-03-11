@@ -44,58 +44,59 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
-test.describe.serial('Preferred registry settings verification', { tag: '@smoke' }, () => {
-  test('Default search results for fedora are from docker.io', async ({ navigationBar }) => {
-    test.setTimeout(90_000);
+test.describe
+  .serial('Preferred registry settings verification', { tag: '@smoke' }, () => {
+    test('Default search results for fedora are from docker.io', async ({ navigationBar }) => {
+      test.setTimeout(90_000);
 
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
-    const pullImagePage = await imagesPage.openPullImage();
-    await playExpect(pullImagePage.heading).toBeVisible();
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
 
-    await playExpect
-      .poll(async () => await pullImagePage.getFirstSearchResultFor(imageToSearch, false), { timeout: 10_000 })
-      .toContain('docker.io');
+      await playExpect
+        .poll(async () => await pullImagePage.getFirstSearchResultFor(imageToSearch, false), { timeout: 10_000 })
+        .toContain('docker.io');
+    });
+
+    test('Add quay.io as preferred registry in front of docker.io', async ({ navigationBar }) => {
+      const settingsBar = await navigationBar.openSettings();
+      const registryPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registryPage.heading).toBeVisible({ timeout: 10_000 });
+
+      await registryPage.addPreferredRepositories(['quay.io']);
+    });
+
+    test('Search results for fedora are from quay.io after preference change', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => await pullImagePage.getFirstSearchResultFor(imageToSearch, false), { timeout: 10_000 })
+        .toContain('quay.io');
+    });
+
+    test('Revert preferred registry to default docker.io', async ({ navigationBar }) => {
+      const settingsBar = await navigationBar.openSettings();
+      const registryPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registryPage.heading).toBeVisible({ timeout: 10_000 });
+
+      await registryPage.updatePreferredRepositories(defaultPreferred);
+    });
+
+    test('Search results for fedora are back to docker.io after revert', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => await pullImagePage.getFirstSearchResultFor(imageToSearch, false), { timeout: 10_000 })
+        .toContain('docker.io');
+    });
   });
-
-  test('Add quay.io as preferred registry in front of docker.io', async ({ navigationBar }) => {
-    const settingsBar = await navigationBar.openSettings();
-    const registryPage = await settingsBar.openTabPage(RegistriesPage);
-    await playExpect(registryPage.heading).toBeVisible({ timeout: 10_000 });
-
-    await registryPage.addPreferredRepositories(['quay.io']);
-  });
-
-  test('Search results for fedora are from quay.io after preference change', async ({ navigationBar }) => {
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const pullImagePage = await imagesPage.openPullImage();
-    await playExpect(pullImagePage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await pullImagePage.getFirstSearchResultFor(imageToSearch, false), { timeout: 10_000 })
-      .toContain('quay.io');
-  });
-
-  test('Revert preferred registry to default docker.io', async ({ navigationBar }) => {
-    const settingsBar = await navigationBar.openSettings();
-    const registryPage = await settingsBar.openTabPage(RegistriesPage);
-    await playExpect(registryPage.heading).toBeVisible({ timeout: 10_000 });
-
-    await registryPage.updatePreferredRepositories(defaultPreferred);
-  });
-
-  test('Search results for fedora are back to docker.io after revert', async ({ navigationBar }) => {
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const pullImagePage = await imagesPage.openPullImage();
-    await playExpect(pullImagePage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await pullImagePage.getFirstSearchResultFor(imageToSearch, false), { timeout: 10_000 })
-      .toContain('docker.io');
-  });
-});
