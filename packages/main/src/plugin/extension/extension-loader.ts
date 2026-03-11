@@ -1249,6 +1249,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         context: string,
         eventCollect: (eventName: 'stream' | 'error' | 'finish', data: string) => void,
         options?: containerDesktopAPI.BuildImageOptions,
+        validateRegistries?: boolean,
       ) {
         // to avoid breaking the extension-api the pull option may be `string | boolean`.
         let pull: boolean | undefined;
@@ -1274,6 +1275,7 @@ export class ExtensionLoader implements IAsyncDisposable {
                 pull: pull,
               }
             : undefined,
+          validateRegistries,
         );
       },
       listImages(options?: containerDesktopAPI.ListImagesOptions): Promise<containerDesktopAPI.ImageInfo[]> {

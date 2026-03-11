@@ -4018,11 +4018,13 @@ declare module '@podman-desktop/api' {
      * @param context the build context directory
      * @param eventCollect a function called when new build logs are emitted or new events happen during the build operation. The value of `eventName` can be either `stream` (and `data` contains the logs), or `finish` indicating the end of the build operation, or `error` in case of build error (and `data` contains the error message)
      * @param options parameters for the build operation
+     * @param validateRegistries boolean value to validate existing registries
      */
     export function buildImage(
       context: string,
       eventCollect: (eventName: 'stream' | 'error' | 'finish', data: string) => void,
       options?: BuildImageOptions,
+      validateRegistries?: boolean,
     ): Promise<unknown>;
 
     /**
