@@ -192,7 +192,7 @@
   },
   "pnpm": {
     "overrides": {
-      "rollup": "^4.22.5",
+      "rollup": "^4.59.0",
       "react-router>path-to-regexp": "^1.9.0",
       "serve-handler>path-to-regexp": "^3.3.0",
       "express>cookie": "^0.7.0",
