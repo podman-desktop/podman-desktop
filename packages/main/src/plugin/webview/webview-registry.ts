@@ -66,6 +66,8 @@ export class HttpServer {
     if (!this.#instance) {
       return;
     }
+    // Force-close all keep-alive connections so close() can complete
+    this.#instance.closeAllConnections();
     return new Promise<void>((resolve, reject) => {
       this.#instance?.close((err: unknown) => {
         if (err) {

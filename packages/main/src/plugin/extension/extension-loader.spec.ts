@@ -258,6 +258,7 @@ const contributionManager: ContributionManager = {
 const webviewRegistry: WebviewRegistry = {
   listSimpleWebviews: vi.fn(),
   listWebviews: vi.fn(),
+  stop: vi.fn(),
 } as unknown as WebviewRegistry;
 
 const navigationManager: NavigationManager = new NavigationManager(

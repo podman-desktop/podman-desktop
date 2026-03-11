@@ -236,6 +236,9 @@ export class ExtensionLoader implements IAsyncDisposable {
   async asyncDispose(): Promise<void> {
     await this.stopAllExtensions();
 
+    // stop the webview HTTP server
+    await this.webviewRegistry.stop();
+
     // clear maps
     this.activatedExtensions.clear();
     this.analyzedExtensions.clear();
