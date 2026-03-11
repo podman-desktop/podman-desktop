@@ -57,6 +57,7 @@ export class TrayMenu {
   constructor(
     private readonly tray: Tray,
     private readonly animatedTray: AnimatedTray,
+    private trayDestroyed = false,
   ) {
     ipcMain.on(
       'tray:add-provider-menu-item',
@@ -244,6 +245,11 @@ export class TrayMenu {
   }
 
   private updateMenu(): void {
+    // if the tray has been disabled in settings, don't update
+    if (!this.tray || this.trayDestroyed) {
+      return;
+    }
+
     const generatedMenuTemplate: MenuItemConstructorOptions[] = [];
     for (const [, item] of this.menuProviderItems) {
       generatedMenuTemplate.push(this.createProviderMenuItem(item));
@@ -284,6 +290,11 @@ export class TrayMenu {
   }
 
   protected updateGlobalStatus(): void {
+    // if the tray has been disabled in settings, don't update
+    if (!this.tray || this.trayDestroyed) {
+      return;
+    }
+
     // do we have any provider or any connection ?
     const hasOneProviderBeingStarted = Array.from(this.menuProviderItems.values()).find(
       item => item.status === 'started',
@@ -442,5 +453,9 @@ export class TrayMenu {
     }
     window?.focus();
     window?.moveTop();
+  }
+
+  public destroyTray(): void {
+    this.trayDestroyed = true;
   }
 }

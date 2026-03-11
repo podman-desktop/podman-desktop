@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,19 @@ export class AnimatedTray {
   private color = 'default'; // default, light, dark
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
 
+  // function reference passed to constructor and destructor
+  // added to ensure that the listener doesn't stay open after removal.
+  private onThemeUpdated = (): void => {
+    this.updateIcon();
+  };
+
   constructor() {
     this.status = 'initialized';
     this.updateIcon();
 
     // refresh icon when theme is being updated (especially for Windows as for macOS we always use template icon and on linux the menu bar is not related to the theme)
-    nativeTheme.on('updated', () => {
-      this.updateIcon();
-    });
+    // updates the same handler for on() and off() values.
+    nativeTheme.on('updated', this.onThemeUpdated);
   }
 
   protected isProd(): boolean {
@@ -145,5 +150,17 @@ export class AnimatedTray {
   setStatus(status: TrayIconStatus): void {
     this.status = status;
     this.updateIcon();
+  }
+
+  // cleans up event listeners and timers as well as set the object as undefined
+  destroyTray(): void {
+    if (this.animatedInterval) {
+      clearInterval(this.animatedInterval);
+      this.animatedInterval = undefined;
+    }
+    // remove event listener
+    nativeTheme.off('updated', this.onThemeUpdated);
+    // stops any updates to the tray
+    this.tray = undefined;
   }
 }

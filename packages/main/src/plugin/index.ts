@@ -241,6 +241,7 @@ import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
+import { TrayToggleMacOS } from './tray-toggle-macos.js';
 import { Troubleshooting } from './troubleshooting.js';
 import { DirectoryStrategy } from './util/directory-strategy.js';
 import { Exec } from './util/exec.js';
@@ -618,6 +619,12 @@ export class PluginSystem {
       container.bind<TrayIconColor>(TrayIconColor).toSelf().inSingletonScope();
       const trayIconColor = container.get<TrayIconColor>(TrayIconColor);
       await trayIconColor.init();
+    }
+    //Add tray toggle option for Mac only
+    if (isMac()) {
+      container.bind<TrayToggleMacOS>(TrayToggleMacOS).toSelf().inSingletonScope();
+      const trayToggleMacOS = container.get<TrayToggleMacOS>(TrayToggleMacOS);
+      await trayToggleMacOS.init();
     }
 
     // Add all notifications to notification registry

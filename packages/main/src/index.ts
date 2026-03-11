@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+
 import type { Event } from '@podman-desktop/core-api';
 import { app, ipcMain, Menu, Tray } from 'electron';
 
@@ -106,6 +107,17 @@ app.whenReady().then(
         const color = configurationRegistry.getConfiguration('preferences').get('TrayIconColor');
         if (typeof color === 'string') {
           animatedTray.setColor(color);
+        }
+      }
+      if (isMac()) {
+        const trayToggle = configurationRegistry.getConfiguration('preferences').get('TrayToggle');
+        // disable menubar if the tray toggle is set to "enabled"
+        // -> enabled (true) = hide menu bar icon
+        // -> disabled (false) = show menu bar icon
+        if (trayToggle === true) {
+          trayMenu.destroyTray();
+          animatedTray.destroyTray();
+          tray.destroy();
         }
       }
 
