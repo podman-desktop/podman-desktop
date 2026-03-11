@@ -216,7 +216,8 @@
       "@docusaurus/types>webpack": "^5.105.0",
       "minimatch@^3": "^3.1.5",
       "minimatch@^9": "^9.0.9",
-      "minimatch@^10": "^10.2.4"
+      "minimatch@^10": "^10.2.4",
+      "serialize-javascript": "^7.0.4"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"
