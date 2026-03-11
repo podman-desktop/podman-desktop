@@ -152,9 +152,12 @@ async function createWindow(): Promise<BrowserWindow> {
     quitAfterUpdate = true;
   });
 
+  let destroyed = false;
+
   browserWindow.on('close', e => {
     if (quitAfterUpdate) {
       browserWindow.destroy();
+      destroyed = true;
       app.quit();
       return;
     }
@@ -173,16 +176,19 @@ async function createWindow(): Promise<BrowserWindow> {
       }
     } else {
       browserWindow.destroy();
+      destroyed = true;
       app.quit();
     }
   });
-
-  let destroyed = false;
   app.on('before-quit', () => {
     if (destroyed || !stoppedExtensions.val) {
       return;
     }
-    browserWindow.destroy();
+    // Only destroy if the window hasn't been destroyed yet
+    // This prevents double-destroy issues with Electron 40.5.0+ on macOS
+    if (!browserWindow.isDestroyed()) {
+      browserWindow.destroy();
+    }
     destroyed = true;
   });
 

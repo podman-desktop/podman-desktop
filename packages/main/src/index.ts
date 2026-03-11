@@ -34,6 +34,7 @@ import { TrayMenu } from './tray-menu.js';
 import { isMac, isWindows, stoppedExtensions } from './util.js';
 
 let extensionLoader: ExtensionLoader | undefined;
+let isQuittingAfterExtensionsDisposed = false;
 
 // Main startup
 const podmanDesktopMain = new Main(app);
@@ -54,11 +55,13 @@ app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unk
   });
 });
 
-app.once('before-quit', event => {
-  if (!extensionLoader) {
-    stoppedExtensions.val = true;
+app.on('before-quit', event => {
+  // If we're already in the process of quitting after extensions disposed, let it proceed
+  if (isQuittingAfterExtensionsDisposed || !extensionLoader || stoppedExtensions.val) {
     return;
   }
+
+  // Prevent quit until extensions are disposed
   event.preventDefault();
   extensionLoader
     .asyncDispose()
@@ -70,6 +73,8 @@ app.once('before-quit', event => {
     })
     .finally(() => {
       stoppedExtensions.val = true;
+      isQuittingAfterExtensionsDisposed = true;
+      // Now quit again, this time the before-quit handler will allow it
       app.quit();
     });
 });
