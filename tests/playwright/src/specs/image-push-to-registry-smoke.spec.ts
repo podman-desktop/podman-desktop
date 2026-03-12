@@ -58,102 +58,103 @@ test.afterAll(async ({ runner, page }) => {
 
 test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
-test.describe.serial('Push image to container registry', { tag: '@smoke' }, () => {
-  test('Add registry', async ({ navigationBar, page }) => {
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const registryPage = await settingsBar.openTabPage(RegistriesPage);
-    await playExpect(registryPage.heading).toBeVisible();
+test.describe
+  .serial('Push image to container registry', { tag: '@smoke' }, () => {
+    test('Add registry', async ({ navigationBar, page }) => {
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const registryPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registryPage.heading).toBeVisible();
 
-    await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
+      await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
-    const registryBox = registryPage.registriesTable.getByLabel('GitHub');
-    const username = registryBox.getByText(registryUsername);
-    await playExpect(username).toBeVisible();
+      const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+      const username = registryBox.getByText(registryUsername);
+      await playExpect(username).toBeVisible();
+    });
+
+    test('Pull image', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      imagesPage = await pullImagePage.pullImage(helloContainer);
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => imagesPage.waitForRowToExists(helloContainer, 30_000), { timeout: 0 })
+        .toBeTruthy();
+    });
+
+    test('Rename image', async ({ page }) => {
+      let imagesPage = new ImagesPage(page);
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      fullName = `${registryUrl}/${registryUsername}/test-image`;
+
+      imagesPage = await imagesPage.renameImage(helloContainer, fullName, 'latest');
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => imagesPage.waitForRowToExists(fullName, 30_000), {
+          timeout: 0,
+        })
+        .toBeTruthy();
+    });
+
+    test('Push image to registry', async ({ page }) => {
+      const imagesPage = new ImagesPage(page);
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const imageDetailsPage = await imagesPage.openImageDetails(fullName);
+      await playExpect(imageDetailsPage.heading).toBeVisible();
+
+      await imageDetailsPage.pushImage();
+    });
+
+    test('Delete image', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => imagesPage.waitForRowToExists(fullName, 30_000), {
+          timeout: 0,
+        })
+        .toBeTruthy();
+
+      const imageDetailPage = await imagesPage.openImageDetails(fullName);
+      await playExpect(imageDetailPage.heading).toBeVisible();
+
+      imagesPage = await imageDetailPage.deleteImage();
+      await playExpect(imagesPage.heading).toBeVisible({ timeout: 30_000 });
+
+      await playExpect
+        .poll(async () => await imagesPage.waitForRowToBeDelete(fullName, 60_000), { timeout: 0 })
+        .toBeTruthy();
+    });
+
+    test('Pull image from github repo under new name', async ({ navigationBar }) => {
+      let imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      imagesPage = await pullImagePage.pullImage(fullName, 'latest');
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => await imagesPage.waitForRowToExists(fullName, 15_000), { timeout: 0 })
+        .toBeTruthy();
+    });
+
+    test('Registry removal verification', async ({ page, navigationBar }) => {
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const registryPage = await settingsBar.openTabPage(RegistriesPage);
+      await playExpect(registryPage.heading).toBeVisible();
+
+      await registryPage.removeRegistry(registryName);
+      const registryBox = registryPage.registriesTable.getByLabel(registryName);
+      const username = registryBox.getByText(registryUsername);
+      await playExpect(username).toBeHidden();
+    });
   });
-
-  test('Pull image', async ({ navigationBar }) => {
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const pullImagePage = await imagesPage.openPullImage();
-    imagesPage = await pullImagePage.pullImage(helloContainer);
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => imagesPage.waitForRowToExists(helloContainer, 30_000), { timeout: 0 })
-      .toBeTruthy();
-  });
-
-  test('Rename image', async ({ page }) => {
-    let imagesPage = new ImagesPage(page);
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    fullName = `${registryUrl}/${registryUsername}/test-image`;
-
-    imagesPage = await imagesPage.renameImage(helloContainer, fullName, 'latest');
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => imagesPage.waitForRowToExists(fullName, 30_000), {
-        timeout: 0,
-      })
-      .toBeTruthy();
-  });
-
-  test('Push image to registry', async ({ page }) => {
-    const imagesPage = new ImagesPage(page);
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const imageDetailsPage = await imagesPage.openImageDetails(fullName);
-    await playExpect(imageDetailsPage.heading).toBeVisible();
-
-    await imageDetailsPage.pushImage();
-  });
-
-  test('Delete image', async ({ navigationBar }) => {
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => imagesPage.waitForRowToExists(fullName, 30_000), {
-        timeout: 0,
-      })
-      .toBeTruthy();
-
-    const imageDetailPage = await imagesPage.openImageDetails(fullName);
-    await playExpect(imageDetailPage.heading).toBeVisible();
-
-    imagesPage = await imageDetailPage.deleteImage();
-    await playExpect(imagesPage.heading).toBeVisible({ timeout: 30_000 });
-
-    await playExpect
-      .poll(async () => await imagesPage.waitForRowToBeDelete(fullName, 60_000), { timeout: 0 })
-      .toBeTruthy();
-  });
-
-  test('Pull image from github repo under new name', async ({ navigationBar }) => {
-    let imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    const pullImagePage = await imagesPage.openPullImage();
-    imagesPage = await pullImagePage.pullImage(fullName, 'latest');
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await imagesPage.waitForRowToExists(fullName, 15_000), { timeout: 0 })
-      .toBeTruthy();
-  });
-
-  test('Registry removal verification', async ({ page, navigationBar }) => {
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const registryPage = await settingsBar.openTabPage(RegistriesPage);
-    await playExpect(registryPage.heading).toBeVisible();
-
-    await registryPage.removeRegistry(registryName);
-    const registryBox = registryPage.registriesTable.getByLabel(registryName);
-    const username = registryBox.getByText(registryUsername);
-    await playExpect(username).toBeHidden();
-  });
-});
