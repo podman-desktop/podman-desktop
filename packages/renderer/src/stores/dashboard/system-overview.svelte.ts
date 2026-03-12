@@ -69,7 +69,7 @@ export function getConnectionDisplayName(connection: ProviderConnectionInfo): st
  * System overview status store - receives computed status from backend
  */
 export const systemOverview = $state<{ status: Status; text: string }>({
-  status: SYSTEM_OVERVIEW_STATUS.critical,
+  status: SYSTEM_OVERVIEW_STATUS.stable,
   text: 'Loading...',
 });
 

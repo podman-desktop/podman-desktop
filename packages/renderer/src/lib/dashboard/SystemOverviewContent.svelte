@@ -5,15 +5,14 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
+import { getStatusBgClass, getStatusTextClass } from '/@/lib/dashboard/system-overview-utils';
 import SystemOverviewCardStack from '/@/lib/dashboard/SystemOverviewCardStack.svelte';
 import SystemOverviewProviderCardDetailed from '/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte';
 import SystemOverviewProviderConfigured from '/@/lib/dashboard/SystemOverviewProviderConfigured.svelte';
-import SystemOverviewProviderInstalled from '/@/lib/dashboard/SystemOverviewProviderInstalled.svelte';
+import SystemOverviewProviderOnboarding from '/@/lib/dashboard/SystemOverviewProviderOnboarding.svelte';
 import { containersInfos } from '/@/stores/containers';
 import { type Status, systemOverview } from '/@/stores/dashboard/system-overview.svelte';
 import { providerInfos } from '/@/stores/providers';
-
-import SystemOverviewProviderNotInstalled from './SystemOverviewProviderNotInstalled.svelte';
 
 let providers = $derived($providerInfos);
 let containers = $derived($containersInfos);
@@ -109,29 +108,13 @@ let standaloneConnections = $derived(
   ),
 );
 
-// Container connections shown as detailed cards (started, errored, or progressing)
-let detailedContainerConnections = $derived(
-  containerConnectionsWithChildren.filter(
-    ({ connection, provider }) => connection.status !== 'stopped' || provider.warnings.length > 0,
-  ),
-);
-
-// Container connections shown as minimal cards (stopped, no errors/warnings)
-let minimalContainerConnections = $derived(
-  containerConnectionsWithChildren
-    .filter(({ connection, provider }) => connection.status === 'stopped' && provider.warnings.length === 0)
-    .map(({ connection, provider }) => ({ connection: connection as ProviderConnectionInfo, provider })),
-);
-
-// All connections rendered as minimal stacked cards
-let allMinimalConnections = $derived([...minimalContainerConnections, ...standaloneConnections]);
-
 // Only show not-installed/installed/configured states for container providers
 let containerProviders = $derived(
   providers.filter(p => p.containerProviderConnectionCreation || p.containerProviderConnectionInitialization),
 );
-let providersNotInstalled = $derived(containerProviders.filter(p => p.status === 'not-installed'));
-let providersInstalled = $derived(containerProviders.filter(p => p.status === 'installed'));
+let providersNeedingSetup = $derived(
+  containerProviders.filter(p => p.status === 'not-installed' || p.status === 'installed'),
+);
 let providersConfigured = $derived(
   containerProviders.filter(
     p =>
@@ -146,18 +129,10 @@ function navigateToResources(): void {
 }
 </script>
 
-<div class="pt-2">
+<div class="pt-2" aria-label="System Overview">
   <button
-    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors border border-transparent"
-    class:text-[var(--pd-system-overview-healthy-text)]={status.status === 'healthy'}
-    class:text-[var(--pd-system-overview-stable-text)]={status.status === 'stable'}
-    class:text-[var(--pd-system-overview-critical-text)]={status.status === 'critical'}
-    class:text-[var(--pd-system-overview-progressing-text)]={status.status === 'progressing'}
-    class:bg-[var(--pd-system-overview-healthy-bg)]={status.status === 'healthy'}
-    class:bg-[var(--pd-system-overview-stable-bg)]={status.status === 'stable'}
-    class:bg-[var(--pd-system-overview-critical-bg)]={status.status === 'critical'}
-    class:bg-[var(--pd-system-overview-progressing-bg)]={status.status === 'progressing'}
-    aria-label="System Overview - Navigate to resources"
+    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-colors border border-transparent {getStatusBgClass(status.status)} {getStatusTextClass(status.status)}"
+    aria-label="System Overview - Overal status"
     onclick={navigateToResources}>
     <!-- Force re-render the icon when the status changes -->
     {#key status.status}
@@ -167,26 +142,25 @@ function navigateToResources(): void {
     <Icon icon={faChevronRight} size="sm" />
   </button>
 
+  <div class="text-md font-semibold text-[var(--pd-content-card-header-text)] pt-2">Container providers:</div>
   <div class="flex flex-col gap-2 pt-2">
-    {#each providersNotInstalled as provider (provider.id)}
-      <SystemOverviewProviderNotInstalled {provider} />
-    {/each}
-    {#each providersInstalled as provider (provider.id)}
-      <SystemOverviewProviderInstalled {provider} />
+    {#each providersNeedingSetup as provider (provider.id)}
+      <SystemOverviewProviderOnboarding {provider} />
     {/each}
     {#each providersConfigured as provider (provider.id)}
       <SystemOverviewProviderConfigured {provider} />
     {/each}
 
     <!-- Container providers as detailed cards (started, error, or progressing) -->
-    {#each detailedContainerConnections as { connection, provider, childConnections } (provider.id + ':' + connection.name)}
+    {#each containerConnectionsWithChildren as { connection, provider, childConnections } (provider.id + ':' + connection.name)}
       <SystemOverviewProviderCardDetailed {connection} {provider} {childConnections} />
     {/each}
 
     <!-- Standalone K8s/VM connections as stacked minimal cards -->
-    {#if allMinimalConnections.length > 0}
+    {#if standaloneConnections.length > 0}
+      <div class="text-md font-semibold text-[var(--pd-content-card-header-text)]">Kubernetes/VM connections:</div>
       <div class="rounded-lg p-2 bg-[var(--pd-content-card-carousel-card-bg)]">
-        <SystemOverviewCardStack connections={allMinimalConnections} />
+        <SystemOverviewCardStack connections={standaloneConnections} />
       </div>
     {/if}
   </div>

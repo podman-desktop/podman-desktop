@@ -18,7 +18,6 @@
 
 import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import {
-  CONNECTIONS_EXPANDED_CONFIGURATION_KEY,
   CRITICAL_STATUS,
   ENHANCED_DASHBOARD_CONFIGURATION_KEY,
   HEALTHY_STATUS,
@@ -66,11 +65,6 @@ export class DashboardService {
           type: 'boolean',
           hidden: true,
           default: false,
-        },
-        [CONNECTIONS_EXPANDED_CONFIGURATION_KEY]: {
-          type: 'boolean',
-          hidden: true,
-          default: true,
         },
       },
     };

@@ -27,18 +27,17 @@ import SystemOverviewContent from './SystemOverviewContent.svelte';
 
 vi.mock(import('/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte'));
 vi.mock(import('/@/lib/dashboard/SystemOverviewProviderConfigured.svelte'));
-vi.mock(import('/@/lib/dashboard/SystemOverviewProviderInstalled.svelte'));
-vi.mock(import('/@/lib/dashboard/SystemOverviewProviderNotInstalled.svelte'));
+vi.mock(import('/@/lib/dashboard/SystemOverviewProviderOnboarding.svelte'));
 
 beforeEach(() => {
   vi.resetAllMocks();
   providerInfos.set([]);
 });
 
-test('should render navigate to resources button', async () => {
+test('should render overall status button', async () => {
   render(SystemOverviewContent);
   await vi.waitFor(() =>
-    expect(screen.getByRole('button', { name: 'System Overview - Navigate to resources' })).toBeInTheDocument(),
+    expect(screen.getByRole('button', { name: 'System Overview - Overal status' })).toBeInTheDocument(),
   );
 });
 

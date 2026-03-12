@@ -73,7 +73,7 @@ test('should render connection display name', async () => {
   await vi.waitFor(() => expect(screen.getByText('Podman Machine')).toBeInTheDocument());
 });
 
-test('should render View button when connection is started', async () => {
+test('should render resource usage instead of button when container connection is started', async () => {
   const provider = { ...baseProvider, containerConnections: [containerConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: containerConnection,
@@ -81,7 +81,7 @@ test('should render View button when connection is started', async () => {
     childConnections: [],
   });
 
-  await vi.waitFor(() => expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument());
+  await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument());
 });
 
 test('should render Start button when connection is stopped', async () => {

@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
+import { router } from 'tinro';
 
 import SystemOverviewProviderCardBase from './SystemOverviewProviderCardBase.svelte';
 
@@ -10,28 +11,24 @@ interface Props {
 
 let { provider }: Props = $props();
 
-let startInProgress = $state(false);
+let subtitleText = $derived(
+  provider.status === 'not-installed'
+    ? `${provider.name} needs to be set up. Some features might not function optimally.`
+    : 'No container engine (machine) created yet. Create one to run containers and pods.',
+);
 
-function startProvider(): void {
-  startInProgress = true;
-  window
-    .startProvider(provider.internalId)
-    .catch(() => {
-      startInProgress = false;
-    })
-    .finally(() => {
-      startInProgress = false;
-    });
+function goToOnboarding(): void {
+  router.goto(`/preferences/onboarding/${provider.extensionId}`);
 }
 </script>
 
 <SystemOverviewProviderCardBase {provider}>
   {#snippet subtitle()}
     <div class="text-sm text-[var(--pd-content-text-sub)]">
-      No container engine (machine) created yet. Create one to run containers and pods.
+      {subtitleText}
     </div>
   {/snippet}
   {#snippet actions()}
-    <Button type="primary" onclick={startProvider} inProgress={startInProgress}>Start {provider.name}</Button>
+    <Button type="primary" onclick={goToOnboarding}>Set up {provider.name}</Button>
   {/snippet}
 </SystemOverviewProviderCardBase>

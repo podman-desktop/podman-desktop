@@ -1,10 +1,13 @@
 <script lang="ts">
 import { SYSTEM_OVERVIEW_CONFIGURATION_KEY } from '@podman-desktop/core-api';
-import { Expandable } from '@podman-desktop/ui-svelte';
+import { Expandable, Tooltip } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 
+import { getStatusTextClass } from '/@/lib/dashboard/system-overview-utils';
 import SystemOverviewContent from '/@/lib/dashboard/SystemOverviewContent.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+import { systemOverview } from '/@/stores/dashboard/system-overview.svelte';
 
 let expanded: boolean = $state(true);
 let initialized: boolean = $state(false);
@@ -36,7 +39,16 @@ async function toggle(expanded: boolean): Promise<void> {
 <div class="flex flex-1 flex-col bg-[var(--pd-content-card-bg)] p-5 rounded-lg">
   <Expandable bind:initialized bind:expanded onclick={toggle}>
     {#snippet title()}
-      <div class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">System Overview</div>
+      <div class="flex items-center gap-2">
+        <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">System Overview</span>
+        {#if !expanded}
+          <Tooltip tip={systemOverview.text} containerClass="inline-flex items-center">
+            {#key systemOverview.status.status}
+              <Icon class={getStatusTextClass(systemOverview.status.status)} icon={systemOverview.status.icon} size={systemOverview.status.status === 'progressing' ? '1.25em' : 'lg'} />
+            {/key}
+          </Tooltip>
+        {/if}
+      </div>
     {/snippet}
     <SystemOverviewContent />
   </Expandable>

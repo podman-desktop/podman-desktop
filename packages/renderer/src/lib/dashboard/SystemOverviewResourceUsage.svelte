@@ -12,12 +12,9 @@ import { configurationProperties } from '/@/stores/configurationProperties';
 interface Props {
   provider: ProviderInfo;
   connection: ProviderContainerConnectionInfo;
-  compact?: boolean;
 }
 
-let { provider, connection, compact = false }: Props = $props();
-
-const HIGH_USAGE_THRESHOLD = 50;
+let { provider, connection }: Props = $props();
 
 type ResourceData = {
   name: string;
@@ -103,28 +100,12 @@ let resourceData = $derived.by((): ResourceData | undefined => {
     },
   };
 });
-
-let hasHighUsage = $derived(
-  (resourceData?.cpu.percent ?? 0) >= HIGH_USAGE_THRESHOLD ||
-    (resourceData?.memory.percent ?? 0) >= HIGH_USAGE_THRESHOLD ||
-    (resourceData?.disk.percent ?? 0) >= HIGH_USAGE_THRESHOLD,
-);
 </script>
 
 {#if resourceData}
-  {#if compact && !hasHighUsage}
-    <div class="flex flex-col gap-1 text-xs">
-      <SystemOverviewResourceBar label="CPU" percent={resourceData.cpu.percent} compact />
-      <SystemOverviewResourceBar label="Mem" percent={resourceData.memory.percent} compact />
-      <SystemOverviewResourceBar label="Disk" percent={resourceData.disk.percent} compact />
-    </div>
-  {:else if !compact && hasHighUsage}
-    <div class="border-t border-[var(--pd-content-divider)] pt-3">
-      <div class="px-3 grid grid-cols-3 gap-6">
-        <SystemOverviewResourceBar label="CPU" percent={resourceData.cpu.percent} value={resourceData.cpu.value} />
-        <SystemOverviewResourceBar label="Memory" percent={resourceData.memory.percent} value={resourceData.memory.value} />
-        <SystemOverviewResourceBar label="Disk" percent={resourceData.disk.percent} value={resourceData.disk.value} />
-      </div>
-    </div>
-  {/if}
+  <div class="flex flex-col gap-1 text-xs">
+    <SystemOverviewResourceBar label="CPU" percent={resourceData.cpu.percent} />
+    <SystemOverviewResourceBar label="Mem" percent={resourceData.memory.percent} />
+    <SystemOverviewResourceBar label="Disk" percent={resourceData.disk.percent} />
+  </div>
 {/if}
