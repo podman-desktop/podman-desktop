@@ -477,6 +477,7 @@ export function initExposure(): void {
       imageName: string,
       callback: (event: PullEvent) => void,
       platform?: string,
+      cancellableTokenId?: number,
     ): Promise<void> => {
       onDataCallbacksPullImageId++;
       onDataCallbacksPullImage.set(onDataCallbacksPullImageId, callback);
@@ -486,6 +487,7 @@ export function initExposure(): void {
         imageName,
         onDataCallbacksPullImageId,
         platform,
+        cancellableTokenId,
       );
     },
   );

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowCircleDown, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faBan, faCog, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import type { ImageSearchOptions, ProviderContainerConnectionInfo, PullEvent } from '@podman-desktop/core-api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
 import { Button, Checkbox, ErrorMessage, Link, Tooltip } from '@podman-desktop/ui-svelte';
@@ -33,6 +33,8 @@ let logsPull = $state<Terminal>();
 let pullError = $state('');
 let pullInProgress = $state(false);
 let pullFinished = $state(false);
+let pullCancellableTokenId = $state<number | undefined>();
+let pullCancellationRequested = $state(false);
 let shortnameImages: string[] = [];
 let podmanFQN = $state('');
 let usePodmanFQN = $state(false);
@@ -145,21 +147,51 @@ async function pullImage(): Promise<void> {
 
   pullInProgress = true;
   try {
+    pullCancellationRequested = false;
+    pullCancellableTokenId = await window.getCancellableTokenSource();
     const selectedProviderConnectionSnapshot = $state.snapshot(selectedProviderConnection);
     if (podmanFQN) {
       usePodmanFQN
-        ? await window.pullImage(selectedProviderConnectionSnapshot, podmanFQN.trim(), callback)
-        : await window.pullImage(selectedProviderConnectionSnapshot, `docker.io/${imageToPull.trim()}`, callback);
+        ? await window.pullImage(
+            selectedProviderConnectionSnapshot,
+            podmanFQN.trim(),
+            callback,
+            undefined,
+            pullCancellableTokenId,
+          )
+        : await window.pullImage(
+            selectedProviderConnectionSnapshot,
+            `docker.io/${imageToPull.trim()}`,
+            callback,
+            undefined,
+            pullCancellableTokenId,
+          );
     } else {
-      await window.pullImage(selectedProviderConnectionSnapshot, imageToPull.trim(), callback);
+      await window.pullImage(
+        selectedProviderConnectionSnapshot,
+        imageToPull.trim(),
+        callback,
+        undefined,
+        pullCancellableTokenId,
+      );
     }
-    pullInProgress = false;
     pullFinished = true;
   } catch (error: unknown) {
     const errorMessage =
       error && typeof error === 'object' && 'message' in error && error.message ? error.message : error;
-    pullError = `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
+    const normalizedErrorMessage = String(errorMessage).toLowerCase();
+    const pullCanceled =
+      pullCancellationRequested ||
+      normalizedErrorMessage.includes('aborted') ||
+      normalizedErrorMessage.includes('cancelled') ||
+      normalizedErrorMessage.includes('canceled');
+    if (!pullCanceled) {
+      pullError = `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`;
+    }
+  } finally {
+    pullCancellableTokenId = undefined;
     pullInProgress = false;
+    pullCancellationRequested = false;
   }
 }
 
@@ -201,6 +233,13 @@ async function gotoImageRun(): Promise<void> {
     runImageInfo.set(image);
     router.goto('/images/run/basic');
   }
+}
+async function cancelPullImage(): Promise<void> {
+  if (pullCancellableTokenId === undefined) {
+    return;
+  }
+  pullCancellationRequested = true;
+  await window.cancelToken(pullCancellableTokenId);
 }
 
 async function gotoManageRegistries(): Promise<void> {
@@ -457,13 +496,18 @@ async function searchFunction(value: string): Promise<void> {
     <footer>
       <div class="w-full flex flex-col justify-end">
         {#if !pullFinished}
-          <Button
-            icon={faArrowCircleDown}
-            disabled={imageNameIsInvalid || pullInProgress}
-            on:click={pullImage}
-            inProgress={pullInProgress}>
-            {pullInProgress ? 'Pulling image' : 'Pull image'}
-          </Button>
+          <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
+            <Button
+              icon={faArrowCircleDown}
+              disabled={imageNameIsInvalid || pullInProgress}
+              on:click={pullImage}
+              inProgress={pullInProgress}>
+              {pullInProgress ? 'Pulling image' : 'Pull image'}
+            </Button>
+            {#if pullInProgress}
+              <Button icon={faBan} disabled={!pullInProgress} on:click={cancelPullImage} type="secondary">Cancel</Button>
+            {/if}
+          </div>
         {:else}
         <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
           <Button type='secondary' on:click={pullImageFinished}>Close</Button>

@@ -82,6 +82,8 @@ beforeEach(() => {
   });
   console.error = vi.fn();
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
+  vi.mocked(window.cancelToken).mockResolvedValue(undefined);
   vi.mocked(window.pullImage).mockResolvedValue(undefined);
   vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
   vi.mocked(window.listImages).mockResolvedValue([]);
@@ -245,6 +247,47 @@ describe('PullImage', () => {
     const proposal = screen.getByRole('button', { name: 'Install myExtension.id Extension' });
     expect(proposal).toBeInTheDocument();
     expect(proposal).toBeEnabled();
+  });
+
+  test('Expect cancel to request cancellation while pull is in progress', async () => {
+    const pendingPull = Promise.withResolvers<void>();
+    vi.mocked(window.getCancellableTokenSource).mockResolvedValue(9876);
+    vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
+
+    render(PullImage, { imageToPull: 'some-valid-image' });
+
+    const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+    await userEvent.click(pullImagebutton);
+
+    expect(window.pullImage).toHaveBeenCalledWith(
+      CONTAINER_CONNECTION_MOCK,
+      'some-valid-image',
+      expect.any(Function),
+      undefined,
+      9876,
+    );
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    await userEvent.click(cancelButton);
+    expect(window.cancelToken).toHaveBeenCalledWith(9876);
+
+    pendingPull.reject(new Error('The operation was aborted'));
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pull image' })).toBeInTheDocument();
+    });
+  });
+
+  test('Expect cancellation errors are not displayed as pull errors', async () => {
+    vi.mocked(window.pullImage).mockRejectedValueOnce(new Error('Request aborted'));
+    render(PullImage, { imageToPull: 'some-valid-image' });
+
+    const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+    await userEvent.click(pullImagebutton);
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pull image' })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('alert', { name: 'Error Message Content' })).toBeNull();
   });
 });
 
@@ -550,7 +593,13 @@ describe('container connections', () => {
     pullImagebutton.click();
 
     await vi.waitFor(() => {
-      expect(window.pullImage).toHaveBeenCalledWith(connectionTarget, 'test1', expect.any(Function));
+      expect(window.pullImage).toHaveBeenCalledWith(
+        connectionTarget,
+        'test1',
+        expect.any(Function),
+        undefined,
+        expect.any(Number),
+      );
     });
   });
 });
