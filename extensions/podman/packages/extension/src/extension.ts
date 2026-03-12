@@ -1138,7 +1138,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
     }
 
     // check if unmarshalling errors
-    let machineListError = '';
+    let machineListError: string;
     try {
       const machineListOutput = await getJSONMachineList();
       machineListError = machineListOutput.error;

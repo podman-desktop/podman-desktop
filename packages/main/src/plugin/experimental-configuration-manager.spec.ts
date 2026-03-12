@@ -21,17 +21,22 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { ExperimentalConfigurationManager } from './experimental-configuration-manager.js';
+import type { Telemetry } from './telemetry/telemetry.js';
 
 const mockedConfigurationRegistry = {
   updateConfigurationValue: vi.fn(),
   getConfiguration: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
+const mockedTelemetry = {
+  track: vi.fn(),
+} as unknown as Telemetry;
+
 let experimentalConfigurationManager: ExperimentalConfigurationManager;
 
 beforeEach(() => {
   vi.resetAllMocks();
-  experimentalConfigurationManager = new ExperimentalConfigurationManager(mockedConfigurationRegistry);
+  experimentalConfigurationManager = new ExperimentalConfigurationManager(mockedConfigurationRegistry, mockedTelemetry);
 });
 
 describe('ExperimentalConfigurationManager', () => {
@@ -128,6 +133,36 @@ describe('ExperimentalConfigurationManager', () => {
 
       expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, scope);
     });
+
+    test('should track telemetry with enabled=true when config is an object', async () => {
+      const key = 'kubernetes.statesExperimental';
+      await experimentalConfigurationManager.updateExperimentalConfigurationValue(key, {}, 'DEFAULT');
+
+      expect(mockedTelemetry.track).toHaveBeenCalledWith('experimentalConfigurationUpdate', {
+        key,
+        enabled: true,
+      });
+    });
+
+    test('should track telemetry with enabled=false when config is false', async () => {
+      const key = 'kubernetes.statesExperimental';
+      await experimentalConfigurationManager.updateExperimentalConfigurationValue(key, false, 'DEFAULT');
+
+      expect(mockedTelemetry.track).toHaveBeenCalledWith('experimentalConfigurationUpdate', {
+        key,
+        enabled: false,
+      });
+    });
+
+    test('should track telemetry with enabled=false when config is undefined', async () => {
+      const key = 'kubernetes.statesExperimental';
+      await experimentalConfigurationManager.updateExperimentalConfigurationValue(key, undefined, 'DEFAULT');
+
+      expect(mockedTelemetry.track).toHaveBeenCalledWith('experimentalConfigurationUpdate', {
+        key,
+        enabled: false,
+      });
+    });
   });
 
   describe('enableExperimentalConfiguration', () => {
@@ -167,7 +202,7 @@ describe('ExperimentalConfigurationManager', () => {
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key, scope);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, scope);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, false, scope);
     });
 
     test('should disable configuration with array of scopes', async () => {
@@ -177,18 +212,8 @@ describe('ExperimentalConfigurationManager', () => {
       await experimentalConfigurationManager.disableExperimentalConfiguration(key, scopes);
 
       expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledTimes(2);
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
-        1,
-        key,
-        undefined,
-        scopes[0],
-      );
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(
-        2,
-        key,
-        undefined,
-        scopes[1],
-      );
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(1, key, false, scopes[0]);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenNthCalledWith(2, key, false, scopes[1]);
     });
 
     test('should disable configuration without scope', async () => {
@@ -196,7 +221,7 @@ describe('ExperimentalConfigurationManager', () => {
 
       await experimentalConfigurationManager.disableExperimentalConfiguration(key);
 
-      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, undefined, undefined);
+      expect(mockedConfigurationRegistry.updateConfigurationValue).toHaveBeenCalledWith(key, false, undefined);
     });
   });
 

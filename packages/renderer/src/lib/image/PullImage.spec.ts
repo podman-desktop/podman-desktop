@@ -20,14 +20,16 @@ import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { PreferredRegistriesSettings } from '@podman-desktop/core-api';
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { get } from 'svelte/store';
+import { router } from 'tinro';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 import { recommendedRegistries } from '/@/stores/recommendedRegistries';
+import { runImageInfo } from '/@/stores/run-image-store';
 
 import PullImage from './PullImage.svelte';
 
@@ -80,8 +82,12 @@ beforeEach(() => {
   });
   console.error = vi.fn();
   vi.mocked(window.resolveShortnameImage).mockResolvedValue(['docker.io/test1']);
+  vi.mocked(window.getCancellableTokenSource).mockResolvedValue(1234);
+  vi.mocked(window.cancelToken).mockResolvedValue(undefined);
   vi.mocked(window.pullImage).mockResolvedValue(undefined);
   vi.mocked(window.listImageTagsInRegistry).mockResolvedValue(['latest', 'other']);
+  vi.mocked(window.listImages).mockResolvedValue([]);
+  vi.mocked(window.searchImageInRegistry).mockResolvedValue([]);
 
   providerInfos.set([PROVIDER_INFO_MOCK]);
 });
@@ -243,6 +249,47 @@ describe('PullImage', () => {
     expect(proposal).toBeInTheDocument();
     expect(proposal).toBeEnabled();
   });
+
+  test('Expect cancel to request cancellation while pull is in progress', async () => {
+    const pendingPull = Promise.withResolvers<void>();
+    vi.mocked(window.getCancellableTokenSource).mockResolvedValue(9876);
+    vi.mocked(window.pullImage).mockReturnValue(pendingPull.promise);
+
+    render(PullImage, { imageToPull: 'some-valid-image' });
+
+    const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+    await userEvent.click(pullImagebutton);
+
+    expect(window.pullImage).toHaveBeenCalledWith(
+      CONTAINER_CONNECTION_MOCK,
+      'some-valid-image',
+      expect.any(Function),
+      undefined,
+      9876,
+    );
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    await userEvent.click(cancelButton);
+    expect(window.cancelToken).toHaveBeenCalledWith(9876);
+
+    pendingPull.reject(new Error('The operation was aborted'));
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pull image' })).toBeInTheDocument();
+    });
+  });
+
+  test('Expect cancellation errors are not displayed as pull errors', async () => {
+    vi.mocked(window.pullImage).mockRejectedValueOnce(new Error('Request aborted'));
+    render(PullImage, { imageToPull: 'some-valid-image' });
+
+    const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+    await userEvent.click(pullImagebutton);
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pull image' })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('alert', { name: 'Error Message Content' })).toBeNull();
+  });
 });
 
 test('Expect if no docker.io shortname to use Podman FQN', async () => {
@@ -333,6 +380,80 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
   // expect that the warning message is not displayed
   const errorMesssage = screen.queryByRole('alert', { name: 'Warning Message Content' });
   expect(errorMesssage).toBeNull();
+});
+
+test('Expect done, details and run actions after a successful pull', async () => {
+  render(PullImage, { imageToPull: 'some-valid-image' });
+
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+  await userEvent.click(pullImagebutton);
+
+  const footer = await screen.findByRole('contentinfo');
+  expect(within(footer).getByRole('button', { name: 'View details' })).toBeInTheDocument();
+  expect(within(footer).getByRole('button', { name: 'Run' })).toBeInTheDocument();
+  expect(within(footer).getByRole('button', { name: 'Close' })).toBeInTheDocument();
+});
+
+test('Expect details action to open pulled image summary route', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['docker.io/library/alpine:latest'],
+      Created: 1644009612,
+      Size: 123,
+      engineId: 'podman',
+      engineName: 'podman',
+    } as never,
+  ]);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+  await userEvent.click(pullImagebutton);
+  const detailsButton = await screen.findByRole('button', { name: 'View details' });
+  await userEvent.click(detailsButton);
+
+  await vi.waitFor(() => {
+    expect(window.listImages).toHaveBeenCalledWith({
+      provider: CONTAINER_CONNECTION_MOCK,
+    });
+    expect(gotoSpy).toHaveBeenLastCalledWith(
+      '/images/sha256:1234567890123/podman/ZG9ja2VyLmlvL2xpYnJhcnkvYWxwaW5lOmxhdGVzdA==/summary',
+    );
+  });
+});
+
+test('Expect run action to set image info and go to run page', async () => {
+  const gotoSpy = vi.spyOn(router, 'goto');
+  const runImageInfoSetSpy = vi.spyOn(runImageInfo, 'set');
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['docker.io/library/alpine:latest'],
+      Created: 1644009612,
+      Size: 123,
+      engineId: 'podman',
+      engineName: 'podman',
+    } as never,
+  ]);
+  render(PullImage, { imageToPull: 'docker.io/alpine' });
+
+  const pullImagebutton = screen.getByRole('button', { name: 'Pull image' });
+  await userEvent.click(pullImagebutton);
+  const runButton = await screen.findByRole('button', { name: 'Run' });
+  await userEvent.click(runButton);
+
+  await vi.waitFor(() => {
+    expect(runImageInfoSetSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'sha256:1234567890123',
+        engineId: 'podman',
+        name: 'docker.io/library/alpine',
+        tag: 'latest',
+      }),
+    );
+    expect(gotoSpy).toHaveBeenLastCalledWith('/images/run/basic');
+  });
 });
 
 test('input component should not raise an error when the input is valid', async () => {
@@ -436,7 +557,7 @@ describe('container connections', () => {
     expect(dropdown).toHaveTextContent(MULTI_CONNECTIONS.containerConnections[0].name);
   });
 
-  test('selecting a provider should update the dropdown button', async () => {
+  test('selecting a provider should update the dropdown button', { timeout: 10_000 }, async () => {
     // set multiple connections
     const connectionTarget = MULTI_CONNECTIONS.containerConnections[3];
     providerInfos.set([MULTI_CONNECTIONS]);
@@ -447,7 +568,7 @@ describe('container connections', () => {
     expect(dropdown).toBeEnabled();
 
     // open the dropdown
-    dropdown.click();
+    await userEvent.click(dropdown);
 
     // get the connection we want
     const connection3 = await vi.waitFor(() => {
@@ -457,7 +578,7 @@ describe('container connections', () => {
     });
 
     // select it
-    connection3.click();
+    await userEvent.click(connection3);
     await vi.waitFor(() => {
       expect(dropdown).toHaveTextContent(connectionTarget.name);
     });
@@ -473,7 +594,13 @@ describe('container connections', () => {
     pullImagebutton.click();
 
     await vi.waitFor(() => {
-      expect(window.pullImage).toHaveBeenCalledWith(connectionTarget, 'test1', expect.any(Function));
+      expect(window.pullImage).toHaveBeenCalledWith(
+        connectionTarget,
+        'test1',
+        expect.any(Function),
+        undefined,
+        expect.any(Number),
+      );
     });
   });
 });

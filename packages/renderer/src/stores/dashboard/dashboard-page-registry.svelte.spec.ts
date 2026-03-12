@@ -22,8 +22,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   convertFromListOrganizerItems,
+  dashboardPageRegistry,
   type DashboardPageRegistryEntry,
-  defaultSectionNames,
+  setupDashboardPageRegistry,
 } from './dashboard-page-registry.svelte';
 
 // Mock the individual registry creation functions
@@ -33,19 +34,24 @@ vi.mock(import('/@/lib/dashboard/ProvidersSection.svelte'));
 vi.mock(import('/@/lib/dashboard/ReleaseNotesBox.svelte'));
 vi.mock(import('/@/lib/explore-features/ExploreFeatures.svelte'));
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetAllMocks();
+  vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
 });
 
-describe('getDefaultSectionNames', () => {
-  test('should return section names in correct order', () => {
-    expect(defaultSectionNames).toEqual([
-      'Release Notes',
-      'Extension Banners',
-      'Explore Features',
-      'Learning Center',
-      'Providers',
-    ]);
+describe('defaultSection', () => {
+  test('should return section names in correct order when enhanced dashboard is enabled', async () => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
+    await setupDashboardPageRegistry();
+
+    // Now should have 4 items (without providers)
+    await vi.waitFor(() => {
+      expect(dashboardPageRegistry.entries).toHaveLength(4);
+    });
+
+    // Check the section names from the registry entries
+    const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
+    expect(sectionNames).toEqual(['Release Notes', 'Extension Banners', 'Explore Features', 'Learning Center']);
   });
 });
 

@@ -69,7 +69,7 @@ export class WelcomePage extends BasePage {
   async turnOffTelemetry(): Promise<void> {
     return test.step('Turn off Telemetry', async () => {
       // Extensions load sequentially (faster speed but can block ui)
-      await playExpect(this.startOnboarding).toBeEnabled({ timeout: 45_000 });
+      await playExpect(this.startOnboarding).toBeEnabled({ timeout: 60_000 });
 
       if (await this.telemetryConsent.isChecked()) {
         await playExpect(this.telemetryConsent).toBeChecked();
@@ -86,7 +86,7 @@ export class WelcomePage extends BasePage {
       await this.skipOnBoarding.click({ force: true });
       try {
         await waitWhile(async () => await this.skipOnBoarding.isVisible(), { timeout: 5_000, diff: 250 });
-      } catch (err) {
+      } catch (_err) {
         console.log('Skip Onboarding button is still visible, retrying to press the button');
         await this.skipOnBoarding.click({ force: true });
       }

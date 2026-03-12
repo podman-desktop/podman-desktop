@@ -74,7 +74,7 @@ async function pushManifestFinished(): Promise<void> {
   {#snippet buttons()}
   
       {#if !pushInProgress && !pushFinished}
-        <Button class="w-auto" type="secondary" on:click={closeCallback}>Cancel</Button>
+        <Button class="w-auto" type="link" on:click={closeCallback}>Cancel</Button>
       {/if}
       {#if !pushFinished}
         <Button

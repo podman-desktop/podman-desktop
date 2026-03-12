@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faCheck, faGripVertical, faPen, faUndo } from '@fortawesome/free-solid-svg-icons';
-import { SvelteMap } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import { Icon } from '../icons';
 import type { ListOrganizerItem } from './ListOrganizer';
@@ -72,7 +72,7 @@ let orderedItems = $derived.by(() => {
 });
 
 // Create a reactive set derived from items (read-only)
-let enabledItems = $derived(new Set(items.filter(item => item.enabled).map(item => item.id)));
+let enabledItems: Set<string> = $derived(new SvelteSet(items.filter(item => item.enabled).map(item => item.id)));
 
 let isResetDisabled = $derived.by(() => {
   // Reset callback must be provided
@@ -256,7 +256,7 @@ function handleReset(): void {
   </button>
 
   {#if isOpen}
-    <div 
+    <div
       class="origin-top-right absolute z-50 right-0 top-full mt-1 overflow-y-auto overflow-x-hidden rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] border border-[var(--pd-dropdown-border)] text-nowrap animate-in fade-in zoom-in-95 duration-200"
     >
       <div class="bg-[var(--pd-dropdown-header-bg)]">
@@ -306,7 +306,7 @@ function handleReset(): void {
           </button>
         {/each}
       </div>
-      
+
       <div class="flex items-center justify-between">
         {#if onReset}
           <button

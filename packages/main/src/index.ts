@@ -34,6 +34,7 @@ import { TrayMenu } from './tray-menu.js';
 import { isMac, isWindows, stoppedExtensions } from './util.js';
 
 let extensionLoader: ExtensionLoader | undefined;
+let animatedTray: AnimatedTray | undefined;
 
 // Main startup
 const podmanDesktopMain = new Main(app);
@@ -54,6 +55,11 @@ app.on('second-instance', (_event, _args, _workingDirectory, additionalData: unk
   });
 });
 
+app.on('will-quit', () => {
+  // Clean up tray resources
+  animatedTray?.dispose();
+  tray?.destroy();
+});
 app.once('before-quit', event => {
   if (!extensionLoader) {
     stoppedExtensions.val = true;
@@ -88,7 +94,7 @@ app.on('will-finish-launching', () => {
 app.whenReady().then(
   async () => {
     // Setup the default tray icon + menu items
-    const animatedTray = new AnimatedTray();
+    animatedTray = new AnimatedTray();
     tray = new Tray(animatedTray.getDefaultImage());
     animatedTray.setTray(tray);
     const trayMenu = new TrayMenu(tray, animatedTray);
@@ -105,7 +111,7 @@ app.whenReady().then(
       if (!isMac()) {
         const color = configurationRegistry.getConfiguration('preferences').get('TrayIconColor');
         if (typeof color === 'string') {
-          animatedTray.setColor(color);
+          animatedTray?.setColor(color);
         }
       }
 

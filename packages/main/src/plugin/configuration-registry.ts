@@ -221,7 +221,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
         const configurationValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE);
         if (configurationValue !== undefined) {
           if (
-            configProperty.default &&
+            configProperty.default !== undefined &&
             this.isDefaultScope(configProperty.scope) &&
             configurationValue[key] === undefined
           ) {
@@ -380,7 +380,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const property = this.configurationProperties[key];
     if (property?.enum) {
       property.enum?.push(...values);
-      this.apiSender.send('configuration-changed');
+      this.apiSender.send('configuration-changed', { key, value: property.enum });
     }
     return Disposable.create(() => {
       this.removeConfigurationEnum(key, values, valueWhenRemoved);
@@ -402,7 +402,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
           console.error(`unable to update default value for the property ${key}`, e),
         );
       }
-      this.apiSender.send('configuration-changed');
+      this.apiSender.send('configuration-changed', { key, value: property.enum });
     }
   }
 }

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@
  ***********************************************************************/
 
 import { existsSync } from 'node:fs';
-import { unlink, writeFile } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import type { Configuration } from '@podman-desktop/api';
 import { app } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-
-import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 
 import { MacosStartup } from './macos-startup.js';
 
@@ -34,6 +31,7 @@ vi.mock('electron', async () => {
   return {
     app: {
       getPath: vi.fn(),
+      setLoginItemSettings: vi.fn(),
     },
   };
 });
@@ -46,16 +44,10 @@ vi.mock('node:fs', async () => {
 vi.mock('node:fs/promises');
 vi.mock('node:path');
 
-const configurationRegistry = {
-  getConfiguration: vi.fn(),
-} as unknown as ConfigurationRegistry;
-
 let macosStartup: MacosStartup;
 
 const fakeAppExe = 'fakeAppExe';
 const fakeAppHome = 'fakeAppHome';
-
-const savedCommandLine = `/usr/bin/truncate -s 0 '${fakeAppHome}/Library/Logs/Podman Desktop/launchd-stdout.log'; /usr/bin/truncate -s 0 '${fakeAppHome}/Library/Logs/Podman Desktop/launchd-stderr.log'; '${fakeAppExe}' `;
 
 const originalConsoleInfo = console.info;
 const originalConsoleWarn = console.warn;
@@ -77,7 +69,7 @@ beforeEach(() => {
     }
     throw new Error('Unsupported path');
   });
-  macosStartup = new MacosStartup(configurationRegistry);
+  macosStartup = new MacosStartup();
 });
 
 afterEach(() => {
@@ -86,26 +78,41 @@ afterEach(() => {
 });
 
 describe('enable', () => {
-  test('check writing the plist file with the correct instruction', async () => {
-    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValue(true),
-    } as unknown as Configuration);
+  test('should call app.setLoginItemSettings with openAtLogin true', async () => {
+    await macosStartup.enable();
+
+    expect(app.setLoginItemSettings).toHaveBeenCalledWith({
+      openAtLogin: true,
+    });
+
+    expect(console.info).toHaveBeenCalledWith(expect.stringContaining('Registered Podman Desktop as a login item'));
+  });
+
+  test('should remove legacy plist file if it exists', async () => {
+    vi.mocked(existsSync).mockReturnValue(true);
 
     await macosStartup.enable();
 
-    // check content being written
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.stringContaining('fakeAppHome/Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist'),
-      expect.stringContaining(savedCommandLine),
-      'utf-8',
+    expect(unlink).toHaveBeenCalledWith(
+      expect.stringContaining('Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist'),
     );
-
-    // check console
-    expect(console.info).toHaveBeenCalledWith(expect.stringContaining('Installing Podman Desktop startup file at'));
+    expect(app.setLoginItemSettings).toHaveBeenCalledWith({
+      openAtLogin: true,
+    });
   });
 
-  test('check unable to write the plist file if app is in /Volumes', async () => {
-    // change the app home to be in /Volumes
+  test('should not attempt to remove legacy plist if it does not exist', async () => {
+    vi.mocked(existsSync).mockReturnValue(false);
+
+    await macosStartup.enable();
+
+    expect(unlink).not.toHaveBeenCalled();
+    expect(app.setLoginItemSettings).toHaveBeenCalledWith({
+      openAtLogin: true,
+    });
+  });
+
+  test('should skip when running from a volume', async () => {
     vi.mocked(app.getPath).mockImplementation((name: AppGetPathParam) => {
       if (name === 'exe') {
         return `/Volumes/${fakeAppExe}`;
@@ -115,76 +122,48 @@ describe('enable', () => {
       }
       throw new Error('Unsupported path');
     });
-    // recreate the object to get correct resolve method
-    macosStartup = new MacosStartup(configurationRegistry);
-
-    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValue(true),
-    } as unknown as Configuration);
+    macosStartup = new MacosStartup();
 
     await macosStartup.enable();
 
-    // check no content has being written
-    expect(writeFile).not.toHaveBeenCalled();
-
-    // check console
-    expect(console.info).not.toHaveBeenCalled();
-    expect(console.warn).toHaveBeenCalled();
-  });
-
-  test('check writing the plist file according to login.minimize configuration value', async () => {
-    vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValueOnce(true).mockReturnValueOnce(false),
-    } as unknown as Configuration);
-
-    await macosStartup.enable();
-
-    // check content being written
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.stringContaining(`<string>${savedCommandLine}--minimize</string>`),
-      'utf-8',
-    );
-
-    vi.mocked(writeFile).mockReset();
-    await macosStartup.enable();
-
-    // check content being written
-    expect(writeFile).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.stringContaining(`<string>${savedCommandLine}</string>`),
-      'utf-8',
-    );
+    expect(app.setLoginItemSettings).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Cannot enable the start on login'));
   });
 });
 
 describe('disable', () => {
-  test('check remove if exists', async () => {
-    // mock as file exists
+  test('should call app.setLoginItemSettings with openAtLogin false', async () => {
+    await macosStartup.disable();
+
+    expect(app.setLoginItemSettings).toHaveBeenCalledWith({
+      openAtLogin: false,
+    });
+  });
+
+  test('should remove legacy plist file if it exists', async () => {
     vi.mocked(existsSync).mockReturnValue(true);
 
     await macosStartup.disable();
 
-    // check calls on fs
-    expect(existsSync).toHaveBeenCalled();
-    expect(unlink).toHaveBeenCalled();
+    expect(unlink).toHaveBeenCalledWith(
+      expect.stringContaining('Library/LaunchAgents/io.podman_desktop.PodmanDesktop.plist'),
+    );
+    expect(app.setLoginItemSettings).toHaveBeenCalledWith({
+      openAtLogin: false,
+    });
   });
 
-  test('check do not remove if not exists', async () => {
-    // mock as file not existing
+  test('should not attempt to remove legacy plist if it does not exist', async () => {
     vi.mocked(existsSync).mockReturnValue(false);
 
     await macosStartup.disable();
 
-    // check calls on fs
-    expect(existsSync).toHaveBeenCalled();
     expect(unlink).not.toHaveBeenCalled();
   });
 });
 
 describe('shouldEnable', () => {
-  test('check shouldEnable being true', async () => {
-    // change the app folder to be in /Applications
+  test('should return true when running from /Applications', async () => {
     vi.mocked(app.getPath).mockImplementation((name: AppGetPathParam) => {
       if (name === 'exe') {
         return `/Applications/${fakeAppExe}`;
@@ -195,14 +174,30 @@ describe('shouldEnable', () => {
       throw new Error('Unsupported path');
     });
 
-    // recreate the object to get correct resolve method
-    macosStartup = new MacosStartup(configurationRegistry);
+    macosStartup = new MacosStartup();
 
     const result = macosStartup.shouldEnable();
     expect(result).toBeTruthy();
   });
 
-  test('check shouldEnable being false', async () => {
+  test('should return true when running from ~/Applications', async () => {
+    vi.mocked(app.getPath).mockImplementation((name: AppGetPathParam) => {
+      if (name === 'exe') {
+        return `${fakeAppHome}/Applications/${fakeAppExe}`;
+      }
+      if (name === 'home') {
+        return fakeAppHome;
+      }
+      throw new Error('Unsupported path');
+    });
+
+    macosStartup = new MacosStartup();
+
+    const result = macosStartup.shouldEnable();
+    expect(result).toBeTruthy();
+  });
+
+  test('should return false when not running from Applications folder', async () => {
     const result = macosStartup.shouldEnable();
 
     expect(console.warn).toHaveBeenCalledWith(

@@ -35,16 +35,17 @@ import { app } from 'electron';
 import type { LinuxOs } from 'getos';
 import getos from 'getos';
 import { inject, injectable } from 'inversify';
-import * as osLocale from 'os-locale';
+import osLocale from 'os-locale';
 
 import { DefaultConfiguration } from '/@/plugin/default-configuration.js';
+import { Emitter } from '/@/plugin/events/emitter.js';
 import { LockedConfiguration } from '/@/plugin/locked-configuration.js';
+import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '/@/plugin/types/telemetry.js';
+import { stoppedExtensions } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+// eslint-disable-next-line no-restricted-imports
 import telemetry from '../../../../../telemetry.json' with { type: 'json' };
-import { stoppedExtensions } from '../../util.js';
-import { Emitter } from '../events/emitter.js';
-import { TelemetryTrustedValue as TypeTelemetryTrustedValue } from '../types/telemetry.js';
 import { Identity } from './identity.js';
 import type { TelemetryRule } from './telemetry-api.js';
 
@@ -465,7 +466,7 @@ export class Telemetry {
   }
 
   protected async getLocale(): Promise<string> {
-    this.locale ??= (await osLocale.osLocale()).replace('_', '-');
+    this.locale ??= osLocale().replace('_', '-');
     return this.locale;
   }
 

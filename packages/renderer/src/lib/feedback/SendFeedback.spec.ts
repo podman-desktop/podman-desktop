@@ -148,7 +148,7 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
   await userEvent.keyboard('[ArrowDown]');
   const featureCategory = screen.getByRole('button', { name: /Feature/ });
   await fireEvent.click(featureCategory);
-  expect(vi.mocked(GitHubIssueFeedback)).toHaveBeenNthCalledWith(2, expect.anything(), {
+  expect(vi.mocked(GitHubIssueFeedback)).toHaveBeenNthCalledWith(1, expect.anything(), {
     onCloseForm: expect.any(Function),
     category: 'feature',
     contentChange: expect.any(Function),

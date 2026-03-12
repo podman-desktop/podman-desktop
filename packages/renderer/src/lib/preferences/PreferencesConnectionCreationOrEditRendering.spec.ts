@@ -352,7 +352,7 @@ describe.each([
     if (!connectionInfo) {
       auditSpy = vi.spyOn(window as any, 'auditConnectionParameters').mockImplementationOnce(() => ({ records: [] }));
     }
-    auditSpy = auditSpy
+    auditSpy
       .mockImplementationOnce(() => ({
         records: [
           {

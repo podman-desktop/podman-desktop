@@ -26,6 +26,7 @@ $: {
     logsTerminal?.clear();
     fetchComposeLogs().catch((err: unknown) => console.error('Error fetching compose logs', err));
   }
+  // eslint-disable-next-line no-useless-assignment
   refCompose = compose;
 }
 

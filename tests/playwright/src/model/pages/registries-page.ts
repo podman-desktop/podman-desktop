@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ export class RegistriesPage extends SettingsPage {
   readonly registryUrlField: Locator;
   readonly registryUsernameField: Locator;
   readonly registryPswdField: Locator;
+  readonly preferredRepositoriesField: Locator;
 
   constructor(page: Page) {
     super(page, 'Registries');
@@ -49,6 +50,7 @@ export class RegistriesPage extends SettingsPage {
     this.registryUrlField = this.addRegistryDialog.getByPlaceholder('https://registry.io');
     this.registryUsernameField = this.addRegistryDialog.getByPlaceholder('username');
     this.registryPswdField = this.addRegistryDialog.getByPlaceholder('password');
+    this.preferredRepositoriesField = page.locator('input[name="registries.preferred"]');
   }
 
   async createRegistry(url: string, username: string, pswd: string): Promise<void> {
@@ -112,6 +114,45 @@ export class RegistriesPage extends SettingsPage {
 
       const editButton = registryBox.getByTitle('Remove');
       await editButton.click();
+    });
+  }
+
+  async updatePreferredRepositories(repositories: string): Promise<void> {
+    return test.step('Update preferred image repositories', async () => {
+      await playExpect(this.preferredRepositoriesField).toBeVisible();
+
+      await this.preferredRepositoriesField.clear();
+      await playExpect(this.preferredRepositoriesField).toHaveValue('');
+
+      await this.preferredRepositoriesField.fill(repositories);
+      await playExpect(this.preferredRepositoriesField).toHaveValue(repositories);
+
+      // wait for the preferred repositories field debounce timer to complete and modifications to be applied
+      await this.page.waitForTimeout(2_000);
+    });
+  }
+
+  async addPreferredRepositories(repositories: string[]): Promise<void> {
+    return test.step('Add preferred image repositories', async () => {
+      await playExpect(this.preferredRepositoriesField).toBeVisible();
+
+      const current = await this.preferredRepositoriesField.inputValue();
+      const existing = current
+        ? current
+            .split(',')
+            .map(r => r.trim())
+            .filter(Boolean)
+        : [];
+      const merged = [...repositories, ...existing].join(',');
+
+      await this.preferredRepositoriesField.clear();
+      await playExpect(this.preferredRepositoriesField).toHaveValue('');
+
+      await this.preferredRepositoriesField.fill(merged);
+      await playExpect(this.preferredRepositoriesField).toHaveValue(merged);
+
+      // wait for the preferred repositories field debounce timer to complete and modifications to be applied
+      await this.page.waitForTimeout(2_000);
     });
   }
 

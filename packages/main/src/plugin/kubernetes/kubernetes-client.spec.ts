@@ -1013,10 +1013,9 @@ test('Expect apply should work with multiple files', async () => {
   const client = createTestClient('default');
   const manifests = { kind: test, metadata: { name: 'n1', annotations: test } } as unknown as KubernetesObject;
   const createdObjs = [{ kind: 'created' }, { kind: 'created' }];
-  let count = 0;
   vi.spyOn(client, 'loadManifestsFromFile').mockResolvedValue([manifests]);
   makeApiClientMock.mockReturnValue({
-    create: vi.fn().mockReturnValue(createdObjs[count++]),
+    create: vi.fn().mockReturnValueOnce(createdObjs[0]).mockReturnValueOnce(createdObjs[1]),
   });
 
   const objects = await client.applyResourcesFromFile('default', ['some-file.yaml', 'another-file.yaml']);

@@ -1,3 +1,5 @@
 {
-  "preferences.appearance": "dark"
+  "feedback.dialog": true,
+  "preferences.zoomLevel": 0.5,
+  "preferences.ExitOnClose": false
 }

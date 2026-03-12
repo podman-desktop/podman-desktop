@@ -100,7 +100,7 @@ export class ConfigurationImpl implements containerDesktopAPI.Configuration {
 
     // remove the value if undefined
     if (value === undefined) {
-      if (localView[localKey]) {
+      if (localView[localKey] !== undefined) {
         delete localView[localKey];
         delete this[localKey];
         this.apiSender.send('configuration-changed', configurationChangedEvent);

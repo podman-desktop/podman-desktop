@@ -186,9 +186,11 @@ function dragMe(node: HTMLElement): void {
                   <div
                     class="px-4 pt-4 pb-2 bg-[var(--pd-invert-content-card-bg)] group-hover:bg-[var(--pd-modal-dropdown-highlight)] hover:bg-[var(--pd-modal-dropdown-highlight)] group-hover:border-[var(--pd-tab-highlight)] hover:border-[var(--pd-tab-highlight)] rounded-t-md group-[.is-selected]:bg-[var(--pd-modal-dropdown-highlight)] border-t-2 border-x-2 border-transparent"
                     class:border-b-2={usePopperForDetails ||
-                      itemSectionHiddenStatus.get((i / colsPerRow) * colsPerRow + j)}
+                      (itemSectionHiddenStatus.get((i / colsPerRow) * colsPerRow + j) ?? false) ||
+                      (innerItem.sections?.length ?? 0) === 0}
                     class:rounded-b-md={usePopperForDetails ||
-                      itemSectionHiddenStatus.get((i / colsPerRow) * colsPerRow + j)}
+                      (itemSectionHiddenStatus.get((i / colsPerRow) * colsPerRow + j) ?? false) ||
+                      (innerItem.sections?.length ?? 0) === 0}
                     class:bg-[var(--pd-modal-dropdown-highlight)]={innerItem.selected}>
                     <div class="flex flex-row mb-1 gap-x-1">
                       <span class="text-md font-bold">{innerItem.title}</span>

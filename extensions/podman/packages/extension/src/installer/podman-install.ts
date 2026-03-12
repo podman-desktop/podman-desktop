@@ -152,10 +152,10 @@ export class PodmanInstall {
     }
 
     if (machinesRunning.length > 0) {
-      let text;
+      let text: string;
       if (machinesRunning.length === 1) {
         const machineName = machinesRunning[0].Name;
-        let subText = '';
+        let subText: string;
         if (machineName === 'podman-machine-default') {
           subText = 'Podman machine';
         } else {

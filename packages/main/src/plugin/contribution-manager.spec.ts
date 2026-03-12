@@ -256,7 +256,7 @@ test('waitForAContainerConnection', async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   // now send the 'extension-started' event
-  apiSender.send('extensions-started', {});
+  apiSender.send('extensions-started');
 
   await promise;
 });
@@ -276,7 +276,7 @@ test('waitForAContainerConnection delayed', async () => {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   // now send the 'extension-started' event
-  apiSender.send('extensions-started', {});
+  apiSender.send('extensions-started');
 
   // and now the provider-change event (failing)
   apiSender.send('provider-change', {});
@@ -302,7 +302,7 @@ test('waitForAContainerConnection delayed twice', async () => {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   // now send the 'extension-started' event
-  apiSender.send('extensions-started', {});
+  apiSender.send('extensions-started');
 
   // and now the provider-change event (failing)
   apiSender.send('provider-change', {});

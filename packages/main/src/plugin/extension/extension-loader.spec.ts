@@ -81,6 +81,7 @@ import type { AnalyzedExtension, ExtensionAnalyzer } from './extension-analyzer.
 import type { ExtensionDevelopmentFolders } from './extension-development-folders.js';
 import type { ActivatedExtension, AnalyzedExtensionWithApi, RequireCacheDict } from './extension-loader.js';
 import { ExtensionLoader } from './extension-loader.js';
+import type { ExtensionManifest } from './extension-manifest-schema.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
 
 class TestExtensionLoader extends ExtensionLoader {
@@ -258,6 +259,7 @@ const contributionManager: ContributionManager = {
 const webviewRegistry: WebviewRegistry = {
   listSimpleWebviews: vi.fn(),
   listWebviews: vi.fn(),
+  stop: vi.fn(),
 } as unknown as WebviewRegistry;
 
 const navigationManager: NavigationManager = new NavigationManager(
@@ -601,7 +603,7 @@ test('Verify extension error leads to failed state', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
-      manifest: {},
+      manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
@@ -632,7 +634,7 @@ test('Verify extension subscriptions are disposed when failed state reached', as
       mainPath: '',
       removable: false,
       devMode: false,
-      manifest: {},
+      manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
@@ -667,7 +669,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
       mainPath: '',
       removable: false,
       devMode: false,
-      manifest: {},
+      manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
@@ -699,7 +701,7 @@ test('Verify extension load triggers an onDidChange event', async () => {
     mainPath: '',
     removable: false,
     devMode: false,
-    manifest: {},
+    manifest: {} as unknown as ExtensionManifest,
     subscriptions: [],
     readme: '',
     dispose: vi.fn(),
@@ -722,7 +724,7 @@ test('Verify extension load', async () => {
     devMode: false,
     manifest: {
       version: '1.1',
-    },
+    } as unknown as ExtensionManifest,
     subscriptions: [],
     readme: '',
     dispose: vi.fn(),
@@ -765,7 +767,7 @@ test('Verify extension do not add configuration to subscriptions', async () => {
           title: 'dummy-configuration-title',
         },
       },
-    },
+    } as unknown as ExtensionManifest,
     subscriptions: subscriptions,
     readme: '',
     dispose: vi.fn(),
@@ -797,7 +799,7 @@ test('Verify extension activate registers extension features and the disposable 
       contributes: {
         features: ['feature1', 'feature2'],
       },
-    },
+    } as unknown as ExtensionManifest,
     subscriptions,
     readme: '',
     dispose: vi.fn(),
@@ -1349,7 +1351,7 @@ test('Verify extension uri', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
-      manifest: {},
+      manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
@@ -1385,7 +1387,7 @@ test('Verify exports and packageJSON', async () => {
       devMode: false,
       manifest: {
         foo: 'bar',
-      },
+      } as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),
@@ -2885,7 +2887,7 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
       mainPath: '',
       removable: false,
       devMode: false,
-      manifest: {},
+      manifest: {} as unknown as ExtensionManifest,
       subscriptions: [],
       readme: '',
       dispose: vi.fn(),

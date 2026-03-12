@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { fireEvent, render, type RenderResult, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, type RenderResult, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 /* eslint-disable import/no-duplicates */
 import { type Component, type ComponentProps, tick } from 'svelte';
@@ -1012,5 +1012,188 @@ test('pods with same name on different engines should have separate group', asyn
   await vi.waitFor(() => {
     const expandButtons = getAllByRole('button', { name: 'Collapse Row' });
     expect(expandButtons).toHaveLength(CONTAINERS_MOCK.length);
+  });
+});
+
+test('Expect environment dropdown to appear with multiple running connections', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      id: 'podman',
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+    } as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'container1',
+      Image: 'podman-image',
+      Names: ['podman-container'],
+      Status: 'Running',
+      State: 'running',
+      engineId: 'podman.podman-machine-default',
+      engineName: 'Podman Machine',
+      engineType: 'podman',
+      StartedAt: '2024-01-01T00:00:00Z',
+      ImageBase64RepoTag: '',
+      Created: 0,
+      Ports: [],
+      Labels: {},
+      ImageID: '',
+    } as unknown as ContainerInfo,
+    {
+      Id: 'container2',
+      Image: 'docker-image',
+      Names: ['docker-container'],
+      Status: 'Running',
+      State: 'running',
+      engineId: 'docker.docker-context',
+      engineName: 'Docker Desktop',
+      engineType: 'docker',
+      StartedAt: '2024-01-01T00:00:00Z',
+      ImageBase64RepoTag: '',
+      Created: 0,
+      Ports: [],
+      Labels: {},
+      ImageID: '',
+    } as unknown as ContainerInfo,
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => {
+    expect(get(containersInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  // Environment dropdown should be visible
+  const environmentDropdown = screen.getByLabelText('Environment');
+  expect(environmentDropdown).toBeInTheDocument();
+});
+
+test('Expect environment dropdown to filter containers by selected environment', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      id: 'podman',
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          displayName: 'Podman Machine',
+          status: 'started',
+          type: 'podman',
+        },
+      ],
+    } as ProviderInfo,
+    {
+      id: 'docker',
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker-context',
+          displayName: 'Docker Desktop',
+          status: 'started',
+          type: 'docker',
+        },
+      ],
+    } as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listContainers).mockResolvedValue([
+    {
+      Id: 'container1',
+      Image: 'podman-image',
+      Names: ['podman-container'],
+      Status: 'Running',
+      State: 'running',
+      engineId: 'podman.podman-machine-default',
+      engineName: 'Podman Machine',
+      engineType: 'podman',
+      StartedAt: '2024-01-01T00:00:00Z',
+      ImageBase64RepoTag: '',
+      Created: 0,
+      Ports: [],
+      Labels: {},
+      ImageID: '',
+    } as unknown as ContainerInfo,
+    {
+      Id: 'container2',
+      Image: 'docker-image',
+      Names: ['docker-container'],
+      Status: 'Running',
+      State: 'running',
+      engineId: 'docker.docker-context',
+      engineName: 'Docker Desktop',
+      engineType: 'docker',
+      StartedAt: '2024-01-01T00:00:00Z',
+      ImageBase64RepoTag: '',
+      Created: 0,
+      Ports: [],
+      Labels: {},
+      ImageID: '',
+    } as unknown as ContainerInfo,
+  ]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => {
+    expect(get(containersInfos)).not.toHaveLength(0);
+    expect(get(providerInfos)).not.toHaveLength(0);
+  });
+
+  await waitRender({});
+
+  // Both containers should be visible initially
+  expect(screen.getByText('podman-container')).toBeInTheDocument();
+  expect(screen.getByText('docker-container')).toBeInTheDocument();
+
+  // Select Podman environment from dropdown
+  const dropdownContainer = screen.getByLabelText('Environment');
+  const dropdownButton = within(dropdownContainer).getByRole('button');
+  await fireEvent.click(dropdownButton);
+
+  const podmanOption = await waitFor(async () => {
+    await tick();
+    return screen.getByRole('button', { name: 'Podman' });
+  });
+  await fireEvent.click(podmanOption);
+
+  // Only podman container should be visible
+  await waitFor(() => {
+    expect(screen.getByText('podman-container')).toBeInTheDocument();
+    expect(screen.queryByText('docker-container')).not.toBeInTheDocument();
   });
 });

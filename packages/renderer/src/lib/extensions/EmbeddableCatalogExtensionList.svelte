@@ -1,4 +1,5 @@
 <script lang="ts">
+import { onMount } from 'svelte';
 import { derived, type Readable } from 'svelte/store';
 
 import { combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
@@ -19,6 +20,13 @@ export let ondetails: (extensionId: string) => void = () => {};
 
 // show installed extensions
 export let showInstalled: boolean = true;
+
+let enableCatalog = true;
+
+onMount(async () => {
+  const value = await window.getConfigurationValue<boolean>('extensions.catalog.enabled');
+  enableCatalog = value ?? true;
+});
 
 const extensionsUtils = new ExtensionsUtils();
 
@@ -53,6 +61,7 @@ const catalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
 );
 </script>
 
+{#if enableCatalog}
 <div class="flex bg-[var(--pd-content-bg)] text-left">
   <CatalogExtensionList
     oninstall={oninstall}
@@ -61,3 +70,4 @@ const catalogExtensions: Readable<CatalogExtensionInfoUI[]> = derived(
     showEmptyScreen={showEmptyScreen}
     catalogExtensions={$catalogExtensions} />
 </div>
+{/if}

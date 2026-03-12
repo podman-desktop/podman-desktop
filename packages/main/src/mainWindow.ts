@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,12 +98,21 @@ async function createWindow(): Promise<BrowserWindow> {
    *
    * @see https://github.com/electron/electron/issues/25012
    */
+  // Track whether the window show is deferred (macOS login item launch).
+  // On macOS, app.setLoginItemSettings() does not support passing CLI args,
+  // so we defer showing the window until the configuration registry is available
+  // to check the preferences.login.minimize setting.
+  let deferredShow = false;
+
   browserWindow.on('ready-to-show', () => {
-    // If started with --minimize flag, don't show the window and hide the dock icon on macOS
+    // If started with --minimize flag (Windows login item or manual CLI), hide the window
     if (isStartedMinimize()) {
       if (isMac()) {
         app.dock?.hide();
       }
+    } else if (isMac() && app.getLoginItemSettings().wasOpenedAtLogin) {
+      // On macOS login item launch, defer showing until we can check the minimize preference
+      deferredShow = true;
     } else {
       browserWindow.show();
     }
@@ -112,6 +121,19 @@ async function createWindow(): Promise<BrowserWindow> {
   let configurationRegistry: ConfigurationRegistry;
   ipcMain.on('configuration-registry', (_, data) => {
     configurationRegistry = data;
+
+    // If the window show was deferred (macOS login item launch),
+    // check the minimize preference and show or hide accordingly
+    if (deferredShow) {
+      deferredShow = false;
+      const preferencesConfig = configurationRegistry.getConfiguration('preferences');
+      const minimize = preferencesConfig.get<boolean>('login.minimize');
+      if (minimize) {
+        app.dock?.hide();
+      } else {
+        browserWindow.show();
+      }
+    }
 
     // refresh the value of the development mode config property
     const developmentModeTracker = new DevelopmentModeTracker(configurationRegistry);
