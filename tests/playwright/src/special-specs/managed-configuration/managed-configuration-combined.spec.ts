@@ -19,7 +19,7 @@
 import type { Locator } from '@playwright/test';
 import { expect as playExpect } from '@playwright/test';
 
-import { Preferences } from '/@/model/core/settings';
+import { Preferences } from '/@/model/core/settings/preferences';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { test } from '/@/utility/fixtures';
