@@ -3,17 +3,18 @@ import type { ProviderConnectionInfo, ProviderContainerConnectionInfo, ProviderI
 import { Button } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
+import SystemOverviewCardStack from '/@/lib/dashboard/SystemOverviewCardStack.svelte';
+import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
+import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
+import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
+
 import {
   getConnectionButtonText,
   getConnectionDetailPath,
   getConnectionStatusConfig,
   getStatusTextClass,
   startConnection,
-} from '/@/lib/dashboard/system-overview-utils';
-import SystemOverviewCardStack from '/@/lib/dashboard/SystemOverviewCardStack.svelte';
-import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
-import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
-import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
+} from './system-overview-utils.svelte';
 
 export type ChildConnection = {
   connection: ProviderConnectionInfo;

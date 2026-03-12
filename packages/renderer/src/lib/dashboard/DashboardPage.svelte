@@ -71,7 +71,7 @@ async function loadDashboardConfiguration(): Promise<ListOrganizerItem[]> {
     // Start with loaded items that are in persisted storage (preserves user's order and settings)
     const items: ListOrganizerItem[] = loadedItems.map(item => ({
       ...item,
-      originalOrder: item.originalOrder ?? defaultItemsMap.get(item.id)?.originalOrder ?? 0,
+      originalOrder: defaultItemsMap.get(item.id)?.originalOrder ?? item.originalOrder ?? 0,
     }));
 
     // Add new items from registry that are not in persisted storage

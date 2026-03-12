@@ -5,7 +5,6 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { router } from 'tinro';
 
-import { getStatusBgClass, getStatusTextClass } from '/@/lib/dashboard/system-overview-utils';
 import SystemOverviewCardStack from '/@/lib/dashboard/SystemOverviewCardStack.svelte';
 import SystemOverviewProviderCardDetailed from '/@/lib/dashboard/SystemOverviewProviderCardDetailed.svelte';
 import SystemOverviewProviderConfigured from '/@/lib/dashboard/SystemOverviewProviderConfigured.svelte';
@@ -13,6 +12,8 @@ import SystemOverviewProviderOnboarding from '/@/lib/dashboard/SystemOverviewPro
 import { containersInfos } from '/@/stores/containers';
 import { type Status, systemOverview } from '/@/stores/dashboard/system-overview.svelte';
 import { providerInfos } from '/@/stores/providers';
+
+import { getStatusBgClass, getStatusTextClass } from './system-overview-utils.svelte';
 
 let providers = $derived($providerInfos);
 let containers = $derived($containersInfos);

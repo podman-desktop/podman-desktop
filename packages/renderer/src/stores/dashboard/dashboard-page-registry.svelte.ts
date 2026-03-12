@@ -41,7 +41,7 @@ const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
   const providers = !enhancedDashboard.enabled ? [createProviders()] : [];
   const systemOverview = enhancedDashboard.enabled ? [createSystemOverview()] : [];
-  return [
+  const entries = [
     createReleaseNotesBox(),
     ...systemOverview,
     createExtensionBanners(),
@@ -49,6 +49,7 @@ function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
     createLearningCenter(),
     ...providers,
   ];
+  return entries.map((entry, index) => ({ ...entry, originalOrder: index }));
 }
 
 setupDashboardPageRegistry().catch((error: unknown) => {
@@ -67,6 +68,7 @@ window.events?.receive('enhanced-dashboard-enabled', (value: unknown) => {
 export async function setupDashboardPageRegistry(): Promise<void> {
   enhancedDashboard.enabled = await window.isExperimentalConfigurationEnabled('dashboard.enhancedDashboard');
   dashboardPageRegistry.entries = getDashboardPageRegistry();
+  defaultSection.names = dashboardPageRegistry.entries.map(entry => entry.id);
 }
 
 // Get default section names in their registry order

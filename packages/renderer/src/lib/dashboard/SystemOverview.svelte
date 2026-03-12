@@ -4,10 +4,11 @@ import { Expandable, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
 
-import { getStatusTextClass } from '/@/lib/dashboard/system-overview-utils';
 import SystemOverviewContent from '/@/lib/dashboard/SystemOverviewContent.svelte';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 import { systemOverview } from '/@/stores/dashboard/system-overview.svelte';
+
+import { getStatusTextClass } from './system-overview-utils.svelte';
 
 let expanded: boolean = $state(true);
 let initialized: boolean = $state(false);

@@ -16,8 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { Buffer } from 'node:buffer';
-
 import type { ProviderConnectionStatus } from '@podman-desktop/api';
 import type {
   ProviderConnectionInfo,
@@ -26,6 +24,7 @@ import type {
   SystemOverviewStatus,
 } from '@podman-desktop/core-api';
 import type { ButtonType } from '@podman-desktop/ui-svelte';
+import { Buffer } from 'buffer';
 
 import {
   type ConnectionCallback,

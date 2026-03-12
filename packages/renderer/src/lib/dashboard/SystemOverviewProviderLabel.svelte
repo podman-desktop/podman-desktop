@@ -1,4 +1,6 @@
 <script lang="ts">
+import Label from '/@/lib/ui/Label.svelte';
+
 interface Props {
   name: string;
   version?: string;
@@ -8,13 +10,10 @@ interface Props {
 let { name, version, vmType }: Props = $props();
 </script>
 
-<div class="flex items-center gap-2 text-[var(--pd-content-card-text)]">
+<div
+  class="flex items-center gap-2 text-[var(--pd-content-card-text)] [--pd-label-bg:var(--pd-content-card-bg)] [--pd-label-text:var(--pd-content-text-sub)]">
   <span class="font-medium">{name}</span>
   {#if vmType ?? version}
-    <span class="text-sm text-[var(--pd-content-text-sub)] bg-[var(--pd-content-card-bg)] rounded-md p-1">
-      {#if vmType}{vmType}{/if}
-      {#if vmType && version} - {/if}
-      {#if version}v{version}{/if}
-    </span>
+    <Label name={[vmType, version ? `v${version}` : undefined].filter(Boolean).join(' - ')} />
   {/if}
 </div>

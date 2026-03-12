@@ -4,12 +4,13 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
-import { getConnectionDetailPath } from '/@/lib/dashboard/system-overview-utils';
 import {
   getConnectionDisplayName,
   getSystemOverviewStatus,
   SYSTEM_OVERVIEW_STATUS,
 } from '/@/stores/dashboard/system-overview.svelte';
+
+import { getConnectionDetailPath } from './system-overview-utils.svelte';
 
 const STATUS_DOT_CLASS: Record<SystemOverviewStatus, string> = {
   healthy: 'bg-[var(--pd-status-running)]',
