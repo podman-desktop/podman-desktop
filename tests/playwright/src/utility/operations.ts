@@ -577,6 +577,17 @@ export async function setStatusBarProvidersFeature(
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
 }
 
+export async function setEnhancedDashboardFeature(
+  page: Page,
+  navigationBar: NavigationBar,
+  enable: boolean,
+): Promise<void> {
+  await navigationBar.openSettings();
+  const settingsBar = new SettingsBar(page);
+  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+  await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
+}
+
 function isRootlessPodman(): boolean {
   try {
     let output: string;

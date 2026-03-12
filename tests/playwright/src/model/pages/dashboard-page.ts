@@ -42,6 +42,12 @@ export class DashboardPage extends BasePage {
   readonly podmanStatusLabel: Locator;
   readonly podmanInitilizeAndStartButton: Locator;
 
+  // enhanced dashboard - health monitoring
+  readonly systemOverview: Locator;
+  readonly statusButton: Locator;
+  readonly setUpPodmanButton: Locator;
+  readonly errorDetailsButton: Locator;
+
   // contants
   readonly ACTUAL_STATE = 'Actual State';
   readonly CONNECTION_STATUS_LABEL = 'Connection Status Label';
@@ -71,6 +77,12 @@ export class DashboardPage extends BasePage {
     this.podmanInitilizeAndStartButton = this.podmanProvider.getByRole('button', { name: 'Initialize and start ' });
     this.transitioningState = this.podmanProvider.getByLabel('Transitioning State');
     this.podmanStatusLabel = this.podmanProvider.getByLabel(this.CONNECTION_STATUS_LABEL);
+
+    // Enhanced Dashboard - Health Monitoring
+    this.systemOverview = page.getByRole('region', { name: 'System Overview' });
+    this.setUpPodmanButton = this.systemOverview.getByRole('button', { name: 'Set up Podman' });
+    this.errorDetailsButton = this.systemOverview.getByRole('button', { name: 'See Details in Resources' });
+    this.statusButton = this.systemOverview.getByRole('button', { name: 'System Overview - Navigate to resources' }); //'Some systems are stopped', 'All systems operational', 'Starting up...', 'Error detected'
   }
 
   public getPodmanStatusLocator(): Locator {

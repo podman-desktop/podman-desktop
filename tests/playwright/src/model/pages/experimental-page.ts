@@ -26,6 +26,7 @@ export class ExperimentalPage extends SettingsPage {
   readonly enableAllExperimentalFeaturesCheckbox: Locator;
   readonly enableAllExperimentalFeaturesButton: Locator;
   readonly statusBarProvidersCheckbox: Locator;
+  readonly enhancedDashboardCheckbox: Locator;
 
   constructor(page: Page) {
     super(page, 'Experimental');
@@ -35,6 +36,9 @@ export class ExperimentalPage extends SettingsPage {
       .and(this.content.locator('#input-experimental-enable-all'));
     this.enableAllExperimentalFeaturesButton = this.enableAllExperimentalFeaturesCheckbox.locator('..');
     this.statusBarProvidersCheckbox = this.content.getByRole('checkbox', { name: 'Show providers in the status bar' });
+    this.enhancedDashboardCheckbox = this.content.getByRole('checkbox', {
+      name: 'Enhanced dashboard with more features and improved user experience',
+    });
   }
 
   public async enableAllExperimentalFeatures(): Promise<void> {
