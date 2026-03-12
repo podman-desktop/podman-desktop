@@ -459,10 +459,10 @@ async function searchFunction(value: string): Promise<void> {
         {#if !pullFinished}
           <Button
             icon={faArrowCircleDown}
-            disabled={imageNameIsInvalid}
+            disabled={imageNameIsInvalid || pullInProgress}
             on:click={pullImage}
             inProgress={pullInProgress}>
-            Pull image
+            {pullInProgress ? 'Pulling image' : 'Pull image'}
           </Button>
         {:else}
         <div class="space-x-2 flex flex-nowrap text-[var(--pd-content-text)]">
