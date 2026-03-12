@@ -600,8 +600,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       proxy:
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^3.0.0
+        version: 3.0.0
       semver:
         specifier: ^7.7.4
         version: 7.7.4
@@ -10191,8 +10191,8 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  proxy@2.2.0:
-    resolution: {integrity: sha512-nYclNIWj9UpXbVJ3W5EXIYiGR88AKZoGt90kyh3zoOBY5QW+7bbtPvMFgKGD4VJmpS3UXQXtlGXSg3lRNLOFLg==}
+  proxy@3.0.0:
+    resolution: {integrity: sha512-3JQGizbKR8edoC+4EFkxCflh8toCZ3KbjYO10veRowcj+wHVJNIAavWo/BRUeez1kEHdvqad2ZZsCzSC2wOO+w==}
     engines: {node: '>= 14'}
     hasBin: true
 
@@ -23675,11 +23675,11 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  proxy@2.2.0:
+  proxy@3.0.0:
     dependencies:
       args: 5.0.3
       basic-auth-parser: 0.0.2-1
-      debug: 4.4.0
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
