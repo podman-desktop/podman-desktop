@@ -79,7 +79,8 @@ import type {
   ImageSearchResult,
   ImagesSaveOptions,
   ImageTagsListOptions,
-  ImageUpdateStatus,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   ItemInfo,
   KubeContext,
   KubernetesContextResources,
@@ -592,12 +593,9 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:saveImages', options);
   });
 
-  contextBridge.exposeInMainWorld(
-    'checkImageUpdateStatus',
-    async (imageReference: string, imageTag: string, localDigests: string[]): Promise<ImageUpdateStatus> => {
-      return ipcInvoke('image-registry:checkImageUpdateStatus', imageReference, imageTag, localDigests);
-    },
-  );
+  contextBridge.exposeInMainWorld('updateImages', async (images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> => {
+    return ipcInvoke('container-provider-registry:updateImages', images);
+  });
 
   contextBridge.exposeInMainWorld('loadImages', async (options: ImageLoadOptions): Promise<void> => {
     return ipcInvoke('container-provider-registry:loadImages', options);
