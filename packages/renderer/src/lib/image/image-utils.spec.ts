@@ -22,6 +22,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ContextUI } from '/@/lib/context/context';
 
 import { ImageUtils } from './image-utils';
+import type { ImageInfoUI } from './ImageInfoUI';
 
 let imageUtils: ImageUtils;
 
@@ -244,5 +245,38 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     );
     expect(imageInfoUIs.length).toBe(1);
     expect(imageInfoUIs[0].id).toBe('manifest1');
+  });
+});
+
+describe('updateImages', () => {
+  beforeEach(() => {
+    (window as unknown as Record<string, unknown>).updateImages = vi.fn();
+  });
+
+  test('skips images without digest', async () => {
+    const results = await imageUtils.updateImages([
+      { name: 'nginx', tag: 'latest', engineId: 'podman' } as ImageInfoUI,
+    ]);
+
+    expect(results[0]?.updated).toBe(false);
+    expect(results[0]?.message).toContain('digest');
+    expect(window.updateImages).not.toHaveBeenCalled();
+  });
+
+  test('sends batch payload in a single IPC call', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([
+      { imageRef: 'nginx:latest', updated: true, message: 'Updated' },
+      { imageRef: 'redis:7', updated: false, message: 'Up to date' },
+    ]);
+
+    const results = await imageUtils.updateImages([
+      { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc' },
+      { name: 'redis', tag: '7', engineId: 'podman', digest: 'sha256:def' },
+    ] as ImageInfoUI[]);
+
+    expect(window.updateImages).toHaveBeenCalledOnce();
+    expect(results).toHaveLength(2);
+    expect(results[0]?.updated).toBe(true);
+    expect(results[1]?.updated).toBe(false);
   });
 });

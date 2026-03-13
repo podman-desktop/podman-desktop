@@ -19,6 +19,7 @@
 import {
   type ContainerInfo,
   type ImageInfo,
+  type ImageUpdateResult,
   isViewContributionBadge,
   isViewContributionIcon,
   type ViewContributionBadgeValue,
@@ -245,6 +246,41 @@ export class ImageUtils {
   deleteImage(image: ImageInfoUI): Promise<void> {
     const imageId = image.name === '<none>' ? image.id : `${image.name}:${image.tag}`;
     return window.deleteImage(image.engineId, imageId);
+  }
+
+  async updateImages(images: ImageInfoUI[]): Promise<ImageUpdateResult[]> {
+    const results: ImageUpdateResult[] = new Array(images.length);
+    const validEntries: { index: number; image: ImageInfoUI; digest: string }[] = [];
+
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      if (!image.digest) {
+        results[i] = {
+          imageRef: `${image.name}:${image.tag}`,
+          updated: false,
+          message: 'Image digest is unavailable for this image.',
+        };
+      } else {
+        validEntries.push({ index: i, image, digest: image.digest });
+      }
+    }
+
+    if (validEntries.length > 0) {
+      const backendResults = await window.updateImages(
+        validEntries.map(({ image, digest }) => ({
+          engineId: image.engineId,
+          image: `${image.name}:${image.tag}`,
+          tag: image.tag,
+          digest,
+        })),
+      );
+
+      for (let j = 0; j < validEntries.length; j++) {
+        results[validEntries[j].index] = backendResults[j];
+      }
+    }
+
+    return results;
   }
 
   getImageInfoUI(
