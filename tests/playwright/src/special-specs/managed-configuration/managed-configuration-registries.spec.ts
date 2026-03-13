@@ -58,18 +58,15 @@ test.describe
           const isManaged = await registriesPage.isPreferredManaged();
           playExpect(isManaged).toBeTruthy();
 
-          const value = await registriesPage.preferredRepositoriesField.inputValue();
-          playExpect(value).toBe('docker.io, quay.io');
+          await playExpect(registriesPage.preferredRepositoriesField).toHaveValue('docker.io, quay.io');
         });
 
         test('Field is readonly when locked', async () => {
           // Locked fields are set to readonly (not disabled) in StringItem.svelte
-          const isReadonly = await registriesPage.preferredRepositoriesField.getAttribute('readonly');
-          playExpect(isReadonly).not.toBeNull();
+          await playExpect(registriesPage.preferredRepositoriesField).toHaveAttribute('readonly');
 
           // Field should still be enabled (readonly !== disabled)
-          const isEnabled = await registriesPage.preferredRepositoriesField.isEnabled();
-          playExpect(isEnabled).toBeTruthy();
+          await playExpect(registriesPage.preferredRepositoriesField).toBeEnabled();
         });
       });
 
@@ -112,8 +109,8 @@ test.describe
             }
           }
 
-          playExpect(foundRegistries.has('docker.io')).toBeTruthy();
-          playExpect(foundRegistries.has('quay.io')).toBeTruthy();
+          playExpect(foundRegistries).toContain('docker.io');
+          playExpect(foundRegistries).toContain('quay.io');
         });
       });
   });
