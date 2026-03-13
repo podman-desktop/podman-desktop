@@ -33,6 +33,9 @@ vi.mock('./image-utils', () => {
   return {
     ImageUtils: vi.fn().mockImplementation(() => ({
       deleteImage: vi.fn().mockImplementation(() => Promise.reject(new Error('Cannot delete image in test'))),
+      updateImage: vi
+        .fn()
+        .mockResolvedValue({ imageRef: 'dummy:latest', updated: true, message: 'Image updated successfully' }),
     })),
   };
 });
@@ -255,4 +258,30 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
   await waitFor(() => {
     expect(withConfirmation).toHaveBeenNthCalledWith(1, expect.anything(), 'delete image image-name:1.0');
   });
+});
+
+test.each([
+  { name: '<none>', status: 'UNUSED' as const, tag: '', expectEnabled: false },
+  { name: 'image-name', status: 'USED' as const, tag: '1.0', expectEnabled: false },
+  { name: 'image-name', status: 'UNUSED' as const, tag: '1.0', expectEnabled: true },
+])('Expect Update Image button enabled=$expectEnabled for name=$name status=$status', async ({
+  name,
+  status,
+  tag,
+  expectEnabled,
+}) => {
+  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+
+  render(ImageActions, {
+    onPushImage: vi.fn(),
+    onRenameImage: vi.fn(),
+    image: { name, status, tag } as ImageInfoUI,
+  });
+
+  const button = screen.getByTitle('Update Image');
+  if (expectEnabled) {
+    expect(button).toBeEnabled();
+  } else {
+    expect(button).toBeDisabled();
+  }
 });

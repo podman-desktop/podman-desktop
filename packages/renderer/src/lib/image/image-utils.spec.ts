@@ -22,6 +22,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ContextUI } from '/@/lib/context/context';
 
 import { ImageUtils } from './image-utils';
+import type { ImageInfoUI } from './ImageInfoUI';
 
 let imageUtils: ImageUtils;
 
@@ -244,5 +245,42 @@ describe('getImagesFromManifest and construct ImageInfoUI', () => {
     );
     expect(imageInfoUIs.length).toBe(1);
     expect(imageInfoUIs[0].id).toBe('manifest1');
+  });
+});
+
+describe('updateImage', () => {
+  beforeEach(() => {
+    (window as unknown as Record<string, unknown>).updateImages = vi.fn();
+  });
+
+  test('returns early when digest is missing', async () => {
+    const image = { name: 'nginx', tag: 'latest', engineId: 'podman' } as ImageInfoUI;
+
+    const result = await imageUtils.updateImage(image);
+
+    expect(result.updated).toBe(false);
+    expect(result.message).toContain('digest');
+    expect(window.updateImages).not.toHaveBeenCalled();
+  });
+
+  test('delegates to window.updateImages with correct payload', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([
+      { imageRef: 'nginx:latest', updated: true, message: 'Image updated successfully' },
+    ]);
+    const image = { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc' } as ImageInfoUI;
+
+    const result = await imageUtils.updateImage(image);
+
+    expect(window.updateImages).toHaveBeenCalledWith([
+      { engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc' },
+    ]);
+    expect(result).toEqual({ imageRef: 'nginx:latest', updated: true, message: 'Image updated successfully' });
+  });
+
+  test('throws when backend returns empty results', async () => {
+    vi.mocked(window.updateImages).mockResolvedValue([]);
+    const image = { name: 'nginx', tag: 'latest', engineId: 'podman', digest: 'sha256:abc' } as ImageInfoUI;
+
+    await expect(imageUtils.updateImage(image)).rejects.toThrow('Backend returned no result');
   });
 });

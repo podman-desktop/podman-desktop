@@ -514,6 +514,49 @@ test('expect redirect to saveImage page when at least one image is selected and 
   expect(goToMock).toBeCalledWith('/images/save');
 });
 
+test('Expect Update images button appears when images are selected', async () => {
+  vi.mocked(window.getProviderInfos).mockResolvedValue([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        } as unknown as ProviderContainerConnectionInfo,
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  vi.mocked(window.listImages).mockResolvedValue([
+    {
+      Id: 'sha256:1234567890123',
+      RepoTags: ['fedora:latest'],
+      Created: 1644009612,
+      Size: 123,
+      Status: 'Running',
+      engineId: 'podman',
+      engineName: 'podman',
+    },
+  ] as unknown as ImageInfo[]);
+
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('image-build'));
+
+  await vi.waitUntil(() => get(imagesInfos).length > 0);
+  await vi.waitUntil(() => get(providerInfos).length > 0);
+
+  await waitRender({});
+
+  const toggleAll = screen.getByTitle('Toggle all');
+  await fireEvent.click(toggleAll);
+
+  const updateButton = screen.getByRole('button', { name: 'Update images' });
+  expect(updateButton).toBeInTheDocument();
+});
+
 test('Expect load images button redirects to images load page', async () => {
   const goToMock = vi.spyOn(router, 'goto');
   render(ImagesList);
