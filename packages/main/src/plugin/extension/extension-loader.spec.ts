@@ -2198,7 +2198,7 @@ describe('containerEngine', async () => {
       await api.containerEngine.buildImage('context', callbackMock);
 
       expect(containerProviderRegistry.buildImage).toHaveBeenCalledOnce();
-      expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith('context', callbackMock, undefined, undefined);
+      expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith('context', callbackMock, undefined);
     });
 
     test('non-(string | boolean) pull option should throw an error', async () => {
@@ -2255,12 +2255,7 @@ describe('containerEngine', async () => {
     ] as Array<TestCase>)('$name', async ({ options, expected }) => {
       await api.containerEngine.buildImage('context', vi.fn(), options);
 
-      expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith(
-        'context',
-        expect.any(Function),
-        expected,
-        undefined,
-      );
+      expect(containerProviderRegistry.buildImage).toHaveBeenCalledWith('context', expect.any(Function), expected);
     });
   });
 

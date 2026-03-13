@@ -183,6 +183,13 @@ export interface BuildImageOptions {
    * Do not use the cache when building the image.
    */
   nocache?: boolean;
+
+  /**
+   * Default: true
+   *
+   * Validate existing registries before building.
+   */
+  validateRegistries?: boolean;
 }
 
 export interface ListImagesOptions {

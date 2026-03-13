@@ -2589,7 +2589,6 @@ export class ContainerProviderRegistry {
     containerBuildContextDirectory: string,
     eventCollect: (eventName: 'stream' | 'error' | 'finish', data: string) => void,
     options?: BuildImageOptions,
-    validateRegistries?: boolean,
   ): Promise<unknown> {
     let telemetryOptions = {};
     try {
@@ -2603,7 +2602,7 @@ export class ContainerProviderRegistry {
       }
 
       // grab auth for all registries
-      const registryconfig = await this.imageRegistry.getRegistryConfig(validateRegistries);
+      const registryconfig = await this.imageRegistry.getRegistryConfig(options?.validateRegistries);
       eventCollect(
         'stream',
         `Uploading the build context from ${containerBuildContextDirectory}...Can take a while...\r\n`,
