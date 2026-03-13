@@ -1334,14 +1334,16 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'image-registry:checkImageUpdateStatus',
-      async (
-        _listener,
-        imageReference: string,
-        imageTag: string,
-        localDigests: string[],
-      ): Promise<ImageUpdateStatus> => {
-        return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
+      'container-provider-registry:updateImages',
+      async (_listener, images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> => {
+        const results = await containerProviderRegistry.updateImages(images);
+        for (const result of results) {
+          if (result.updated) {
+            const task = taskManager.createTask({ title: `Update ${result.imageRef}` });
+            task.status = 'success';
+          }
+        }
+        return results;
       },
     );
 

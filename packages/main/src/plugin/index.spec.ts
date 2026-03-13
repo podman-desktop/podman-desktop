@@ -972,54 +972,29 @@ describe('container-provider-registry:buildImage', () => {
   });
 });
 
-describe('checkImageUpdateStatus handler', () => {
-  test('should check image update status and return result', async () => {
-    const handle = handlers.get('image-registry:checkImageUpdateStatus');
+describe('updateImages handler', () => {
+  test('should delegate to containerProviderRegistry.updateImages and create task for updated images', async () => {
+    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+    const handle = handlers.get('container-provider-registry:updateImages');
     expect(handle).not.equal(undefined);
 
-    const imageReference = 'docker.io/library/alpine:latest';
-    const imageTag = 'latest';
-    const localDigests = ['alpine@sha256:abc123'];
+    const updateImagesSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'updateImages').mockResolvedValue([
+      { imageRef: 'nginx:latest', updated: true, message: 'Image updated successfully' },
+      { imageRef: 'redis:7', updated: false, message: 'Already up to date' },
+    ]);
 
-    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
-      status: 'normal',
-      updateAvailable: true,
-      remoteDigest: 'sha256:def456',
-      message: 'A newer version is available',
-    });
+    const images = [
+      { engineId: 'podman', image: 'nginx:latest', tag: 'latest', digest: 'sha256:abc123' },
+      { engineId: 'podman', image: 'redis:7', tag: '7', digest: 'sha256:def456' },
+    ];
+    const result = await handle(undefined, images);
 
-    const result = await handle(undefined, imageReference, imageTag, localDigests);
-
-    expect(result.result).toEqual({
-      status: 'normal',
-      updateAvailable: true,
-      remoteDigest: 'sha256:def456',
-      message: 'A newer version is available',
-    });
-    expect(ImageRegistry.prototype.checkImageUpdateStatus).toHaveBeenCalledWith(imageReference, imageTag, localDigests);
-  });
-
-  test('should return update not available when image is latest', async () => {
-    const handle = handlers.get('image-registry:checkImageUpdateStatus');
-    expect(handle).not.equal(undefined);
-
-    const imageReference = 'docker.io/library/alpine:latest';
-    const imageTag = 'latest';
-    const localDigests = ['alpine@sha256:abc123'];
-
-    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
-      status: 'normal',
-      updateAvailable: false,
-      message: 'Image is already the latest version',
-    });
-
-    const result = await handle(undefined, imageReference, imageTag, localDigests);
-
-    expect(result.result).toEqual({
-      status: 'normal',
-      updateAvailable: false,
-      message: 'Image is already the latest version',
-    });
+    expect(updateImagesSpy).toHaveBeenCalledWith(images);
+    expect(result.result).toHaveLength(2);
+    // Only the updated image should get a task notification
+    expect(createTaskSpy).toHaveBeenCalledOnce();
+    expect(createTaskSpy).toHaveBeenCalledWith({ title: 'Update nginx:latest' });
+    expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
   });
 });
 
