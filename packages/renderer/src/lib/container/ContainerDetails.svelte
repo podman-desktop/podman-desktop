@@ -38,6 +38,13 @@ let container: ContainerInfoUI | undefined = $derived(
   getContainerInfoUI($containersInfos.find(c => c.Id === containerID)),
 );
 
+// track if the container has been deleted
+let deleted = false;
+
+$effect.pre(() => {
+  deleted = !container;
+});
+
 $effect(() => {
   if (container) {
     window
@@ -55,8 +62,14 @@ $effect(() => {
         }
       })
       .catch((err: unknown) => console.error(`Error getting container inspect ${container?.id}: ${err}`));
-  } else {
-    detailsPage?.close();
+  }
+  const page = detailsPage;
+  if (page) {
+    return (): void => {
+      if (deleted) {
+        page.close();
+      }
+    };
   }
 });
 
