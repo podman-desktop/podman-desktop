@@ -25,6 +25,7 @@ import { expect as playExpect } from '@playwright/test';
 import { RegistriesPage } from '/@/model/pages/registries-page';
 import { RunnerOptions } from '/@/runner/runner-options';
 import { test } from '/@/utility/fixtures';
+import { isLinux } from '/@/utility/platform';
 
 let registriesPage: RegistriesPage;
 
@@ -73,6 +74,10 @@ test.describe
     test.describe
       .serial('Registries configuration file verification', () => {
         test('registries.conf contains expected default registries from managed configuration', async () => {
+          test.skip(
+            !isLinux,
+            'Skipping file content verification on Windows and Mac due to different config file handling',
+          );
           const homeDir = os.homedir();
           const registriesConfPath = path.join(homeDir, '.config', 'containers', 'registries.conf');
 
