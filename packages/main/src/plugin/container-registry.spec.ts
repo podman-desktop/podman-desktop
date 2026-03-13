@@ -29,6 +29,7 @@ import type {
   ContainerInspectInfo,
   HostConfig,
   ImageInfo,
+  ImageUpdateStatus,
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -6236,6 +6237,89 @@ describe('getNetworkDrivers', () => {
 
     await expect(containerRegistry.getNetworkDrivers(nonexistentConnectionInfo)).rejects.toThrow(
       'no running provider for the matching container',
+    );
+  });
+});
+
+describe('updateImages', () => {
+  const pullMock = vi.fn();
+  const followProgressMock = vi.fn();
+  const fakeDockerode = {
+    pull: pullMock,
+    modem: { followProgress: followProgressMock },
+  } as unknown as Dockerode;
+
+  beforeEach(() => {
+    pullMock.mockReset();
+    followProgressMock.mockReset();
+    followProgressMock.mockImplementation((_s: unknown, f: (err: Error | null) => void) => f(null));
+    containerRegistry.addInternalProvider('testEngine', {
+      name: 'testEngine',
+      id: 'testEngine',
+      connection: { type: 'podman', endpoint: { socketPath: '/test.socket' } },
+      api: fakeDockerode,
+    } as unknown as InternalContainerProvider);
+  });
+
+  test.each<ImageUpdateStatus>([
+    { status: 'normal', updateAvailable: false, message: 'Up to date' },
+    { status: 'skipped', updateAvailable: false, message: 'Skipped' },
+  ])('does not pull when status=$status', async mockStatus => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue(mockStatus);
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(result!.updated).toBe(false);
+    expect(pullMock).not.toHaveBeenCalled();
+  });
+
+  test('returns error when engine not found', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+      status: 'normal',
+      updateAvailable: true,
+      remoteDigest: 'sha256:new',
+      message: '',
+    });
+
+    const [result] = await containerRegistry.updateImages([
+      { engineId: 'nonexistent', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+    ]);
+
+    expect(result!.updated).toBe(false);
+    expect(result!.message).toContain('no engine matching this engine');
+  });
+
+  test('pulls updated images, skips failures, and tracks telemetry per image', async () => {
+    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus')
+      .mockResolvedValueOnce({
+        status: 'normal',
+        updateAvailable: true,
+        remoteDigest: 'sha256:new',
+        message: '',
+      })
+      .mockResolvedValueOnce({
+        status: 'error',
+        updateAvailable: false,
+        message: 'Registry unavailable',
+      });
+    vi.spyOn(ImageRegistry.prototype, 'getAuthconfigForImage').mockReturnValue(undefined);
+    pullMock.mockResolvedValue({});
+
+    const results = await containerRegistry.updateImages([
+      { engineId: 'testEngine', image: 'nginx:latest', tag: 'latest', digest: 'sha256:old' },
+      { engineId: 'testEngine', image: 'redis:latest', tag: 'latest', digest: 'sha256:old2' },
+    ]);
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toEqual(expect.objectContaining({ updated: true, imageRef: 'nginx:latest' }));
+    expect(results[1]?.updated).toBe(false);
+    expect(pullMock).toHaveBeenCalledTimes(1);
+    expect(pullMock).toHaveBeenCalledWith('nginx:latest', { authconfig: undefined });
+    expect(telemetryTrackMock).toHaveBeenCalledWith(
+      'updateImage',
+      expect.objectContaining({ imageName: expect.any(String) }),
     );
   });
 });

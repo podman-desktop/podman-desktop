@@ -60,3 +60,25 @@ export interface ImageUpdateStatus {
    */
   message: string;
 }
+
+/**
+ * Describes a single image to be updated via the backend.
+ */
+export interface ImageUpdateInfo {
+  engineId: string;
+  /** Full image reference, e.g. "docker.io/library/nginx:latest" */
+  image: string;
+  /** Image tag, e.g. "latest" */
+  tag: string;
+  /** Current local digest of the image */
+  digest: string;
+}
+
+/**
+ * Per-image result returned by the backend updateImages call.
+ */
+export interface ImageUpdateResult {
+  imageRef: string;
+  updated: boolean;
+  message: string;
+}
