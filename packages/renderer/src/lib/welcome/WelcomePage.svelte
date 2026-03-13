@@ -113,9 +113,9 @@ function startOnboardingQueue(): void {
       <div class="flex justify-center text-lg font-bold p-2">
         <span class="mr-2">🎉</span>{welcomeMessages?.welcomeMessage} v{podmanDesktopVersion} !
       </div>
-      <div class="flex flex-row justify-center">
-        <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">
-          {#if onboardingProviders && onboardingProviders.length > 0}
+      {#if onboardingProviders && onboardingProviders.length > 0}
+        <div class="flex flex-row justify-center">
+          <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm">
             <div class="flex justify-center text-sm text-[var(--pd-content-card-text)] pb-2">
               <div>Choose the extensions to include:</div>
             </div>
@@ -146,12 +146,12 @@ function startOnboardingQueue(): void {
                 </div>
               {/each}
             </div>
-          {/if}
+          </div>
         </div>
-      </div>
-      <div class="flex justify-center p-2 text-sm items-center">
-        Configure these and more under Settings.
-      </div>
+        <div class="flex justify-center p-2 text-sm items-center">
+          Configure these and more under Settings.
+        </div>
+      {/if}
     </div>
 
     <!-- Telemetry -->
