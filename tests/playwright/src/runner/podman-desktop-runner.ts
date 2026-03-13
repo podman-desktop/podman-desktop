@@ -223,12 +223,7 @@ export class Runner {
     console.log('Starting Podman Desktop close sequence');
 
     try {
-      await Promise.race([
-        this.stopTracing(),
-        new Promise<void>((_resolve, reject) =>
-          setTimeout(() => reject(new Error('stopTracing timed out')), timeout / 2),
-        ),
-      ]);
+      await this.raceWithTimeout(this.stopTracing(), timeout / 2, 'stopTracing timed out');
     } catch (err: unknown) {
       console.log(`stopTracing failed or timed out, continuing with close: ${err}`);
     }
@@ -240,12 +235,11 @@ export class Runner {
     const pid = this._app?.process()?.pid;
     console.log(`Closing Podman Desktop with a timeout of ${timeout} ms, PID: ${pid}`);
     try {
-      await Promise.race([
+      await this.raceWithTimeout(
         this.getElectronApp().close(),
-        new Promise<void>((_resolve, reject) =>
-          setTimeout(() => reject(new Error(`electronApp.close() timed out after ${timeout} ms`)), timeout),
-        ),
-      ]);
+        timeout,
+        `electronApp.close() timed out after ${timeout} ms`,
+      );
     } catch (err: unknown) {
       console.log(`Caught exception in closing: ${err}`);
       if (pid) {
@@ -305,6 +299,20 @@ export class Runner {
         console.log(`Removing video folder: ${videoPath}`);
         rmSync(videoPath, { recursive: true, force: true, maxRetries: 5 });
       }
+    }
+  }
+
+  protected async raceWithTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error(message)), ms);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 
