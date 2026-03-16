@@ -16,16 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ProviderConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import {
-  CRITICAL_STATUS,
-  ENHANCED_DASHBOARD_CONFIGURATION_KEY,
-  HEALTHY_STATUS,
-  PROGRESSING_STATUS,
-  STABLE_STATUS,
-  SYSTEM_OVERVIEW_CONFIGURATION_KEY,
+import type {
+  ProviderConnectionInfo,
+  ProviderInfo,
   SystemOverviewStatus,
   SystemOverviewStatusInfo,
+} from '@podman-desktop/core-api';
+import {
+  ENHANCED_DASHBOARD_CONFIGURATION_KEY,
+  STATUS,
+  SYSTEM_OVERVIEW_CONFIGURATION_KEY,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
@@ -106,7 +106,7 @@ export class DashboardService {
         p => p.status === 'configuring' || p.status === 'starting' || p.status === 'stopping',
       );
 
-      const status: SystemOverviewStatus = isConfiguringOrStarting ? PROGRESSING_STATUS : STABLE_STATUS;
+      const status: SystemOverviewStatus = isConfiguringOrStarting ? STATUS.PROGRESSING : STATUS.STABLE;
       return {
         status,
         text: this.getStatusText(status, allConnections, providers),
@@ -119,13 +119,13 @@ export class DashboardService {
 
     let worstStatus: SystemOverviewStatus;
     if (hasCritical) {
-      worstStatus = CRITICAL_STATUS;
+      worstStatus = STATUS.CRITICAL;
     } else if (hasProgressing) {
-      worstStatus = PROGRESSING_STATUS;
+      worstStatus = STATUS.PROGRESSING;
     } else if (hasContainerStarted) {
-      worstStatus = HEALTHY_STATUS;
+      worstStatus = STATUS.HEALTHY;
     } else {
-      worstStatus = STABLE_STATUS;
+      worstStatus = STATUS.STABLE;
     }
 
     return {
@@ -143,18 +143,18 @@ export class DashboardService {
     const errorProviders = providers.filter(provider => provider.status === 'error').length;
 
     switch (status) {
-      case HEALTHY_STATUS:
+      case STATUS.HEALTHY:
         return 'All systems operational';
-      case STABLE_STATUS:
+      case STATUS.STABLE:
         return 'Some systems are stopped';
-      case PROGRESSING_STATUS:
+      case STATUS.PROGRESSING:
         // Check if starting or stopping
         if (allConnections.filter(connection => connection.status === 'starting').length) {
           return 'Starting up...';
         } else {
           return 'Stopping...';
         }
-      case CRITICAL_STATUS:
+      case STATUS.CRITICAL:
         if (errorConnections > 1 || errorProviders > 1 || (errorConnections === 1 && errorProviders === 1)) {
           return 'Multiple errors detected';
         } else {

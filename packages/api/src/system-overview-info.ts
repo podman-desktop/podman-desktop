@@ -16,4 +16,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const ENHANCED_DASHBOARD_CONFIGURATION_KEY = 'dashboard.enhancedDashboard';
+export const SYSTEM_OVERVIEW_CONFIGURATION_KEY = 'systemOverview.expanded';
+
+export const STATUS = {
+  HEALTHY: 'healthy',
+  STABLE: 'stable',
+  PROGRESSING: 'progressing',
+  CRITICAL: 'critical',
+};
+
+export type SystemOverviewStatus = (typeof STATUS)[keyof typeof STATUS];
+
+// Priority levels for status comparison: higher number = worse status
+export const STATUS_PRIORITY: Record<SystemOverviewStatus, number> = {
+  [STATUS.HEALTHY]: 0,
+  [STATUS.STABLE]: 1,
+  [STATUS.PROGRESSING]: 2,
+  [STATUS.CRITICAL]: 3,
+};
+
+export interface SystemOverviewStatusInfo {
+  status: SystemOverviewStatus;
+  text: string;
+}
