@@ -134,8 +134,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.7",
-    "@commitlint/cli": "^20.4.4",
-    "@commitlint/config-conventional": "^20.4.4",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@electron/fuses": "^2.1.0",
     "@eslint/compat": "^2.0.3",
     "@eslint/eslintrc": "^3.3.5",
