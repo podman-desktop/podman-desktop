@@ -16,15 +16,31 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ENHANCED_DASHBOARD_CONFIGURATION_KEY } from '@podman-desktop/core-api';
+import {
+  ENHANCED_DASHBOARD_CONFIGURATION_KEY,
+  HEALTH_MONITOR_STATUS,
+  type ProviderConnectionInfo,
+  type ProviderInfo,
+  SYSTEM_OVERVIEW_CONFIGURATION_KEY,
+  SystemOverviewStatus,
+  SystemOverviewStatusInfo,
+} from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
+import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
+import { ProviderRegistry } from '/@/plugin/provider-registry.js';
+
 @injectable()
 export class DashboardService {
+  private isEnhancedDashboardEnabled = false;
+
   constructor(
     @inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry,
+    @inject(ProviderRegistry) private providerRegistry: ProviderRegistry,
+    @inject(ExperimentalConfigurationManager)
+    private experimentalConfigurationManager: ExperimentalConfigurationManager,
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
   ) {}
@@ -43,18 +59,116 @@ export class DashboardService {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
           },
         },
+        [SYSTEM_OVERVIEW_CONFIGURATION_KEY]: {
+          type: 'boolean',
+          hidden: true,
+          default: false,
+        },
       },
     };
 
     this.configurationRegistry.registerConfigurations([dashboardConfiguration]);
 
     this.configurationRegistry.onDidChangeConfiguration(async e => {
-      if (
-        e.key === ENHANCED_DASHBOARD_CONFIGURATION_KEY &&
-        (typeof e.value === 'object' || typeof e.value === 'undefined')
-      ) {
-        this.apiSender.send('enhanced-dashboard-enabled', typeof e.value === 'object');
+      if (e.key === ENHANCED_DASHBOARD_CONFIGURATION_KEY) {
+        this.isEnhancedDashboardEnabled = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
+          ENHANCED_DASHBOARD_CONFIGURATION_KEY,
+        );
+        this.apiSender.send('enhanced-dashboard-enabled', this.isEnhancedDashboardEnabled);
+
+        this.updateSystemOverviewStatus();
       }
     });
+
+    // Check if enhanced dashboard is enabled during initialization
+    this.isEnhancedDashboardEnabled = this.experimentalConfigurationManager.isExperimentalConfigurationEnabled(
+      ENHANCED_DASHBOARD_CONFIGURATION_KEY,
+    );
+
+    // Provider listeners
+    this.providerRegistry.addProviderListener(() => this.updateSystemOverviewStatus());
+    this.apiSender.receive('provider-change', () => this.updateSystemOverviewStatus());
+  }
+
+  private getSystemOverviewStatus(): SystemOverviewStatusInfo {
+    const providers: ProviderInfo[] = this.providerRegistry.getProviderInfos();
+
+    const allConnections: ProviderConnectionInfo[] = providers.flatMap(provider => [
+      ...provider.containerConnections,
+      ...provider.kubernetesConnections,
+      ...provider.vmConnections,
+    ]);
+
+    if (allConnections.length === 0) {
+      const isConfiguringOrStarting = providers.some(
+        p => p.status === 'configuring' || p.status === 'starting' || p.status === 'stopping',
+      );
+
+      const status: SystemOverviewStatus = isConfiguringOrStarting
+        ? (HEALTH_MONITOR_STATUS.PROGRESSING as SystemOverviewStatus)
+        : (HEALTH_MONITOR_STATUS.STABLE as SystemOverviewStatus);
+      return {
+        status,
+        text: this.getStatusText(status, allConnections, providers),
+      };
+    }
+
+    const hasCritical = allConnections.some(c => c.status === 'unknown');
+    const hasProgressing = allConnections.some(c => c.status === 'starting' || c.status === 'stopping');
+    const hasContainerStarted = providers.some(p => p.containerConnections.some(c => c.status === 'started'));
+
+    let worstStatus: SystemOverviewStatus;
+    if (hasCritical) {
+      worstStatus = HEALTH_MONITOR_STATUS.CRITICAL as SystemOverviewStatus;
+    } else if (hasProgressing) {
+      worstStatus = HEALTH_MONITOR_STATUS.PROGRESSING as SystemOverviewStatus;
+    } else if (hasContainerStarted) {
+      worstStatus = HEALTH_MONITOR_STATUS.HEALTHY as SystemOverviewStatus;
+    } else {
+      worstStatus = HEALTH_MONITOR_STATUS.STABLE as SystemOverviewStatus;
+    }
+
+    return {
+      status: worstStatus,
+      text: this.getStatusText(worstStatus, allConnections, providers),
+    };
+  }
+
+  private getStatusText(
+    status: SystemOverviewStatus,
+    allConnections: ProviderConnectionInfo[],
+    providers: ProviderInfo[],
+  ): string {
+    const errorConnections = allConnections.filter(connection => connection.status === 'unknown').length;
+    const errorProviders = providers.filter(provider => provider.status === 'error').length;
+
+    switch (status) {
+      case HEALTH_MONITOR_STATUS.HEALTHY:
+        return 'All systems operational';
+      case HEALTH_MONITOR_STATUS.STABLE:
+        return 'Some systems are stopped';
+      case HEALTH_MONITOR_STATUS.PROGRESSING:
+        // Check if starting or stopping
+        if (allConnections.filter(connection => connection.status === 'starting').length) {
+          return 'Starting up...';
+        } else {
+          return 'Stopping...';
+        }
+      case HEALTH_MONITOR_STATUS.CRITICAL:
+        if (errorConnections > 1 || errorProviders > 1 || (errorConnections === 1 && errorProviders === 1)) {
+          return 'Multiple errors detected';
+        } else {
+          return 'Error detected';
+        }
+      default:
+        return 'Unknown';
+    }
+  }
+
+  private updateSystemOverviewStatus(): void {
+    const statusInfo = this.getSystemOverviewStatus();
+
+    // Send status and text to renderer (frontend will map to icon)
+    this.apiSender.send('dashboard:system-overview-status', statusInfo);
   }
 }
