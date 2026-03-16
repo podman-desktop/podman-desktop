@@ -124,8 +124,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 41.0.1
-        version: 41.0.1
+        specifier: 41.0.2
+        version: 41.0.2
       electron-builder:
         specifier: 26.8.2
         version: 26.8.2(electron-builder-squirrel-windows@26.8.2(dmg-builder@26.8.2))
@@ -556,8 +556,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       electron:
-        specifier: 41.0.1
-        version: 41.0.1
+        specifier: 41.0.2
+        version: 41.0.2
       electron-context-menu:
         specifier: 4.1.1
         version: 4.1.1
@@ -695,8 +695,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 41.0.1
-        version: 41.0.1
+        specifier: 41.0.2
+        version: 41.0.2
     devDependencies:
       vitest:
         specifier: ^4.1.0
@@ -708,8 +708,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 41.0.1
-        version: 41.0.1
+        specifier: 41.0.2
+        version: 41.0.2
     devDependencies:
       '@docker/extension-api-client-types':
         specifier: 0.4.2
@@ -727,8 +727,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 41.0.1
-        version: 41.0.1
+        specifier: 41.0.2
+        version: 41.0.2
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.10(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -1071,8 +1071,8 @@ importers:
         specifier: ^24
         version: 24.6.2
       electron:
-        specifier: 41.0.1
-        version: 41.0.1
+        specifier: 41.0.2
+        version: 41.0.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -4383,9 +4383,6 @@ packages:
   '@types/node@24.10.11':
     resolution: {integrity: sha512-/Af7O8r1frCVgOz0I62jWUtMohJ0/ZQU/ZoketltOJPZpnb17yoNc9BSoVuV9qlaIXJiPNOpsfq4ByFajSArNQ==}
 
-  '@types/node@24.12.0':
-    resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
-
   '@types/node@24.6.2':
     resolution: {integrity: sha512-d2L25Y4j+W3ZlNAeMKcy7yDsK425ibcAOO2t7aPTz6gNMH0z2GThtwENCDc0d/Pw9wgyRqE5Px1wkV7naz8ang==}
 
@@ -6591,8 +6588,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@41.0.1:
-    resolution: {integrity: sha512-VElEzqqlqQJla59NF7TPf9u7yGX1NEpVz94ZNp/dMRUMPJHcc9kuP7C4ODbNzzevjhChw9gB4NT6osNpN5qjJA==}
+  electron@41.0.2:
+    resolution: {integrity: sha512-raotm/aO8kOs1jD8SI8ssJ7EKciQOY295AOOprl1TxW7B0At8m5Ae7qNU1xdMxofiHMR8cNEGi9PKD3U+yT/mA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -14940,7 +14937,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       '@types/yargs': 17.0.33
       chalk: 4.1.2
 
@@ -16134,24 +16131,24 @@ snapshots:
 
   '@types/asn1@0.2.4':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/aws-lambda@8.10.157': {}
 
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/bonjour@3.5.13':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/cacheable-request@6.0.3':
     dependencies:
       '@types/http-cache-semantics': 4.2.0
       '@types/keyv': 3.1.4
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       '@types/responselike': 1.0.3
 
   '@types/chai@5.2.3':
@@ -16162,11 +16159,11 @@ snapshots:
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 5.0.1
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/culori@4.0.1': {}
 
@@ -16295,7 +16292,7 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       '@types/ssh2': 1.15.5
 
   '@types/dockerode@3.3.47':
@@ -16324,14 +16321,14 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
 
   '@types/express-serve-static-core@5.0.1':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -16351,7 +16348,7 @@ snapshots:
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/geojson@7946.0.16': {}
 
@@ -16375,7 +16372,7 @@ snapshots:
 
   '@types/http-proxy@1.17.15':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -16397,7 +16394,7 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -16415,12 +16412,12 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       form-data: 4.0.4
 
   '@types/node-forge@1.3.11':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/node@17.0.45': {}
 
@@ -16436,10 +16433,6 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/node@24.12.0':
-    dependencies:
-      undici-types: 7.16.0
-
   '@types/node@24.6.2':
     dependencies:
       undici-types: 7.13.0
@@ -16452,7 +16445,7 @@ snapshots:
 
   '@types/plist@3.0.5':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       xmlbuilder: 15.1.1
     optional: true
 
@@ -16492,20 +16485,20 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/retry@0.12.2': {}
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/semver@7.7.1': {}
 
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/serve-index@1.9.4':
     dependencies:
@@ -16514,17 +16507,17 @@ snapshots:
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       '@types/send': 0.17.4
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/sockjs@0.3.36':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/ssh2@1.15.5':
     dependencies:
@@ -16539,11 +16532,11 @@ snapshots:
 
   '@types/stream-buffers@3.0.7':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/stream-chain@2.1.0':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/stream-json@1.7.8':
     dependencies:
@@ -16557,7 +16550,7 @@ snapshots:
 
   '@types/tar-stream@3.1.3':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/tar@7.0.87':
     dependencies:
@@ -16578,7 +16571,7 @@ snapshots:
 
   '@types/ws@8.18.0':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -16588,7 +16581,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.57.0(@typescript-eslint/parser@8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)':
@@ -18997,10 +18990,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@41.0.1:
+  electron@41.0.2:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -19535,7 +19528,7 @@ snapshots:
 
   eval@0.1.8:
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       require-like: 0.1.2
 
   eventemitter3@4.0.7: {}
@@ -20821,7 +20814,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -20829,13 +20822,13 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -23116,7 +23109,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 24.12.0
+      '@types/node': 24.10.11
       long: 5.3.2
 
   proxy-addr@2.0.7:
