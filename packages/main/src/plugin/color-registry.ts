@@ -1534,6 +1534,37 @@ export class ColorRegistry {
       light: gray[100],
     });
 
+    this.registerColorDefinition(
+      this.color(`${status}running-bg`)
+        .withLight(colorPaletteHelper(green[200]).withAlpha(0.2))
+        .withDark(colorPaletteHelper(green[900]).withAlpha(0.2))
+        .build(),
+    );
+    this.registerColorDefinition(
+      this.color(`${status}stopped-bg`)
+        .withLight(colorPaletteHelper(gray[300]).withAlpha(0.2))
+        .withDark(colorPaletteHelper(charcoal[500]).withAlpha(0.2))
+        .build(),
+    );
+    this.registerColorDefinition(
+      this.color(`${status}terminated-bg`)
+        .withLight(colorPaletteHelper(red[200]).withAlpha(0.2))
+        .withDark(colorPaletteHelper(red[900]).withAlpha(0.2))
+        .build(),
+    );
+    this.registerColorDefinition(
+      this.color(`${status}starting-bg`)
+        .withLight(colorPaletteHelper(green[200]).withAlpha(0.2))
+        .withDark(colorPaletteHelper(green[900]).withAlpha(0.2))
+        .build(),
+    );
+    this.registerColorDefinition(
+      this.color(`${status}unknown-bg`)
+        .withLight(colorPaletteHelper(gray[300]).withAlpha(0.2))
+        .withDark(colorPaletteHelper(charcoal[500]).withAlpha(0.2))
+        .build(),
+    );
+
     // contrast color for the other status colors,
     // e.g. to use in status icons
     this.registerColor(`${status}contrast`, {
