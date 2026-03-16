@@ -90,6 +90,10 @@ class TestColorRegistry extends ColorRegistry {
   override initCommon(): void {
     super.initCommon();
   }
+
+  override initStatusColors(): void {
+    super.initStatusColors();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -823,6 +827,89 @@ describe('initCommon', () => {
     // verify the colors contain alpha information (0.4)
     expect(definition?.dark).toContain('0.4');
     expect(definition?.light).toContain('0.4');
+  });
+});
+
+describe('initStatusColors', () => {
+  beforeEach(() => {
+    vi.spyOn(colorRegistry, 'registerColor').mockReturnValue(undefined);
+    vi.spyOn(colorRegistry, 'registerColorDefinition').mockReturnValue(undefined);
+
+    colorRegistry.initStatusColors();
+  });
+
+  test('registers status-running-bg with green alpha background', () => {
+    const call = vi
+      .mocked(colorRegistry.registerColorDefinition)
+      .mock.calls.find(c => c?.[0]?.id === 'status-running-bg');
+    expect(call).toBeDefined();
+
+    const definition = call?.[0];
+    expect(definition?.id).toBe('status-running-bg');
+    expect(definition?.light).toBeDefined();
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toContain('0.2');
+    expect(definition?.dark).toContain('0.2');
+  });
+
+  test('registers status-stopped-bg with gray/charcoal alpha background', () => {
+    const call = vi
+      .mocked(colorRegistry.registerColorDefinition)
+      .mock.calls.find(c => c?.[0]?.id === 'status-stopped-bg');
+    expect(call).toBeDefined();
+
+    const definition = call?.[0];
+    expect(definition?.id).toBe('status-stopped-bg');
+    expect(definition?.light).toBeDefined();
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toContain('0.2');
+    expect(definition?.dark).toContain('0.2');
+  });
+
+  test('registers status-terminated-bg with red alpha background', () => {
+    const call = vi
+      .mocked(colorRegistry.registerColorDefinition)
+      .mock.calls.find(c => c?.[0]?.id === 'status-terminated-bg');
+    expect(call).toBeDefined();
+
+    const definition = call?.[0];
+    expect(definition?.id).toBe('status-terminated-bg');
+    expect(definition?.light).toBeDefined();
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toContain('0.2');
+    expect(definition?.dark).toContain('0.2');
+  });
+
+  test('registers status-starting-bg with green alpha background', () => {
+    const call = vi
+      .mocked(colorRegistry.registerColorDefinition)
+      .mock.calls.find(c => c?.[0]?.id === 'status-starting-bg');
+    expect(call).toBeDefined();
+
+    const definition = call?.[0];
+    expect(definition?.id).toBe('status-starting-bg');
+    expect(definition?.light).toBeDefined();
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toContain('0.2');
+    expect(definition?.dark).toContain('0.2');
+  });
+
+  test('registers status-unknown-bg with gray/charcoal alpha background', () => {
+    const call = vi
+      .mocked(colorRegistry.registerColorDefinition)
+      .mock.calls.find(c => c?.[0]?.id === 'status-unknown-bg');
+    expect(call).toBeDefined();
+
+    const definition = call?.[0];
+    expect(definition?.id).toBe('status-unknown-bg');
+    expect(definition?.light).toBeDefined();
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toContain('0.2');
+    expect(definition?.dark).toContain('0.2');
+  });
+
+  test('registers exactly 5 color definitions for status backgrounds', () => {
+    expect(vi.mocked(colorRegistry.registerColorDefinition)).toHaveBeenCalledTimes(5);
   });
 });
 
