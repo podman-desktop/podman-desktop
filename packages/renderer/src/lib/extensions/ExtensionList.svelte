@@ -28,6 +28,12 @@ let enableCustomExtensions = $derived(
   (await window.getConfigurationValue('extensions.customExtensions.enabled')) ?? true,
 );
 
+let enableLocalExtensions = $derived(
+  (await window.getConfigurationValue('extensions.localExtensions.enabled')) ?? true,
+);
+
+let enableCatalog = $derived((await window.getConfigurationValue('extensions.catalog.enabled')) ?? true);
+
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
   extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm),
 );
@@ -98,18 +104,22 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
         changeScreen('installed');
       }}
       selected={screen === 'installed'}>Installed</Button>
-    <Button
-      type="tab"
-      on:click={(): void => {
-        changeScreen('catalog');
-      }}
-      selected={screen === 'catalog'}>Catalog</Button>
+    {#if enableCatalog}
       <Button
-      type="tab"
-      on:click={(): void => {
-        changeScreen('development');
-      }}
-      selected={screen === 'development'}>Local Extensions</Button>
+        type="tab"
+        on:click={(): void => {
+          changeScreen('catalog');
+        }}
+        selected={screen === 'catalog'}>Catalog</Button>
+    {/if}
+    {#if enableLocalExtensions}
+      <Button
+        type="tab"
+        on:click={(): void => {
+          changeScreen('development');
+        }}
+        selected={screen === 'development'}>Local Extensions</Button>
+    {/if}
  {/snippet}
 
   {#snippet content()}
@@ -123,7 +133,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
           on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <InstalledExtensionList extensionInfos={filteredInstalledExtensions} />
-    {:else if screen === 'catalog'}
+    {:else if screen === 'catalog' && enableCatalog}
       {#if searchTerm && filteredCatalogExtensions.length === 0}
         <FilteredEmptyScreen
           icon={ExtensionIcon}
@@ -132,7 +142,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
           on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
       <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={filteredCatalogExtensions} />
-    {:else if screen === 'development'}
+    {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}
   </div>

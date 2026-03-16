@@ -43,7 +43,6 @@ import type {
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
-  CertificateInfo,
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -1296,16 +1295,40 @@ export class PluginSystem {
         imageName: string,
         callbackId: number,
         platform?: string,
+        cancellableTokenId?: number,
       ): Promise<void> => {
-        return commandRegistry.executeCommand(
-          'pullImage',
-          providerContainerConnectionInfo,
-          imageName,
-          (event: PullEvent) => {
-            this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
-          },
-          platform,
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          cancellableTokenId,
         );
+        const task = taskManager.createTask({
+          title: `Pulling ${imageName}`,
+          cancellable: cancellableTokenId !== undefined,
+          cancellationTokenSourceId: cancellableTokenId,
+        });
+
+        try {
+          await containerProviderRegistry.pullImage(
+            providerContainerConnectionInfo,
+            imageName,
+            (event: PullEvent) => {
+              this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
+            },
+            platform,
+            abortController,
+          );
+          task.status = 'success';
+        } catch (error: unknown) {
+          const cancellationToken = cancellableTokenId
+            ? cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId)?.token
+            : undefined;
+          if (cancellationToken?.isCancellationRequested) {
+            task.status = 'canceled';
+          } else {
+            task.error = `Something went wrong while trying to pull ${imageName}: ${String(error)};`;
+          }
+          throw error;
+        }
       },
     );
 
@@ -1549,6 +1572,7 @@ export class PluginSystem {
         buildargs?: { [key: string]: string },
         taskId?: number,
         target?: string,
+        validateRegistries?: boolean,
       ): Promise<unknown> => {
         const titleArgs = ['Building image'];
         if (imageName) {
@@ -1598,6 +1622,7 @@ export class PluginSystem {
               abortController,
               buildargs,
               target,
+              validateRegistries,
             },
           )
           .then(result => {
@@ -2444,10 +2469,6 @@ export class PluginSystem {
 
     this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
       return proxy.getState();
-    });
-
-    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
-      return certificates.getAllCertificateInfos();
     });
 
     this.ipcHandle(

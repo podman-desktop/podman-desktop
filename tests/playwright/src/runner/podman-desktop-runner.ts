@@ -24,7 +24,6 @@ import { _electron as electron, test } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
 import { isLinux } from '/@/utility/platform';
-import { waitWhile } from '/@/utility/wait';
 
 import { RunnerOptions } from './runner-options';
 
@@ -221,42 +220,50 @@ export class Runner {
   }
 
   public async close(timeout = 30_000): Promise<void> {
-    // Stop playwright tracing
-    await this.stopTracing();
+    console.log('Starting Podman Desktop close sequence');
+
+    try {
+      await this.raceWithTimeout(this.stopTracing(), timeout / 2, 'stopTracing timed out');
+    } catch (err: unknown) {
+      console.log(`stopTracing failed or timed out, continuing with close: ${err}`);
+    }
 
     if (!this.isRunning()) {
       throw Error('Podman Desktop is not running');
     }
 
-    if (this.getElectronApp()) {
-      const pid = this.getElectronApp()?.process()?.pid;
-      console.log(`Closing Podman Desktop with a timeout of ${timeout} ms`);
-      try {
-        await Promise.race([
-          waitWhile(async () => this.isRunning(), { timeout: timeout, diff: 100 }),
-          this.getElectronApp().close(),
-        ]);
-      } catch (err: unknown) {
-        console.log(`Caught exception in closing: ${err}`);
-        console.log('Trying to kill the electron app process');
-        if (pid) {
-          console.log(`Killing the electron app process with PID: ${pid}`);
-          try {
-            process.kill(pid as number);
-          } catch (error: unknown) {
-            console.log(`Exception thrown when killing the process: ${error}`);
-          }
+    const pid = this._app?.process()?.pid;
+    console.log(`Closing Podman Desktop with a timeout of ${timeout} ms, PID: ${pid}`);
+    try {
+      await this.raceWithTimeout(
+        this.getElectronApp().close(),
+        timeout,
+        `electronApp.close() timed out after ${timeout} ms`,
+      );
+    } catch (err: unknown) {
+      console.log(`Caught exception in closing: ${err}`);
+      if (pid) {
+        console.log(`Killing the electron app process with PID: ${pid}`);
+        try {
+          process.kill(pid);
+        } catch (error: unknown) {
+          console.log(`Exception thrown when killing the process: ${error}`);
         }
       }
     }
+
     this._running = false;
     Runner._instance = undefined;
 
     if (this._videoAndTraceName) {
       const videoPath = join(this._testOutput, 'videos', `${this._videoAndTraceName}.webm`);
-      const elapsed = await this.trackTime(async () => await this.saveVideoAs(videoPath));
-      console.log(`Saving a video file took: ${elapsed} ms`);
-      console.log(`Video file saved as: ${videoPath}`);
+      try {
+        const elapsed = await this.trackTime(async () => await this.saveVideoAs(videoPath));
+        console.log(`Saving a video file took: ${elapsed} ms`);
+        console.log(`Video file saved as: ${videoPath}`);
+      } catch (err: unknown) {
+        console.log(`Failed to save video: ${err}`);
+      }
     }
     await this.removeTracesOnFinished();
   }
@@ -292,6 +299,20 @@ export class Runner {
         console.log(`Removing video folder: ${videoPath}`);
         rmSync(videoPath, { recursive: true, force: true, maxRetries: 5 });
       }
+    }
+  }
+
+  protected async raceWithTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error(message)), ms);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 

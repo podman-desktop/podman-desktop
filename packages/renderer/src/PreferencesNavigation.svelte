@@ -10,6 +10,7 @@ import ShortcutArrowIcon from '/@/lib/images/ShortcutArrowIcon.svelte';
 import { type NavItem, settingsNavigationEntries, type SettingsNavItemConfig } from '/@/PreferencesNavigation';
 
 import { configurationProperties } from './stores/configurationProperties';
+import { onDidChangeRegisteredFeatures, registeredFeatures } from './stores/registered-features';
 
 interface Props {
   meta: TinroRouteMeta;
@@ -47,8 +48,27 @@ function sortItems(items: NavItem[]): NavItem[] {
   return items.toSorted((a, b) => a.title.localeCompare(b.title));
 }
 
+const kubernetesContextsManagerFeature = 'kubernetes-contexts-manager';
+
+function updateKubernetesVisibility(enabled: boolean): void {
+  const kubernetesIndex = settingsNavigationItems.findIndex(entry => entry.title === 'Kubernetes');
+  if (kubernetesIndex !== -1) {
+    settingsNavigationItems[kubernetesIndex].visible = !enabled;
+  }
+}
+
+const featureListener = (event: Event): void => {
+  updateKubernetesVisibility((event as CustomEvent<boolean>).detail);
+};
+
 onMount(() => {
-  return configurationProperties.subscribe(value => {
+  onDidChangeRegisteredFeatures.addEventListener(kubernetesContextsManagerFeature, featureListener);
+
+  const unsubFeatures = registeredFeatures.subscribe(features => {
+    updateKubernetesVisibility(features.includes(kubernetesContextsManagerFeature));
+  });
+
+  const unsubConfig = configurationProperties.subscribe(value => {
     // update compatibility
     updateDockerCompatibility();
 
@@ -78,6 +98,12 @@ onMount(() => {
       return map;
     }, new Map<string, NavItem[]>());
   });
+
+  return (): void => {
+    unsubConfig();
+    unsubFeatures();
+    onDidChangeRegisteredFeatures.removeEventListener(kubernetesContextsManagerFeature, featureListener);
+  };
 });
 </script>
 

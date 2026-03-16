@@ -128,8 +128,9 @@ async function openGitHub(): Promise<void> {
       class="w-full p-2 outline-hidden text-sm bg-[var(--pd-input-field-focused-bg)] rounded-xs text-[var(--pd-input-field-focused-text)] placeholder-[var(--pd-input-field-placeholder-text)]"
       placeholder="Please enter your feedback here, we appreciate and review all comments"></textarea>
 
-    <label for="contactInformation" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]"
-      >Share your contact information if you'd like us to answer you:</label>
+    <label for="contactInformation" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]">
+      Share your email address if we can follow up with you regarding your feedback. We will only use your email address for this purpose:
+    </label>
     <input
       type="email"
       name="contactInformation"

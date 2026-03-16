@@ -241,3 +241,17 @@ test('Expect design category to be sent when design category is used', async () 
   // expect close to have been call with confirmation=false
   expect(closeMock).toHaveBeenCalledWith(false);
 });
+
+test('Expect email field has correct text', async () => {
+  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+
+  const emaillabel = await screen.findByLabelText(
+    'Share your email address if we can follow up with you regarding your feedback. We will only use your email address for this purpose:',
+  );
+  expect(emaillabel).toBeInTheDocument();
+
+  const emailPlaceholder = await screen.findByPlaceholderText(
+    'Enter email address, or leave blank for anonymous feedback',
+  );
+  expect(emailPlaceholder).toBeInTheDocument();
+});

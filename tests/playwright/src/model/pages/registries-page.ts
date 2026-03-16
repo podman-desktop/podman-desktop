@@ -19,6 +19,7 @@
 import test, { expect as playExpect } from '@playwright/test';
 import type { Locator, Page } from 'playwright';
 
+import { Registries } from '/@/model/core/settings/registries';
 import { waitUntil } from '/@/utility/wait';
 
 import { SettingsPage } from './settings-page';
@@ -36,10 +37,10 @@ export class RegistriesPage extends SettingsPage {
   readonly preferredRepositoriesField: Locator;
 
   constructor(page: Page) {
-    super(page, 'Registries');
-    this.heading = page.getByRole('heading').and(page.getByText('Registries', { exact: true }));
+    super(page, Registries.TABLE_ARIA_LABEL);
+    this.heading = page.getByRole('heading').and(page.getByText(Registries.TABLE_ARIA_LABEL, { exact: true }));
     this.addRegistryButton = page.getByRole('button', { name: 'Add registry' });
-    this.registriesTable = page.getByRole('table', { name: 'Registries' });
+    this.registriesTable = page.getByRole('table', { name: Registries.TABLE_ARIA_LABEL });
     this.addRegistryDialog = page.getByRole('dialog', { name: 'Add Registry' });
     this.cancelDialogButton = this.addRegistryDialog.getByRole('button', {
       name: 'Cancel',
@@ -50,7 +51,7 @@ export class RegistriesPage extends SettingsPage {
     this.registryUrlField = this.addRegistryDialog.getByPlaceholder('https://registry.io');
     this.registryUsernameField = this.addRegistryDialog.getByPlaceholder('username');
     this.registryPswdField = this.addRegistryDialog.getByPlaceholder('password');
-    this.preferredRepositoriesField = page.locator('input[name="registries.preferred"]');
+    this.preferredRepositoriesField = page.locator(`input[name="${Registries.PREFERRED_INPUT_NAME}"]`);
   }
 
   async createRegistry(url: string, username: string, pswd: string): Promise<void> {
@@ -158,6 +159,29 @@ export class RegistriesPage extends SettingsPage {
 
   async getRegistryRowByName(name: string): Promise<Locator> {
     return this.registriesTable.getByRole('row', { name: name });
+  }
+
+  async isPreferredManaged(): Promise<boolean> {
+    return test.step('Check if Preferred Repositories field has Managed label', async () => {
+      try {
+        // Find the section containing "Preferred" label text
+        const preferredSection = this.page
+          .locator('div')
+          .filter({ hasText: Registries.Labels.PREFERRED })
+          .filter({ has: this.preferredRepositoriesField });
+
+        // Look for the "Managed" label within that section
+        const managedLabel = preferredSection.getByText(Registries.Labels.MANAGED, { exact: true });
+        await managedLabel.waitFor({ state: 'visible', timeout: 5_000 });
+        return true;
+      } catch (err) {
+        // Only treat timeout errors as "not managed", re-throw other errors
+        if ((err as Error).name === 'TimeoutError') {
+          return false;
+        }
+        throw err;
+      }
+    });
   }
 
   private async loginButtonHandling(loginButton: Locator): Promise<void> {

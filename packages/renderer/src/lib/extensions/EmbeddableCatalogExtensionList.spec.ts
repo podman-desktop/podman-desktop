@@ -34,6 +34,8 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // default to catalog enabled
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 });
 
 const aFakeExtension: CatalogExtension = {
@@ -217,4 +219,30 @@ test('empty catalog, hide if empty', async () => {
 
   const emptyMsg = screen.queryByText('No extensions in the catalog');
   expect(emptyMsg).not.toBeInTheDocument();
+});
+
+test('render nothing when catalog is disabled', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set(combined);
+
+  render(EmbeddableCatalogExtensionList, {});
+
+  await vi.waitFor(() => {
+    expect(screen.queryByText('Available extensions')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'A Extension' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'B Extension' })).not.toBeInTheDocument();
+  });
+});
+
+test('render extensions when catalog is enabled', async () => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  catalogExtensionInfos.set([aFakeExtension, bFakeExtension]);
+  extensionInfos.set(combined);
+
+  render(EmbeddableCatalogExtensionList, {});
+
+  await vi.waitFor(() => {
+    expect(screen.queryByText('Available extensions')).toBeInTheDocument();
+  });
 });

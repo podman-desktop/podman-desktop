@@ -42,7 +42,6 @@ import type {
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
-  CertificateInfo,
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -478,6 +477,7 @@ export function initExposure(): void {
       imageName: string,
       callback: (event: PullEvent) => void,
       platform?: string,
+      cancellableTokenId?: number,
     ): Promise<void> => {
       onDataCallbacksPullImageId++;
       onDataCallbacksPullImage.set(onDataCallbacksPullImageId, callback);
@@ -487,6 +487,7 @@ export function initExposure(): void {
         imageName,
         onDataCallbacksPullImageId,
         platform,
+        cancellableTokenId,
       );
     },
   );
@@ -1328,6 +1329,7 @@ export function initExposure(): void {
       buildargs?: { [key: string]: string },
       taskId?: number,
       target?: string,
+      validateRegistries?: boolean,
     ): Promise<unknown> => {
       onDataCallbacksBuildImageId++;
       onDataCallbacksBuildImage.set(onDataCallbacksBuildImageId, eventCollect);
@@ -1344,6 +1346,7 @@ export function initExposure(): void {
         buildargs,
         taskId,
         target,
+        validateRegistries,
       );
     },
   );
@@ -2710,10 +2713,6 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('unpinStatusBar', async (optionId: string): Promise<void> => {
     return ipcInvoke('statusbar:unpin', optionId);
-  });
-
-  contextBridge.exposeInMainWorld('listCertificates', async (): Promise<CertificateInfo[]> => {
-    return ipcInvoke('certificates:listCertificates');
   });
 }
 

@@ -58,6 +58,7 @@ export class PullImagePage extends BasePage {
     return test.step(`Pulling image ${imageName}:${tag}`, async () => {
       const fullImageName = `${imageName}${tag.length === 0 ? '' : ':' + tag}`;
       await this.imageNameInput.fill(fullImageName);
+      await playExpect(this.imageNameInput).toHaveValue(fullImageName);
       await playExpect(this.pullImageButton).toBeEnabled();
       await this.pullImageButton.click();
 

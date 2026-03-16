@@ -95,7 +95,7 @@ export class TasksPage extends BasePage {
     await this.clearAllButton.click();
   }
 
-  async awaitTaskCompletion(taskName: string, status: string = 'completed', timeout: number = 60_000): Promise<void> {
+  async awaitTaskCompletion(taskName: string, status = 'completed', timeout = 60_000): Promise<void> {
     const taskRow = this.getTaskRowByName(taskName);
     const taskStatus = taskRow.getByRole('status');
 

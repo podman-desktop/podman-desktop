@@ -355,7 +355,7 @@ export class ContainerProviderRegistry {
     };
     let previousStatus = containerProviderConnection.status();
 
-    providerRegistry.onBeforeDidUpdateContainerConnection(event => {
+    const onBeforeUpdateDisposable = providerRegistry.onBeforeDidUpdateContainerConnection(event => {
       if (
         event.providerId === provider.id &&
         event.connection.name === containerProviderConnection.name &&
@@ -393,6 +393,7 @@ export class ContainerProviderRegistry {
 
     return Disposable.create(() => {
       clearInterval(timer);
+      onBeforeUpdateDisposable.dispose();
       this.internalProviders.delete(id);
       this.containerProviders.delete(id);
       this.apiSender.send('provider-change', {});
@@ -2602,7 +2603,7 @@ export class ContainerProviderRegistry {
       }
 
       // grab auth for all registries
-      const registryconfig = this.imageRegistry.getRegistryConfig();
+      const registryconfig = await this.imageRegistry.getRegistryConfig(options?.validateRegistries);
       eventCollect(
         'stream',
         `Uploading the build context from ${containerBuildContextDirectory}...Can take a while...\r\n`,
