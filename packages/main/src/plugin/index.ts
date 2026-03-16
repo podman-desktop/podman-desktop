@@ -168,6 +168,7 @@ import { Welcome } from '/@/plugin/welcome.js';
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 import { TrayMenu } from '/@/tray-menu.js';
 import { createHash, isMac } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -1755,6 +1756,10 @@ export class PluginSystem {
 
     this.ipcHandle('app:get-release-notes', async (): Promise<ReleaseNotesInfo> => {
       return podmanDesktopUpdater.getReleaseNotes();
+    });
+
+    this.ipcHandle('app:getProductName', async (_listener): Promise<string> => {
+      return product.name;
     });
 
     this.ipcHandle('provider-registry:getProviderInfos', async (): Promise<ProviderInfo[]> => {
