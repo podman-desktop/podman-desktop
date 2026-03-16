@@ -18,21 +18,21 @@
 
 export const SYSTEM_OVERVIEW_CONFIGURATION_KEY = 'systemOverview.expanded';
 
-export const STATUS = {
+export const HEALTH_MONITOR_STATUS = {
   HEALTHY: 'healthy',
   STABLE: 'stable',
   PROGRESSING: 'progressing',
   CRITICAL: 'critical',
 };
 
-export type SystemOverviewStatus = (typeof STATUS)[keyof typeof STATUS];
+export type SystemOverviewStatus = (typeof HEALTH_MONITOR_STATUS)[keyof typeof HEALTH_MONITOR_STATUS];
 
 // Priority levels for status comparison: higher number = worse status
-export const STATUS_PRIORITY: Record<SystemOverviewStatus, number> = {
-  [STATUS.HEALTHY]: 0,
-  [STATUS.STABLE]: 1,
-  [STATUS.PROGRESSING]: 2,
-  [STATUS.CRITICAL]: 3,
+export const HEALTH_MONITOR_STATUS_PRIORITY: Record<SystemOverviewStatus, number> = {
+  [HEALTH_MONITOR_STATUS.HEALTHY]: 0,
+  [HEALTH_MONITOR_STATUS.STABLE]: 1,
+  [HEALTH_MONITOR_STATUS.PROGRESSING]: 2,
+  [HEALTH_MONITOR_STATUS.CRITICAL]: 3,
 };
 
 export interface SystemOverviewStatusInfo {
