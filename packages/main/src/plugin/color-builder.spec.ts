@@ -130,7 +130,7 @@ describe('ColorBuilder', () => {
     expect(result.hcLight).toBe('#6234b1');
   });
 
-  test('should not include darkHc and hcLight when not set', () => {
+  test('should not include hcDark and hcLight when not set', () => {
     const result = new ColorBuilder('no-hc-color')
       .withLight(colorPaletteHelper('#ffffff'))
       .withDark(colorPaletteHelper('#000000'))
@@ -140,7 +140,7 @@ describe('ColorBuilder', () => {
     expect(result.hcLight).toBeUndefined();
   });
 
-  test('should build darkHc color with alpha value', () => {
+  test('should build hcDark color with alpha value', () => {
     const result = new ColorBuilder('hc-alpha-color')
       .withLight(colorPaletteHelper('#ffffff'))
       .withDark(colorPaletteHelper('#000000'))
