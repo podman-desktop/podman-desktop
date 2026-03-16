@@ -73,8 +73,8 @@ export class ColorBuilder {
   #colorId: string;
   #lightColor?: ColorPaletteHelper;
   #darkColor?: ColorPaletteHelper;
-  #darkHcColor?: ColorPaletteHelper;
-  #lightHcColor?: ColorPaletteHelper;
+  #hcDarkColor?: ColorPaletteHelper;
+  #hcLightColor?: ColorPaletteHelper;
 
   constructor(colorId: string) {
     this.#colorId = colorId;
@@ -96,8 +96,8 @@ export class ColorBuilder {
    * @param color - The ColorPaletteHelper instance
    * @returns This builder for method chaining
    */
-  withLightHc(color: ColorPaletteHelper): this {
-    this.#lightHcColor = color;
+  withHcLight(color: ColorPaletteHelper): this {
+    this.#hcLightColor = color;
 
     return this;
   }
@@ -118,8 +118,8 @@ export class ColorBuilder {
    * @param color - The ColorPaletteHelper instance
    * @returns This builder for method chaining
    */
-  withDarkHc(color: ColorPaletteHelper): this {
-    this.#darkHcColor = color;
+  withHcDark(color: ColorPaletteHelper): this {
+    this.#hcDarkColor = color;
 
     return this;
   }
@@ -139,8 +139,8 @@ export class ColorBuilder {
       id: this.#colorId,
       light: applyAlpha(this.#lightColor.color, this.#lightColor.alpha),
       dark: applyAlpha(this.#darkColor.color, this.#darkColor.alpha),
-      darkHc: this.#darkHcColor ? applyAlpha(this.#darkHcColor.color, this.#darkHcColor.alpha) : undefined,
-      lightHc: this.#lightHcColor ? applyAlpha(this.#lightHcColor.color, this.#lightHcColor.alpha) : undefined,
+      hcDark: this.#hcDarkColor ? applyAlpha(this.#hcDarkColor.color, this.#hcDarkColor.alpha) : undefined,
+      hcLight: this.#hcLightColor ? applyAlpha(this.#hcLightColor.color, this.#hcLightColor.alpha) : undefined,
     };
   }
 }

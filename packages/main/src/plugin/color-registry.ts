@@ -71,10 +71,10 @@ export class ColorRegistry {
     // default themes
     this.#themes.set('light', new Map());
     this.#themes.set('dark', new Map());
-    this.#themes.set('light-hc', new Map());
-    this.#themes.set('dark-hc', new Map());
-    this.#parentThemes.set('light-hc', 'light');
-    this.#parentThemes.set('dark-hc', 'dark');
+    this.#themes.set('hc-light', new Map());
+    this.#themes.set('hc-dark', new Map());
+    this.#parentThemes.set('hc-light', 'light');
+    this.#parentThemes.set('hc-dark', 'dark');
   }
 
   registerExtensionThemes(extension: AnalyzedExtension, themes: RawThemeContribution[]): extensionApi.Disposable {
@@ -170,8 +170,8 @@ export class ColorRegistry {
     // set the colors in the default themes
     this.#themes.get('light')?.set(colorId, definition.light);
     this.#themes.get('dark')?.set(colorId, definition.dark);
-    this.#themes.get('light-hc')?.set(colorId, definition.lightHc ?? definition.light);
-    this.#themes.get('dark-hc')?.set(colorId, definition.darkHc ?? definition.dark);
+    this.#themes.get('hc-light')?.set(colorId, definition.hcLight ?? definition.light);
+    this.#themes.get('hc-dark')?.set(colorId, definition.hcDark ?? definition.dark);
     this.notifyUpdate();
   }
 
@@ -201,8 +201,8 @@ export class ColorRegistry {
     this.registerColor(definition.id, {
       light: definition.light,
       dark: definition.dark,
-      darkHc: definition.darkHc,
-      lightHc: definition.lightHc,
+      hcDark: definition.hcDark,
+      hcLight: definition.hcLight,
     });
   }
 

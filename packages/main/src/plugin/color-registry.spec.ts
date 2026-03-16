@@ -337,11 +337,11 @@ describe('registerColor', () => {
     colorRegistry.registerColor('hc-fallback-color', { light: 'lightColor', dark: 'darkColor' });
 
     // should fall back to base color
-    const lightHcColors = colorRegistry.listColors('light-hc');
+    const lightHcColors = colorRegistry.listColors('hc-light');
     expect(lightHcColors[0]?.value).toBe('lightColor');
 
     // should fall back to base color
-    const darkHcColors = colorRegistry.listColors('dark-hc');
+    const darkHcColors = colorRegistry.listColors('hc-dark');
     expect(darkHcColors[0]?.value).toBe('darkColor');
   });
 
@@ -354,17 +354,17 @@ describe('registerColor', () => {
     colorRegistry.registerColor('hc-override-color', {
       light: 'lightColor',
       dark: 'darkColor',
-      lightHc: 'lightHcColor',
-      darkHc: 'darkHcColor',
+      hcLight: 'hcLightColor',
+      hcDark: 'hcDarkColor',
     });
 
     // should override color
-    const lightHcColors = colorRegistry.listColors('light-hc');
-    expect(lightHcColors[0]?.value).toBe('lightHcColor');
+    const hcLightColors = colorRegistry.listColors('hc-light');
+    expect(hcLightColors[0]?.value).toBe('hcLightColor');
 
     // should override color
-    const darkHcColors = colorRegistry.listColors('dark-hc');
-    expect(darkHcColors[0]?.value).toBe('darkHcColor');
+    const hcDarkColors = colorRegistry.listColors('hc-dark');
+    expect(hcDarkColors[0]?.value).toBe('hcDarkColor');
   });
 });
 
@@ -423,13 +423,13 @@ describe('isDarkTheme', () => {
     expect(isDark).toBeTruthy();
   });
 
-  test('light-hc is not dark (inherits from light)', async () => {
-    const isDark = colorRegistry.isDarkTheme('light-hc');
+  test('hc-light is not dark (inherits from light)', async () => {
+    const isDark = colorRegistry.isDarkTheme('hc-light');
     expect(isDark).toBeFalsy();
   });
 
-  test('dark-hc is dark (inherits from dark)', async () => {
-    const isDark = colorRegistry.isDarkTheme('dark-hc');
+  test('hc-dark is dark (inherits from dark)', async () => {
+    const isDark = colorRegistry.isDarkTheme('hc-dark');
     expect(isDark).toBeTruthy();
   });
 
@@ -915,7 +915,7 @@ describe('registerColorDefinition', () => {
     });
   });
 
-  test('passes darkHc and lightHc to registerColor when provided', () => {
+  test('passes hcDark and hcLight to registerColor when provided', () => {
     const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
     spyOnRegisterColor.mockReturnValue(undefined);
 
@@ -923,19 +923,19 @@ describe('registerColorDefinition', () => {
       id: 'hc-def-test',
       light: '#fff',
       dark: '#000',
-      darkHc: '#darkHcValue',
-      lightHc: '#lightHcValue',
+      hcDark: '#hcDarkValue',
+      hcLight: '#hcLightValue',
     });
 
     expect(spyOnRegisterColor).toHaveBeenCalledWith('hc-def-test', {
       light: '#fff',
       dark: '#000',
-      darkHc: '#darkHcValue',
-      lightHc: '#lightHcValue',
+      hcDark: '#hcDarkValue',
+      hcLight: '#hcLightValue',
     });
   });
 
-  test('does not pass darkHc and lightHc to registerColor when not provided', () => {
+  test('does not pass hcDark and hcLight to registerColor when not provided', () => {
     const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
     spyOnRegisterColor.mockReturnValue(undefined);
 

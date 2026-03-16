@@ -111,53 +111,53 @@ describe('ColorBuilder', () => {
 
   test('should support method chaining for HC colors', () => {
     const builder = new ColorBuilder('chain-hc-test');
-    const afterDarkHc = builder.withDarkHc(colorPaletteHelper('#000'));
-    const afterLightHc = afterDarkHc.withLightHc(colorPaletteHelper('#fff'));
+    const afterDarkHc = builder.withHcDark(colorPaletteHelper('#000'));
+    const afterLightHc = afterDarkHc.withHcLight(colorPaletteHelper('#fff'));
 
     expect(afterDarkHc).toBe(builder);
     expect(afterLightHc).toBe(builder);
   });
 
-  test('should build color definition with darkHc and lightHc colors', () => {
+  test('should build color definition with hcDark and hcLight colors', () => {
     const result = new ColorBuilder('hc-color')
       .withLight(colorPaletteHelper('#ffffff'))
       .withDark(colorPaletteHelper('#000000'))
-      .withDarkHc(colorPaletteHelper('#7e60e6'))
-      .withLightHc(colorPaletteHelper('#6234b1'))
+      .withHcDark(colorPaletteHelper('#7e60e6'))
+      .withHcLight(colorPaletteHelper('#6234b1'))
       .build();
 
-    expect(result.darkHc).toBe('#7e60e6');
-    expect(result.lightHc).toBe('#6234b1');
+    expect(result.hcDark).toBe('#7e60e6');
+    expect(result.hcLight).toBe('#6234b1');
   });
 
-  test('should not include darkHc and lightHc when not set', () => {
+  test('should not include darkHc and hcLight when not set', () => {
     const result = new ColorBuilder('no-hc-color')
       .withLight(colorPaletteHelper('#ffffff'))
       .withDark(colorPaletteHelper('#000000'))
       .build();
 
-    expect(result.darkHc).toBeUndefined();
-    expect(result.lightHc).toBeUndefined();
+    expect(result.hcDark).toBeUndefined();
+    expect(result.hcLight).toBeUndefined();
   });
 
   test('should build darkHc color with alpha value', () => {
     const result = new ColorBuilder('hc-alpha-color')
       .withLight(colorPaletteHelper('#ffffff'))
       .withDark(colorPaletteHelper('#000000'))
-      .withDarkHc(colorPaletteHelper('#000000').withAlpha(0.8))
+      .withHcDark(colorPaletteHelper('#000000').withAlpha(0.8))
       .build();
 
-    expect(result.darkHc).toBe('color(srgb 0 0 0 / 0.8)');
+    expect(result.hcDark).toBe('color(srgb 0 0 0 / 0.8)');
   });
 
-  test('should build lightHc color with alpha value', () => {
+  test('should build hcLight color with alpha value', () => {
     const result = new ColorBuilder('hc-light-alpha-color')
       .withLight(colorPaletteHelper('#ffffff'))
       .withDark(colorPaletteHelper('#000000'))
-      .withLightHc(colorPaletteHelper('#ffffff').withAlpha(0.5))
+      .withHcLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
       .build();
 
-    expect(result.lightHc).toBe('color(srgb 1 1 1 / 0.5)');
+    expect(result.hcLight).toBe('color(srgb 1 1 1 / 0.5)');
   });
 
   test('should handle hex colors correctly', () => {
