@@ -77,6 +77,7 @@ export * from './proxy.js';
 export * from './pull-event.js';
 export * from './release-notes-info.js';
 export * from './status-bar.js';
+export * from './system-overview-info.js';
 export * from './taskInfo.js';
 export * from './tasks-preferences.js';
 export * from './telemetry.js';
