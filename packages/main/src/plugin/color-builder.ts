@@ -139,8 +139,12 @@ export class ColorBuilder {
       id: this.#colorId,
       light: applyAlpha(this.#lightColor.color, this.#lightColor.alpha),
       dark: applyAlpha(this.#darkColor.color, this.#darkColor.alpha),
-      hcDark: this.#hcDarkColor ? applyAlpha(this.#hcDarkColor.color, this.#hcDarkColor.alpha) : undefined,
-      hcLight: this.#hcLightColor ? applyAlpha(this.#hcLightColor.color, this.#hcLightColor.alpha) : undefined,
+      hcDark: this.#hcDarkColor
+        ? applyAlpha(this.#hcDarkColor.color, this.#hcDarkColor.alpha)
+        : applyAlpha(this.#darkColor.color, this.#darkColor.alpha),
+      hcLight: this.#hcLightColor
+        ? applyAlpha(this.#hcLightColor.color, this.#hcLightColor.alpha)
+        : applyAlpha(this.#lightColor.color, this.#lightColor.alpha),
     };
   }
 }
