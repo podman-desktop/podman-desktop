@@ -366,7 +366,7 @@ test('Expect latest tag warning is displayed when the image does not have latest
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is displayed
-  const errorMesssage = screen.getByRole('alert', { name: 'Warning Message Content' });
+  const errorMesssage = screen.getByRole('alert');
   expect(errorMesssage).toBeInTheDocument();
   expect(errorMesssage).toHaveTextContent('"latest" tag not found');
 });
@@ -378,7 +378,7 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is not displayed
-  const errorMesssage = screen.queryByRole('alert', { name: 'Warning Message Content' });
+  const errorMesssage = screen.queryByRole('alert');
   expect(errorMesssage).toBeNull();
 });
 
