@@ -35,9 +35,9 @@ async function onShowHide(event: MouseEvent): Promise<void> {
 <Input
   id="password-{id}"
   name={name ?? `password-${id}`}
-  placeholder="password"
+  placeholder="Password"
   bind:value={password}
-  aria-label="password {id}"
+  aria-label="Password {id}"
   bind:readonly={readonly}
   type={type}
   {...restProps}
