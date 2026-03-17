@@ -103,6 +103,9 @@ importers:
       '@rollup/plugin-node-resolve':
         specifier: ^16.0.3
         version: 16.0.3(rollup@4.59.0)
+      '@tony.ganchev/eslint-plugin-header':
+        specifier: ^3.3.1
+        version: 3.3.1(eslint@10.0.3(jiti@2.6.1))
       '@tsconfig/strictest':
         specifier: ^2.0.8
         version: 2.0.8
@@ -4107,6 +4110,11 @@ packages:
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
+
+  '@tony.ganchev/eslint-plugin-header@3.3.1':
+    resolution: {integrity: sha512-/Fj0+DaXbBfrlXmd3wBZkB8TIwGT3N++y/oTYxRABK/gzNxjgcBjt63xBpuHCYIXmH1EwuALd6XS1fzNG4S0zg==}
+    peerDependencies:
+      eslint: '>=7.7.0'
 
   '@ts-morph/common@0.12.3':
     resolution: {integrity: sha512-4tUmeLyXJnJWvTFOKtcNJ1yh0a3SsTLi2MUoyj8iUNznFRN1ZquaNe7Oukqrnki2FzZkm0J9adCNLDZxUzvj+w==}
@@ -16146,6 +16154,10 @@ snapshots:
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
       '@testing-library/dom': 10.4.1
+
+  '@tony.ganchev/eslint-plugin-header@3.3.1(eslint@10.0.3(jiti@2.6.1))':
+    dependencies:
+      eslint: 10.0.3(jiti@2.6.1)
 
   '@ts-morph/common@0.12.3':
     dependencies:

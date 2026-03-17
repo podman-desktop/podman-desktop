@@ -18,6 +18,7 @@
 
 import globals from 'globals';
 import js from '@eslint/js';
+import header from '@tony.ganchev/eslint-plugin-header';
 import typescriptLint from 'typescript-eslint';
 import tsParser from '@typescript-eslint/parser';
 import svelteParser from 'svelte-eslint-parser';
@@ -98,6 +99,7 @@ export default [
       // non-compliant v10 plug-ins
       'file-progress': fixupPluginRules(fileProgress),
       etc: fixupPluginRules(etc),
+      header,
       import: fixupPluginRules(importPlugin),
       'no-null': fixupPluginRules(noNull),
       'redundant-undefined': fixupPluginRules(redundantUndefined),
@@ -245,6 +247,9 @@ export default [
       // redundant-undefined custom rules
       'redundant-undefined/redundant-undefined': 'error',
 
+      // copyright header custom rules
+      'header/header': ['error', "block", [{ "pattern": "SPDX-License-Identifier: Apache-2\\.0" }]],
+
       // simple-import-sort custom rules
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
@@ -253,6 +258,14 @@ export default [
       // but comment it by default until we can fix all the issues in the codebase
       'preserve-caught-error': 'off',
     },
+  },
+
+  {
+    files: ['**/*.tsx'],
+    rules: {
+      // NOTE: @tony.ganchev/eslint-plugin-header has no problem supporting tsx/jsx so these sources can start having license headers.
+      'header/header': 'off'
+    }
   },
 
   {
@@ -274,6 +287,7 @@ export default [
       'sonarjs/no-nested-assignment': 'off',
       'sonarjs/no-alphabetical-sort': 'off',
       'svelte/no-reactive-literals': 'error',
+      'header/header': 'off'
     },
   },
 
