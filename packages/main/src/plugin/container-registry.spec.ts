@@ -4764,11 +4764,11 @@ test('pass options to compat api when using podmanListImages', async () => {
     },
   } as unknown as InternalContainerProvider);
 
-  await containerRegistry.podmanListImages({ all: true, filters: { dangling: ['false'] } });
+  await containerRegistry.podmanListImages({ all: true, filters: '{"dangling":["false"]}' });
 
   expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
     all: true,
-    filters: { dangling: ['false'] },
+    filters: '{"dangling":["false"]}',
   });
 });
 
