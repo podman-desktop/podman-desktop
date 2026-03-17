@@ -43,7 +43,7 @@ export class AppearanceUtil {
   /**
    * Helper function that returns the correct image to use based on icon and current light vs dark setting.
    */
-  async getImage(icon: string | { light: string; dark: string } | undefined): Promise<string | undefined> {
+  getImage(icon: string | { light: string; dark: string } | undefined): string | undefined {
     if (!icon) {
       return undefined;
     }
