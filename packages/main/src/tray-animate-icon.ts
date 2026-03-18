@@ -84,7 +84,7 @@ export class AnimatedTray {
     } else {
       name = `-${iconName}`;
     }
-    let suffix: string = '';
+    let suffix = '';
     // on Mac, always pickup template icon
     if (isMac()) {
       suffix = 'Template';
