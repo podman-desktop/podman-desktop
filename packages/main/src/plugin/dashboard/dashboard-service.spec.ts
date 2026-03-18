@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_CONFIGURATION_KEY } from '@podman-desktop/core-api';
+import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_EXPANDED } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -75,10 +75,10 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]?.description).toBe(
     'Enhanced dashboard with more features and improved user experience',
   );
-  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_CONFIGURATION_KEY]).toBeDefined();
-  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_CONFIGURATION_KEY]?.type).toBe('boolean');
-  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_CONFIGURATION_KEY]?.hidden).toBe(true);
-  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_CONFIGURATION_KEY]?.default).toBe(false);
+  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]).toBeDefined();
+  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.type).toBe('boolean');
+  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.hidden).toBe(true);
+  expect(configurationNode?.properties?.[SYSTEM_OVERVIEW_EXPANDED]?.default).toBe(false);
   expect(
     configurationNode?.properties?.[ENHANCED_DASHBOARD_CONFIGURATION_KEY]?.experimental?.githubDiscussionLink,
   ).toBe('https://github.com/podman-desktop/podman-desktop/discussions/16055');
