@@ -237,7 +237,7 @@ test('Expects images.icon option to be used when no themes are present', async (
       sessionRequests: [],
     },
   ];
-  vi.mocked(AppearanceUtil.prototype.getImage).mockResolvedValue('./icon.png');
+  vi.mocked(AppearanceUtil.prototype.getImage).mockReturnValue('./icon.png');
   authenticationProviders.set(providerWithImageIcon);
   render(PreferencesAuthenticationProvidersRendering, {});
 
@@ -264,7 +264,7 @@ test('Expects images.icon.dark option to be used when theme is dark', async () =
       sessionRequests: [],
     },
   ];
-  vi.mocked(AppearanceUtil.prototype.getImage).mockResolvedValue('./icon-dark.png');
+  vi.mocked(AppearanceUtil.prototype.getImage).mockReturnValue('./icon-dark.png');
   authenticationProviders.set(providerWithImageIcon);
 
   configMock.mockReturnValue('dark');
