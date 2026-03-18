@@ -16,14 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const SYSTEM_OVERVIEW_CONFIGURATION_KEY = 'systemOverview.expanded';
+export const SYSTEM_OVERVIEW_EXPANDED = 'systemOverview.expanded';
 
 export const HEALTH_MONITOR_STATUS = {
   HEALTHY: 'healthy',
   STABLE: 'stable',
   PROGRESSING: 'progressing',
   CRITICAL: 'critical',
-};
+} as const;
 
 export type SystemOverviewStatus = (typeof HEALTH_MONITOR_STATUS)[keyof typeof HEALTH_MONITOR_STATUS];
 
