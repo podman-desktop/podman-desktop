@@ -21,7 +21,7 @@ import {
   HEALTH_MONITOR_STATUS,
   type ProviderConnectionInfo,
   type ProviderInfo,
-  SYSTEM_OVERVIEW_CONFIGURATION_KEY,
+  SYSTEM_OVERVIEW_EXPANDED,
   SystemOverviewStatus,
   SystemOverviewStatusInfo,
 } from '@podman-desktop/core-api';
@@ -59,8 +59,9 @@ export class DashboardService {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
           },
         },
-        [SYSTEM_OVERVIEW_CONFIGURATION_KEY]: {
+        [SYSTEM_OVERVIEW_EXPANDED]: {
           type: 'boolean',
+          description: 'Expand the system overview section on the dashboard',
           hidden: true,
           default: false,
         },
@@ -105,8 +106,8 @@ export class DashboardService {
       );
 
       const status: SystemOverviewStatus = isConfiguringOrStarting
-        ? (HEALTH_MONITOR_STATUS.PROGRESSING as SystemOverviewStatus)
-        : (HEALTH_MONITOR_STATUS.STABLE as SystemOverviewStatus);
+        ? HEALTH_MONITOR_STATUS.PROGRESSING
+        : HEALTH_MONITOR_STATUS.STABLE;
       return {
         status,
         text: this.getStatusText(status, allConnections, providers),
@@ -119,13 +120,13 @@ export class DashboardService {
 
     let worstStatus: SystemOverviewStatus;
     if (hasCritical) {
-      worstStatus = HEALTH_MONITOR_STATUS.CRITICAL as SystemOverviewStatus;
+      worstStatus = HEALTH_MONITOR_STATUS.CRITICAL;
     } else if (hasProgressing) {
-      worstStatus = HEALTH_MONITOR_STATUS.PROGRESSING as SystemOverviewStatus;
+      worstStatus = HEALTH_MONITOR_STATUS.PROGRESSING;
     } else if (hasContainerStarted) {
-      worstStatus = HEALTH_MONITOR_STATUS.HEALTHY as SystemOverviewStatus;
+      worstStatus = HEALTH_MONITOR_STATUS.HEALTHY;
     } else {
-      worstStatus = HEALTH_MONITOR_STATUS.STABLE as SystemOverviewStatus;
+      worstStatus = HEALTH_MONITOR_STATUS.STABLE;
     }
 
     return {
