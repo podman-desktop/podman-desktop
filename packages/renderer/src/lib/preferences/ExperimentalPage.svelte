@@ -14,7 +14,7 @@ interface Props {
 let { properties = [] }: Props = $props();
 
 let experimental: IConfigurationPropertyRecordedSchema[] = $derived(
-  properties.filter(property => !!property.experimental),
+  properties.filter(property => !!property.experimental && !property.hidden),
 );
 
 let values: Record<string, boolean> = $state({});
