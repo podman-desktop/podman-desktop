@@ -31,24 +31,6 @@ import {
 } from '/@/utils/podman-windows-legacy-installer';
 
 vi.mock(import('winreg'));
-vi.mock(
-  import('@podman-desktop/api'),
-  () =>
-    ({
-      window: {
-        withProgress: vi.fn(),
-      },
-      commands: {
-        registerCommand: vi.fn(),
-      },
-      process: {
-        exec: vi.fn(),
-      },
-      ProgressLocation: {
-        TASK_WIDGET: 2,
-      },
-    }) as unknown as typeof extensionApi,
-);
 
 const TELEMETRY_LOGGER_MOCK = {
   logUsage: vi.fn(),

@@ -1,6 +1,6 @@
 {
   "name": "@podman-desktop/preload",
-  "version": "1.26.0-next",
+  "version": "1.27.0-next",
   "type": "module",
   "license": "Apache-2.0",
   "files": [
@@ -16,10 +16,10 @@
     "test:watch": "vitest watch --coverage --passWithNoTests"
   },
   "devDependencies": {
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "@podman-desktop/core-api": "workspace:*",
-    "electron": "41.0.0"
+    "electron": "41.0.3"
   }
 }

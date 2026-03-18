@@ -1,5 +1,20 @@
 {
   "feedback.dialog": true,
   "preferences.zoomLevel": 0.5,
-  "preferences.ExitOnClose": false
+  "preferences.ExitOnClose": false,
+  "registries.preferred": "docker.io, quay.io",
+  "registries.defaults": [
+    {
+      "registry": {
+        "prefix": "docker.io",
+        "location": "docker.io"
+      }
+    },
+    {
+      "registry": {
+        "prefix": "quay.io",
+        "location": "quay.io"
+      }
+    }
+  ]
 }

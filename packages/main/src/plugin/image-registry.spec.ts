@@ -878,7 +878,7 @@ describe('expect checkCredentials', async () => {
   });
 });
 
-test('getRegistryConfig should return only valid registries and unregister all the non valid ones', async () => {
+test('getRegistryConfig should return only valid registries if validateRegistries is true', async () => {
   const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
   spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
   spyCheckCredentials.mockResolvedValueOnce(undefined);
@@ -925,12 +925,19 @@ test('getRegistryConfig should return only valid registries and unregister all t
 
   expect(imageRegistry.getRegistries().length).toBe(4);
 
-  const registryConfig = await imageRegistry.getRegistryConfig();
+  const registryConfig = await imageRegistry.getRegistryConfig(false);
 
-  expect(Object.keys(registryConfig).length).toBe(2);
+  expect(Object.keys(registryConfig).length).toBe(4);
+  expect(Object.keys(registryConfig)).toContain('an-url-1');
   expect(Object.keys(registryConfig)).toContain('an-url-2');
   expect(Object.keys(registryConfig)).toContain('an-url-3');
-  expect(imageRegistry.getRegistries().length).toBe(4);
+  expect(Object.keys(registryConfig)).toContain('an-url-4');
+
+  const validRegistryConfig = await imageRegistry.getRegistryConfig(true);
+
+  expect(Object.keys(validRegistryConfig).length).toBe(2);
+  expect(Object.keys(validRegistryConfig)).toContain('an-url-2');
+  expect(Object.keys(validRegistryConfig)).toContain('an-url-3');
 });
 
 test('findBestManifest returns the expected manifest', () => {

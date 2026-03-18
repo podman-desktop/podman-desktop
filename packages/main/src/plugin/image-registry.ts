@@ -150,18 +150,21 @@ export class ImageRegistry {
   /**
    * Provides authentication information from all registries.
    */
-  async getRegistryConfig(): Promise<Dockerode.RegistryConfig> {
+  async getRegistryConfig(validateRegistries: boolean = true): Promise<Dockerode.RegistryConfig> {
     const registryConfig: Dockerode.RegistryConfig = {};
     await Promise.all(
       this.getRegistries().map(async registry => {
         let addRegistry = true;
-        // before adding the registry, check if the registry information is valid
-        await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
-          () => {
-            console.error(`Error while checking registry credentials ${registry.serverUrl}`);
-            addRegistry = false;
-          },
-        );
+
+        if (validateRegistries) {
+          // before adding the registry, check if the registry information is valid
+          await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
+            () => {
+              console.error(`Error while checking registry credentials ${registry.serverUrl}`);
+              addRegistry = false;
+            },
+          );
+        }
 
         if (addRegistry) {
           const serveraddress = registry.serverUrl.toLowerCase();

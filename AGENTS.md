@@ -187,12 +187,97 @@ Built-in extensions are in `extensions/` and follow the same API as external ext
 - Follow ESLint and Biome rules
 - Tailwind CSS for styling (no custom CSS unless necessary)
 
+### ESLint Rules
+
+Before writing or modifying code, always check `eslint.config.mjs` to understand which linting rules are active. Rules vary by file type and package — consult the config directly rather than assuming defaults.
+
+### Svelte Reactive Patterns
+
+When setting a variable reactively, prefer in this order:
+
+1. **`$derived` (with optional `await`)** — use when the value can be computed from existing state or an async source. Svelte 5.36+ supports `await` inside `$derived`.
+2. **`onMount`** — use when you need to fetch or set a value once after the component mounts and `$derived` is not applicable.
+3. **`$effect`** — use only as a last resort for side effects that cannot be expressed as a derivation.
+
+```ts
+// ✅ Preferred: $derived (sync or async)
+let items = $derived(await fetchItems());
+
+// ✅ Acceptable: onMount when $derived does not fit
+let items = $state<Item[]>([]);
+onMount(async () => {
+  items = await fetchItems();
+});
+
+// 🚫 Avoid: $effect for setting variables
+let items = $state<Item[]>([]);
+$effect(() => {
+  fetchItems().then(result => {
+    items = result;
+  });
+});
+```
+
+> **Note:** `$derived` variables are read-only — you cannot reassign them (e.g. `items = [something]` will be a compile error). If you need to mutate the variable elsewhere in the component (e.g. in response to a user action), use `$state` + `onMount` instead:
+>
+> ```ts
+> // 🚫 Won't work — cannot assign to a $derived variable
+> let items = $derived(await fetchItems());
+> items = []; // ❌ compile error
+>
+> // ✅ Use $state + onMount when you also need to write to the variable
+> let items = $state<Item[]>([]);
+> onMount(async () => {
+>   items = await fetchItems();
+> });
+> // later in the component:
+> items = []; // ✅ fine
+> ```
+
+### Testing Patterns
+
+- When mocking modules, use `vi.mock(import('./path/to/module'))` (with a dynamic `import()` expression) instead of `vi.mock('./path/to/module')` (string literal). This provides better type inference and IDE support.
+- Use `vi.mocked(fn)` to get a typed mock reference, then configure it with `.mockReturnValue()` / `.mockResolvedValue()` and assert with `expect()`.
+
+```ts
+// ✅ Preferred
+vi.mock(import('node:fs'));
+vi.mock(import('./Compo2.svelte'));
+
+// 🚫 Avoid
+vi.mock('node:fs');
+vi.mock('./Compo2.svelte');
+```
+
+**Setting up and asserting mocks:**
+
+```ts
+import { readFileSync } from 'node:fs';
+import { beforeEach, expect, test, vi } from 'vitest';
+
+vi.mock(import('node:fs'));
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
+test('returns parsed content', () => {
+  vi.mocked(readFileSync).mockReturnValue('hello');
+  const result = parseFile('/some/path');
+  expect(result).toBe('hello');
+  expect(readFileSync).toHaveBeenCalledWith('/some/path', 'utf-8');
+});
+```
+
+For comprehensive coding and testing guidelines, see [CODE-GUIDELINES.md](CODE-GUIDELINES.md).
+
 ### Commits & Pull requests
 
 - We use semantic commits (E.g. `feat(renderer): updating something`)
 - Every commit must be signed
 - AI assisted commit should be mentioned
 - Respect the GitHub template for the pull request body
+
 ## Resources
 
 - **Comprehensive guidelines:** [CODE-GUIDELINES.md](CODE-GUIDELINES.md)

@@ -5,7 +5,7 @@ import { faCube, faMinusCircle, faPlusCircle } from '@fortawesome/free-solid-svg
 import { type OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import { NavigationPage } from '@podman-desktop/core-api';
-import { Button, Input } from '@podman-desktop/ui-svelte';
+import { Button, Checkbox, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy } from 'svelte';
 import { get, type Unsubscriber } from 'svelte/store';
 
@@ -35,6 +35,7 @@ interface Props {
 
 let { taskId = $bindable() }: Props = $props();
 let buildImageInfo: BuildImageInfo = $state(createDefaultBuildImageInfo());
+let validateRegistries = $state(true);
 
 const containerFileDialogOptions: OpenDialogOptions = {
   title: 'Select Containerfile to build',
@@ -145,6 +146,7 @@ async function buildSinglePlatformImage(): Promise<void> {
       formattedBuildArgs,
       buildImageInfo.taskId,
       buildImageInfo.target,
+      validateRegistries,
     );
   } catch (error) {
     eventCollect(buildImageInfo.buildImageKey, 'error', String(error));
@@ -208,6 +210,7 @@ async function buildMultiplePlatformImagesAndCreateManifest(): Promise<void> {
         formattedBuildArgs,
         buildImageInfo.taskId,
         buildImageInfo.target,
+        validateRegistries,
       )) as BuildOutput;
 
       // Extract and store the build ID as this is required for creating the manifest, only if it is available.
@@ -431,6 +434,12 @@ let hasInvalidFields = $derived(
           <p class="text-[var(--pd-content-text)] mb-2">Multiple platforms selected, a manifest will be created</p>
         {/if}
         <BuildImageFromContainerfileCards bind:platforms={buildImageInfo.containerBuildPlatform} />
+      </div>
+
+      <div hidden={buildImageInfo.buildRunning}>
+        <label for="registryValidation" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
+          >Registry Validation</label>
+        <Checkbox bind:checked={validateRegistries} title='validate registries'>Validate registries before building</Checkbox>
       </div>
 
       <div class="w-full flex flex-row space-x-4">

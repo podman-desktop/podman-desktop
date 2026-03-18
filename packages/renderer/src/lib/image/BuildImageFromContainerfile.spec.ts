@@ -204,6 +204,7 @@ test('Select multiple platforms and expect pressing Build will do two buildImage
     expect.anything(),
     expect.anything(),
     undefined,
+    true,
   );
 
   expect(window.buildImage).toHaveBeenCalledWith(
@@ -218,6 +219,7 @@ test('Select multiple platforms and expect pressing Build will do two buildImage
     expect.anything(),
     expect.anything(),
     undefined,
+    true,
   );
 });
 
@@ -314,6 +316,7 @@ test('Selecting one platform only calls buildImage once with the selected platfo
     expect.anything(),
     expect.anything(),
     undefined,
+    true,
   );
 });
 
@@ -654,6 +657,46 @@ describe('Build image that has an intermediate target', () => {
       {},
       expect.anything(),
       expected,
+      true,
     );
   });
+});
+
+test('Expect to have a checkbox on by default to validate registries before building an images', async () => {
+  setup();
+  render(BuildImageFromContainerfile, {});
+
+  const validateRegistriesCheckbox = screen.getByRole('checkbox', { name: 'validate registries' });
+
+  expect(validateRegistriesCheckbox).toBeChecked();
+
+  await userEvent.click(validateRegistriesCheckbox);
+
+  expect(validateRegistriesCheckbox).not.toBeChecked();
+
+  vi.mocked(window.pathRelative).mockResolvedValue('containerfile');
+  const containerFilePath = screen.getByRole('textbox', { name: 'Containerfile path' });
+  await userEvent.type(containerFilePath, '/somepath/containerfile');
+
+  const buildButton = screen.getByRole('button', { name: 'Build' });
+  expect(buildButton).toBeInTheDocument();
+  expect(buildButton).toBeEnabled();
+
+  await userEvent.click(buildButton);
+
+  expect(window.buildImage).toHaveBeenCalledTimes(1);
+  expect(window.buildImage).toHaveBeenCalledWith(
+    '/somepath',
+    'containerfile',
+    expect.anything(),
+    'linux/amd64',
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
+    {},
+    expect.anything(),
+    undefined,
+    false,
+  );
 });
