@@ -1,6 +1,6 @@
 {
   "name": "@podman-desktop/preload",
-  "version": "1.26.0-next",
+  "version": "1.27.0-next",
   "type": "module",
   "license": "Apache-2.0",
   "files": [
@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "@podman-desktop/core-api": "workspace:*",
-    "electron": "41.0.2"
+    "electron": "41.0.3"
   }
 }

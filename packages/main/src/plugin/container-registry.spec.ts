@@ -32,6 +32,7 @@ import type {
   ProviderContainerConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type { ContainerCreateOptions as PodmanContainerCreateOptions } from '@podman-desktop/core-api/libpod';
 import Dockerode from 'dockerode';
 import moment from 'moment';
@@ -4778,6 +4779,68 @@ test('expect to get get zero images if podman provider has neither libpod API no
   expect(images).toHaveLength(0);
 });
 
+test('expect podmanListImages to return images from working providers even if one fails', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error');
+
+  const workingProviderImages = [
+    {
+      Id: 'workingImageId',
+      Digest: 'fooDigest',
+    },
+  ];
+
+  // Setup working provider
+  server = setupServer(
+    http.get('http://localhost/v4.2.0/libpod/images/json', () => HttpResponse.json(workingProviderImages)),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const workingApi = new Dockerode({ protocol: 'http', host: 'localhost' });
+
+  // Add working provider
+  containerRegistry.addInternalProvider('podman-working', {
+    name: 'podman-working',
+    id: 'podman-working',
+    api: workingApi,
+    libpodApi: workingApi,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  // Add failing provider
+  const failingError = new Error('Connection failed');
+  const failingApi = {
+    podmanListImages: vi.fn().mockRejectedValue(failingError),
+    listImages: vi.fn().mockRejectedValue(failingError),
+  };
+
+  containerRegistry.addInternalProvider('podman-failing', {
+    name: 'podman-failing',
+    id: 'podman-failing',
+    api: failingApi,
+    libpodApi: failingApi,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  const images = await containerRegistry.podmanListImages();
+
+  // Should return images from working provider despite the error
+  expect(images).toBeDefined();
+  expect(images).toHaveLength(1);
+  expect(images[0]?.Id).toBe('sha256:workingImageId');
+  expect(images[0]?.engineId).toBe('podman-working');
+  expect(images[0]?.engineName).toBe('podman-working');
+
+  // Should log error for failed provider with provider context
+  expect(consoleErrorSpy).toHaveBeenCalledWith(
+    'Error listing images from provider podman-failing (podman-failing):',
+    failingError,
+  );
+});
+
 test('listInfos without provider', async () => {
   const api = new Dockerode({ protocol: 'http', host: 'localhost' });
 
@@ -6237,5 +6300,47 @@ describe('getNetworkDrivers', () => {
     await expect(containerRegistry.getNetworkDrivers(nonexistentConnectionInfo)).rejects.toThrow(
       'no running provider for the matching container',
     );
+  });
+});
+
+describe('ContainerRegistrySettings', () => {
+  test('init should register provider timeout configuration', () => {
+    const registerConfigurationsMock = vi.fn();
+    const configRegistry = {
+      registerConfigurations: registerConfigurationsMock,
+    } as unknown as ConfigurationRegistry;
+
+    const proxy: Proxy = {
+      onDidStateChange: vi.fn(),
+      onDidUpdateProxy: vi.fn(),
+      isEnabled: vi.fn(),
+    } as unknown as Proxy;
+
+    const imageRegistry = new ImageRegistry(
+      {} as ApiSenderType,
+      { track: vi.fn() } as unknown as Telemetry,
+      {} as Certificates,
+      proxy,
+    );
+
+    const apiSender: ApiSenderType = {
+      send: vi.fn(),
+      receive: vi.fn(),
+    };
+
+    const containerProviderRegistry = new TestContainerProviderRegistry(apiSender, configRegistry, imageRegistry, {
+      track: vi.fn(),
+    } as unknown as Telemetry);
+
+    containerProviderRegistry.init();
+
+    expect(registerConfigurationsMock).toHaveBeenCalledOnce();
+    const registeredConfig = registerConfigurationsMock.mock.calls[0]?.[0]?.[0] as IConfigurationNode | undefined;
+    expect(registeredConfig?.id).toBe('preferences.container-registry');
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']).toBeDefined();
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.type).toBe('number');
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.default).toBe(30);
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.minimum).toBe(5);
+    expect(registeredConfig?.properties?.['container-registry.providerTimeout']?.maximum).toBe(120);
   });
 });

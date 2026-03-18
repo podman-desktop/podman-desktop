@@ -1329,6 +1329,7 @@ export function initExposure(): void {
       buildargs?: { [key: string]: string },
       taskId?: number,
       target?: string,
+      validateRegistries?: boolean,
     ): Promise<unknown> => {
       onDataCallbacksBuildImageId++;
       onDataCallbacksBuildImage.set(onDataCallbacksBuildImageId, eventCollect);
@@ -1345,6 +1346,7 @@ export function initExposure(): void {
         buildargs,
         taskId,
         target,
+        validateRegistries,
       );
     },
   );

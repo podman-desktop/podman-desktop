@@ -1,12 +1,14 @@
 <script lang="ts">
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faCaretDown, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { onMount, type Snippet } from 'svelte';
+import { type Component, onMount, type Snippet } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 
 interface Option {
   value: string;
   label: string;
+  icon?: IconDefinition | Component | string;
 }
 
 interface Props {
@@ -21,6 +23,11 @@ interface Props {
   ariaLabel?: string;
   left?: Snippet;
   children?: Snippet;
+  /** Render without the built-in trigger button or form inputs. Visibility is controlled externally via `opened`. */
+  triggerless?: boolean;
+  opened?: boolean;
+  /** Use mouseup instead of click for item selection (useful for long-press triggered menus). */
+  selectOnMouseUp?: boolean;
 }
 let {
   id,
@@ -34,9 +41,11 @@ let {
   ariaLabel = '',
   left = undefined,
   children = undefined,
+  triggerless = false,
+  opened = $bindable(false),
+  selectOnMouseUp = false,
 }: Props = $props();
 
-let opened: boolean = $state(false);
 let selectLabel: string = $derived(options.find(o => o.value === value)?.label ?? value ?? '');
 let highlightIndex: number = $state(-1);
 let comp: HTMLElement;
@@ -44,12 +53,13 @@ let comp: HTMLElement;
 const pageStep: number = 10;
 
 onMount(() => {
-  if (!value && options?.length > 0) {
+  if (!triggerless && !value && options?.length > 0) {
     value = options[0].value;
   }
 });
 
 function onKeyDown(e: KeyboardEvent): void {
+  if (triggerless) return;
   switch (e.key) {
     case 'ArrowDown':
       onDownKey(e);
@@ -131,8 +141,10 @@ function onEnter(i: number): void {
 
 function onSelect(e: Event, newValue: string): void {
   onChange(newValue);
-  value = newValue;
-  close();
+  if (!triggerless) {
+    value = newValue;
+    close();
+  }
   e.preventDefault();
 }
 
@@ -167,6 +179,7 @@ function buildOptions(node: HTMLSelectElement): any {
 }
 
 function onWindowClick(e: Event): void {
+  if (triggerless) return;
   if (opened && e.target instanceof Node && !comp.contains(e.target)) {
     close();
   }
@@ -175,64 +188,96 @@ function onWindowClick(e: Event): void {
 
 <svelte:window on:click={onWindowClick} />
 
-<div
-  class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent min-w-24 relative {className}"
-  class:not(focus-within):hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
-  class:focus-within:bg-[var(--pd-input-field-focused-bg)]={!disabled}
-  class:focus-within:rounded-md={!disabled}
-  class:focus-within:border-[var(--pd-input-field-hover-stroke)]={!disabled}
-  class:border-b-[var(--pd-input-field-stroke)]={!disabled}
-  class:hover:border-b-[var(--pd-input-field-hover-stroke)]={!disabled}
-  class:border-b-[var(--pd-input-field-stroke-readonly)]={disabled}
-  aria-label={ariaLabel}
-  aria-invalid={ariaInvalid}
-  bind:this={comp}>
-  <button
-    class="flex flex-row w-full outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] items-center text-start"
-    class:text-[color:var(--pd-input-field-focused-text)]={!disabled}
-    class:text-[color:var(--pd-input-field-disabled-text)]={disabled}
-    class:group-hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
-    class:group-focus-within:bg-[var(--pd-input-field-hover-bg)]={!disabled}
-    class:group-hover-placeholder:text-[color:var(--pd-input-field-placeholder-text)]={!disabled}
-    disabled={disabled}
-    id={id}
-    name={name}
-    onclick={toggleOpen}
-    onkeydown={onKeyDown}>
-    {@render left?.()}
-    <span class="grow">{selectLabel}</span>
+{#if triggerless}
+  {#if opened && options.length > 0}
     <div
-      class:text-[var(--pd-input-field-stroke)]={!disabled}
-      class:text-[var(--pd-input-field-disabled-text)]={!disabled}
-      class:group-hover:text-[var(--pd-input-field-hover-stroke)]={!disabled}>
-      <Icon icon={faCaretDown}/>
-    </div>
-  </button>
-
-  {#if opened}
-    <div
-      class="absolute top-full right-0 z-10 w-full max-h-80 rounded-md bg-[var(--pd-dropdown-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px] overflow-y-auto whitespace-nowrap">
+      aria-label={ariaLabel || 'dropdown'}
+      class="rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] overflow-y-auto overflow-x-hidden text-nowrap max-h-[300px] {className}">
       {#each options as option, i (i)}
         <button
-          onkeydown={onKeyDown}
+          aria-label={option.label}
+          onmouseup={selectOnMouseUp ? (e: Event): void => onSelect(e, option.value) : undefined}
+          onclick={!selectOnMouseUp ? (e: Event): void => onSelect(e, option.value) : undefined}
           onmouseenter={(): void => onEnter(i)}
-          onclick={(e): void => onSelect(e, option.value)}
-          class="flex flex-row w-full select-none px-2 py-1 items-center text-start"
-          class:autofocus={i === 0}
+          class="flex w-full p-2.5 hover:bg-[var(--pd-dropdown-item-hover-bg)] hover:text-[var(--pd-dropdown-item-hover-text)] hover:rounded-md text-[var(--pd-dropdown-item-text)] hover:cursor-pointer text-start"
           class:bg-[var(--pd-dropdown-item-hover-bg)]={highlightIndex === i}
           class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
-          <div class="min-w-4 max-w-4">
-            {#if option.value === value}<Icon icon={faCheck} />{/if}
-          </div>
-          <div class="grow">{option.label}</div>
+          <span
+            title={option.label}
+            class="group flex items-center no-underline whitespace-nowrap h-4">
+            {#if option.icon}
+              <Icon class="w-4 text-md" icon={option.icon} />
+            {/if}
+            <span class={option.icon ? 'ml-2' : ''}>{option.label}</span>
+          </span>
         </button>
       {/each}
     </div>
   {/if}
+{:else}
+  <div
+    class="flex flex-row grow items-center px-1 py-1 group bg-[var(--pd-input-field-bg)] border-[1px] border-transparent min-w-24 relative {className}"
+    class:not(focus-within):hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
+    class:focus-within:bg-[var(--pd-input-field-focused-bg)]={!disabled}
+    class:focus-within:rounded-md={!disabled}
+    class:focus-within:border-[var(--pd-input-field-hover-stroke)]={!disabled}
+    class:border-b-[var(--pd-input-field-stroke)]={!disabled}
+    class:hover:border-b-[var(--pd-input-field-hover-stroke)]={!disabled}
+    class:border-b-[var(--pd-input-field-stroke-readonly)]={disabled}
+    aria-label={ariaLabel}
+    aria-invalid={ariaInvalid}
+    bind:this={comp}>
+    <button
+      class="flex flex-row w-full outline-0 bg-[var(--pd-input-field-bg)] placeholder:text-[color:var(--pd-input-field-placeholder-text)] items-center text-start"
+      class:text-[color:var(--pd-input-field-focused-text)]={!disabled}
+      class:text-[color:var(--pd-input-field-disabled-text)]={disabled}
+      class:group-hover:bg-[var(--pd-input-field-hover-bg)]={!disabled}
+      class:group-focus-within:bg-[var(--pd-input-field-hover-bg)]={!disabled}
+      class:group-hover-placeholder:text-[color:var(--pd-input-field-placeholder-text)]={!disabled}
+      disabled={disabled}
+      id={id}
+      name={name}
+      onclick={toggleOpen}
+      onkeydown={onKeyDown}>
+      {@render left?.()}
+      <span class="grow">{selectLabel}</span>
+      <div
+        class:text-[var(--pd-input-field-stroke)]={!disabled}
+        class:text-[var(--pd-input-field-disabled-text)]={!disabled}
+        class:group-hover:text-[var(--pd-input-field-hover-stroke)]={!disabled}>
+        <Icon icon={faCaretDown}/>
+      </div>
+    </button>
 
-  <input name={name} value={value} type="hidden" aria-label="hidden input"/>
+    {#if opened}
+      <div
+        class="absolute top-full right-0 z-10 w-full max-h-80 rounded-md bg-[var(--pd-dropdown-bg)] border-[var(--pd-input-field-hover-stroke)] border-[1px] overflow-y-auto whitespace-nowrap">
+        {#each options as option, i (i)}
+          <button
+            onkeydown={onKeyDown}
+            onmouseenter={(): void => onEnter(i)}
+            onclick={(e): void => onSelect(e, option.value)}
+            class="flex flex-row w-full select-none px-2 py-1 items-center text-start"
+            class:autofocus={i === 0}
+            class:bg-[var(--pd-dropdown-item-hover-bg)]={highlightIndex === i}
+            class:text-[var(--pd-dropdown-item-hover-text)]={highlightIndex === i}>
+            <div class="min-w-4 max-w-4">
+              {#if option.icon}
+                <Icon icon={option.icon} />
+              {:else if option.value === value}
+                <Icon icon={faCheck} />
+              {/if}
+            </div>
+            <div class="grow">{option.label}</div>
+          </button>
+        {/each}
+      </div>
+    {/if}
 
-  <select use:buildOptions class="hidden" bind:value={value}>
-    {@render children?.()}
-  </select>
-</div>
+    <input name={name} value={value} type="hidden" aria-label="hidden input"/>
+
+    <select use:buildOptions class="hidden" bind:value={value}>
+      {@render children?.()}
+    </select>
+  </div>
+{/if}

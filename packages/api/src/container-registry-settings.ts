@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2026 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export enum AppearanceSettings {
-  SectionName = 'preferences',
-  Appearance = 'appearance',
-  LightEnumValue = 'light',
-  LightHCEnumValue = 'hc-light',
-  DarkEnumValue = 'dark',
-  DarkHCEnumValue = 'hc-dark',
-  SystemEnumValue = 'system',
-  ZoomLevel = 'zoomLevel',
-  NavigationAppearance = 'navigationBarLayout',
-  Icon = 'icon',
-  IconAndTitle = 'icon + title',
-  SearchBar = 'searchBar',
+export enum ContainerRegistrySettings {
+  SectionName = 'container-registry',
+  ProviderTimeout = 'providerTimeout',
 }
