@@ -23,18 +23,18 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getInitialValue } from '/@/lib/preferences/Util';
 import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
 
 import PreferencesRenderingItemFormat from './PreferencesRenderingItemFormat.svelte';
 
-beforeAll(() => {
-  (window as any).getConfigurationValue = vi.fn().mockResolvedValue(undefined);
+beforeEach(() => {
+  vi.resetAllMocks();
 });
 
 async function awaitRender(record: IConfigurationPropertyRecordedSchema, customProperties: any): Promise<void> {
@@ -511,4 +511,69 @@ test('Expect a password input when record is type string and format is password'
   // check that the name is properly set and the value too
   expect(passwordInput).toHaveAttribute('name', 'record');
   expect(passwordInput).toHaveValue('foobar');
+});
+
+describe('experimental configuration update', () => {
+  test('Expect updateExperimentalConfigurationValue to be called for experimental records', async () => {
+    const record: IConfigurationPropertyRecordedSchema = {
+      id: 'experimental.record',
+      title: 'Experimental feature',
+      parentId: 'parent.record',
+      description: 'experimental-description',
+      type: 'boolean',
+      default: false,
+      scope: 'DEFAULT',
+      experimental: { githubDiscussionLink: 'https://github.com/test' },
+    };
+
+    render(PreferencesRenderingItemFormat, {
+      record,
+      initialValue: getInitialValue(record),
+      enableAutoSave: true,
+    });
+
+    const checkbox = screen.getByRole('checkbox');
+    await fireEvent.click(checkbox);
+
+    await vi.waitFor(
+      () => {
+        expect(window.updateExperimentalConfigurationValue).toHaveBeenCalledWith(
+          'experimental.record',
+          expect.anything(),
+          'DEFAULT',
+        );
+      },
+      { timeout: 3000 },
+    );
+    expect(window.updateConfigurationValue).not.toHaveBeenCalled();
+  });
+
+  test('Expect updateConfigurationValue to be called for non-experimental records', async () => {
+    const record: IConfigurationPropertyRecordedSchema = {
+      id: 'regular.record',
+      title: 'Regular feature',
+      parentId: 'parent.record',
+      description: 'regular-description',
+      type: 'boolean',
+      default: false,
+      scope: 'DEFAULT',
+    };
+
+    render(PreferencesRenderingItemFormat, {
+      record,
+      initialValue: getInitialValue(record),
+      enableAutoSave: true,
+    });
+
+    const checkbox = screen.getByRole('checkbox');
+    await fireEvent.click(checkbox);
+
+    await vi.waitFor(
+      () => {
+        expect(window.updateConfigurationValue).toHaveBeenCalledWith('regular.record', expect.anything(), 'DEFAULT');
+      },
+      { timeout: 3000 },
+    );
+    expect(window.updateExperimentalConfigurationValue).not.toHaveBeenCalled();
+  });
 });

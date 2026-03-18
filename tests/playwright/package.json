@@ -24,9 +24,9 @@
   "devDependencies": {
     "@playwright/test": "1.58.2",
     "@types/node": "^24",
-    "electron": "40.4.1",
+    "electron": "41.0.2",
     "typescript": "^5.9.3",
     "unplugin-dts": "1.0.0-beta.6",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }

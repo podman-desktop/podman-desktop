@@ -20,7 +20,6 @@ interface Props {
 
 let { extension }: Props = $props();
 
-let onboardingsUnsubscribe: Unsubscriber | undefined;
 let onboardingEnabledUnsubscribe: Unsubscriber | undefined;
 let configurationPropertiesUnsubscribe: Unsubscriber | undefined;
 let onboardingEnabledReadable: Readable<boolean>;
@@ -66,7 +65,6 @@ onMount(() => {
 });
 
 onDestroy(() => {
-  onboardingsUnsubscribe?.();
   onboardingEnabledUnsubscribe?.();
   configurationPropertiesUnsubscribe?.();
 });

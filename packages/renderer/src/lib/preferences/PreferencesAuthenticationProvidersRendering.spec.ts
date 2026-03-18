@@ -22,7 +22,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { afterEach, beforeAll, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import { authenticationProviders } from '/@/stores/authenticationProviders';
@@ -44,17 +44,22 @@ beforeAll(() => {
   (window as any).getConfigurationValue = configMock;
 });
 
+beforeEach(() => {
+  // ensure we mock the config to not block rendering of the component (individual tests can override)
+  configMock.mockResolvedValue(undefined);
+});
+
 afterEach(() => {
   vi.clearAllMocks();
 });
 
-test('Expect that page shows icon and message when no auth providers registered', () => {
+test('Expect that page shows icon and message when no auth providers registered', async () => {
   render(PreferencesAuthenticationProvidersRendering, {});
-  const noProvidersText = screen.getByText('No authentication providers');
+  const noProvidersText = await waitFor(() => screen.getByText('No authentication providers'));
   expect(noProvidersText).toBeInTheDocument();
 });
 
-test('Expect that page shows registered authentication providers without accounts as logged out', () => {
+test('Expect that page shows registered authentication providers without accounts as logged out', async () => {
   authenticationProviders.set([
     {
       id: 'test',
@@ -63,7 +68,7 @@ test('Expect that page shows registered authentication providers without account
     },
   ]);
   render(PreferencesAuthenticationProvidersRendering, {});
-  const listOfProviders = screen.getByRole('list');
+  const listOfProviders = await waitFor(() => screen.getByRole('list'));
   expect(listOfProviders).toBeInTheDocument();
   const providerItem = screen.getByRole('listitem', { name: 'Test Authentication Provider' });
   expect(providerItem).toBeInTheDocument();
@@ -89,10 +94,10 @@ const testProvidersInfo = [
   },
 ];
 
-test('Expect that page shows registered authentication providers with account as logged in', () => {
+test('Expect that page shows registered authentication providers with account as logged in', async () => {
   authenticationProviders.set(testProvidersInfo);
   render(PreferencesAuthenticationProvidersRendering, {});
-  const providerName = screen.getByLabelText('Provider Name');
+  const providerName = await waitFor(() => screen.getByLabelText('Provider Name'));
   expect(providerName).toHaveTextContent('Test Authentication Provider');
   const providerStatus = screen.getByLabelText('Provider Status');
   expect(providerStatus).toBeInTheDocument();
@@ -107,7 +112,9 @@ test('Expect that page shows registered authentication providers with account as
 test('Expect Sign Out button click calls window.requestAuthenticationProviderSignOut with provider and account ids', async () => {
   authenticationProviders.set(testProvidersInfo);
   render(PreferencesAuthenticationProvidersRendering, {});
-  const signoutButton = screen.getByRole('button', { name: `Sign out of ${testProvidersInfo[0].accounts[0].label}` });
+  const signoutButton = await waitFor(() =>
+    screen.getByRole('button', { name: `Sign out of ${testProvidersInfo[0].accounts[0].label}` }),
+  );
   const requestSignOutMock = vi.fn().mockImplementation(() => {});
   (window as any).requestAuthenticationProviderSignOut = requestSignOutMock;
   await fireEvent.click(signoutButton);
@@ -126,8 +133,9 @@ const testProvidersInfoWithoutSessionRequests = [
 test('Expect Sign in button to be hidden when there are no session requests', async () => {
   authenticationProviders.set(testProvidersInfoWithoutSessionRequests);
   render(PreferencesAuthenticationProvidersRendering, {});
-  const menuButton = screen.queryAllByRole('button', { name: 'Sign in' });
-  expect(menuButton.length).equals(0); // no menu button
+  await waitFor(() => {
+    expect(screen.queryAllByRole('button', { name: 'Sign in' }).length).equals(0);
+  });
 });
 
 const testProvidersInfoWithSessionRequests = [
@@ -152,7 +160,7 @@ test('Expect Sign In button to be visible when there is only one session request
   const requestSignInMock = vi.fn();
   (window as any).requestAuthenticationProviderSignIn = requestSignInMock;
   render(PreferencesAuthenticationProvidersRendering, {});
-  const menuButton = screen.getByRole('button', { name: 'Sign in' });
+  const menuButton = await waitFor(() => screen.getByRole('button', { name: 'Sign in' }));
 
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await fireEvent.mouseEnter(tooltipTrigger);
@@ -191,7 +199,7 @@ test('Expect Sign In popup menu to be visible when there is more than one sessio
   authenticationProviders.set(testProvidersInfoWithMultipleSessionRequests);
   (window as any).requestAuthenticationProviderSignIn = vi.fn();
   render(PreferencesAuthenticationProvidersRendering, {});
-  const menuButton = screen.getByRole('button', { name: 'kebab menu' });
+  const menuButton = await waitFor(() => screen.getByRole('button', { name: 'kebab menu' }));
   await fireEvent.click(menuButton);
   // test sign in with extension1
   const menuItem1 = screen.getByText('Sign in to use Extension1 Label');
@@ -210,9 +218,11 @@ test('Expect Sign In popup menu to be visible when there is more than one sessio
 test('Expects default icon to be used when provider has no images option', async () => {
   authenticationProviders.set(testProvidersInfoWithSessionRequests);
   render(PreferencesAuthenticationProvidersRendering, {});
-  screen.getByRole('img', {
-    name: `Default icon for ${testProvidersInfoWithSessionRequests[0].displayName} provider`,
-  });
+  await waitFor(() =>
+    screen.getByRole('img', {
+      name: `Default icon for ${testProvidersInfoWithSessionRequests[0].displayName} provider`,
+    }),
+  );
 });
 
 test('Expects images.icon option to be used when no themes are present', async () => {

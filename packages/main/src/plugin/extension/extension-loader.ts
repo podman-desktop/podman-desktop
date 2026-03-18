@@ -236,6 +236,9 @@ export class ExtensionLoader implements IAsyncDisposable {
   async asyncDispose(): Promise<void> {
     await this.stopAllExtensions();
 
+    // stop the webview HTTP server
+    await this.webviewRegistry.stop();
+
     // clear maps
     this.activatedExtensions.clear();
     this.analyzedExtensions.clear();
@@ -388,10 +391,25 @@ export class ExtensionLoader implements IAsyncDisposable {
       },
     };
 
+    const allowCustomExtensions: IConfigurationNode = {
+      id: 'preferences.extensions',
+      title: 'Extensions',
+      type: 'object',
+      properties: {
+        ['extensions.customExtensions.enabled']: {
+          description: 'When disabled, the `Install custom...` button on the Extensions page will not appear.',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
+      },
+    };
+
     this.configurationRegistry.registerConfigurations([
       maxActivationTimeConfiguration,
       disabledExtensionConfiguration,
       developmentModeExtensionConfiguration,
+      allowCustomExtensions,
     ]);
   }
 
@@ -783,11 +801,14 @@ export class ExtensionLoader implements IAsyncDisposable {
     const extensionConfiguration = extension.manifest?.contributes?.configuration;
     if (extensionConfiguration) {
       // add information about the current extension
-      extensionConfiguration.extension = extension;
-      extensionConfiguration.title = `Extension: ${extensionConfiguration.title}`;
-      extensionConfiguration.id = 'preferences.' + extension.id;
-
-      this.configurationRegistry.registerConfigurations([extensionConfiguration]);
+      this.configurationRegistry.registerConfigurations([
+        {
+          ...extensionConfiguration,
+          id: 'preferences.' + extension.id,
+          extension,
+          title: `Extension: ${extensionConfiguration.title}`,
+        },
+      ]);
     }
 
     const extensionCommands = extension.manifest?.contributes?.commands;

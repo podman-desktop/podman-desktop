@@ -423,11 +423,46 @@ test('Pull image creates a task', async () => {
   expect(registeredCallback).not.equal(defaultCallback);
   registeredCallback({ id: 'pullEvent1' } as PullEvent);
   expect(createTaskSpy).toHaveBeenCalledOnce();
-  expect(createTaskSpy).toHaveBeenCalledWith({ title: `Pulling registry.com/repo/image:latest`, action: undefined });
+  expect(createTaskSpy).toHaveBeenCalledWith({
+    title: 'Pulling registry.com/repo/image:latest',
+    cancellable: false,
+    cancellationTokenSourceId: undefined,
+  });
   expect(webContents.send).toBeCalledWith('container-provider-registry:pullImage-onData', 1, {
     id: 'pullEvent1',
   } as PullEvent);
   expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
+});
+
+test('Pull image creates a cancellable task and marks task as canceled on cancellation', async () => {
+  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+  const createTokenHandler: () => Promise<number | { result: number }> = handlers.get('cancellableTokenSource:create');
+  const cancelTokenHandler: (_event: unknown, id: number) => Promise<void> = handlers.get('cancellableToken:cancel');
+  const handle = handlers.get('container-provider-registry:pullImage');
+  expect(handle).not.equal(undefined);
+
+  const tokenCreationResult = await createTokenHandler();
+  const tokenId = typeof tokenCreationResult === 'number' ? tokenCreationResult : tokenCreationResult.result;
+  const pullImageSpy = vi
+    .spyOn(ContainerProviderRegistry.prototype, 'pullImage')
+    .mockImplementation(async (_engine, _imageName, _callback, _platform, abortController) => {
+      await Promise.resolve();
+      abortController?.abort();
+      throw new Error('aborted');
+    });
+
+  await cancelTokenHandler(undefined, tokenId);
+  const handleReturn = await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1, undefined, tokenId);
+  expect(handleReturn.error).toBeInstanceOf(Error);
+  expect(handleReturn.error.message).toBe('aborted');
+
+  expect(pullImageSpy).toHaveBeenCalled();
+  expect(createTaskSpy).toHaveBeenCalledWith({
+    title: 'Pulling registry.com/repo/image:latest',
+    cancellable: true,
+    cancellationTokenSourceId: tokenId,
+  });
+  expect(createTaskSpy.mock.results[0]?.value.status).toBe('canceled');
 });
 
 test('ipcMain.handle returns caught error as is if it is instance of Error', async () => {

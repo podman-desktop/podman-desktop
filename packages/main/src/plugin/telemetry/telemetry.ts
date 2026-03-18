@@ -35,7 +35,7 @@ import { app } from 'electron';
 import type { LinuxOs } from 'getos';
 import getos from 'getos';
 import { inject, injectable } from 'inversify';
-import * as osLocale from 'os-locale';
+import osLocale from 'os-locale';
 
 import { DefaultConfiguration } from '/@/plugin/default-configuration.js';
 import { Emitter } from '/@/plugin/events/emitter.js';
@@ -466,7 +466,7 @@ export class Telemetry {
   }
 
   protected async getLocale(): Promise<string> {
-    this.locale ??= (await osLocale.osLocale()).replace('_', '-');
+    this.locale ??= osLocale().replace('_', '-');
     return this.locale;
   }
 

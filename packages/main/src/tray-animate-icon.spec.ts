@@ -48,6 +48,7 @@ vi.mock('electron', async () => {
     },
     nativeTheme: {
       on: vi.fn(),
+      off: vi.fn(),
       shouldUseDarkColors: false,
     },
   };
@@ -55,7 +56,6 @@ vi.mock('electron', async () => {
 
 vi.mock('./util.js', () => ({
   isMac: vi.fn(),
-  isLinux: vi.fn(),
   isWindows: vi.fn(),
 }));
 
@@ -73,7 +73,6 @@ beforeEach(() => {
 
   // Reset platform detection to false by default
   vi.mocked(util.isMac).mockReturnValue(false);
-  vi.mocked(util.isLinux).mockReturnValue(false);
   vi.mocked(util.isWindows).mockReturnValue(false);
 
   // Reset theme to light by default
@@ -109,7 +108,7 @@ test('macOS should use template icon for all states', () => {
 });
 
 test('Linux should always use regular icon', () => {
-  vi.mocked(util.isLinux).mockReturnValue(true);
+  // Linux is the default (non-Mac) path, no mock needed
 
   const iconPath = testAnimatedTray.getIconPath('default');
 
@@ -119,7 +118,7 @@ test('Linux should always use regular icon', () => {
 });
 
 test('Linux should use regular icon for all states', () => {
-  vi.mocked(util.isLinux).mockReturnValue(true);
+  // Linux is the default (non-Mac) path, no mock needed
 
   expect(testAnimatedTray.getIconPath('default')).toContain('tray-icon.png');
   expect(testAnimatedTray.getIconPath('empty')).toContain('tray-icon-empty.png');
@@ -185,4 +184,10 @@ test('manual color override to dark should use dark icon', () => {
   const iconPath = testAnimatedTray.getIconPath('default');
 
   expect(iconPath).toContain('tray-iconDark.png');
+});
+
+test('dispose should remove nativeTheme listener', () => {
+  testAnimatedTray.dispose();
+
+  expect(nativeTheme.off).toHaveBeenCalledWith('updated', expect.any(Function));
 });

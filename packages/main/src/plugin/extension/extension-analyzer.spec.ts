@@ -25,6 +25,7 @@ import * as path from 'node:path';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionAnalyzer } from './extension-analyzer.js';
+import type { ExtensionManifest } from './extension-manifest-schema.js';
 
 let extensionAnalyzer: ExtensionAnalyzer;
 
@@ -52,7 +53,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       main: 'main-entry.js',
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -88,7 +89,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       main: 'main-entry.js',
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -120,7 +121,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       // no main entry
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -152,7 +153,7 @@ describe('analyze extension and main', () => {
       publisher: 'fooPublisher',
       name: 'fooName',
       // no main entry
-    };
+    } as unknown as ExtensionManifest;
 
     // mock loadManifest
     const loadManifestMock = vi.spyOn(extensionAnalyzer, 'loadManifest');
@@ -166,5 +167,77 @@ describe('analyze extension and main', () => {
 
     expect(extension?.id).toBe('fooPublisher.fooName');
     expect(extension?.devMode).toBeTruthy();
+  });
+});
+
+describe('loadManifest', () => {
+  test('returns parsed manifest when schema validation succeeds', async () => {
+    const validManifest = {
+      name: 'my-ext',
+      displayName: 'My Extension',
+      version: '1.0.0',
+      publisher: 'test',
+      description: 'desc',
+      main: 'index.js',
+    };
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(validManifest));
+
+    const result = await extensionAnalyzer.loadManifest('/some/path');
+
+    expect(result.name).toBe('my-ext');
+    expect(result.version).toBe('1.0.0');
+    expect(result.main).toBe('index.js');
+  });
+
+  test('returns raw manifest and logs error when schema validation fails', async () => {
+    const invalidManifest = { name: 123 };
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(invalidManifest));
+    const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await extensionAnalyzer.loadManifest('/bad/extension');
+
+    const expectedError =
+      'Error while parsing manifest for extension /bad/extension. ' +
+      '✖ Invalid input: expected string, received number\n  → at name\n' +
+      '✖ Invalid input: expected string, received undefined\n  → at displayName\n' +
+      '✖ Invalid input: expected string, received undefined\n  → at version\n' +
+      '✖ Invalid input: expected string, received undefined\n  → at publisher\n' +
+      '✖ Invalid input: expected string, received undefined\n  → at description';
+    expect(consoleErrorMock).toHaveBeenCalledWith(expectedError);
+    expect(result).toEqual(invalidManifest);
+  });
+
+  test('preserves unknown fields from the manifest', async () => {
+    const manifestWithExtras = {
+      name: 'my-ext',
+      displayName: 'My Extension',
+      version: '1.0.0',
+      publisher: 'test',
+      description: 'desc',
+      scripts: { build: 'tsc' },
+      license: 'MIT',
+    };
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(manifestWithExtras));
+
+    const result = await extensionAnalyzer.loadManifest('/some/path');
+
+    expect(result.name).toBe('my-ext');
+    expect((result as Record<string, unknown>)['scripts']).toEqual({ build: 'tsc' });
+    expect((result as Record<string, unknown>)['license']).toBe('MIT');
+  });
+
+  test('reads package.json from the given extension path', async () => {
+    const validManifest = {
+      name: 'my-ext',
+      displayName: 'My Extension',
+      version: '1.0.0',
+      publisher: 'test',
+      description: 'desc',
+    };
+    vi.mocked(readFile).mockResolvedValue(JSON.stringify(validManifest));
+
+    await extensionAnalyzer.loadManifest('/extensions/my-ext');
+
+    expect(readFile).toHaveBeenCalledWith(path.join('/extensions/my-ext', 'package.json'), 'utf8');
   });
 });

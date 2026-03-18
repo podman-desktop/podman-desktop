@@ -29,9 +29,9 @@ $: providerConnections = providers
   .flat()
   .filter(providerContainerConnection => providerContainerConnection.type === 'podman')
   .filter(providerContainerConnection => providerContainerConnection.status === 'started');
-let selectedProviderConnection: ProviderContainerConnectionInfo | undefined = undefined;
+let selectedProviderConnection: ProviderContainerConnectionInfo | undefined;
 $: selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
-let selectedProvider: ProviderContainerConnectionInfo | undefined = undefined;
+let selectedProvider: ProviderContainerConnectionInfo | undefined;
 $: selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
 
 async function createPodFromContainers(): Promise<void> {

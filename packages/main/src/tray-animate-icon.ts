@@ -33,6 +33,7 @@ export class AnimatedTray {
   private animatedInterval: NodeJS.Timeout | undefined = undefined;
   private tray: Tray | undefined = undefined;
   private color = 'default'; // default, light, dark
+  private readonly onThemeUpdated: () => void;
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
 
   constructor() {
@@ -40,9 +41,10 @@ export class AnimatedTray {
     this.updateIcon();
 
     // refresh icon when theme is being updated (especially for Windows as for macOS we always use template icon and on linux the menu bar is not related to the theme)
-    nativeTheme.on('updated', () => {
+    this.onThemeUpdated = (): void => {
       this.updateIcon();
-    });
+    };
+    nativeTheme.on('updated', this.onThemeUpdated);
   }
 
   protected isProd(): boolean {
@@ -76,13 +78,13 @@ export class AnimatedTray {
 
   // provide the path to the icon depending on theme and platform
   protected getIconPath(iconName: string): string {
-    let name;
+    let name: string;
     if (iconName === 'default') {
       name = '';
     } else {
       name = `-${iconName}`;
     }
-    let suffix = '';
+    let suffix: string = '';
     // on Mac, always pickup template icon
     if (isMac()) {
       suffix = 'Template';
@@ -136,5 +138,13 @@ export class AnimatedTray {
   setStatus(status: TrayIconStatus): void {
     this.status = status;
     this.updateIcon();
+  }
+
+  dispose(): void {
+    if (this.animatedInterval) {
+      clearInterval(this.animatedInterval);
+      this.animatedInterval = undefined;
+    }
+    nativeTheme.off('updated', this.onThemeUpdated);
   }
 }

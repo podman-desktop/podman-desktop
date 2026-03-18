@@ -1,4 +1,4 @@
-# Podman Desktop - A graphical tool for developing on containers and Kubernetes
+# Podman Desktop – A graphical tool for developing on containers and Kubernetes
 
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/podman-desktop/podman-desktop)
@@ -16,7 +16,7 @@
 [![LFX Active Contributors](https://insights.linuxfoundation.org/api/badge/active-contributors?project=podman-desktop)](https://insights.linuxfoundation.org/project/podman-desktop)
 
 <p align="center">
-  <img alt="Podman Desktop" src="/website/static/img/features/manage-containers.webp">
+  <img alt="Podman Desktop" src="/website/static/img/features/homepage.webp" width="100%">
 </p>
 
 ## Documentation
@@ -135,7 +135,7 @@ Kubernetes questions & development:
 ## Share Your Feedback
 
 Are you using **Podman Desktop** at your company?
-We’d love to hear how you’re using (or planning to use) Podman Desktop. Spend **30 minutes** chatting with us about your use case, and we’ll send you some Podman-Desktop swag as a thank-you!
+We’d love to hear how you’re using (or planning to use) Podman Desktop. Spend **30 minutes** chatting with us about your use case, and we’ll send you some Podman Desktop swag as a thank-you!
 
 👉 Please complete this [form](https://forms.gle/mTagLs36275B4L198), and we’ll be in touch to arrange a time.
 

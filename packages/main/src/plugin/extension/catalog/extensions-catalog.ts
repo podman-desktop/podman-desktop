@@ -69,6 +69,18 @@ export class ExtensionsCatalog {
           default: ExtensionsCatalog.DEFAULT_EXTENSIONS_URL,
           hidden: true,
         },
+        ['extensions.localExtensions.enabled']: {
+          description: 'Show the local extensions tab.',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
+        [ExtensionsCatalogSettings.SectionName + '.' + ExtensionsCatalogSettings.catalogEnabled]: {
+          description: 'Show the extension catalog in the UI. When disabled, hides the catalog suggestions.',
+          type: 'boolean',
+          default: true,
+          hidden: true,
+        },
       },
     };
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,16 @@ import path from 'node:path';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import { injectable } from 'inversify';
+import { z } from 'zod';
+
+import { ExtensionManifest, ExtensionManifestSchema } from './extension-manifest-schema.js';
 
 export interface AnalyzedExtension {
   id: string;
   name: string;
   // root folder (where is package.json)
   path: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  manifest: any;
+  manifest: ExtensionManifest;
   // main entry
   mainPath?: string;
   api?: typeof containerDesktopAPI;
@@ -75,7 +77,7 @@ export class ExtensionAnalyzer {
         id: '<unknown>',
         name: '<unknown>',
         path: resolvedExtensionPath,
-        manifest: undefined,
+        manifest: {} as unknown as ExtensionManifest,
         readme: '',
         api: <typeof containerDesktopAPI>{},
         removable: removable,
@@ -124,9 +126,18 @@ export class ExtensionAnalyzer {
     return analyzedExtension;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async loadManifest(extensionPath: string): Promise<any> {
+  async loadManifest(extensionPath: string): Promise<ExtensionManifest> {
     const manifestPath = path.join(extensionPath, 'package.json');
-    return JSON.parse(await readFile(manifestPath, 'utf8'));
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+
+    // try to parse using zod
+    const result = ExtensionManifestSchema.safeParse(manifest);
+    if (result.success) {
+      return result.data;
+    } else {
+      console.error(`Error while parsing manifest for extension ${extensionPath}. ${z.prettifyError(result.error)}`);
+      // return the manifest as it is, even if it is not valid
+      return manifest as ExtensionManifest;
+    }
   }
 }

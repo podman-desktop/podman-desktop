@@ -64,10 +64,10 @@ test.afterAll(async ({ runner }) => {
 });
 
 for (const extension of extensionsToTest) {
-  test.describe.serial(
-    `Verification of Built-In Extension: ${extension.extensionLabelName}`,
-    { tag: ['@smoke', '@windows_sanity'] },
-    () => {
+  test.describe
+    .serial(`Verification of Built-In Extension: ${extension.extensionLabelName}`, {
+      tag: ['@smoke', '@windows_sanity'],
+    }, () => {
       test.describe.configure({ retries: 1 });
 
       test(`Check ${extension.extensionLabelName} extension is enabled and present`, async () => {
@@ -85,8 +85,7 @@ for (const extension of extensionsToTest) {
         await podmanExtensionPage.enableExtension();
         await verifyBuiltInExtensionStatus(true, extension);
       });
-    },
-  );
+    });
 }
 
 async function verifyBuiltInExtensionStatus(

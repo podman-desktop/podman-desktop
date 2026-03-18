@@ -150,15 +150,29 @@ export class ImageRegistry {
   /**
    * Provides authentication information from all registries.
    */
-  getRegistryConfig(): Dockerode.RegistryConfig {
+  async getRegistryConfig(): Promise<Dockerode.RegistryConfig> {
     const registryConfig: Dockerode.RegistryConfig = {};
-    for (const registry of this.getRegistries()) {
-      const serveraddress = registry.serverUrl.toLowerCase();
-      registryConfig[serveraddress] = {
-        username: registry.username,
-        password: registry.secret,
-      };
-    }
+    await Promise.all(
+      this.getRegistries().map(async registry => {
+        let addRegistry = true;
+        // before adding the registry, check if the registry information is valid
+        await this.checkCredentials(registry.serverUrl, registry.username, registry.secret, registry.insecure).catch(
+          () => {
+            console.error(`Error while checking registry credentials ${registry.serverUrl}`);
+            addRegistry = false;
+          },
+        );
+
+        if (addRegistry) {
+          const serveraddress = registry.serverUrl.toLowerCase();
+          registryConfig[serveraddress] = {
+            username: registry.username,
+            password: registry.secret,
+          };
+        }
+      }),
+    );
+
     return registryConfig;
   }
 
@@ -546,7 +560,7 @@ export class ImageRegistry {
       (layer: any) => layer.mediaType === 'application/vnd.oci.image.layer.v1.tar+zstd',
     );
 
-    let layers: { digest: string; size: number; mediaType: string }[] = [];
+    let layers: { digest: string; size: number; mediaType: string }[];
     if (zstdLayers.length > 0) {
       // using zstd layers
       layers = zstdLayers;

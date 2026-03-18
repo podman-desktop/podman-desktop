@@ -29,7 +29,7 @@ import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
-import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import imageRegistryConfigJson from '/@tests/resources/data/plugin/image-registry-config.json' with { type: 'json' };
 import imageRegistryManifestJson from '/@tests/resources/data/plugin/image-registry-manifest-index.json' with {
@@ -74,12 +74,9 @@ const apiSender: ApiSenderType = {
   send(_channel: string, _data?: any): void {},
 } as ApiSenderType;
 
-beforeAll(async () => {
-  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
-});
-
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
 });
 
 afterEach(() => {
@@ -879,6 +876,61 @@ describe('expect checkCredentials', async () => {
     expectTypeOf(registries2).toBeArray();
     expect(registries2.length).toBe(1);
   });
+});
+
+test('getRegistryConfig should return only valid registries and unregister all the non valid ones', async () => {
+  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+  spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
+  spyCheckCredentials.mockResolvedValueOnce(undefined);
+  spyCheckCredentials.mockResolvedValueOnce(undefined);
+  spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
+
+  const registries: Registry[] = [...imageRegistry.getRegistries()];
+  expect(registries).toBeDefined();
+  expectTypeOf(registries).toBeArray();
+  expect(registries.length).toBe(0);
+
+  const reg1: Registry = {
+    source: 'a-source-1',
+    serverUrl: 'an-url-1',
+    username: 'a-username-1',
+    secret: 'pass-1',
+  };
+
+  const reg2: Registry = {
+    source: 'a-source-2',
+    serverUrl: 'An-url-2',
+    username: 'a-username-2',
+    secret: 'pass-2',
+  };
+
+  const reg3: Registry = {
+    source: 'a-source-3',
+    serverUrl: 'an-url-3',
+    username: 'a-username-3',
+    secret: 'pass-3',
+  };
+
+  const reg4: Registry = {
+    source: 'a-source-4',
+    serverUrl: 'an-url-4',
+    username: 'a-username-4',
+    secret: 'pass-4',
+  };
+
+  imageRegistry.registerRegistry(reg1);
+  imageRegistry.registerRegistry(reg2);
+  imageRegistry.registerRegistry(reg3);
+  imageRegistry.registerRegistry(reg4);
+
+  expect(imageRegistry.getRegistries().length).toBe(4);
+
+  const registryConfig = await imageRegistry.getRegistryConfig();
+
+  expect(Object.keys(registryConfig).length).toBe(2);
+  expect(Object.keys(registryConfig)).toContain('an-url-2');
+  expect(Object.keys(registryConfig)).toContain('an-url-3');
+  expect(imageRegistry.getRegistries().length).toBe(4);
 });
 
 test('findBestManifest returns the expected manifest', () => {
