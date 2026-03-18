@@ -40,6 +40,8 @@ import type {
   ImageInspectInfo,
   ImageLoadOptions,
   ImagesSaveOptions,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   LibPodPodInfo,
   ListImagesOptions,
   ManifestCreateOptions,
@@ -1276,6 +1278,45 @@ export class ContainerProviderRegistry {
 
   getImageHash(imageName: string): string {
     return crypto.createHash('sha512').update(imageName).digest('hex');
+  }
+
+  async updateImages(images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> {
+    return Promise.all(
+      images.map(async (info): Promise<ImageUpdateResult> => {
+        let telemetryOptions: Record<string, unknown> = {};
+        try {
+          const status = await this.imageRegistry.checkImageUpdateStatus(info.image, info.tag, [info.digest]);
+
+          if (status.status === 'skipped' || status.status === 'error' || !status.updateAvailable) {
+            telemetryOptions = { skipped: true, reason: status.status };
+            return { imageRef: info.image, updated: false, message: status.message };
+          }
+
+          const matchingEngine = this.getMatchingEngine(info.engineId);
+          const authconfig = this.imageRegistry.getAuthconfigForImage(info.image);
+          const pullStream = await matchingEngine.pull(info.image, { authconfig });
+
+          await new Promise<void>((resolve, reject) => {
+            matchingEngine.modem.followProgress(
+              pullStream,
+              (err: Error | null) => (err ? reject(err) : resolve()),
+              () => {},
+            );
+          });
+
+          return { imageRef: info.image, updated: true, message: 'Image updated successfully' };
+        } catch (error: unknown) {
+          telemetryOptions = { error: error };
+          const message = error instanceof Error ? error.message : String(error);
+          return { imageRef: info.image, updated: false, message };
+        } finally {
+          this.telemetryService.track('updateImage', {
+            imageName: this.getImageHash(info.image),
+            ...telemetryOptions,
+          });
+        }
+      }),
+    );
   }
 
   async pingContainerEngine(providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> {

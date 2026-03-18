@@ -78,7 +78,8 @@ import type {
   ImageSearchResult,
   ImagesSaveOptions,
   ImageTagsListOptions,
-  ImageUpdateStatus,
+  ImageUpdateInfo,
+  ImageUpdateResult,
   KubeContext,
   KubernetesContextResources,
   KubernetesTroubleshootingInformation,
@@ -1333,14 +1334,9 @@ export class PluginSystem {
     );
 
     this.ipcHandle(
-      'image-registry:checkImageUpdateStatus',
-      async (
-        _listener,
-        imageReference: string,
-        imageTag: string,
-        localDigests: string[],
-      ): Promise<ImageUpdateStatus> => {
-        return imageRegistry.checkImageUpdateStatus(imageReference, imageTag, localDigests);
+      'container-provider-registry:updateImages',
+      async (_listener, images: ImageUpdateInfo[]): Promise<ImageUpdateResult[]> => {
+        return containerProviderRegistry.updateImages(images);
       },
     );
 

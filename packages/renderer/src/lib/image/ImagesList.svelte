@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faArrowCircleDown, faCube, faDownload, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faCube, faDownload, faSync, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
 import type { ContainerInfo, ImageInfo, ViewInfoUI } from '@podman-desktop/core-api';
 import {
   Button,
@@ -226,6 +226,52 @@ async function saveSelectedImages(): Promise<void> {
   router.goto('/images/save');
 }
 
+let bulkUpdateInProgress = $state(false);
+
+function confirmUpdateSelectedImages(): void {
+  if (selectedItemsNumber) {
+    withBulkConfirmation(
+      updateSelectedImages,
+      `update ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
+    );
+  }
+}
+
+async function updateSelectedImages(): Promise<void> {
+  const selectedImages = filteredImages.filter(image => image.selected);
+  if (selectedImages.length === 0) {
+    return;
+  }
+
+  bulkUpdateInProgress = true;
+  // Capture each image's status before overwriting to 'UPDATING'.
+  const prevStatuses = selectedImages.map(img => img.status);
+  for (const image of selectedImages) {
+    image.status = 'UPDATING';
+  }
+  images = [...images];
+
+  // Update images in parallel since each update independently checks a remote registry then pulls.
+  await Promise.all(
+    selectedImages.map(async (image, i) => {
+      try {
+        const result = await imageUtils.updateImage(image);
+        if (!result.updated) {
+          console.info(`${image.name}:${image.tag}: ${result.message}`);
+        }
+      } catch (err: unknown) {
+        console.error('Failed to update image:', err);
+      }
+      image.status = prevStatuses[i];
+      image.selected = false;
+    }),
+  );
+  bulkUpdateInProgress = false;
+  // Shallow-copy so the Table component detects the reference change
+  // and recalculates the "Toggle all" checkbox state.
+  images = [...images];
+}
+
 let selectedItemsNumber: number | undefined = $state();
 
 let statusColumn = new TableColumn<ImageInfoUI>('Status', {
@@ -346,6 +392,12 @@ function label(item: ImageInfoUI): string {
         title="Save {selectedItemsNumber} selected items"
         aria-label="Save images"
         icon={faDownload} />
+      <Button
+        on:click={confirmUpdateSelectedImages}
+        title="Update {selectedItemsNumber} selected items"
+        inProgress={bulkUpdateInProgress}
+        aria-label="Update images"
+        icon={faSync} />
       <span>On {selectedItemsNumber} selected items.</span>
     {/if}
   {/snippet}
