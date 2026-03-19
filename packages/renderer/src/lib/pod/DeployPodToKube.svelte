@@ -552,10 +552,10 @@ function updateKubeResult(): void {
     {/if}
 
     {#if deployWarning}
-      <WarningMessage aria-label="Deploy Warning Message" class="text-sm" error={deployWarning} />
+      <WarningMessage class="text-sm" error={deployWarning} />
     {/if}
     {#if deployError}
-      <ErrorMessage aria-label="Deploy Error Message" class="text-sm" error={deployError} />
+      <ErrorMessage class="text-sm" error={deployError} />
     {/if}
 
     {#if !deployStarted}
