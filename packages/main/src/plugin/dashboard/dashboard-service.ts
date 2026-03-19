@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { Disposable } from '@podman-desktop/api';
 import {
   ENHANCED_DASHBOARD_CONFIGURATION_KEY,
   HEALTH_MONITOR_STATUS,
@@ -35,7 +36,7 @@ import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 const STARTUP_GRACE_PERIOD_DURATION = 8_000;
 
 @injectable()
-export class DashboardService {
+export class DashboardService implements Disposable {
   private isEnhancedDashboardEnabled = false;
   private startupGracePeriod = true;
   private timeout: NodeJS.Timeout | undefined = undefined;
@@ -99,11 +100,10 @@ export class DashboardService {
       ENHANCED_DASHBOARD_CONFIGURATION_KEY,
     );
 
-    // Provider listeners
     this.providerRegistry.addProviderListener(() => this.updateSystemOverviewStatus());
-    this.apiSender.receive('provider-change', () => this.updateSystemOverviewStatus());
 
     this.timeout = setTimeout(() => {
+      this.timeout = undefined;
       this.startupGracePeriod = false;
       this.updateSystemOverviewStatus();
     }, STARTUP_GRACE_PERIOD_DURATION);
@@ -187,8 +187,7 @@ export class DashboardService {
   private updateSystemOverviewStatus(): void {
     const statusInfo = this.getSystemOverviewStatus();
 
-    // Send status and text to renderer (frontend will map to icon)
-    if (this.startupGracePeriod) {
+    if (this.startupGracePeriod && statusInfo.status === HEALTH_MONITOR_STATUS.CRITICAL) {
       statusInfo.status = HEALTH_MONITOR_STATUS.PROGRESSING;
       statusInfo.text = 'Initializing...';
     }

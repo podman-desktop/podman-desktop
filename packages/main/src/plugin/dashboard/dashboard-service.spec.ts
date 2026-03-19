@@ -19,24 +19,20 @@
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_EXPANDED } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
 import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
-const registerConfigurationsMock = vi.fn();
-const onDidChangeConfigurationMock = vi.fn();
-
 const configurationRegistryMock = {
-  registerConfigurations: registerConfigurationsMock,
-  onDidChangeConfiguration: onDidChangeConfigurationMock,
+  registerConfigurations: vi.fn(),
+  onDidChangeConfiguration: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
 const apiSenderMock = {
   send: vi.fn(),
-  receive: vi.fn(),
 } as unknown as ApiSenderType;
 
 const experimentalConfigurationManagerMock = {
@@ -49,9 +45,41 @@ const providerRegistryMock = {
   getProviderInfos: getProviderInfosMock,
 } as unknown as ProviderRegistry;
 
+function createProvider(connectionStatus: string): ProviderInfo {
+  return {
+    internalId: 'id',
+    id: 'podman',
+    extensionId: 'podman',
+    name: 'Podman',
+    containerConnections: [
+      {
+        connectionType: 'container',
+        name: 'podman-machine',
+        displayName: 'Podman Machine',
+        status: connectionStatus,
+        endpoint: { socketPath: '/run/podman/podman.sock' },
+        type: 'podman',
+      } as unknown as ProviderContainerConnectionInfo,
+    ],
+    kubernetesConnections: [],
+    vmConnections: [],
+    status: 'configured',
+  } as unknown as ProviderInfo;
+}
+
+function triggerProviderChange(): void {
+  vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0](
+    'provider:update-status',
+    createProvider('unknown'),
+  );
+}
+
 let dashboardService: DashboardService;
+
 beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.resetAllMocks();
+  getProviderInfosMock.mockReturnValue([]);
   dashboardService = new DashboardService(
     configurationRegistryMock,
     providerRegistryMock,
@@ -59,11 +87,9 @@ beforeEach(() => {
     apiSenderMock,
   );
   dashboardService.init();
-
-  getProviderInfosMock.mockReturnValue([]);
 });
 
-test('should register a configuration', async () => {
+test('should register a configuration', () => {
   expect(configurationRegistryMock.registerConfigurations).toBeCalled();
   const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0][0];
   expect(configurationNode?.id).toBe('preferences.experimental.enhancedDashboard');
@@ -86,29 +112,8 @@ test('should register a configuration', async () => {
 
 describe('system overview status', () => {
   test('should send healthy status when container connection is started', () => {
-    const connection: ProviderContainerConnectionInfo = {
-      connectionType: 'container',
-      name: 'podman-machine',
-      displayName: 'Podman Machine',
-      status: 'started',
-      endpoint: { socketPath: '/run/podman/podman.sock' },
-      type: 'podman',
-    };
-    const provider: ProviderInfo = {
-      internalId: 'id',
-      id: 'podman',
-      extensionId: 'podman',
-      name: 'Podman',
-      containerConnections: [connection],
-      kubernetesConnections: [],
-      vmConnections: [],
-      status: 'configured',
-    } as unknown as ProviderInfo;
-    getProviderInfosMock.mockReturnValue([provider]);
-
-    const providerListener = vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0];
-    expect(providerListener).toBeDefined();
-    providerListener?.('provider:update-status', provider);
+    getProviderInfosMock.mockReturnValue([createProvider('started')]);
+    triggerProviderChange();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'healthy',
@@ -117,10 +122,11 @@ describe('system overview status', () => {
   });
 
   test('should send status when configuration changes', async () => {
+    vi.mocked(experimentalConfigurationManagerMock.isExperimentalConfigurationEnabled).mockReturnValue(true);
     const configCallback = vi.mocked(configurationRegistryMock.onDidChangeConfiguration).mock.calls[0]?.[0];
     await configCallback?.({ key: ENHANCED_DASHBOARD_CONFIGURATION_KEY, value: true, scope: 'DEFAULT' });
 
-    expect(apiSenderMock.send).toHaveBeenCalledWith('enhanced-dashboard-enabled', undefined);
+    expect(apiSenderMock.send).toHaveBeenCalledWith('enhanced-dashboard-enabled', true);
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'stable',
       text: 'Some systems are stopped',
@@ -128,11 +134,7 @@ describe('system overview status', () => {
   });
 
   test('should send status when provider-change is received', () => {
-    const receiveCallback = vi
-      .mocked(apiSenderMock.receive)
-      .mock.calls.find(call => call[0] === 'provider-change')?.[1];
-    expect(receiveCallback).toBeDefined();
-    receiveCallback?.();
+    triggerProviderChange();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'stable',
@@ -142,52 +144,9 @@ describe('system overview status', () => {
 });
 
 describe('startup grace period', () => {
-  let gracePeriodService: DashboardService;
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.resetAllMocks();
-    gracePeriodService = new DashboardService(
-      configurationRegistryMock,
-      providerRegistryMock,
-      experimentalConfigurationManagerMock,
-      apiSenderMock,
-    );
-    gracePeriodService.init();
-    getProviderInfosMock.mockReturnValue([]);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  function createUnknownConnectionProvider(): ProviderInfo {
-    const connection: ProviderContainerConnectionInfo = {
-      connectionType: 'container',
-      name: 'podman-machine',
-      displayName: 'Podman Machine',
-      status: 'unknown',
-      endpoint: { socketPath: '/run/podman/podman.sock' },
-      type: 'podman',
-    };
-    return {
-      internalId: 'id',
-      id: 'podman',
-      extensionId: 'podman',
-      name: 'Podman',
-      containerConnections: [connection],
-      kubernetesConnections: [],
-      vmConnections: [],
-      status: 'configured',
-    } as unknown as ProviderInfo;
-  }
-
   test('should send progressing status for unknown connections during grace period', () => {
-    const provider = createUnknownConnectionProvider();
-    getProviderInfosMock.mockReturnValue([provider]);
-
-    const providerListener = vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0];
-    providerListener?.('provider:update-status', provider);
+    getProviderInfosMock.mockReturnValue([createProvider('unknown')]);
+    triggerProviderChange();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'progressing',
@@ -196,10 +155,8 @@ describe('startup grace period', () => {
   });
 
   test('should send critical status for unknown connections after grace period expires', () => {
-    const provider = createUnknownConnectionProvider();
-    getProviderInfosMock.mockReturnValue([provider]);
-
-    vi.advanceTimersByTime(5000);
+    getProviderInfosMock.mockReturnValue([createProvider('unknown')]);
+    vi.advanceTimersByTime(8_000);
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'critical',
@@ -208,11 +165,9 @@ describe('startup grace period', () => {
   });
 
   test('should send healthy status if connection resolves before grace period ends', () => {
-    const provider = createUnknownConnectionProvider();
+    const provider = createProvider('unknown');
     getProviderInfosMock.mockReturnValue([provider]);
-
-    const providerListener = vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0];
-    providerListener?.('provider:update-status', provider);
+    triggerProviderChange();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'progressing',
@@ -221,7 +176,7 @@ describe('startup grace period', () => {
 
     provider.containerConnections[0]!.status = 'started';
     vi.mocked(apiSenderMock.send).mockClear();
-    providerListener?.('provider:update-status', provider);
+    triggerProviderChange();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'healthy',
