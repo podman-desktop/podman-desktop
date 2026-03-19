@@ -71,6 +71,10 @@ export class ColorRegistry {
     // default themes
     this.#themes.set('light', new Map());
     this.#themes.set('dark', new Map());
+    this.#themes.set('hc-light', new Map());
+    this.#themes.set('hc-dark', new Map());
+    this.#parentThemes.set('hc-light', 'light');
+    this.#parentThemes.set('hc-dark', 'dark');
   }
 
   registerExtensionThemes(extension: AnalyzedExtension, themes: RawThemeContribution[]): extensionApi.Disposable {
@@ -166,6 +170,12 @@ export class ColorRegistry {
     // set the colors in the default themes
     this.#themes.get('light')?.set(colorId, definition.light);
     this.#themes.get('dark')?.set(colorId, definition.dark);
+    if (definition.hcLight !== undefined) {
+      this.#themes.get('hc-light')?.set(colorId, definition.hcLight);
+    }
+    if (definition.hcDark !== undefined) {
+      this.#themes.get('hc-dark')?.set(colorId, definition.hcDark);
+    }
     this.notifyUpdate();
   }
 
@@ -195,6 +205,8 @@ export class ColorRegistry {
     this.registerColor(definition.id, {
       light: definition.light,
       dark: definition.dark,
+      hcDark: definition.hcDark,
+      hcLight: definition.hcLight,
     });
   }
 
@@ -269,10 +281,18 @@ export class ColorRegistry {
       if (theme?.has(id)) {
         // return the color
         return { id, cssVar, value: theme.get(id)! };
-      } else {
-        // error
-        throw new Error(`Color ${id} is not defined in theme ${themeName}`);
       }
+
+      // fall back to parent theme (e.g. hc-light → light, hc-dark → dark)
+      const parentName = this.#parentThemes.get(themeName);
+      if (parentName) {
+        const parentTheme = this.#themes.get(parentName);
+        if (parentTheme?.has(id)) {
+          return { id, cssVar, value: parentTheme.get(id)! };
+        }
+      }
+
+      throw new Error(`Color ${id} is not defined in theme ${themeName}`);
     });
   }
 

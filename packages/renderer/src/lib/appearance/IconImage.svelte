@@ -13,7 +13,7 @@ interface Props {
 let { image, alt, class: className = '', children }: Props = $props();
 
 const appearanceUtil = new AppearanceUtil();
-let imgSrc: string | undefined = $derived(await appearanceUtil.getImage(image));
+let imgSrc: string | undefined = $derived(appearanceUtil.getImage(image));
 </script>
 
 {#if imgSrc}

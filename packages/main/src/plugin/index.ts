@@ -626,6 +626,7 @@ export class PluginSystem {
     Object.freeze(notifications);
     const kubeGeneratorRegistry = container.get<KubeGeneratorRegistry>(KubeGeneratorRegistry);
     const containerProviderRegistry = container.get<ContainerProviderRegistry>(ContainerProviderRegistry);
+    containerProviderRegistry.init();
     kubeGeneratorRegistry.registerDefaultKubeGenerator({
       name: 'PodmanKube',
       types: ['Compose', 'Container', 'Pod'],

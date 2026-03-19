@@ -61,7 +61,9 @@ import type {
   VolumeInspectInfo,
   VolumeListInfo,
 } from '@podman-desktop/core-api';
+import { ContainerRegistrySettings } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type {
   ContainerCreateMountOption,
   ContainerCreateNetNSOption,
@@ -95,6 +97,8 @@ import { Disposable } from './types/disposable.js';
 import { guessIsManifest } from './util/manifest.js';
 
 const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } = require('tar-fs');
+
+const DEFAULT_PROVIDER_TIMEOUT = 30;
 
 export interface InternalContainerProvider {
   name: string;
@@ -140,6 +144,25 @@ export class ContainerProviderRegistry {
 
     // setup listeners
     this.setupListeners();
+  }
+
+  init(): void {
+    const providerTimeoutConfiguration: IConfigurationNode = {
+      id: 'preferences.container-registry',
+      title: 'Container registries',
+      type: 'object',
+      properties: {
+        [`${ContainerRegistrySettings.SectionName}.${ContainerRegistrySettings.ProviderTimeout}`]: {
+          description: 'Timeout in seconds for container provider image listing operations.',
+          type: 'number',
+          default: DEFAULT_PROVIDER_TIMEOUT,
+          minimum: 5,
+          maximum: 120,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([providerTimeoutConfiguration]);
   }
 
   protected containerProviders: Map<string, containerDesktopAPI.ContainerProviderConnection> = new Map();
@@ -643,6 +666,33 @@ export class ContainerProviderRegistry {
   // Podman list images will prefer to use libpod API of the provider
   // before falling back to using the regular API
   async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+    // Get timeout from configuration
+    const timeoutSeconds = this.configurationRegistry
+      .getConfiguration(ContainerRegistrySettings.SectionName)
+      .get<number>(ContainerRegistrySettings.ProviderTimeout, DEFAULT_PROVIDER_TIMEOUT);
+    const providerTimeoutMs = timeoutSeconds * 1000;
+
+    // Helper function to add timeout to provider operations
+    function withTimeout<T>(
+      promise: Promise<T>,
+      timeoutMs: number,
+      providerName: string,
+      providerId: string,
+    ): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(`Provider ${providerName} (${providerId}): listing images timed out after ${timeoutMs}ms`),
+              ),
+            timeoutMs,
+          ),
+        ),
+      ]);
+    }
+
     // This gets all the available providers if no provider has been specified
     let providers: InternalContainerProvider[];
     if (options?.provider === undefined) {
@@ -653,57 +703,72 @@ export class ContainerProviderRegistry {
 
     const images = await Promise.all(
       providers.map(async provider => {
-        // Initialize an empty array for the case where neither API is available
-        // ignore any warning as we are adding engineId and engineName to the image
-        // and as one of the API uses Dockerode, the other ImageInfo
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let fetchedImages: any[] = [];
+        try {
+          // Initialize an empty array for the case where neither API is available
+          // ignore any warning as we are adding engineId and engineName to the image
+          // and as one of the API uses Dockerode, the other ImageInfo
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let fetchedImages: any[] = [];
 
-        // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
-        if (provider.libpodApi && this.useLibpodApiForImageList()) {
-          fetchedImages = await provider.libpodApi.podmanListImages({
-            all: options?.all,
-            filters: options?.filters,
-          });
-        } else if (provider.api) {
-          fetchedImages = await provider.api.listImages({ all: false });
-        } else {
-          console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
-          return fetchedImages;
-        }
+          // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
+          if (provider.libpodApi && this.useLibpodApiForImageList()) {
+            fetchedImages = await withTimeout(
+              provider.libpodApi.podmanListImages({
+                all: options?.all,
+                filters: options?.filters,
+              }),
+              providerTimeoutMs,
+              provider.name,
+              provider.id,
+            );
+          } else if (provider.api) {
+            fetchedImages = await withTimeout(
+              provider.api.listImages({ all: false }),
+              providerTimeoutMs,
+              provider.name,
+              provider.id,
+            );
+          } else {
+            console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
+            return fetchedImages;
+          }
 
-        return Promise.all(
-          Array.from(fetchedImages).map(async image => {
-            // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
-            // rather than guessing
-            const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
+          return Promise.all(
+            Array.from(fetchedImages).map(async image => {
+              // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
+              // rather than guessing
+              const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
 
-            // Return the base image with the engineName and engineId as well as our isManifest parameter.
-            const baseImage = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              isManifest,
-              Id: image.Digest ? `sha256:${image.Id}` : image.Id,
-              Digest: image.Digest ?? `sha256:${image.Id}`,
-            };
+              // Return the base image with the engineName and engineId as well as our isManifest parameter.
+              const baseImage = {
+                ...image,
+                engineName: provider.name,
+                engineId: provider.id,
+                isManifest,
+                Id: image.Digest ? `sha256:${image.Id}` : image.Id,
+                Digest: image.Digest ?? `sha256:${image.Id}`,
+              };
 
-            // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
-            // however, we do not **ever** want this to block the UI / operation, so if this fails, output to console and continue
-            if (baseImage.isManifest && provider.libpodApi) {
-              try {
-                const manifestInspectInfo = await provider.libpodApi.podmanInspectManifest(image.Id);
-                if (manifestInspectInfo?.manifests) {
-                  baseImage.manifests = manifestInspectInfo.manifests;
+              // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
+              // however, we do not **ever** want this to block the UI / operation, so if this fails, output to console and continue
+              if (baseImage.isManifest && provider.libpodApi) {
+                try {
+                  const manifestInspectInfo = await provider.libpodApi.podmanInspectManifest(image.Id);
+                  if (manifestInspectInfo?.manifests) {
+                    baseImage.manifests = manifestInspectInfo.manifests;
+                  }
+                } catch (error) {
+                  console.error('Error while inspecting manifest', error);
                 }
-              } catch (error) {
-                console.error('Error while inspecting manifest', error);
               }
-            }
 
-            return baseImage;
-          }),
-        );
+              return baseImage;
+            }),
+          );
+        } catch (error) {
+          console.error(`Error listing images from provider ${provider.name} (${provider.id}):`, error);
+          return [];
+        }
       }),
     );
 

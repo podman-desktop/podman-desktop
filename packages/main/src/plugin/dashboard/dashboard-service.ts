@@ -39,6 +39,7 @@ export class DashboardService {
           description: 'Enhanced dashboard with more features and improved user experience',
           type: 'object',
           default: false,
+          hidden: true,
           experimental: {
             githubDiscussionLink: 'https://github.com/podman-desktop/podman-desktop/discussions/16055',
           },

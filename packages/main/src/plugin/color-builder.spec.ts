@@ -109,6 +109,57 @@ describe('ColorBuilder', () => {
     expect(afterDark).toBe(builder);
   });
 
+  test('should support method chaining for HC colors', () => {
+    const builder = new ColorBuilder('chain-hc-test');
+    const afterDarkHc = builder.withHcDark(colorPaletteHelper('#000'));
+    const afterLightHc = afterDarkHc.withHcLight(colorPaletteHelper('#fff'));
+
+    expect(afterDarkHc).toBe(builder);
+    expect(afterLightHc).toBe(builder);
+  });
+
+  test('should build color definition with hcDark and hcLight colors', () => {
+    const result = new ColorBuilder('hc-color')
+      .withLight(colorPaletteHelper('#ffffff'))
+      .withDark(colorPaletteHelper('#000000'))
+      .withHcDark(colorPaletteHelper('#7e60e6'))
+      .withHcLight(colorPaletteHelper('#6234b1'))
+      .build();
+
+    expect(result.hcDark).toBe('#7e60e6');
+    expect(result.hcLight).toBe('#6234b1');
+  });
+
+  test('should default hcDark and hcLight to base colors when not set', () => {
+    const result = new ColorBuilder('no-hc-color')
+      .withLight(colorPaletteHelper('#ffffff'))
+      .withDark(colorPaletteHelper('#000000'))
+      .build();
+
+    expect(result.hcDark).toBe('#000000');
+    expect(result.hcLight).toBe('#ffffff');
+  });
+
+  test('should build hcDark color with alpha value', () => {
+    const result = new ColorBuilder('hc-alpha-color')
+      .withLight(colorPaletteHelper('#ffffff'))
+      .withDark(colorPaletteHelper('#000000'))
+      .withHcDark(colorPaletteHelper('#000000').withAlpha(0.8))
+      .build();
+
+    expect(result.hcDark).toBe('color(srgb 0 0 0 / 0.8)');
+  });
+
+  test('should build hcLight color with alpha value', () => {
+    const result = new ColorBuilder('hc-light-alpha-color')
+      .withLight(colorPaletteHelper('#ffffff'))
+      .withDark(colorPaletteHelper('#000000'))
+      .withHcLight(colorPaletteHelper('#ffffff').withAlpha(0.5))
+      .build();
+
+    expect(result.hcLight).toBe('color(srgb 1 1 1 / 0.5)');
+  });
+
   test('should handle hex colors correctly', () => {
     const result = new ColorBuilder('hex-color')
       .withLight(colorPaletteHelper('#f9fafb'))

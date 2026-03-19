@@ -13,7 +13,7 @@ onMount(async () => {
   const appearanceUtil = new AppearanceUtil();
 
   // get the color
-  let singleColor = await appearanceUtil.getImage(color);
+  let singleColor = appearanceUtil.getImage(color);
   singleColor ??= '';
 
   if (singleColor?.startsWith('#')) {

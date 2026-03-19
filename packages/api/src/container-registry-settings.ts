@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import '@testing-library/jest-dom/vitest';
-
-import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
-
-import PinMenu from '/@/lib/statusbar/PinMenu.svelte';
-
-test('component should render with fixed positioning above status bar', () => {
-  render(PinMenu);
-  const menu = screen.getByTestId('pin-menu');
-  expect(menu).toBeInTheDocument();
-  expect(menu.className).toContain('fixed');
-  expect(menu.className).toContain('bottom-[26px]');
-  expect(menu.className).toContain('left-px');
-});
+export enum ContainerRegistrySettings {
+  SectionName = 'container-registry',
+  ProviderTimeout = 'providerTimeout',
+}

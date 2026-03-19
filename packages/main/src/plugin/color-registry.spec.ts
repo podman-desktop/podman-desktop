@@ -327,6 +327,45 @@ describe('registerColor', () => {
       'Color dummyColor already registered',
     );
   });
+
+  test('registerColor without HC values falls back to base colors in HC themes', async () => {
+    // spy notifyUpdate
+    const spyOnNotifyUpdate = vi.spyOn(colorRegistry, 'notifyUpdate');
+    spyOnNotifyUpdate.mockReturnValue(undefined);
+
+    // register the color
+    colorRegistry.registerColor('hc-fallback-color', { light: 'lightColor', dark: 'darkColor' });
+
+    // should fall back to base color
+    const lightHcColors = colorRegistry.listColors('hc-light');
+    expect(lightHcColors[0]?.value).toBe('lightColor');
+
+    // should fall back to base color
+    const darkHcColors = colorRegistry.listColors('hc-dark');
+    expect(darkHcColors[0]?.value).toBe('darkColor');
+  });
+
+  test('registerColor with HC values uses overrides in HC themes', async () => {
+    // spy notifyUpdate
+    const spyOnNotifyUpdate = vi.spyOn(colorRegistry, 'notifyUpdate');
+    spyOnNotifyUpdate.mockReturnValue(undefined);
+
+    // register the color
+    colorRegistry.registerColor('hc-override-color', {
+      light: 'lightColor',
+      dark: 'darkColor',
+      hcLight: 'hcLightColor',
+      hcDark: 'hcDarkColor',
+    });
+
+    // should override color
+    const hcLightColors = colorRegistry.listColors('hc-light');
+    expect(hcLightColors[0]?.value).toBe('hcLightColor');
+
+    // should override color
+    const hcDarkColors = colorRegistry.listColors('hc-dark');
+    expect(hcDarkColors[0]?.value).toBe('hcDarkColor');
+  });
 });
 
 describe('listColors', () => {
@@ -381,6 +420,16 @@ describe('isDarkTheme', () => {
 
   test('dark', async () => {
     const isDark = colorRegistry.isDarkTheme('dark');
+    expect(isDark).toBeTruthy();
+  });
+
+  test('hc-light is not dark (inherits from light)', async () => {
+    const isDark = colorRegistry.isDarkTheme('hc-light');
+    expect(isDark).toBeFalsy();
+  });
+
+  test('hc-dark is dark (inherits from dark)', async () => {
+    const isDark = colorRegistry.isDarkTheme('hc-dark');
     expect(isDark).toBeTruthy();
   });
 
@@ -861,6 +910,42 @@ describe('registerColorDefinition', () => {
     });
 
     expect(spyOnRegisterColor).toHaveBeenCalledWith('internal-test', {
+      light: '#fff',
+      dark: '#000',
+    });
+  });
+
+  test('passes hcDark and hcLight to registerColor when provided', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.registerColorDefinition({
+      id: 'hc-def-test',
+      light: '#fff',
+      dark: '#000',
+      hcDark: '#hcDarkValue',
+      hcLight: '#hcLightValue',
+    });
+
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('hc-def-test', {
+      light: '#fff',
+      dark: '#000',
+      hcDark: '#hcDarkValue',
+      hcLight: '#hcLightValue',
+    });
+  });
+
+  test('does not pass hcDark and hcLight to registerColor when not provided', () => {
+    const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.registerColorDefinition({
+      id: 'no-hc-def-test',
+      light: '#fff',
+      dark: '#000',
+    });
+
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('no-hc-def-test', {
       light: '#fff',
       dark: '#000',
     });
