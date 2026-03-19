@@ -18,22 +18,16 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render } from '@testing-library/svelte';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import { expect, test } from 'vitest';
 
 import PinMenu from '/@/lib/statusbar/PinMenu.svelte';
 
-beforeAll(() => {
-  Object.defineProperty(window, 'addEventListener', { value: vi.fn() });
-  Object.defineProperty(window, 'removeEventListener', { value: vi.fn() });
-});
-
-beforeEach(() => {
-  vi.resetAllMocks();
-});
-
-test('component on mount should resize listener', () => {
+test('component should render with fixed positioning above status bar', () => {
   render(PinMenu);
-  expect(window.addEventListener).toHaveBeenCalledOnce();
-  expect(window.addEventListener).toHaveBeenCalledWith('resize', expect.any(Function));
+  const menu = screen.getByTestId('pin-menu');
+  expect(menu).toBeInTheDocument();
+  expect(menu.className).toContain('fixed');
+  expect(menu.className).toContain('bottom-[26px]');
+  expect(menu.className).toContain('left-px');
 });

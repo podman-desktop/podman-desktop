@@ -1,28 +1,5 @@
-<script lang="ts">
-import { onDestroy, onMount } from 'svelte';
-
-let dropDownHeight: number;
-let dropDownElement: HTMLElement;
-
-const STATUS_BAR_HEIGHT = 26;
-
-function updateMenuLocation(): void {
-  dropDownElement.style.top = `${window.innerHeight - dropDownHeight - STATUS_BAR_HEIGHT}px`;
-  dropDownElement.style.left = '1px';
-}
-
-onMount(() => {
-  updateMenuLocation();
-  window.addEventListener('resize', updateMenuLocation);
-});
-
-onDestroy(() => window.removeEventListener('resize', updateMenuLocation));
-</script>
-
 <div
-  bind:offsetHeight={dropDownHeight}
-  bind:this={dropDownElement}
-  class="absolute z-10"
+  class="fixed z-10 bottom-[26px] left-px"
   data-testid="pin-menu">
   <div
     title="Pin Menu"
