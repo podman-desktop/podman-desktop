@@ -19,7 +19,7 @@
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_EXPANDED } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
@@ -137,6 +137,95 @@ describe('system overview status', () => {
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
       status: 'stable',
       text: 'Some systems are stopped',
+    });
+  });
+});
+
+describe('startup grace period', () => {
+  let gracePeriodService: DashboardService;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.resetAllMocks();
+    gracePeriodService = new DashboardService(
+      configurationRegistryMock,
+      providerRegistryMock,
+      experimentalConfigurationManagerMock,
+      apiSenderMock,
+    );
+    gracePeriodService.init();
+    getProviderInfosMock.mockReturnValue([]);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function createUnknownConnectionProvider(): ProviderInfo {
+    const connection: ProviderContainerConnectionInfo = {
+      connectionType: 'container',
+      name: 'podman-machine',
+      displayName: 'Podman Machine',
+      status: 'unknown',
+      endpoint: { socketPath: '/run/podman/podman.sock' },
+      type: 'podman',
+    };
+    return {
+      internalId: 'id',
+      id: 'podman',
+      extensionId: 'podman',
+      name: 'Podman',
+      containerConnections: [connection],
+      kubernetesConnections: [],
+      vmConnections: [],
+      status: 'configured',
+    } as unknown as ProviderInfo;
+  }
+
+  test('should send progressing status for unknown connections during grace period', () => {
+    const provider = createUnknownConnectionProvider();
+    getProviderInfosMock.mockReturnValue([provider]);
+
+    const providerListener = vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0];
+    providerListener?.('provider:update-status', provider);
+
+    expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
+      status: 'progressing',
+      text: 'Initializing...',
+    });
+  });
+
+  test('should send critical status for unknown connections after grace period expires', () => {
+    const provider = createUnknownConnectionProvider();
+    getProviderInfosMock.mockReturnValue([provider]);
+
+    vi.advanceTimersByTime(5000);
+
+    expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
+      status: 'critical',
+      text: 'Error detected',
+    });
+  });
+
+  test('should send healthy status if connection resolves before grace period ends', () => {
+    const provider = createUnknownConnectionProvider();
+    getProviderInfosMock.mockReturnValue([provider]);
+
+    const providerListener = vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0];
+    providerListener?.('provider:update-status', provider);
+
+    expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
+      status: 'progressing',
+      text: 'Initializing...',
+    });
+
+    provider.containerConnections[0]!.status = 'started';
+    vi.mocked(apiSenderMock.send).mockClear();
+    providerListener?.('provider:update-status', provider);
+
+    expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
+      status: 'healthy',
+      text: 'All systems operational',
     });
   });
 });

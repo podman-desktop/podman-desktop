@@ -19,22 +19,26 @@
 import {
   ENHANCED_DASHBOARD_CONFIGURATION_KEY,
   HEALTH_MONITOR_STATUS,
-  type ProviderConnectionInfo,
-  type ProviderInfo,
+  ProviderConnectionInfo,
+  ProviderInfo,
   SYSTEM_OVERVIEW_EXPANDED,
   SystemOverviewStatus,
   SystemOverviewStatusInfo,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
 import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
+const STARTUP_GRACE_PERIOD_DURATION = 8_000;
+
 @injectable()
 export class DashboardService {
   private isEnhancedDashboardEnabled = false;
+  private startupGracePeriod = true;
+  private timeout: NodeJS.Timeout | undefined = undefined;
 
   constructor(
     @inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry,
@@ -45,6 +49,15 @@ export class DashboardService {
     private apiSender: ApiSenderType,
   ) {}
 
+  @preDestroy()
+  dispose(): void {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+    this.timeout = undefined;
+  }
+
+  @postConstruct()
   init(): void {
     const dashboardConfiguration: IConfigurationNode = {
       id: 'preferences.experimental.enhancedDashboard',
@@ -89,6 +102,11 @@ export class DashboardService {
     // Provider listeners
     this.providerRegistry.addProviderListener(() => this.updateSystemOverviewStatus());
     this.apiSender.receive('provider-change', () => this.updateSystemOverviewStatus());
+
+    this.timeout = setTimeout(() => {
+      this.startupGracePeriod = false;
+      this.updateSystemOverviewStatus();
+    }, STARTUP_GRACE_PERIOD_DURATION);
   }
 
   private getSystemOverviewStatus(): SystemOverviewStatusInfo {
@@ -170,6 +188,11 @@ export class DashboardService {
     const statusInfo = this.getSystemOverviewStatus();
 
     // Send status and text to renderer (frontend will map to icon)
+    if (this.startupGracePeriod) {
+      statusInfo.status = HEALTH_MONITOR_STATUS.PROGRESSING;
+      statusInfo.text = 'Initializing...';
+    }
+
     this.apiSender.send('dashboard:system-overview-status', statusInfo);
   }
 }
