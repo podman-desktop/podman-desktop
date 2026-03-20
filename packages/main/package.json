@@ -47,7 +47,7 @@
     "date.js": "^0.3.3",
     "dockerode": "^4.0.9",
     "electron": "41.0.3",
-    "electron-context-menu": "4.1.1",
+    "electron-context-menu": "4.1.2",
     "electron-updater": "6.8.3",
     "electron-util": "^1.0.0",
     "express": "^5.2.1",
