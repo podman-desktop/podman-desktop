@@ -1,0 +1,143 @@
+#
+# Copyright (C) 2025 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Thank Contributors on Merge
+
+env:
+  # temp images picked within the repo, these will change based on what we decide as new images and a location to store them
+  IMAGE_1ST: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/website/static/img/blog/podman-desktop-release-1.7/renovations.png
+  IMAGE_10TH: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/website/static/img/blog/podman-desktop-release-1.6/santaseal.png
+  IMAGE_25TH: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/website/static/img/blog/podman-desktop-release-1.5/onboarding-selkies.png
+  IMAGE_50TH: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/website/static/img/blog/podman-desktop-release-1.4/juggling.png
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  thank-you-contributor:
+    runs-on: ubuntu-24.04
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Debug context
+        run: |
+          echo "Author Association: ${{ github.event.pull_request.author_association }}"
+          echo "User: ${{ github.event.pull_request.user.login }}"
+          echo "Merged: ${{ github.event.pull_request.merged }}"
+
+      - name: Skip maintainers
+        id: check-maintainer
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const login = context.payload.pull_request.user.login;
+            const filePath = 'MAINTAINERS.md';
+
+            // Read the MAINTAINERS.md file
+            const content = fs.readFileSync(filePath, 'utf8');
+
+            // Extract all GitHub usernames (strip leading @)
+            const usernames = [...content.matchAll(/@([a-zA-Z0-9-]+)/g)].map(m => m[1].toLowerCase());
+
+            if (usernames.includes(login.toLowerCase())) {
+              core.setOutput('isMaintainer', 'true');
+            } else {
+              core.setOutput('isMaintainer', 'false');
+            }
+
+      - name: Calculate contribution level
+        id: calc-prs
+        if: steps.check-maintainer.outputs.isMaintainer == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const login = context.payload.pull_request.user.login;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const { data: allPRs } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "closed",
+              per_page: 100
+            });
+
+            const mergedCount = allPRs.filter(pr => pr.user.login === login && pr.merged_at).length;    
+            return mergedCount;     
+
+      - name: Send thank-you message 
+        if: steps.check-maintainer.outputs.isMaintainer == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+          script: |
+            const login = context.payload.pull_request.user.login;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = 'main';
+            const mergedCount = Number("${{ steps.calc-prs.outputs.result }}");
+
+            // Dynamically read image URLs from env
+            const images = {
+              first: process.env.IMAGE_1ST,
+              tenth: process.env.IMAGE_10TH,
+              twentyfifth: process.env.IMAGE_25TH,
+              fiftieth: process.env.IMAGE_50TH
+            };
+
+            let imageUrl = ``;
+            let messageHeader = ``;
+
+            if (mergedCount == 50) {
+              imageUrl = images.fiftieth;
+              messageHeader = `🏆 Amazing work @${login}! You've hit **50 merged PRs** — you're on fire!`;
+            } else if (mergedCount == 25) {
+              imageUrl = images.twentyfifth;
+              messageHeader = `🌟 Awesome @${login}! ** 25 merged PRs** — great momentum!`;
+            } else if (mergedCount == 10) {
+              imageUrl = images.tenth;
+              messageHeader = `🚀 Impressive @${login}! ** 10 merged PRs** — you're making an impact!`;
+            } else if (mergedCount == 1) {
+              imageUrl = images.first;
+              messageHeader = `🎉 Huge thanks @${login} for your **first contribution**!! 🎉`;
+            }
+
+            // Only post if both exist
+            if (messageHeader && imageUrl) {
+              const message = `
+              ${messageHeader}
+
+              ![Sticker](${imageUrl})
+              `;
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner,
+                repo,
+                body: message
+              });
+            } 

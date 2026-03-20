@@ -1,0 +1,230 @@
+#
+# Copyright (C) 2026 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Thank External Contributors on PR Merge
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  thank-you-contributor:
+    runs-on: ubuntu-24.04
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Debug context
+        run: |
+          echo "Author Association: ${{ github.event.pull_request.author_association }}"
+          echo "User: ${{ github.event.pull_request.user.login }}"
+          echo "Merged: ${{ github.event.pull_request.merged }}"
+
+      - name: Skip maintainers
+        id: check-maintainer
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+          script: |
+            const login = context.payload.pull_request.user.login;
+            const org = 'podman-desktop';
+
+            // team slugs to check.
+            const teamSlugs = ['committers', 'qe-reviewers']; 
+
+            let isOrgTeamMember = false;
+
+            for (const teamSlug of teamSlugs) {
+              try {
+                // GET /orgs/{org}/teams/{team_slug}/memberships/{username}
+                const { data: membership } = await github.rest.teams.getMembershipForUserInOrg({
+                  org,
+                  team_slug: teamSlug,
+                  username: login
+                });
+
+                // membership.state can be 'active' or 'pending'
+                if (membership.state === 'active' || membership.state === 'pending') {
+                  isOrgTeamMember = true;
+                  break;
+                }
+              } catch (err) {
+                if (err.status === 404) {
+                  // 404 means the user is simply not a member of this team — expected, not an error
+                  console.log(`User ${login} is not a member of team "${teamSlug}".`);
+                } else {
+                  // Any other error (e.g. 403 token lacks org read access) is worth flagging
+                  console.warn(`Could not check membership for user "${login}" in team "${teamSlug}": ${err.message}`);
+                }
+              }
+            }
+
+            if (!isOrgTeamMember) {
+              console.log(`User ${login} is not a member of any specified org team. Treating as external contributor.`);
+            }
+
+            core.setOutput('isMaintainer', isOrgTeamMember ? 'true' : 'false');
+
+      - name: Calculate contribution level
+        id: calc-prs
+        if: steps.check-maintainer.outputs.isMaintainer == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const login = context.payload.pull_request.user.login;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const query = `
+              query($searchQuery: String!) {
+                search(query: $searchQuery, type: ISSUE, first: 1) {
+                  issueCount
+                }
+              }
+            `;
+            const result = await github.graphql(query, {
+              searchQuery: `repo:${owner}/${repo} is:pr is:merged author:${login}`
+            });
+
+            const mergedCount = result.search.issueCount;
+
+            //console.log(`Total merged PRs for ${login} in ${owner}/${repo}: ${mergedCount}`);
+            return mergedCount;  
+
+      - name: Fetch random image for milestone
+        id: fetch-image
+        if: steps.check-maintainer.outputs.isMaintainer == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const rawCount = "${{ steps.calc-prs.outputs.result }}";
+            const mergedCount = parseInt(rawCount.trim(), 10);
+
+            console.log(`Raw merged count from previous step: "${rawCount}"`);
+            console.log(`Parsed mergedCount: ${mergedCount}`);
+
+            const mediaOwner = context.payload.pull_request.user.login;
+            const mediaRepo = 'podman-desktop-media';
+            const mediaBranch = 'thank-temp1';  
+
+            // Map milestone count to folder name
+            const folderMap = {
+              1:  'milestone_1',
+              10: 'milestone_10',
+              25: 'milestone_25',
+              50: 'milestone_50'
+            };
+            const folder = folderMap[mergedCount];
+
+            if (!folder) {
+              core.setOutput('imageUrl', '');
+              core.setOutput('folder', '');
+              return;
+            }
+
+            // Fetch ONLY the contents of the matched milestone folder
+            let files;
+            try {
+              const { data } = await github.rest.repos.getContent({
+                owner: mediaOwner,
+                repo: mediaRepo,
+                path: folder,    
+                ref: mediaBranch
+              });
+              files = Array.isArray(data) ? data : [data];
+            } catch (err) {
+              console.error(`Failed to fetch folder "${folder}" from ${mediaOwner}/${mediaRepo}@${mediaBranch}: ${err.message}`);
+              core.setOutput('imageUrl', '');
+              core.setOutput('folder', '');
+              return;
+            }
+
+          
+            // Filter to image files only
+            const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+            const imageFiles = files.filter(f =>
+              f.type === 'file' &&
+              imageExtensions.some(ext => f.name.toLowerCase().endsWith(ext))
+            );
+
+            if (imageFiles.length === 0) {
+              console.warn(`No image files found in folder "${folder}".`);
+              core.setOutput('imageUrl', '');
+              core.setOutput('folder', folder);
+              return;
+            }
+
+            // Pick a random image from this folder only
+            const randomFile = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+            const imageUrl = `https://raw.githubusercontent.com/${mediaOwner}/${mediaRepo}/${mediaBranch}/${folder}/${randomFile.name}`;
+
+            core.setOutput('imageUrl', imageUrl);
+            core.setOutput('folder', folder);
+
+      - name: Send thank-you message
+        if: steps.check-maintainer.outputs.isMaintainer == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+          script: |
+            const login = context.payload.pull_request.user.login;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const mergedCount = parseInt("${{ steps.calc-prs.outputs.result }}".trim(), 10);
+            const imageUrl = "${{ steps.fetch-image.outputs.imageUrl }}";
+
+            // Map milestone count to message header
+            const milestoneMessages = {
+              50: `🏆 Amazing work @${login}! You've hit **50 merged PRs** ! You're on fire!`,
+              25: `🌟 Awesome @${login}! **25 merged PRs** ! Great Momentum!`,
+              10: `🚀 Impressive @${login}! **10 merged PRs** ! You're making an impact!`,
+              1:  `🎉 Huge thanks @${login} for your **First Contribution**!! 🎉`
+            };
+
+
+            const messageHeader = milestoneMessages[mergedCount];
+
+            // Only post if this is a known milestone and we have an image
+            if (!messageHeader) {
+              console.log(`mergedCount=${mergedCount} is not a milestone. No comment posted.`);
+              return;
+            }
+
+            if (!imageUrl) {
+              console.warn(`No image URL available for milestone ${mergedCount}. No comment posted.`);
+              return;
+            }
+            const message = `
+            ${messageHeader}
+
+            ![Sticker](${imageUrl})
+            `;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner,
+              repo,
+              body: message
+            });
