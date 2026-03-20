@@ -184,12 +184,38 @@ export async function countKubernetesPodReplicas(page: Page, expectedPodName: st
     let counter = 0;
     const rows = await kubernetesPodsPage.getAllTableRows();
     for (let i = rows.length - 1; i > 0; i--) {
-      const podName = await rows[i].getByRole('cell').nth(3).getByRole('button').textContent();
+      const podName = await rows[i].getByRole('cell').nth(3).getByRole('button').locator('div').first().textContent();
       if (podName?.includes(expectedPodName)) {
         counter += 1;
       }
     }
     return counter;
+  });
+}
+
+export async function getFirstPodFromDeployment(page: Page, deploymentName: string): Promise<string> {
+  return test.step(`Get first pod name from deployment: ${deploymentName}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesPodsPage = await kubernetesBar.openTabPage(KubernetesResources.Pods);
+
+    const rows = await kubernetesPodsPage.getAllTableRows();
+    const podNames: string[] = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const podName = await rows[i].getByRole('cell').nth(3).getByRole('button').locator('div').first().textContent();
+      if (podName?.includes(deploymentName)) {
+        podNames.push(podName);
+      }
+    }
+
+    if (podNames.length === 0) {
+      throw new Error(`No pods found for deployment: ${deploymentName}`);
+    }
+
+    // Sort to ensure consistent ordering
+    podNames.sort((a, b) => a.localeCompare(b));
+    return podNames[0];
   });
 }
 
