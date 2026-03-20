@@ -78,10 +78,21 @@ let detailsPage: DetailsPage | undefined = $state();
 let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
 let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
 
+// track if the image has been deleted
+let deleted = false;
+
+$effect.pre(() => {
+  deleted = !image;
+});
+
 $effect(() => {
-  if (!image) {
-    // the image has been deleted
-    detailsPage?.close();
+  const page = detailsPage;
+  if (page) {
+    return (): void => {
+      if (deleted) {
+        page.close();
+      }
+    };
   }
 });
 </script>

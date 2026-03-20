@@ -36,8 +36,22 @@ let volume: VolumeInfoUI | undefined = $derived.by(() => {
   return undefined;
 });
 
+// track if the volume has been deleted
+let deleted = false;
+
+$effect.pre(() => {
+  deleted = !volume;
+});
+
 $effect(() => {
-  if (!volume) detailsPage?.close();
+  const page = detailsPage;
+  if (page) {
+    return (): void => {
+      if (deleted) {
+        page.close();
+      }
+    };
+  }
 });
 </script>
 
