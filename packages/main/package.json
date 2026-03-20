@@ -62,7 +62,7 @@
     "os-locale": "^8.0.0",
     "proxy": "^3.0.0",
     "semver": "^7.7.4",
-    "stream-json": "^1.9.1",
+    "stream-json": "^2.0.0",
     "tar": "^7.5.12",
     "tar-fs": "^3.1.2",
     "tar-stream": "^3.1.8",
