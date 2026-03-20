@@ -80,7 +80,7 @@ onMount(async () => {
   hidden={!closed && container.state !== 'RUNNING'}
   icon={NoLogIcon}
   title="No TTY"
-  message="Tty has stopped" />
+  message="TTY has stopped" />
 
 <EmptyScreen
   hidden={container.state === 'RUNNING'}
