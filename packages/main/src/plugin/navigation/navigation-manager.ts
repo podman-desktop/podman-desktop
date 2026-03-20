@@ -378,6 +378,12 @@ export class NavigationManager {
     });
   }
 
+  async navigateToAppearance(): Promise<void> {
+    this.navigateTo({
+      page: NavigationPage.APPEARANCE,
+    });
+  }
+
   async navigateToExtensionsCatalog(options: NavigateToExtensionsCatalogOptions): Promise<void> {
     this.navigateTo({
       page: NavigationPage.EXTENSIONS_CATALOG,

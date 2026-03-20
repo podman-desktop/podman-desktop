@@ -153,5 +153,8 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.EXTENSIONS_CATALOG:
       router.goto(`/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`);
       break;
+    case NavigationPage.APPEARANCE:
+      router.goto('/preferences/default/preferences.appearance');
+      break;
   }
 };

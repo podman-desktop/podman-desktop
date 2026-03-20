@@ -119,6 +119,20 @@ export class CommandsInit implements IDisposable {
     );
 
     this.#disposables.push(
+      commandRegistry.registerCommand('appearance', () => {
+        return this.getNavigationManager().navigateToAppearance();
+      }),
+    );
+
+    this.#disposables.push(
+      commandRegistry.registerCommandPalette({
+        command: 'appearance',
+        title: 'Appearance',
+        category: 'Preferences',
+      }),
+    );
+
+    this.#disposables.push(
       commandRegistry.registerCommand('openExternal', async (arg: Uri) => {
         if (arg) {
           await shell.openExternal(arg.toString());

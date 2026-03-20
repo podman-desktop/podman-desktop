@@ -1,0 +1,621 @@
+{
+  "palettes": {
+    "rhbpd": {
+      "dark": {
+        "accent-1": "#92c5f9",
+        "accent-2": "#a60000",
+        "shadow": "#e7e5e4",
+        "midtone": "#292929",
+        "highlight": "#e5e7eb",
+
+        "accent-bg": "#2c333d",
+        "accent-deep": "#003366",
+        "accent-deepest": "#032142",
+        "bright": "#ddd",
+        "deep": "#000",
+        "dim": "#4d4d4d",
+        "dimmed": "#9a9a9a",
+        "disabled": "#818181",
+        "faint": "#383838",
+        "gray": "#707070",
+        "lightest": "#f2f2f2",
+        "muted": "#b4b4b4",
+        "pale": "#c7c7c7",
+        "soft": "#d1d1d1",
+        "subtle": "#aaabac",
+        "white": "#fff",
+
+        "danger": "#f0561d",
+        "danger-bold": "#b1380b",
+        "success": "#87bb62",
+        "success-deep": "#63993d",
+        "success-soft": "#afdc8f"
+      },
+      "light": {
+        "accent-1": "#06c",
+        "accent-2": "#a60000",
+        "shadow": "#101828",
+        "midtone": "#4a5565",
+        "highlight": "#f3f4f6",
+
+        "accent-bg": "#dce7f9",
+        "accent-light": "#b9dafc",
+        "accent-wash": "#e0f0ff",
+        "black": "#000",
+        "dark": "#1f1f1f",
+        "darkest": "#151515",
+        "light": "#f2f2f2",
+        "medium": "#5c5c5c",
+        "muted": "#ddd",
+        "near-white": "#fafafa",
+        "soft": "#e0e0e0",
+        "text": "#404040",
+        "white": "#fff",
+
+        "danger": "#b1380b",
+        "danger-bold": "#731f00",
+        "danger-vivid": "#f0561d",
+        "success": "#3d7317",
+        "success-soft": "#afdc8f"
+      }
+    },
+    "kortex": {
+      "dark": {
+        "accent-1": "#588ed1",
+        "accent-2": "#b5782d",
+        "shadow": "#e7e5e4",
+        "midtone": "#292929",
+        "highlight": "#e5e7eb",
+
+        "accent-bg": "#2c333d",
+        "accent-deep": "#003366",
+        "accent-deepest": "#032142",
+        "bright": "#ddd",
+        "deep": "#000",
+        "dim": "#4d4d4d",
+        "dimmed": "#9a9a9a",
+        "disabled": "#818181",
+        "faint": "#383838",
+        "gray": "#707070",
+        "lightest": "#f2f2f2",
+        "muted": "#b4b4b4",
+        "pale": "#c7c7c7",
+        "soft": "#d1d1d1",
+        "subtle": "#aaabac",
+        "white": "#fff",
+
+        "danger": "#f0561d",
+        "danger-bold": "#b1380b",
+        "success": "#87bb62",
+        "success-deep": "#63993d",
+        "success-soft": "#afdc8f"
+      },
+      "light": {
+        "accent-1": "#1f6fd1",
+        "accent-2": "#c08236",
+        "shadow": "#101828",
+        "midtone": "#4a5565",
+        "highlight": "#f3f4f6",
+
+        "accent-bg": "#dce7f9",
+        "accent-light": "#b9dafc",
+        "accent-wash": "#e0f0ff",
+        "black": "#000",
+        "dark": "#1f1f1f",
+        "darkest": "#151515",
+        "light": "#f2f2f2",
+        "medium": "#5c5c5c",
+        "muted": "#ddd",
+        "near-white": "#fafafa",
+        "soft": "#e0e0e0",
+        "text": "#404040",
+        "white": "#fff",
+
+        "danger": "#b1380b",
+        "danger-bold": "#731f00",
+        "danger-vivid": "#f0561d",
+        "success": "#3d7317",
+        "success-soft": "#afdc8f"
+      }
+    }
+  },
+
+  "themes": [
+    {
+      "id": "rhbpd-dark",
+      "name": "Red Hat Build of PD (Dark)",
+      "parent": "dark",
+      "palette": "rhbpd.dark",
+      "colors": {
+        "notificationDot": "$accent-1",
+        "badgePurple": "$accent-1",
+
+        "globalNavIcon": "$muted",
+        "globalNavIconHover": "$muted",
+        "globalNavIconHoverBg": "$midtone",
+        "globalNavIconSelectedHighlight": "$accent-1",
+        "globalNavIconSelectedBg": "$accent-bg",
+
+        "secondaryNavTextHover": "$highlight",
+        "secondaryNavTextHoverBg": "transparent",
+        "secondaryNavSelectedHighlight": "$accent-1",
+        "secondaryNavSelectedBg": "$accent-bg",
+
+        "invertContentButtonActive": "$accent-1",
+        "invertContentInfoIcon": "$accent-1",
+
+        "contentBreadcrumb": "$accent-1",
+        "contentBreadcrumb-2": "$accent-1",
+        "contentText": "$subtle",
+        "contentSubHeader": "$accent-1",
+        "contentHeaderIcon": "$muted",
+        "contentCardHeaderText": "$bright",
+        "contentCardLightTitle": "$dimmed",
+        "contentCardInsetBg": "$deep",
+        "contentCardHoverInsetBg": "$deep",
+        "contentCardIcon": "$accent-1",
+        "contentCardCarouselNav": "$dimmed",
+        "contentCardCarouselHoverNav": "$muted",
+        "contentCardBorderSelected": "$accent-1",
+        "contentCardText": "$bright",
+
+        "inputFieldHoverText": "$subtle",
+        "inputFieldPlaceholderText": "$subtle",
+        "inputFieldHoverStroke": "$white",
+        "inputFieldIcon": "$subtle",
+        "inputFieldHoverIcon": "$subtle",
+        "inputCheckboxDisabled": "$faint",
+        "inputCheckboxIndeterminate": "$accent-1",
+        "inputCheckboxFocusedIndeterminate": "$accent-1",
+        "inputCheckboxChecked": "$accent-1",
+        "inputCheckboxFocusedChecked": "$accent-1",
+        "inputCheckboxUnchecked": "$highlight",
+        "inputCheckboxFocusedUnchecked": "$highlight",
+        "inputToggleOnBg": "$accent-1",
+        "inputToggleOnFocusedBg": "$accent-1",
+
+        "tableHeaderText": "$muted",
+        "tableBodyText": "$subtle",
+        "tableBodyTextSubSecondary": "$accent-1",
+
+        "detailsEmptyIcon": "$muted",
+        "detailsEmptySubHeader": "$muted",
+        "detailsCardHeader": "$subtle",
+
+        "tabText": "$muted",
+        "tabHighlight": "$highlight",
+        "tabHover": "$gray",
+
+        "modalHeaderText": "$lightest",
+        "modalHeaderDivider": "$accent-1",
+        "modalDropdownHighlight": "$accent-bg",
+
+        "link": "$accent-1",
+
+        "buttonPrimaryBg": "$accent-1",
+        "buttonPrimaryHoverBg": "$accent-1",
+        "buttonSecondary": "$accent-1",
+        "buttonSecondaryHover": "$accent-1",
+        "buttonText": "$deep",
+        "buttonTabBorderSelected": "$highlight",
+        "buttonTabText": "$muted",
+        "buttonLinkText": "$accent-1",
+
+        "actionButtonHoverText": "$accent-1",
+        "actionButtonPrimaryText": "$accent-1",
+        "actionButtonPrimaryHoverText": "$accent-1",
+        "actionButtonDetailsHoverText": "$accent-1",
+        "actionButtonDisabledText": "$disabled",
+        "actionButtonDetailsDisabledText": "$disabled",
+        "actionButtonSpinner": "$accent-1",
+
+        "dropdownRing": "$accent-deepest",
+        "dropdownHoverRing": "$accent-deep",
+        "dropdownItemHoverBg": "$accent-bg",
+        "dropdownItemHoverText": "$soft",
+        "dropdownDisabledItemText": "$disabled",
+
+        "inputSelectHoverText": "$disabled",
+
+        "labelText": "$pale",
+        "labelPrimaryBg": "$accent-bg",
+        "labelPrimaryText": "$accent-1",
+
+        "statusNotRunning": "$subtle",
+
+        "onboardingActiveDotBg": "$accent-1",
+        "onboardingActiveDotBorder": "$accent-1",
+        "onboardingInactiveDotBorder": "$subtle",
+
+        "stateInfo": "$accent-1",
+        "stateError": "$danger",
+        "stateSuccess": "$success",
+
+        "statusRunning": "$success",
+        "statusStarting": "$success",
+        "statusTerminated": "$danger",
+        "statusDead": "$danger",
+        "statusConnected": "$success-deep",
+        "statusCreated": "$success-soft",
+
+        "buttonDangerBorder": "$danger",
+        "buttonDangerText": "$danger",
+        "buttonDangerHoverBg": "$danger-bold",
+
+        "inputFieldErrorText": "$danger",
+        "inputFieldStrokeError": "$danger",
+
+        "progressBarInProgressBg": "$accent-1",
+        "progressBarText": "$accent-1",
+
+        "statusbarBg": "$deep",
+        "statusbarHoverBg": "#06c"
+      }
+    },
+    {
+      "id": "rhbpd-light",
+      "name": "Red Hat Build of PD (Light)",
+      "parent": "light",
+      "palette": "rhbpd.light",
+      "colors": {
+        "notificationDot": "$accent-1",
+        "badgePurple": "$accent-1",
+
+        "globalNavIconHover": "$medium",
+        "globalNavIconHoverBg": "$light",
+        "globalNavIconSelected": "$accent-1",
+        "globalNavIconSelectedBg": "$accent-bg",
+        "globalNavIconSelectedHighlight": "$accent-1",
+
+        "titlebarIcon": "$accent-1",
+        "titlebarText": "$accent-1",
+
+        "secondaryNavSelectedBg": "$accent-bg",
+        "secondaryNavSelectedHighlight": "$accent-1",
+        "secondaryNavTextHover": "$dark",
+        "secondaryNavTextHoverBg": "transparent",
+
+        "invertContentButtonActive": "$accent-1",
+        "invertContentInfoIcon": "$accent-1",
+
+        "contentBreadcrumb-2": "$accent-1",
+        "contentBreadcrumb": "$accent-1",
+        "contentCardBorderSelected": "$accent-1",
+        "contentCardHeaderText": "$darkest",
+        "contentCardHoverBg": "$near-white",
+        "contentCardHoverInsetBg": "$white",
+        "contentCardIcon": "$accent-1",
+        "contentCardInsetBg": "$white",
+        "contentCardLightTitle": "$accent-1",
+        "contentCardSelectedBg": "$accent-wash",
+        "contentCardText": "$text",
+        "contentHeaderIcon": "$accent-1",
+        "contentSubHeader": "$accent-1",
+        "contentText": "$text",
+
+        "inputCheckboxChecked": "$accent-1",
+        "inputCheckboxDisabled": "$muted",
+        "inputCheckboxFocusedChecked": "$accent-1",
+        "inputCheckboxFocusedIndeterminate": "$accent-1",
+        "inputCheckboxFocusedUnchecked": "$shadow",
+        "inputCheckboxIndeterminate": "$accent-1",
+        "inputCheckboxUnchecked": "$shadow",
+        "inputFieldFocusedIcon": "$accent-1",
+        "inputFieldHoverIcon": "$accent-1",
+        "inputFieldHoverStroke": "$accent-1",
+        "inputToggleOnBg": "$accent-1",
+        "inputToggleOnFocusedBg": "$accent-1",
+
+        "tabHighlight": "$accent-1",
+        "tabHover": "$muted",
+        "tableBodyTextSubSecondary": "$accent-1",
+
+        "modalDropdownHighlight": "$accent-bg",
+        "modalHeaderDivider": "$accent-1",
+        "modalHeaderText": "$text",
+        "modalTextHover": "$accent-1",
+
+        "link": "$accent-1",
+
+        "buttonLinkText": "$accent-1",
+        "buttonPrimaryBg": "$accent-1",
+        "buttonPrimaryHoverBg": "$accent-1",
+        "buttonSecondary": "$accent-1",
+        "buttonSecondaryHover": "$accent-1",
+        "buttonTabBorderSelected": "$accent-1",
+        "buttonTabHoverBorder": "$muted",
+
+        "actionButtonDetailsHoverText": "$accent-1",
+        "actionButtonHoverText": "$accent-1",
+        "actionButtonPrimaryHoverText": "$accent-1",
+        "actionButtonPrimaryText": "$accent-1",
+        "actionButtonSpinner": "$accent-1",
+
+        "dropdownBorder": "$accent-1",
+        "dropdownHoverRing": "$accent-1",
+        "dropdownItemHoverBg": "$accent-bg",
+        "dropdownItemHoverText": "$text",
+        "dropdownRing": "$accent-1",
+
+        "labelBg": "$soft",
+        "labelPrimaryBg": "$accent-light",
+        "labelPrimaryText": "$accent-1",
+
+        "onboardingActiveDotBg": "$accent-1",
+        "onboardingActiveDotBorder": "$accent-1",
+
+        "stateInfo": "$accent-1",
+        "stateError": "$danger",
+        "stateSuccess": "$success",
+
+        "statusRunning": "$success",
+        "statusStarting": "$success",
+        "statusTerminated": "$danger-bold",
+        "statusDead": "$danger-bold",
+        "statusConnected": "$success",
+        "statusCreated": "$success-soft",
+
+        "buttonDangerBorder": "$danger-bold",
+        "buttonDangerText": "$danger-bold",
+        "buttonDangerHoverBg": "$danger",
+
+        "inputFieldErrorText": "$danger-vivid",
+        "inputFieldStrokeError": "$danger-vivid",
+
+        "progressBarInProgressBg": "$accent-1",
+        "progressBarText": "$accent-1",
+
+        "statusbarBg": "$black",
+        "statusbarHoverBg": "$accent-1"
+      }
+    },
+    {
+      "id": "kortex-dark",
+      "name": "Kortex (Dark)",
+      "parent": "dark",
+      "palette": "kortex.dark",
+      "colors": {
+        "notificationDot": "$accent-1",
+        "badgePurple": "$accent-1",
+
+        "globalNavIcon": "$muted",
+        "globalNavIconHover": "$muted",
+        "globalNavIconHoverBg": "$midtone",
+        "globalNavIconSelectedHighlight": "$accent-1",
+        "globalNavIconSelectedBg": "$accent-bg",
+
+        "secondaryNavTextHover": "$highlight",
+        "secondaryNavTextHoverBg": "transparent",
+        "secondaryNavSelectedHighlight": "$accent-1",
+        "secondaryNavSelectedBg": "$accent-bg",
+
+        "invertContentButtonActive": "$accent-1",
+        "invertContentInfoIcon": "$accent-1",
+
+        "contentBreadcrumb": "$accent-1",
+        "contentBreadcrumb-2": "$accent-1",
+        "contentText": "$subtle",
+        "contentSubHeader": "$accent-1",
+        "contentHeaderIcon": "$muted",
+        "contentCardHeaderText": "$bright",
+        "contentCardLightTitle": "$dimmed",
+        "contentCardInsetBg": "$deep",
+        "contentCardHoverInsetBg": "$deep",
+        "contentCardIcon": "$accent-1",
+        "contentCardCarouselNav": "$dimmed",
+        "contentCardCarouselHoverNav": "$muted",
+        "contentCardBorderSelected": "$accent-1",
+        "contentCardText": "$bright",
+
+        "inputFieldHoverText": "$subtle",
+        "inputFieldPlaceholderText": "$subtle",
+        "inputFieldHoverStroke": "$white",
+        "inputFieldIcon": "$subtle",
+        "inputFieldHoverIcon": "$subtle",
+        "inputCheckboxDisabled": "$faint",
+        "inputCheckboxIndeterminate": "$accent-1",
+        "inputCheckboxFocusedIndeterminate": "$accent-1",
+        "inputCheckboxChecked": "$accent-1",
+        "inputCheckboxFocusedChecked": "$accent-1",
+        "inputCheckboxUnchecked": "$highlight",
+        "inputCheckboxFocusedUnchecked": "$highlight",
+        "inputToggleOnBg": "$accent-1",
+        "inputToggleOnFocusedBg": "$accent-1",
+
+        "tableHeaderText": "$muted",
+        "tableBodyText": "$subtle",
+        "tableBodyTextSubSecondary": "$accent-1",
+
+        "detailsEmptyIcon": "$muted",
+        "detailsEmptySubHeader": "$muted",
+        "detailsCardHeader": "$subtle",
+
+        "tabText": "$muted",
+        "tabHighlight": "$highlight",
+        "tabHover": "$gray",
+
+        "modalHeaderText": "$lightest",
+        "modalHeaderDivider": "$accent-1",
+        "modalDropdownHighlight": "$accent-bg",
+
+        "link": "$accent-1",
+
+        "buttonPrimaryBg": "$accent-1",
+        "buttonPrimaryHoverBg": "$accent-1",
+        "buttonSecondary": "$accent-1",
+        "buttonSecondaryHover": "$accent-1",
+        "buttonText": "$deep",
+        "buttonTabBorderSelected": "$highlight",
+        "buttonTabText": "$muted",
+        "buttonLinkText": "$accent-1",
+
+        "actionButtonHoverText": "$accent-1",
+        "actionButtonPrimaryText": "$accent-1",
+        "actionButtonPrimaryHoverText": "$accent-1",
+        "actionButtonDetailsHoverText": "$accent-1",
+        "actionButtonDisabledText": "$disabled",
+        "actionButtonDetailsDisabledText": "$disabled",
+        "actionButtonSpinner": "$accent-1",
+
+        "dropdownRing": "$accent-deepest",
+        "dropdownHoverRing": "$accent-deep",
+        "dropdownItemHoverBg": "$accent-bg",
+        "dropdownItemHoverText": "$soft",
+        "dropdownDisabledItemText": "$disabled",
+
+        "inputSelectHoverText": "$disabled",
+
+        "labelText": "$pale",
+        "labelPrimaryBg": "$accent-bg",
+        "labelPrimaryText": "$accent-1",
+
+        "statusNotRunning": "$subtle",
+
+        "onboardingActiveDotBg": "$accent-1",
+        "onboardingActiveDotBorder": "$accent-1",
+        "onboardingInactiveDotBorder": "$subtle",
+
+        "stateInfo": "$accent-1",
+        "stateError": "$danger",
+        "stateSuccess": "$success",
+
+        "statusRunning": "$success",
+        "statusStarting": "$success",
+        "statusTerminated": "$danger",
+        "statusDead": "$danger",
+        "statusConnected": "$success-deep",
+        "statusCreated": "$success-soft",
+
+        "buttonDangerBorder": "$danger",
+        "buttonDangerText": "$danger",
+        "buttonDangerHoverBg": "$danger-bold",
+
+        "inputFieldErrorText": "$danger",
+        "inputFieldStrokeError": "$danger",
+
+        "progressBarInProgressBg": "$accent-1",
+        "progressBarText": "$accent-1",
+
+        "statusbarBg": "$deep",
+        "statusbarHoverBg": "#06c"
+      }
+    },
+    {
+      "id": "kortex-light",
+      "name": "Kortex (Light)",
+      "parent": "light",
+      "palette": "kortex.light",
+      "colors": {
+        "notificationDot": "$accent-1",
+        "badgePurple": "$accent-1",
+
+        "globalNavIconHover": "$medium",
+        "globalNavIconHoverBg": "$light",
+        "globalNavIconSelected": "$accent-1",
+        "globalNavIconSelectedBg": "$accent-bg",
+        "globalNavIconSelectedHighlight": "$accent-1",
+
+        "titlebarIcon": "$accent-1",
+        "titlebarText": "$accent-1",
+
+        "secondaryNavSelectedBg": "$accent-bg",
+        "secondaryNavSelectedHighlight": "$accent-1",
+        "secondaryNavTextHover": "$dark",
+        "secondaryNavTextHoverBg": "transparent",
+
+        "invertContentButtonActive": "$accent-1",
+        "invertContentInfoIcon": "$accent-1",
+
+        "contentBreadcrumb-2": "$accent-1",
+        "contentBreadcrumb": "$accent-1",
+        "contentCardBorderSelected": "$accent-1",
+        "contentCardHeaderText": "$darkest",
+        "contentCardHoverBg": "$near-white",
+        "contentCardHoverInsetBg": "$white",
+        "contentCardIcon": "$accent-1",
+        "contentCardInsetBg": "$white",
+        "contentCardLightTitle": "$accent-1",
+        "contentCardSelectedBg": "$accent-wash",
+        "contentCardText": "$text",
+        "contentHeaderIcon": "$accent-1",
+        "contentSubHeader": "$accent-1",
+        "contentText": "$text",
+
+        "inputCheckboxChecked": "$accent-1",
+        "inputCheckboxDisabled": "$muted",
+        "inputCheckboxFocusedChecked": "$accent-1",
+        "inputCheckboxFocusedIndeterminate": "$accent-1",
+        "inputCheckboxFocusedUnchecked": "$shadow",
+        "inputCheckboxIndeterminate": "$accent-1",
+        "inputCheckboxUnchecked": "$shadow",
+        "inputFieldFocusedIcon": "$accent-1",
+        "inputFieldHoverIcon": "$accent-1",
+        "inputFieldHoverStroke": "$accent-1",
+        "inputToggleOnBg": "$accent-1",
+        "inputToggleOnFocusedBg": "$accent-1",
+
+        "tabHighlight": "$accent-1",
+        "tabHover": "$muted",
+        "tableBodyTextSubSecondary": "$accent-1",
+
+        "modalDropdownHighlight": "$accent-bg",
+        "modalHeaderDivider": "$accent-1",
+        "modalHeaderText": "$text",
+        "modalTextHover": "$accent-1",
+
+        "link": "$accent-1",
+
+        "buttonLinkText": "$accent-1",
+        "buttonPrimaryBg": "$accent-1",
+        "buttonPrimaryHoverBg": "$accent-1",
+        "buttonSecondary": "$accent-1",
+        "buttonSecondaryHover": "$accent-1",
+        "buttonTabBorderSelected": "$accent-1",
+        "buttonTabHoverBorder": "$muted",
+
+        "actionButtonDetailsHoverText": "$accent-1",
+        "actionButtonHoverText": "$accent-1",
+        "actionButtonPrimaryHoverText": "$accent-1",
+        "actionButtonPrimaryText": "$accent-1",
+        "actionButtonSpinner": "$accent-1",
+
+        "dropdownBorder": "$accent-1",
+        "dropdownHoverRing": "$accent-1",
+        "dropdownItemHoverBg": "$accent-bg",
+        "dropdownItemHoverText": "$text",
+        "dropdownRing": "$accent-1",
+
+        "labelBg": "$soft",
+        "labelPrimaryBg": "$accent-light",
+        "labelPrimaryText": "$accent-1",
+
+        "onboardingActiveDotBg": "$accent-1",
+        "onboardingActiveDotBorder": "$accent-1",
+
+        "stateInfo": "$accent-1",
+        "stateError": "$danger",
+        "stateSuccess": "$success",
+
+        "statusRunning": "$success",
+        "statusStarting": "$success",
+        "statusTerminated": "$danger-bold",
+        "statusDead": "$danger-bold",
+        "statusConnected": "$success",
+        "statusCreated": "$success-soft",
+
+        "buttonDangerBorder": "$danger-bold",
+        "buttonDangerText": "$danger-bold",
+        "buttonDangerHoverBg": "$danger",
+
+        "inputFieldErrorText": "$danger-vivid",
+        "inputFieldStrokeError": "$danger-vivid",
+
+        "progressBarInProgressBg": "$accent-1",
+        "progressBarText": "$accent-1",
+
+        "statusbarBg": "$black",
+        "statusbarHoverBg": "$accent-1"
+      }
+    }
+  ]
+}
