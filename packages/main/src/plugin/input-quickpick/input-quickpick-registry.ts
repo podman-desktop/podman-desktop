@@ -20,6 +20,7 @@ import type {
   CancellationToken,
   InputBoxOptions,
   InputBoxValidationMessage,
+  QuickPickItem,
   QuickPickOptions,
 } from '@podman-desktop/api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -37,9 +38,8 @@ export class InputQuickPickRegistry {
   private callbacksQuickPicks = new Map<
     number,
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      items: readonly any[];
-      deferred: PromiseWithResolvers<string[] | string | undefined>;
+      items: readonly (string | QuickPickItem)[];
+      deferred: PromiseWithResolvers<(string | QuickPickItem)[] | string | QuickPickItem | undefined>;
       options?: QuickPickOptions;
       token?: CancellationToken;
     }
@@ -87,7 +87,7 @@ export class InputQuickPickRegistry {
       deferred.reject('Input has been cancelled');
     });
     // return the promise
-    return deferred.promise;
+    return deferred.promise as Promise<string | undefined>;
   }
 
   // this method is called by the frontend when the user has entered a value
@@ -121,7 +121,7 @@ export class InputQuickPickRegistry {
         // no selection
         callback.deferred.resolve(undefined);
       } else if (callback.options?.canPickMany) {
-        const allItems = indexes.map(index => callback.items[index]);
+        const allItems = indexes.map(index => callback.items[index]).filter(item => item !== undefined);
         // resolve the promise
         callback.deferred.resolve(allItems);
       } else if (indexes[0] !== undefined) {
@@ -162,7 +162,9 @@ export class InputQuickPickRegistry {
       // grab item
       const item = callback.items[index];
 
-      return callback.options.onDidSelectItem(item);
+      if (item) {
+        return callback.options.onDidSelectItem(item);
+      }
     }
     return undefined;
   }
@@ -171,16 +173,15 @@ export class InputQuickPickRegistry {
    * Return a promise that resolves to the selected item (or undefined if cancelled)
    */
   async showQuickPick(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    items: readonly any[] | Promise<readonly any[]>,
+    items: readonly (string | QuickPickItem)[] | Promise<readonly (string | QuickPickItem)[]>,
     options?: QuickPickOptions,
     token?: CancellationToken,
-  ): Promise<string[] | string | undefined> {
+  ): Promise<(string | QuickPickItem)[] | string | QuickPickItem | undefined> {
     // keep track of this request
     this.callbackId++;
 
     // create a promise that will be resolved when the frontend sends the result
-    const deferred = Promise.withResolvers<string | string[] | undefined>();
+    const deferred = Promise.withResolvers<(string | QuickPickItem)[] | string | QuickPickItem | undefined>();
 
     // check if the items are a promise
     if (items instanceof Promise) {
