@@ -42,7 +42,7 @@ export class AppearanceInit {
         [APPEARANCE_FULL_KEY]: {
           description: 'Select between light or dark mode, or use your system setting.',
           type: 'string',
-          enum: ['system', 'dark', 'light'],
+          enum: ['system', 'dark', 'light', 'hc-dark', 'hc-light'],
           default: 'system',
         },
         [`${AppearanceSettings.SectionName}.${AppearanceSettings.ZoomLevel}`]: {
@@ -78,9 +78,9 @@ export class AppearanceInit {
 
   updateNativeTheme(appearance: string): void {
     // appearance config values match the enum values for themeSource, but lets be expicit
-    if (appearance === AppearanceSettings.LightEnumValue) {
+    if (appearance === AppearanceSettings.LightEnumValue || appearance === AppearanceSettings.LightHCEnumValue) {
       nativeTheme.themeSource = 'light';
-    } else if (appearance === AppearanceSettings.DarkEnumValue) {
+    } else if (appearance === AppearanceSettings.DarkEnumValue || appearance === AppearanceSettings.DarkHCEnumValue) {
       nativeTheme.themeSource = 'dark';
     } else {
       nativeTheme.themeSource = 'system';
