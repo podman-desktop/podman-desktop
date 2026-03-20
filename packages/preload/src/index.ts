@@ -1385,6 +1385,10 @@ export function initExposure(): void {
     return ipcInvoke('app:get-release-notes');
   });
 
+  contextBridge.exposeInMainWorld('getProductName', async (): Promise<string> => {
+    return ipcInvoke('app:getProductName');
+  });
+
   contextBridge.exposeInMainWorld('getProviderInfos', async (): Promise<ProviderInfo[]> => {
     return ipcInvoke('provider-registry:getProviderInfos');
   });

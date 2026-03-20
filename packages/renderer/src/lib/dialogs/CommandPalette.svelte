@@ -79,7 +79,7 @@ let isMac: boolean = $state(false);
 let modifierC: string = $derived(isMac ? '⌘' : 'Ctrl+');
 let modifierS: string = $derived(isMac ? '⇧' : 'Shift+');
 let searchOptions: SearchOption[] = $derived([
-  { text: 'All', shortCut: [`${modifierC}${modifierS}P`], helperText: 'Search Podman Desktop, or type > for commands' },
+  { text: 'All', shortCut: [`${modifierC}${modifierS}P`], helperText: `Search ${productName}, or type > for commands` },
   { text: 'Commands', shortCut: [`${F1}`, '>'], helperText: 'Search and execute commands' },
   { text: 'Documentation', shortCut: [`${modifierC}K`], helperText: 'Search documentation and tutorials' },
   { text: 'Go to', shortCut: [`${modifierC}F`], helperText: 'Search images, containers, pods, and other resources' },
