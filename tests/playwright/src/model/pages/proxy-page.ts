@@ -18,6 +18,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect as playExpect, test } from '@playwright/test';
 
+import { Proxy } from '/@/model/core/settings/proxy';
 import { ProxyTypes } from '/@/model/core/types';
 import { handleConfirmationDialog } from '/@/utility/operations';
 
@@ -43,6 +44,13 @@ export class ProxyPage extends SettingsPage {
     this.noProxy = this.content.getByRole('textbox').and(this.content.locator('#noProxy'));
     this.proxyAlert = this.content.getByRole('alert', { name: 'Error Message Content' });
     this.proxyDialog = this.page.getByRole('dialog', { name: 'Proxy Settings' });
+  }
+
+  override async getTab(): Promise<Locator> {
+    // The tab link text is 'Proxy', but the page region name is 'Proxy Settings'
+    return this.page
+      .getByRole('navigation', { name: 'PreferencesNavigation' })
+      .getByRole('link', { name: 'Proxy', exact: true });
   }
 
   public async getProxyType(): Promise<ProxyTypes> {
@@ -105,5 +113,41 @@ export class ProxyPage extends SettingsPage {
 
   public async fillNoProxy(value: string): Promise<void> {
     await this.fillProxyInput(this.noProxy, value);
+  }
+
+  /**
+   * Checks if a proxy field shows the managed configuration indicator.
+   * Uses the label's `for` attribute to locate the parent section in the DOM.
+   */
+  private async isFieldManaged(fieldId: string): Promise<boolean> {
+    return test.step(`Check if ${fieldId} has Managed label`, async () => {
+      try {
+        const fieldSection = this.content.locator(`label[for="${fieldId}"]`).locator('..');
+        const managedLabel = fieldSection.getByText(Proxy.Labels.MANAGED, { exact: true });
+        await managedLabel.waitFor({ state: 'visible', timeout: 5_000 });
+        return true;
+      } catch (err) {
+        if ((err as Error).name === 'TimeoutError') {
+          return false;
+        }
+        throw err;
+      }
+    });
+  }
+
+  public async isProxyConfigurationManaged(): Promise<boolean> {
+    return this.isFieldManaged(Proxy.TOGGLE_PROXY_ID);
+  }
+
+  public async isHttpProxyManaged(): Promise<boolean> {
+    return this.isFieldManaged(Proxy.HTTP_PROXY_ID);
+  }
+
+  public async isHttpsProxyManaged(): Promise<boolean> {
+    return this.isFieldManaged(Proxy.HTTPS_PROXY_ID);
+  }
+
+  public async isNoProxyManaged(): Promise<boolean> {
+    return this.isFieldManaged(Proxy.NO_PROXY_ID);
   }
 }

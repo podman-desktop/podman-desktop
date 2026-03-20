@@ -1,3 +1,11 @@
 {
-  "locked": ["terminal.integrated.lineHeight", "tasks.Toast", "preferences.ExitOnClose", "registries.preferred"]
+  "locked": [
+    "terminal.integrated.lineHeight",
+    "tasks.Toast",
+    "preferences.ExitOnClose",
+    "registries.preferred",
+    "proxy.enabled",
+    "proxy.http",
+    "proxy.https"
+  ]
 }
