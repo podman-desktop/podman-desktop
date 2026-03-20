@@ -22,4 +22,5 @@ export enum MenuContext {
   DASHBOARD_POD = 'dashboard/pod',
   DASHBOARD_COMPOSE = 'dashboard/compose',
   DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
+  DASHBOARD_NETWORK = 'dashboard/network',
 }
