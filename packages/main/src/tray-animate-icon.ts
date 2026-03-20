@@ -23,7 +23,7 @@ import { app, nativeTheme } from 'electron';
 
 import product from '/@product.json' with { type: 'json' };
 
-import { isLinux, isMac } from './util.js';
+import { isMac } from './util.js';
 
 export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
 
@@ -84,21 +84,12 @@ export class AnimatedTray {
     } else {
       name = `-${iconName}`;
     }
-    let suffix: string;
-    // on Linux, always pickup dark icon
-    if (isLinux()) {
-      suffix = 'Dark';
-    } else if (isMac()) {
-      // on Mac, always pickup template icon
+    let suffix = '';
+    // on Mac, always pickup template icon
+    if (isMac()) {
       suffix = 'Template';
-    } else {
-      // check based from the theme using electron nativeTheme
-      if (nativeTheme.shouldUseDarkColors) {
-        suffix = 'Dark';
-      } else {
-        suffix = 'Template';
-      }
     }
+    // on Windows and Linux, always use regular icon (no suffix)
 
     // Regardless what is the theme, if the user has set the color to light, we use the light icon, same as dark, etc.
     if (this.color === 'light') {
