@@ -133,11 +133,10 @@ By default, Podman is available on Linux distributions, such as CentOS Stream, F
 1. Remove the Podman Desktop configuration files:
    ```powershell
    $ rm -Recurse -Force ~/.local/share/containers/podman-desktop/
-   $ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop
    ```
 1. Remove temporary files, caches, and blobs:
    ```powershell
-   $ rm -Recurse -Force ~/AppData/Roaming/Podman Desktop
+   $ rm -Recurse -Force "~/AppData/Roaming/Podman Desktop"
    ```
 
 </TabItem>
