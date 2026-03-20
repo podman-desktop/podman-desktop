@@ -109,17 +109,10 @@ export interface InternalContainerProvider {
   libpodApi?: LibPod;
 }
 
-interface JSONEvent {
-  type: string;
-  status: string;
-  id: string;
-  Type?: string;
-}
-
 @injectable()
 export class ContainerProviderRegistry {
-  private readonly _onEvent = new Emitter<JSONEvent>();
-  readonly onEvent: Event<JSONEvent> = this._onEvent.event;
+  private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
+  readonly onEvent: Event<containerDesktopAPI.ContainerJSONEvent> = this._onEvent.event;
 
   private readonly _onApiAttached = new Emitter<string>();
   readonly onApiAttached: Event<string> = this._onApiAttached.event;
@@ -184,13 +177,15 @@ export class ContainerProviderRegistry {
     const startDate = performance.now();
     const eventEmitter = new EventEmitter();
 
-    eventEmitter.on('event', (jsonEvent: JSONEvent) => {
+    eventEmitter.on('event', (jsonEvent: containerDesktopAPI.ContainerJSONEvent) => {
       nbEvents++;
       // reconnected
       this.notify = true;
 
-      const status = jsonEvent.status;
-      const id = jsonEvent.id;
+      // Podman uses top-level `status` and `id`, while Docker API v1.52+ uses `Action` and `Actor.ID`.
+      // Docker can emit compound Action values like "health_status: healthy"; keep only the base action.
+      const status = 'status' in jsonEvent ? jsonEvent.status : jsonEvent.Action?.split(':')[0]?.trim();
+      const id = 'id' in jsonEvent ? jsonEvent.id : jsonEvent.Actor?.ID;
 
       // do not log healthcheck(health_status) events
       // as it's too verbose/repeating a lot
