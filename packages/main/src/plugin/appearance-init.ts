@@ -40,7 +40,7 @@ export class AppearanceInit {
       type: 'object',
       properties: {
         [APPEARANCE_FULL_KEY]: {
-          description: 'Select between light or dark mode, or use your system setting.',
+          description: 'Select light, dark, high-contrast light, high-contrast dark, or use your system setting.',
           type: 'string',
           enum: ['system', 'dark', 'light', 'hc-dark', 'hc-light'],
           default: 'system',
