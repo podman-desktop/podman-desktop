@@ -23,6 +23,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteConnections } from './podman-remote-connections';
 import type { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
+import type { PodmanRemoteTcpTunnel } from './podman-remote-tcp-tunnel';
 
 vi.mock('node:fs');
 
@@ -34,7 +35,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 class TestPodmanRemoteConnections extends PodmanRemoteConnections {
-  createTunnel(
+  createSshTunnel(
     host: string,
     port: number,
     username: string,
@@ -42,7 +43,11 @@ class TestPodmanRemoteConnections extends PodmanRemoteConnections {
     remotePath: string,
     localPath: string,
   ): PodmanRemoteSshTunnel {
-    return super.createTunnel(host, port, username, privateKey, remotePath, localPath);
+    return super.createSshTunnel(host, port, username, privateKey, remotePath, localPath);
+  }
+
+  createTcpTunnel(host: string, port: number, localPath: string): PodmanRemoteTcpTunnel {
+    return super.createTcpTunnel(host, port, localPath);
   }
 
   async refreshRemoteConnections(): Promise<void> {
@@ -56,8 +61,8 @@ test('should do nothing if the configuration is disabled', async () => {
   } as unknown as extensionApi.Configuration);
   const podmanRemoteConnections = new TestPodmanRemoteConnections(extensionContext, provider);
 
-  // spy createTunnel method
-  const spyCreateTunnel = vi.spyOn(podmanRemoteConnections, 'createTunnel');
+  // spy createSshTunnel method
+  const spyCreateSshTunnel = vi.spyOn(podmanRemoteConnections, 'createSshTunnel');
 
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
@@ -69,7 +74,7 @@ test('should do nothing if the configuration is disabled', async () => {
   await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
 
   // no connection should be created
-  expect(spyCreateTunnel).not.toHaveBeenCalled();
+  expect(spyCreateSshTunnel).not.toHaveBeenCalled();
   expect(spyRefreshRemoteConnections).not.toHaveBeenCalled();
 });
 
@@ -84,8 +89,8 @@ test('should check connections if configuration is enabled', async () => {
     stdout: JSON.stringify([]),
   } as unknown as extensionApi.RunResult);
 
-  // spy createTunnel method
-  const spyCreateTunnel = vi.spyOn(podmanRemoteConnections, 'createTunnel');
+  // spy createSshTunnel method
+  const spyCreateSshTunnel = vi.spyOn(podmanRemoteConnections, 'createSshTunnel');
 
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
@@ -97,7 +102,7 @@ test('should check connections if configuration is enabled', async () => {
   await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
 
   // no connection should be created
-  expect(spyCreateTunnel).not.toHaveBeenCalled();
+  expect(spyCreateSshTunnel).not.toHaveBeenCalled();
   expect(spyRefreshRemoteConnections).toHaveBeenCalled();
 });
 
@@ -132,8 +137,8 @@ test('should check connections if configuration is enabled and a system connecti
     ]),
   } as unknown as extensionApi.RunResult);
 
-  // spy createTunnel method
-  const spyCreateTunnel = vi.spyOn(podmanRemoteConnections, 'createTunnel');
+  // spy createSshTunnel method
+  const spyCreateSshTunnel = vi.spyOn(podmanRemoteConnections, 'createSshTunnel');
 
   // spy refreshRemoteConnections method
   const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
@@ -145,6 +150,43 @@ test('should check connections if configuration is enabled and a system connecti
   await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
 
   // no connection should be created
-  expect(spyCreateTunnel).not.toHaveBeenCalled();
+  expect(spyCreateSshTunnel).not.toHaveBeenCalled();
   expect(spyRefreshRemoteConnections).toHaveBeenCalled();
+});
+
+test('should create direct tunnel for tcp connections', async () => {
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => true,
+  } as unknown as extensionApi.Configuration);
+  const podmanRemoteConnections = new TestPodmanRemoteConnections(extensionContext, provider);
+
+  // mock exec method for listing podman system connections with a TCP connection
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'tcp://192.168.1.100:2375',
+        Identity: '',
+        Name: 'TcpRemoteConnection',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+
+  // spy createSshTunnel method - should NOT be called for TCP connections
+  const spyCreateSshTunnel = vi.spyOn(podmanRemoteConnections, 'createSshTunnel');
+
+  // spy refreshRemoteConnections method
+  const spyRefreshRemoteConnections = vi.spyOn(podmanRemoteConnections, 'refreshRemoteConnections');
+
+  // start
+  podmanRemoteConnections.start();
+
+  // wait for the getConfiguration being called
+  await vi.waitFor(() => expect(extensionApi.configuration.getConfiguration).toHaveBeenCalled());
+
+  // should call refreshRemoteConnections
+  expect(spyRefreshRemoteConnections).toHaveBeenCalled();
+
+  // SSH tunnel should not be called for TCP connections
+  expect(spyCreateSshTunnel).not.toHaveBeenCalled();
 });
