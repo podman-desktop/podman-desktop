@@ -59,24 +59,26 @@ describe('spinner SVG structure', () => {
     render(Spinner);
     const spinner = screen.getByRole('status', { name: 'Loading' });
     const svg = spinner.querySelector('svg');
-    expect(svg).toBeDefined();
-    const lines = svg?.querySelectorAll('line');
-    expect(lines?.length).toBe(8);
+    expect(svg).not.toBeNull();
+    const lines = svg!.querySelectorAll('line');
+    expect(lines.length).toBe(8);
   });
 
   test('should have viewBox 0 0 64 64', () => {
     render(Spinner);
     const spinner = screen.getByRole('status', { name: 'Loading' });
     const svg = spinner.querySelector('svg');
-    expect(svg?.getAttribute('viewBox')).toBe('0 0 64 64');
+    expect(svg).not.toBeNull();
+    expect(svg!.getAttribute('viewBox')).toBe('0 0 64 64');
   });
 
   test('should have animateTransform element', () => {
     render(Spinner);
     const spinner = screen.getByRole('status', { name: 'Loading' });
     const svg = spinner.querySelector('svg');
-    const animateTransform = svg?.querySelector('animateTransform');
-    expect(animateTransform).toBeDefined();
-    expect(animateTransform?.getAttribute('calcMode')).toBe('discrete');
+    expect(svg).not.toBeNull();
+    const animateTransform = svg!.querySelector('animateTransform');
+    expect(animateTransform).not.toBeNull();
+    expect(animateTransform!.getAttribute('calcMode')).toBe('discrete');
   });
 });
