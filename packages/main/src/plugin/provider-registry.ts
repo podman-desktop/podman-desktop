@@ -1069,28 +1069,60 @@ export class ProviderRegistry {
     internalProviderId: string,
     providerContainerConnectionInfo: ProviderConnectionInfo | ContainerProviderConnection,
   ): ProviderConnection {
+    // Check if this is a ProviderConnectionInfo with connectionType discriminator
+    if ('connectionType' in providerContainerConnectionInfo) {
+      const info = providerContainerConnectionInfo as ProviderConnectionInfo;
+      switch (info.connectionType) {
+        case 'container':
+          return this.getMatchingContainerConnectionFromProvider(internalProviderId, info);
+        case 'kubernetes':
+          return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, info);
+        case 'vm':
+          return this.getMatchingVmConnectionFromProvider(internalProviderId, info);
+        default: {
+          // Exhaustiveness check - TypeScript will error if we miss a case
+          throw new Error(`Unknown connection type: ${JSON.stringify(info)}`);
+        }
+      }
+    }
+
+    // Fallback for ContainerProviderConnection (API object without connectionType)
     if (this.isProviderContainerConnection(providerContainerConnectionInfo)) {
       return this.getMatchingContainerConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else if (this.isProviderKubernetesConnectionInfo(providerContainerConnectionInfo)) {
-      return this.getMatchingKubernetesConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
-    } else {
-      return this.getMatchingVmConnectionFromProvider(internalProviderId, providerContainerConnectionInfo);
     }
+
+    throw new Error(`Unable to determine connection type for provider ${internalProviderId}`);
   }
 
   isProviderContainerConnection(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderContainerConnectionInfo | ContainerProviderConnection {
-    return (connection as ProviderContainerConnectionInfo).endpoint?.socketPath !== undefined;
+    // Check connectionType discriminator first if available
+    if ('connectionType' in connection) {
+      return connection.connectionType === 'container';
+    }
+    // Fallback to structural check for ContainerProviderConnection
+    return (connection as ContainerProviderConnection).endpoint?.socketPath !== undefined;
   }
 
   isProviderKubernetesConnectionInfo(
     connection: ProviderConnectionInfo | ContainerProviderConnection,
   ): connection is ProviderKubernetesConnectionInfo {
+    // Check connectionType discriminator first if available
+    if ('connectionType' in connection) {
+      return connection.connectionType === 'kubernetes';
+    }
+    // Fallback to structural check
     return (
       !this.isProviderContainerConnection(connection) &&
       (connection as ProviderKubernetesConnectionInfo).endpoint !== undefined
     );
+  }
+
+  isProviderVmConnectionInfo(
+    connection: ProviderConnectionInfo | ContainerProviderConnection,
+  ): connection is ProviderVmConnectionInfo {
+    return 'connectionType' in connection && connection.connectionType === 'vm';
   }
 
   isContainerConnection(connection: ProviderConnection): connection is ContainerProviderConnection {
