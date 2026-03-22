@@ -19,7 +19,7 @@
 import * as fs from 'node:fs';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { resolve } from 'node:path';
+import { delimiter, resolve } from 'node:path';
 import { PassThrough } from 'node:stream';
 
 import type {
@@ -177,7 +177,7 @@ export interface PodCreationSource {
 export class KubernetesClient {
   protected kubeConfig;
 
-  private static readonly DEFAULT_KUBECONFIG_PATH = resolve(homedir(), '.kube', 'config');
+  private static readonly DEFAULT_KUBECONFIG_PATH = process.env['KUBECONFIG'] ?? resolve(homedir(), '.kube', 'config');
 
   // Custom path to the location of the kubeconfig file
   private kubeconfigPath: string = KubernetesClient.DEFAULT_KUBECONFIG_PATH;
@@ -185,7 +185,7 @@ export class KubernetesClient {
   protected currentNamespace: string | undefined;
   protected currentContextName: string | undefined;
 
-  private kubeConfigWatcher: containerDesktopAPI.FileSystemWatcher | undefined;
+  private kubeConfigWatchers: containerDesktopAPI.FileSystemWatcher[] = [];
 
   private apiGroups = new Array<V1APIGroup>();
 
@@ -232,8 +232,8 @@ export class KubernetesClient {
   }
 
   async init(): Promise<void> {
-    // default
-    const defaultKubeconfigPath = resolve(homedir(), '.kube', 'config');
+    // default: respect KUBECONFIG env var if set, otherwise ~/.kube/config
+    const defaultKubeconfigPath = process.env['KUBECONFIG'] ?? resolve(homedir(), '.kube', 'config');
 
     // add configuration
     const kubeconfigConfigurationNode: IConfigurationNode = {
@@ -270,8 +270,9 @@ export class KubernetesClient {
     if (userKubeconfigPath) {
       this.kubeconfigPath = userKubeconfigPath;
       this.setupWatcher(userKubeconfigPath);
-      // check if path exists
-      if (existsSync(userKubeconfigPath)) {
+      // check if any path in the (possibly multi-path) value exists
+      const paths = this.getKubeconfigPaths(userKubeconfigPath);
+      if (paths.some(p => existsSync(p))) {
         this.refresh().catch(() => console.error('Refresh of kube resources on startup failed'));
       } else {
         console.error(`Kubeconfig path ${userKubeconfigPath} provided does not exist. Skipping.`);
@@ -323,41 +324,52 @@ export class KubernetesClient {
   // help send information to the renderer process to notify any
   // stores (in particular kube context store) as well as extensions (extensions/kube-context)
   setupWatcher(kubeconfigFile: string): void {
-    // cancel the previous one (if any)
-    this.kubeConfigWatcher?.dispose();
+    // cancel the previous watchers (if any)
+    for (const watcher of this.kubeConfigWatchers) {
+      watcher.dispose();
+    }
+    this.kubeConfigWatchers = [];
 
-    // monitor the kube config file for changes
-    this.kubeConfigWatcher = this.fileSystemMonitoring.createFileSystemWatcher(kubeconfigFile);
+    const paths = this.getKubeconfigPaths(kubeconfigFile);
 
-    const location = Uri.file(kubeconfigFile);
-    const notifyKubeConfigExist = async (): Promise<void> => {
-      await this.refresh();
-      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
-      this.apiSender.send('kubernetes-context-update');
-    };
-
-    if (fs.existsSync(kubeconfigFile)) {
-      notifyKubeConfigExist().catch((error: unknown) => {
-        console.error('Error while checking kubeconfig', error);
-      });
+    // trigger initial load if any path exists
+    const anyExists = paths.some(p => fs.existsSync(p));
+    if (anyExists) {
+      this.refresh()
+        .then(() => {
+          this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location: Uri.file(paths[0]!) });
+          this.apiSender.send('kubernetes-context-update');
+        })
+        .catch((error: unknown) => {
+          console.error('Error while checking kubeconfig', error);
+        });
     }
 
-    // needs to refresh
-    this.kubeConfigWatcher.onDidChange(async () => {
-      await this.refresh();
-      this._onDidUpdateKubeconfig.fire({ type: 'UPDATE', location });
-      this.apiSender.send('kubernetes-context-update');
-    });
+    // set up a watcher for each file path
+    for (const filePath of paths) {
+      const watcher = this.fileSystemMonitoring.createFileSystemWatcher(filePath);
+      const location = Uri.file(filePath);
 
-    this.kubeConfigWatcher.onDidCreate(async () => {
-      await notifyKubeConfigExist();
-    });
+      watcher.onDidChange(async () => {
+        await this.refresh();
+        this._onDidUpdateKubeconfig.fire({ type: 'UPDATE', location });
+        this.apiSender.send('kubernetes-context-update');
+      });
 
-    this.kubeConfigWatcher.onDidDelete(() => {
-      this.kubeConfig = new KubeConfig();
-      this._onDidUpdateKubeconfig.fire({ type: 'DELETE', location });
-      this.apiSender.send('kubernetes-context-update');
-    });
+      watcher.onDidCreate(async () => {
+        await this.refresh();
+        this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
+        this.apiSender.send('kubernetes-context-update');
+      });
+
+      watcher.onDidDelete(() => {
+        this.kubeConfig = new KubeConfig();
+        this._onDidUpdateKubeconfig.fire({ type: 'DELETE', location });
+        this.apiSender.send('kubernetes-context-update');
+      });
+
+      this.kubeConfigWatchers.push(watcher);
+    }
   }
 
   protected createWatchObject(): Watch {
@@ -613,17 +625,77 @@ export class KubernetesClient {
     return namespace;
   }
 
+  // Split a kubeconfig path string into individual file paths using the platform delimiter
+  protected getKubeconfigPaths(kubeconfigPath: string): string[] {
+    return kubeconfigPath.split(delimiter).filter(p => p.length > 0);
+  }
+
+  // Load kubeconfig from one or more files (supports colon-separated paths on Unix, semicolon on Windows).
+  // Uses first-wins dedup strategy for clusters/users/contexts, matching kubectl behavior.
+  private loadKubeConfigFromPaths(kubeconfigPath: string): void {
+    const paths = this.getKubeconfigPaths(kubeconfigPath).filter(p => existsSync(p));
+    if (paths.length === 0) {
+      throw new Error('No kubeconfig paths provided');
+    }
+    this.kubeConfig.loadFromFile(paths[0]!);
+    for (let i = 1; i < paths.length; i++) {
+      const additional = new KubeConfig();
+      additional.loadFromFile(paths[i]!);
+      this.mergeKubeConfigs(this.kubeConfig, additional);
+    }
+  }
+
+  // Merge source KubeConfig into target, skipping duplicate names (first-wins).
+  // This avoids the "Duplicate user/cluster/context" errors from KubeConfig.mergeConfig().
+  private mergeKubeConfigs(target: KubeConfig, source: KubeConfig): void {
+    const existingClusters = new Set(target.clusters.map(c => c.name));
+    const existingUsers = new Set(target.users.map(u => u.name));
+    const existingContexts = new Set(target.contexts.map(c => c.name));
+
+    for (const cluster of source.clusters) {
+      if (!existingClusters.has(cluster.name)) {
+        target.clusters.push(cluster);
+      }
+    }
+    for (const user of source.users) {
+      if (!existingUsers.has(user.name)) {
+        target.users.push(user);
+      }
+    }
+    for (const ctx of source.contexts) {
+      if (!existingContexts.has(ctx.name)) {
+        target.contexts.push(ctx);
+      }
+    }
+  }
+
   async refresh(): Promise<void> {
-    // check the file is empty
-    const fileContent = await fs.promises.readFile(this.kubeconfigPath);
-    if (fileContent.length === 0) {
-      console.error(`Kubeconfig file at ${this.kubeconfigPath} is empty. Skipping.`);
+    const paths = this.getKubeconfigPaths(this.kubeconfigPath);
+
+    // check that at least one file exists and is non-empty
+    const existingPaths = paths.filter(p => existsSync(p));
+    if (existingPaths.length === 0) {
+      console.error(`No kubeconfig files found in path ${this.kubeconfigPath}. Skipping.`);
+      return;
+    }
+
+    // check the files are not all empty
+    let allEmpty = true;
+    for (const p of existingPaths) {
+      const content = await fs.promises.readFile(p);
+      if (content.length > 0) {
+        allEmpty = false;
+        break;
+      }
+    }
+    if (allEmpty) {
+      console.error(`All kubeconfig files in ${this.kubeconfigPath} are empty. Skipping.`);
       return;
     }
 
     // perform it under a try/catch block as the file may not be valid for the kubernetes-javascript client library
     try {
-      this.kubeConfig.loadFromFile(this.kubeconfigPath);
+      this.loadKubeConfigFromPaths(this.kubeconfigPath);
     } catch (error) {
       console.error(`An error happened when loading kubeconfig file at ${this.kubeconfigPath}`, error);
       return;
@@ -1206,7 +1278,10 @@ export class KubernetesClient {
   }
 
   async stop(): Promise<void> {
-    this.kubeConfigWatcher?.dispose();
+    for (const watcher of this.kubeConfigWatchers) {
+      watcher.dispose();
+    }
+    this.kubeConfigWatchers = [];
   }
 
   getTags(tags: Tags): Tags {
@@ -1458,7 +1533,10 @@ export class KubernetesClient {
   }
 
   public dispose(): void {
-    this.kubeConfigWatcher?.dispose();
+    for (const watcher of this.kubeConfigWatchers) {
+      watcher.dispose();
+    }
+    this.kubeConfigWatchers = [];
     this.contextsState?.dispose();
     this.contextsStatesDispatcher?.dispose();
     this.#portForwardService?.dispose();
