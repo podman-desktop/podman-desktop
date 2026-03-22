@@ -127,6 +127,10 @@ class TestKubernetesClient extends KubernetesClient {
     return super.createWatchObject();
   }
 
+  public testGetKubeconfigPaths(kubeconfigPath: string): string[] {
+    return this.getKubeconfigPaths(kubeconfigPath);
+  }
+
   public setInitialNamespace(namespace: string): void {
     this.currentNamespace = namespace;
   }
@@ -328,11 +332,16 @@ const execMock = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(fs.existsSync).mockReset();
+  KubeConfig.prototype.loadFromFile = vi.fn();
   KubeConfig.prototype.loadFromString = vi.fn();
+  KubeConfig.prototype.mergeConfig = vi.fn();
   KubeConfig.prototype.exportConfig = vi.fn();
   KubeConfig.prototype.makeApiClient = makeApiClientMock;
   KubeConfig.prototype.getContextObject = getContextObjectMock;
+  KubeConfig.prototype.getCurrentContext = vi.fn().mockReturnValue('context');
   KubeConfig.prototype.currentContext = 'context';
+  KubeConfig.prototype.contexts = [];
   Exec.prototype.exec = execMock;
   Health.prototype.readyz = vi.fn();
 });
@@ -514,6 +523,7 @@ test('Check update with empty kubeconfig file', async () => {
   const consoleErrorSpy = vi.spyOn(console, 'error');
 
   // provide empty kubeconfig file
+  vi.mocked(fs.existsSync).mockReturnValue(true);
   readFileMock.mockResolvedValue('');
 
   const client = new KubernetesClient(
@@ -525,28 +535,36 @@ test('Check update with empty kubeconfig file', async () => {
     featureRegistry,
   );
   await client.refresh();
-  expect(consoleErrorSpy).toBeCalledWith(expect.stringContaining('is empty. Skipping'));
+  expect(consoleErrorSpy).toBeCalledWith(expect.stringContaining('are empty. Skipping'));
 });
 
 test('test that blank kubeconfig path will be set to default one', async () => {
-  const client = createTestClient('fooNS');
-  vi.spyOn(client, 'refresh').mockImplementation(() => {
-    return Promise.resolve();
-  });
-  const setKubeconfigSpy = vi.spyOn(client, 'setKubeconfig');
+  const savedKubeconfig = process.env['KUBECONFIG'];
+  delete process.env['KUBECONFIG'];
+  try {
+    const client = createTestClient('fooNS');
+    vi.spyOn(client, 'refresh').mockImplementation(() => {
+      return Promise.resolve();
+    });
+    const setKubeconfigSpy = vi.spyOn(client, 'setKubeconfig');
 
-  await client.init();
+    await client.init();
 
-  // Set empty path
-  _onDidChangeConfiguration.fire({
-    key: 'kubernetes.Kubeconfig',
-    value: '',
-    scope: 'DEFAULT',
-  });
+    // Set empty path
+    _onDidChangeConfiguration.fire({
+      key: 'kubernetes.Kubeconfig',
+      value: '',
+      scope: 'DEFAULT',
+    });
 
-  const kubeconfigPath = Uri.file(resolve(homedir(), '.kube', 'config'));
-  // Should be default kubeconfigpath
-  expect(setKubeconfigSpy).toBeCalledWith(kubeconfigPath);
+    const kubeconfigPath = Uri.file(resolve(homedir(), '.kube', 'config'));
+    // Should be default kubeconfigpath
+    expect(setKubeconfigSpy).toBeCalledWith(kubeconfigPath);
+  } finally {
+    if (savedKubeconfig !== undefined) {
+      process.env['KUBECONFIG'] = savedKubeconfig;
+    }
+  }
 });
 
 test('test that setting current namespace updates namespace but not kubeconfig', async () => {
@@ -2714,4 +2732,76 @@ test('useInternalKubernetes configuration is set to true when internal manager i
   await client.init();
   await client.KubernetesManagerStart();
   expect(configurationRegistry.updateConfigurationValue).toHaveBeenCalledWith('kubernetes.useInternalKubernetes', true);
+});
+
+describe('multi-path KUBECONFIG support', () => {
+  test('refresh loads and merges multiple kubeconfig files', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.spyOn(fs.promises, 'readFile').mockResolvedValue('non-empty');
+
+    const client = createTestClient('default');
+    vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
+
+    await client.setKubeconfig(Uri.file('/path/a:/path/b'));
+
+    expect(KubeConfig.prototype.loadFromFile).toHaveBeenCalledWith('/path/a');
+    // Second file should also be loaded (into a separate KubeConfig for merging)
+    expect(KubeConfig.prototype.loadFromFile).toHaveBeenCalledWith('/path/b');
+  });
+
+  test('refresh skips non-existent paths in multi-path kubeconfig', async () => {
+    vi.mocked(fs.existsSync).mockImplementation((p: fs.PathLike) => {
+      return p === '/path/a';
+    });
+    vi.spyOn(fs.promises, 'readFile').mockResolvedValue('non-empty');
+
+    const client = createTestClient('default');
+    vi.spyOn(client, 'checkConnection').mockResolvedValue(false);
+
+    await client.setKubeconfig(Uri.file('/path/a:/path/nonexistent'));
+
+    // Only the existing path should be loaded
+    expect(KubeConfig.prototype.loadFromFile).toHaveBeenCalledWith('/path/a');
+    // Second (nonexistent) path should not be loaded
+    expect(KubeConfig.prototype.loadFromFile).not.toHaveBeenCalledWith('/path/nonexistent');
+  });
+
+  test('refresh logs error when no kubeconfig files exist in multi-path', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error');
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+
+    const client = createTestClient('default');
+    await client.setKubeconfig(Uri.file('/nonexistent/a:/nonexistent/b'));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('No kubeconfig files found'));
+  });
+
+  test('getKubeconfigPaths splits paths by platform delimiter', () => {
+    const client = createTestClient('default');
+    const paths = client.testGetKubeconfigPaths('/path/a:/path/b');
+    // On Unix, delimiter is ':', so this should split into two paths
+    // On Windows, it would be ';' — the test value uses ':' which matches Unix
+    if (process.platform !== 'win32') {
+      expect(paths).toEqual(['/path/a', '/path/b']);
+    }
+  });
+
+  test('setupWatcher creates watchers for all paths in multi-path kubeconfig', () => {
+    const createWatcherMock = vi.spyOn(fileSystemMonitoring, 'createFileSystemWatcher').mockReturnValue({
+      onDidChange: vi.fn(),
+      onDidCreate: vi.fn(),
+      onDidDelete: vi.fn(),
+      dispose: vi.fn(),
+    } as unknown as FileSystemWatcher);
+
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+    const client = createTestClient('default');
+    client.setupWatcher('/path/a:/path/b');
+
+    if (process.platform !== 'win32') {
+      expect(createWatcherMock).toHaveBeenCalledTimes(2);
+      expect(createWatcherMock).toHaveBeenCalledWith('/path/a');
+      expect(createWatcherMock).toHaveBeenCalledWith('/path/b');
+    }
+  });
 });
