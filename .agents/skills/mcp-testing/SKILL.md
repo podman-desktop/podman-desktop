@@ -47,13 +47,13 @@ pnpm compile:current  # Only needed once or after code changes
 _Linux/macOS:_
 
 ```bash
-bash .claude/playwright-tests-mcp/start-with-cdp.sh
+bash .agents/skills/mcp-testing/start-with-cdp.sh
 ```
 
 _Windows (PowerShell):_
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1
+powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1
 ```
 
 This will:
@@ -372,12 +372,12 @@ This happens when the app is launched in background mode. You must launch it in 
 
 ```bash
 # Linux/macOS — DON'T run with & or in background mode
-bash .claude/playwright-tests-mcp/start-with-cdp.sh
+bash .agents/skills/mcp-testing/start-with-cdp.sh
 ```
 
 ```powershell
 # Windows — run directly in a PowerShell terminal
-powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1
+powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1
 ```
 
 ### "Too Many Open Files" Error (Linux/macOS only)
@@ -510,7 +510,7 @@ Array.from(document.querySelectorAll('button'))
 
 ## Additional Resources
 
-All MCP testing resources are in `.claude/playwright-tests-mcp/`:
+All MCP testing resources are in `.agents/skills/mcp-testing/`:
 
 - **Full documentation:** `TESTING-WITH-MCP.md` - Comprehensive guide with selector strategies, common scenarios, and troubleshooting
 - **Example commands:** `mcp-test-examples.md` - 500+ lines of ready-to-use MCP command examples for testing workflows

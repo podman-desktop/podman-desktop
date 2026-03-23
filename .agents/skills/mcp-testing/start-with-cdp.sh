@@ -6,7 +6,7 @@
 # - Isolated test environment in /tmp to prevent data pollution
 #
 # Usage (from repo root):
-#   bash .claude/playwright-tests-mcp/start-with-cdp.sh
+#   bash .agents/skills/mcp-testing/start-with-cdp.sh
 #
 # Prerequisites:
 #   - Compiled binary must exist (run: pnpm compile:current)

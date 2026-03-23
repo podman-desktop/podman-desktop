@@ -18,7 +18,7 @@ Connect to Podman Desktop using CDP at http://localhost:9223
 Connect to Podman Desktop using CDP at http://localhost:9222
 ```
 
-**Prerequisites:** Running `bash .claude/playwright-tests-mcp/start-with-cdp.sh` in another terminal.
+**Prerequisites:** Running `bash .agents/skills/mcp-testing/start-with-cdp.sh` in another terminal.
 
 ### Launch Production Binary
 
@@ -396,7 +396,7 @@ Run this daily to verify core functionality:
 Before releasing a new version:
 
 1. Compile production binary: pnpm compile:current
-2. Launch with CDP: bash .claude/playwright-tests-mcp/start-with-cdp.sh
+2. Launch with CDP: bash .agents/skills/mcp-testing/start-with-cdp.sh
 3. Connect via MCP
 4. Run complete container lifecycle test
 5. Test extension installation/removal

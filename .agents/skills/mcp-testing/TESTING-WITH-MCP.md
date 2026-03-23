@@ -134,13 +134,13 @@ codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app"
 _Linux/macOS:_
 
 ```bash
-bash .claude/playwright-tests-mcp/start-with-cdp.sh
+bash .agents/skills/mcp-testing/start-with-cdp.sh
 ```
 
 _Windows (PowerShell):_
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1
+powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1
 ```
 
 This script:
@@ -352,8 +352,8 @@ Stop-Process -Id <PID> -Force
 **Solution:**
 
 1. Use the CDP helper script for production testing (creates isolated environment):
-   - Linux/macOS: `bash .claude/playwright-tests-mcp/start-with-cdp.sh`
-   - Windows: `powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1`
+   - Linux/macOS: `bash .agents/skills/mcp-testing/start-with-cdp.sh`
+   - Windows: `powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1`
 2. Verify `PODMAN_DESKTOP_HOME_DIR` is set to temp directory
 3. Delete old test directories if needed:
    - Linux/macOS: `rm -rf /tmp/pd-mcp-test-*`
@@ -391,7 +391,7 @@ MCP testing complements, not replaces, existing Playwright E2E tests:
 
 ## Example Commands Reference
 
-See [.claude/playwright-tests-mcp/mcp-test-examples.md](.claude/playwright-tests-mcp/mcp-test-examples.md) for ready-to-use MCP command examples.
+See [.agents/skills/mcp-testing/mcp-test-examples.md](.agents/skills/mcp-testing/mcp-test-examples.md) for ready-to-use MCP command examples.
 
 ## Tips for Effective Testing
 

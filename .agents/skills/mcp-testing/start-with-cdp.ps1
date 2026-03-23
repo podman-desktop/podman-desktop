@@ -5,7 +5,7 @@
 # - Isolated test environment in %TEMP% to prevent data pollution
 #
 # Usage (from repo root):
-#   powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1
+#   powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1
 #
 # Prerequisites:
 #   - Compiled binary must exist (run: pnpm compile:current)

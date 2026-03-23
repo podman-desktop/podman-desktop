@@ -31,12 +31,12 @@ This skill enables interactive manual testing of Podman Desktop through the elec
   - Launches compiled Podman Desktop binary with CDP on port 9222
   - Creates isolated test environment in `/tmp/pd-mcp-test-{timestamp}`
   - Platform-aware (Linux/macOS)
-  - Usage: `bash .claude/playwright-tests-mcp/start-with-cdp.sh`
+  - Usage: `bash .agents/skills/mcp-testing/start-with-cdp.sh`
 
 - **`start-with-cdp.ps1`** - PowerShell script for Windows
   - Equivalent of `start-with-cdp.sh` for Windows
   - Creates isolated test environment in `%TEMP%\pd-mcp-test-{timestamp}`
-  - Usage: `powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1`
+  - Usage: `powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1`
 
 ## Quick Start
 
@@ -57,9 +57,9 @@ pnpm compile:current
 
 # 2. Launch with CDP enabled
 # Linux/macOS:
-bash .claude/playwright-tests-mcp/start-with-cdp.sh
+bash .agents/skills/mcp-testing/start-with-cdp.sh
 # Windows (PowerShell):
-powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with-cdp.ps1
+powershell -ExecutionPolicy Bypass -File .agents\skills\mcp-testing\start-with-cdp.ps1
 
 # 3. In Claude conversation, connect via MCP
 "Connect to Podman Desktop using CDP at http://localhost:9222"
@@ -67,10 +67,10 @@ powershell -ExecutionPolicy Bypass -File .claude\playwright-tests-mcp\start-with
 
 ## File Locations Summary
 
-All files are in: `.claude/playwright-tests-mcp/`
+All files are in: `.agents/skills/mcp-testing/`
 
 ```
-playwright-tests-mcp/
+mcp-testing/
 ├── README.md                  # This file
 ├── SKILL.md                   # Main skill (loaded by sub-agents)
 ├── TESTING-WITH-MCP.md        # Comprehensive testing guide
@@ -102,7 +102,7 @@ Binary locations after `pnpm compile:current`:
 ### Direct Reference
 
 ```
-Read .claude/playwright-tests-mcp/mcp-test-examples.md for command examples
+Read .agents/skills/mcp-testing/mcp-test-examples.md for command examples
 ```
 
 ### For Sub-Agents
