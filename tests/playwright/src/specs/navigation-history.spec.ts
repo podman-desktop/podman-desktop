@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe
-  .serial('Navigation History Comprehensive Tests', () => {
+  .serial('Navigation History Comprehensive Tests', { tag: '@smoke' }, () => {
     test.describe.configure({ retries: 2 });
 
     test('TC-004: Alt+Left navigates back on Windows/Linux', async ({ navigationBar, page }) => {
@@ -50,9 +50,6 @@ test.describe
 
       // Press Alt+ArrowLeft
       await page.keyboard.press('Alt+ArrowLeft');
-
-      // Wait for navigation
-      await page.waitForTimeout(200);
 
       // Verify on Containers page
       const containersPage = new ContainersPage(page);
@@ -70,9 +67,6 @@ test.describe
 
       // Press Alt+ArrowRight
       await page.keyboard.press('Alt+ArrowRight');
-
-      // Wait for navigation
-      await page.waitForTimeout(200);
 
       // Verify on Images page
       const imagesPage = new ImagesPage(page);
@@ -95,9 +89,6 @@ test.describe
         const shortcut = isMac ? 'Meta+ArrowLeft' : 'Alt+ArrowLeft';
         await page.keyboard.press(shortcut);
 
-        // Wait a bit
-        await page.waitForTimeout(300);
-
         // Verify still on Containers page (no navigation occurred)
         await playExpect(containersPage.heading).toBeVisible();
       }
@@ -114,9 +105,6 @@ test.describe
       // Press Cmd+[
       await page.keyboard.press('Meta+BracketLeft');
 
-      // Wait for navigation
-      await page.waitForTimeout(200);
-
       // Verify on Containers page
       const containersPage = new ContainersPage(page);
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
@@ -132,14 +120,12 @@ test.describe
 
       // Press Cmd+ArrowLeft (back)
       await page.keyboard.press('Meta+ArrowLeft');
-      await page.waitForTimeout(200);
 
       // Verify on Containers
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
 
       // Press Cmd+ArrowRight (forward)
       await page.keyboard.press('Meta+ArrowRight');
-      await page.waitForTimeout(200);
 
       // Verify on Images
       const imagesPage = new ImagesPage(page);
@@ -160,9 +146,6 @@ test.describe
         });
         document.body.dispatchEvent(event);
       });
-
-      // Wait for navigation
-      await page.waitForTimeout(200);
 
       // Verify on Containers page
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
@@ -185,9 +168,6 @@ test.describe
         document.body.dispatchEvent(event);
       });
 
-      // Wait for navigation
-      await page.waitForTimeout(200);
-
       // Verify navigation to Images
       const imagesPage = new ImagesPage(page);
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
@@ -207,9 +187,6 @@ test.describe
         });
         document.body.dispatchEvent(event);
       });
-
-      // Wait
-      await page.waitForTimeout(300);
 
       // Verify still on Containers page (no navigation)
       await playExpect(containersPage.heading).toBeVisible();

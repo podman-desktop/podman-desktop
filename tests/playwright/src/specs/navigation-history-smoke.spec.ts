@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,9 +107,6 @@ test.describe
         });
         document.body.dispatchEvent(event);
       });
-
-      // Wait for navigation to complete
-      await page.waitForTimeout(200);
 
       // Verify navigation occurred to Containers
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
