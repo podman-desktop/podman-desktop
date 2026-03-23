@@ -382,6 +382,7 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
   expect(errorMessage).toBeNull();
 });
 
+
 test('Expect done, details and run actions after a successful pull', async () => {
   render(PullImage, { imageToPull: 'some-valid-image' });
 
