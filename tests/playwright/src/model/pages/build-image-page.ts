@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ export class BuildImagePage extends BasePage {
   readonly archLessOptionsButton: Locator;
   readonly terminalContent: Locator;
   readonly targetDropdownButton: Locator;
+  readonly registryValidationCheckbox: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -66,6 +67,7 @@ export class BuildImagePage extends BasePage {
     this.archLessOptionsButton = this.platformRegion.getByRole('button', { name: 'Show less options' });
     this.terminalContent = page.locator('.xterm-rows');
     this.targetDropdownButton = page.getByRole('button', { name: 'target' });
+    this.registryValidationCheckbox = page.getByRole('checkbox', { name: 'validate registries' });
   }
 
   async buildImage(
@@ -75,12 +77,15 @@ export class BuildImagePage extends BasePage {
     archType: string[] = [ArchitectureType.Default],
     timeout = 120_000,
     target?: string,
+    errorExpected = false,
+    errorText?: string | RegExp,
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
-      await this.validateBuildLogs();
+
+      await this.validateBuildLogs(errorExpected, errorText);
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
@@ -175,16 +180,29 @@ export class BuildImagePage extends BasePage {
     }
   }
 
-  async validateBuildLogs(): Promise<void> {
-    const logs = this.page.locator('.xterm-rows');
-    await playExpect(logs).toBeVisible();
-    const logRows = await logs.locator('div:has(span)').all();
+  private async validateBuildLogs(errorExpected: boolean, errorText: string | RegExp = /Error:/): Promise<void> {
+    await playExpect(this.terminalContent).toBeVisible();
+    await playExpect(this.terminalContent).toContainText(errorExpected ? errorText : 'Successfully built');
+  }
 
-    await Promise.all(
-      logRows.map(async logRow => {
-        await playExpect.poll(async () => logRow.textContent()).not.toContain('Error');
-      }),
-    );
+  async toggleRegistryValidation(enabled: boolean): Promise<void> {
+    return test.step(`${enabled ? 'Enable' : 'Disable'} registry validation`, async () => {
+      const currentState = await this.registryValidationCheckbox.isChecked();
+      if (currentState !== enabled) {
+        await playExpect(this.registryValidationCheckbox).toBeVisible();
+        await this.registryValidationCheckbox.click();
+        if (enabled) {
+          await playExpect(this.registryValidationCheckbox).toBeChecked();
+        } else {
+          await playExpect(this.registryValidationCheckbox).not.toBeChecked();
+        }
+      }
+    });
+  }
+
+  async isRegistryValidationEnabled(): Promise<boolean> {
+    await playExpect(this.registryValidationCheckbox).toBeVisible();
+    return this.registryValidationCheckbox.isChecked();
   }
 
   private async fillBuildImageForm(
