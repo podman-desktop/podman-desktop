@@ -234,6 +234,8 @@ test.describe
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
 
+      const baselineNoneCount = await imagesPage.countImagesByName('<none>');
+
       for (const image of imageList) {
         await imagesPage.pullImage(helloContainer);
         await playExpect(imagesPage.heading).toBeVisible();
@@ -256,14 +258,14 @@ test.describe
 
       await untagImagesFromPodman(imageList[0]);
       await playExpect
-        .poll(async () => await imagesPage.waitForImageExists('<none>', 60_000), { timeout: 0 })
-        .toBeTruthy();
+        .poll(async () => await imagesPage.countImagesByName('<none>'), { timeout: 60_000 })
+        .toBeGreaterThan(baselineNoneCount);
 
       await imagesPage.pruneUntaggedImages();
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await imagesPage.waitForImageDelete('<none>', 60_000), { timeout: 0 })
-        .toBeTruthy();
+        .poll(async () => await imagesPage.countImagesByName('<none>'), { timeout: 60_000 })
+        .toBeLessThanOrEqual(baselineNoneCount);
       await playExpect
         .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 60_000), { timeout: 0 })
         .toBeTruthy();
