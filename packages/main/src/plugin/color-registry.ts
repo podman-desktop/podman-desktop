@@ -47,8 +47,6 @@ const {
   purple,
   red,
   sky,
-  statusgreen,
-  statusred,
   stone,
   white,
   transparent,
@@ -736,8 +734,8 @@ export class ColorRegistry {
       light: charcoal[900],
     });
     this.registerColor(`${sNav}error-text`, {
-      dark: statusred[400],
-      light: statusred[400],
+      dark: red[550],
+      light: red[550],
     });
     this.registerColor(`${sNav}disabled-text`, {
       dark: charcoal[100],
@@ -760,8 +758,8 @@ export class ColorRegistry {
       light: accent1[500],
     });
     this.registerColor(`${sNav}stroke-error`, {
-      dark: statusred[400],
-      light: statusred[400],
+      dark: red[550],
+      light: red[550],
     });
     this.registerColor(`${sNav}stroke-readonly`, {
       dark: charcoal[100],
@@ -1059,24 +1057,24 @@ export class ColorRegistry {
       light: gray[900],
     });
     this.registerColor(`${button}danger-border`, {
-      dark: statusred[400],
-      light: statusred[800],
+      dark: red[550],
+      light: red[950],
     });
     this.registerColor(`${button}danger-bg`, {
       dark: transparent,
       light: transparent,
     });
     this.registerColor(`${button}danger-text`, {
-      dark: statusred[400],
-      light: statusred[800],
+      dark: red[550],
+      light: red[950],
     });
     this.registerColor(`${button}danger-hover-text`, {
       dark: white,
       light: white,
     });
     this.registerColor(`${button}danger-hover-bg`, {
-      dark: statusred[600],
-      light: statusred[600],
+      dark: red[750],
+      light: red[750],
     });
     this.registerColor(`${button}danger-disabled-border`, {
       dark: charcoal[50],
@@ -1353,13 +1351,13 @@ export class ColorRegistry {
 
     // Podman & Kubernetes
     this.registerColor(`${status}running`, {
-      dark: statusgreen[400],
-      light: statusgreen[800],
+      dark: green[350],
+      light: green[550],
     });
     // Kubernetes only
     this.registerColor(`${status}terminated`, {
-      dark: statusred[400],
-      light: statusred[800],
+      dark: red[550],
+      light: red[950],
     });
     this.registerColor(`${status}waiting`, {
       dark: amber[600],
@@ -1367,8 +1365,8 @@ export class ColorRegistry {
     });
     // Podman only
     this.registerColor(`${status}starting`, {
-      dark: statusgreen[400],
-      light: statusgreen[800],
+      dark: green[350],
+      light: green[550],
     });
     // Stopped & Exited are the same color / same thing in the eyes of statuses
     this.registerColor(`${status}stopped`, {
@@ -1394,12 +1392,12 @@ export class ColorRegistry {
     });
     // Others
     this.registerColor(`${status}created`, {
-      dark: statusgreen[200],
-      light: statusgreen[200],
+      dark: green[250],
+      light: green[250],
     });
     this.registerColor(`${status}dead`, {
-      dark: statusred[400],
-      light: statusred[800],
+      dark: red[550],
+      light: red[950],
     });
     // If we don't know the status, use gray
     this.registerColor(`${status}unknown`, {
@@ -1408,8 +1406,8 @@ export class ColorRegistry {
     });
     // Connections / login
     this.registerColor(`${status}connected`, {
-      dark: statusgreen[600],
-      light: statusgreen[800],
+      dark: green[450],
+      light: green[550],
     });
     this.registerColor(`${status}disconnected`, {
       dark: gray[500],
@@ -1481,16 +1479,16 @@ export class ColorRegistry {
 
     // general error and warning states
     this.registerColor(`${state}success`, {
-      dark: statusgreen[400],
-      light: statusgreen[800],
+      dark: green[350],
+      light: green[550],
     });
     this.registerColor(`${state}warning`, {
       dark: amber[500],
       light: amber[600],
     });
     this.registerColor(`${state}error`, {
-      dark: statusred[400],
-      light: statusred[600],
+      dark: red[550],
+      light: red[750],
     });
     this.registerColor(`${state}info`, {
       dark: accent1[400],
