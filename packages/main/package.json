@@ -51,7 +51,7 @@
     "electron-util": "^1.0.0",
     "express": "^5.2.1",
     "fzstd": "^0.1.1",
-    "get-tsconfig": "^4.13.6",
+    "get-tsconfig": "^4.13.7",
     "getos": "^3.2.1",
     "got": "^14.4.2",
     "hpagent": "^1.2.0",
