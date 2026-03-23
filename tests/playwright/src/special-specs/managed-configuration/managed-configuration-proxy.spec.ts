@@ -29,6 +29,7 @@ test.use({
     customFolder: 'managed-configuration',
     customSettings: {
       'proxy.enabled': 1, // Manual proxy mode
+      'proxy.http': 'http://user-proxy.local:3128', // should be overridden by locked default
       'proxy.no': 'user-defined-no-proxy.local',
     },
   }),
@@ -71,6 +72,12 @@ test.describe
           playExpect(isManaged).toBeTruthy();
 
           await playExpect(proxyPage.httpProxy).toHaveValue('http://managed-proxy.example.com:8080');
+        });
+
+        test('Locked default overrides user preference', async () => {
+          // customSettings sets proxy.http to 'http://user-proxy.local:3128'
+          // but the locked managed default must take precedence
+          await playExpect(proxyPage.httpProxy).not.toHaveValue('http://user-proxy.local:3128');
         });
 
         test('Field is disabled when locked', async () => {
