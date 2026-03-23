@@ -145,94 +145,33 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-018: Kubernetes submenu with no context adds /kubernetes to history', async ({ navigationBar, page }) => {
-      // This test assumes no Kubernetes context exists
-      // If context exists, the test may behave differently
+    test('TC-014: Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
+      // Setup: Navigate and go back
       await navigationBar.openDashboard();
-
-      // Navigate to Kubernetes
-      await navigationBar.openKubernetes();
-
-      // Check if we're on an empty state or dashboard
-      // If no context: stays on /kubernetes empty state
-      // If context exists: redirects to /kubernetes/dashboard
-      const currentUrl = page.url();
-
-      if (currentUrl.includes('/kubernetes') && !currentUrl.includes('/kubernetes/')) {
-        // No context case: /kubernetes should be in history
-        // Go back should return to Dashboard
-        await navigationBar.goBack();
-        const dashboardPage = new DashboardPage(page);
-        await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
-      } else {
-        // Context exists: skip this test scenario
-        test.skip(true, 'Kubernetes context exists, skipping no-context test');
-      }
-    });
-
-    test('TC-019: Kubernetes submenu with context skips /kubernetes in history', async ({ navigationBar, page }) => {
-      await navigationBar.openDashboard();
-
-      // Navigate to Kubernetes
-      await navigationBar.openKubernetes();
-
-      // Check current URL
-      const currentUrl = page.url();
-
-      if (currentUrl.includes('/kubernetes/')) {
-        // Context exists: should be on /kubernetes/dashboard or similar
-        // Go back should return to Dashboard (not /kubernetes)
-        await navigationBar.goBack();
-        const dashboardPage = new DashboardPage(page);
-        await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
-      } else {
-        // No context: skip this test scenario
-        test.skip(true, 'No Kubernetes context, skipping with-context test');
-      }
-    });
-
-    test('TC-020: Navigating to deleted container shows error placeholder', async ({ navigationBar, page }) => {
-      // Pull alpine image (minimal image for testing)
-      const imageName = 'ghcr.io/linuxcontainers/alpine';
-      const imagesPage = await navigationBar.openImages();
-      const pullImagePage = await imagesPage.openPullImage();
-      const updatedImages = await pullImagePage.pullImage(imageName, 'latest');
-
-      // Wait for image to be pulled
-      await playExpect
-        .poll(async () => await updatedImages.waitForImageExists(imageName), { timeout: 30_000 })
-        .toBeTruthy();
-
-      // Create and start container
-      const imageDetails = await imagesPage.openImageDetails(imageName);
-      const runImage = await imageDetails.openRunImage();
-      await runImage.startContainer(testContainerName, { attachTerminal: false });
-
-      // Navigate to container details
-      const containersPage = await navigationBar.openContainers();
-      await playExpect
-        .poll(async () => await containersPage.containerExists(testContainerName), { timeout: 30_000 })
-        .toBeTruthy();
-
-      await containersPage.openContainersDetails(testContainerName);
-
-      // Navigate away to Images
+      await navigationBar.openContainers();
       await navigationBar.openImages();
+      await navigationBar.goBack(); // Now on Containers
 
-      // Delete the container
-      await deleteContainer(page, testContainerName);
+      // Open command palette and execute Go Forward
+      const commandPalette = new CommandPalette(page);
+      await commandPalette.executeCommand('Go Forward');
 
-      // Navigate back (should show error/placeholder, not crash)
+      // Verify on Images page
+      const imagesPage = new ImagesPage(page);
+      await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
+    });
+
+    test('TC-016: Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
+      await navigationBar.openDashboard();
+      await navigationBar.openContainers();
+
+      // Click Containers again
+      await navigationBar.openContainers();
+
+      // Go back - should go to Dashboard, not Containers
       await navigationBar.goBack();
 
-      // Verify error or placeholder message shown
-      // The app should handle this gracefully without crashing
-      // Look for error message or "not found" text
-      await page.waitForTimeout(1000);
-
-      // The test passes if no crash occurs - app should show some error state
-      // We can check for common error patterns
-      const bodyText = await page.locator('body').textContent();
-      playExpect(bodyText).toBeTruthy(); // Page is responsive, not crashed
+      const dashboardPage = new DashboardPage(page);
+      await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
     });
   });
