@@ -89,6 +89,28 @@ test.describe
         .toBeTruthy();
     });
 
+    test('Cancel pull image', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
+
+      await pullImagePage.cancelPullImage(imageToSearch);
+      await playExpect(pullImagePage.heading).toBeVisible();
+    });
+
+    test('Pull image and view details', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
+
+      const imageDetailsPage = await pullImagePage.pullImageAndViewDetails(helloContainer);
+      await playExpect(imageDetailsPage.heading).toBeVisible();
+    });
+
     test('Test navigation between pages', async ({ navigationBar }) => {
       const imagesPage = await navigationBar.openImages();
       const imageDetailPage = await imagesPage.openImageDetails(helloContainer);
