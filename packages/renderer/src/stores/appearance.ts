@@ -45,9 +45,9 @@ function updateIsDark(appearance: string): void {
   if (appearance === AppearanceSettings.SystemEnumValue) {
     // need to read the system default theme using the window.matchMedia
     isDark.set(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  } else if (appearance === AppearanceSettings.LightEnumValue) {
+  } else if (appearance === AppearanceSettings.LightEnumValue || appearance === AppearanceSettings.LightHCEnumValue) {
     isDark.set(false);
-  } else if (appearance === AppearanceSettings.DarkEnumValue) {
+  } else if (appearance === AppearanceSettings.DarkEnumValue || appearance === AppearanceSettings.DarkHCEnumValue) {
     isDark.set(true);
   }
 }
