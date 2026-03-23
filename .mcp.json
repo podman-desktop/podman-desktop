@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "electron-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["electron-test-mcp"]
+    }
+  }
+}

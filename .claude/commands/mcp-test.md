@@ -1,0 +1,1 @@
+Read .claude/playwright-tests-mcp/SKILL.md and follow its instructions to test Podman Desktop using the electron-test MCP server.
