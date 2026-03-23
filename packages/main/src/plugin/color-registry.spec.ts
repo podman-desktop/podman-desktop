@@ -289,6 +289,20 @@ test('initContent', async () => {
   expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#907cee');
 });
 
+test('initDropdown registers dropdown-border', async () => {
+  colorRegistry.initColors();
+
+  const colorsLight = colorRegistry.listColors('light');
+  const dropdownBorderLight = colorsLight.find(c => c.id === 'dropdown-border');
+  expect(dropdownBorderLight).toBeDefined();
+  expect(dropdownBorderLight?.value).toBe('#8e51ff');
+
+  const colorsDark = colorRegistry.listColors('dark');
+  const dropdownBorderDark = colorsDark.find(c => c.id === 'dropdown-border');
+  expect(dropdownBorderDark).toBeDefined();
+  expect(dropdownBorderDark?.value).toBe('transparent');
+});
+
 describe('registerColor', () => {
   test('registerColor not yet defined', async () => {
     // spy notifyUpdate
