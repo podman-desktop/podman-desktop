@@ -172,7 +172,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "minimist": "^1.2.8",
-    "msw": "^2.12.13",
+    "msw": "^2.12.14",
     "prettier": "^3.8.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.57.1",
