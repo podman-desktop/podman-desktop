@@ -40,18 +40,20 @@ export class NavigationBar {
   readonly extensionsLink: Locator;
   readonly kubernetesLink: Locator;
   readonly networksLink: Locator;
+  readonly backButton: Locator;
+  readonly forwardButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.navigationLocator = this.page.getByRole('navigation', {
       name: 'AppNavigation',
     });
-    this.imagesLink = this.page.getByRole('link', { name: 'Images' });
-    this.containersLink = this.page.getByRole('link', { name: 'Containers' }).nth(0);
-    this.podsLink = this.page.getByRole('link', { name: 'Pods', exact: true }).nth(0);
-    this.volumesLink = this.page.getByRole('link', { name: 'Volumes' });
-    this.dashboardLink = this.page.getByRole('link', { name: 'Dashboard', exact: true });
-    this.settingsLink = this.page.getByRole('link', { name: 'Settings', exact: true });
+    this.imagesLink = this.navigationLocator.getByRole('link', { name: 'Images' });
+    this.containersLink = this.navigationLocator.getByRole('link', { name: 'Containers' }).nth(0);
+    this.podsLink = this.navigationLocator.getByRole('link', { name: 'Pods', exact: true }).nth(0);
+    this.volumesLink = this.navigationLocator.getByRole('link', { name: 'Volumes' });
+    this.dashboardLink = this.navigationLocator.getByRole('link', { name: 'Dashboard', exact: true });
+    this.settingsLink = this.navigationLocator.getByRole('link', { name: 'Settings', exact: true });
     this.extensionsLink = this.navigationLocator.getByRole('link', {
       name: 'Extensions',
       exact: true,
@@ -62,6 +64,8 @@ export class NavigationBar {
     this.networksLink = this.navigationLocator.getByRole('link', {
       name: 'Networks',
     });
+    this.backButton = this.page.getByRole('button', { name: 'Back (hold for history)' });
+    this.forwardButton = this.page.getByRole('button', { name: 'Forward (hold for history)' });
   }
 
   async openDashboard(): Promise<DashboardPage> {
@@ -139,6 +143,20 @@ export class NavigationBar {
       await playExpect(this.networksLink).toBeVisible({ timeout: 10_000 });
       await this.networksLink.click({ force: true });
       return new NetworksPage(this.page);
+    });
+  }
+
+  async goBack(): Promise<void> {
+    return test.step('Click back button', async () => {
+      await playExpect(this.backButton).toBeEnabled({ timeout: 5_000 });
+      await this.backButton.click();
+    });
+  }
+
+  async goForward(): Promise<void> {
+    return test.step('Click forward button', async () => {
+      await playExpect(this.forwardButton).toBeEnabled({ timeout: 5_000 });
+      await this.forwardButton.click();
     });
   }
 }
