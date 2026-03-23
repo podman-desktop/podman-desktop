@@ -81,7 +81,7 @@ test.describe('Image search verification', { tag: ['@smoke', '@windows_sanity'] 
     await playExpect(pullImagePage.heading).toBeVisible();
 
     const searchResults = await pullImagePage.getAllSearchResultsFor(imageToSearch, true, 'latest');
-    await playExpect.poll(async () => searchResults.length).toBeGreaterThan(0);
+    playExpect(searchResults.length).toBeGreaterThan(0);
 
     const imageDetailsPage = await pullImagePage.pullImageFromSearchResultsAndViewDetails(`${imageToSearch}:latest`);
     await playExpect(imageDetailsPage.heading).toBeVisible();
