@@ -411,7 +411,7 @@ export class ColorRegistry {
       light: accent1[500],
     });
     this.registerColor(`${glNav}icon-selected-bg`, {
-      dark: charcoal[750],
+      dark: charcoal[500],
       light: gray[250],
     });
     this.registerColor(`${glNav}icon-selected-highlight`, {
@@ -486,7 +486,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${sNav}selected-bg`, {
-      dark: charcoal[800],
+      dark: charcoal[500],
       light: gray[250],
     });
 
@@ -1029,23 +1029,23 @@ export class ColorRegistry {
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
-      dark: accent1[400],
+      dark: accent1[500],
       light: accent1[500],
     });
     this.registerColor(`${button}primary-hover-bg`, {
       dark: accent1[400],
-      light: accent1[500],
+      light: accent1[400],
     });
     this.registerColor(`${button}secondary`, {
       dark: accent1[400],
-      light: accent1[500],
+      light: accent1[600],
     });
     this.registerColor(`${button}secondary-hover`, {
       dark: accent1[400],
-      light: accent1[500],
+      light: accent1[400],
     });
     this.registerColor(`${button}text`, {
-      dark: black,
+      dark: white,
       light: white,
     });
     this.registerColor(`${button}disabled`, {
@@ -1115,8 +1115,8 @@ export class ColorRegistry {
         .build(),
     );
     this.registerColor(`${button}link-text`, {
-      dark: accent1[400],
-      light: accent1[500],
+      dark: accent1[300],
+      light: accent1[600],
     });
     this.registerColorDefinition(
       this.color(`${button}link-hover-bg`)
