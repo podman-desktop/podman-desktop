@@ -285,8 +285,8 @@ test('initContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[400]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe('#8e51ff');
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe('#907cee');
 });
 
 describe('registerColor', () => {
@@ -500,7 +500,7 @@ describe('registerExtensionThemes', () => {
     // now check for a color not defined in 'light-theme1'
     const titlebarTextColorLight = colorsLight.find(c => c.id === 'titlebar-text');
     expect(titlebarTextColorLight).toBeDefined();
-    expect(titlebarTextColorLight?.value).toBe('#37255d');
+    expect(titlebarTextColorLight?.value).toBe('#8e51ff');
   });
 
   test('check dispose on Windows', async () => {
@@ -662,12 +662,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[2]?.[0]).toStrictEqual('label-primary-bg');
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.purple[300]);
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe('#b9dafc');
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe('#32303f');
 
     expect(spyOnRegisterColor.mock.calls[3]?.[0]).toStrictEqual('label-primary-text');
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.purple[700]);
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe('#8e51ff');
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe('#907cee');
   });
 
   test('secondary color', () => {
