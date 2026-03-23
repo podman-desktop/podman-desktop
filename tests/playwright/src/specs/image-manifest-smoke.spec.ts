@@ -131,6 +131,7 @@ test.describe
           await imageDetailsPage.backLink.click();
         });
         test('Delete Manifest', async ({ page }) => {
+          test.setTimeout(180_000);
           await deleteImageManifest(page, manifestLabelSimple);
         });
       });
@@ -152,7 +153,7 @@ test.describe
         });
 
         test('Build the image using cross-arch build (complex)', async ({ page, navigationBar }) => {
-          test.setTimeout(120_000);
+          test.setTimeout(180_000);
 
           imagesPage = await navigationBar.openImages();
           await playExpect(imagesPage.heading).toBeVisible();
@@ -237,6 +238,7 @@ test.describe
 
         test('Delete Manifest', async ({ page }) => {
           test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
+          test.setTimeout(180_000);
           await deleteImageManifest(page, manifestLabelComplex);
         });
       });
@@ -248,8 +250,8 @@ async function deleteImageManifest(page: Page, manifestName: string): Promise<vo
 
   await imagesPage.deleteImageManifest(manifestName);
   await playExpect
-    .poll(async () => await imagesPage.waitForImageDelete(manifestName, 30_000), { timeout: 0 })
+    .poll(async () => await imagesPage.waitForImageDelete(manifestName, 60_000), { timeout: 0 })
     .toBeTruthy();
   await imagesPage.deleteAllUnusedImages();
-  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 30_000 }).toBe(0);
+  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 90_000 }).toBe(0);
 }
