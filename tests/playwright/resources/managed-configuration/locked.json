@@ -4,7 +4,6 @@
     "tasks.Toast",
     "preferences.ExitOnClose",
     "registries.preferred",
-    "proxy.enabled",
     "proxy.http",
     "proxy.https"
   ]
