@@ -1014,7 +1014,7 @@ export class ColorRegistry {
 
     this.registerColor(`${link}`, {
       dark: accent1[400],
-      light: accent1[500],
+      light: accent1[600],
     });
     this.registerColorDefinition(
       this.color(`${link}-hover-bg`)
@@ -1314,8 +1314,8 @@ export class ColorRegistry {
       light: accent1[200],
     });
     this.registerColor(`${label}primary-text`, {
-      dark: accent1[400],
-      light: accent1[500],
+      dark: accent1[200],
+      light: accent1[800],
     });
 
     this.registerColor(`${label}secondary-bg`, {
