@@ -27,6 +27,10 @@ let proxyPage: ProxyPage;
 test.use({
   runnerOptions: new RunnerOptions({
     customFolder: 'managed-configuration',
+    customSettings: {
+      'proxy.enabled': 1, // Manual proxy mode
+      'proxy.no': 'user-defined-no-proxy.local',
+    },
   }),
 });
 
@@ -45,16 +49,16 @@ test.afterAll(async ({ runner }) => {
 test.describe
   .serial('Managed Configuration - proxy', { tag: '@managed-configuration' }, () => {
     test.describe
-      .serial('Locked setting: Proxy Configuration dropdown', () => {
-        test('Dropdown is managed', async () => {
+      .serial('Unlocked setting: Proxy Configuration dropdown', () => {
+        test('Dropdown is not managed', async () => {
           await playExpect(proxyPage.heading).toBeVisible();
 
           const isManaged = await proxyPage.isProxyConfigurationManaged();
-          playExpect(isManaged).toBeTruthy();
+          playExpect(isManaged).toBeFalsy();
         });
 
-        test('Dropdown is disabled when locked', async () => {
-          await playExpect(proxyPage.toggleProxyButton).toBeDisabled();
+        test('Dropdown is enabled when not locked', async () => {
+          await playExpect(proxyPage.toggleProxyButton).toBeEnabled();
         });
       });
 
@@ -97,6 +101,10 @@ test.describe
 
           const isManaged = await proxyPage.isNoProxyManaged();
           playExpect(isManaged).toBeFalsy();
+        });
+
+        test('User preference takes precedence over default', async () => {
+          await playExpect(proxyPage.noProxy).toHaveValue('user-defined-no-proxy.local');
         });
       });
   });
