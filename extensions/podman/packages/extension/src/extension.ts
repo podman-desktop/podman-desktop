@@ -876,6 +876,7 @@ export async function startMachine(
     // start the machine
     await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, {
       logger: new LoggerDelegator(context, logger),
+      detached: true,
     });
     provider.updateStatus('started');
   } catch (err) {
@@ -907,6 +908,7 @@ export async function stopMachine(
   try {
     await execPodman(['machine', 'stop', machineInfo.name], machineInfo.vmType, {
       logger: new LoggerDelegator(context, logger),
+      detached: true,
     });
     provider.updateStatus('stopped');
   } catch (err: unknown) {
