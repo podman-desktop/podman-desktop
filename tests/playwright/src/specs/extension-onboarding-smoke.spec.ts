@@ -167,7 +167,14 @@ test.describe
         .then(() => true)
         .catch(() => false);
       if (!appeared) {
+        if (rateLimitReachedFlag) {
+          test.skip(true, 'Rate limit exceeded after clicking version selector; skipping');
+        }
         await welcomePage.otherVersionButton.click();
+      }
+
+      if (rateLimitReachedFlag) {
+        test.skip(true, 'Rate limit exceeded while loading version dropdown; skipping');
       }
 
       await playExpect(welcomePage.dropDownDialog).toBeVisible({ timeout: 10_000 });
