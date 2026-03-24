@@ -505,12 +505,12 @@ export async function runComposeUpFromCLI(composeFilePath: string): Promise<void
   });
 }
 
-export async function removeAllImagesCLI(engine: 'podman' | 'docker' = 'podman'): Promise<void> {
+export async function removeAllImagesCLI(engine: 'podman' | 'docker' = 'podman', timeout = 120_000): Promise<void> {
   return test.step(`Remove all ${engine} images via CLI`, () => {
     try {
       const command = engine === 'podman' ? 'podman rmi --all --force' : 'docker image prune --all --force';
       // eslint-disable-next-line sonarjs/os-command
-      execSync(command, { timeout: 120_000 });
+      execSync(command, { timeout });
       console.log(`All ${engine} images removed via CLI`);
     } catch (error) {
       console.log(

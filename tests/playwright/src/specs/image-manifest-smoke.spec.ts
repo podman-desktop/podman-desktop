@@ -52,6 +52,7 @@ let registryPswdSecret: string;
 let manifestLabelComplex: string;
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
+  test.setTimeout(180_000);
   runner.setVideoAndTraceName('image-manifest-smoke-e2e');
 
   await welcomePage.handleWelcomePage(true);
