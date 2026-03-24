@@ -66,7 +66,7 @@ test.afterAll(async ({ runner }) => {
 for (const extension of extensionsToTest) {
   test.describe
     .serial(`Verification of Built-In Extension: ${extension.extensionLabelName}`, {
-      tag: ['@smoke', '@windows_sanity'],
+      tag: ['@smoke', '@windows_sanity', '@macos_sanity'],
     }, () => {
       test.describe.configure({ retries: 1 });
 

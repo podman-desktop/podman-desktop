@@ -44,7 +44,7 @@ test.afterAll(async ({ navigationBar, runner }) => {
 });
 
 test.describe
-  .serial('Proxy settings ', { tag: '@smoke' }, () => {
+  .serial('Proxy settings ', { tag: ['@smoke', '@macos_sanity'] }, () => {
     test.beforeEach(async ({ navigationBar }) => {
       await navigationBar.openDashboard();
       const settingsBar = await navigationBar.openSettings();
