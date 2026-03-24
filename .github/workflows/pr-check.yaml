@@ -417,6 +417,51 @@ jobs:
             ./tests/**/output/
             !./tests/**/traces/raw
   
+  macos-sanity-check-e2e-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: macos sanity check e2e tests
+    runs-on: macos-26
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run macOS Sanity Check E2E tests in Development Mode
+        run: pnpm test:e2e:macos-sanity
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6.3.1
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: always()
+        with:
+          name: macos-sanity-e2e-tests
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+
   k8s-sanity-e2e-tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: k8s sanity e2e tests

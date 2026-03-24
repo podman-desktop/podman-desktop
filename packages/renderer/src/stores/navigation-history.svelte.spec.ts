@@ -21,10 +21,15 @@ import { router, type TinroRoute } from 'tinro';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
-import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
-import * as navigationRegistry from '/@/stores/navigation/navigation-registry';
-
-import { goBack, goForward, navigationHistory } from './navigation-history.svelte';
+import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import {
+  getBackEntries,
+  getForwardEntries,
+  goBack,
+  goForward,
+  goToHistoryIndex,
+  navigationHistory,
+} from '/@/stores/navigation-history.svelte';
 
 let routerSubscribeCallback = vi.hoisted(() => {
   return vi.fn() as unknown as (navigation: TinroRoute) => void;
@@ -43,13 +48,66 @@ vi.mock('tinro', () => ({
 vi.mock(import('/@/stores/kubernetes-no-current-context'));
 vi.mock(import('/@/stores/navigation/navigation-registry'));
 
+vi.mock(import('/@/PreferencesNavigation'), () => ({
+  settingsNavigationEntries: [],
+}));
+
+vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
+  return {
+    navigationRegistry: {
+      subscribe: vi.fn((listener: (value: NavigationRegistryEntry[]) => void) => {
+        listener([
+          {
+            name: 'Kubernetes',
+            icon: {},
+            link: '/kubernetes',
+            tooltip: 'Kubernetes',
+            counter: 0,
+            type: 'submenu',
+            items: [
+              {
+                name: 'Pods',
+                icon: {},
+                link: '/kubernetes/pods',
+                tooltip: 'Pods',
+                counter: 0,
+                type: 'entry',
+              },
+              {
+                name: 'ConfigMaps & Secrets',
+                icon: {},
+                link: '/kubernetes/configmapsSecrets',
+                tooltip: 'ConfigMaps & Secrets',
+                counter: 0,
+                type: 'entry',
+              },
+            ],
+          },
+          {
+            name: 'Containers',
+            icon: {},
+            link: '/containers',
+            tooltip: 'Containers',
+            counter: 0,
+            type: 'entry',
+          },
+        ] as NavigationRegistryEntry[]);
+        return vi.fn();
+      }),
+      set: vi.fn(),
+      update: vi.fn(),
+      unsubscribe: vi.fn(),
+    },
+  };
+});
+
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
 
-  vi.mocked(navigationRegistry).navigationRegistry = writable([
+  vi.mocked(navigationRegistry).set([
     { type: 'root', link: '/', title: 'Dashboard' } as unknown as NavigationRegistryEntry,
     { type: 'submenu', link: '/kubernetes', title: 'Kubernetes' } as unknown as NavigationRegistryEntry,
     {
@@ -65,6 +123,10 @@ beforeEach(() => {
 });
 
 describe('goBack', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
   test('should not navigate when history is empty', () => {
     goBack();
 
@@ -95,6 +157,10 @@ describe('goBack', () => {
 });
 
 describe('goForward', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
   test('should not navigate when history is empty', () => {
     goForward();
 
@@ -164,5 +230,200 @@ describe('router navigation events', () => {
     expect(navigationHistory.stack).not.toContain('/index.html');
     expect(navigationHistory.stack).toContain('/');
     expect(navigationHistory.index).toBe(0);
+  });
+});
+
+describe('goToHistoryIndex', () => {
+  beforeEach(() => {
+    vi.spyOn(router, 'goto').mockReturnValue(undefined);
+  });
+
+  test('should not navigate to invalid negative index', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+    goToHistoryIndex(-1);
+
+    expect(router.goto).not.toHaveBeenCalled();
+  });
+
+  test('should not navigate to index beyond stack', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    goToHistoryIndex(5);
+
+    expect(router.goto).not.toHaveBeenCalled();
+  });
+
+  test('should not navigate to current index', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    goToHistoryIndex(0);
+
+    expect(router.goto).not.toHaveBeenCalled();
+  });
+
+  test('should navigate to valid index', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 2;
+
+    goToHistoryIndex(0);
+
+    expect(navigationHistory.index).toBe(0);
+    expect(router.goto).toHaveBeenCalledWith('/containers');
+  });
+});
+
+describe('getBackEntries', () => {
+  test('should return empty array when no history', () => {
+    const entries = getBackEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return empty array when at first entry', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    const entries = getBackEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return previous entries in reverse order with computed names', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 2;
+
+    const entries = getBackEntries();
+
+    expect(entries).toEqual([
+      { index: 1, name: 'Images', icon: undefined },
+      { index: 0, name: 'Containers', icon: {} },
+    ]);
+  });
+});
+
+describe('getForwardEntries', () => {
+  test('should return empty array when no history', () => {
+    const entries = getForwardEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return empty array when at last entry', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+    expect(entries).toEqual([]);
+  });
+
+  test('should return forward entries in order with computed names', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+
+    expect(entries).toEqual([
+      { index: 1, name: 'Images', icon: undefined },
+      { index: 2, name: 'Pods', icon: undefined },
+    ]);
+  });
+});
+
+describe('submenu navigation', () => {
+  test('should show submenu parent > resource type breadcrumb', () => {
+    // Simulate navigation: Dashboard -> Kubernetes Pods list -> Specific pod
+    navigationHistory.stack = ['/', '/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/summary'];
+    navigationHistory.index = 2;
+
+    const backEntries = getBackEntries();
+
+    expect(backEntries.length).toBe(2);
+    // getBackEntries returns in reverse order, so [0] is index 1, [1] is index 0
+    // backEntries[0] = '/kubernetes/pods' - should show full breadcrumb from registry
+    expect(backEntries[0].name).toBe('Kubernetes > Pods');
+    // backEntries[1] = '/' - should show Dashboard
+    expect(backEntries[1].name).toBe('Dashboard');
+
+    // The current entry (detail page) should show full breadcrumb with resource name
+    const forwardEntries = getForwardEntries();
+    expect(forwardEntries.length).toBe(0); // We're at the end
+  });
+
+  test('should preserve special characters in submenu breadcrumbs', () => {
+    // Test ConfigMaps & Secrets with special character '&'
+    navigationHistory.stack = [
+      '/',
+      '/kubernetes/configmapsSecrets',
+      '/kubernetes/configmapsSecrets/my-config/default/summary',
+    ];
+    navigationHistory.index = 2;
+
+    const backEntries = getBackEntries();
+
+    expect(backEntries.length).toBe(2);
+    // backEntries[0] = '/kubernetes/configmapsSecrets' base route
+    // Should show proper name from registry with '&' preserved
+    expect(backEntries[0].name).toBe('Kubernetes > ConfigMaps & Secrets');
+    // backEntries[1] = '/' Dashboard
+    expect(backEntries[1].name).toBe('Dashboard');
+  });
+
+  test('should show full breadcrumb for detail pages including tab', () => {
+    // Test detail page shows: parent > resource type > resource name > tab
+    navigationHistory.stack = [
+      '/kubernetes/configmapsSecrets/my-config/default/summary',
+      '/kubernetes/configmapsSecrets',
+    ];
+    navigationHistory.index = 1;
+
+    const entries = getBackEntries();
+    expect(entries.length).toBe(1);
+    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets > my-config > Summary');
+  });
+});
+
+describe('tab navigation for detail pages', () => {
+  test('should add new entry for each tab change', () => {
+    // Start by navigating to containers list
+    routerSubscribeCallback({ url: '/containers' } as TinroRoute);
+    expect(navigationHistory.stack).toEqual(['/containers']);
+    expect(navigationHistory.index).toBe(0);
+
+    // Navigate to container detail page summary tab (should add new entry)
+    routerSubscribeCallback({ url: '/containers/abc123/summary' } as TinroRoute);
+    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
+    expect(navigationHistory.index).toBe(1);
+
+    // Switch to logs tab (should ADD a new entry)
+    routerSubscribeCallback({ url: '/containers/abc123/logs' } as TinroRoute);
+
+    // Stack should now have 3 entries (each tab is a separate history entry)
+    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary', '/containers/abc123/logs']);
+    expect(navigationHistory.stack.length).toBe(3);
+    expect(navigationHistory.index).toBe(2);
+  });
+
+  test('should show tab name in display for different tabs', () => {
+    // Set up stack with different tabs
+    navigationHistory.stack = ['/containers', '/containers/abc123/inspect'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+
+    // Should show resource name WITH tab name
+    expect(entries).toEqual([{ index: 1, name: 'Containers > abc123 > Inspect', icon: {} }]);
+    // Tab name should appear in display
+    expect(entries[0].name).toContain('Inspect');
+  });
+
+  test('should show resource name with tab for submenu resources', () => {
+    // Kubernetes pod with tab navigation
+    navigationHistory.stack = ['/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/logs'];
+    navigationHistory.index = 0;
+
+    const entries = getForwardEntries();
+
+    expect(entries.length).toBe(1);
+    expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod > Logs');
   });
 });
