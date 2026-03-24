@@ -20,10 +20,7 @@ import { CommandPalette } from '/@/model/pages/command-palette';
 import { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ImagesPage } from '/@/model/pages/images-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteContainer } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
-
-const testContainerName = 'nav-history-test-container';
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('navigation-history-smoke-e2e');
@@ -31,14 +28,8 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner, page }) => {
-  try {
-    await deleteContainer(page, testContainerName);
-  } catch (error) {
-    // Container may not exist, ignore error
-  } finally {
-    await runner.close();
-  }
+test.afterAll(async ({ runner }) => {
+  await runner.close();
 });
 
 test.describe
@@ -92,27 +83,7 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-010: Trackpad swipe back navigates to previous page', async ({ navigationBar, page }) => {
-      // Navigate: Dashboard → Containers → Images
-      await navigationBar.openDashboard();
-      const containersPage = await navigationBar.openContainers();
-      await navigationBar.openImages();
-
-      // Simulate trackpad swipe right (deltaX < -30 for back)
-      await page.evaluate(() => {
-        const event = new WheelEvent('wheel', {
-          deltaX: -50, // < -30 threshold for back navigation
-          deltaY: 0,
-          bubbles: true,
-        });
-        document.body.dispatchEvent(event);
-      });
-
-      // Verify navigation occurred to Containers
-      await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
-    });
-
-    test('TC-013: Command palette Go Back navigates to previous page', async ({ navigationBar, page }) => {
+    test('TC-004: Command palette Go Back navigates to previous page', async ({ navigationBar, page }) => {
       // Navigate: Dashboard → Containers
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
@@ -126,7 +97,23 @@ test.describe
       await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-015: History truncated when navigating to new page from middle of stack', async ({ navigationBar }) => {
+    test('TC-005: Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
+      // Setup: Navigate and go back
+      await navigationBar.openDashboard();
+      await navigationBar.openContainers();
+      await navigationBar.openImages();
+      await navigationBar.goBack(); // Now on Containers
+
+      // Open command palette and execute Go Forward
+      const commandPalette = new CommandPalette(page);
+      await commandPalette.executeCommand('Go Forward');
+
+      // Verify on Images page
+      const imagesPage = new ImagesPage(page);
+      await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
+    });
+
+    test('TC-006: History truncated when navigating to new page from middle of stack', async ({ navigationBar }) => {
       // Navigate: Dashboard → Containers → Images → Volumes
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
@@ -145,23 +132,7 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-014: Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
-      // Setup: Navigate and go back
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
-      await navigationBar.goBack(); // Now on Containers
-
-      // Open command palette and execute Go Forward
-      const commandPalette = new CommandPalette(page);
-      await commandPalette.executeCommand('Go Forward');
-
-      // Verify on Images page
-      const imagesPage = new ImagesPage(page);
-      await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
-    });
-
-    test('TC-016: Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
+    test('TC-007: Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
 

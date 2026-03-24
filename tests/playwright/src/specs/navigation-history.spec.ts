@@ -45,7 +45,7 @@ test.describe
   .serial('Navigation History Comprehensive Tests', { tag: '@smoke' }, () => {
     test.describe.configure({ retries: 1 });
 
-    test('TC-004: Alt+Left navigates back on Windows/Linux', async ({ navigationBar, page }) => {
+    test('TC-008: Alt+Left navigates back on Windows/Linux', async ({ navigationBar, page }) => {
       test.skip(isMac, 'Alt shortcuts are for Windows/Linux only');
 
       // Navigate through pages
@@ -62,7 +62,7 @@ test.describe
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-005: Alt+Right navigates forward on Windows/Linux', async ({ navigationBar, page }) => {
+    test('TC-009: Alt+Right navigates forward on Windows/Linux', async ({ navigationBar, page }) => {
       test.skip(isMac, 'Alt shortcuts are for Windows/Linux only');
 
       // Setup: Navigate and go back
@@ -79,28 +79,7 @@ test.describe
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-006: Navigation shortcuts blocked when focus in input field', async ({ navigationBar, page }) => {
-      await navigationBar.openDashboard();
-      const containersPage = await navigationBar.openContainers();
-      await playExpect(containersPage.heading).toBeVisible();
-
-      // Find and focus on search input (if available)
-      const searchInput = page.getByPlaceholder(/search/i).first();
-      const searchExists = await searchInput.count();
-
-      if (searchExists > 0) {
-        await searchInput.click();
-
-        // Try keyboard shortcut
-        const shortcut = isMac ? 'Meta+ArrowLeft' : 'Alt+ArrowLeft';
-        await page.keyboard.press(shortcut);
-
-        // Verify still on Containers page (no navigation occurred)
-        await playExpect(containersPage.heading).toBeVisible();
-      }
-    });
-
-    test('TC-007: Cmd+[ navigates back on macOS', async ({ navigationBar, page }) => {
+    test('TC-010: Cmd+[ navigates back on macOS', async ({ navigationBar, page }) => {
       test.skip(!isMac, 'Cmd shortcuts are for macOS only');
 
       // Navigate through pages
@@ -116,7 +95,7 @@ test.describe
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-008: Cmd+Arrow navigates on macOS', async ({ navigationBar, page }) => {
+    test('TC-011: Cmd+Arrow navigates on macOS', async ({ navigationBar, page }) => {
       test.skip(!isMac, 'Cmd shortcuts are for macOS only');
 
       // Navigate through pages
@@ -138,7 +117,7 @@ test.describe
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-009: Mouse button 3 (back) navigates backward', async ({ navigationBar, page }) => {
+    test('TC-012: Mouse button 3 (back) navigates backward', async ({ navigationBar, page }) => {
       // Navigate through pages
       await navigationBar.openDashboard();
       const containersPage = await navigationBar.openContainers();
@@ -157,7 +136,27 @@ test.describe
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-011: Trackpad swipe left navigates forward', async ({ navigationBar, page }) => {
+    test('TC-013: Trackpad swipe left navigates to previous page', async ({ navigationBar, page }) => {
+      // Navigate: Dashboard → Containers → Images
+      await navigationBar.openDashboard();
+      const containersPage = await navigationBar.openContainers();
+      await navigationBar.openImages();
+
+      // Simulate trackpad swipe right (deltaX < -30 for back)
+      await page.evaluate(() => {
+        const event = new WheelEvent('wheel', {
+          deltaX: -50, // < -30 threshold for back navigation
+          deltaY: 0,
+          bubbles: true,
+        });
+        document.body.dispatchEvent(event);
+      });
+
+      // Verify navigation occurred to Containers
+      await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
+    });
+
+    test('TC-014: Trackpad swipe right navigates forward', async ({ navigationBar, page }) => {
       // Setup: Navigate and go back to have forward available
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
@@ -179,7 +178,28 @@ test.describe
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-012: Vertical scroll does not trigger navigation', async ({ navigationBar, page }) => {
+    test('TC-015: Navigation shortcuts blocked when focus in input field', async ({ navigationBar, page }) => {
+      await navigationBar.openDashboard();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+
+      // Find and focus on search input (if available)
+      const searchInput = page.getByPlaceholder(/search/i).first();
+      const searchExists = await searchInput.count();
+
+      if (searchExists > 0) {
+        await searchInput.click();
+
+        // Try keyboard shortcut
+        const shortcut = isMac ? 'Meta+ArrowLeft' : 'Alt+ArrowLeft';
+        await page.keyboard.press(shortcut);
+
+        // Verify still on Containers page (no navigation occurred)
+        await playExpect(containersPage.heading).toBeVisible();
+      }
+    });
+
+    test('TC-016: Vertical scroll does not trigger navigation', async ({ navigationBar, page }) => {
       await navigationBar.openDashboard();
       const containersPage = await navigationBar.openContainers();
       await playExpect(containersPage.heading).toBeVisible();
@@ -198,17 +218,17 @@ test.describe
       await playExpect(containersPage.heading).toBeVisible();
     });
 
-    test('TC-018: Can go to Kubernetes and back, regression check for #15636', async () => {
+    test('TC-017: Can go to Kubernetes and back, regression check for #15636', async () => {
       // Context exists: skip this test scenario
       test.skip(true, 'Requires K8s context set');
     });
 
-    test('TC-019: Kubernetes submenu navigation', async () => {
+    test('TC-018: Kubernetes submenu navigation', async () => {
       // Context exists: skip this test scenario
       test.skip(true, 'Requires K8s context set');
     });
 
-    test('TC-020: Navigating to deleted container shows error placeholder', async ({ navigationBar, page }) => {
+    test('TC-019: Navigating back to deleted container shows error placeholder', async ({ navigationBar, page }) => {
       // Pull alpine image (minimal image for testing)
       const imageName = 'ghcr.io/linuxcontainers/alpine';
       const imagesPage = await navigationBar.openImages();
@@ -236,26 +256,38 @@ test.describe
       // Navigate away to Images
       await navigationBar.openImages();
 
-      // Delete the container
+      // Delete the container. it opens containers page
       await deleteContainer(page, testContainerName);
+      // when container is deleted, it show Containers Page
+      await playExpect(containersPage.heading).toBeVisible();
 
-      // Navigate back (should show error/placeholder, not crash)
+      // Navigate back, should open images
+      await navigationBar.goBack();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      // Navigate back, will open empty page for deleted container
       await navigationBar.goBack();
 
-      // Verify error or placeholder message shown
-      // The app should handle this gracefully without crashing
-      // Look for error message or "not found" text
-      await page.waitForTimeout(1000);
-
-      // The test passes if no crash occurs - app should show some error state
-      // We can check for common error patterns
-      const bodyText = await page.locator('body').textContent();
-      playExpect(bodyText).toBeTruthy(); // Page is responsive, not crashed
+      // App shows empty page, navigation bar, contentinfo and header.
+      await playExpect(imagesPage.heading).not.toBeVisible();
+      await playExpect(containersPage.heading).not.toBeVisible();
+      await playExpect(imagesPage.header).not.toBeVisible();
+      await playExpect(imagesPage.content).not.toBeVisible();
     });
 
-    test('TC-021: Navigating to stopped Podman machine shows current state', async () => {
+    test('TC-020: Navigating to stopped Podman machine shows current state', async () => {
       // This test is complex and requires machine management
       // Skipping for now as it requires specific machine state setup
       test.skip(true, 'Machine state testing requires complex setup');
+    });
+
+    test('TC-021: Navigating in the extension webView', async () => {
+      // advanced test case
+      test.skip(true, 'Machine state testing requires complex setup');
+    });
+
+    test('TC-022: Navigating back from containers details with tty attached, regression #15994', async () => {
+      // Test will be implemented later based on bug fix
+      test.skip(true, 'Implement later when #15994 is resolved');
     });
   });
