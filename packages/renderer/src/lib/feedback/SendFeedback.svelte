@@ -56,7 +56,7 @@ function handleUpdate(e: boolean): void {
 
 {#if displayModal}
 <div class='z-40'>
-  <Modal name="Share your feedback" onclose={(): Promise<void> => hideModal()}>
+  <Modal name="Share your feedback" onclose={(): Promise<void> => hideModal()} ignoreFocusOut={true}>
     <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
       <h1 class="grow text-lg font-bold capitalize">Share your feedback</h1>
       <CloseButton onclick={(): Promise<void> => hideModal()} />
