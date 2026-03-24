@@ -22,19 +22,21 @@ import { fileURLToPath } from 'node:url';
 
 import { RegistriesPage } from '/@/model/pages/registries-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isLinux } from '/@/utility/platform';
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
 import {
   backupAuthFile,
+  getAuthFileLocation,
   injectInvalidCredentials,
   removeRegistryCredentials,
   restoreAuthFile,
 } from '/@/utility/registry-auth-config';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-// Linux CI only: ensure auth.json exists before Electron starts.
-// registry-setup.ts sets up fs.watchFile only if auth.json exists at extension activation time,
-// so credential changes go undetected without it. macOS/Windows are not affected — Podman
-// creates auth.json under os.homedir() during installation.
+// All platforms: ensure auth.json exists before Electron starts so registry-setup.ts
+// registers its fs.watchFile. Without it, the extension returns early at activation and
+// credential changes written by the test are never detected.
+// On CI with freshly installed Podman (no prior podman login), auth.json may not exist yet —
+// this affects Windows (WSL, Hyper-V) and macOS (libkrun, applehv) nightly runners too.
 if (isLinux) {
   const xdgRuntimeDir = process.env.XDG_RUNTIME_DIR;
   if (xdgRuntimeDir) {
@@ -44,6 +46,12 @@ if (isLinux) {
     if (!fs.existsSync(authJsonPath)) {
       fs.writeFileSync(authJsonPath, JSON.stringify({ auths: {} }, null, 2), 'utf8');
     }
+  }
+} else if (isMac || isWindows) {
+  const authJsonPath = getAuthFileLocation();
+  if (!fs.existsSync(authJsonPath)) {
+    fs.mkdirSync(path.dirname(authJsonPath), { recursive: true });
+    fs.writeFileSync(authJsonPath, JSON.stringify({ auths: {} }, null, 2), 'utf8');
   }
 }
 
