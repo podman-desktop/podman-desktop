@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 import { RegistriesPage } from '/@/model/pages/registries-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
+import { deleteImage } from '/@/utility/operations';
 import { isLinux, isMac, isWindows } from '/@/utility/platform';
 import {
   backupAuthFile,
@@ -77,7 +78,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   authBackupPath = await backupAuthFile();
 });
 
-test.afterAll(async ({ runner }) => {
+test.afterAll(async ({ runner, page }) => {
   try {
     await removeRegistryCredentials(TEST_REGISTRY_URL).catch((error: unknown) => {
       console.log('Failed to remove invalid credentials:', error);
@@ -87,6 +88,11 @@ test.afterAll(async ({ runner }) => {
         console.log('Failed to restore auth file backup:', error);
       });
     }
+    await deleteImage(page, 'docker.io/library/valid-registry-build-test');
+    await deleteImage(page, 'docker.io/library/valid-registry-no-validation-test');
+    await deleteImage(page, 'docker.io/library/invalid-creds-validation-enabled-test');
+    await deleteImage(page, 'docker.io/library/invalid-creds-validation-disabled-test');
+    await deleteImage(page, 'ghcr.io/linuxcontainers/alpine');
   } finally {
     await runner.close();
   }
