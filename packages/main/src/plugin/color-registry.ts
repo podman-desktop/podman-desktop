@@ -399,8 +399,8 @@ export class ColorRegistry {
       light: charcoal[200],
     });
     this.registerColor(`${glNav}icon-hover-bg`, {
-      dark: charcoal[450],
-      light: gray[150],
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${glNav}icon-inset-bg`, {
       dark: charcoal[800],
@@ -1016,12 +1016,10 @@ export class ColorRegistry {
       dark: accent1[400],
       light: accent1[600],
     });
-    this.registerColorDefinition(
-      this.color(`${link}-hover-bg`)
-        .withLight(colorPaletteHelper(black).withAlpha(0.13))
-        .withDark(colorPaletteHelper(white).withAlpha(0.13))
-        .build(),
-    );
+    this.registerColor(`${link}-hover-bg`, {
+      dark: transparent,
+      light: transparent,
+    });
   }
 
   // button
@@ -1108,22 +1106,18 @@ export class ColorRegistry {
       dark: white,
       light: black,
     });
-    this.registerColorDefinition(
-      this.color(`${button}close-hover-bg`)
-        .withLight(colorPaletteHelper(black).withAlpha(0.13))
-        .withDark(colorPaletteHelper(white).withAlpha(0.13))
-        .build(),
-    );
+    this.registerColor(`${button}close-hover-bg`, {
+      dark: transparent,
+      light: transparent,
+    });
     this.registerColor(`${button}link-text`, {
       dark: accent1[300],
       light: accent1[600],
     });
-    this.registerColorDefinition(
-      this.color(`${button}link-hover-bg`)
-        .withLight(colorPaletteHelper(black).withAlpha(0.13))
-        .withDark(colorPaletteHelper(white).withAlpha(0.13))
-        .build(),
-    );
+    this.registerColor(`${button}link-hover-bg`, {
+      dark: transparent,
+      light: transparent,
+    });
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
@@ -1142,8 +1136,8 @@ export class ColorRegistry {
       light: gray[400],
     });
     this.registerColor(`${ab}hover-bg`, {
-      dark: charcoal[600],
-      light: gray[50],
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${ab}hover-text`, {
       dark: accent1[400],
