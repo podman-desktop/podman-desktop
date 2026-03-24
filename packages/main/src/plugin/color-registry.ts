@@ -1037,7 +1037,7 @@ export class ColorRegistry {
       light: accent1[400],
     });
     this.registerColor(`${button}secondary`, {
-      dark: accent1[400],
+      dark: gray[200],
       light: accent1[600],
     });
     this.registerColor(`${button}secondary-hover`, {
