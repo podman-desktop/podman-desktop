@@ -158,9 +158,9 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton);
 
     // expect that the error message is displayed
-    const errorMesssage = screen.getByRole('alert', { name: 'Error Message Content' });
-    expect(errorMesssage).toBeInTheDocument();
-    expect(errorMesssage).toHaveTextContent('Image does not exists');
+    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    expect(errorMessage).toBeInTheDocument();
+    expect(errorMessage).toHaveTextContent('Image does not exists');
   });
 
   test('Expect that focus is in `Image to pull` field after page is opened', async () => {
@@ -179,9 +179,9 @@ describe('PullImage', () => {
     await userEvent.keyboard('image-does-not-exist[Enter]');
 
     // expect that the error message is displayed
-    const errorMesssage = screen.getByRole('alert', { name: 'Error Message Content' });
-    expect(errorMesssage).toBeInTheDocument();
-    expect(errorMesssage).toHaveTextContent('Image does not exists');
+    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    expect(errorMessage).toBeInTheDocument();
+    expect(errorMessage).toHaveTextContent('Image does not exists');
   });
 
   // pull image with error and then pull image with success
@@ -199,9 +199,9 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton);
 
     // expect that the error message is displayed
-    const errorMesssage = screen.getByRole('alert', { name: 'Error Message Content' });
-    expect(errorMesssage).toBeInTheDocument();
-    expect(errorMesssage).toHaveTextContent('Image does not exists');
+    const errorMessage = screen.getByRole('alert', { name: 'Error Message Content' });
+    expect(errorMessage).toBeInTheDocument();
+    expect(errorMessage).toHaveTextContent('Image does not exists');
 
     // ok, now choose a valid image name
     await renderResult.rerender({ imageToPull: 'some-valid-image' });
@@ -211,7 +211,7 @@ describe('PullImage', () => {
     await userEvent.click(pullImagebutton2);
 
     // expect that the error message is not displayed
-    expect(errorMesssage).not.toBeInTheDocument();
+    expect(errorMessage).not.toBeInTheDocument();
   });
 
   test('Expect that pull image is suggesting an extension in case of matching error', async () => {
@@ -366,9 +366,9 @@ test('Expect latest tag warning is displayed when the image does not have latest
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is displayed
-  const errorMesssage = screen.getByRole('alert', { name: 'Warning Message Content' });
-  expect(errorMesssage).toBeInTheDocument();
-  expect(errorMesssage).toHaveTextContent('"latest" tag not found');
+  const errorMessage = screen.getByRole('alert', { name: 'Warning Message Content' });
+  expect(errorMessage).toBeInTheDocument();
+  expect(errorMessage).toHaveTextContent('"latest" tag not found');
 });
 
 test('Expect latest tag warning is not displayed when the image has latest tag', async () => {
@@ -378,8 +378,8 @@ test('Expect latest tag warning is not displayed when the image has latest tag',
   await userEvent.keyboard('my-registry/image-without-latest[Enter]');
 
   // expect that the warning message is not displayed
-  const errorMesssage = screen.queryByRole('alert', { name: 'Warning Message Content' });
-  expect(errorMesssage).toBeNull();
+  const errorMessage = screen.queryByRole('alert', { name: 'Warning Message Content' });
+  expect(errorMessage).toBeNull();
 });
 
 test('Expect done, details and run actions after a successful pull', async () => {
