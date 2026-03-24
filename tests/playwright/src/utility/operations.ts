@@ -507,6 +507,11 @@ export async function runComposeUpFromCLI(composeFilePath: string): Promise<void
 
 export async function removeAllImagesCLI(engine: 'podman' | 'docker' = 'podman', timeout = 120_000): Promise<void> {
   return test.step(`Remove all ${engine} images via CLI`, () => {
+    if (process.env.CI !== 'true') {
+      console.log(`Skipping ${engine} image cleanup (CI is not set to true)`);
+      return;
+    }
+
     try {
       const command = engine === 'podman' ? 'podman rmi --all --force' : 'docker image prune --all --force';
       // eslint-disable-next-line sonarjs/os-command
@@ -518,6 +523,23 @@ export async function removeAllImagesCLI(engine: 'podman' | 'docker' = 'podman',
         error instanceof Error ? error.message : String(error),
       );
     }
+  });
+}
+
+export async function ensureNoImagesPresentCLI(page: Page): Promise<void> {
+  return test.step('Ensure no images are present', async () => {
+    if (process.env.CI !== 'true') {
+      console.log('Skipping image cleanup and validation (CI is not set to true)');
+      return;
+    }
+
+    await removeAllImagesCLI('podman');
+    await removeAllImagesCLI('docker');
+
+    const navigationBar = new NavigationBar(page);
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+    await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 30_000 }).toBe(0);
   });
 }
 

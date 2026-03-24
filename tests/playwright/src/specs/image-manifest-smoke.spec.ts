@@ -30,7 +30,7 @@ import { SettingsBar } from '/@/model/pages/settings-bar';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteRegistry, removeAllImagesCLI } from '/@/utility/operations';
+import { deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
 import { isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
@@ -78,12 +78,8 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
     console.log('Error deleting registry:', error);
   });
 
-  await removeAllImagesCLI('podman');
-  await removeAllImagesCLI('docker');
-
+  await ensureNoImagesPresentCLI(page);
   imagesPage = await navigationBar.openImages();
-  await playExpect(imagesPage.heading).toBeVisible();
-  await playExpect.poll(async () => await imagesPage.countRowsFromTable(), { timeout: 30_000 }).toBe(0);
 });
 
 test.afterAll(async ({ runner, page }) => {
