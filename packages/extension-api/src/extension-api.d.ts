@@ -3114,12 +3114,21 @@ declare module '@podman-desktop/api' {
     };
   }
 
-  interface ContainerJSONEvent {
-    type: string;
-    status: string;
-    id: string;
-    Type?: string;
-  }
+  // Podman uses top-level `status` and `id`, while Docker API v1.52+ uses `Action` and `Actor.ID`.
+  type ContainerJSONEvent = {
+    Type: string;
+  } & (
+    | {
+        status: string;
+        id: string;
+      }
+    | {
+        Action: string;
+        Actor: {
+          ID: string;
+        };
+      }
+  );
 
   /**
    * Authentication credentials, used when pushing an image to a registry
