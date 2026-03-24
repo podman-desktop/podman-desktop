@@ -35,18 +35,14 @@ export type ContainersAuthConfigFile = {
 };
 
 /**
- * Get the auth.json file location based on the platform and environment.
+ * Get the auth.json file location based on the platform.
  * This replicates the logic from registry-setup.ts in the Podman extension.
  */
 export function getAuthFileLocation(): string {
   let podmanConfigContainersPath = '';
 
-  // Check if PODMAN_DESKTOP_HOME_DIR is set (used in E2E tests)
-  const podmanDesktopHomeDir = process.env.PODMAN_DESKTOP_HOME_DIR;
-
   if (isMac || isWindows) {
-    const baseDir = podmanDesktopHomeDir ?? os.homedir();
-    podmanConfigContainersPath = path.resolve(baseDir, '.config/containers');
+    podmanConfigContainersPath = path.resolve(os.homedir(), '.config/containers');
   } else if (isLinux) {
     const xdgRuntimeDirectory = process.env.XDG_RUNTIME_DIR ?? '';
     podmanConfigContainersPath = path.resolve(xdgRuntimeDirectory, 'containers');

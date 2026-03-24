@@ -191,15 +191,14 @@ export class BuildImagePage extends BasePage {
   async toggleRegistryValidation(enabled: boolean): Promise<void> {
     return test.step(`${enabled ? 'Enable' : 'Disable'} registry validation`, async () => {
       await playExpect(this.registryValidationCheckbox).toBeVisible();
-      const currentState = await this.registryValidationCheckbox.isChecked();
-      if (currentState !== enabled) {
-        await this.registryValidationCheckbox.click();
-        if (enabled) {
-          await playExpect(this.registryValidationCheckbox).toBeChecked();
-        } else {
-          await playExpect(this.registryValidationCheckbox).not.toBeChecked();
-        }
-      }
+      // Wait for the form to hydrate and settle into the opposite state before clicking
+      await playExpect
+        .poll(async () => await this.registryValidationCheckbox.isChecked(), { timeout: 10_000 })
+        .not.toBe(enabled);
+      await this.registryValidationCheckbox.click();
+      await playExpect
+        .poll(async () => await this.registryValidationCheckbox.isChecked(), { timeout: 10_000 })
+        .toBe(enabled);
     });
   }
 

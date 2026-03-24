@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,22 +31,19 @@ import {
 } from '/@/utility/registry-auth-config';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-// Linux CI only: ensure XDG_RUNTIME_DIR is set and auth.json exists before Electron starts.
+// Linux CI only: ensure auth.json exists before Electron starts.
 // registry-setup.ts sets up fs.watchFile only if auth.json exists at extension activation time,
 // so credential changes go undetected without it. macOS/Windows are not affected — Podman
 // creates auth.json under os.homedir() during installation.
-let syntheticXdgDir: string | undefined;
 if (isLinux) {
-  if (!process.env.XDG_RUNTIME_DIR) {
-    syntheticXdgDir = path.join(os.tmpdir(), 'pd-e2e-xdg-runtime');
-    fs.mkdirSync(syntheticXdgDir, { recursive: true });
-    process.env.XDG_RUNTIME_DIR = syntheticXdgDir;
-  }
-  const containersDir = path.join(process.env.XDG_RUNTIME_DIR, 'containers');
-  const authJsonPath = path.join(containersDir, 'auth.json');
-  fs.mkdirSync(containersDir, { recursive: true });
-  if (!fs.existsSync(authJsonPath)) {
-    fs.writeFileSync(authJsonPath, JSON.stringify({ auths: {} }, null, 2), 'utf8');
+  const xdgRuntimeDir = process.env.XDG_RUNTIME_DIR;
+  if (xdgRuntimeDir) {
+    const containersDir = path.join(xdgRuntimeDir, 'containers');
+    const authJsonPath = path.join(containersDir, 'auth.json');
+    fs.mkdirSync(containersDir, { recursive: true });
+    if (!fs.existsSync(authJsonPath)) {
+      fs.writeFileSync(authJsonPath, JSON.stringify({ auths: {} }, null, 2), 'utf8');
+    }
   }
 }
 
@@ -82,9 +78,6 @@ test.afterAll(async ({ runner }) => {
       await restoreAuthFile(authBackupPath).catch((error: unknown) => {
         console.log('Failed to restore auth file backup:', error);
       });
-    }
-    if (syntheticXdgDir) {
-      fs.rmSync(syntheticXdgDir, { recursive: true, force: true });
     }
   } finally {
     await runner.close();
