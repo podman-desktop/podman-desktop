@@ -21,20 +21,20 @@
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.3.1",
-    "@storybook/addon-docs": "^10.3.1",
-    "@storybook/addon-links": "^10.3.1",
-    "@storybook/addon-svelte-csf": "5.0.9",
-    "@storybook/addon-themes": "^10.3.1",
-    "@storybook/svelte-vite": "^10.3.1",
+    "@storybook/addon-a11y": "^10.3.3",
+    "@storybook/addon-docs": "^10.3.3",
+    "@storybook/addon-links": "^10.3.3",
+    "@storybook/addon-svelte-csf": "5.1.0",
+    "@storybook/addon-themes": "^10.3.3",
+    "@storybook/svelte-vite": "^10.3.3",
     "@sveltejs/package": "^2.5.7",
     "@sveltejs/vite-plugin-svelte": "6.2.4",
     "@tailwindcss/vite": "^4.2.2",
     "@tsconfig/svelte": "^5.0.8",
-    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
     "autoprefixer": "^10.4.27",
     "cross-env": "10.1.0",
-    "eslint-plugin-storybook": "10.3.1",
+    "eslint-plugin-storybook": "10.3.3",
     "eslint-plugin-svelte": "^3.16.0",
     "postcss": "^8.5.8",
     "postcss-load-config": "^6.0.1",
@@ -46,6 +46,6 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.1"
   }
 }

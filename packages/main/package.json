@@ -32,7 +32,7 @@
     "@types/validator": "^13.15.10",
     "@types/winreg": "^1.2.36",
     "msw": "^2.12.14",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.1"
   },
   "dependencies": {
     "@expo/sudo-prompt": "^9.3.2",
@@ -63,7 +63,7 @@
     "proxy": "^3.0.0",
     "semver": "^7.7.4",
     "stream-json": "^1.9.1",
-    "tar": "^7.5.12",
+    "tar": "^7.5.13",
     "tar-fs": "^3.1.2",
     "tar-stream": "^3.1.8",
     "undici": "^7.24.5",
