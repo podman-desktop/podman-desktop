@@ -19,6 +19,7 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { ArchitectureType } from '/@/model/core/platforms';
+import type { BuildImageOptions } from '/@/model/core/types';
 import { archType } from '/@/utility/platform';
 
 import { BasePage } from './base-page';
@@ -74,11 +75,13 @@ export class BuildImagePage extends BasePage {
     imageName: string,
     containerFilePath: string,
     contextDirectory: string,
-    archType: string[] = [ArchitectureType.Default],
-    timeout = 120_000,
-    target?: string,
-    errorExpected = false,
-    errorText?: string | RegExp,
+    {
+      archType = [ArchitectureType.Default],
+      timeout = 120_000,
+      target,
+      errorExpected = false,
+      errorText,
+    }: BuildImageOptions = {},
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
@@ -187,9 +190,9 @@ export class BuildImagePage extends BasePage {
 
   async toggleRegistryValidation(enabled: boolean): Promise<void> {
     return test.step(`${enabled ? 'Enable' : 'Disable'} registry validation`, async () => {
+      await playExpect(this.registryValidationCheckbox).toBeVisible();
       const currentState = await this.registryValidationCheckbox.isChecked();
       if (currentState !== enabled) {
-        await playExpect(this.registryValidationCheckbox).toBeVisible();
         await this.registryValidationCheckbox.click();
         if (enabled) {
           await playExpect(this.registryValidationCheckbox).toBeChecked();

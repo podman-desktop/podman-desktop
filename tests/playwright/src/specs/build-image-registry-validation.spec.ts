@@ -21,7 +21,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ArchitectureType } from '/@/model/core/platforms';
 import { RegistriesPage } from '/@/model/pages/registries-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { isLinux } from '/@/utility/platform';
@@ -276,11 +275,7 @@ test.describe
         'invalid-creds-validation-disabled-test',
         CONTAINERFILE_PATH,
         CONTEXT_DIR,
-        [ArchitectureType.Default],
-        40_000,
-        undefined,
-        true,
-        'failed to parse "X-Registry-Config" header',
+        { timeout: 40_000, errorExpected: true, errorText: 'failed to parse "X-Registry-Config" header' },
       );
 
       await test.step('Verify build failed and image was not created', async () => {
