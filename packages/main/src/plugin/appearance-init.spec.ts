@@ -165,6 +165,20 @@ test('Expect native theme to be set to system', async () => {
   expect(nativeTheme.themeSource).toEqual('system');
 });
 
+test('Expect native theme to be set to light for hc-light', async () => {
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
+  appearanceInit.updateNativeTheme('hc-light');
+
+  expect(nativeTheme.themeSource).toEqual('light');
+});
+
+test('Expect native theme to be set to dark for hc-dark', async () => {
+  const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
+  appearanceInit.updateNativeTheme('hc-dark');
+
+  expect(nativeTheme.themeSource).toEqual('dark');
+});
+
 test('Expect unknown theme to be set to system', async () => {
   const appearanceInit: AppearanceInit = new AppearanceInit(configurationRegistry, apiSender);
   appearanceInit.updateNativeTheme('unknown');

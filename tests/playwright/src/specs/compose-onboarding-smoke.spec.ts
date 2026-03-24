@@ -108,7 +108,7 @@ test.describe
           hasText: 'Compose successfully Downloaded',
         })
         .first();
-      const rateLimitExceeded = page.getByText('API rate limit exceeded').first();
+      const rateLimitExceeded = page.getByRole('dialog').getByText('API rate limit exceeded');
 
       await playExpect(downloadSuccess.or(rateLimitExceeded)).toBeVisible({ timeout: 50_000 });
 

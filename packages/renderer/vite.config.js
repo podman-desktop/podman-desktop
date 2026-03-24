@@ -37,7 +37,7 @@ export default defineConfig({
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js', hot: !process.env.VITEST }), svelteTesting()],
+  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js' }), svelteTesting()],
   optimizeDeps: {
     exclude: ['tinro', '@podman-desktop/api'],
   },
