@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalo
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Featured } from '/@/plugin/featured/featured.js';
 
+// eslint-disable-next-line no-restricted-imports
 import recommendations from '../../../../../recommendations.json' with { type: 'json' };
 
 @injectable()

@@ -76,3 +76,17 @@ test('Expect dark mode using dark configuration', async () => {
 
   await vi.waitFor(() => expect(get(isDark)).toBe(true));
 });
+
+test('Expect light mode using hc-light configuration', async () => {
+  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightHCEnumValue);
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(false));
+});
+
+test('Expect dark mode using hc-dark configuration', async () => {
+  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkHCEnumValue);
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isDark)).toBe(true));
+});

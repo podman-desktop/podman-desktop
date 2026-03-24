@@ -35,6 +35,8 @@ export * from './utility/wait';
 export * from './model/core/extensions';
 export * from './model/core/operations';
 export * from './model/core/platforms';
+export * from './model/core/settings/preferences';
+export * from './model/core/settings/registries';
 export * from './model/core/states';
 export * from './model/core/types';
 export * from './model/pages/authentication-page';

@@ -2,7 +2,7 @@
   "name": "docker",
   "displayName": "Docker",
   "description": "Integration for Docker engine",
-  "version": "1.26.0-next",
+  "version": "1.27.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -25,7 +25,7 @@
     "adm-zip": "^0.5.16",
     "mkdirp": "^3.0.1",
     "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.1"
   },
   "contributes": {
     "commands": [

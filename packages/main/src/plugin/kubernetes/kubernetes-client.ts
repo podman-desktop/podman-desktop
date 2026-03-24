@@ -1458,7 +1458,14 @@ export class KubernetesClient {
   }
 
   public dispose(): void {
+    this.kubeConfigWatcher?.dispose();
     this.contextsState?.dispose();
+    this.contextsStatesDispatcher?.dispose();
+    this.#portForwardService?.dispose();
+    for (const entry of this.#execs.values()) {
+      entry.conn.close();
+    }
+    this.#execs.clear();
   }
 
   async execIntoContainer(

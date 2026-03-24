@@ -26,7 +26,7 @@ We distinguish between two operational modes to run the tests with: development 
 Multiple scenarios may occur:
 
 1. Running E2E tests from `podman-desktop` repository in DEVELOPMENT mode: We do not need to set any paths to electron binary, `Runner` uses default configuration and grabs electron from `/node_modules/.bin/electron` which is installed via electron dependency postinstall script during `pnpm install`.
-2. Running E2 tests from `podman-desktop` repository in PRODUCTION mode: We need to set `PODMAN_DESKTOP_BINARY` environment variable when running the tests from `podman-desktop` repository with the previously built or downloaded Podman Desktop electron app. Simply point to a `podman-desktop` binary or executable.
+2. Running E2E tests from `podman-desktop` repository in PRODUCTION mode: We need to set `PODMAN_DESKTOP_BINARY` environment variable when running the tests from `podman-desktop` repository with the previously built or downloaded Podman Desktop electron app. Simply point to a `podman-desktop` binary or executable.
 3. Running E2E tests in external repository in DEVELOPMENT mode: Set `PODMAN_DESKTOP_ARGS` and point to the previously built `podman-desktop` repository. We are using electron binary from `podman-desktop` repository the same way as in point 1.
 4. Running E2E tests in external repository in PRODUCTION mode: Set `PODMAN_DESKTOP_BINARY` environment variable and point to a downloaded/built Podman Desktop application which is also main electron binary that is used.
 

@@ -43,7 +43,6 @@ import type {
 } from '@kubernetes/client-node';
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
-  CertificateInfo,
   CliToolInfo,
   ColorInfo,
   CommandInfo,
@@ -124,6 +123,7 @@ import type {
   WebviewInfo,
   WelcomeMessages,
 } from '@podman-desktop/core-api';
+import type { ApiSenderChannelMap } from '@podman-desktop/core-api/api-sender';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo } from '@podman-desktop/core-api/authentication';
 import {
@@ -186,6 +186,7 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { Context } from './context/context.js';
 import { ContributionManager } from './contribution-manager.js';
 import { CustomPickRegistry } from './custompick/custompick-registry.js';
+import { DashboardService } from './dashboard/dashboard-service.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { DialogRegistry } from './dialog-registry.js';
 import { Directories } from './directories.js';
@@ -386,14 +387,14 @@ export class PluginSystem {
   }
 
   getApiSender(webContents: WebContents): ApiSenderType {
-    const queuedEvents: { channel: string; data: unknown }[] = [];
+    const queuedEvents: { channel: string; data: unknown[] }[] = [];
 
     const flushQueuedEvents = (): void => {
       // flush queued events ?
       if (this.uiReady && this.isReady && queuedEvents.length > 0) {
         console.log(`Delayed startup, flushing ${queuedEvents.length} events`);
         queuedEvents.forEach(({ channel, data }) => {
-          webContents.send('api-sender', channel, data);
+          webContents.send('api-sender', channel, ...data);
         });
         queuedEvents.length = 0;
       }
@@ -407,20 +408,26 @@ export class PluginSystem {
 
     const eventEmitter = new EventEmitter();
     return {
-      send: (channel: string, data: unknown): void => {
+      send: <K extends keyof ApiSenderChannelMap>(
+        channel: K,
+        ...data: ApiSenderChannelMap[K] extends never ? [] : [data: ApiSenderChannelMap[K]]
+      ): void => {
         // send only when the UI is ready
         if (this.uiReady && this.isReady) {
           flushQueuedEvents();
           if (!webContents.isDestroyed()) {
-            webContents.send('api-sender', channel, data);
+            webContents.send('api-sender', channel, ...data);
           }
         } else {
           // add to the queue
           queuedEvents.push({ channel, data });
         }
-        eventEmitter.emit(channel, data);
+        eventEmitter.emit(channel, ...data);
       },
-      receive: (channel: string, func: (...args: unknown[]) => void): IDisposable => {
+      receive: <K extends keyof ApiSenderChannelMap>(
+        channel: K,
+        func: ApiSenderChannelMap[K] extends never ? () => void : (data: ApiSenderChannelMap[K]) => void,
+      ): IDisposable => {
         eventEmitter.on(channel, func);
         return {
           dispose: (): void => {
@@ -529,11 +536,6 @@ export class PluginSystem {
       configurationRegistryEmitter,
     );
 
-    container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
-    const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
-      ExperimentalConfigurationManager,
-    );
-
     container.bind<ColorRegistry>(ColorRegistry).to(InjectableColorRegistry).inSingletonScope();
     const colorRegistry = container.get<ColorRegistry>(ColorRegistry);
     colorRegistry.init();
@@ -552,6 +554,11 @@ export class PluginSystem {
     container.bind<Telemetry>(Telemetry).toSelf().inSingletonScope();
     const telemetry = container.get<Telemetry>(Telemetry);
     await telemetry.init();
+
+    container.bind<ExperimentalConfigurationManager>(ExperimentalConfigurationManager).toSelf().inSingletonScope();
+    const experimentalConfigurationManager = container.get<ExperimentalConfigurationManager>(
+      ExperimentalConfigurationManager,
+    );
 
     container.bind<CommandRegistry>(CommandRegistry).toSelf().inSingletonScope();
     const commandRegistry = container.get<CommandRegistry>(CommandRegistry);
@@ -576,6 +583,9 @@ export class PluginSystem {
     container.bind<CustomPickRegistry>(CustomPickRegistry).toSelf().inSingletonScope();
     container.bind<OnboardingRegistry>(OnboardingRegistry).toSelf().inSingletonScope();
     container.bind<FeatureRegistry>(FeatureRegistry).toSelf().inSingletonScope();
+    const featureRegistry = container.get<FeatureRegistry>(FeatureRegistry);
+    featureRegistry.init();
+
     container.bind<KubernetesClient>(KubernetesClient).toSelf().inSingletonScope();
     const kubernetesClient = container.get<KubernetesClient>(KubernetesClient);
     await kubernetesClient.init();
@@ -591,6 +601,10 @@ export class PluginSystem {
     container.bind<StatusbarProvidersInit>(StatusbarProvidersInit).toSelf().inSingletonScope();
     const statusbarProviders = container.get<StatusbarProvidersInit>(StatusbarProvidersInit);
     statusbarProviders.init();
+
+    container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
+    const dashboardService = container.get<DashboardService>(DashboardService);
+    dashboardService.init();
 
     container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
     const helpMenu = container.get<HelpMenu>(HelpMenu);
@@ -612,6 +626,7 @@ export class PluginSystem {
     Object.freeze(notifications);
     const kubeGeneratorRegistry = container.get<KubeGeneratorRegistry>(KubeGeneratorRegistry);
     const containerProviderRegistry = container.get<ContainerProviderRegistry>(ContainerProviderRegistry);
+    containerProviderRegistry.init();
     kubeGeneratorRegistry.registerDefaultKubeGenerator({
       name: 'PodmanKube',
       types: ['Compose', 'Container', 'Pod'],
@@ -1281,16 +1296,40 @@ export class PluginSystem {
         imageName: string,
         callbackId: number,
         platform?: string,
+        cancellableTokenId?: number,
       ): Promise<void> => {
-        return commandRegistry.executeCommand(
-          'pullImage',
-          providerContainerConnectionInfo,
-          imageName,
-          (event: PullEvent) => {
-            this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
-          },
-          platform,
+        const abortController = this.createAbortControllerOnCancellationToken(
+          cancellationTokenRegistry,
+          cancellableTokenId,
         );
+        const task = taskManager.createTask({
+          title: `Pulling ${imageName}`,
+          cancellable: cancellableTokenId !== undefined,
+          cancellationTokenSourceId: cancellableTokenId,
+        });
+
+        try {
+          await containerProviderRegistry.pullImage(
+            providerContainerConnectionInfo,
+            imageName,
+            (event: PullEvent) => {
+              this.getWebContentsSender().send('container-provider-registry:pullImage-onData', callbackId, event);
+            },
+            platform,
+            abortController,
+          );
+          task.status = 'success';
+        } catch (error: unknown) {
+          const cancellationToken = cancellableTokenId
+            ? cancellationTokenRegistry.getCancellationTokenSource(cancellableTokenId)?.token
+            : undefined;
+          if (cancellationToken?.isCancellationRequested) {
+            task.status = 'canceled';
+          } else {
+            task.error = `Something went wrong while trying to pull ${imageName}: ${String(error)};`;
+          }
+          throw error;
+        }
       },
     );
 
@@ -1534,6 +1573,7 @@ export class PluginSystem {
         buildargs?: { [key: string]: string },
         taskId?: number,
         target?: string,
+        validateRegistries?: boolean,
       ): Promise<unknown> => {
         const titleArgs = ['Building image'];
         if (imageName) {
@@ -1583,6 +1623,7 @@ export class PluginSystem {
               abortController,
               buildargs,
               target,
+              validateRegistries,
             },
           )
           .then(result => {
@@ -2429,10 +2470,6 @@ export class PluginSystem {
 
     this.ipcHandle('proxy:getState', async (): Promise<ProxyState> => {
       return proxy.getState();
-    });
-
-    this.ipcHandle('certificates:listCertificates', async (): Promise<CertificateInfo[]> => {
-      return certificates.getAllCertificateInfos();
     });
 
     this.ipcHandle(

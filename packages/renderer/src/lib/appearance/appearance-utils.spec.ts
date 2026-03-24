@@ -44,14 +44,14 @@ test('Expect standard icon using dark configuration', async () => {
   const img = 'icon.png';
   vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkEnumValue);
 
-  expect(await appearanceUtil.getImage(img)).toBe(img);
+  expect(appearanceUtil.getImage(img)).toBe(img);
 });
 
 test('Expect standard icon using light configuration', async () => {
   const img = 'icon.png';
   vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightEnumValue);
 
-  expect(await appearanceUtil.getImage(img)).toBe(img);
+  expect(appearanceUtil.getImage(img)).toBe(img);
 });
 
 test('Expect dark icon using dark configuration', async () => {
@@ -59,7 +59,7 @@ test('Expect dark icon using dark configuration', async () => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.DarkEnumValue);
   configurationProperties.set([]);
 
-  await vi.waitFor(async () => expect(await appearanceUtil.getImage(img)).toBe(img.dark));
+  await vi.waitFor(async () => expect(appearanceUtil.getImage(img)).toBe(img.dark));
 });
 
 test('Expect light icon using light configuration', async () => {
@@ -67,7 +67,7 @@ test('Expect light icon using light configuration', async () => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(AppearanceSettings.LightEnumValue);
   configurationProperties.set([]);
 
-  await vi.waitFor(async () => expect(await appearanceUtil.getImage(img)).toBe(img.light));
+  await vi.waitFor(async () => expect(appearanceUtil.getImage(img)).toBe(img.light));
 });
 
 describe('getTheme', () => {

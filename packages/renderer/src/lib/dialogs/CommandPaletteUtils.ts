@@ -72,7 +72,7 @@ function processNavigationEntry(
   }
 
   // Determine the display name with appropriate prefix and count
-  let displayName = entry.name;
+  let displayName: string;
 
   // Add count in parentheses if available
   const count = entry.counter || 0;

@@ -38,7 +38,7 @@
       "title": "Manage Docker",
       "description": "With Podman Desktop, you can configure a Docker-compatible environment using the Settings page. After configuration, your Docker tools are directed to use the Podman engine and your Compose application can be run using the Podman CLI.",
       "buttonIcon": "fas fa-gears",
-      "buttonTitle": "Manage Compatibility",
+      "buttonTitle": "Manage compatibility",
       "buttonLink": "/preferences/docker-compatibility",
       "tutorialLink": "",
       "learnMore": "https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility",

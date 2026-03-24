@@ -39,48 +39,49 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Cancelable task verification', { tag: ['@smoke', '@windows_sanity'] }, () => {
-  test('Enable all experimental features', async ({ navigationBar }) => {
-    const settingsBar = await navigationBar.openSettings();
+test.describe
+  .serial('Cancelable task verification', { tag: ['@smoke', '@windows_sanity'] }, () => {
+    test('Enable all experimental features', async ({ navigationBar }) => {
+      const settingsBar = await navigationBar.openSettings();
 
-    const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
-    await playExpect(experimentalPage.heading).toBeVisible({ timeout: 10_000 });
-    await experimentalPage.enableAllExperimentalFeatures();
+      const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+      await playExpect(experimentalPage.heading).toBeVisible({ timeout: 10_000 });
+      await experimentalPage.enableAllExperimentalFeatures();
+    });
+
+    test('Install long running task extension', async ({ navigationBar }) => {
+      const extensionsPage = await navigationBar.openExtensions();
+      await extensionsPage.installExtensionFromOCIImage(longRunningTaskName);
+    });
+
+    test('Cancel long running task', async ({ page }) => {
+      const commandPalettePage = new CommandPalette(page);
+      await commandPalettePage.executeCommand(taskName);
+
+      const statusBar = new StatusBar(page);
+      const tasksPage = await statusBar.openTasksPage();
+      await playExpect(tasksPage.heading).toBeVisible();
+      await tasksPage.cancelLatestTask();
+      await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Canceled);
+    });
+
+    test('Check that task is finished successfully', async ({ page }) => {
+      test.setTimeout(200_000);
+
+      const commandPalettePage = new CommandPalette(page);
+      await commandPalettePage.executeCommand(taskName);
+
+      const tasksPage = new TasksPage(page);
+      await playExpect(tasksPage.heading).toBeVisible();
+      await playExpect
+        .poll(async () => await tasksPage.getStatusForLatestTask(), { timeout: 180_000 })
+        .toContain(TaskState.Success);
+    });
+
+    test('Clear all tasks', async ({ page }) => {
+      const tasksPage = new TasksPage(page);
+      await playExpect(tasksPage.heading).toBeVisible();
+      await tasksPage.clearAllTasks();
+      await playExpect(tasksPage.taskList).toHaveCount(0);
+    });
   });
-
-  test('Install long running task extension', async ({ navigationBar }) => {
-    const extensionsPage = await navigationBar.openExtensions();
-    await extensionsPage.installExtensionFromOCIImage(longRunningTaskName);
-  });
-
-  test('Cancel long running task', async ({ page }) => {
-    const commandPalettePage = new CommandPalette(page);
-    await commandPalettePage.executeCommand(taskName);
-
-    const statusBar = new StatusBar(page);
-    const tasksPage = await statusBar.openTasksPage();
-    await playExpect(tasksPage.heading).toBeVisible();
-    await tasksPage.cancelLatestTask();
-    await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Canceled);
-  });
-
-  test('Check that task is finished successfully', async ({ page }) => {
-    test.setTimeout(200_000);
-
-    const commandPalettePage = new CommandPalette(page);
-    await commandPalettePage.executeCommand(taskName);
-
-    const tasksPage = new TasksPage(page);
-    await playExpect(tasksPage.heading).toBeVisible();
-    await playExpect
-      .poll(async () => await tasksPage.getStatusForLatestTask(), { timeout: 180_000 })
-      .toContain(TaskState.Success);
-  });
-
-  test('Clear all tasks', async ({ page }) => {
-    const tasksPage = new TasksPage(page);
-    await playExpect(tasksPage.heading).toBeVisible();
-    await tasksPage.clearAllTasks();
-    await playExpect(tasksPage.taskList).toHaveCount(0);
-  });
-});

@@ -73,6 +73,27 @@ test.describe('Image search verification', { tag: ['@smoke', '@windows_sanity'] 
     playExpect(searchResults).toContain('quay.io/podman');
   });
 
+  test('Pull image from search results and view details', async ({ navigationBar }) => {
+    const imagesPage = await navigationBar.openImages();
+    await playExpect(imagesPage.heading).toBeVisible();
+
+    const pullImagePage = await imagesPage.openPullImage();
+    await playExpect(pullImagePage.heading).toBeVisible();
+
+    const searchResults = await pullImagePage.getAllSearchResultsFor(imageToSearch, true, 'latest');
+    playExpect(searchResults.length).toBeGreaterThan(0);
+
+    const imageDetailsPage = await pullImagePage.pullImageFromSearchResultsAndViewDetails(`${imageToSearch}:latest`);
+    await playExpect(imageDetailsPage.heading).toBeVisible();
+
+    const updatedImagesPage = await imageDetailsPage.deleteImage();
+    await playExpect(updatedImagesPage.heading).toBeVisible({ timeout: 30_000 });
+
+    await playExpect
+      .poll(async () => await updatedImagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
+      .toBeTruthy();
+  });
+
   test(`Search for ${httpdImage} after using intermediate steps`, async ({ navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();

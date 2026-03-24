@@ -53,6 +53,7 @@ import type { InstalledPodman } from '/@/utils/podman-binary';
 import { PodmanBinary } from '/@/utils/podman-binary';
 
 import { CertificateDetectionService } from './certificate-detection/certificate-detection-service';
+import { PodmanCertificateSync } from './certificate-sync/podman-certificate-sync';
 import { getDetectionChecks } from './checks/detection-checks';
 import { MacKrunkitPodmanMachineCreationCheck, MacPodmanInstallCheck } from './checks/macos-checks';
 import { PodmanCleanupMacOS } from './cleanup/podman-cleanup-macos';
@@ -1138,7 +1139,7 @@ export function registerOnboardingRemoveUnsupportedMachinesCommand(): extensionA
     }
 
     // check if unmarshalling errors
-    let machineListError = '';
+    let machineListError: string;
     try {
       const machineListOutput = await getJSONMachineList();
       machineListError = machineListOutput.error;
@@ -1651,6 +1652,12 @@ export async function start(
     onboardingUnsupportedPodmanMachineCommand,
     onboardingRemoveUnsupportedMachinesCommand,
   );
+
+  const podmanCertSync = new PodmanCertificateSync(podmanMachinesStatuses, podmanMachinesInfo);
+  const syncCertsCommand = extensionApi.commands.registerCommand('podman.synchronizeCertificates', async () => {
+    await podmanCertSync.synchronizeAll();
+  });
+  extensionContext.subscriptions.push(syncCertsCommand);
 
   // register the registries
   const registrySetup = new RegistrySetup();

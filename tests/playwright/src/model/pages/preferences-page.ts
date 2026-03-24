@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ export class PreferencesPage extends SettingsPage {
   readonly heading: Locator;
   readonly searchbar: Locator;
   readonly kubePathInput: Locator;
-  readonly APPEARANCE_PREFERENCE_LABEL = 'Appearance';
 
   constructor(page: Page) {
     super(page, 'Preferences');
@@ -39,7 +38,7 @@ export class PreferencesPage extends SettingsPage {
   getPreferenceRowByName(name: string): Locator {
     return this.content
       .locator('div.flex.flex-row.justify-between')
-      .filter({ has: this.page.getByText(name, { exact: true }) });
+      .filter({ has: this.page.locator('span.font-semibold').getByText(name, { exact: true }) });
   }
 
   async isPreferenceManaged(name: string): Promise<boolean> {
@@ -54,32 +53,77 @@ export class PreferencesPage extends SettingsPage {
     await resetButton.click();
   }
 
-  async getAppearancePreferenceValue(): Promise<string> {
-    const appearancePreferenceRow = this.getPreferenceRowByName(this.APPEARANCE_PREFERENCE_LABEL);
-    await playExpect(appearancePreferenceRow).toBeAttached();
-    await appearancePreferenceRow.scrollIntoViewIfNeeded();
-    await playExpect(appearancePreferenceRow).toBeVisible();
+  async getPreferenceDropdownValue(preferenceLabel: string): Promise<string> {
+    const preferenceRow = this.getPreferenceRowByName(preferenceLabel);
+    await playExpect(preferenceRow).toBeAttached();
+    await preferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(preferenceRow).toBeVisible();
 
-    const preferenceInput = appearancePreferenceRow.getByLabel('hidden input');
+    const preferenceInput = preferenceRow.getByLabel('hidden input');
     await playExpect(preferenceInput).toBeAttached();
     return await preferenceInput.inputValue();
   }
 
-  async setAppearancePreference(value: string): Promise<void> {
-    const appearancePreferenceRow = this.getPreferenceRowByName(this.APPEARANCE_PREFERENCE_LABEL);
-    await playExpect(appearancePreferenceRow).toBeAttached();
-    await appearancePreferenceRow.scrollIntoViewIfNeeded();
-    await playExpect(appearancePreferenceRow).toBeVisible();
+  async setPreferenceDropdownValue(preferenceLabel: string, value: string): Promise<void> {
+    const preferenceRow = this.getPreferenceRowByName(preferenceLabel);
+    await playExpect(preferenceRow).toBeAttached();
+    await preferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(preferenceRow).toBeVisible();
 
-    const selectionButton = appearancePreferenceRow.getByLabel(
-      'Select between light or dark mode, or use your system setting.',
-    );
-    await playExpect(selectionButton).toBeVisible();
-    await selectionButton.click();
+    const triggerButton = preferenceRow
+      .locator('div[aria-label]:has(input[aria-label="hidden input"])')
+      .getByRole('button')
+      .first();
+    await playExpect(triggerButton).toBeVisible();
+    await triggerButton.click();
 
-    const option = appearancePreferenceRow.getByRole('button', { name: value, exact: true });
+    const option = preferenceRow.getByRole('button', { name: value, exact: true });
     await playExpect(option).toBeVisible();
     await option.click();
+  }
+
+  async getPreferenceCheckboxValue(preferenceName: string, toggleLabel: string): Promise<boolean> {
+    const preferenceRow = this.getPreferenceRowByName(preferenceName);
+    await playExpect(preferenceRow).toBeAttached();
+    await preferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(preferenceRow).toBeVisible();
+
+    const toggle = preferenceRow.getByLabel(toggleLabel);
+    await playExpect(toggle).toBeAttached();
+    return await toggle.isChecked();
+  }
+
+  async togglePreferenceCheckbox(preferenceName: string, toggleLabel: string): Promise<void> {
+    const preferenceRow = this.getPreferenceRowByName(preferenceName);
+    await playExpect(preferenceRow).toBeAttached();
+    await preferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(preferenceRow).toBeVisible();
+
+    const toggle = preferenceRow.getByLabel(toggleLabel);
+    await playExpect(toggle).toBeVisible();
+    await toggle.click({ force: true });
+  }
+
+  async getPreferenceNumberInputValue(preferenceName: string, configId: string): Promise<string> {
+    const preferenceRow = this.getPreferenceRowByName(preferenceName);
+    await playExpect(preferenceRow).toBeAttached();
+    await preferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(preferenceRow).toBeVisible();
+
+    const preferenceInput = preferenceRow.locator(`input[name="${configId}"]`);
+    await playExpect(preferenceInput).toBeAttached();
+    return await preferenceInput.inputValue();
+  }
+
+  async setPreferenceNumberInputValue(preferenceName: string, configId: string, value: string): Promise<void> {
+    const preferenceRow = this.getPreferenceRowByName(preferenceName);
+    await playExpect(preferenceRow).toBeAttached();
+    await preferenceRow.scrollIntoViewIfNeeded();
+    await playExpect(preferenceRow).toBeVisible();
+
+    const preferenceInput = preferenceRow.locator(`input[name="${configId}"]`);
+    await playExpect(preferenceInput).toBeAttached();
+    await preferenceInput.fill(value);
   }
 
   async selectKubeFile(pathToKube: string): Promise<void> {

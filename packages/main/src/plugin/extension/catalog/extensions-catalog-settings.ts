@@ -19,4 +19,5 @@
 export enum ExtensionsCatalogSettings {
   SectionName = 'extensions',
   registryUrl = 'registryUrl',
+  catalogEnabled = 'catalog.enabled',
 }

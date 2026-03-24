@@ -29,6 +29,7 @@ import { Uri } from './types/uri.js';
 
 export class FileSystemWatcherImpl implements containerDesktopAPI.FileSystemWatcher {
   watcher: chokidar.FSWatcher | undefined;
+  private parentWatcher: FileSystemWatcherImpl | undefined;
 
   constructor(path: string) {
     const parent = pathfs.dirname(path);
@@ -36,13 +37,13 @@ export class FileSystemWatcherImpl implements containerDesktopAPI.FileSystemWatc
       this.doWatch(pathfs.join(fs.realpathSync(parent), pathfs.basename(path)), true);
     } else if (parent !== path) {
       // we stop the recursion at /
-      const parentWatcher = new FileSystemWatcherImpl(parent);
-      const dispoReady = parentWatcher.onReady(() => {
+      this.parentWatcher = new FileSystemWatcherImpl(parent);
+      const dispoReady = this.parentWatcher.onReady(() => {
         this._onReady.fire();
         dispoReady.dispose();
       });
 
-      const disposable = parentWatcher.onDidCreate((uri: containerDesktopAPI.Uri) => {
+      const disposable = this.parentWatcher.onDidCreate((uri: containerDesktopAPI.Uri) => {
         if (uri.path === parent) {
           this.doWatch(pathfs.join(fs.realpathSync(parent), pathfs.basename(path)));
           disposable.dispose();
@@ -98,6 +99,8 @@ export class FileSystemWatcherImpl implements containerDesktopAPI.FileSystemWatc
   readonly onDidDelete: containerDesktopAPI.Event<containerDesktopAPI.Uri> = this._onDidDelete.event;
 
   dispose(): void {
+    this.parentWatcher?.dispose();
+    this.parentWatcher = undefined;
     if (this.watcher) {
       this.watcher.close()?.catch((err: unknown) => {
         console.error('unable to close watcher', err);

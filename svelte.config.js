@@ -19,6 +19,7 @@
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   compilerOptions: {
+    hmr: !process.env.VITEST,
     experimental: {
       async: true,
     },

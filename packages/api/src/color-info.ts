@@ -19,6 +19,8 @@
 export interface ColorDefinition {
   dark: string;
   light: string;
+  hcDark?: string;
+  hcLight?: string;
 }
 
 export interface ColorInfo {

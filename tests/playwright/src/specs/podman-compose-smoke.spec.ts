@@ -63,62 +63,63 @@ test.skip(
   'Tests suite should not run on Mac platform in CICD due to being unable  to ensure Compose is installed',
 );
 
-test.describe.serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
-  test.beforeEach(async () => {
-    if (cliToolsPage.wasRateLimitReached()) {
-      test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
-      test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
-    }
+test.describe
+  .serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
+    test.beforeEach(async () => {
+      if (cliToolsPage.wasRateLimitReached()) {
+        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+        test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
+      }
+    });
+
+    test('Verify Compose was installed', async ({ page, navigationBar }) => {
+      test.skip(!!isCI && isLinux, 'This test should not run on Ubuntu platform in Github Actions');
+
+      await navigationBar.openSettings();
+      const settingsBar = new SettingsBar(page);
+      const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+      await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+
+      const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
+      const setupButton = composeBox.setupButton;
+
+      if ((await setupButton.count()) > 0 && !isMac) {
+        await settingsBar.cliToolsTab.click();
+        await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+        await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+        await cliToolsPage.installTool('Compose');
+      }
+
+      await navigationBar.openSettings();
+      cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
+      const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
+      const composeVersionInfo = composeRow.getByLabel('cli-version');
+      await playExpect(composeVersionInfo).toContainText('docker-compose');
+    });
+
+    test('Check Podman Desktop autorefresh when using podman compose up', async ({ navigationBar }) => {
+      test.setTimeout(300_000);
+
+      const composeFilePath = path.resolve(__dirname, '..', '..', 'resources', 'compose.yaml');
+      await runComposeUpFromCLI(composeFilePath);
+
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+
+      await playExpect
+        .poll(async () => await containersPage.containerExists(composeContainer), { timeout: 120_000 })
+        .toBeTruthy();
+      await playExpect
+        .poll(async () => await containersPage.containerExists(backendContainerName), { timeout: 120_000 })
+        .toBeTruthy();
+      await playExpect
+        .poll(async () => await containersPage.containerExists(frontendContainerName), { timeout: 120_000 })
+        .toBeTruthy();
+
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      await playExpect.poll(async () => await imagesPage.waitForImageExists(backendImageName)).toBeTruthy();
+      await playExpect.poll(async () => await imagesPage.waitForImageExists(frontendImageName)).toBeTruthy();
+    });
   });
-
-  test('Verify Compose was installed', async ({ page, navigationBar }) => {
-    test.skip(!!isCI && isLinux, 'This test should not run on Ubuntu platform in Github Actions');
-
-    await navigationBar.openSettings();
-    const settingsBar = new SettingsBar(page);
-    const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
-    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
-
-    const composeBox = new ResourceCliCardPage(page, RESOURCE_NAME);
-    const setupButton = composeBox.setupButton;
-
-    if ((await setupButton.count()) > 0 && !isMac) {
-      await settingsBar.cliToolsTab.click();
-      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
-      await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
-      await cliToolsPage.installTool('Compose');
-    }
-
-    await navigationBar.openSettings();
-    cliToolsPage = await settingsBar.openTabPage(CLIToolsPage);
-    const composeRow = cliToolsPage.toolsTable.getByLabel(RESOURCE_NAME);
-    const composeVersionInfo = composeRow.getByLabel('cli-version');
-    await playExpect(composeVersionInfo).toContainText('docker-compose');
-  });
-
-  test('Check Podman Desktop autorefresh when using podman compose up', async ({ navigationBar }) => {
-    test.setTimeout(300_000);
-
-    const composeFilePath = path.resolve(__dirname, '..', '..', 'resources', 'compose.yaml');
-    await runComposeUpFromCLI(composeFilePath);
-
-    const containersPage = await navigationBar.openContainers();
-    await playExpect(containersPage.heading).toBeVisible();
-
-    await playExpect
-      .poll(async () => await containersPage.containerExists(composeContainer), { timeout: 120_000 })
-      .toBeTruthy();
-    await playExpect
-      .poll(async () => await containersPage.containerExists(backendContainerName), { timeout: 120_000 })
-      .toBeTruthy();
-    await playExpect
-      .poll(async () => await containersPage.containerExists(frontendContainerName), { timeout: 120_000 })
-      .toBeTruthy();
-
-    const imagesPage = await navigationBar.openImages();
-    await playExpect(imagesPage.heading).toBeVisible();
-
-    await playExpect.poll(async () => await imagesPage.waitForImageExists(backendImageName)).toBeTruthy();
-    await playExpect.poll(async () => await imagesPage.waitForImageExists(frontendImageName)).toBeTruthy();
-  });
-});

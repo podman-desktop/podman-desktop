@@ -50,7 +50,7 @@ export class NavigationBar {
     this.containersLink = this.page.getByRole('link', { name: 'Containers' }).nth(0);
     this.podsLink = this.page.getByRole('link', { name: 'Pods', exact: true }).nth(0);
     this.volumesLink = this.page.getByRole('link', { name: 'Volumes' });
-    this.dashboardLink = this.page.getByRole('link', { name: 'Dashboard' });
+    this.dashboardLink = this.page.getByRole('link', { name: 'Dashboard', exact: true });
     this.settingsLink = this.page.getByRole('link', { name: 'Settings', exact: true });
     this.extensionsLink = this.navigationLocator.getByRole('link', {
       name: 'Extensions',

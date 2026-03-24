@@ -21,14 +21,19 @@ import { type AddressInfo, createConnection, createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { Server } from 'ssh2';
+import { Client, Server } from 'ssh2';
 import { generatePrivateKey } from 'sshpk';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.restoreAllMocks();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 class TestPodmanRemoteSshTunnel extends PodmanRemoteSshTunnel {
@@ -121,4 +126,26 @@ test('should be able to connect', async () => {
 
   client.end();
   npipeServer.close();
+});
+
+test('disconnect should clear pending reconnect timeout', () => {
+  vi.useFakeTimers();
+  vi.spyOn(Client.prototype, 'connect').mockReturnThis();
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+  const connectSpy = vi.spyOn(podmanRemoteSshTunnel, 'connect');
+
+  podmanRemoteSshTunnel.connect();
+  podmanRemoteSshTunnel.handleReconnect();
+  podmanRemoteSshTunnel.disconnect();
+
+  vi.advanceTimersByTime(30000);
+  expect(connectSpy).toHaveBeenCalledTimes(1);
 });

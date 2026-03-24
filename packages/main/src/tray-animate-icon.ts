@@ -23,7 +23,7 @@ import { app, nativeTheme } from 'electron';
 
 import product from '/@product.json' with { type: 'json' };
 
-import { isLinux, isMac } from './util.js';
+import { isMac } from './util.js';
 
 export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
 
@@ -33,6 +33,7 @@ export class AnimatedTray {
   private animatedInterval: NodeJS.Timeout | undefined = undefined;
   private tray: Tray | undefined = undefined;
   private color = 'default'; // default, light, dark
+  private readonly onThemeUpdated: () => void;
   static readonly MAIN_ASSETS_FOLDER = 'packages/main/src/assets';
 
   constructor() {
@@ -40,9 +41,10 @@ export class AnimatedTray {
     this.updateIcon();
 
     // refresh icon when theme is being updated (especially for Windows as for macOS we always use template icon and on linux the menu bar is not related to the theme)
-    nativeTheme.on('updated', () => {
+    this.onThemeUpdated = (): void => {
       this.updateIcon();
-    });
+    };
+    nativeTheme.on('updated', this.onThemeUpdated);
   }
 
   protected isProd(): boolean {
@@ -76,27 +78,18 @@ export class AnimatedTray {
 
   // provide the path to the icon depending on theme and platform
   protected getIconPath(iconName: string): string {
-    let name;
+    let name: string;
     if (iconName === 'default') {
       name = '';
     } else {
       name = `-${iconName}`;
     }
     let suffix = '';
-    // on Linux, always pickup dark icon
-    if (isLinux()) {
-      suffix = 'Dark';
-    } else if (isMac()) {
-      // on Mac, always pickup template icon
+    // on Mac, always pickup template icon
+    if (isMac()) {
       suffix = 'Template';
-    } else {
-      // check based from the theme using electron nativeTheme
-      if (nativeTheme.shouldUseDarkColors) {
-        suffix = 'Dark';
-      } else {
-        suffix = 'Template';
-      }
     }
+    // on Windows and Linux, always use regular icon (no suffix)
 
     // Regardless what is the theme, if the user has set the color to light, we use the light icon, same as dark, etc.
     if (this.color === 'light') {
@@ -145,5 +138,13 @@ export class AnimatedTray {
   setStatus(status: TrayIconStatus): void {
     this.status = status;
     this.updateIcon();
+  }
+
+  dispose(): void {
+    if (this.animatedInterval) {
+      clearInterval(this.animatedInterval);
+      this.animatedInterval = undefined;
+    }
+    nativeTheme.off('updated', this.onThemeUpdated);
   }
 }

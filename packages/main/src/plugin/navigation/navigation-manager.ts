@@ -63,13 +63,13 @@ export class NavigationManager {
   init(): void {
     this.#disposables.push(
       this.commandRegistry.registerCommand('navigation.goBack', () => {
-        this.apiSender.send('navigation-go-back', '');
+        this.apiSender.send('navigation-go-back');
       }),
     );
 
     this.#disposables.push(
       this.commandRegistry.registerCommand('navigation.goForward', () => {
-        this.apiSender.send('navigation-go-forward', '');
+        this.apiSender.send('navigation-go-forward');
       }),
     );
 

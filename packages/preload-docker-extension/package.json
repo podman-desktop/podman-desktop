@@ -1,6 +1,6 @@
 {
   "name": "@podman-desktop/preload-docker-extension",
-  "version": "1.26.0-next",
+  "version": "1.27.0-next",
   "type": "module",
   "license": "Apache-2.0",
   "files": [
@@ -17,10 +17,10 @@
   },
   "devDependencies": {
     "@docker/extension-api-client-types": "0.4.2",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.1"
   },
   "dependencies": {
     "@podman-desktop/core-api": "workspace:*",
-    "electron": "40.4.1"
+    "electron": "41.0.3"
   }
 }

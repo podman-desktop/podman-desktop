@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,20 +29,19 @@ import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
 import { setupServer, type SetupServerApi } from 'msw/node';
 import * as nodeTar from 'tar';
-import { afterEach, beforeAll, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
-import imageRegistryConfigJson from '../../tests/resources/data/plugin/image-registry-config.json' with {
+import imageRegistryConfigJson from '/@tests/resources/data/plugin/image-registry-config.json' with { type: 'json' };
+import imageRegistryManifestJson from '/@tests/resources/data/plugin/image-registry-manifest-index.json' with {
   type: 'json',
 };
-import imageRegistryManifestJson from '../../tests/resources/data/plugin/image-registry-manifest-index.json' with {
+import imageRegistryManifestZstdJson from '/@tests/resources/data/plugin/image-registry-manifest-index.zstd.json' with {
   type: 'json',
 };
-import imageRegistryManifestZstdJson from '../../tests/resources/data/plugin/image-registry-manifest-index.zstd.json' with {
+import imageRegistryManifestMultiArchJson from '/@tests/resources/data/plugin/image-registry-manifest-multi-arch-index.json' with {
   type: 'json',
 };
-import imageRegistryManifestMultiArchJson from '../../tests/resources/data/plugin/image-registry-manifest-multi-arch-index.json' with {
-  type: 'json',
-};
+
 import type { Certificates } from './certificates.js';
 import { ImageRegistry } from './image-registry.js';
 import type { Proxy } from './proxy.js';
@@ -75,12 +74,9 @@ const apiSender: ApiSenderType = {
   send(_channel: string, _data?: any): void {},
 } as ApiSenderType;
 
-beforeAll(async () => {
-  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
-});
-
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  imageRegistry = new ImageRegistry(apiSender, telemetry, certificates, proxy);
 });
 
 afterEach(() => {
@@ -880,6 +876,68 @@ describe('expect checkCredentials', async () => {
     expectTypeOf(registries2).toBeArray();
     expect(registries2.length).toBe(1);
   });
+});
+
+test('getRegistryConfig should return only valid registries if validateRegistries is true', async () => {
+  const spyCheckCredentials = vi.spyOn(imageRegistry, 'checkCredentials');
+  spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
+  spyCheckCredentials.mockResolvedValueOnce(undefined);
+  spyCheckCredentials.mockResolvedValueOnce(undefined);
+  spyCheckCredentials.mockRejectedValueOnce(new Error('something went wrong'));
+
+  const registries: Registry[] = [...imageRegistry.getRegistries()];
+  expect(registries).toBeDefined();
+  expectTypeOf(registries).toBeArray();
+  expect(registries.length).toBe(0);
+
+  const reg1: Registry = {
+    source: 'a-source-1',
+    serverUrl: 'an-url-1',
+    username: 'a-username-1',
+    secret: 'pass-1',
+  };
+
+  const reg2: Registry = {
+    source: 'a-source-2',
+    serverUrl: 'An-url-2',
+    username: 'a-username-2',
+    secret: 'pass-2',
+  };
+
+  const reg3: Registry = {
+    source: 'a-source-3',
+    serverUrl: 'an-url-3',
+    username: 'a-username-3',
+    secret: 'pass-3',
+  };
+
+  const reg4: Registry = {
+    source: 'a-source-4',
+    serverUrl: 'an-url-4',
+    username: 'a-username-4',
+    secret: 'pass-4',
+  };
+
+  imageRegistry.registerRegistry(reg1);
+  imageRegistry.registerRegistry(reg2);
+  imageRegistry.registerRegistry(reg3);
+  imageRegistry.registerRegistry(reg4);
+
+  expect(imageRegistry.getRegistries().length).toBe(4);
+
+  const registryConfig = await imageRegistry.getRegistryConfig(false);
+
+  expect(Object.keys(registryConfig).length).toBe(4);
+  expect(Object.keys(registryConfig)).toContain('an-url-1');
+  expect(Object.keys(registryConfig)).toContain('an-url-2');
+  expect(Object.keys(registryConfig)).toContain('an-url-3');
+  expect(Object.keys(registryConfig)).toContain('an-url-4');
+
+  const validRegistryConfig = await imageRegistry.getRegistryConfig(true);
+
+  expect(Object.keys(validRegistryConfig).length).toBe(2);
+  expect(Object.keys(validRegistryConfig)).toContain('an-url-2');
+  expect(Object.keys(validRegistryConfig)).toContain('an-url-3');
 });
 
 test('findBestManifest returns the expected manifest', () => {

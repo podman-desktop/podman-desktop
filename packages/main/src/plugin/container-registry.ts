@@ -61,7 +61,9 @@ import type {
   VolumeInspectInfo,
   VolumeListInfo,
 } from '@podman-desktop/core-api';
+import { ContainerRegistrySettings } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
 import type {
   ContainerCreateMountOption,
   ContainerCreateNetNSOption,
@@ -95,6 +97,8 @@ import { Disposable } from './types/disposable.js';
 import { guessIsManifest } from './util/manifest.js';
 
 const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } = require('tar-fs');
+
+const DEFAULT_PROVIDER_TIMEOUT = 30;
 
 export interface InternalContainerProvider {
   name: string;
@@ -142,6 +146,25 @@ export class ContainerProviderRegistry {
     this.setupListeners();
   }
 
+  init(): void {
+    const providerTimeoutConfiguration: IConfigurationNode = {
+      id: 'preferences.container-registry',
+      title: 'Container registries',
+      type: 'object',
+      properties: {
+        [`${ContainerRegistrySettings.SectionName}.${ContainerRegistrySettings.ProviderTimeout}`]: {
+          description: 'Timeout in seconds for container provider image listing operations.',
+          type: 'number',
+          default: DEFAULT_PROVIDER_TIMEOUT,
+          minimum: 5,
+          maximum: 120,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([providerTimeoutConfiguration]);
+  }
+
   protected containerProviders: Map<string, containerDesktopAPI.ContainerProviderConnection> = new Map();
   protected internalProviders: Map<string, InternalContainerProvider> = new Map();
   protected notify: boolean = true;
@@ -165,60 +188,64 @@ export class ContainerProviderRegistry {
       nbEvents++;
       // reconnected
       this.notify = true;
+
+      const status = jsonEvent.status;
+      const id = jsonEvent.id;
+
       // do not log healthcheck(health_status) events
       // as it's too verbose/repeating a lot
-      if (jsonEvent.status !== 'health_status') {
+      if (status !== 'health_status') {
         console.log('event is', jsonEvent);
       }
       this._onEvent.fire(jsonEvent);
-      if (jsonEvent.status === 'stop' && jsonEvent?.Type === 'container') {
+      if (status === 'stop' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been stopped
-        this.apiSender.send('container-stopped-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'init' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-stopped-event', id);
+      } else if (status === 'init' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been started
-        this.apiSender.send('container-init-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'create' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-init-event', id);
+      } else if (status === 'create' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been created
-        this.apiSender.send('container-created-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'start' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-created-event', id);
+      } else if (status === 'start' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been started
-        this.apiSender.send('container-started-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'destroy' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-started-event', id);
+      } else if (status === 'destroy' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been destroyed
-        this.apiSender.send('container-stopped-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'die' && jsonEvent?.Type === 'container') {
-        this.apiSender.send('container-die-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'kill' && jsonEvent?.Type === 'container') {
-        this.apiSender.send('container-kill-event', jsonEvent.id);
+        this.apiSender.send('container-stopped-event', id);
+      } else if (status === 'die' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-die-event', id);
+      } else if (status === 'kill' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-kill-event', id);
       } else if (jsonEvent?.Type === 'pod') {
         this.apiSender.send('pod-event');
       } else if (jsonEvent?.Type === 'volume') {
         this.apiSender.send('volume-event');
       } else if (jsonEvent?.Type === 'network') {
         this.apiSender.send('network-event');
-      } else if (jsonEvent.status === 'remove' && jsonEvent?.Type === 'container') {
-        this.apiSender.send('container-removed-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'pull' && jsonEvent?.Type === 'image') {
+      } else if (status === 'remove' && jsonEvent?.Type === 'container') {
+        this.apiSender.send('container-removed-event', id);
+      } else if (status === 'pull' && jsonEvent?.Type === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-pull-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'tag' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-pull-event', id);
+      } else if (status === 'tag' && jsonEvent?.Type === 'image') {
         // need to notify that image are being tagged
-        this.apiSender.send('image-tag-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'untag' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-tag-event', id);
+      } else if (status === 'untag' && jsonEvent?.Type === 'image') {
         // need to notify that image are being untagged
-        this.apiSender.send('image-untag-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'remove' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-untag-event', id);
+      } else if (status === 'remove' && jsonEvent?.Type === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-remove-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'delete' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-remove-event', id);
+      } else if (status === 'delete' && jsonEvent?.Type === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-remove-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'build' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-remove-event', id);
+      } else if (status === 'build' && jsonEvent?.Type === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-build-event', jsonEvent.id);
-      } else if (jsonEvent.status === 'loadfromarchive' && jsonEvent?.Type === 'image') {
+        this.apiSender.send('image-build-event', id);
+      } else if (status === 'loadfromarchive' && jsonEvent?.Type === 'image') {
         // need to notify that image are being pulled
-        this.apiSender.send('image-loadfromarchive-event', jsonEvent.id);
+        this.apiSender.send('image-loadfromarchive-event', id);
       }
     });
 
@@ -351,7 +378,7 @@ export class ContainerProviderRegistry {
     };
     let previousStatus = containerProviderConnection.status();
 
-    providerRegistry.onBeforeDidUpdateContainerConnection(event => {
+    const onBeforeUpdateDisposable = providerRegistry.onBeforeDidUpdateContainerConnection(event => {
       if (
         event.providerId === provider.id &&
         event.connection.name === containerProviderConnection.name &&
@@ -389,6 +416,7 @@ export class ContainerProviderRegistry {
 
     return Disposable.create(() => {
       clearInterval(timer);
+      onBeforeUpdateDisposable.dispose();
       this.internalProviders.delete(id);
       this.containerProviders.delete(id);
       this.apiSender.send('provider-change', {});
@@ -638,6 +666,33 @@ export class ContainerProviderRegistry {
   // Podman list images will prefer to use libpod API of the provider
   // before falling back to using the regular API
   async podmanListImages(options?: PodmanListImagesOptions): Promise<ImageInfo[]> {
+    // Get timeout from configuration
+    const timeoutSeconds = this.configurationRegistry
+      .getConfiguration(ContainerRegistrySettings.SectionName)
+      .get<number>(ContainerRegistrySettings.ProviderTimeout, DEFAULT_PROVIDER_TIMEOUT);
+    const providerTimeoutMs = timeoutSeconds * 1000;
+
+    // Helper function to add timeout to provider operations
+    function withTimeout<T>(
+      promise: Promise<T>,
+      timeoutMs: number,
+      providerName: string,
+      providerId: string,
+    ): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(`Provider ${providerName} (${providerId}): listing images timed out after ${timeoutMs}ms`),
+              ),
+            timeoutMs,
+          ),
+        ),
+      ]);
+    }
+
     // This gets all the available providers if no provider has been specified
     let providers: InternalContainerProvider[];
     if (options?.provider === undefined) {
@@ -648,57 +703,72 @@ export class ContainerProviderRegistry {
 
     const images = await Promise.all(
       providers.map(async provider => {
-        // Initialize an empty array for the case where neither API is available
-        // ignore any warning as we are adding engineId and engineName to the image
-        // and as one of the API uses Dockerode, the other ImageInfo
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let fetchedImages: any[] = [];
+        try {
+          // Initialize an empty array for the case where neither API is available
+          // ignore any warning as we are adding engineId and engineName to the image
+          // and as one of the API uses Dockerode, the other ImageInfo
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let fetchedImages: any[] = [];
 
-        // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
-        if (provider.libpodApi && this.useLibpodApiForImageList()) {
-          fetchedImages = await provider.libpodApi.podmanListImages({
-            all: options?.all,
-            filters: options?.filters,
-          });
-        } else if (provider.api) {
-          fetchedImages = await provider.api.listImages({ all: false });
-        } else {
-          console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
-          return fetchedImages;
-        }
+          // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
+          if (provider.libpodApi && this.useLibpodApiForImageList()) {
+            fetchedImages = await withTimeout(
+              provider.libpodApi.podmanListImages({
+                all: options?.all,
+                filters: options?.filters,
+              }),
+              providerTimeoutMs,
+              provider.name,
+              provider.id,
+            );
+          } else if (provider.api) {
+            fetchedImages = await withTimeout(
+              provider.api.listImages({ all: false }),
+              providerTimeoutMs,
+              provider.name,
+              provider.id,
+            );
+          } else {
+            console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);
+            return fetchedImages;
+          }
 
-        return Promise.all(
-          Array.from(fetchedImages).map(async image => {
-            // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
-            // rather than guessing
-            const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
+          return Promise.all(
+            Array.from(fetchedImages).map(async image => {
+              // If image.isManifestList is NOT undefined (5.0.2+), we can use it to determine if the image is a manifest
+              // rather than guessing
+              const isManifest = image.isManifestList ?? guessIsManifest(image, provider.connection.type);
 
-            // Return the base image with the engineName and engineId as well as our isManifest parameter.
-            const baseImage = {
-              ...image,
-              engineName: provider.name,
-              engineId: provider.id,
-              isManifest,
-              Id: image.Digest ? `sha256:${image.Id}` : image.Id,
-              Digest: image.Digest ?? `sha256:${image.Id}`,
-            };
+              // Return the base image with the engineName and engineId as well as our isManifest parameter.
+              const baseImage = {
+                ...image,
+                engineName: provider.name,
+                engineId: provider.id,
+                isManifest,
+                Id: image.Digest ? `sha256:${image.Id}` : image.Id,
+                Digest: image.Digest ?? `sha256:${image.Id}`,
+              };
 
-            // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
-            // however, we do not **ever** want this to block the UI / operation, so if this fails, output to console and continue
-            if (baseImage.isManifest && provider.libpodApi) {
-              try {
-                const manifestInspectInfo = await provider.libpodApi.podmanInspectManifest(image.Id);
-                if (manifestInspectInfo?.manifests) {
-                  baseImage.manifests = manifestInspectInfo.manifests;
+              // If the image is a manifest, inspect the manifest to get the digests of the images part of the manifest
+              // however, we do not **ever** want this to block the UI / operation, so if this fails, output to console and continue
+              if (baseImage.isManifest && provider.libpodApi) {
+                try {
+                  const manifestInspectInfo = await provider.libpodApi.podmanInspectManifest(image.Id);
+                  if (manifestInspectInfo?.manifests) {
+                    baseImage.manifests = manifestInspectInfo.manifests;
+                  }
+                } catch (error) {
+                  console.error('Error while inspecting manifest', error);
                 }
-              } catch (error) {
-                console.error('Error while inspecting manifest', error);
               }
-            }
 
-            return baseImage;
-          }),
-        );
+              return baseImage;
+            }),
+          );
+        } catch (error) {
+          console.error(`Error listing images from provider ${provider.name} (${provider.id}):`, error);
+          return [];
+        }
       }),
     );
 
@@ -2598,7 +2668,7 @@ export class ContainerProviderRegistry {
       }
 
       // grab auth for all registries
-      const registryconfig = this.imageRegistry.getRegistryConfig();
+      const registryconfig = await this.imageRegistry.getRegistryConfig(options?.validateRegistries);
       eventCollect(
         'stream',
         `Uploading the build context from ${containerBuildContextDirectory}...Can take a while...\r\n`,

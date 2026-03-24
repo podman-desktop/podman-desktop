@@ -22,6 +22,7 @@ import type { EngineInfoUI } from '/@/lib/engine/EngineInfoUI';
 import Prune from '/@/lib/engine/Prune.svelte';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 import ContainerEngineEnvironmentColumn from '/@/lib/table/columns/ContainerEngineEnvironmentColumn.svelte';
+import EnvironmentDropdown from '/@/lib/ui/EnvironmentDropdown.svelte';
 import { IMAGE_LIST_VIEW_BADGES, IMAGE_LIST_VIEW_ICONS, IMAGE_VIEW_BADGES, IMAGE_VIEW_ICONS } from '/@/lib/view/views';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
@@ -48,7 +49,14 @@ $effect(() => {
   searchPattern.set(searchTerm);
 });
 
+let selectedEnvironment = $state('');
 let images: ImageInfoUI[] = $state([]);
+
+// Filter images by selected environment
+let filteredImages = $derived.by(() => {
+  if (!selectedEnvironment) return images;
+  return images.filter(image => image.engineId === selectedEnvironment);
+});
 let enginesList: EngineInfoUI[] = $state([]);
 
 let providerConnections = $derived(
@@ -189,7 +197,7 @@ function loadImages(): void {
 // delete the items selected in the list
 let bulkDeleteInProgress = $state(false);
 async function deleteSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = filteredImages.filter(image => image.selected);
   if (selectedImages.length === 0) {
     return;
   }
@@ -209,7 +217,7 @@ async function deleteSelectedImages(): Promise<void> {
 
 // save the items selected in the list
 async function saveSelectedImages(): Promise<void> {
-  const selectedImages = images.filter(image => image.selected);
+  const selectedImages = filteredImages.filter(image => image.selected);
   if (selectedImages.length === 0) {
     return;
   }
@@ -302,6 +310,7 @@ function label(item: ImageInfoUI): string {
       <Prune type="images" engines={enginesList} />
     {/if}
     <Button
+      type="secondary"
       on:click={loadImages}
       title="Load Images From Tar Archives"
       icon={faUpload}
@@ -309,17 +318,19 @@ function label(item: ImageInfoUI): string {
       Load
     </Button>
     <Button
+      type="secondary"
       on:click={importImage}
       title="Import Containers From Filesystem"
       icon={faArrowCircleDown}
       aria-label="Import Image">
       Import
     </Button>
-    <Button on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
-    <Button on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
+    <Button type="secondary" on:click={gotoPullImage} title="Pull Image From a Registry" icon={faArrowCircleDown}>Pull</Button>
+    <Button type="primary" on:click={gotoBuildImage} title="Build Image From Containerfile" icon={faCube}>Build</Button>
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
+    <EnvironmentDropdown bind:selectedEnvironment={selectedEnvironment} />
     {#if selectedItemsNumber && selectedItemsNumber > 0}
       <Button
         on:click={(): void => {
@@ -350,11 +361,13 @@ function label(item: ImageInfoUI): string {
       {:else}
         <ImageEmptyScreen />
       {/if}
+    {:else if filteredImages.length === 0 && selectedEnvironment}
+      <FilteredEmptyScreen icon={ImageIcon} kind="images" searchTerm="selected environment" onResetFilter={(): void => { selectedEnvironment = ''; }} />
     {:else}
       <Table
         kind="image"
         bind:selectedItemsNumber={selectedItemsNumber}
-        data={images}
+        data={filteredImages}
         columns={columns}
         row={row}
         defaultSortColumn="Age"

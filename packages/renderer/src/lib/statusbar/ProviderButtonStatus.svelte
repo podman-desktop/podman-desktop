@@ -1,4 +1,6 @@
 <script lang="ts">
+import { Spinner } from '@podman-desktop/ui-svelte';
+
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 
 import arrowUp from './status-icons/arrow-up.svg';
@@ -13,7 +15,7 @@ let { status, class: className = '' }: Props = $props();
 
 
 {#if status === 'starting' || status === 'stopping'}
-  <div aria-label="Connection Status Icon" class="h-3 w-3 rounded-full animate-spin border border-solid border-[var(--pd-action-button-spinner)] border-t-transparent {className}"></div>
+  <Spinner size="12px" />
 {:else if status === 'ready' || status === 'started'}
   <div aria-label="Connection Status Icon" class="h-[7px] w-[7px] absolute top-[0px] right-[-2px] rounded-full bg-[var(--pd-status-contrast)] border-1 border-[var(--pd-statusbar-bg)] {className}"></div>
 {:else if status === 'error'}

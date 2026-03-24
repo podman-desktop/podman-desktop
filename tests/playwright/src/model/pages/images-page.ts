@@ -153,6 +153,13 @@ export class ImagesPage extends MainPage {
     });
   }
 
+  async countImagesByName(name: string): Promise<number> {
+    return test.step(`Count images matching: ${name}`, async () => {
+      const locator = this.page.getByRole('row').and(this.page.getByLabel(name, { exact: true }));
+      return locator.count();
+    });
+  }
+
   async getCurrentStatusOfImage(name: string): Promise<string> {
     return test.step(`Get current status of image: ${name}`, async () => {
       let status = '';

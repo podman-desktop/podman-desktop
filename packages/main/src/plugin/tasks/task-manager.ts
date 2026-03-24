@@ -52,7 +52,7 @@ export class TaskManager {
     this.setStatusBarEntry(false);
 
     this.commandRegistry.registerCommand('show-task-manager', () => {
-      this.apiSender.send('toggle-task-manager', '');
+      this.apiSender.send('toggle-task-manager');
       this.setStatusBarEntry(false);
     });
 

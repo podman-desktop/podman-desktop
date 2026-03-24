@@ -5,7 +5,6 @@ import { StatusIcon, Tab } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
-import type { ContextUI } from '/@/lib/context/context';
 import { ImageUtils } from '/@/lib/image/image-utils';
 import ImageDetailsSummary from '/@/lib/image/ImageDetailsSummary.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
@@ -25,7 +24,6 @@ interface Props {
 
 let { imageID, engineId, base64RepoTag }: Props = $props();
 
-let globalContext: ContextUI | undefined;
 let viewContributions: ViewInfoUI[] = [];
 let allImages: ImageInfo[];
 
@@ -45,7 +43,7 @@ function updateImage(): void {
   imageInfo = allImages.find(c => c.Id === imageID && c.engineId === engineId);
   let tempImage;
   if (imageInfo) {
-    tempImage = imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, globalContext, viewContributions);
+    tempImage = imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, undefined, viewContributions);
   }
   if (tempImage) {
     imageMetadataInfo = tempImage;

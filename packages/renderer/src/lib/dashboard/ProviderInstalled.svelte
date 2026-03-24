@@ -25,7 +25,7 @@ import ProviderUpdateButton from './ProviderUpdateButton.svelte';
 export let provider: ProviderInfo;
 export let initializationContext: InitializationContext;
 
-let initializationButtonVisible = true;
+let initializationButtonVisible: boolean;
 let initializeInProgress = false;
 
 let initializeError: string | undefined = undefined;

@@ -1,6 +1,6 @@
 {
   "name": "@podman-desktop/core-api",
-  "version": "1.26.0-next",
+  "version": "1.27.0-next",
   "description": "API to be consumed by main/renderer/preload packages",
   "type": "module",
   "license": "Apache-2.0",
@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/hosted-git-info": "^3.0.5",
     "vite-plugin-dts": "^4.3.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.1"
   },
   "exports": {
     ".": {
@@ -26,8 +26,8 @@
       "default": "./dist/index.js"
     },
     "./api-sender": {
-      "types": "./dist/api-sender/api-sender-type.d.ts",
-      "default": "./dist/api-sender/api-sender-type.js"
+      "types": "./dist/api-sender/index.d.ts",
+      "default": "./dist/api-sender/index.js"
     },
     "./appearance": {
       "types": "./dist/appearance/appearance-settings.d.ts",
