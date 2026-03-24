@@ -53,7 +53,7 @@
     "msw": "^2.12.14",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
-    "typedoc": "^0.28.17",
+    "typedoc": "^0.28.18",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
