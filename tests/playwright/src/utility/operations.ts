@@ -505,6 +505,22 @@ export async function runComposeUpFromCLI(composeFilePath: string): Promise<void
   });
 }
 
+export async function removeAllImagesCLI(engine: 'podman' | 'docker' = 'podman'): Promise<void> {
+  return test.step(`Remove all ${engine} images via CLI`, () => {
+    try {
+      const command = engine === 'podman' ? 'podman rmi --all --force' : 'docker image prune --all --force';
+      // eslint-disable-next-line sonarjs/os-command
+      execSync(command, { timeout: 120_000 });
+      console.log(`All ${engine} images removed via CLI`);
+    } catch (error) {
+      console.log(
+        `No ${engine} images to remove or command not available:`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  });
+}
+
 export async function untagImagesFromPodman(name: string, tag = ''): Promise<void> {
   return test.step('Untag images from Podman', async () => {
     try {
