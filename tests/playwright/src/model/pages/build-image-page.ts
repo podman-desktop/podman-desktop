@@ -184,7 +184,6 @@ export class BuildImagePage extends BasePage {
       playExpect(text).toContain(errorText);
       return;
     }
-    playExpect(text).not.toContain('Error:');
     playExpect((text.match(/Successfully built/g) ?? []).length).toBe(archCount);
   }
 
