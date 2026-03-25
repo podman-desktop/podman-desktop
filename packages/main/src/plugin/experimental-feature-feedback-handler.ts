@@ -72,7 +72,7 @@ export class ExperimentalFeatureFeedbackHandler {
 
   async init(): Promise<void> {
     const feedbackConfiguration: IConfigurationNode = {
-      id: 'preferences',
+      id: 'preferences.feedback',
       title: 'Feedback dialog',
       type: 'object',
       properties: {
