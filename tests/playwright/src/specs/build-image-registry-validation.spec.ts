@@ -282,7 +282,7 @@ test.describe
         'invalid-creds-validation-disabled-test',
         CONTAINERFILE_PATH,
         CONTEXT_DIR,
-        { timeout: 40_000, errorExpected: true, errorText: 'failed to parse "X-Registry-Config" header' },
+        { timeout: 40_000, errorText: 'failed to parse "X-Registry-Config" header' },
       );
 
       await test.step('Verify build failed and image was not created', async () => {

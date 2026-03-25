@@ -175,7 +175,7 @@ test.describe
           } catch (error) {
             skipTests = true;
             await deleteImageManifest(page, manifestLabelComplex);
-            if (!!isWindows && provider?.toLocaleLowerCase().trim().toLowerCase() === 'wsl') {
+            if (isWindows && provider?.toLocaleLowerCase().trim() === 'wsl') {
               test.skip(true, 'Building cross-architecture images with the WSL hypervisor is not working yet');
             }
             throw error;

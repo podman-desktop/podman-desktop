@@ -75,20 +75,14 @@ export class BuildImagePage extends BasePage {
     imageName: string,
     containerFilePath: string,
     contextDirectory: string,
-    {
-      archType = [ArchitectureType.Default],
-      timeout = 120_000,
-      target,
-      errorExpected = false,
-      errorText,
-    }: BuildImageOptions = {},
+    { archType = [ArchitectureType.Default], timeout = 120_000, target, errorText }: BuildImageOptions = {},
   ): Promise<ImagesPage> {
     return test.step(`Building image ${imageName} from ${containerFilePath} in ${contextDirectory} with ${archType} architecture`, async () => {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
 
-      await this.validateBuildLogs(errorExpected, errorText);
+      await this.validateBuildLogs(archType.length, errorText);
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
@@ -183,9 +177,15 @@ export class BuildImagePage extends BasePage {
     }
   }
 
-  private async validateBuildLogs(errorExpected: boolean, errorText: string | RegExp = /Error:/): Promise<void> {
+  private async validateBuildLogs(archCount: number, errorText?: string | RegExp): Promise<void> {
     await playExpect(this.terminalContent).toBeVisible();
-    await playExpect(this.terminalContent).toContainText(errorExpected ? errorText : 'Successfully built');
+    const text = (await this.terminalContent.innerText()) ?? '';
+    if (errorText) {
+      playExpect(text).toContain(errorText);
+      return;
+    }
+    playExpect(text).not.toContain('Error:');
+    playExpect((text.match(/Successfully built/g) ?? []).length).toBe(archCount);
   }
 
   async toggleRegistryValidation(enabled: boolean): Promise<void> {

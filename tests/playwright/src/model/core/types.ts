@@ -36,7 +36,6 @@ export interface BuildImageOptions {
   archType?: string[];
   timeout?: number;
   target?: string;
-  errorExpected?: boolean;
   errorText?: string | RegExp;
 }
 
