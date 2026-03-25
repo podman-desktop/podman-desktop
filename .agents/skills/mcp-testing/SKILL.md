@@ -510,6 +510,6 @@ Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes
 
 All MCP testing resources are in `.agents/skills/mcp-testing/`:
 
-- **Full documentation:** `TESTING-WITH-MCP.md` - Comprehensive guide with selector strategies, common scenarios, and troubleshooting
-- **Example commands:** `mcp-test-examples.md` - 500+ lines of ready-to-use MCP command examples for testing workflows
+- **Full documentation:** `reference.md` - Comprehensive guide with selector strategies, common scenarios, and troubleshooting
+- **Example commands:** `examples.md` - 500+ lines of ready-to-use MCP command examples for testing workflows
 - **Helper scripts:** `start-with-cdp.sh` (Linux/macOS) and `start-with-cdp.ps1` (Windows) - Scripts to launch Podman Desktop with CDP enabled on port 9222

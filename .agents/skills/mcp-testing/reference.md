@@ -391,7 +391,7 @@ MCP testing complements, not replaces, existing Playwright E2E tests:
 
 ## Example Commands Reference
 
-See [mcp-test-examples.md](./mcp-test-examples.md) for ready-to-use MCP command examples.
+See [examples.md](./examples.md) for ready-to-use MCP command examples.
 
 ## Tips for Effective Testing
 
