@@ -19,7 +19,7 @@ import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValu
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
-type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
+type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning' | 'danger';
 
 @injectable()
 export class MessageBox {
