@@ -10,7 +10,7 @@
 #
 # Prerequisites:
 #   - Compiled binary must exist (run: pnpm compile:current)
-#   - On macOS, binary must be signed (run: codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app")
+#   - On macOS, binary must be signed (see error output for the correct path based on your architecture)
 
 set -euo pipefail
 
