@@ -10,7 +10,7 @@
 #
 # Prerequisites:
 #   - Compiled binary must exist (run: pnpm compile:current)
-#   - On macOS, binary must be signed (see error output for the correct path based on your architecture)
+#   - On macOS (arm64), binary must be signed (run: codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app")
 
 set -euo pipefail
 
@@ -23,12 +23,7 @@ case "$PLATFORM" in
     BINARY_PATH="dist/linux-unpacked/podman-desktop"
     ;;
   darwin)
-    ARCH="$(uname -m)"
-    if [[ "$ARCH" == "arm64" ]]; then
-      BINARY_PATH="dist/mac-arm64/Podman Desktop.app/Contents/MacOS/Podman Desktop"
-    else
-      BINARY_PATH="dist/mac/Podman Desktop.app/Contents/MacOS/Podman Desktop"
-    fi
+    BINARY_PATH="dist/mac-arm64/Podman Desktop.app/Contents/MacOS/Podman Desktop"
     ;;
   *)
     echo "Error: Unsupported platform: $PLATFORM"
@@ -36,7 +31,7 @@ case "$PLATFORM" in
     ;;
 esac
 
-# Check if binary exists
+# Check if binary exists and is executable
 if [[ ! -f "$BINARY_PATH" && ! -d "$BINARY_PATH" ]]; then
   echo "Error: Binary not found at: $BINARY_PATH"
   echo ""
@@ -44,13 +39,17 @@ if [[ ! -f "$BINARY_PATH" && ! -d "$BINARY_PATH" ]]; then
   echo "  pnpm compile:current"
   if [[ "$PLATFORM" == "darwin" ]]; then
     echo ""
-    echo "On macOS, also sign the binary:"
-    if [[ "$(uname -m)" == "arm64" ]]; then
-      echo "  codesign --force --deep --sign - \"dist/mac-arm64/Podman Desktop.app\""
-    else
-      echo "  codesign --force --deep --sign - \"dist/mac/Podman Desktop.app\""
-    fi
+    echo "On macOS (arm64), also sign the binary:"
+    echo "  codesign --force --deep --sign - \"dist/mac-arm64/Podman Desktop.app\""
   fi
+  exit 1
+fi
+
+if [[ ! -x "$BINARY_PATH" ]]; then
+  echo "Error: Binary is not executable: $BINARY_PATH"
+  echo ""
+  echo "Fix with:"
+  echo "  chmod +x \"$BINARY_PATH\""
   exit 1
 fi
 

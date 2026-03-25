@@ -1,3 +1,12 @@
+---
+name: mcp-testing
+description: >-
+  Guide for interactively testing Podman Desktop UI using the electron-test MCP
+  server and Chrome DevTools Protocol (CDP). Use when manually testing UI
+  workflows, debugging UI issues, exploring features interactively, or doing
+  quick acceptance testing without writing Playwright test code.
+---
+
 # Podman Desktop MCP Testing
 
 Use the electron-test MCP server to interactively test and interact with Podman Desktop through automated browser commands.
@@ -302,26 +311,26 @@ mcp__electron-test__disconnect()
 
 When interacting with elements, prefer in this order:
 
-1. **data-testid attributes** (most stable — preferred for test reliability)
-
-   ```javascript
-   document.querySelector('[data-testid="settings-button"]').click()
-   ```
-
-2. **ARIA roles and accessible names**
+1. **ARIA roles and accessible names** (most stable — preferred for accessibility and test reliability)
 
    ```javascript
    document.querySelector('button[aria-label="Create"]').click()
    ```
 
-3. **Text content**
+2. **Text content / labels**
 
    ```javascript
    Array.from(document.querySelectorAll('button'))
      .find(b => b.textContent.includes('Pull')).click()
    ```
 
-4. **JavaScript evaluation / generic CSS selectors** (fallback when nothing else works)
+3. **data-testid attributes** (fallback when ARIA/text is insufficient)
+
+   ```javascript
+   document.querySelector('[data-testid="settings-button"]').click()
+   ```
+
+4. **JavaScript evaluation / generic CSS selectors** (last resort when nothing else works)
 
    ```javascript
    document.querySelector('a[href="/containers"]').click()

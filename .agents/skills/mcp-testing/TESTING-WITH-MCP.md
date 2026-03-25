@@ -123,7 +123,7 @@ Click on the Containers link in the navigation and count how many containers are
 pnpm compile:current
 ```
 
-**macOS Note:** After compiling, sign the binary:
+**macOS (arm64) Note:** After compiling, sign the binary:
 
 ```bash
 codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app"
