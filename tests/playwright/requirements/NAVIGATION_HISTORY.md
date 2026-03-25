@@ -872,61 +872,7 @@ The following items are explicitly excluded from Phase 1 testing:
 
 ---
 
----
-
-## Implementation Checklist
-
-### Page Objects
-
-- [x] Existing: [NavigationBar](tests/playwright/src/model/workbench/navigation.ts) - Already exists, extended with navigation history methods
-- [x] Extend: NavigationBar - Add methods:
-  - `goBack()` - Click back button [IMPLEMENTED]
-  - `goForward()` - Click forward button [IMPLEMENTED]
-  - `isBackButtonEnabled()` - Check back button state [IMPLEMENTED]
-  - `isForwardButtonEnabled()` - Check forward button state [IMPLEMENTED]
-  - Add locators: `backButton`, `forwardButton` [IMPLEMENTED]
-
-### Utilities
-
-- [x] Navigation utilities integrated into NavigationBar page object
-- [x] Command palette integration for Go Back/Forward commands
-
-### Test Files
-
-- [x] Created: [tests/playwright/src/specs/navigation-history-smoke.spec.ts](../src/specs/navigation-history-smoke.spec.ts)
-  - Smoke tests with @smoke tag
-  - 7 test cases covering core navigation functionality
-  - Tests: Back/forward buttons, command palette, history truncation, duplicate URL handling
-
-- [x] Created: [tests/playwright/src/specs/navigation-history.spec.ts](../src/specs/navigation-history.spec.ts)
-  - Comprehensive tests with @smoke tag
-  - 15 test cases (TC-008 through TC-022) covering platform-specific features and edge cases
-  - Tests: Keyboard shortcuts (Alt, Cmd), mouse navigation, trackpad gestures, input field protection, deleted resources, K8s routing, extensions, TTY regression
-  - 10 test cases active and passing
-  - 5 test cases skipped (TC-017, TC-018, TC-020, TC-021, TC-022 - require K8s context, machine state management, extension setup, or pending bug fixes)
-
-### Documentation
-
-- [ ] Update: Testing sheet with test cases and coverage
-- [x] User documentation: Already exists in [release notes](website/blog/2026-01-19-release-1.25.md)
-- [ ] Consider: Dedicated user guide page at `website/docs/navigation/history.md`
-- [x] Updated: This requirements document in `tests/playwright/requirements/` directory
-
-### Unit Tests
-
-- [x] Existing: [navigation-history.svelte.spec.ts](packages/renderer/src/stores/navigation-history.svelte.spec.ts) - Good coverage
-- [x] Existing: [NavigationButtons.spec.ts](packages/renderer/src/lib/ui/NavigationButtons.spec.ts) - Good coverage
-- [ ] Consider adding: Tests for 20-entry limit enforcement
-- [ ] Consider adding: Tests for command palette event handling verification
-
-## Test Execution Strategy
-
-### Phase 1: Smoke Tests
-
-```bash
-# Run smoke tests only
-pnpm exec playwright test tests/playwright/src/specs/navigation-history-smoke.spec.ts
-```
+## Tests Overview
 
 **Priority smoke tests:**
 
@@ -938,47 +884,12 @@ pnpm exec playwright test tests/playwright/src/specs/navigation-history-smoke.sp
 - TC-006: History truncation
 - TC-007: Duplicate URL handling
 
-### Phase 2: Platform-Specific Tests
-
-```bash
-# Run on each platform
-pnpm test:e2e:run --grep "navigation-history"
-```
-
 **Platform coverage:**
 
 - Windows: TC-008, TC-009, TC-015 (Alt+Left, Alt+Right, shortcuts blocked in input)
 - macOS: TC-010, TC-011, TC-015 (Cmd+[, Cmd+Arrow, shortcuts blocked in input)
 - Linux: TC-008, TC-009, TC-015 (Alt+Left, Alt+Right, shortcuts blocked in input)
 - All platforms: TC-012, TC-013, TC-014, TC-016 (Mouse, trackpad gestures, vertical scroll)
-
-### Phase 3: Full Regression
-
-```bash
-# Run all navigation history tests
-pnpm exec playwright test tests/playwright/src/specs/navigation-history.spec.ts
-pnpm exec playwright test tests/playwright/src/specs/navigation-history-smoke.spec.ts
-```
-
-### Phase 4: Integration with CI
-
-Add to `.github/workflows/e2e-main.yaml`:
-
-- Run smoke tests on all platforms (Windows, macOS, Linux)
-- Run full test suite on ubuntu-latest
-- Generate test reports and upload artifacts
-
-## Test Coverage Summary
-
-### Implementation Status: Phase 1 Complete
-
-**E2E Tests Implemented**: 17 of 22 test cases (77%)
-
-**Test Distribution**:
-
-- **Active tests**: 17 (passing)
-- **Skipped tests**: 5 (require special setup or pending bug fixes)
-- **Total test cases**: 22
 
 #### Smoke Tests (navigation-history-smoke.spec.ts)
 
@@ -992,14 +903,6 @@ Add to `.github/workflows/e2e-main.yaml`:
 - **10 active tests** passing and tagged with `@smoke`
 - **5 skipped tests** (require K8s setup, machine state management, or pending bug fixes)
 - Cover: Keyboard shortcuts, mouse/trackpad navigation, input field protection, edge cases
-
-#### Skipped Tests
-
-- **TC-017**: Kubernetes regression test #15636 (requires K8s context setup)
-- **TC-018**: Kubernetes submenu navigation (requires K8s context setup)
-- **TC-020**: Stopped Podman machine navigation (requires complex machine state management)
-- **TC-021**: Extension webView navigation (advanced test case requiring extension setup)
-- **TC-022**: TTY-attached container regression #15994 (pending bug fix resolution)
 
 #### Test Coverage by Feature
 
@@ -1016,43 +919,3 @@ Add to `.github/workflows/e2e-main.yaml`:
 | Deleted Resource Handling          | Complete | TC-019                 |
 | Kubernetes Routing                 | Pending  | TC-017, TC-018         |
 | Stopped Machine State              | Pending  | TC-020                 |
-
-### Remaining Work
-
-1. **Kubernetes Tests** (TC-017, TC-018)
-   - TC-017: Kubernetes regression test for issue #15636
-   - TC-018: Kubernetes submenu navigation
-   - Requires Kubernetes cluster setup and context configuration
-   - Consider adding to `@k8s_e2e` test suite when K8s infrastructure is ready
-
-2. **Machine State Tests** (TC-020)
-   - TC-020: Stopped Podman machine navigation
-   - Requires complex machine state management
-   - Low priority (machine state transitions are complex to test)
-
-3. **Extension and Regression Tests** (TC-021, TC-022)
-   - TC-021: Extension webView navigation (advanced test case)
-   - TC-022: TTY-attached container regression for issue #15994
-   - Require special setup or pending bug fixes
-
-4. **Testing Sheet Documentation**
-   - Update testing spreadsheet with implemented test cases
-   - Add links to spec files and test case mappings
-   - Document skipped tests and reasons
-
-## Notes
-
-- **E2E coverage is comprehensive** for Phase 1 features (17 of 22 test cases implemented, 77% coverage)
-- All active tests are passing and provide excellent coverage for the core functionality
-- All unit tests are passing and provide excellent coverage for the core logic
-- Phase 2 features (history dropdown) should be tested separately when PR #15567 merges
-- Consider adding visual regression tests for button states and tooltips
-- Performance testing may be valuable for rapid navigation scenarios
-- **Skipped tests** (5 total) can be implemented when infrastructure/fixes are available:
-  - TC-017, TC-018: Require Kubernetes cluster setup
-  - TC-020: Requires complex machine state management
-  - TC-021: Requires extension setup
-  - TC-022: Pending bug fix for issue #15994
-- Test files location:
-  - [navigation-history-smoke.spec.ts](../src/specs/navigation-history-smoke.spec.ts) - 7 smoke tests
-  - [navigation-history.spec.ts](../src/specs/navigation-history.spec.ts) - 15 comprehensive tests (10 active, 5 skipped)
