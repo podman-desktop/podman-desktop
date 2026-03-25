@@ -42,7 +42,6 @@ const manifestLabelSimple: string = `localhost/${imageNameSimple}`;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let imagesPage: ImagesPage;
-let skipTests = false;
 
 let provider: string | undefined;
 
@@ -139,6 +138,11 @@ test.describe
       });
     test.describe
       .serial('Image Manifest Validation - Complex Containerfile', () => {
+        test.skip(
+          isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
+          'Building cross-architecture images with the WSL hypervisor is not working yet',
+        );
+
         test('Add registry for manifest push', async ({ navigationBar, page }) => {
           test.skip(!canTestRegistry(), 'Registry tests are disabled');
 
@@ -154,7 +158,7 @@ test.describe
           await playExpect(username).toBeVisible();
         });
 
-        test('Build the image using cross-arch build (complex)', async ({ page, navigationBar }) => {
+        test('Build the image using cross-arch build (complex)', async ({ navigationBar }) => {
           test.setTimeout(180_000);
 
           imagesPage = await navigationBar.openImages();
@@ -163,6 +167,7 @@ test.describe
 
           const buildImagePage = await imagesPage.openBuildImage();
           await playExpect(buildImagePage.heading).toBeVisible();
+
           const dockerfilePath = path.resolve(
             __dirname,
             '..',
@@ -173,21 +178,12 @@ test.describe
           );
           const contextDirectory = path.resolve(__dirname, '..', '..', 'resources', 'alphine-hello');
 
-          try {
-            imagesPage = await buildImagePage.buildImage(
-              manifestLabelComplex,
-              dockerfilePath,
-              contextDirectory,
-              architectures,
-            );
-          } catch (error) {
-            skipTests = true;
-            await deleteImageManifest(page, manifestLabelComplex);
-            if (!!isWindows && provider?.toLocaleLowerCase().trim() === 'wsl') {
-              test.skip(true, 'Building cross-architecture images with the WSL hypervisor is not working yet');
-            }
-            throw error;
-          }
+          imagesPage = await buildImagePage.buildImage(
+            manifestLabelComplex,
+            dockerfilePath,
+            contextDirectory,
+            architectures,
+          );
 
           await playExpect
             .poll(async () => await imagesPage.waitForImageExists(manifestLabelComplex, 60_000), { timeout: 0 })
@@ -198,8 +194,6 @@ test.describe
         });
 
         test('Check Manifest details', async ({ navigationBar }) => {
-          test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
-
           imagesPage = await navigationBar.openImages();
           await playExpect(imagesPage.heading).toBeVisible();
 
@@ -215,7 +209,6 @@ test.describe
 
         test('Push manifest to registry', async ({ navigationBar }) => {
           test.skip(!canTestRegistry(), 'Registry tests are disabled');
-          test.skip(skipTests, 'Build manifest failed, skipping the test');
           test.setTimeout(150_000);
 
           imagesPage = await navigationBar.openImages();
@@ -239,7 +232,6 @@ test.describe
         });
 
         test('Delete Manifest', async ({ page }) => {
-          test.skip(skipTests, 'Build manifest failed, manifest should be already deleted, skipping the test');
           test.setTimeout(180_000);
           await deleteImageManifest(page, manifestLabelComplex);
         });
