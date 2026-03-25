@@ -295,42 +295,46 @@ mcp__electron - test__screenshot({ fullPage: false });
 
 ### Step 6: Clean Up
 
-When finished testing:
+When finished testing, close the application and disconnect:
 
 ```javascript
-// Disconnect from MCP (does not close the app)
+// Close the Podman Desktop application window
+mcp__electron - test__close();
+
+// Disconnect from MCP
 mcp__electron - test__disconnect();
 ```
 
-Then manually close the app window or press Ctrl+C in the terminal running the app.
+> **Note (development mode):** In development mode (`pnpm watch`), `close()` shuts the Electron window but the watch process continues running. Stop it with Ctrl+C in the terminal when done.
 
 ## Selector Strategy
 
 When interacting with elements, prefer in this order:
 
-1. **JavaScript evaluation** (most reliable for sub-agents)
-
-   ```javascript
-   document.querySelector('a[href="/containers"]').click();
-   ```
-
-2. **data-testid attributes** (when available)
+1. **data-testid attributes** (most stable — preferred for test reliability)
 
    ```javascript
    document.querySelector('[data-testid="settings-button"]').click();
    ```
 
-3. **ARIA roles and accessible names**
+2. **ARIA roles and accessible names**
 
    ```javascript
    document.querySelector('button[aria-label="Create"]').click();
    ```
 
-4. **Text content**
+3. **Text content**
+
    ```javascript
    Array.from(document.querySelectorAll('button'))
      .find(b => b.textContent.includes('Pull'))
      .click();
+   ```
+
+4. **JavaScript evaluation / generic CSS selectors** (fallback when nothing else works)
+
+   ```javascript
+   document.querySelector('a[href="/containers"]').click();
    ```
 
 ## Troubleshooting
@@ -444,7 +448,8 @@ for (const page of pages) {
   mcp__electron - test__snapshot();
 }
 
-// 5. Disconnect
+// 5. Close the app and disconnect
+mcp__electron - test__close();
 mcp__electron - test__disconnect();
 ```
 
@@ -478,14 +483,15 @@ mcp__electron -
 
 ### Essential MCP Commands
 
-| Command                                              | Purpose                        |
-| ---------------------------------------------------- | ------------------------------ |
-| `mcp__electron-test__connect({ port: 9222 })`        | Connect to running app         |
-| `mcp__electron-test__disconnect()`                   | Disconnect (doesn't close app) |
-| `mcp__electron-test__snapshot()`                     | Get accessibility tree         |
-| `mcp__electron-test__evaluate({ script: '...' })`    | Run JavaScript in renderer     |
-| `mcp__electron-test__screenshot({ fullPage: true })` | Capture screenshot             |
-| `mcp__electron-test__wait({ selector: 'main' })`     | Wait for element               |
+| Command                                              | Purpose                      |
+| ---------------------------------------------------- | ---------------------------- |
+| `mcp__electron-test__connect({ port: 9222 })`        | Connect to running app       |
+| `mcp__electron-test__close()`                        | Close the application window |
+| `mcp__electron-test__disconnect()`                   | Disconnect from MCP          |
+| `mcp__electron-test__snapshot()`                     | Get accessibility tree       |
+| `mcp__electron-test__evaluate({ script: '...' })`    | Run JavaScript in renderer   |
+| `mcp__electron-test__screenshot({ fullPage: true })` | Capture screenshot           |
+| `mcp__electron-test__wait({ selector: 'main' })`     | Wait for element             |
 
 ### Common Scripts
 
@@ -514,4 +520,4 @@ All MCP testing resources are in `.agents/skills/mcp-testing/`:
 
 - **Full documentation:** `TESTING-WITH-MCP.md` - Comprehensive guide with selector strategies, common scenarios, and troubleshooting
 - **Example commands:** `mcp-test-examples.md` - 500+ lines of ready-to-use MCP command examples for testing workflows
-- **Helper script:** `start-with-cdp.sh` - Executable script to launch Podman Desktop with CDP enabled on port 9222
+- **Helper scripts:** `start-with-cdp.sh` (Linux/macOS) and `start-with-cdp.ps1` (Windows) - Scripts to launch Podman Desktop with CDP enabled on port 9222

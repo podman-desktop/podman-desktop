@@ -45,7 +45,11 @@ if [[ ! -f "$BINARY_PATH" && ! -d "$BINARY_PATH" ]]; then
   if [[ "$PLATFORM" == "darwin" ]]; then
     echo ""
     echo "On macOS, also sign the binary:"
-    echo "  codesign --force --deep --sign - \"dist/mac-arm64/Podman Desktop.app\""
+    if [[ "$(uname -m)" == "arm64" ]]; then
+      echo "  codesign --force --deep --sign - \"dist/mac-arm64/Podman Desktop.app\""
+    else
+      echo "  codesign --force --deep --sign - \"dist/mac/Podman Desktop.app\""
+    fi
   fi
   exit 1
 fi

@@ -3,7 +3,7 @@
     "electron-test": {
       "type": "stdio",
       "command": "npx",
-      "args": ["electron-test-mcp"]
+      "args": ["--yes", "electron-test-mcp"]
     }
   }
 }
