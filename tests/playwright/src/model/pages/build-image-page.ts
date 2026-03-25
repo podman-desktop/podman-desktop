@@ -184,7 +184,11 @@ export class BuildImagePage extends BasePage {
       playExpect(text).toContain(errorText);
       return;
     }
-    playExpect((text.match(/Successfully built/g) ?? []).length).toBe(archCount);
+    await playExpect
+      .poll(async () => (((await this.terminalContent.innerText()) ?? '').match(/Successfully built/g) ?? []).length, {
+        timeout: 30_000,
+      })
+      .toBe(archCount);
   }
 
   async toggleRegistryValidation(enabled: boolean): Promise<void> {
