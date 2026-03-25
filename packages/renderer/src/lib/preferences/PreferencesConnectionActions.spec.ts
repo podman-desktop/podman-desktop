@@ -173,6 +173,7 @@ describe('delete', () => {
         title: 'Confirmation',
         message: `Are you sure you want to delete ${containerConnection.name}?`,
         buttons: ['Yes', 'Cancel'],
+        type: 'question',
       });
     });
   });

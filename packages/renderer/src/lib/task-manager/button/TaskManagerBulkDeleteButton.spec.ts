@@ -83,6 +83,7 @@ test('Expect bulk button is bringing confirmation but not deleting anything', as
     buttons: ['Yes', 'Cancel'],
     message: 'Are you sure you want to bulk delete operation?',
     title: 'Confirmation',
+    type: 'question',
   });
 
   // expect we did not call the clearTask method
