@@ -39,16 +39,34 @@ ulimit -n 65536
 
 ## Workflow
 
+### Step 0: First-Time Setup (fresh clone)
+
+If you have just cloned the repository, run this once before anything else:
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Then choose your mode (see Step 1 below):
+#   Development (faster to start): ulimit -n 65536 && pnpm watch
+#   Production binary:             pnpm compile:current
+```
+
+Skip this step if `node_modules/` already exists in the repo root.
+
+---
+
 ### Step 1: Start Podman Desktop with CDP Enabled
 
 Choose ONE of these methods:
 
 #### Option A: Production Testing (Recommended for sub-agents)
 
-**Prerequisites:** Binary must be compiled first
+**Prerequisites:** Dependencies installed and binary compiled
 
 ```bash
-pnpm compile:current  # Only needed once or after code changes
+pnpm install          # Skip if node_modules already exists
+pnpm compile:current  # Builds and packages the binary
 ```
 
 **Start the app:**
@@ -81,10 +99,11 @@ This will:
 
 #### Option B: Development Testing
 
-**Prerequisites:** Source code must be built
+**Prerequisites:** Dependencies installed
 
 ```bash
-ulimit -n 65536  # Increase file descriptor limit (Linux/macOS only)
+pnpm install    # Skip if node_modules already exists
+ulimit -n 65536 # Increase file descriptor limit (Linux/macOS only, required)
 pnpm watch
 ```
 
@@ -107,35 +126,67 @@ This will:
 - Requires higher file descriptor limits
 - Not testing production binary
 
-### Step 2: Check if App is Running
+### Step 2: Check if App is Running and Close DevTools Targets
 
-Before connecting, verify the app started successfully:
+Before connecting, verify the app started successfully and close any open DevTools windows.
+The `electron-test` MCP tool picks the first available CDP target — if a DevTools window is
+open it will connect there instead of the app.
 
 _Linux/macOS:_
 
 ```bash
-# Check process
-ps aux | grep "podman-desktop --remote-debugging-port"
-
-# Check CDP endpoint is available
+# 1. Check CDP endpoint is available
 curl -s http://localhost:9222/json/version  # For production
 # OR
 curl -s http://localhost:9223/json/version  # For development
 ```
 
+```bash
+# 2. Close all DevTools CDP targets (run for whichever port you are using)
+PORT=9223  # or 9222 for production
+curl -s http://localhost:$PORT/json | python3 -c "
+import json, sys, urllib.request
+for t in json.load(sys.stdin):
+    if 'devtools' in t.get('url', ''):
+        try:
+            urllib.request.urlopen(f'http://localhost:$PORT/json/close/{t[\"id\"]}')
+            print('Closed DevTools target:', t['id'])
+        except Exception as e:
+            print('Already gone:', e)
+"
+```
+
+```bash
+# 3. Verify — should show only "Podman Desktop"
+curl -s http://localhost:$PORT/json | python3 -c "import json,sys; [print('-', t['title']) for t in json.load(sys.stdin)]"
+```
+
 _Windows (PowerShell):_
 
 ```powershell
-# Check process
-Get-Process -Name "Podman Desktop" -ErrorAction SilentlyContinue
-
-# Check CDP endpoint is available
+# 1. Check CDP endpoint is available
 Invoke-WebRequest -Uri http://localhost:9222/json/version -UseBasicParsing  # For production
 # OR
 Invoke-WebRequest -Uri http://localhost:9223/json/version -UseBasicParsing  # For development
 ```
 
-Expected output: JSON with browser version info
+```powershell
+# 2. Close all DevTools CDP targets
+$port = 9223  # or 9222 for production
+$targets = (Invoke-WebRequest -Uri "http://localhost:$port/json" -UseBasicParsing).Content | ConvertFrom-Json
+foreach ($t in $targets) {
+    if ($t.url -like "*devtools*") {
+        try {
+            Invoke-WebRequest -Uri "http://localhost:$port/json/close/$($t.id)" -UseBasicParsing | Out-Null
+            Write-Host "Closed DevTools target: $($t.id)"
+        } catch {
+            Write-Host "Already gone: $($t.id)"
+        }
+    }
+}
+```
+
+Expected output: JSON with browser version info, then only `- Podman Desktop` in the target list.
 
 ### Step 3: Connect via MCP
 
@@ -150,6 +201,9 @@ mcp__electron-test__connect({ port: 9223 })
 ```
 
 Expected result: `Connected via CDP (port XXXX). Window title: Podman Desktop`
+
+> **Verify the window title says "Podman Desktop"**, not "DevTools". If you see "DevTools",
+> go back to Step 2 and close the DevTools targets before reconnecting.
 
 ### Step 4: Get Page Snapshot
 
@@ -337,6 +391,59 @@ When interacting with elements, prefer in this order:
    ```
 
 ## Troubleshooting
+
+### `pnpm: command not found`
+
+pnpm is not installed. Install it:
+
+```bash
+npm install -g pnpm
+# or via the official installer:
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
+
+Then re-open your terminal and verify with `pnpm --version`.
+
+### `node_modules` Not Found / `pnpm install` Not Run
+
+Symptoms: `pnpm watch` or `start-with-cdp.sh` exits immediately with a module resolution error.
+
+```bash
+pnpm install
+```
+
+This only needs to be done once after cloning (or after `package.json` changes).
+
+### `pnpm compile:current` Fails with `flatpak-builder: command not found`
+
+This error occurs at the very end of packaging (after the binary is already built) when
+`flatpak-builder` is not installed. The usable binary is still produced:
+
+```
+dist/linux-unpacked/podman-desktop   ← this is built and works
+```
+
+You can safely ignore the error and proceed with `start-with-cdp.sh`.
+
+### Connected to DevTools Instead of App
+
+**Symptom:** `connect` returns `Window title: DevTools` instead of `Window title: Podman Desktop`.
+
+**Cause:** The `electron-test` MCP tool picks the first available CDP target. Electron opens a
+DevTools window alongside the app, and the tool consistently selects it first.
+
+**Fix — close DevTools targets, then reconnect:**
+
+1. Disconnect: `mcp__electron-test__disconnect()`
+2. Run the close-DevTools command from Step 2 above
+3. Reconnect: `mcp__electron-test__connect({ port: 9223 })` (or 9222 for production)
+
+**If the app window is also broken** (empty/white — caused by launching a dev build without
+a running Vite server): kill the process and restart properly.
+
+- Kill: `pkill -f "podman-desktop --remote-debugging-port"`
+- Restart with `pnpm watch` (port 9223) or via `start-with-cdp.sh` (port 9222)
+- `start-with-cdp.sh` detects dev builds automatically and exits with clear instructions.
 
 ### Port Already in Use
 
