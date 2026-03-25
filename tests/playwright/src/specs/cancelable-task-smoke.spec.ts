@@ -81,7 +81,7 @@ test.describe
       const tasksPage = new TasksPage(page);
       await playExpect(tasksPage.heading).toBeVisible();
 
-      await tasksPage.cancelledTasksButton.click();
+      await tasksPage.canceledTasksButton.click();
       await playExpect
         .poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 })
         .toBeGreaterThanOrEqual(1);

@@ -36,7 +36,7 @@ export class TasksPage extends BasePage {
   readonly inProgressTasksButton: Locator;
   readonly successTasksButton: Locator;
   readonly failureTasksButton: Locator;
-  readonly cancelledTasksButton: Locator;
+  readonly canceledTasksButton: Locator;
   readonly content: Locator;
   readonly noTasksPlaceholder: Locator;
   readonly taskListHeader: Locator;
@@ -60,7 +60,7 @@ export class TasksPage extends BasePage {
     this.inProgressTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'In-Progress' });
     this.successTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Success' });
     this.failureTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Failure' });
-    this.cancelledTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Canceled' });
+    this.canceledTasksButton = this.tasksManagerWindow.getByRole('button', { name: 'Canceled' });
     this.content = this.tasksManagerWindow.getByRole('region', { name: 'content' });
     this.noTasksPlaceholder = this.content.getByRole('table', { name: 'No active tasks' });
     this.taskListHeader = this.content.getByRole('rowgroup').nth(0);
