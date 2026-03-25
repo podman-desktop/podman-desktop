@@ -65,20 +65,24 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-003: Buttons disabled when navigation not possible', async ({ navigationBar }) => {
+    test('TC-003: Buttons disabled when navigation not possible', async ({ navigationBar, page }) => {
       // Navigate to Dashboard (fresh start for this test)
-      const dashboardPage = await navigationBar.openDashboard();
-      await playExpect(dashboardPage.heading).toBeVisible();
-
-      // After one navigation, back should be enabled, forward disabled
-      await navigationBar.openContainers();
-      await playExpect(navigationBar.backButton).toBeEnabled();
+      await page.reload();
+      await playExpect(navigationBar.backButton).toBeDisabled();
       await playExpect(navigationBar.forwardButton).toBeDisabled();
 
-      // Navigate to Images
-      await navigationBar.openImages();
+      const dashboardPage = new DashboardPage(page);
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
 
-      // Back enabled, forward disabled (at end of history)
+      await navigationBar.goBack();
+      await playExpect(dashboardPage.heading).toBeVisible();
+
+      await playExpect(navigationBar.forwardButton).toBeEnabled();
+      await playExpect(navigationBar.backButton).toBeDisabled();
+
+      // After one navigation, back should be enabled, forward disabled
+      await navigationBar.goForward();
       await playExpect(navigationBar.backButton).toBeEnabled();
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
