@@ -49,7 +49,6 @@ test.describe
       test.skip(isMac, 'Alt shortcuts are for Windows/Linux only');
 
       // Navigate through pages
-      await navigationBar.openDashboard();
       await navigationBar.openContainers();
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
@@ -66,16 +65,16 @@ test.describe
       test.skip(isMac, 'Alt shortcuts are for Windows/Linux only');
 
       // Setup: Navigate and go back
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
       await navigationBar.goBack(); // Now on Containers
 
       // Press Alt+ArrowRight
       await page.keyboard.press('Alt+ArrowRight');
 
       // Verify on Images page
-      const imagesPage = new ImagesPage(page);
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
@@ -83,15 +82,15 @@ test.describe
       test.skip(!isMac, 'Cmd shortcuts are for macOS only');
 
       // Navigate through pages
-      await navigationBar.openDashboard();
-      await navigationBar.openContainers();
-      await navigationBar.openImages();
+      const containersPage = await navigationBar.openContainers();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
       // Press Cmd+[
       await page.keyboard.press('Meta+BracketLeft');
 
       // Verify on Containers page
-      const containersPage = new ContainersPage(page);
       await playExpect(containersPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
@@ -101,7 +100,9 @@ test.describe
       // Navigate through pages
       await navigationBar.openDashboard();
       const containersPage = await navigationBar.openContainers();
-      await navigationBar.openImages();
+      await playExpect(containersPage.heading).toBeVisible();
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
 
       // Press Cmd+ArrowLeft (back)
       await page.keyboard.press('Meta+ArrowLeft');
@@ -113,7 +114,6 @@ test.describe
       await page.keyboard.press('Meta+ArrowRight');
 
       // Verify on Images
-      const imagesPage = new ImagesPage(page);
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
@@ -185,6 +185,7 @@ test.describe
 
       // Find and focus on search input (if available)
       const searchInput = page.getByPlaceholder(/search/i).first();
+      await playExpect(searchInput).toBeVisible();
       const searchExists = await searchInput.count();
 
       if (searchExists > 0) {
