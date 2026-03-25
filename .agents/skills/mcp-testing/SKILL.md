@@ -132,12 +132,12 @@ Expected output: JSON with browser version info
 
 Use the MCP connect tool:
 
-```javascript
+```text
 // For production testing (port 9222)
-mcp__electron - test__connect({ port: 9222 });
+mcp__electron-test__connect({ port: 9222 })
 
 // For development testing (port 9223)
-mcp__electron - test__connect({ port: 9223 });
+mcp__electron-test__connect({ port: 9223 })
 ```
 
 Expected result: `Connected via CDP (port XXXX). Window title: Podman Desktop`
@@ -146,8 +146,8 @@ Expected result: `Connected via CDP (port XXXX). Window title: Podman Desktop`
 
 Always start by understanding what's on the current page:
 
-```javascript
-mcp__electron - test__snapshot();
+```text
+mcp__electron-test__snapshot()
 ```
 
 This returns the accessibility tree showing:
@@ -164,10 +164,9 @@ This returns the accessibility tree showing:
 
 On first launch, a welcome dialog appears. Close it:
 
-```javascript
-mcp__electron -
-  test__evaluate({
-    script: `
+```text
+mcp__electron-test__evaluate({
+  script: `
     const skipButton = document.evaluate(
       "//button[contains(text(), 'Skip')]",
       document,
@@ -181,37 +180,34 @@ mcp__electron -
     } else {
       'No welcome dialog found';
     }
-  `,
-  });
+  `
+})
 ```
 
 #### Navigate to Pages
 
 Use JavaScript evaluation for reliable navigation:
 
-```javascript
+```text
 // Navigate to Containers page
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     document.querySelector('a[href="/containers"]').click();
     'Navigated to Containers';
-  `,
-  });
+  `
+})
 
 // Navigate to Images page
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     document.querySelector('a[href="/images"]').click();
     'Navigated to Images';
-  `,
-  });
+  `
+})
 
 // Navigate to Settings
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     const links = Array.from(document.querySelectorAll('a'));
     const settingsLink = links.find(link => link.textContent.includes('Settings'));
     if (settingsLink) {
@@ -220,26 +216,24 @@ mcp__electron -
     } else {
       'Settings link not found';
     }
-  `,
-  });
+  `
+})
 
 // Navigate to Extensions
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     document.querySelector('a[href="/extensions"]').click();
     'Navigated to Extensions';
-  `,
-  });
+  `
+})
 
 // Navigate to Dashboard
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     document.querySelector('a[href="/"]').click();
     'Navigated to Dashboard';
-  `,
-  });
+  `
+})
 ```
 
 #### Common Navigation URLs
@@ -257,52 +251,49 @@ Use these hrefs for direct navigation:
 
 #### Check Page Content
 
-```javascript
+```text
 // Get current URL hash
-mcp__electron -
-  test__evaluate({
-    script: `window.location.hash`,
-  });
+mcp__electron-test__evaluate({
+  script: `window.location.hash`
+})
 
 // Check for specific text
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     document.body.innerText.includes('No Container Engine')
       ? 'No container engine configured'
       : 'Container engine available';
-  `,
-  });
+  `
+})
 
 // Count elements
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     document.querySelectorAll('[data-testid*="container-card"]').length
-  `,
-  });
+  `
+})
 ```
 
 #### Take Screenshots
 
-```javascript
+```text
 // Full page screenshot
-mcp__electron - test__screenshot({ fullPage: true });
+mcp__electron-test__screenshot({ fullPage: true })
 
 // Viewport screenshot
-mcp__electron - test__screenshot({ fullPage: false });
+mcp__electron-test__screenshot({ fullPage: false })
 ```
 
 ### Step 6: Clean Up
 
 When finished testing, close the application and disconnect:
 
-```javascript
+```text
 // Close the Podman Desktop application window
-mcp__electron - test__close();
+mcp__electron-test__close()
 
 // Disconnect from MCP
-mcp__electron - test__disconnect();
+mcp__electron-test__disconnect()
 ```
 
 > **Note (development mode):** In development mode (`pnpm watch`), `close()` shuts the Electron window but the watch process continues running. Stop it with Ctrl+C in the terminal when done.
@@ -314,27 +305,26 @@ When interacting with elements, prefer in this order:
 1. **data-testid attributes** (most stable — preferred for test reliability)
 
    ```javascript
-   document.querySelector('[data-testid="settings-button"]').click();
+   document.querySelector('[data-testid="settings-button"]').click()
    ```
 
 2. **ARIA roles and accessible names**
 
    ```javascript
-   document.querySelector('button[aria-label="Create"]').click();
+   document.querySelector('button[aria-label="Create"]').click()
    ```
 
 3. **Text content**
 
    ```javascript
    Array.from(document.querySelectorAll('button'))
-     .find(b => b.textContent.includes('Pull'))
-     .click();
+     .find(b => b.textContent.includes('Pull')).click()
    ```
 
 4. **JavaScript evaluation / generic CSS selectors** (fallback when nothing else works)
 
    ```javascript
-   document.querySelector('a[href="/containers"]').click();
+   document.querySelector('a[href="/containers"]').click()
    ```
 
 ## Troubleshooting
@@ -402,14 +392,13 @@ This issue does not occur on Windows.
 
 Use JavaScript evaluation instead of click:
 
-```javascript
-mcp__electron -
-  test__evaluate({
-    script: `
+```text
+mcp__electron-test__evaluate({
+  script: `
     document.evaluate("//button[contains(text(), 'Skip')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
       .singleNodeValue?.click();
-  `,
-  });
+  `
+})
 ```
 
 ### MCP Tools Not Available
@@ -420,98 +409,92 @@ Check that `.mcp.json` exists at the repo root and restart Claude Code.
 
 ### Full Navigation Test
 
-```javascript
+```text
 // 1. Connect
-mcp__electron - test__connect({ port: 9222 });
+mcp__electron-test__connect({ port: 9222 })
 
 // 2. Get initial state
-mcp__electron - test__snapshot();
+mcp__electron-test__snapshot()
 
 // 3. Close welcome dialog if present
-mcp__electron -
-  test__evaluate({
-    script: `document.evaluate("//button[contains(text(), 'Skip')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue?.click()`,
-  });
+mcp__electron-test__evaluate({
+  script: `document.evaluate("//button[contains(text(), 'Skip')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue?.click()`
+})
 
 // 4. Navigate to each page
 const pages = ['/containers', '/images', '/pods', '/volumes', '/extensions'];
 for (const page of pages) {
-  mcp__electron -
-    test__evaluate({
-      script: `document.querySelector('a[href="${page}"]').click(); 'Navigated to ${page}';`,
-    });
+  mcp__electron-test__evaluate({
+    script: `document.querySelector('a[href="${page}"]').click(); 'Navigated to ${page}';`
+  })
 
   // Wait a moment for page load
-  mcp__electron - test__wait({ selector: 'main', timeout: 5000 });
+  mcp__electron-test__wait({ selector: 'main', timeout: 5000 })
 
   // Get snapshot
-  mcp__electron - test__snapshot();
+  mcp__electron-test__snapshot()
 }
 
 // 5. Close the app and disconnect
-mcp__electron - test__close();
-mcp__electron - test__disconnect();
+mcp__electron-test__close()
+mcp__electron-test__disconnect()
 ```
 
 ### Verify Page Loaded
 
-```javascript
+```text
 // Wait for main content
-mcp__electron - test__wait({ selector: 'main', state: 'visible', timeout: 5000 });
+mcp__electron-test__wait({ selector: 'main', state: 'visible', timeout: 5000 })
 
 // Check heading matches expected page
-mcp__electron -
-  test__evaluate({
-    script: `document.querySelector('h1')?.textContent || 'No heading found'`,
-  });
+mcp__electron-test__evaluate({
+  script: `document.querySelector('h1')?.textContent || 'No heading found'`
+})
 ```
 
 ### Check for Errors
 
-```javascript
+```text
 // Check for error messages in UI
-mcp__electron -
-  test__evaluate({
-    script: `
+mcp__electron-test__evaluate({
+  script: `
     const errorElements = document.querySelectorAll('[role="alert"], .error, [class*="error"]');
     Array.from(errorElements).map(el => el.textContent).join(', ') || 'No errors found';
-  `,
-  });
+  `
+})
 ```
 
 ## Quick Reference
 
 ### Essential MCP Commands
 
-| Command                                              | Purpose                      |
-| ---------------------------------------------------- | ---------------------------- |
-| `mcp__electron-test__connect({ port: 9222 })`        | Connect to running app       |
-| `mcp__electron-test__close()`                        | Close the application window |
-| `mcp__electron-test__disconnect()`                   | Disconnect from MCP          |
-| `mcp__electron-test__snapshot()`                     | Get accessibility tree       |
-| `mcp__electron-test__evaluate({ script: '...' })`    | Run JavaScript in renderer   |
-| `mcp__electron-test__screenshot({ fullPage: true })` | Capture screenshot           |
-| `mcp__electron-test__wait({ selector: 'main' })`     | Wait for element             |
+| Command                                              | Purpose                        |
+| ---------------------------------------------------- | ------------------------------ |
+| `mcp__electron-test__connect({ port: 9222 })`        | Connect to running app         |
+| `mcp__electron-test__close()`                        | Close the application window   |
+| `mcp__electron-test__disconnect()`                   | Disconnect from MCP            |
+| `mcp__electron-test__snapshot()`                     | Get accessibility tree         |
+| `mcp__electron-test__evaluate({ script: '...' })`    | Run JavaScript in renderer     |
+| `mcp__electron-test__screenshot({ fullPage: true })` | Capture screenshot             |
+| `mcp__electron-test__wait({ selector: 'main' })`     | Wait for element               |
 
 ### Common Scripts
 
 ```javascript
 // Navigate
-document.querySelector('a[href="/path"]').click();
+document.querySelector('a[href="/path"]').click()
 
 // Get text
-document.querySelector('h1')?.textContent;
+document.querySelector('h1')?.textContent
 
 // Check visibility
-document.querySelector('.element')?.offsetParent !== null;
+document.querySelector('.element')?.offsetParent !== null
 
 // Count elements
-document.querySelectorAll('.item').length;
+document.querySelectorAll('.item').length
 
 // Find by text
-Array.from(document.querySelectorAll('button'))
-  .find(b => b.textContent.includes('Text'))
-  ?.click();
+Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Text'))?.click()
 ```
 
 ## Additional Resources
