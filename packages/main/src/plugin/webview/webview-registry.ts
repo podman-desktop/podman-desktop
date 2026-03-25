@@ -53,7 +53,7 @@ export class HttpServer {
     // now listen on the port
     await new Promise<void>((resolve, reject) => {
       this.#instance = this.#app
-        .listen(serverPort, () => {
+        .listen(serverPort, '127.0.0.1', () => {
           resolve();
         })
         .on('error', (err: unknown) => {
