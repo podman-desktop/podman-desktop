@@ -1095,6 +1095,9 @@ export class ExtensionLoader implements IAsyncDisposable {
       showErrorMessage: (message: string, ...items: string[]) => {
         return messageBox.showDialog('error', extManifest.displayName, message, items);
       },
+      showDangerMessage: (message: string, ...items: string[]) => {
+        return messageBox.showDialog('danger', extManifest.displayName, message, items);
+      },
 
       showInputBox: (options?: containerDesktopAPI.InputBoxOptions, token?: containerDesktopAPI.CancellationToken) => {
         return inputQuickPickRegistry.showInputBox(options, token);

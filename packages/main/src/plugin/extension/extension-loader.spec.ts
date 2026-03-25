@@ -167,7 +167,9 @@ const apiSender: ApiSenderType = { send: vi.fn() } as unknown as ApiSenderType;
 
 const trayMenuRegistry: TrayMenuRegistry = {} as unknown as TrayMenuRegistry;
 
-const messageBox: MessageBox = {} as MessageBox;
+const messageBox: MessageBox = {
+  showDialog: vi.fn(),
+} as unknown as MessageBox;
 
 const progress: ProgressImpl = {
   withProgress: vi.fn(),
@@ -1255,6 +1257,30 @@ describe('setContextValue', async () => {
 
     api.context.setValue('key', 'value', 'DockerCompatibility');
     expect(setValueSpy).toBeCalledWith('publisher.extension-name.DockerCompatibility.key', 'value');
+  });
+});
+
+describe('showDangerMessage', () => {
+  test('should call messageBox.showDialog with danger type', async () => {
+    const api = createApi();
+
+    vi.mocked(messageBox.showDialog).mockResolvedValue('Yes');
+
+    const result = await api.window.showDangerMessage('Are you sure?', 'Yes', 'No');
+
+    expect(messageBox.showDialog).toHaveBeenCalledWith('danger', 'dname', 'Are you sure?', ['Yes', 'No']);
+    expect(result).toBe('Yes');
+  });
+
+  test('should call messageBox.showDialog with no items', async () => {
+    const api = createApi();
+
+    vi.mocked(messageBox.showDialog).mockResolvedValue(undefined);
+
+    const result = await api.window.showDangerMessage('Danger message');
+
+    expect(messageBox.showDialog).toHaveBeenCalledWith('danger', 'dname', 'Danger message', []);
+    expect(result).toBeUndefined();
   });
 });
 
