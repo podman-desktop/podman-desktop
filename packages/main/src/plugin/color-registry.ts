@@ -394,7 +394,7 @@ export class ColorRegistry {
       dark: charcoal[500],
       light: gray[300],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
     this.registerColor(`${glNav}icon`, {
       dark: gray[600],
@@ -464,7 +464,7 @@ export class ColorRegistry {
       dark: charcoal[300],
       light: gray[300],
       hcDark: charcoal[500],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
 
     this.registerColor('titlebar-windows-hover-exit-bg', {
@@ -726,7 +726,7 @@ export class ColorRegistry {
       dark: charcoal[400],
       light: gray[700],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
 
     this.registerColor(`${ct}card-carousel-card-bg`, {
@@ -772,7 +772,7 @@ export class ColorRegistry {
       dark: charcoal[800],
       light: gray[200],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
 
     this.registerColor(`${ct}card-border-selected`, {
@@ -786,7 +786,7 @@ export class ColorRegistry {
       dark: charcoal[400],
       light: gray[300],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
   }
 
@@ -836,7 +836,7 @@ export class ColorRegistry {
       dark: charcoal[400],
       light: gray[700],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
     this.registerColor(`${sNav}hover-stroke`, {
       dark: white,
@@ -1096,7 +1096,7 @@ export class ColorRegistry {
       dark: charcoal[500],
       light: gray[500],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
     this.registerColor(`${modal}header-bg`, {
       dark: black,
@@ -1351,7 +1351,7 @@ export class ColorRegistry {
       dark: accent1[800],
       light: accent1[500],
       hcDark: gray[300],
-      hcLight: '#8F8F8F',
+      hcLight: gray[850],
     });
     this.registerColor(`${dropdown}hover-ring`, {
       dark: accent1[700],
