@@ -620,8 +620,8 @@ importers:
         specifier: ^3.1.8
         version: 3.1.8
       undici:
-        specifier: ^7.24.5
-        version: 7.24.5
+        specifier: ^7.24.6
+        version: 7.24.6
       validator:
         specifier: ^13.15.26
         version: 13.15.26
@@ -11455,8 +11455,8 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici@7.24.5:
-    resolution: {integrity: sha512-3IWdCpjgxp15CbJnsi/Y9TCDE7HWVN19j1hmzVhoAkY/+CJx449tVxT5wZc1Gwg8J+P0LWvzlBzxYRnHJ+1i7Q==}
+  undici@7.24.6:
+    resolution: {integrity: sha512-Xi4agocCbRzt0yYMZGMA6ApD7gvtUFaxm4ZmeacWI4cZxaF6C+8I8QfofC20NAePiB/IcvZmzkJ7XPa471AEtA==}
     engines: {node: '>=20.18.1'}
 
   unicode-canonical-property-names-ecmascript@2.0.1:
@@ -17950,7 +17950,7 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 7.24.5
+      undici: 7.24.6
       whatwg-mimetype: 4.0.0
 
   chevrotain-allstar@0.3.1(chevrotain@11.0.3):
@@ -20999,7 +20999,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.0
-      undici: 7.24.5
+      undici: 7.24.6
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -24969,7 +24969,7 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  undici@7.24.5: {}
+  undici@7.24.6: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
