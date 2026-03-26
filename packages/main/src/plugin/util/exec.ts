@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ChildProcessWithoutNullStreams } from 'node:child_process';
+import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
@@ -150,9 +150,13 @@ export class Exec {
       command = 'flatpak-spawn';
     }
 
-    let cwd: string;
+    let cwd: string | undefined;
     if (options?.cwd) {
       cwd = options.cwd;
+    }
+
+    if (options?.detached) {
+      return this.execDetached(command, args ?? [], env, cwd);
     }
 
     return new Promise((resolve, reject) => {
@@ -240,6 +244,53 @@ export class Exec {
             childProcess.killed,
           );
           reject(errResult);
+        }
+      });
+    });
+  }
+
+  private execDetached(
+    command: string,
+    args: string[],
+    env: NodeJS.ProcessEnv,
+    cwd: string | undefined,
+  ): Promise<RunResult> {
+    return new Promise((resolve, reject) => {
+      const childProcess: ChildProcess = spawn(command, args, { env, cwd, detached: true, stdio: 'ignore' });
+
+      childProcess.unref();
+
+      childProcess.on('error', error => {
+        reject(
+          new RunErrorImpl(
+            error.name,
+            `Failed to execute command: ${error.message}`,
+            1,
+            command,
+            '',
+            '',
+            false,
+            childProcess.killed,
+          ),
+        );
+      });
+
+      childProcess.on('close', exitCode => {
+        if (exitCode === 0) {
+          resolve({ command, stdout: '', stderr: '' });
+        } else {
+          reject(
+            new RunErrorImpl(
+              `Command execution failed with exit code ${exitCode}`,
+              `Command execution failed with exit code ${exitCode}`,
+              exitCode ?? 1,
+              command,
+              '',
+              '',
+              false,
+              childProcess.killed,
+            ),
+          );
         }
       });
     });
