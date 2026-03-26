@@ -369,7 +369,7 @@ export class ColorRegistry {
       dark: white,
       light: charcoal[900],
       hcDark: white,
-      hcLight: '#000000',
+      hcLight: black,
     });
   }
 
