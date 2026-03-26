@@ -157,7 +157,7 @@ Skip if the run history shows a chronic or isolated pattern. Launch in parallel:
 
 1. **Verify last passing run:** `gh run view {id} --repo {owner}/{repo}`
 2. **Check adjacent failures** for same test: `gh run view {id} --repo ... | grep -E "^X|🧪|❌"`
-3. **Fetch test source:** `gh api repos/{repo}/contents/{path} --jq '.content' | base64 --decode | sed -n '{start},{end}p'`
+3. **Fetch test source:** `gh api repos/{owner}/{repo}/contents/{path} --jq '.content' | base64 --decode | sed -n '{start},{end}p'`
    (macOS base64 fallback: pipe through `python3 -c "import sys,base64;print(base64.b64decode(sys.stdin.read()).decode())"`)
 4. **Commits between pass/fail:** `git log --oneline --since="{date}" --until="{date}" -- {paths}`
 
