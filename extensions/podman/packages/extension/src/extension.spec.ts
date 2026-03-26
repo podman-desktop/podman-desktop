@@ -1819,6 +1819,69 @@ test('provider is registered with limited edit capabilities on (HyperV) Windows'
   );
 });
 
+test.each([
+  {
+    description: 'telemetry is tracked when rootful is set to true',
+    inspectRootful: false,
+    editParams: { 'podman.machine.rootful': true },
+    expectedTelemetry: { event: 'podman.machine.edit.rootful', data: { isRootful: true } },
+  },
+  {
+    description: 'telemetry is tracked when rootful is set to false',
+    inspectRootful: false,
+    editParams: { 'podman.machine.rootful': false },
+    expectedTelemetry: { event: 'podman.machine.edit.rootful', data: { isRootful: false } },
+  },
+  {
+    description: 'telemetry is not tracked when other settings are changed without rootful',
+    inspectRootful: true,
+    editParams: { 'podman.machine.cpus': '4', 'podman.machine.memory': '2048' },
+    expectedTelemetry: undefined,
+  },
+])('$description', async ({ inspectRootful, editParams, expectedTelemetry }) => {
+  vi.mocked(extensionApi.env).isMac = true;
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: inspectRootful }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+          resolve({
+            stdout: '',
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('Unexpected command'));
+        }
+      }),
+  );
+
+  let registeredConnection: ContainerProviderConnection | undefined;
+  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+    registeredConnection = connection;
+    return Disposable.from({ dispose: () => {} });
+  });
+
+  await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+  expect(registeredConnection).toBeDefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+
+  vi.mocked(telemetryLogger.logUsage).mockClear();
+
+  await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, editParams);
+
+  if (expectedTelemetry) {
+    expect(telemetryLogger.logUsage).toHaveBeenCalledWith(expectedTelemetry.event, expectedTelemetry.data);
+  } else {
+    expect(telemetryLogger.logUsage).not.toHaveBeenCalled();
+  }
+});
+
 test('provider is registered without edit capabilities on Linux', async () => {
   vi.mocked(extensionApi.env).isLinux = true;
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);

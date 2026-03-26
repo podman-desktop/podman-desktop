@@ -5,9 +5,9 @@ import { CloseButton, Dropdown, Modal } from '@podman-desktop/ui-svelte';
 import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
 
-let displayModal = false;
+let displayModal = $state(false);
 const DEFAULT_CATEGORY: FeedbackCategory = 'developers';
-let category: FeedbackCategory = DEFAULT_CATEGORY;
+let category: FeedbackCategory = $state(DEFAULT_CATEGORY);
 let hasContent: boolean = false;
 
 const FEEDBACK_CATEGORIES = new Map<FeedbackCategory, string>([
@@ -56,7 +56,7 @@ function handleUpdate(e: boolean): void {
 
 {#if displayModal}
 <div class='z-40'>
-  <Modal name="Share your feedback" on:close={(): Promise<void> => hideModal()}>
+  <Modal name="Share your feedback" onclose={(): Promise<void> => hideModal()}>
     <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
       <h1 class="grow text-lg font-bold capitalize">Share your feedback</h1>
       <CloseButton onclick={(): Promise<void> => hideModal()} />

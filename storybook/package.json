@@ -24,7 +24,7 @@
     "@storybook/addon-a11y": "^10.3.3",
     "@storybook/addon-docs": "^10.3.3",
     "@storybook/addon-links": "^10.3.3",
-    "@storybook/addon-svelte-csf": "5.1.0",
+    "@storybook/addon-svelte-csf": "5.1.1",
     "@storybook/addon-themes": "^10.3.3",
     "@storybook/svelte-vite": "^10.3.3",
     "@sveltejs/package": "^2.5.7",

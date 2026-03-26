@@ -135,7 +135,7 @@
     "*.{css,json}": "biome format --write"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.8",
+    "@biomejs/biome": "^2.4.9",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@electron/fuses": "^2.1.0",
@@ -154,7 +154,7 @@
     "@vitest/eslint-plugin": "^1.6.13",
     "cross-env": "10.1.0",
     "dts-for-context-bridge": "0.7.1",
-    "electron": "41.0.3",
+    "electron": "41.0.4",
     "electron-builder": "26.8.2",
     "electron-builder-notarize": "^1.5.2",
     "eslint": "^10.1.0",

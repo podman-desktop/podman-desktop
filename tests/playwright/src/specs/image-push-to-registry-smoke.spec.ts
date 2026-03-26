@@ -21,7 +21,7 @@ import { RegistriesPage } from '/@/model/pages/registries-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteImage, deleteRegistry } from '/@/utility/operations';
+import { deleteImage, deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'ghcr.io/podmandesktop-ci/hello';
@@ -36,6 +36,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+  await ensureNoImagesPresentCLI(page);
 
   [registryUrl, registryUsername, registryPswdSecret] = setupRegistry();
 });

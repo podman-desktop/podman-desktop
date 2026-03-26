@@ -285,8 +285,22 @@ test('initContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[400]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.accent1[500]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.accent1[400]);
+});
+
+test('initDropdown registers dropdown-border', async () => {
+  colorRegistry.initColors();
+
+  const colorsLight = colorRegistry.listColors('light');
+  const dropdownBorderLight = colorsLight.find(c => c.id === 'dropdown-border');
+  expect(dropdownBorderLight).toBeDefined();
+  expect(dropdownBorderLight?.value).toBe(tailwindColorPalette.accent1[500]);
+
+  const colorsDark = colorRegistry.listColors('dark');
+  const dropdownBorderDark = colorsDark.find(c => c.id === 'dropdown-border');
+  expect(dropdownBorderDark).toBeDefined();
+  expect(dropdownBorderDark?.value).toBe('transparent');
 });
 
 describe('registerColor', () => {
@@ -500,7 +514,7 @@ describe('registerExtensionThemes', () => {
     // now check for a color not defined in 'light-theme1'
     const titlebarTextColorLight = colorsLight.find(c => c.id === 'titlebar-text');
     expect(titlebarTextColorLight).toBeDefined();
-    expect(titlebarTextColorLight?.value).toBe('#37255d');
+    expect(titlebarTextColorLight?.value).toBe(tailwindColorPalette.accent1[500]);
   });
 
   test('check dispose on Windows', async () => {
@@ -662,12 +676,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[2]?.[0]).toStrictEqual('label-primary-bg');
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.purple[300]);
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.accent1[200]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.accent1[900]);
 
     expect(spyOnRegisterColor.mock.calls[3]?.[0]).toStrictEqual('label-primary-text');
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.purple[700]);
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.accent1[800]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.accent1[200]);
   });
 
   test('secondary color', () => {

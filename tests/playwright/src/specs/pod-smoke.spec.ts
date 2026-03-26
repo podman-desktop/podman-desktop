@@ -192,7 +192,7 @@ test.describe
       await playExpect(podDetails.heading).toContainText(podToRun);
       await podDetails.activateTab('Logs');
 
-      await podDetails.findInLogs('backend');
+      await podDetails.findInLogs('redis');
       await playExpect
         .poll(async () => podDetails.getCountOfSearchResults(), { timeout: 10_000 })
         .toBeGreaterThanOrEqual(1);

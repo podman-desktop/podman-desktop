@@ -23,7 +23,7 @@ import { ArchitectureType } from '/@/model/core/platforms';
 import { ImageState } from '/@/model/core/states';
 import { ImageDetailsPage } from '/@/model/pages/image-details-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { untagImagesFromPodman } from '/@/utility/operations';
+import { ensureNoImagesPresentCLI, untagImagesFromPodman } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'ghcr.io/podmandesktop-ci/hello';
@@ -39,6 +39,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+  await ensureNoImagesPresentCLI(page);
 });
 
 test.afterAll(async ({ runner }) => {

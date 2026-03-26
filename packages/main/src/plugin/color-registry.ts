@@ -35,6 +35,7 @@ import type { ConfigurationRegistry } from './configuration-registry.js';
 import { Disposable } from './types/disposable.js';
 
 const {
+  accent1,
   amber,
   black,
   charcoal,
@@ -367,13 +368,15 @@ export class ColorRegistry {
     this.registerColor(`${def}text`, {
       dark: white,
       light: charcoal[900],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
   protected initNotificationDot(): void {
     this.registerColor('notification-dot', {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
   }
 
@@ -384,38 +387,54 @@ export class ColorRegistry {
     this.registerColor(`${glNav}bg`, {
       dark: charcoal[600],
       light: gray[100],
+      hcDark: black,
+      hcLight: white,
     });
     this.registerColor(`${glNav}bg-border`, {
       dark: charcoal[500],
       light: gray[300],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
     this.registerColor(`${glNav}icon`, {
-      dark: gray[400],
+      dark: gray[600],
       light: charcoal[200],
+      hcDark: white,
+      hcLight: charcoal[900],
     });
     this.registerColor(`${glNav}icon-hover`, {
-      dark: white,
-      light: purple[800],
+      dark: gray[600],
+      light: charcoal[200],
     });
     this.registerColor(`${glNav}icon-hover-bg`, {
-      dark: purple[700],
-      light: purple[300],
+      dark: transparent,
+      light: transparent,
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
     this.registerColor(`${glNav}icon-inset-bg`, {
       dark: charcoal[800],
       light: gray[300],
+      hcDark: black,
+      hcLight: white,
     });
     this.registerColor(`${glNav}icon-selected`, {
       dark: white,
-      light: purple[800],
+      light: accent1[500],
+      hcDark: white,
+      hcLight: white,
     });
     this.registerColor(`${glNav}icon-selected-bg`, {
       dark: charcoal[500],
-      light: gray[300],
+      light: gray[250],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
     this.registerColor(`${glNav}icon-selected-highlight`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
+      hcDark: purple[600],
+      hcLight: purple[600],
     });
   }
 
@@ -423,21 +442,29 @@ export class ColorRegistry {
     this.registerColor('titlebar-bg', {
       dark: isWindows() ? '#202020' : charcoal[900],
       light: gray[50],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor('titlebar-text', {
       dark: white,
-      light: purple[900],
+      light: accent1[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor('titlebar-icon', {
       dark: white,
-      light: purple[900],
+      light: accent1[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor('titlebar-hover-bg', {
       dark: charcoal[300],
       light: gray[300],
+      hcDark: charcoal[500],
+      hcLight: gray[850],
     });
 
     this.registerColor('titlebar-windows-hover-exit-bg', {
@@ -457,46 +484,64 @@ export class ColorRegistry {
     this.registerColor(`${sNav}bg`, {
       dark: charcoal[700],
       light: gray[100],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor(`${sNav}header-text`, {
       dark: white,
       light: charcoal[900],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${sNav}text`, {
       dark: gray[300],
       light: charcoal[700],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${sNav}text-hover`, {
-      dark: white,
-      light: purple[800],
+      dark: gray[275],
+      light: charcoal[750],
+      hcDark: white,
+      hcLight: white,
     });
 
     this.registerColor(`${sNav}text-hover-bg`, {
-      dark: purple[700],
-      light: purple[300],
+      dark: transparent,
+      light: transparent,
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
 
     this.registerColor(`${sNav}text-selected`, {
       dark: white,
       light: black,
+      hcDark: white,
+      hcLight: white,
     });
 
     this.registerColor(`${sNav}selected-bg`, {
       dark: charcoal[500],
-      light: gray[300],
+      light: gray[250],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
 
     this.registerColor(`${sNav}selected-highlight`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
+      hcDark: purple[600],
+      hcLight: purple[600],
     });
 
     this.registerColor(`${sNav}expander`, {
       dark: white,
       light: charcoal[700],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
@@ -504,6 +549,8 @@ export class ColorRegistry {
     this.registerColor(`card-bg`, {
       dark: charcoal[800],
       light: gray[300],
+      hcDark: black,
+      hcLight: gray[100],
     });
 
     this.registerColor(`card-header-text`, {
@@ -522,21 +569,27 @@ export class ColorRegistry {
     this.registerColor(`${invCt}bg`, {
       dark: charcoal[800],
       light: gray[25],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor(`${invCt}header-text`, {
       dark: white,
       light: charcoal[900],
+      hcLight: black,
     });
 
     this.registerColor(`${invCt}header2-text`, {
       dark: white,
       light: charcoal[900],
+      hcLight: black,
     });
 
     this.registerColor(`${invCt}card-bg`, {
       dark: charcoal[600],
       light: gray[100],
+      hcDark: charcoal[900],
+      hcLight: white,
     });
 
     this.registerColor(`${invCt}card-header-text`, {
@@ -550,8 +603,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${invCt}button-active`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${invCt}button-inactive`, {
@@ -560,66 +613,77 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${invCt}info-icon`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
   }
 
   protected initContent(): void {
     const ct = 'content-';
     this.registerColor(`${ct}breadcrumb`, {
-      dark: gray[400],
-      light: purple[900],
+      dark: accent1[400],
+      light: accent1[500],
+      hcDark: gray[300],
     });
 
     this.registerColor(`${ct}breadcrumb-2`, {
-      dark: purple[400],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${ct}header`, {
       dark: white,
       light: charcoal[900],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ct}text`, {
-      dark: gray[400],
-      light: gray[900],
+      dark: gray[700],
+      light: charcoal[250],
+      hcDark: white,
+      hcLight: charcoal[900],
     });
 
     this.registerColor(`${ct}sub-header`, {
-      dark: gray[400],
-      light: purple[900],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${ct}header-icon`, {
-      dark: gray[400],
-      light: purple[700],
+      dark: gray[600],
+      light: accent1[500],
     });
 
     this.registerColor(`${ct}card-header-text`, {
-      dark: gray[100],
-      light: purple[900],
+      dark: gray[350],
+      light: charcoal[850],
     });
 
     this.registerColor(`${ct}card-bg`, {
       dark: charcoal[800],
       light: gray[25],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor(`${ct}card-hover-bg`, {
-      dark: charcoal[500],
-      light: gray[300],
+      dark: charcoal[800],
+      light: gray[25],
+      hcDark: charcoal[800],
+      hcLight: gray[100],
     });
 
     this.registerColor(`${ct}card-selected-bg`, {
       dark: charcoal[400],
-      light: purple[100],
+      light: accent1[100],
+      hcDark: charcoal[700],
+      hcLight: gray[200],
     });
 
     this.registerColor(`${ct}card-text`, {
-      dark: gray[400],
-      light: purple[900],
+      dark: gray[350],
+      light: charcoal[250],
     });
 
     this.registerColor(`${ct}card-title`, {
@@ -628,43 +692,55 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}card-light-title`, {
-      dark: gray[500],
-      light: purple[900],
+      dark: gray[800],
+      light: accent1[500],
     });
 
     this.registerColor(`${ct}card-inset-bg`, {
-      dark: charcoal[900],
-      light: dustypurple[200],
+      dark: black,
+      light: white,
+      hcDark: black,
+      hcLight: gray[100],
     });
 
     this.registerColor(`${ct}card-hover-inset-bg`, {
-      dark: charcoal[700],
-      light: dustypurple[300],
+      dark: black,
+      light: white,
+      hcDark: charcoal[900],
+      hcLight: gray[200],
     });
 
     this.registerColor(`${ct}bg`, {
       dark: charcoal[700],
       light: gray[100],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor(`${ct}card-icon`, {
-      dark: gray[400],
-      light: purple[900],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${ct}divider`, {
       dark: charcoal[400],
       light: gray[700],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
 
     this.registerColor(`${ct}card-carousel-card-bg`, {
       dark: charcoal[600],
       light: gray[100],
+      hcDark: charcoal[900],
+      hcLight: white,
     });
 
     this.registerColor(`${ct}card-carousel-card-hover-bg`, {
-      dark: charcoal[500],
-      light: gray[200],
+      dark: charcoal[600],
+      light: gray[100],
+      hcDark: charcoal[800],
+      hcLight: gray[100],
     });
 
     this.registerColor(`${ct}card-carousel-card-header-text`, {
@@ -678,12 +754,12 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ct}card-carousel-nav`, {
-      dark: gray[500],
+      dark: gray[800],
       light: gray[300],
     });
 
     this.registerColor(`${ct}card-carousel-hover-nav`, {
-      dark: gray[400],
+      dark: gray[600],
       light: gray[500],
     });
 
@@ -695,16 +771,22 @@ export class ColorRegistry {
     this.registerColor(`${ct}card-border`, {
       dark: charcoal[800],
       light: gray[200],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
 
     this.registerColor(`${ct}card-border-selected`, {
-      dark: dustypurple[700],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
 
     this.registerColor(`${ct}table-border`, {
       dark: charcoal[400],
       light: gray[300],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
   }
 
@@ -719,6 +801,8 @@ export class ColorRegistry {
     this.registerColor(`${sNav}focused-bg`, {
       dark: charcoal[900],
       light: gray[100],
+      hcDark: black,
+      hcLight: white,
     });
     this.registerColor(`${sNav}disabled-bg`, {
       dark: transparent,
@@ -733,52 +817,57 @@ export class ColorRegistry {
       light: charcoal[900],
     });
     this.registerColor(`${sNav}error-text`, {
-      dark: red[500],
-      light: red[500],
+      dark: red[550],
+      light: red[550],
     });
     this.registerColor(`${sNav}disabled-text`, {
       dark: charcoal[100],
       light: gray[700],
     });
     this.registerColor(`${sNav}hover-text`, {
-      dark: gray[400],
+      dark: gray[700],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}placeholder-text`, {
-      dark: gray[500],
+      dark: gray[700],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}stroke`, {
       dark: charcoal[400],
       light: gray[700],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
     this.registerColor(`${sNav}hover-stroke`, {
-      dark: purple[400],
-      light: purple[500],
+      dark: white,
+      light: accent1[500],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
     this.registerColor(`${sNav}stroke-error`, {
-      dark: red[500],
-      light: red[500],
+      dark: red[550],
+      light: red[550],
     });
     this.registerColor(`${sNav}stroke-readonly`, {
       dark: charcoal[100],
       light: charcoal[100],
+      hcDark: charcoal[50],
     });
     this.registerColor(`${sNav}icon`, {
-      dark: gray[400],
+      dark: gray[700],
       light: charcoal[200],
     });
     this.registerColor(`${sNav}focused-icon`, {
       dark: gray[500],
-      light: purple[600],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}disabled-icon`, {
       dark: charcoal[100],
       light: gray[700],
     });
     this.registerColor(`${sNav}hover-icon`, {
-      dark: gray[400],
-      light: purple[600],
+      dark: gray[700],
+      light: accent1[500],
     });
   }
 
@@ -787,32 +876,32 @@ export class ColorRegistry {
     const sNav = 'input-checkbox-';
 
     this.registerColor(`${sNav}disabled`, {
-      dark: gray[600],
-      light: charcoal[200],
+      dark: charcoal[350],
+      light: gray[350],
     });
     this.registerColor(`${sNav}indeterminate`, {
-      dark: purple[500],
-      light: purple[900],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}focused-indeterminate`, {
-      dark: purple[400],
-      light: purple[700],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}checked`, {
-      dark: purple[500],
-      light: purple[900],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}focused-checked`, {
-      dark: purple[400],
-      light: purple[700],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}unchecked`, {
-      dark: gray[400],
-      light: purple[900],
+      dark: gray[275],
+      light: charcoal[875],
     });
     this.registerColor(`${sNav}focused-unchecked`, {
-      dark: purple[400],
-      light: purple[700],
+      dark: gray[275],
+      light: charcoal[875],
     });
   }
 
@@ -829,12 +918,12 @@ export class ColorRegistry {
       light: gray[800],
     });
     this.registerColor(`${sNav}on-bg`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}on-focused-bg`, {
-      dark: purple[400],
-      light: purple[500],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${sNav}switch`, {
       dark: white,
@@ -874,7 +963,7 @@ export class ColorRegistry {
     const tab = 'table-';
     // color of columns names
     this.registerColor(`${tab}header-text`, {
-      dark: gray[400],
+      dark: gray[600],
       light: charcoal[200],
     });
     // color of up/down arrows when column is not the ordered one
@@ -885,7 +974,7 @@ export class ColorRegistry {
 
     // color for most text in tables
     this.registerColor(`${tab}body-text`, {
-      dark: gray[400],
+      dark: gray[700],
       light: charcoal[100],
     });
     // color for the text in the main column of the table (generally Name)
@@ -895,8 +984,8 @@ export class ColorRegistry {
     });
     // color for the text in second line of main column, in secondary color (generally IDs)
     this.registerColor(`${tab}body-text-sub-secondary`, {
-      dark: purple[400],
-      light: purple[700],
+      dark: accent1[400],
+      light: accent1[500],
     });
     // color for highlighted text in second line of main column
     this.registerColor(`${tab}body-text-sub-highlight`, {
@@ -912,7 +1001,7 @@ export class ColorRegistry {
       light: charcoal[500],
     });
     this.registerColor(`${details}empty-icon`, {
-      dark: gray[400],
+      dark: gray[600],
       light: charcoal[200],
     });
     this.registerColor(`${details}empty-header`, {
@@ -920,27 +1009,34 @@ export class ColorRegistry {
       light: charcoal[500],
     });
     this.registerColor(`${details}empty-sub-header`, {
-      dark: gray[400],
+      dark: gray[600],
       light: charcoal[500],
     });
     this.registerColor(`${details}empty-cmdline-bg`, {
       dark: charcoal[900],
       light: gray[200],
+      hcDark: black,
+      hcLight: gray[100],
     });
     this.registerColor(`${details}empty-cmdline-text`, {
       dark: gray[400],
       light: charcoal[700],
+      hcLight: black,
     });
     this.registerColor(`${details}bg`, {
       dark: charcoal[900],
       light: gray[50],
+      hcDark: black,
+      hcLight: white,
     });
     this.registerColor(`${details}card-bg`, {
       dark: charcoal[600],
       light: gray[300],
+      hcDark: charcoal[900],
+      hcLight: gray[100],
     });
     this.registerColor(`${details}card-header`, {
-      dark: gray[400],
+      dark: gray[700],
       light: charcoal[300],
     });
     this.registerColor(`${details}card-text`, {
@@ -952,20 +1048,25 @@ export class ColorRegistry {
   protected initTab(): void {
     const tab = 'tab-';
     this.registerColor(`${tab}text`, {
-      dark: gray[400],
+      dark: gray[600],
       light: charcoal[200],
+      hcDark: white,
+      hcLight: charcoal[900],
     });
     this.registerColor(`${tab}text-highlight`, {
       dark: white,
       light: charcoal[300],
+      hcLight: black,
     });
     this.registerColor(`${tab}highlight`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: gray[275],
+      light: accent1[500],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
     this.registerColor(`${tab}hover`, {
-      dark: purple[400],
-      light: purple[500],
+      dark: charcoal[75],
+      light: gray[350],
     });
   }
 
@@ -983,27 +1084,33 @@ export class ColorRegistry {
     });
     this.registerColor(`${modal}text-hover`, {
       dark: gray[300],
-      light: purple[800],
+      light: accent1[500],
     });
     this.registerColor(`${modal}bg`, {
       dark: charcoal[800],
       light: gray[50],
+      hcDark: black,
+      hcLight: white,
     });
     this.registerColor(`${modal}border`, {
       dark: charcoal[500],
       light: gray[500],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
     this.registerColor(`${modal}header-bg`, {
       dark: black,
       light: gray[100],
+      hcDark: black,
+      hcLight: white,
     });
     this.registerColor(`${modal}header-text`, {
-      dark: gray[400],
-      light: purple[500],
+      dark: gray[150],
+      light: charcoal[250],
     });
     this.registerColor(`${modal}header-divider`, {
-      dark: purple[700],
-      light: purple[300],
+      dark: accent1[400],
+      light: accent1[500],
     });
   }
 
@@ -1012,15 +1119,13 @@ export class ColorRegistry {
     const link = 'link';
 
     this.registerColor(`${link}`, {
-      dark: purple[400],
-      light: purple[700],
+      dark: accent1[400],
+      light: accent1[600],
     });
-    this.registerColorDefinition(
-      this.color(`${link}-hover-bg`)
-        .withLight(colorPaletteHelper(black).withAlpha(0.13))
-        .withDark(colorPaletteHelper(white).withAlpha(0.13))
-        .build(),
-    );
+    this.registerColor(`${link}-hover-bg`, {
+      dark: transparent,
+      light: transparent,
+    });
   }
 
   // button
@@ -1028,20 +1133,20 @@ export class ColorRegistry {
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
-      dark: purple[600],
-      light: purple[600],
+      dark: accent1[500],
+      light: accent1[500],
     });
     this.registerColor(`${button}primary-hover-bg`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: accent1[500],
+      light: accent1[500],
     });
     this.registerColor(`${button}secondary`, {
       dark: gray[200],
-      light: purple[600],
+      light: accent1[600],
     });
     this.registerColor(`${button}secondary-hover`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: accent1[500],
+      light: accent1[500],
     });
     this.registerColor(`${button}text`, {
       dark: white,
@@ -1056,24 +1161,24 @@ export class ColorRegistry {
       light: gray[900],
     });
     this.registerColor(`${button}danger-border`, {
-      dark: red[500],
-      light: red[700],
+      dark: red[550],
+      light: red[950],
     });
     this.registerColor(`${button}danger-bg`, {
       dark: transparent,
       light: transparent,
     });
     this.registerColor(`${button}danger-text`, {
-      dark: red[500],
-      light: red[700],
+      dark: red[550],
+      light: red[950],
     });
     this.registerColor(`${button}danger-hover-text`, {
       dark: white,
       light: white,
     });
     this.registerColor(`${button}danger-hover-bg`, {
-      dark: red[600],
-      light: red[600],
+      dark: red[750],
+      light: red[750],
     });
     this.registerColor(`${button}danger-disabled-border`, {
       dark: charcoal[50],
@@ -1092,37 +1197,33 @@ export class ColorRegistry {
       light: transparent,
     });
     this.registerColor(`${button}tab-border-selected`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: gray[275],
+      light: accent1[500],
     });
     this.registerColor(`${button}tab-hover-border`, {
       dark: charcoal[100],
-      light: gray[600],
+      light: gray[350],
     });
     this.registerColor(`${button}tab-text`, {
-      dark: gray[400],
+      dark: gray[600],
       light: charcoal[200],
     });
     this.registerColor(`${button}tab-text-selected`, {
       dark: white,
       light: black,
     });
-    this.registerColorDefinition(
-      this.color(`${button}close-hover-bg`)
-        .withLight(colorPaletteHelper(black).withAlpha(0.13))
-        .withDark(colorPaletteHelper(white).withAlpha(0.13))
-        .build(),
-    );
-    this.registerColor(`${button}link-text`, {
-      dark: purple[400],
-      light: purple[700],
+    this.registerColor(`${button}close-hover-bg`, {
+      dark: transparent,
+      light: transparent,
     });
-    this.registerColorDefinition(
-      this.color(`${button}link-hover-bg`)
-        .withLight(colorPaletteHelper(black).withAlpha(0.13))
-        .withDark(colorPaletteHelper(white).withAlpha(0.13))
-        .build(),
-    );
+    this.registerColor(`${button}link-text`, {
+      dark: accent1[300],
+      light: accent1[600],
+    });
+    this.registerColor(`${button}link-hover-bg`, {
+      dark: transparent,
+      light: transparent,
+    });
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
@@ -1141,25 +1242,25 @@ export class ColorRegistry {
       light: gray[400],
     });
     this.registerColor(`${ab}hover-bg`, {
-      dark: charcoal[600],
-      light: gray[50],
+      dark: transparent,
+      light: transparent,
     });
     this.registerColor(`${ab}hover-text`, {
-      dark: purple[600],
-      light: purple[500],
+      dark: gray[400],
+      light: charcoal[500],
     });
 
     this.registerColor(`${ab}primary-text`, {
-      dark: purple[600],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${ab}primary-hover-text`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${ab}disabled-text`, {
-      dark: gray[700],
+      dark: gray[900],
       light: gray[900],
     });
 
@@ -1172,12 +1273,12 @@ export class ColorRegistry {
       light: gray[50],
     });
     this.registerColor(`${ab}details-hover-text`, {
-      dark: purple[600],
-      light: purple[500],
+      dark: gray[400],
+      light: charcoal[900],
     });
 
     this.registerColor(`${ab}details-disabled-text`, {
-      dark: gray[700],
+      dark: gray[900],
       light: gray[900],
     });
     this.registerColor(`${ab}details-disabled-bg`, {
@@ -1186,8 +1287,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ab}spinner`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: accent1[400],
+      light: accent1[500],
     });
   }
 
@@ -1237,18 +1338,26 @@ export class ColorRegistry {
     this.registerColor(`${dropdown}bg`, {
       dark: charcoal[600],
       light: gray[100],
+      hcDark: charcoal[900],
+      hcLight: white,
     });
     this.registerColor(`${select}bg`, {
       dark: charcoal[800],
       light: gray[300],
+      hcDark: black,
+      hcLight: gray[100],
     });
     this.registerColor(`${dropdown}ring`, {
-      dark: purple[900],
-      light: gray[500],
+      dark: accent1[800],
+      light: accent1[500],
+      hcDark: gray[300],
+      hcLight: gray[850],
     });
     this.registerColor(`${dropdown}hover-ring`, {
-      dark: purple[700],
-      light: purple[300],
+      dark: accent1[700],
+      light: accent1[500],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
     this.registerColor(`${dropdown}divider`, {
       dark: charcoal[600],
@@ -1260,16 +1369,18 @@ export class ColorRegistry {
       light: charcoal[600],
     });
     this.registerColor(`${dropdown}item-hover-bg`, {
-      dark: black,
-      light: gray[300],
+      dark: accent1[900],
+      light: accent1[50],
+      hcDark: black,
+      hcLight: gray[100],
     });
     this.registerColor(`${dropdown}item-hover-text`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: gray[400],
+      light: charcoal[250],
     });
 
     this.registerColor(`${dropdown}disabled-item-text`, {
-      dark: gray[700],
+      dark: gray[900],
       light: charcoal[100],
     });
     this.registerColor(`${dropdown}disabled-item-bg`, {
@@ -1278,16 +1389,20 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${modal}${dropdown}highlight`, {
-      dark: purple[600],
-      light: purple[300],
+      dark: accent1[900],
+      light: accent1[50],
     });
     this.registerColor(`${modal}${dropdown}text`, {
       dark: white,
       light: charcoal[900],
     });
     this.registerColor(`${input}${select}hover-text`, {
-      dark: gray[400],
+      dark: gray[900],
       light: charcoal[200],
+    });
+    this.registerColor(`${dropdown}border`, {
+      dark: transparent,
+      light: accent1[500],
     });
   }
 
@@ -1297,20 +1412,20 @@ export class ColorRegistry {
 
     this.registerColor(`${label}bg`, {
       dark: charcoal[500],
-      light: purple[200],
+      light: gray[250],
     });
     this.registerColor(`${label}text`, {
-      dark: gray[400],
+      dark: gray[450],
       light: charcoal[300],
     });
 
     this.registerColor(`${label}primary-bg`, {
-      dark: purple[700],
-      light: purple[300],
+      dark: accent1[900],
+      light: accent1[200],
     });
     this.registerColor(`${label}primary-text`, {
-      dark: purple[300],
-      light: purple[700],
+      dark: accent1[200],
+      light: accent1[800],
     });
 
     this.registerColor(`${label}secondary-bg`, {
@@ -1346,13 +1461,13 @@ export class ColorRegistry {
 
     // Podman & Kubernetes
     this.registerColor(`${status}running`, {
-      dark: green[500],
-      light: green[600],
+      dark: green[350],
+      light: green[550],
     });
     // Kubernetes only
     this.registerColor(`${status}terminated`, {
-      dark: red[500],
-      light: red[700],
+      dark: red[550],
+      light: red[950],
     });
     this.registerColor(`${status}waiting`, {
       dark: amber[600],
@@ -1360,8 +1475,8 @@ export class ColorRegistry {
     });
     // Podman only
     this.registerColor(`${status}starting`, {
-      dark: green[500],
-      light: green[600],
+      dark: green[350],
+      light: green[550],
     });
     // Stopped & Exited are the same color / same thing in the eyes of statuses
     this.registerColor(`${status}stopped`, {
@@ -1373,7 +1488,7 @@ export class ColorRegistry {
       light: charcoal[200],
     });
     this.registerColor(`${status}not-running`, {
-      dark: gray[500],
+      dark: gray[700],
       light: gray[900],
     });
     // "Warning"
@@ -1387,12 +1502,12 @@ export class ColorRegistry {
     });
     // Others
     this.registerColor(`${status}created`, {
-      dark: green[300],
-      light: green[300],
+      dark: green[250],
+      light: green[250],
     });
     this.registerColor(`${status}dead`, {
-      dark: red[500],
-      light: red[700],
+      dark: red[550],
+      light: red[950],
     });
     // If we don't know the status, use gray
     this.registerColor(`${status}unknown`, {
@@ -1401,8 +1516,8 @@ export class ColorRegistry {
     });
     // Connections / login
     this.registerColor(`${status}connected`, {
-      dark: green[600],
-      light: green[600],
+      dark: green[450],
+      light: green[550],
     });
     this.registerColor(`${status}disconnected`, {
       dark: gray[500],
@@ -1430,13 +1545,17 @@ export class ColorRegistry {
   protected initStatusBar(): void {
     const statusbar = 'statusbar-';
     this.registerColor(`${statusbar}bg`, {
-      dark: purple[900],
-      light: purple[900],
+      dark: black,
+      light: black,
+      hcDark: purple[900],
+      hcLight: purple[900],
     });
 
     this.registerColor(`${statusbar}hover-bg`, {
-      dark: purple[800],
-      light: purple[800],
+      dark: accent1[500],
+      light: accent1[500],
+      hcDark: '#7E60E6',
+      hcLight: purple[700],
     });
 
     this.registerColor(`${statusbar}text`, {
@@ -1448,13 +1567,13 @@ export class ColorRegistry {
   protected initOnboarding(): void {
     const onboarding = 'onboarding-';
     this.registerColor(`${onboarding}active-dot-bg`, {
-      dark: purple[700],
-      light: purple[700],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${onboarding}active-dot-border`, {
-      dark: purple[700],
-      light: purple[700],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     this.registerColor(`${onboarding}inactive-dot-bg`, {
@@ -1463,7 +1582,7 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${onboarding}inactive-dot-border`, {
-      dark: gray[500],
+      dark: gray[700],
       light: gray[700],
     });
   }
@@ -1474,20 +1593,20 @@ export class ColorRegistry {
 
     // general error and warning states
     this.registerColor(`${state}success`, {
-      dark: green[500],
-      light: green[600],
+      dark: green[350],
+      light: green[550],
     });
     this.registerColor(`${state}warning`, {
       dark: amber[500],
       light: amber[600],
     });
     this.registerColor(`${state}error`, {
-      dark: red[500],
-      light: red[600],
+      dark: red[550],
+      light: red[750],
     });
     this.registerColor(`${state}info`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
 
     // additional severity levels
@@ -1625,12 +1744,12 @@ export class ColorRegistry {
       light: gray[700],
     });
     this.registerColor(`${pb}in-progress-bg`, {
-      dark: purple[600],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${pb}text`, {
-      dark: purple[500],
-      light: purple[600],
+      dark: accent1[400],
+      light: accent1[500],
     });
   }
 
@@ -1661,8 +1780,8 @@ export class ColorRegistry {
       light: sky[500],
     });
     this.registerColor(`${badge}purple`, {
-      dark: purple[500],
-      light: purple[500],
+      dark: accent1[400],
+      light: accent1[500],
     });
     this.registerColor(`${badge}fuchsia`, {
       dark: fuchsia[600],

@@ -774,6 +774,8 @@ export async function registerProviderFor(
     lifecycle.edit = async (context, params, logger, _token): Promise<void> => {
       let effective = false;
       const args = ['machine', 'set', machineInfo.name];
+      let isRootful: boolean | undefined;
+
       for (const key of Object.keys(params)) {
         if (isEditCPUSupported && key === 'podman.machine.cpus') {
           args.push('--cpus', params[key]);
@@ -787,6 +789,7 @@ export async function registerProviderFor(
         } else if (isEditRootfulSupported && key === 'podman.machine.rootful') {
           args.push(`--rootful=${params[key]}`);
           effective = true;
+          isRootful = params[key];
         }
       }
       if (effective) {
@@ -798,6 +801,11 @@ export async function registerProviderFor(
           await execPodman(args, machineInfo.vmType, {
             logger: new LoggerDelegator(context, logger),
           });
+
+          // Track telemetry if rootful/rootless switch was changed
+          if (isRootful !== undefined) {
+            telemetryLogger.logUsage('podman.machine.edit.rootful', { isRootful });
+          }
         } finally {
           if (state === 'started') {
             await lifecycle.start?.(context, logger);

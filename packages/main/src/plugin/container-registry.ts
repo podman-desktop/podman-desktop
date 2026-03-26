@@ -261,7 +261,7 @@ export class ContainerProviderRegistry {
       stream?.on('error', error => {
         console.error('/event stream received an error.', error);
         // log why it failed and after how many ms connection dropped
-        this.telemetryService.track('handleContainerEventsFailure', {
+        this.telemetryService.track('container-events-failure', {
           nbEvents,
           failureAfter: performance.now() - startDate,
           error,

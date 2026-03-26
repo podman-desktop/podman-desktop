@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import { expect as playExpect, test } from '/@/utility/fixtures';
+import { ensureNoImagesPresentCLI } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const imageToSearch = 'ghcr.io/linuxcontainers/alpine';
@@ -28,6 +29,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+  await ensureNoImagesPresentCLI(page);
 });
 
 test.afterAll(async ({ runner }) => {
