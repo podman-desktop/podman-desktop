@@ -405,7 +405,7 @@ export class ColorRegistry {
     this.registerColor(`${glNav}icon-hover-bg`, {
       dark: transparent,
       light: transparent,
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
     this.registerColor(`${glNav}icon-inset-bg`, {
       dark: charcoal[800],
@@ -420,7 +420,7 @@ export class ColorRegistry {
     this.registerColor(`${glNav}icon-selected-bg`, {
       dark: charcoal[500],
       light: gray[250],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
     this.registerColor(`${glNav}icon-selected-highlight`, {
       dark: accent1[400],
@@ -495,7 +495,7 @@ export class ColorRegistry {
     this.registerColor(`${sNav}text-hover-bg`, {
       dark: transparent,
       light: transparent,
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
 
     this.registerColor(`${sNav}text-selected`, {
@@ -507,7 +507,7 @@ export class ColorRegistry {
     this.registerColor(`${sNav}selected-bg`, {
       dark: charcoal[500],
       light: gray[250],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
 
     this.registerColor(`${sNav}selected-highlight`, {
@@ -739,7 +739,7 @@ export class ColorRegistry {
     this.registerColor(`${ct}card-border-selected`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
 
     this.registerColor(`${ct}table-border`, {
@@ -798,7 +798,7 @@ export class ColorRegistry {
     this.registerColor(`${sNav}hover-stroke`, {
       dark: white,
       light: accent1[500],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
     this.registerColor(`${sNav}stroke-error`, {
       dark: red[550],
@@ -1011,7 +1011,7 @@ export class ColorRegistry {
     this.registerColor(`${tab}highlight`, {
       dark: gray[275],
       light: accent1[500],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
     this.registerColor(`${tab}hover`, {
       dark: charcoal[75],
@@ -1299,7 +1299,7 @@ export class ColorRegistry {
     this.registerColor(`${dropdown}hover-ring`, {
       dark: accent1[700],
       light: accent1[500],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
     this.registerColor(`${dropdown}divider`, {
       dark: charcoal[600],
@@ -1494,7 +1494,7 @@ export class ColorRegistry {
     this.registerColor(`${statusbar}hover-bg`, {
       dark: accent1[500],
       light: accent1[500],
-      hcDark: '#7E60E6',
+      hcDark: purple[500],
     });
 
     this.registerColor(`${statusbar}text`, {
