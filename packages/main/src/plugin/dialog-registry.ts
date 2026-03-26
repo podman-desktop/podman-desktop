@@ -23,6 +23,7 @@ import { inject, injectable } from 'inversify';
 
 import { isMac } from '/@/util.js';
 
+import { MainWindowDeferred } from './api.js';
 import { Uri } from './types/uri.js';
 
 /**
@@ -34,9 +35,7 @@ export class DialogRegistry {
 
   #mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
 
-  constructor(
-    @inject(Promise.withResolvers<BrowserWindow>) readonly mainWindowDeferred: PromiseWithResolvers<BrowserWindow>,
-  ) {
+  constructor(@inject(MainWindowDeferred) readonly mainWindowDeferred: PromiseWithResolvers<BrowserWindow>) {
     this.#mainWindowDeferred = mainWindowDeferred;
   }
 

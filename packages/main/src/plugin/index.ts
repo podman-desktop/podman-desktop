@@ -169,6 +169,7 @@ import { securityRestrictionCurrentHandler } from '/@/security-restrictions-hand
 import { TrayMenu } from '/@/tray-menu.js';
 import { createHash, isMac } from '/@/util.js';
 
+import { MainWindowDeferred } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
 import { AutostartEngine } from './autostart-engine.js';
@@ -762,9 +763,7 @@ export class PluginSystem {
     const webviewRegistry = container.get<WebviewRegistry>(WebviewRegistry);
     await webviewRegistry.start();
 
-    container
-      .bind<PromiseWithResolvers<BrowserWindow>>(Promise.withResolvers<BrowserWindow>)
-      .toConstantValue(this.mainWindowDeferred);
+    container.bind<PromiseWithResolvers<BrowserWindow>>(MainWindowDeferred).toConstantValue(this.mainWindowDeferred);
     container.bind<DialogRegistry>(DialogRegistry).toSelf().inSingletonScope();
 
     const dialogRegistry = container.get<DialogRegistry>(DialogRegistry);
