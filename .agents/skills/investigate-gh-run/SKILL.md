@@ -26,8 +26,8 @@ gh api repos/{owner}/{repo}/actions/runs/{run-id}/jobs --paginate \
   --jq '.jobs[] | select(.conclusion == "failure") | "\(.id) \(.name)"'
 
 # c) Failed logs -> temp file (10-100x smaller than full logs)
-gh run view {run-id} --repo {owner}/{repo} --log-failed 2>&1 \
-  > /tmp/ci-logs-{run-id}.txt
+gh run view {run-id} --repo {owner}/{repo} --log-failed \
+  > /tmp/ci-logs-{run-id}.txt 2>&1
 
 # d) Artifacts
 gh api repos/{owner}/{repo}/actions/runs/{run-id}/artifacts \
@@ -63,7 +63,7 @@ grep -B 1 -A 5 "Error:.*expect\|Error:.*Manifest\|Error:.*timeout\|Error encount
 
 1. **Download the individual job log** (contains ALL step output including the passed test step):
    ```
-   gh api repos/{owner}/{repo}/actions/jobs/{job-id}/logs 2>&1 > /tmp/ci-job-{job-id}.txt
+   gh api repos/{owner}/{repo}/actions/jobs/{job-id}/logs > /tmp/ci-job-{job-id}.txt 2>&1
    ```
 2. **For blob-format logs** (entire output on one line), use `grep -o` with `cut` to extract error snippets:
    ```
