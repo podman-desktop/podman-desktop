@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import type {
   CommandInfo,
+  CommandPaletteSearchOption,
   ContainerInfo,
   DocumentationInfo,
   GoToInfo,
@@ -52,12 +53,6 @@ interface Props {
   onclose?: () => void;
 }
 
-interface SearchOption {
-  text: string;
-  shortCut?: string[];
-  helperText?: string;
-}
-
 type CommandPaletteItem = CommandInfo | DocumentationInfo | GoToInfo;
 
 let { display = false, onclose }: Props = $props();
@@ -75,15 +70,17 @@ let searchIcon = $derived.by(() => {
   }
 });
 
+let searchOptions: CommandPaletteSearchOption[] = $state([]);
 let isMac: boolean = $state(false);
 let modifierC: string = $derived(isMac ? '⌘' : 'Ctrl+');
 let modifierS: string = $derived(isMac ? '⇧' : 'Shift+');
-let searchOptions: SearchOption[] = $derived([
-  { text: 'All', shortCut: [`${modifierC}${modifierS}P`], helperText: 'Search Podman Desktop, or type > for commands' },
-  { text: 'Commands', shortCut: [`${F1}`, '>'], helperText: 'Search and execute commands' },
-  { text: 'Documentation', shortCut: [`${modifierC}K`], helperText: 'Search documentation and tutorials' },
-  { text: 'Go to', shortCut: [`${modifierC}F`], helperText: 'Search images, containers, pods, and other resources' },
-]);
+let shortcuts = $derived([[`${modifierC}${modifierS}P`], [`${F1}`, '>'], [`${modifierC}K`], [`${modifierC}F`]]);
+let searchOptionsWithShortcuts = $derived(
+  searchOptions.map((searchOption, index) => {
+    return { ...searchOption, shortCut: index < shortcuts.length ? shortcuts[index] : undefined };
+  }),
+);
+
 let searchOptionsSelectedIndex: number = $state(0);
 
 let documentationItems: DocumentationInfo[] = $state([]);
@@ -95,7 +92,7 @@ let navigationItems: NavigationRegistryEntry[] = $derived($navigationRegistry);
 let goToItems: GoToInfo[] = $derived(
   createGoToItems(imageInfos, containerInfos, podInfos, volumInfos, navigationItems),
 );
-let helperText = $derived(searchOptions[searchOptionsSelectedIndex].helperText);
+let helperText = $derived(searchOptionsWithShortcuts[searchOptionsSelectedIndex].placeholder);
 
 // Keep backward compatibility with existing variable name
 let filteredCommandInfoItems: CommandInfo[] = $derived(
@@ -144,6 +141,7 @@ onMount(async () => {
   const platform = await window.getOsPlatform();
   isMac = platform === 'darwin';
   documentationItems = await window.getDocumentationItems();
+  searchOptions = await window.getCommandPaletteSearchOptions();
 });
 
 // Focus the input when the command palette becomes visible
@@ -247,7 +245,7 @@ async function handleKeydown(e: KeyboardEvent): Promise<void> {
 }
 
 function switchSearchOption(direction: 1 | -1): void {
-  const searchOptionsLength = searchOptions.length;
+  const searchOptionsLength = searchOptionsWithShortcuts.length;
   const offset = direction === 1 ? 0 : searchOptionsLength;
   searchOptionsSelectedIndex = (searchOptionsSelectedIndex + direction + offset) % searchOptionsLength;
 }
@@ -320,7 +318,7 @@ async function executeAction(index: number): Promise<void> {
 
   const telemetryOptions = {
     // All / Commands / Docs / Go To
-    selectedTab: searchOptions[searchOptionsSelectedIndex].text,
+    selectedTab: searchOptionsWithShortcuts[searchOptionsSelectedIndex].text,
     // Pod or Image or Documentation or Command
     itemType: itemType,
     pageLink: pageLink,
@@ -435,7 +433,7 @@ function getIcon(item: CommandInfo | DocumentationInfo | GoToInfo): IconDefiniti
         </div>
 
         <div class="flex flex-row m-2">
-          {#each searchOptions as searchOption, index (index)}
+          {#each searchOptionsWithShortcuts as searchOption, index (index)}
             <Button
               type="tab"
               class="focus:outline-hidden"

@@ -83,5 +83,29 @@
     "title": "",
     "image": "",
     "summary": ""
+  },
+  "commandPalette": {
+    "searchOptions": [
+      {
+        "category": "ALL",
+        "text": "All",
+        "placeholder": "Search Podman Desktop, or type > for commands"
+      },
+      {
+        "category": "COMMANDS",
+        "text": "Commands",
+        "placeholder": "Search and execute commands"
+      },
+      {
+        "category": "DOCUMENTATION",
+        "text": "Documentation",
+        "placeholder": "Search documentation and tutorials"
+      },
+      {
+        "category": "GOTO",
+        "text": "Go to",
+        "placeholder": "Search other resources"
+      }
+    ]
   }
 }
