@@ -44,7 +44,7 @@ const SHORTCUTS = isMac
   : ['Alt+ArrowRight', 'Alt+ArrowLeft'];
 
 test.describe
-  .serial('Navigation History Comprehensive Tests', { tag: '@smoke' }, () => {
+  .serial('Navigation History Comprehensive Tests', { tag: ['@smoke', '@macos_sanity', '@windows_sanity'] }, () => {
     test.describe.configure({ retries: 1 });
 
     SHORTCUTS.forEach(element => {

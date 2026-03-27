@@ -33,7 +33,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe
-  .serial('Navigation History Smoke Tests', { tag: '@smoke' }, () => {
+  .serial('Navigation History Smoke Tests', { tag: ['@smoke', '@macos_sanity', '@windows_sanity'] }, () => {
     test('Back button navigates to previous page', async ({ navigationBar }) => {
       // Navigate through pages: Dashboard → Containers → Images
       await navigationBar.openDashboard();
