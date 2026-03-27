@@ -75,7 +75,7 @@ test.describe
       await playExpect(
         setupButton,
         'Compose Setup button is not present, perhaps compose is already installed',
-      ).toBeVisible({ timeout: 10000 });
+      ).toBeVisible({ timeout: 10_000 });
     });
 
     test('Can enter Compose onboarding', async ({ page, navigationBar }) => {
