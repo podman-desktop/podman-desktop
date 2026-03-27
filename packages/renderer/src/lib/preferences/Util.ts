@@ -33,6 +33,7 @@ import { ContextKeyExpr } from '/@/lib/context/contextKey';
 export interface IProviderConnectionConfigurationPropertyRecorded extends IConfigurationPropertyRecordedSchema {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value?: any;
+  base?: number;
   connection: string;
   providerId: string;
 }
