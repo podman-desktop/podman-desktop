@@ -34,7 +34,7 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Navigation History Smoke Tests', { tag: '@smoke' }, () => {
-    test('TC-001: Back button navigates to previous page', async ({ navigationBar }) => {
+    test('Back button navigates to previous page', async ({ navigationBar }) => {
       // Navigate through pages: Dashboard → Containers → Images
       await navigationBar.openDashboard();
       const containersPage = await navigationBar.openContainers();
@@ -51,7 +51,7 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeEnabled();
     });
 
-    test('TC-002: Forward button navigates to next page', async ({ navigationBar, page }) => {
+    test('Forward button navigates to next page', async ({ navigationBar, page }) => {
       // Continue from TC-001 state (on Containers, can go forward to Images)
       const imagesPage = new ImagesPage(page);
 
@@ -65,7 +65,7 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-003: Buttons disabled when navigation not possible', async ({ navigationBar, page }) => {
+    test('Buttons disabled when navigation not possible', async ({ navigationBar, page }) => {
       // Navigate to Dashboard (fresh start for this test)
       await page.reload();
       await playExpect(navigationBar.backButton).toBeDisabled();
@@ -87,7 +87,7 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-004: Command palette Go Back navigates to previous page', async ({ navigationBar, page }) => {
+    test('Command palette Go Back navigates to previous page', async ({ navigationBar, page }) => {
       // Navigate: Dashboard → Containers
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
@@ -101,7 +101,7 @@ test.describe
       await playExpect(dashboardPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-005: Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
+    test('Command palette Go Forward navigates forward', async ({ navigationBar, page }) => {
       // Setup: Navigate and go back
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
@@ -117,7 +117,7 @@ test.describe
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
     });
 
-    test('TC-006: History truncated when navigating to new page from middle of stack', async ({ navigationBar }) => {
+    test('History truncated when navigating to new page from middle of stack', async ({ navigationBar }) => {
       // Navigate: Dashboard → Containers → Images → Volumes
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
@@ -136,7 +136,7 @@ test.describe
       await playExpect(navigationBar.forwardButton).toBeDisabled();
     });
 
-    test('TC-007: Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
+    test('Clicking same navigation link does not add duplicate', async ({ navigationBar, page }) => {
       await navigationBar.openDashboard();
       await navigationBar.openContainers();
 
