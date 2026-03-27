@@ -20,6 +20,7 @@ export enum MenuContext {
   DASHBOARD_IMAGE = 'dashboard/image',
   DASHBOARD_CONTAINER = 'dashboard/container',
   DASHBOARD_POD = 'dashboard/pod',
+  DASHBOARD_VOLUME = 'dashboard/volume',
   DASHBOARD_COMPOSE = 'dashboard/compose',
   DASHBOARD_CONTAINER_CONNECTION = 'dashboard/container-connection',
 }
