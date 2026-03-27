@@ -134,6 +134,10 @@ test.describe.serial('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
 - `@windows_sanity` - Windows compatibility
 - `@k8s_e2e` - Kubernetes tests
 - `@pdmachine` - Podman machine tests
+- `@update-install` - Update installation tests
+- `@managed-configuration` - Managed configuration tests
+- `@podman-remote` - Remote podman tests
+- `@ui-stress` - Non functional UI stress tests
 
 ### 6. File Naming Convention
 
@@ -182,7 +186,7 @@ pnpm test:e2e
 
 **Root project files:**
 
-- [package.json](../../package.json) - Lines 44-68: all `test:e2e:*` scripts
+- [package.json](../../package.json) - All E2E test scripts (see scripts whose names start with `test:e2e:`)
 - [playwright.config.ts](../../playwright.config.ts) - Output dir, timeout (90s), reporters, single worker
 
 **CI workflows:**
@@ -223,13 +227,13 @@ pnpm exec playwright test --grep volume
 pnpm test:e2e:smoke  # Runs @smoke tagged tests
 ```
 
-**Temporarily modify package.json** (line 46) for repeated runs:
+**Temporarily modify package.json** npm script target `test:e2e:smoke:run` for repeated runs:
 
 ```json
-"test:e2e:run": "... npx playwright test tests/playwright/src/specs/volume-smoke.spec.ts"
+"test:e2e:smoke:run": "... npx playwright test tests/playwright/src/specs/volume-smoke.spec.ts"
 ```
 
-Then: `pnpm test:e2e:build && pnpm test:e2e:run` (Remember to revert!)
+Then: `pnpm test:e2e:smoke:run` if you have run `test:e2e:build` before (Remember to revert!)
 
 For more debugging methods, see [skill debugging section](../../.agents/skills/playwright-testing/SKILL.md#debugging-tests).
 
@@ -277,11 +281,144 @@ test.describe.serial('Volume operations', { tag: ['@smoke'] }, () => {
 });
 ```
 
+## AI Agent Skills for E2E Testing
+
+The repository provides specialized AI skills in [.agents/skills/](../../.agents/skills/) for different E2E testing workflows. These skills work together to support the complete testing lifecycle.
+
+### Available Skills
+
+#### 1. [playwright-testing](../../.agents/skills/playwright-testing/SKILL.md)
+
+**Purpose:** Write, update, and maintain Playwright E2E tests for Podman Desktop
+
+**Use when:**
+
+- Creating new test spec files
+- Building or modifying page objects
+- Debugging test failures
+- Adding smoke tests
+- Understanding the test framework
+
+**Provides:**
+
+- Electron runner and custom fixtures guidance
+- Page Object Model (POM) patterns and hierarchy
+- Test file structure and best practices
+- Locator strategies and wait utilities
+- RunnerOptions configuration
+
+**Example prompts:**
+
+- "Create an E2E test for the new navigation feature"
+- "Add a page object for the settings dialog"
+- "Fix this failing test"
+- "How do I use custom fixtures?"
+
+#### 2. [playwright-trace-analysis](../../.agents/skills/playwright-trace-analysis/SKILL.md)
+
+**Purpose:** Analyze Playwright trace files to diagnose test failures and flaky behavior
+
+**Use when:**
+
+- A test failed and you have a `trace.zip` file
+- Investigating flaky tests
+- Need root cause analysis from CI artifacts
+- Comparing passing vs failing traces
+
+**Provides:**
+
+- Step-by-step failure investigation
+- Root cause identification with evidence
+- Flakiness detection
+- Timeline and screenshot analysis
+- Manual trace parsing when needed
+
+**Outputs:** Structured failure report with:
+
+- Failure summary
+- Event timeline with step references
+- Evidence citations (screenshots, network logs, console errors)
+- Root cause (Confirmed/Likely/Unknown)
+- Recommended fix with file:line references
+
+**Example prompts:**
+
+- "Analyze this trace.zip file"
+- "Why did this test fail?"
+- "Is this failure flaky or deterministic?"
+- "Compare these two traces"
+
+#### 3. [investigate-gh-run](../../.agents/skills/investigate-gh-run/SKILL.md)
+
+**Purpose:** Deep investigation of CI/CD test failures from GitHub Actions runs
+
+**Use when:**
+
+- Tests failed in CI and you need to understand why
+- Investigating patterns across multiple CI runs
+- Need to download and analyze CI artifacts
+- Performing regression analysis
+
+**Provides:**
+
+- Automated artifact download and analysis
+- Run history pattern detection (isolated, chronic, regression)
+- Trace analysis delegation
+- Commit correlation for regressions
+- Platform-specific failure patterns
+
+**Workflow:**
+
+1. Gathers run data (logs, artifacts, history) in parallel
+2. Classifies failure type (infra, build error, UI/test failure)
+3. Downloads relevant artifacts
+4. Delegates to trace-analysis if needed
+5. Produces comprehensive failure report
+
+**Example prompts:**
+
+- "Investigate this CI run: https://github.com/owner/repo/actions/runs/12345"
+- "Why did E2E tests fail on this PR?"
+- "Analyze GitHub Actions run #12345"
+
+### Skills Workflow Integration
+
+These skills work together in the complete E2E testing lifecycle:
+
+```
+Implementation → Execution → Investigation → Fix
+       ↓             ↓            ↓           ↓
+      [1]           CI          [3]         [1]
+                     ↓            ↓
+               (if fails)      [2]
+```
+
+1. **playwright-testing** - Implement tests following POM patterns
+2. CI execution (GitHub Actions)
+3. **investigate-gh-run** - Analyze CI failure, download artifacts (if tests fail)
+4. **playwright-trace-analysis** - Diagnose root cause from traces
+5. **playwright-testing** - Fix test or identify app bug
+
+### Quick Skill Selection Guide
+
+| Scenario                               | Use This Skill              |
+| -------------------------------------- | --------------------------- |
+| Writing or modifying test code         | `playwright-testing`        |
+| Test failed in CI, need to investigate | `investigate-gh-run`        |
+| Have trace.zip, need diagnosis         | `playwright-trace-analysis` |
+| Understanding why test is flaky        | `playwright-trace-analysis` |
+| Comparing passing vs failing traces    | `playwright-trace-analysis` |
+| Creating page objects                  | `playwright-testing`        |
+| Understanding test framework patterns  | `playwright-testing`        |
+
 ## Resources
 
 ### For AI Agents
 
-- **[`playwright-testing` skill](../../.agents/skills/playwright-testing/SKILL.md)** - Core patterns (POM, locators, assertions, waits)
+- **[AI Skills](../../.agents/skills/)** - Specialized skills for E2E testing workflows
+  - [`playwright-testing`](../../.agents/skills/playwright-testing/SKILL.md) - Core patterns (POM, locators, assertions, waits)
+  - [`playwright-trace-analysis`](../../.agents/skills/playwright-trace-analysis/SKILL.md) - Trace analysis and failure diagnosis
+  - [`investigate-gh-run`](../../.agents/skills/investigate-gh-run/SKILL.md) - CI/CD failure investigation
 - **[Reference docs](../../.agents/skills/playwright-testing/reference.md)** - Advanced features (fixtures, network mocking, etc.)
 - **[Examples](../../.agents/skills/playwright-testing/examples.md)** - Complete test examples
 
