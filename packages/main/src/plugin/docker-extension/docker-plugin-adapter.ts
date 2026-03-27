@@ -167,8 +167,7 @@ export class DockerPluginAdapter {
         updatedArgs = args;
       }
 
-      // eslint-disable-next-line sonarjs/os-command
-      const spawnProcess = spawn(updatedCommand, updatedArgs, { env, shell: true });
+      const spawnProcess = spawn(updatedCommand, updatedArgs, { env });
       spawnProcess.stdout.setEncoding('utf8');
       spawnProcess.stdout.on('data', data => {
         execResult.stdout += data;
