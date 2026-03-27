@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/hosted-git-info": "^3.0.5",
     "vite-plugin-dts": "^4.3.0",
-    "vitest": "^4.1.1"
+    "vitest": "^4.1.2"
   },
   "exports": {
     ".": {
