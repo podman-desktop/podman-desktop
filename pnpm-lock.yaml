@@ -77,8 +77,8 @@ importers:
         specifier: ^20.5.0
         version: 20.5.0
       '@electron/fuses':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.1.1
+        version: 2.1.1
       '@eslint/compat':
         specifier: ^2.0.3
         version: 2.0.3(eslint@10.1.0(jiti@2.6.1))
@@ -2577,8 +2577,8 @@ packages:
     resolution: {integrity: sha512-zx0EIq78WlY/lBb1uXlziZmDZI4ubcCXIMJ4uGjXzZW0nS19TjSPeXPAjzzTmKQlJUZm0SbmZhPKP7tuQ1SsEw==}
     hasBin: true
 
-  '@electron/fuses@2.1.0':
-    resolution: {integrity: sha512-6Mhtz2xYPkiZrunCBo2RoXYSx+yGj/km6n6rTOi71srw0LFpRkfMJ7EpjMuPrXOZv7fCos81idf1lYDqwHALqw==}
+  '@electron/fuses@2.1.1':
+    resolution: {integrity: sha512-38ho27/mtUV/LpsZ1LCDJUomKBBSUZDk/qBH4FNNtoN5fmnkmWDcIp5pm1Kv3InqhRjKZKs7Jzx+wWZNMArHrA==}
     engines: {node: '>=22.12.0'}
     hasBin: true
 
@@ -14438,7 +14438,7 @@ snapshots:
       fs-extra: 9.1.0
       minimist: 1.2.8
 
-  '@electron/fuses@2.1.0': {}
+  '@electron/fuses@2.1.1': {}
 
   '@electron/get@2.0.3':
     dependencies:
