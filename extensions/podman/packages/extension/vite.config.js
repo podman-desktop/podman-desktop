@@ -45,6 +45,7 @@ const config = {
       formats: ['cjs'],
     },
     rollupOptions: {
+      platform: 'node',
       external: [
         '@podman-desktop/api',
         'ssh2',

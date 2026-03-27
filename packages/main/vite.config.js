@@ -47,6 +47,7 @@ const config = {
       formats: ['cjs'],
     },
     rollupOptions: {
+      platform: 'node',
       external: [
         'electron',
         'chokidar',
