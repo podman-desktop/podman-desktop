@@ -67,7 +67,7 @@ export class ContainerDetailsPage extends DetailsPage {
 
   async getState(): Promise<string> {
     return test.step('Get container state', async () => {
-      const currentState = await this.header.getByRole('status').getAttribute('title');
+      const currentState = await this.header.locator('[role="status"][title]').getAttribute('title');
       for (const state of Object.values(ContainerState)) {
         if (currentState === state) return state;
       }
