@@ -105,9 +105,11 @@ async function onClose(): Promise<void> {
   await window.sendShowMessageBoxOnSelect(currentId, cancelId >= 0 ? cancelId : undefined);
 }
 
-function getButtonType(b: boolean): ButtonType {
+function getButtonType(b: boolean, type: string | undefined): ButtonType {
   // eslint-disable-next-line sonarjs/no-selector-parameter
-  if (b) {
+  if (b && type === 'danger') {
+    return 'danger';
+  } else if (b) {
     return 'primary';
   } else {
     return 'secondary';
@@ -175,7 +177,7 @@ function getButtonType(b: boolean): ButtonType {
               <Button type="primary" icon={button.icon} on:click={async (): Promise<void> => await clickButton(i)}>{button.label}</Button>
             {/if}
           {:else}
-            <Button type={getButtonType(defaultId === i)} on:click={async (): Promise<void> => await clickButton(i)}>{buttonsType[i]}</Button>
+            <Button type={getButtonType(defaultId === i, type)} on:click={async (): Promise<void> => await clickButton(i)}>{buttonsType[i]}</Button>
           {/if}
         {/each}
       
