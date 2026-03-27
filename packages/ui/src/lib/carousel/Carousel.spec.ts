@@ -286,6 +286,23 @@ test('carousel prevents horizontal wheel event default behavior', async () => {
   expect(preventDefaultSpy).toHaveBeenCalled();
 });
 
+test('carousel does not prevent default on vertical wheel events', async () => {
+  render(CarouselTest);
+
+  // Set narrow width so scrolling is needed
+  callback([{ contentRect: { width: 360 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
+
+  const carousel = screen.getByLabelText('Carousel container');
+
+  // Create a vertical wheel event - should not be intercepted
+  const wheelEvent = new WheelEvent('wheel', { deltaX: 0, deltaY: 100 });
+  const preventDefaultSpy = vi.spyOn(wheelEvent, 'preventDefault');
+
+  carousel.dispatchEvent(wheelEvent);
+
+  expect(preventDefaultSpy).not.toHaveBeenCalled();
+});
+
 test('carousel does not prevent vertical wheel event default behavior', async () => {
   render(CarouselTest);
 

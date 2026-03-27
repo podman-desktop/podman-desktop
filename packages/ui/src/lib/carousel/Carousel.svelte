@@ -61,7 +61,7 @@ function scrollRight(): void {
 function handleWheel(event: WheelEvent): void {
   // Check if it's a horizontal scroll event (most trackpads and some mice support this)
   if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-    // Natural horizontal scroll
+    // Prevent browser back/forward navigation triggered by horizontal swipe/scroll
     event.preventDefault();
     const scrollAmount = event.deltaX > 0 ? 25 : -25;
     scrollToPosition(scrollPosition + scrollAmount);
@@ -140,8 +140,7 @@ $effect(() => {
     aria-label="Carousel container"
     class="flex grow overflow-hidden relative cursor-grab select-none"
     class:cursor-grabbing={isDragging}
-    onmousedown={handleMouseDown}
-    onwheel={handleWheel}>
+    onmousedown={handleMouseDown}>
     
     <!-- Scrollable container with all cards -->
     <div 
