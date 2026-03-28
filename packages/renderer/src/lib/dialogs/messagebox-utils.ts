@@ -15,6 +15,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+type ConfirmationVariant = 'default' | 'delete';
+
+export interface ConfirmationOptions {
+  variant?: ConfirmationVariant;
+}
 
 /**
  * Utility method to create a confirmation dialog for a given action.
@@ -23,13 +28,21 @@
  *
  * @param func the function to call on confirmation or error
  * @param action the action label to use
+ * @param options the options to use for the confirmation dialog
  */
-export function withConfirmation(func: (err?: unknown) => unknown, action: string): void {
+export function withConfirmation(
+  func: (err?: unknown) => unknown,
+  action: string,
+  options?: ConfirmationOptions,
+): void {
+  const isDelete = options?.variant === 'delete';
+  const activationButton = isDelete ? 'Delete' : 'Yes';
   window
     .showMessageBox({
       title: 'Confirmation',
       message: 'Are you sure you want to ' + action + '?',
-      buttons: ['Yes', 'Cancel'],
+      buttons: [activationButton, 'Cancel'],
+      type: isDelete ? 'danger' : 'question',
     })
     .then(result => {
       if (result?.response === 0) {
