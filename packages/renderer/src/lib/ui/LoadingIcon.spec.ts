@@ -26,15 +26,11 @@ import LoadingIcon from './LoadingIcon.svelte';
 
 test('Expect default size', async () => {
   const icon = faPlayCircle;
-  const loadingWidthClass = 'w-10';
-  const loadingHeightClass = 'h-10';
   const loading = true;
   const iconSize = undefined;
   render(LoadingIcon, {
     icon,
     iconSize,
-    loadingHeightClass,
-    loadingWidthClass,
     loading,
   });
   const loadingIcon = screen.getByRole('img', { hidden: true, name: '' });
@@ -46,15 +42,11 @@ test('Expect default size', async () => {
 
 test('Expect specified size', async () => {
   const icon = faPlayCircle;
-  const loadingWidthClass = 'w-10';
-  const loadingHeightClass = 'h-10';
   const loading = true;
   const iconSize = '2x';
   render(LoadingIcon, {
     icon,
     iconSize,
-    loadingHeightClass,
-    loadingWidthClass,
     loading,
   });
   const loadingIcon = screen.getByRole('img', { hidden: true, name: '' });
