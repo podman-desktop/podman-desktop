@@ -1,3 +1,4 @@
 website/api/
 website/build/
 website/node_modules/
+.agents/skills/
