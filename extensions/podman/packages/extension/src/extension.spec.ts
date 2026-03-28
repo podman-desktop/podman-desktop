@@ -881,6 +881,7 @@ test('if a machine is successfully started it changes its state to started', asy
       CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
     },
     logger: new LoggerDelegator(),
+    detached: true,
   });
 
   expect(spyUpdateStatus).toBeCalledWith('started');
