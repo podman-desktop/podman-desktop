@@ -4545,6 +4545,13 @@ declare module '@podman-desktop/api' {
      * The encoding to use. Default utf8
      */
     encoding?: BufferEncoding;
+
+    /**
+     * If true, the child process will be detached from the parent and its stdio
+     * will be disconnected. The process will continue running independently even
+     * if Podman Desktop exits. Stdout/stderr will not be captured.
+     */
+    detached?: boolean;
   }
 
   /**
