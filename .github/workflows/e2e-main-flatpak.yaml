@@ -1,0 +1,117 @@
+#
+# Copyright (C) 2026 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: e2e-tests-main-flatpak
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        default: 'main'
+        description: 'Podman Desktop repo branch to pull test code from'
+        type: string
+        required: true
+      flatpak_artifact_url:
+        description: 'Direct URL to the .flatpak bundle to install and test'
+        type: string
+        required: true
+      npm_target:
+        default: 'test:e2e'
+        description: 'The npm target to run tests'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-flatpak-tests:
+    name: Run E2E tests on Flatpak bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
+    permissions:
+      checks: write # required for mikepenz/action-junit-report
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Install Podman v5 using external action
+        # Use the action from the other repository
+        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup testenv using external action
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Install flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak
+          flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Download flatpak bundle
+        run: curl --fail -L -o podman-desktop.flatpak "${{ github.event.inputs.flatpak_artifact_url }}"
+
+      - name: Install flatpak bundle
+        run: flatpak install --bundle --user -y podman-desktop.flatpak
+
+      - name: Run E2E tests on Flatpak bundle
+        env:
+          PODMANDESKTOP_CI_BOT_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+          TEST_PODMAN_MACHINE: 'true'
+          SKIP_KIND_INSTALL: 'true'
+        run: |
+          path=$(realpath $(flatpak info --show-location io.podman_desktop.PodmanDesktop)/files/lib/io.podman_desktop.PodmanDesktop/podman-desktop)
+          echo "Podman Desktop flatpak binary: $path"
+          export PODMAN_DESKTOP_BINARY=$path
+          pnpm ${{ github.event.inputs.npm_target }}
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6.3.1
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: always()
+        with:
+          name: e2e-flatpak-tests
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
