@@ -54,4 +54,5 @@ export enum NavigationPage {
   NETWORK = 'network',
   NETWORK_CREATE = 'network-create',
   EXTENSIONS_CATALOG = 'extensions-catalog',
+  APPEARANCE = 'preferences-appearance',
 }

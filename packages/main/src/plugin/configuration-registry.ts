@@ -63,6 +63,10 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
 
   // Contains the value of the current configuration
   private configurationValues: Map<string, { [key: string]: unknown }>;
+
+  // Remembers enum values displaced by removeConfigurationEnum so they can be
+  // restored when the same values are re-added (e.g. extension reload).
+  #previousEnumValues: Map<string, string> = new Map();
   private lockedKeys: LockedKeys;
 
   constructor(
@@ -380,6 +384,19 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const property = this.configurationProperties[key];
     if (property?.enum) {
       property.enum?.push(...values);
+
+      // If the current value was previously reset by removeConfigurationEnum
+      // but matches one of the values being re-added (e.g. extension reload),
+      // restore it so the user's selection survives the reload cycle.
+      const currentValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE)?.[key];
+      const previousValue = this.#previousEnumValues.get(key);
+      if (previousValue !== undefined && currentValue === valueWhenRemoved && values.includes(previousValue)) {
+        this.updateConfigurationValue(key, previousValue).catch((e: unknown) =>
+          console.error(`unable to restore previous value for the property ${key}`, e),
+        );
+        this.#previousEnumValues.delete(key);
+      }
+
       this.apiSender.send('configuration-changed', { key, value: property.enum });
     }
     return Disposable.create(() => {
@@ -398,6 +415,8 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
       const currentValue = this.configurationValues.get(CONFIGURATION_DEFAULT_SCOPE)?.[key];
 
       if (values.some(val => val === currentValue)) {
+        // Remember the value so addConfigurationEnum can restore it on extension reload
+        this.#previousEnumValues.set(key, String(currentValue));
         this.updateConfigurationValue(key, valueWhenRemoved).catch((e: unknown) =>
           console.error(`unable to update default value for the property ${key}`, e),
         );

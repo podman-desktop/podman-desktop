@@ -27,6 +27,7 @@ import type { TaskManager } from './tasks/task-manager.js';
 
 const commandRegistryMock = {
   registerCommand: vi.fn(),
+  registerCommandPalette: vi.fn(),
   executeCommand: vi.fn(),
 } as unknown as CommandRegistry;
 
@@ -42,6 +43,7 @@ const apiSenderMock = {
 const navigationManagerMock = {
   hasRoute: vi.fn(),
   navigateToRoute: vi.fn(),
+  navigateToAppearance: vi.fn(),
 } as unknown as NavigationManager;
 
 const containerProviderRegistryMock = {
@@ -109,5 +111,17 @@ describe('CommandsInit', () => {
 
   test('should register the openExternal command', () => {
     expect(commandRegistryMock.registerCommand).toBeCalledWith('openExternal', expect.anything());
+  });
+
+  test('should register the appearance command', () => {
+    expect(commandRegistryMock.registerCommand).toBeCalledWith('appearance', expect.anything());
+  });
+
+  test('should register the appearance command in the palette', () => {
+    expect(commandRegistryMock.registerCommandPalette).toBeCalledWith({
+      command: 'appearance',
+      title: 'Appearance',
+      category: 'Preferences',
+    });
   });
 });
