@@ -54,6 +54,7 @@ const config = {
     // emptyOutDir: true,
     reportCompressedSize: false,
     rollupOptions: {
+      platform: 'node',
       external: ['electron', '@playwright/test', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].js',
