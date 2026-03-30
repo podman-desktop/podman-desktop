@@ -3,18 +3,11 @@ import { faFileLines, faScroll } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
-import { Uri } from '/@/lib/uri/Uri';
-
 let logs = $state<string[]>([]);
 
 // Save files as a zip file (we first ask the user for the dialog, and then save the files to the filepath)
 async function saveLogsAsZip(): Promise<void> {
-  const defaultUri = await window.troubleshootingGenerateLogFileUri('podman-desktop', 'zip');
-  const filePath = await window.saveDialog({ title: 'Save Logs as .zip', defaultUri });
-  if (filePath) {
-    const filePathUri = Uri.revive(filePath);
-    logs = await window.troubleshootingSaveLogs(filePathUri.fsPath);
-  }
+  logs = await window.troubleshootingSaveLogs();
 }
 </script>
 

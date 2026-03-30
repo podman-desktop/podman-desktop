@@ -1779,19 +1779,8 @@ export class PluginSystem {
 
     this.ipcHandle(
       'troubleshooting:saveLogs',
-      async (
-        _listener,
-        consoleLogs: { logType: LogType; message: string }[],
-        destinaton: string,
-      ): Promise<string[]> => {
-        return troubleshooting.saveLogs(consoleLogs, destinaton);
-      },
-    );
-
-    this.ipcHandle(
-      'troubleshooting:generateLogFileName',
-      async (_listener, filename: string, prefix?: string): Promise<string> => {
-        return troubleshooting.generateLogFileName(filename, prefix);
+      async (_listener, consoleLogs: { logType: LogType; message: string }[]): Promise<string[]> => {
+        return troubleshooting.saveLogs(consoleLogs);
       },
     );
 
