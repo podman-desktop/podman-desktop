@@ -26,7 +26,7 @@ import { MacKrunkitPodmanMachineCreationCheck, MacVersionCheck, MINIMUM_VERSION 
 
 let macVersionCheck: MacVersionCheck;
 
-vi.mock('node:os', () => {
+vi.mock(import('node:os'), () => {
   return {
     release: vi.fn(),
     platform: vi.fn(),

@@ -28,7 +28,7 @@ import * as util from '/@/utils/util';
 
 import { PodmanCertificateSync } from './podman-certificate-sync';
 
-vi.mock('@podman-desktop/api', async () => ({
+vi.mock(import('@podman-desktop/api'), async () => ({
   ProgressLocation: {
     TASK_WIDGET: 1,
   },
@@ -38,11 +38,11 @@ vi.mock('@podman-desktop/api', async () => ({
   },
 }));
 
-vi.mock('../utils/util', () => ({
+vi.mock(import('../utils/util'), () => ({
   execPodman: vi.fn(),
 }));
 
-vi.mock('node:tls', () => ({
+vi.mock(import('node:tls'), () => ({
   getCACertificates: vi.fn(),
 }));
 

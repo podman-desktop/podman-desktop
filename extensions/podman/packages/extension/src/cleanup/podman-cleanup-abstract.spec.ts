@@ -39,7 +39,7 @@ class TestAbsPodmanCleanup extends AbsPodmanCleanup {
 let absPodmanCleanup: TestAbsPodmanCleanup;
 
 // mock exists sync
-vi.mock('node:fs', async () => {
+vi.mock(import('node:fs'), async () => {
   return {
     existsSync: vi.fn(),
     promises: {

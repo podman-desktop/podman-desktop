@@ -24,7 +24,7 @@ import { PodmanCleanupWindows } from './podman-cleanup-windows';
 let podmanCleanupWindows: PodmanCleanupWindows;
 
 // mock exists sync
-vi.mock('node:fs', async () => {
+vi.mock(import('node:fs'), async () => {
   return {
     existsSync: vi.fn(),
     promises: {
@@ -35,7 +35,7 @@ vi.mock('node:fs', async () => {
 });
 
 // mock ps-list
-vi.mock('ps-list', async () => {
+vi.mock(import('ps-list'), async () => {
   return {
     default: vi.fn(),
   };

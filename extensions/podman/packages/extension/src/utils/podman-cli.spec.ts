@@ -30,7 +30,7 @@ const config: Configuration = {
 };
 
 // Mock fs module
-vi.mock('node:fs', () => {
+vi.mock(import('node:fs'), () => {
   return {
     default: {
       realpathSync: vi.fn(),

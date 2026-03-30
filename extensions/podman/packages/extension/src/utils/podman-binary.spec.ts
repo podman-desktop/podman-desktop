@@ -27,7 +27,7 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PodmanBinary } from '/@/utils/podman-binary';
 
 vi.mock(import('/@/utils/podman-cli'));
-vi.mock('@podman-desktop/api', () => ({
+vi.mock(import('@podman-desktop/api'), () => ({
   process: {
     exec: vi.fn(),
   },
