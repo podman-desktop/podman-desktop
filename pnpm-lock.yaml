@@ -149,8 +149,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3)
       eslint-plugin-file-progress:
-        specifier: ^3.0.2
-        version: 3.0.2(eslint@10.1.0(jiti@2.6.1))
+        specifier: ^4.0.0
+        version: 4.0.0(eslint@10.1.0(jiti@2.6.1))
       eslint-plugin-import:
         specifier: ^2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.57.2(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.4)(eslint@10.1.0(jiti@2.6.1))
@@ -4907,6 +4907,7 @@ packages:
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xterm/addon-fit@0.11.0':
     resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
@@ -6833,11 +6834,11 @@ packages:
       eslint: ^8.0.0
       typescript: '>=4.0.0'
 
-  eslint-plugin-file-progress@3.0.2:
-    resolution: {integrity: sha512-wX54LVbKP1MOe+yXI6CkfyseUkgiBgvHDgb3mWZ5j6xfQa81hcLzeiOew+rIZuxZQ+M3UHLC4pOGRYUP6OKsyA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+  eslint-plugin-file-progress@4.0.0:
+    resolution: {integrity: sha512-a2+cwFrw7SNU08+rdcWDZ7zrwUcZVq3eruXwcGbjM2gJJYPjXgR7WZHtdgjHhiO2qz65ChM1jVDVZbz6oi4HXg==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=24.0.0}
     peerDependencies:
-      eslint: ^9.0.0
+      eslint: ^10.0.0
 
   eslint-plugin-import@2.32.0:
     resolution: {integrity: sha512-whOE1HFo/qJDyX4SnXzP4N6zOWn79WhnCUY/iDR0mPfQZO8wcYE4JClzI2oZrhBnnMUCBCHZhO6VQyoBU95mZA==}
@@ -19377,7 +19378,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-file-progress@3.0.2(eslint@10.1.0(jiti@2.6.1)):
+  eslint-plugin-file-progress@4.0.0(eslint@10.1.0(jiti@2.6.1)):
     dependencies:
       eslint: 10.1.0(jiti@2.6.1)
       nanospinner: 1.2.2
