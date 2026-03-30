@@ -22,7 +22,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as detect from './detect';
 import * as handler from './handler';
 
-vi.mock('./detect');
+vi.mock(import('./detect'));
 
 const extensionContextMock: extensionApi.ExtensionContext = {
   storagePath: '/storage-path',

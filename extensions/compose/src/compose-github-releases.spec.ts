@@ -24,6 +24,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ComposeGitHubReleases } from './compose-github-releases';
 
+vi.mock(import('node:fs'));
+
 let composeGitHubReleases: ComposeGitHubReleases;
 
 const listReleaseAssetsMock = vi.fn();
@@ -154,8 +156,6 @@ describe.each([
 });
 
 test('should download the file if parent folder does exist', async () => {
-  vi.mock('node:fs');
-
   getReleaseAssetMock.mockImplementation(() => {
     return { data: 'foo' };
   });
@@ -178,8 +178,6 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  vi.mock('node:fs');
-
   getReleaseAssetMock.mockImplementation(() => {
     return { data: 'foo' };
   });
