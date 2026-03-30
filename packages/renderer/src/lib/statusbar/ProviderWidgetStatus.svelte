@@ -1,5 +1,7 @@
 
 <script lang="ts">
+import { Spinner } from '@podman-desktop/ui-svelte';
+
 interface Props {
   status?: string;
   class?: string;
@@ -12,7 +14,7 @@ const faRegularIconStatus: string[] = ['ready', 'started', 'stopped', 'error', '
 
 {#if status}
   {#if status === 'starting' || status === 'stopping'}
-    <div aria-label="Connection Status Icon" class="h-3 w-3 rounded-full animate-spin border border-solid border-[var(--pd-action-button-spinner)] border-t-transparent {className}"></div>
+    <Spinner size="12px" label="Connection Status Icon" class={className} />
   {:else}
     <div aria-label="Connection Status Icon" class="max-h-3 {className}"
       class:fa-regular={faRegularIconStatus.includes(status)}
