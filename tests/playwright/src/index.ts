@@ -24,6 +24,7 @@ export * from './setupFiles/setup-registry';
 export * from './utility/auth-utils';
 export * from './utility/cleanup';
 export * from './utility/cluster-operations';
+export * from './utility/dialog';
 export * from './utility/fixtures';
 export * from './utility/kubernetes';
 export * from './utility/operations';
