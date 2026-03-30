@@ -140,7 +140,7 @@ test.describe
       .serial('Image Manifest Validation - Complex Containerfile', () => {
         test.skip(
           isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
-          'Building cross-architecture images with the WSL hypervisor is not working yet',
+          'Complex Containerfile uses RUN steps that require executing foreign-arch binaries, which fails on WSL without QEMU emulation. Simple Containerfile only defines CMD metadata and succeeds.',
         );
 
         test('Add registry for manifest push', async ({ navigationBar, page }) => {
