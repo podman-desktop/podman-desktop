@@ -39,4 +39,10 @@ let { size = '2em', class: className, style, label = 'Loading' }: Props = $props
       transform: rotate(1turn);
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    g {
+      animation: none;
+    }
+  }
 </style>
