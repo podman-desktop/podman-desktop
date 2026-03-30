@@ -18,6 +18,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import type * as proc from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import { arch } from 'node:os';
 
@@ -282,17 +283,12 @@ beforeEach(async () => {
 const originalConsoleError = console.error;
 const consoleErrorMock = vi.fn();
 
-vi.mock(import('node:child_process'), async () => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const childProcessActual = await vi.importActual<typeof import('node:child_process')>('node:child_process');
+vi.mock(import('node:child_process'), async importOriginal => {
+  const childProcessActual = await importOriginal();
   return {
     ...childProcessActual,
     env: vi.fn(),
-    spawn: () => {
-      return {
-        on: vi.fn(),
-      } as unknown as proc.ChildProcess;
-    },
+    spawn: vi.fn(),
   };
 });
 
@@ -329,6 +325,10 @@ beforeEach(() => {
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
+
+  vi.mocked(spawn).mockReturnValue({
+    on: vi.fn(),
+  } as unknown as proc.ChildProcess);
 
   const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
   mock.mockReturnValue({
