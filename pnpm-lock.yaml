@@ -816,8 +816,8 @@ importers:
         specifier: ^3.16.0
         version: 3.16.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
       filesize:
-        specifier: ^11.0.14
-        version: 11.0.14
+        specifier: ^11.0.15
+        version: 11.0.15
       humanize-duration:
         specifier: ^3.33.2
         version: 3.33.2
@@ -4907,6 +4907,7 @@ packages:
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xterm/addon-fit@0.11.0':
     resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
@@ -7136,8 +7137,8 @@ packages:
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
 
-  filesize@11.0.14:
-    resolution: {integrity: sha512-2+pBV36IghE/lC78KmHqq4GGzSwqxisNb6YH17W6owdAFoXChND4WZ/51CUYXKyaEiJOhNKKsZSwZ8HbejrKTA==}
+  filesize@11.0.15:
+    resolution: {integrity: sha512-30TpbYxQxCpi4XdVjkwXYQ37CzZltV38+P7MYroQ+4NK/Dmx9mxixFNrolzcmEIBsjT/uowC9T7kiy2+C12r1A==}
     engines: {node: '>= 10.8.0'}
 
   fill-range@7.1.1:
@@ -19832,7 +19833,7 @@ snapshots:
     dependencies:
       minimatch: 5.1.9
 
-  filesize@11.0.14: {}
+  filesize@11.0.15: {}
 
   fill-range@7.1.1:
     dependencies:
