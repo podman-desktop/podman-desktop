@@ -80,6 +80,7 @@ export class BuildImagePage extends BasePage {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
+      await playExpect(this.terminalContent).toBeVisible();
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
