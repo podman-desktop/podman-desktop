@@ -24,14 +24,19 @@ let { size = '2em', class: className, style, label = 'Loading' }: Props = $props
       <line x1="32" y1="4" x2="32" y2="16" transform="rotate(225, 32, 32)" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.36" />
       <line x1="32" y1="4" x2="32" y2="16" transform="rotate(270, 32, 32)" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.4" />
       <line x1="32" y1="4" x2="32" y2="16" transform="rotate(315, 32, 32)" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.4" />
-      <animateTransform
-        attributeName="transform"
-        type="rotate"
-        calcMode="discrete"
-        values="0 32 32;45 32 32;90 32 32;135 32 32;180 32 32;225 32 32;270 32 32;315 32 32"
-        keyTimes="0;0.125;0.25;0.375;0.5;0.625;0.75;0.875"
-        dur="720ms"
-        repeatCount="indefinite" />
     </g>
   </svg>
 </i>
+
+<style>
+  g {
+    animation: spinner-rotate 720ms steps(8) infinite;
+    transform-origin: 32px 32px;
+  }
+
+  @keyframes spinner-rotate {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+</style>
