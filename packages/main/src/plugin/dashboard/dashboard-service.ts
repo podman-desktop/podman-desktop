@@ -162,7 +162,6 @@ export class DashboardService implements IDisposable {
   private getSystemOverviewStatus(): SystemOverviewStatusInfo {
     const providers: ProviderInfo[] = this.providerRegistry.getProviderInfos();
 
-    // Collect all connections from all providers
     const allConnections: ProviderConnectionInfo[] = providers.flatMap(provider => [
       ...provider.containerConnections,
       ...provider.kubernetesConnections,
@@ -244,7 +243,7 @@ export class DashboardService implements IDisposable {
 
   private updateSystemOverviewStatusBar(statusInfo: SystemOverviewStatusInfo): void {
     if (statusInfo.status === HEALTH_MONITOR_STATUS.CRITICAL && this.isEnhancedDashboardEnabled) {
-      const errorText = 'System error detected';
+      const errorText = 'System issues detected';
       this.statusBarRegistry.setEntry(
         'system-overview-status',
         true, // alignLeft
