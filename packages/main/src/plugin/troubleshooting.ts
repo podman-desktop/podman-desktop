@@ -49,7 +49,7 @@ export class Troubleshooting {
     const uri = await this.dialogRegistry.saveDialog({ title: 'Save Logs as .zip', defaultUri: Uri.file(defaultUri) });
 
     if (!uri) {
-      throw new Error('cannot save logs: save dialog returned undefined');
+      return [];
     }
 
     const systemLogs = await this.getSystemLogs();

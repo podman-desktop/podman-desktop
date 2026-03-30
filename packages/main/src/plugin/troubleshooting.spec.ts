@@ -71,14 +71,13 @@ describe('saveLogs', () => {
     });
   });
 
-  test('should throw error if user cancelled save dialog', async () => {
+  test('should return empty array if user cancelled save dialog', async () => {
     vi.mocked(DIALOG_REGISTRY_MOCK.saveDialog).mockResolvedValue(undefined);
 
     const troubleshooting = new Troubleshooting(DIALOG_REGISTRY_MOCK);
 
-    await expect(async () => {
-      await troubleshooting.saveLogs([]);
-    }).rejects.toThrow('cannot save logs: save dialog returned undefined');
+    const result = await troubleshooting.saveLogs([]);
+    expect(result).toHaveLength(0);
   });
 });
 
