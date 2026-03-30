@@ -131,8 +131,10 @@ test.describe.serial('Feature', { tag: ['@smoke', '@windows_sanity'] }, () => {
 **Available tags:**
 
 - `@smoke` - Core smoke tests
-- `@windows_sanity` - Windows compatibility
+- `@windows_sanity` - Windows sanity check tests
+- `@macos_sanity` - Mac OS sanity check tests
 - `@k8s_e2e` - Kubernetes tests
+- `@k8s_sanity` - Kubernetes sanity check tests
 - `@pdmachine` - Podman machine tests
 - `@update-install` - Update installation tests
 - `@managed-configuration` - Managed configuration tests
@@ -223,7 +225,7 @@ pnpm exec playwright test tests/playwright/src/specs/volume-smoke.spec.ts --ui
 **Filter by pattern:**
 
 ```bash
-pnpm exec playwright test --grep volume
+pnpm exec playwright test tests/playwright/src/specs/ --grep volume
 pnpm test:e2e:smoke  # Runs @smoke tagged tests
 ```
 
