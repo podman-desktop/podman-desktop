@@ -449,7 +449,7 @@
     "@podman-desktop/api": "workspace:*",
     "@podman-desktop/podman-extension-api": "workspace:*",
     "async-mutex": "^0.5.0",
-    "inversify": "^7.11.0",
+    "inversify": "^8.1.0",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
     "semver": "^7.7.4",

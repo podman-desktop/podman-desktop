@@ -143,7 +143,7 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  await inversifyContainer.unbindAll();
+  await inversifyContainer.unbindAllAsync();
 });
 
 beforeEach(() => {

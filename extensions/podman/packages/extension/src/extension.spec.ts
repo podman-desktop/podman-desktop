@@ -22,11 +22,10 @@ import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import { arch } from 'node:os';
 
-import type { ServiceIdentifier } from '@inversifyjs/common';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable } from '@podman-desktop/api';
-import type { Container as InversifyContainer } from 'inversify';
+import type { Container as InversifyContainer, ServiceIdentifier } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
