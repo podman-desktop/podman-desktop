@@ -7,7 +7,7 @@
     "rootDirs": ["src", "scripts"],
     "outDir": "dist",
     "target": "esnext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,

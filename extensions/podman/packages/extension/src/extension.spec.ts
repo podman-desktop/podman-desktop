@@ -21,7 +21,7 @@ import type * as proc from 'node:child_process';
 import * as fs from 'node:fs';
 import { arch } from 'node:os';
 
-import type { ServiceIdentifier } from '@inversifyjs/common/lib/esm';
+import type { ServiceIdentifier } from '@inversifyjs/common';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable } from '@podman-desktop/api';
