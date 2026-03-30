@@ -22,7 +22,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { KindClusterWatcher } from './kind-cluster-watcher';
 
-vi.mock('@kubernetes/client-node');
+vi.mock(import('@kubernetes/client-node'));
 
 describe('KindClusterWatcher', () => {
   let mockKubeConfig: KubeConfig;

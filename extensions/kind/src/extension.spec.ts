@@ -28,7 +28,7 @@ import type { KindGithubReleaseArtifactMetadata } from './kind-installer';
 import { KindInstaller } from './kind-installer';
 import * as util from './util';
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 vi.mock(import('./util'));
 vi.mock(import('./image-handler'));
 vi.mock(import('./create-cluster'));

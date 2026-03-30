@@ -27,7 +27,7 @@ import { getKindPath } from './util';
 
 let imageHandler: ImageHandler;
 
-vi.mock('./util', async () => {
+vi.mock(import('./util'), async () => {
   return {
     getKindPath: vi.fn(),
   };

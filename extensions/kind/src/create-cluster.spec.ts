@@ -32,7 +32,7 @@ vi.mock(import('./kind-cluster-watcher'));
 vi.mock(import('@kubernetes/client-node'));
 vi.mock(import('./util'));
 
-vi.mock('node:fs', () => ({
+vi.mock(import('node:fs'), () => ({
   promises: {
     writeFile: vi.fn(),
     readFile: vi.fn(),
