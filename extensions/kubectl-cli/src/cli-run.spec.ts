@@ -25,7 +25,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { installBinaryToSystem } from './cli-run';
 
 // mock exists sync
-vi.mock('node:fs', async () => {
+vi.mock(import('node:fs'), async () => {
   return {
     existsSync: vi.fn(),
   };

@@ -37,15 +37,7 @@ const extensionContext = {
 
 vi.mock(import('./cli-run'));
 vi.mock(import('./kubectl-github-releases'));
-
-vi.mock('node:fs', () => ({
-  promises: {
-    chmod: vi.fn(),
-    mkdir: vi.fn(),
-    unlink: vi.fn(),
-  },
-  existsSync: vi.fn(),
-}));
+vi.mock(import('node:fs'));
 
 beforeEach(() => {
   vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
