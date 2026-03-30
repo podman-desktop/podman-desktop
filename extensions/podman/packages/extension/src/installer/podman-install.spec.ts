@@ -79,17 +79,17 @@ const PODMAN_BINARY_MOCK: PodmanBinary = {
 } as unknown as PodmanBinary;
 
 // mock filesystem
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 // mock ps-list
-vi.mock('ps-list', async () => {
+vi.mock(import('ps-list'), async () => {
   return {
     default: vi.fn(),
   };
 });
 
 // mock release
-vi.mock('node:os', async () => {
+vi.mock(import('node:os'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const actual = await vi.importActual<typeof import('node:os')>('node:os');
   return {

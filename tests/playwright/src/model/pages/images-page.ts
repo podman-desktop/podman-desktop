@@ -20,6 +20,7 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { withMockedOpenFileDialog } from '/@/utility/dialog';
 import { handleConfirmationDialog } from '/@/utility/operations';
 import { waitUntil, waitWhile } from '/@/utility/wait';
 
@@ -48,7 +49,7 @@ export class ImagesPage extends MainPage {
     this.pruneConfirmationButton = this.page.getByRole('button', { name: 'All unused images', exact: true });
     this.loadImagesFromTarButton = this.additionalActions.getByLabel('Load Images', { exact: true });
     this.addArchiveButton = this.page.getByRole('button', { name: 'Add archive', exact: true });
-    this.confirmLoadImagesButton = this.page.getByRole('button', { name: 'Load Images', exact: true });
+    this.confirmLoadImagesButton = this.page.getByRole('button', { name: 'Load images', exact: true });
     this.deleteAllUnusedImagesCheckbox = this.page.getByRole('checkbox', { name: 'Toggle all', exact: true });
     this.deleteAllSelectedButton = this.bottomAdditionalActions.getByRole('button', { name: 'Delete' });
   }
@@ -171,16 +172,21 @@ export class ImagesPage extends MainPage {
     });
   }
 
-  async loadImages(archivePath: string): Promise<ImagesPage> {
-    // TODO: Will probably require refactoring when https://github.com/containers/podman-desktop/issues/7620 is done
+  async loadImages(archivePath: string, timeout = 60_000): Promise<ImagesPage> {
+    return test.step('Load images from tar archive', async () => {
+      await playExpect(this.loadImagesFromTarButton).toBeEnabled();
+      await this.loadImagesFromTarButton.click();
+      await playExpect(this.addArchiveButton).toBeEnabled();
 
-    await playExpect(this.loadImagesFromTarButton).toBeEnabled();
-    await this.loadImagesFromTarButton.click();
-    await playExpect(this.addArchiveButton).toBeEnabled();
-    await this.addArchiveButton.setInputFiles(archivePath);
-    await playExpect(this.confirmLoadImagesButton).toBeEnabled();
-    await this.confirmLoadImagesButton.click();
-    return this;
+      await withMockedOpenFileDialog([archivePath], async () => {
+        await this.addArchiveButton.click();
+      });
+
+      await playExpect(this.confirmLoadImagesButton).toBeEnabled();
+      await this.confirmLoadImagesButton.click();
+      await playExpect(this.heading).toBeVisible({ timeout });
+      return this;
+    });
   }
 
   async markAllUnusedImages(): Promise<boolean> {

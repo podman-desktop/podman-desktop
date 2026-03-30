@@ -27,6 +27,8 @@ import { ComposeDownload } from './download';
 import { OS } from './os';
 import * as utils from './utils';
 
+vi.mock(import('node:fs'));
+
 // Create the OS class as well as fake extensionContext
 const os = new OS();
 const extensionContext: extensionApi.ExtensionContext = {
@@ -112,7 +114,6 @@ test('test download of compose passes and that mkdir and executable mocks are ca
   const downloadReleaseAssetMock = vi.spyOn(composeGitHubReleasesMock, 'downloadReleaseAsset');
 
   // Mock that the storage path does not exist
-  vi.mock('node:fs');
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return false;
   });

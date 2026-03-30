@@ -19,6 +19,7 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { withMockedSaveFileDialog } from '/@/utility/dialog';
 import { handleConfirmationDialog } from '/@/utility/operations';
 
 import { DetailsPage } from './details-page';
@@ -107,16 +108,16 @@ export class ImageDetailsPage extends DetailsPage {
     if (!outputPath) {
       throw Error('Path is incorrect or not provided!');
     }
-    // TODO: Will probably require refactoring when https://github.com/containers/podman-desktop/issues/7620 is done
     await playExpect(this.saveImagebutton).toBeEnabled();
     await this.saveImagebutton.click();
     await playExpect(this.saveImageInput).toBeVisible();
-    await playExpect(this.confirmSaveImages).toBeVisible();
+    await playExpect(this.browseButton).toBeVisible();
 
-    await this.saveImageInput.evaluate(node => node.removeAttribute('readonly'));
-    await this.confirmSaveImages.evaluate(node => node.removeAttribute('disabled'));
-
-    await this.saveImageInput.pressSequentially(outputPath, { delay: 10 });
+    await withMockedSaveFileDialog(outputPath, async () => {
+      await this.browseButton.click();
+    });
+    await playExpect(this.saveImageInput).toHaveValue(outputPath);
+    await playExpect(this.confirmSaveImages).toBeEnabled();
     await this.confirmSaveImages.click();
 
     return new ImagesPage(this.page);

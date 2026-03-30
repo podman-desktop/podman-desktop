@@ -25,15 +25,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { getSystemBinaryPath, installBinaryToSystem, localBinDir } from './cli-run';
 
 // mock exists sync
-vi.mock('node:fs', async () => {
-  return {
-    existsSync: vi.fn(),
-    copyFileSync: vi.fn(),
-    promises: {
-      copyFile: vi.fn(),
-    },
-  };
-});
+vi.mock(import('node:fs'));
 
 const previousPath = process.env.PATH;
 

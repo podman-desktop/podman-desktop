@@ -26,8 +26,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { type CertificateDetectionConfig, CertificateDetectionService } from './certificate-detection-service';
 
-vi.mock('node:fs/promises');
-vi.mock('node:os');
+vi.mock(import('node:fs/promises'));
+vi.mock(import('node:os'));
 
 const mockTelemetryLogger: TelemetryLogger = {
   logUsage: vi.fn(),

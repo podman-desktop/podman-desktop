@@ -40,9 +40,7 @@ test('Expect to have different status icon based on provider status', async () =
   await renderObject.rerender({ status: 'stopping' });
   statusIcon = screen.getByLabelText('Connection Status Icon');
   expect(statusIcon).toBeInTheDocument();
-  expect(statusIcon).toHaveClass(
-    'animate-spin border border-solid border-[var(--pd-action-button-spinner)] border-t-transparent',
-  );
+  expect(statusIcon).toHaveAttribute('role', 'status');
 });
 
 test('Expect to have Update available icon status when an Update available status is passed', () => {
