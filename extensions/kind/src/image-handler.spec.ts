@@ -58,7 +58,10 @@ test('expect error to be raised if no clusters are given', async () => {
 
 test('expect image name to be given', async () => {
   (extensionApi.containerEngine.saveImage as Mock).mockImplementation(
-    (_engineId: string, _id: string, filename: string) => writeFileSync(filename, ''),
+    (_engineId: string, _id: string, filename: string) => {
+      writeFileSync(filename, '');
+      return Promise.resolve();
+    },
   );
 
   await imageHandler.moveImage(
