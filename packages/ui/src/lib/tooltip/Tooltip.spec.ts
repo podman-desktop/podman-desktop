@@ -26,7 +26,7 @@ import { tooltipHidden } from './tooltip-store';
 import TooltipTestComponent from './TooltipTestComponent.svelte';
 import TooltipTestWithSnippet from './TooltipTestWithSnippet.svelte';
 
-vi.mock('@floating-ui/dom', () => ({
+vi.mock(import('@floating-ui/dom'), () => ({
   computePosition: vi.fn((): Promise<{ x: number; y: number }> => Promise.resolve({ x: 100, y: 200 })),
   flip: vi.fn(() => ({})),
   shift: vi.fn(() => ({})),
