@@ -857,6 +857,13 @@ export async function registerProviderFor(
   storedExtensionContext?.subscriptions.push(disposable);
 }
 
+export function getMachineStartLogPath(machineName: string): string | undefined {
+  if (!storedExtensionContext) {
+    return undefined;
+  }
+  return path.join(storedExtensionContext.storagePath, `machine-start-${machineName}.log`);
+}
+
 export async function startMachine(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
@@ -873,10 +880,19 @@ export async function startMachine(
   await checkRosettaMacArm(podmanConfiguration);
 
   try {
-    // start the machine
-    await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, {
+    const runOptions: extensionApi.RunOptions = {
       logger: new LoggerDelegator(context, logger),
-    });
+    };
+
+    if (autoStart) {
+      const logFile = getMachineStartLogPath(machineInfo.name);
+      if (logFile) {
+        fs.mkdirSync(path.dirname(logFile), { recursive: true });
+      }
+      runOptions.detached = { logFile };
+    }
+
+    await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
     provider.updateStatus('started');
   } catch (err) {
     telemetryRecords.error = err;

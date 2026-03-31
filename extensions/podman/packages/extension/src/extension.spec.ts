@@ -957,6 +957,54 @@ test('if a machine failed to start with a wsl distro not found error but the ski
   expect(console.error).toBeCalled();
 });
 
+test('autostart uses detached mode with logFile', async () => {
+  const fakeStoragePath = '/fake/storage/path';
+  extension.initExtensionContext({
+    subscriptions: [],
+    storagePath: fakeStoragePath,
+  } as unknown as extensionApi.ExtensionContext);
+
+  vi.spyOn(provider, 'updateStatus').mockImplementation(() => {});
+  vi.mocked(fs.mkdirSync).mockReturnValue(undefined);
+
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+
+  await extension.startMachine(provider, podmanConfiguration, machineInfo, undefined, undefined, undefined, true);
+
+  expect(fs.mkdirSync).toHaveBeenCalledWith(fakeStoragePath, { recursive: true });
+  expect(spyExecPromise).toHaveBeenCalledWith(
+    podmanCli.getPodmanCli(),
+    ['machine', 'start', 'name'],
+    expect.objectContaining({
+      detached: { logFile: `${fakeStoragePath}/machine-start-name.log` },
+    }),
+  );
+});
+
+test('manual start does not use detached mode', async () => {
+  vi.spyOn(provider, 'updateStatus').mockImplementation(() => {});
+
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
+
+  await extension.startMachine(provider, podmanConfiguration, machineInfo);
+
+  expect(spyExecPromise).toHaveBeenCalledWith(
+    podmanCli.getPodmanCli(),
+    ['machine', 'start', 'name'],
+    expect.not.objectContaining({ detached: expect.anything() }),
+  );
+});
+
+test('getMachineStartLogPath returns correct path when extension context is set', () => {
+  extension.initExtensionContext({
+    subscriptions: [],
+    storagePath: '/test/storage',
+  } as unknown as extensionApi.ExtensionContext);
+
+  const result = extension.getMachineStartLogPath('my-machine');
+  expect(result).toBe('/test/storage/machine-start-my-machine.log');
+});
+
 test('test checkDefaultMachine - if there is no machine marked as default, take the default system connection to retrieve it. Prompt as it is not running', async () => {
   // Create fake of MachineJSON
   const fakeJSON: MachineJSON[] = fakeMachineJSON;
