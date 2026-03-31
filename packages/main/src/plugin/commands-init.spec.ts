@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 
@@ -118,8 +118,8 @@ describe('CommandsInit', () => {
 
     beforeEach(() => {
       const call = vi.mocked(commandRegistryMock.registerCommand).mock.calls.find(c => c[0] === 'openExternal');
-      expect(call).toBeDefined();
-      openExternalCallback = call![1] as typeof openExternalCallback;
+      assert(call);
+      openExternalCallback = call[1] as typeof openExternalCallback;
     });
 
     test('should route through securityRestrictionCurrentHandler', async () => {
