@@ -65,7 +65,7 @@ memory = 4096
 });
 
 test('when enable rosetta is set to true and there is already a file with rosetta = false, remove it.', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   const configFileContent = `
 [machine]
 memory = 4096
@@ -87,7 +87,7 @@ rosetta = false
 });
 
 test('should disable Rosetta when useRosetta is false', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   const configFileContent = `
 [machine]
 memory = 4096
@@ -108,7 +108,7 @@ rosetta = true
 });
 
 test('if rosetta is set to true and the file does NOT exist, do not try and create the file.', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
@@ -122,7 +122,7 @@ test('if rosetta is set to true and the file does NOT exist, do not try and crea
 
 describe('isRosettaEnabled', () => {
   test('check rosetta is enabled', async () => {
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
     vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
     vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nrosetta=true');
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -133,7 +133,7 @@ describe('isRosettaEnabled', () => {
   });
 
   test('check rosetta is enabled if file is not containing rosetta setting (default value is true)', async () => {
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
     vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
     vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
     vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -144,7 +144,7 @@ describe('isRosettaEnabled', () => {
   });
 
   test('check rosetta is disabled', async () => {
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
     vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
     vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nrosetta=false');
 
@@ -157,7 +157,7 @@ describe('isRosettaEnabled', () => {
 });
 
 test('when provider is set to applehv provider and there is already a file with provider = libkrun, remove it.', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nprovider = "libkrun"');
@@ -174,7 +174,7 @@ test('when provider is set to applehv provider and there is already a file with 
 });
 
 test('should update provider', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('[machine]\nprovider = "applehv"');
@@ -191,7 +191,7 @@ test('should update provider', async () => {
 });
 
 test('if provider is set default one (on CLI) and the file does NOT exist, do not try and create the file.', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(fs.promises, 'readFile').mockResolvedValue('');
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');

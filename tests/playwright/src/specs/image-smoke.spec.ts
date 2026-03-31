@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -75,7 +77,7 @@ test.describe
       const searchResults = await pullImagePage.getAllSearchResultsFor(imageToSearch, true);
       playExpect(searchResults.length).toBeGreaterThan(0);
 
-      imagesPage = await pullImagePage.pullImageFromSearchResults(imageToSearch + ':' + imageTagToSearch);
+      imagesPage = await pullImagePage.pullImageFromSearchResults(`${imageToSearch}:${imageTagToSearch}`);
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect.poll(async () => await imagesPage.waitForImageExists(imageToSearch)).toBeTruthy();
 
@@ -299,5 +301,44 @@ test.describe
       await playExpect
         .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
         .toBeTruthy();
+    });
+
+    test('Save image as tar, delete, load from tar', async ({ navigationBar }) => {
+      test.setTimeout(180_000);
+
+      const tarFilePath = path.join(tmpdir(), 'podman-desktop-e2e-hello.tar');
+
+      try {
+        let imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
+
+        imagesPage = await imagesPage.pullImage(helloContainer);
+        await playExpect(imagesPage.heading).toBeVisible();
+
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
+          .toBeTruthy();
+
+        const imageDetailsPage = await imagesPage.openImageDetails(helloContainer);
+        await playExpect(imageDetailsPage.heading).toBeVisible();
+
+        imagesPage = await imageDetailsPage.saveImage(tarFilePath);
+        await playExpect(imagesPage.heading).toBeVisible({ timeout: 60_000 });
+
+        const imageDetailsPageForDelete = await imagesPage.openImageDetails(helloContainer);
+        await playExpect(imageDetailsPageForDelete.heading).toBeVisible();
+
+        imagesPage = await imageDetailsPageForDelete.deleteImage();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageDelete(helloContainer, 60_000), { timeout: 0 })
+          .toBeTruthy();
+
+        await imagesPage.loadImages(tarFilePath);
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
+          .toBeTruthy();
+      } finally {
+        rmSync(tarFilePath, { force: true });
+      }
     });
   });

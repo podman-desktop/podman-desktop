@@ -43,7 +43,7 @@ export class TestRegistrySetup extends RegistrySetup {
 let registrySetup: TestRegistrySetup;
 
 // mock the fs module
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;

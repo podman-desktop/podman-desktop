@@ -239,8 +239,11 @@ export class DownloadAndCheck {
       }
     }
 
-    if (!artifactRelease && !shasums) {
-      throw new Error(`Can't find assets to download and verify for ${tagVersion}`);
+    if (!artifactRelease) {
+      throw new Error(`Can't find artifact ${artifactName} for ${tagVersion}`);
+    }
+    if (!shasums) {
+      throw new Error(`Can't find shasums asset for ${tagVersion}`);
     }
 
     const shasumAsset = await this.#octokit.rest.repos.getReleaseAsset({

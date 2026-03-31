@@ -26,7 +26,7 @@ import { getAssetsFolder } from '/@/utils/util';
 
 import { MacOSInstaller } from './mac-os-installer';
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const extensionContext = {
   subscriptions: [],

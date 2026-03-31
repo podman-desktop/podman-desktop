@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { describe, expect, test } from 'vitest';
+import { assert, describe, expect, test } from 'vitest';
 
 import Spinner from './Spinner.svelte';
 
@@ -72,13 +72,14 @@ describe('spinner SVG structure', () => {
     expect(svg!.getAttribute('viewBox')).toBe('0 0 64 64');
   });
 
-  test('should have animateTransform element', () => {
+  test('should have a g element wrapping all lines as the animation target', () => {
     render(Spinner);
     const spinner = screen.getByRole('status', { name: 'Loading' });
     const svg = spinner.querySelector('svg');
-    expect(svg).not.toBeNull();
-    const animateTransform = svg!.querySelector('animateTransform');
-    expect(animateTransform).not.toBeNull();
-    expect(animateTransform!.getAttribute('calcMode')).toBe('discrete');
+    assert(svg);
+    const g = svg.querySelector('g');
+    assert(g);
+    expect(g.querySelectorAll('line').length).toBe(8);
+    expect(g.children.length).toBe(8);
   });
 });

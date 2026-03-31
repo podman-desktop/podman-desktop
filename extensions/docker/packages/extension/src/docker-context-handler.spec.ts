@@ -41,7 +41,7 @@ class TestDockerContextHandler extends DockerContextHandler {
 }
 
 // mock exists sync
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const originalConsoleError = console.error;
 let dockerContextHandler: TestDockerContextHandler;

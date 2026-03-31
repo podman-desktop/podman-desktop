@@ -18,6 +18,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import type * as proc from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import { arch } from 'node:os';
 
@@ -152,7 +153,7 @@ async function waitTelemetryLoggerUsage() {
   await vi.waitFor(() => expect((telemetryLogger.logUsage as Mock).mock.calls).not.toHaveLength(0));
 }
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 // mock fs.promises.readdir and use string[] as return type
 const fsPromisesReaddirMock = vi.mocked(
   fs.promises.readdir as (path: string, options?: { withFileTypes: false }) => Promise<string[]>,
@@ -161,7 +162,7 @@ const fsPromisesReaddirMock = vi.mocked(
 vi.mock(import('./inject/inversify-binding'));
 
 // mock ps-list
-vi.mock('ps-list', async () => {
+vi.mock(import('ps-list'), async () => {
   return {
     default: vi.fn(),
   };
@@ -282,21 +283,16 @@ beforeEach(async () => {
 const originalConsoleError = console.error;
 const consoleErrorMock = vi.fn();
 
-vi.mock('node:child_process', async () => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const childProcessActual = await vi.importActual<typeof import('node:child_process')>('node:child_process');
+vi.mock(import('node:child_process'), async importOriginal => {
+  const childProcessActual = await importOriginal();
   return {
     ...childProcessActual,
     env: vi.fn(),
-    spawn: () => {
-      return {
-        on: vi.fn(),
-      } as unknown as proc.ChildProcess;
-    },
+    spawn: vi.fn(),
   };
 });
 
-vi.mock('node:os', async () => {
+vi.mock(import('node:os'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const osActual = await vi.importActual<typeof import('node:os')>('node:os');
 
@@ -329,6 +325,10 @@ beforeEach(() => {
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
+
+  vi.mocked(spawn).mockReturnValue({
+    on: vi.fn(),
+  } as unknown as proc.ChildProcess);
 
   const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
   mock.mockReturnValue({
@@ -1160,7 +1160,7 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
   const spyPrompt = vi.mocked(extensionApi.window.showInformationMessage);
   spyPrompt.mockResolvedValue('Yes');
 
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return false;
@@ -3414,7 +3414,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
       },
     });
 
-    vi.mock('./utils/warnings');
+    vi.mock(import('./utils/warnings'));
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {

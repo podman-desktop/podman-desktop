@@ -180,19 +180,20 @@ See the reporting contract below. Lead with the root cause, back every claim wit
 
 ## Decision guide
 
-| What you see                                            | What to do next                                                                                               |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| MCP returns "No trace files found" or similar error     | List zip contents with `unzip -l`; if `trace.trace` exists, use [manual trace parsing](#manual-trace-parsing) |
-| Clear assertion mismatch and obvious cause in overview  | Report it; extra MCP calls may be unnecessary                                                                 |
-| Locator timeout or hidden element                       | Run `get-screenshots`                                                                                         |
-| Overview mentions console errors but not enough context | Run `get-trace` with `filterPreset: "minimal"` or `"moderate"`                                                |
-| Network summary shows 4xx/5xx or missing response       | Run `get-network-log`                                                                                         |
-| Screenshot looks wrong but not enough detail            | Run `view-screenshot` for the named frame                                                                     |
-| Filtered output omits the needed detail                 | Escalate to `conservative`, then raw paginated tools                                                          |
-| Multiple browser sessions exist                         | Use `browserIndex` on paginated raw tools                                                                     |
-| Failure looks like a regression                         | Check git history for the affected file                                                                       |
-| Test source uses a brittle locator                      | Read the spec file and propose a resilient alternative                                                        |
-| CI artifact is a nested zip (not a direct trace zip)    | Extract the inner trace zip first, then analyze                                                               |
+| What you see                                            | What to do next                                                                                                |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| MCP returns "No trace files found" or similar error     | List zip contents with `unzip -l`; if `trace.trace` exists, use [manual trace parsing](#manual-trace-parsing)  |
+| Clear assertion mismatch and obvious cause in overview  | Report it; extra MCP calls may be unnecessary                                                                  |
+| Locator timeout or hidden element                       | Run `get-screenshots`                                                                                          |
+| Overview mentions console errors but not enough context | Run `get-trace` with `filterPreset: "minimal"` or `"moderate"`                                                 |
+| Network summary shows 4xx/5xx or missing response       | Run `get-network-log`                                                                                          |
+| Screenshot looks wrong but not enough detail            | Run `view-screenshot` for the named frame                                                                      |
+| Filtered output omits the needed detail                 | Escalate to `conservative`, then raw paginated tools                                                           |
+| Multiple browser sessions exist                         | Use `browserIndex` on paginated raw tools                                                                      |
+| Failure looks like a regression                         | Check git history for the affected file                                                                        |
+| Test source uses a brittle locator                      | Read the spec file and propose a resilient alternative                                                         |
+| CI artifact is a nested zip (not a direct trace zip)    | Extract the inner trace zip first, then analyze                                                                |
+| Multiple runs fail the same way                         | Do **not** default to flaky; run [exhaustive console analysis](#exhaustive-console-analysis) across all traces |
 
 ## Common patterns
 
@@ -250,6 +251,17 @@ Treat as likely flaky only when the trace suggests timing or nondeterminism, for
 
 If you suspect flakiness, say why and recommend the stabilization point, such as waiting for a specific response, element state, or post-animation condition.
 
+### Deterministic failures across multiple runs
+
+When multiple traces from separate CI runs are provided and they all fail the same way, **raise the bar significantly before classifying as flaky**. A failure that reproduces N/N times across independent runs is almost certainly deterministic. Even if the test has `continue-on-error: true` or is known to be occasionally flaky, consistent reproduction points to an app bug or environment regression — not timing luck.
+
+In this scenario:
+
+1. **Do not default to "likely flaky"** — consistent reproduction is strong counter-evidence against flakiness.
+2. **Perform an exhaustive console log scan** (see [Exhaustive console analysis](#exhaustive-console-analysis) below) before drawing conclusions. The root cause often hides in a log-level message that a severity-filtered search misses.
+3. **Look for a common causal event** across all traces rather than analyzing each in isolation. If the same console error, network failure, or UI state appears in every trace, that is almost certainly the root cause.
+4. Classify as flaky only if the traces show genuinely different failure modes or if some runs pass and others fail.
+
 ## Reporting contract
 
 Every analysis must include all of the sections below. The report should be structured so a developer can read it top-to-bottom in under 2 minutes and know exactly what happened, why, and what to do.
@@ -269,49 +281,9 @@ Every analysis must include all of the sections below. The report should be stru
 
 ### Report template
 
-```markdown
-## Failure summary
+Use markdown headers matching the required sections above. Cite evidence with these prefixes: `[trace step N]`, `[screenshot: filename]`, `[network: METHOD url → status]`, `[console: level] message`. See [reference.md](reference.md) for the full citation format reference.
 
-[What failed and most likely cause in 1-2 sentences.]
-
-## Event timeline
-
-1. [Step/timestamp] — [What happened]
-2. [Step/timestamp] — [What happened]
-3. [Step/timestamp] — [First anomaly or failure signal]
-4. [Step/timestamp] — [Cascading failure or test timeout]
-
-## Evidence
-
-- [trace step N]: [description of what it shows and why it matters]
-- [screenshot: filename]: [what is visible — e.g., "page shows loading spinner, data table absent"]
-- [network: GET /api/items → 500]: [implication — e.g., "backend returned server error before UI could render data"]
-- [console: error] "Uncaught TypeError: ...": [implication]
-
-## Root cause
-
-[Confirmed|Likely|Unknown] — [Explanation grounded in the evidence above.]
-
-[If Likely or Unknown]: Confidence would increase with [specific additional evidence, e.g., "a passing trace for comparison" or "logs from the backend service"].
-
-## What was ruled out
-
-- [Hypothesis]: ruled out because [reason, citing evidence]
-- [Hypothesis]: ruled out because [reason, citing evidence]
-
-## Recommended action
-
-[Specific fix with file paths and code when applicable.]
-
-[If the fix is in test code:]
-In `tests/playwright/src/specs/example.spec.ts`, line 42:
-
-- Current: `await expect(locator).toBeVisible()`
-- Suggested: `await expect(locator).toBeVisible({ timeout: 15_000 })` because [reason]
-
-[If the fix is in app code:]
-In `packages/renderer/src/lib/Component.svelte`, the error handler at line 87 does not account for [scenario]. Suggested change: [description].
-```
+For test code fixes, include the file path, problematic line/locator, and suggested replacement. For app code fixes, point to the relevant source file and describe the expected behavior change.
 
 ### Severity annotation (optional but encouraged)
 
@@ -369,6 +341,30 @@ Then name the single best next action:
 
 Do not leave the analysis open-ended. Always propose a concrete next step even when the trace is insufficient.
 
+## Exhaustive console analysis
+
+Console messages in Playwright traces carry a `messageType` field (`log`, `debug`, `info`, `warning`, `error`). **Do not filter solely by `error` or `warning` severity.** Application code frequently logs critical errors at `log` or `info` level — for example, a `catch` block that calls `console.log(\`Error while ...: ${err}\`)`instead of`console.error(...)`. Filtering only by severity will miss these, potentially causing you to misdiagnose the failure entirely.
+
+### Required console scanning procedure
+
+When performing manual trace parsing, always run **two passes** over console messages:
+
+1. **Severity pass** — collect all `error` and `warning` messages.
+2. **Keyword pass** — collect messages at **any** severity level whose text matches failure-related patterns. Use a broad keyword set:
+
+```
+error, fail, TypeError, ReferenceError, SyntaxError, reject, crash,
+abort, ECONNREFUSED, ENOTFOUND, ETIMEDOUT, fetch failed, tls, cert,
+ssl, socket, refused, timeout, 4xx, 5xx, unauthorized, forbidden,
+not found, unreachable, cannot, unable
+```
+
+Report the union of both passes. When a message appears at an unexpected severity (e.g., an error message at `log` level), flag the mismatch explicitly — it often indicates a swallowed error in the application code that is central to the failure.
+
+### Why this matters
+
+A real-world example: `TypeError: fetch failed` from the Kubernetes client was logged via `console.log()` (not `console.error()`). Filtering only for `error`-level messages missed it entirely, leading to a misdiagnosis of "test flakiness / timing issue" when the actual root cause was the app's `fetch()` calls failing due to a build configuration change. The error was present in all traces and was the direct cause of "Cluster not reachable" — but it was invisible to a severity-only filter.
+
 ## Manual trace parsing
 
 When the MCP tool cannot parse the trace (common with manually-created traces), analyze the files directly. The trace zip typically contains three components: `trace.trace`, `trace.network`, and `resources/` with screenshots.
@@ -405,11 +401,26 @@ with open('trace.trace') as f:
             msg = obj.get('message', '')[:200]
             if any(k in msg.lower() for k in ['error', 'fail', 'timeout', 'locator resolved']):
                 print(f'  LOG: {msg}')
-        elif t == 'console' and obj.get('messageType') == 'error':
-            text = obj.get('args', [{}])[0].get('preview', '')[:150]
-            print(f'  CONSOLE [error]: {text}')
+        elif t == 'console':
+            args = obj.get('args', [])
+            text_parts = [a.get('preview', '') or a.get('value', '') for a in args]
+            text = ' '.join(str(p) for p in text_parts if p)[:300]
+            msg_type = obj.get('messageType', '')
+            # Always show error/warning level
+            if msg_type in ('error', 'warning'):
+                print(f'  CONSOLE [{msg_type}]: {text}')
+            # Also show ANY level if text matches failure keywords
+            elif text and any(k in text.lower() for k in [
+                'error', 'fail', 'typeerror', 'referenceerror', 'reject',
+                'crash', 'abort', 'econnrefused', 'enotfound', 'etimedout',
+                'fetch failed', 'tls', 'cert', 'ssl', 'socket', 'refused',
+                'timeout', 'unauthorized', 'forbidden', 'unreachable',
+                'cannot', 'unable']):
+                print(f'  CONSOLE [{msg_type}]: {text}')
 "
 ```
+
+**Important:** The console extraction above scans messages at **all** severity levels for failure-related keywords, not just `error`/`warning`. This is essential — application code may log critical errors via `console.log()` rather than `console.error()`. See [Exhaustive console analysis](#exhaustive-console-analysis) for the rationale.
 
 The `log` entries with "locator resolved to" are critical — they show exactly which DOM element Playwright matched for each retry of an assertion. Repeated resolution to a hidden or wrong element (as seen in `.first()` matching a `class="hidden"` span) is a strong signal for locator bugs.
 
@@ -437,23 +448,7 @@ For Electron apps, the network log typically only captures renderer-process requ
 
 ## CI artifact structure
 
-CI artifacts often package traces inside a larger archive. Common patterns:
-
-```
-ci-artifact.zip
-└── results/
-    └── podman-desktop/
-        ├── traces/<name>_trace.zip     ← the actual trace
-        ├── videos/<name>.webm          ← screen recording
-        ├── html-results/               ← Playwright HTML report
-        ├── json-results.json           ← structured test results
-        ├── output.log                  ← CI output
-        └── <test-hash>/error-context.md ← page snapshot at failure
-```
-
-The `error-context.md` file contains the page's accessibility tree snapshot at the moment of failure — useful for understanding what Playwright "saw" in the DOM, independent of what was visually rendered. The `json-results.json` file contains the exact error message and locator call log, which often reveals the root cause directly.
-
-When given a CI artifact zip, extract the inner trace zip before analyzing:
+CI artifacts nest traces inside larger archives. Extract the inner trace zip before analyzing. See [reference.md](reference.md) for the full layout, `json-results.json` parsing scripts, and `error-context.md` usage.
 
 ```bash
 unzip -l artifact.zip | grep trace.zip
@@ -462,19 +457,11 @@ unzip artifact.zip "path/to/trace.zip" -d /tmp/analysis
 
 ## If MCP is unavailable
 
-Use the Playwright CLI viewer:
+Fall back to the Playwright CLI viewer. See [reference.md](reference.md) for details.
 
 ```bash
 pnpm exec playwright show-trace /absolute/path/to/trace.zip
 ```
-
-Or:
-
-```bash
-npx playwright show-trace /absolute/path/to/trace.zip
-```
-
-Inspect the failing step, then work backward for the first causal signal. Use the same evidence-based reporting style.
 
 ## After analysis
 
