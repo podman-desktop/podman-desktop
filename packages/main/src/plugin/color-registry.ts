@@ -557,11 +557,14 @@ export class ColorRegistry {
     this.registerColor(`card-header-text`, {
       dark: white,
       light: charcoal[900],
+      hcLight: black,
     });
 
     this.registerColor(`card-text`, {
       dark: gray[300],
       light: charcoal[700],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
@@ -597,11 +600,14 @@ export class ColorRegistry {
     this.registerColor(`${invCt}card-header-text`, {
       dark: white,
       light: charcoal[900],
+      hcLight: black,
     });
 
     this.registerColor(`${invCt}card-text`, {
       dark: gray[300],
       light: charcoal[700],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${invCt}button-active`, {
@@ -658,11 +664,15 @@ export class ColorRegistry {
     this.registerColor(`${ct}header-icon`, {
       dark: gray[600],
       light: accent1[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ct}card-header-text`, {
       dark: gray[350],
       light: charcoal[850],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ct}card-bg`, {
@@ -839,6 +849,7 @@ export class ColorRegistry {
     this.registerColor(`${sNav}focused-text`, {
       dark: white,
       light: charcoal[900],
+      hcLight: black,
     });
 
     this.registerColor(`${sNav}error-text`, {
@@ -854,6 +865,8 @@ export class ColorRegistry {
     this.registerColor(`${sNav}hover-text`, {
       dark: gray[700],
       light: charcoal[200],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${sNav}placeholder-text`, {
@@ -895,6 +908,8 @@ export class ColorRegistry {
     this.registerColor(`${sNav}focused-icon`, {
       dark: gray[500],
       light: accent1[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${sNav}disabled-icon`, {
@@ -905,6 +920,8 @@ export class ColorRegistry {
     this.registerColor(`${sNav}hover-icon`, {
       dark: gray[700],
       light: accent1[500],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
@@ -1032,24 +1049,32 @@ export class ColorRegistry {
     this.registerColor(`${tab}header-text`, {
       dark: gray[600],
       light: charcoal[200],
+      hcDark: white,
+      hcLight: black,
     });
 
     // color of up/down arrows when column is not the ordered one
     this.registerColor(`${tab}header-unsorted`, {
       dark: charcoal[200],
       light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     // color for most text in tables
     this.registerColor(`${tab}body-text`, {
       dark: gray[700],
       light: charcoal[100],
+      hcDark: white,
+      hcLight: black,
     });
 
     // color for the text in the main column of the table (generally Name)
     this.registerColor(`${tab}body-text-highlight`, {
       dark: gray[300],
       light: charcoal[700],
+      hcDark: white,
+      hcLight: black,
     });
 
     // color for the text in second line of main column, in secondary color (generally IDs)
@@ -1062,6 +1087,8 @@ export class ColorRegistry {
     this.registerColor(`${tab}body-text-sub-highlight`, {
       dark: gray[400],
       light: charcoal[200],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
@@ -1071,21 +1098,29 @@ export class ColorRegistry {
     this.registerColor(`${details}body-text`, {
       dark: gray[200],
       light: charcoal[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${details}empty-icon`, {
       dark: gray[600],
       light: charcoal[200],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${details}empty-header`, {
       dark: gray[200],
       light: charcoal[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${details}empty-sub-header`, {
       dark: gray[600],
       light: charcoal[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${details}empty-cmdline-bg`, {
@@ -1098,6 +1133,7 @@ export class ColorRegistry {
     this.registerColor(`${details}empty-cmdline-text`, {
       dark: gray[400],
       light: charcoal[700],
+      hcDark: white,
       hcLight: black,
     });
 
@@ -1118,11 +1154,14 @@ export class ColorRegistry {
     this.registerColor(`${details}card-header`, {
       dark: gray[700],
       light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${details}card-text`, {
       dark: white,
       light: charcoal[900],
+      hcLight: black,
     });
   }
 
@@ -1133,7 +1172,7 @@ export class ColorRegistry {
       dark: gray[600],
       light: charcoal[200],
       hcDark: white,
-      hcLight: charcoal[900],
+      hcLight: black,
     });
 
     this.registerColor(`${tab}text-highlight`, {
@@ -1367,6 +1406,8 @@ export class ColorRegistry {
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
@@ -1376,6 +1417,8 @@ export class ColorRegistry {
     this.registerColor(`${ab}text`, {
       dark: gray[400],
       light: charcoal[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ab}bg`, {
@@ -1393,6 +1436,8 @@ export class ColorRegistry {
     this.registerColor(`${ab}hover-text`, {
       dark: gray[400],
       light: charcoal[500],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ab}primary-text`, {
@@ -1413,6 +1458,8 @@ export class ColorRegistry {
     this.registerColor(`${ab}details-text`, {
       dark: gray[400],
       light: charcoal[900],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ab}details-bg`, {
@@ -1423,6 +1470,8 @@ export class ColorRegistry {
     this.registerColor(`${ab}details-hover-text`, {
       dark: gray[400],
       light: charcoal[900],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${ab}details-disabled-text`, {
@@ -1601,6 +1650,8 @@ export class ColorRegistry {
     this.registerColor(`${label}text`, {
       dark: gray[450],
       light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${label}primary-bg`, {
