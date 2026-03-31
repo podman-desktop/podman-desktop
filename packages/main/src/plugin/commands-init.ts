@@ -125,7 +125,9 @@ export class CommandsInit implements IDisposable {
           try {
             await securityRestrictionCurrentHandler.handler?.(arg.toString());
           } catch (error: unknown) {
-            console.error(`Unable to open external link ${arg.toString()}`, error);
+            const message = `Unable to open external link ${arg.toString()}`;
+            console.error(message, error);
+            throw new Error(message, { cause: error });
           }
         }
       }),
