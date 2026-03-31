@@ -19,6 +19,7 @@ import test, { expect as playExpect, type Locator, type Page } from '@playwright
 
 import type { PlayYamlOptions } from '/@/model/core/types';
 import { PodmanKubePlayOptions } from '/@/model/core/types';
+import { withMockedOpenFileDialog } from '/@/utility/dialog';
 
 import { BasePage } from './base-page';
 import { PodsPage } from './pods-page';
@@ -32,6 +33,7 @@ export class PodmanKubePlayPage extends BasePage {
   readonly createYamlFromScratchButton: Locator;
   readonly customYamlEditor: Locator;
   readonly alertMessage: Locator;
+  readonly browseButton: Locator;
   readonly buildCheckbox: Locator;
   readonly replaceCheckbox: Locator;
 
@@ -44,6 +46,7 @@ export class PodmanKubePlayPage extends BasePage {
     this.selectYamlButton = page.getByRole('button', {
       name: 'Podman Container Engine Runtime',
     });
+    this.browseButton = page.getByRole('button', { name: 'browse' });
     this.createYamlFromScratchButton = page.getByRole('button', { name: 'Create a file from scratch' });
     this.customYamlEditor = page.locator('#custom-yaml-editor');
     this.playButton = page.getByRole('button', { name: 'Play' });
@@ -80,10 +83,11 @@ export class PodmanKubePlayPage extends BasePage {
     await playExpect(this.selectYamlButton).toBeEnabled();
     await this.selectYamlButton.click();
     await playExpect(this.selectYamlButton).toHaveAttribute('aria-pressed', 'true');
-    // TODO: evaluate() is required due to noninteractivity of fields currently, once https://github.com/containers/podman-desktop/issues/5479 is done they will no longer be needed
-    await this.yamlPathInput.evaluate(node => node.removeAttribute('readonly'));
-    await this.playButton.evaluate(node => node.removeAttribute('disabled'));
-    await this.yamlPathInput.fill(pathToYaml);
+
+    await withMockedOpenFileDialog([pathToYaml], async () => {
+      await this.browseButton.click();
+    });
+    await playExpect(this.yamlPathInput).toHaveValue(pathToYaml);
   }
 
   async playYaml(

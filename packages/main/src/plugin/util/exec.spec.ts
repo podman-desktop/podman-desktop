@@ -516,6 +516,60 @@ describe('exec', () => {
     expect(options?.env?.['MY(VAR']).not.toBeDefined();
   });
 
+  function mockDetachedProcess(event: string, eventArg: unknown): { spawnMock: Mock; unrefMock: Mock } {
+    const unrefMock = vi.fn();
+    const onMock = vi.fn().mockImplementation((evt: string, cb: (arg0: unknown) => void) => {
+      if (evt === event) {
+        cb(eventArg);
+      }
+    });
+    const spawnMock = vi.mocked(spawn).mockReturnValue({
+      unref: unrefMock,
+      on: onMock,
+      killed: false,
+    } as unknown as ChildProcess);
+    return { spawnMock, unrefMock };
+  }
+
+  test.each([
+    { description: 'without custom cwd', cwd: undefined },
+    { description: 'with custom cwd', cwd: '/opt/app' },
+  ])('should spawn a detached process and resolve $description', async ({ cwd }) => {
+    const command = 'my-daemon';
+    const args = ['--background'];
+    const { spawnMock, unrefMock } = mockDetachedProcess('close', 0);
+
+    const result = await exec.exec(command, args, { detached: true, cwd });
+
+    const expectedOpts: Record<string, unknown> = { detached: true, stdio: 'ignore' };
+    if (cwd) expectedOpts['cwd'] = cwd;
+    expect(spawnMock).toHaveBeenCalledWith(command, args, expect.objectContaining(expectedOpts));
+    expect(unrefMock).toHaveBeenCalled();
+    expect(result).toEqual({ command, stdout: '', stderr: '' });
+  });
+
+  test.each([
+    {
+      description: 'non-zero exit code',
+      event: 'close',
+      eventArg: 42,
+      expectedError: /Command execution failed with exit code 42/,
+    },
+    {
+      description: 'error event',
+      event: 'error',
+      eventArg: new Error('spawn ENOENT'),
+      expectedError: /Failed to execute command: spawn ENOENT/,
+    },
+  ])('should reject when detached process emits $description', async ({ event, eventArg, expectedError }) => {
+    mockDetachedProcess(event, eventArg);
+
+    const execResult = exec.exec('failing-command', [], { detached: true });
+
+    await expect(execResult).rejects.toThrowError(expectedError);
+    await expect(execResult).rejects.toThrowError(Error);
+  });
+
   test('should run the command and set specific encoding', async () => {
     const command = 'echo';
     const args = ['Hello, World!'];

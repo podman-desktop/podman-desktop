@@ -4796,6 +4796,31 @@ test('expect to fall back to compat api images if podman provider does not have 
   expect(images[0]?.Id).toBe('dummyImageId2');
 });
 
+test('pass options to compat api when using podmanListImages', async () => {
+  const imagesList = [{ Id: 'dummyImageId' }];
+  server = setupServer(http.get('http://localhost/images/json', () => HttpResponse.json(imagesList)));
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+  const listImagesSpy = vi.spyOn(api, 'listImages');
+
+  containerRegistry.addInternalProvider('podman', {
+    name: 'podman',
+    id: 'podman1',
+    api,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  await containerRegistry.podmanListImages({ all: true, filters: '{"dangling":["false"]}' });
+
+  expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
+    all: true,
+    filters: '{"dangling":["false"]}',
+  });
+});
+
 test('expect a blank array if there is no api or libpod API when doing podmanListImages', async () => {
   containerRegistry.addInternalProvider('podman', {
     name: 'podman',

@@ -18,6 +18,6 @@ export let icon = false;
     class="text-[var(--pd-state-warning)] p-1 flex flex-row items-center {$$props.class}"
     class:opacity-0={error === undefined || error === ''}>
     <Icon size="1.125x" class="cursor-pointer text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
-    <div role="alert" aria-label="Warning Message Content" class="ml-2">{error}</div>
+    <div role="alert" class="ml-2">{error}</div>
   </div>
 {/if}

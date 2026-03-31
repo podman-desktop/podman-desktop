@@ -30,14 +30,7 @@ const config: Configuration = {
 };
 
 // Mock fs module
-vi.mock('node:fs', () => {
-  return {
-    default: {
-      realpathSync: vi.fn(),
-      statSync: vi.fn(),
-    },
-  };
-});
+vi.mock(import('node:fs'));
 
 describe('findPodmanInstallations', () => {
   beforeEach(() => {

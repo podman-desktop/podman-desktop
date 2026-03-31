@@ -24,6 +24,8 @@ let footerMarkdownDescription: string | undefined = $state();
 
 let display = $state(false);
 
+const DANGER_TYPE = 'danger';
+
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
   currentId = options?.id || 0;
@@ -107,7 +109,9 @@ async function onClose(): Promise<void> {
 
 function getButtonType(b: boolean): ButtonType {
   // eslint-disable-next-line sonarjs/no-selector-parameter
-  if (b) {
+  if (b && type === DANGER_TYPE) {
+    return 'danger';
+  } else if (b) {
     return 'primary';
   } else {
     return 'secondary';
@@ -119,7 +123,7 @@ function getButtonType(b: boolean): ButtonType {
   <Dialog title={title} onclose={onClose}>
     {#snippet icon()}
       
-        {#if type === 'error'}
+        {#if type === 'error' || type === DANGER_TYPE}
           <Icon class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
         {:else if type === 'warning'}
           <Icon class="h-4 w-4 text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />

@@ -27,12 +27,7 @@ import { Detect } from './detect';
 import { ComposeDownload } from './download';
 import { activate, deactivate } from './extension';
 
-vi.mock('node:fs', () => ({
-  promises: {
-    unlink: vi.fn(),
-  },
-  existsSync: vi.fn(),
-}));
+vi.mock(import('node:fs'));
 
 const cliToolMock = {
   registerUpdate: vi.fn(),

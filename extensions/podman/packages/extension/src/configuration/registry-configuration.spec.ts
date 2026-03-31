@@ -29,11 +29,11 @@ import type { RegistryConfigurationFile } from './registry-configuration';
 import { ActionEnum, RegistryConfigurationImpl } from './registry-configuration';
 
 let registryConfiguration: RegistryConfigurationImpl;
-vi.mock('node:fs');
-vi.mock('node:fs/promises');
+vi.mock(import('node:fs'));
+vi.mock(import('node:fs/promises'));
 
 // need to mock some functions due to exported function getJSONMachineList using os.homedir
-vi.mock('node:os', async () => {
+vi.mock(import('node:os'), async () => {
   return {
     tmpdir: vi.fn().mockReturnValue('fake-tmp'),
     homedir: vi.fn().mockReturnValue('fake-homedir'),

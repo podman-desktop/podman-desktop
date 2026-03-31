@@ -710,20 +710,23 @@ export class ContainerProviderRegistry {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let fetchedImages: any[] = [];
 
+          // Create list options with explicit defaults
+          const listOptions = {
+            all: options?.all ?? false,
+            filters: options?.filters,
+          };
+
           // If libpod API is available AND the configuration is set to use libpodApi, use podmanListImages API call.
           if (provider.libpodApi && this.useLibpodApiForImageList()) {
             fetchedImages = await withTimeout(
-              provider.libpodApi.podmanListImages({
-                all: options?.all,
-                filters: options?.filters,
-              }),
+              provider.libpodApi.podmanListImages(listOptions),
               providerTimeoutMs,
               provider.name,
               provider.id,
             );
           } else if (provider.api) {
             fetchedImages = await withTimeout(
-              provider.api.listImages({ all: false }),
+              provider.api.listImages(listOptions),
               providerTimeoutMs,
               provider.name,
               provider.id,

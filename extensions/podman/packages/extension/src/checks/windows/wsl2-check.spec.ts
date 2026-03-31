@@ -28,7 +28,7 @@ import { WSL2Check } from './wsl2-check';
 const userAdminCheck = { execute: vi.fn() } as unknown as UserAdminCheck;
 
 // mock ps-list
-vi.mock('ps-list', async () => {
+vi.mock(import('ps-list'), async () => {
   return {
     default: vi.fn(),
   };
