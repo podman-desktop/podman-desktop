@@ -18,7 +18,10 @@
 
 // export core modules
 export * from './globalSetup/global-setup';
+export * from './runner/chrome-dev-tools-protocol-runner';
+export * from './runner/electron-runner';
 export * from './runner/podman-desktop-runner';
+export * from './runner/runner-factory';
 export * from './runner/runner-options';
 export * from './setupFiles/setup-registry';
 export * from './utility/auth-utils';
