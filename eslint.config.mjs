@@ -197,7 +197,12 @@ export default [
       'unicorn/prefer-node-protocol': 'error',
 
       // node custom rules
-      'n/no-sync': 'warn',
+      'n/no-sync': [
+        'warn',
+        {
+          ignores: ['existsSync'],
+        },
+      ],
 
       // sonarjs custom rules
       'sonarjs/cognitive-complexity': 'off',
