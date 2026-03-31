@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 
 import type { Browser, Page } from '@playwright/test';
@@ -24,14 +26,46 @@ import { chromium } from '@playwright/test';
 import { Runner } from '/@/runner/podman-desktop-runner';
 import { RunnerFactory } from '/@/runner/runner-factory';
 import type { RunnerOptions } from '/@/runner/runner-options';
+import { waitUntil } from '/@/utility/wait';
+
+interface CDPOptions {
+  executablePath: string;
+  debugPort: string;
+  env: object;
+  recordVideo?: object;
+  timeout?: number;
+  tracesDir?: string;
+}
 
 export class ChromeDevToolsProtocolRunner extends Runner {
   private _browser: Browser | undefined;
+  private _electronProcess: ChildProcess | undefined;
 
   public constructor(options?: { runnerOptions?: RunnerOptions }) {
     super(options);
     console.log('ChromeDevToolsProtocolRunner constructor');
     this._options = this.defaultOptions();
+  }
+
+  private async waitForCDPEndpoint(port: string, timeout = 30_000): Promise<void> {
+    console.log(`Waiting for CDP endpoint at http://127.0.0.1:${port}/json/version`);
+    await waitUntil(
+      async () => {
+        try {
+          const response = await fetch(`http://127.0.0.1:${port}/json/version`);
+          return response.ok;
+        } catch (err) {
+          // Connection errors are expected while app is starting
+          return false;
+        }
+      },
+      {
+        timeout,
+        diff: 1000,
+        message: `CDP endpoint did not become ready within ${timeout}ms`,
+      },
+    );
+    console.log(`CDP endpoint is ready at http://127.0.0.1:${port}`);
   }
 
   override async start(): Promise<Page> {
@@ -41,12 +75,16 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     }
 
     try {
-      // start the app on PODMAN_DESKTOP_BINARY + DEBUGGING_PORT
-      // const electronProcess = spawn
+      // Extract configuration from options
+      const { executablePath: pdBinary, debugPort, env } = this._options as CDPOptions;
+
+      // Start the Electron app with CDP enabled
+      await this.startAppWithDebug(pdBinary, debugPort, env);
+
       this._running = true;
 
-      // connect to the running instance
-      this._browser = await chromium.connectOverCDP(this._runnerOptions._cdp.endpointURL, this._runnerOptions._cdp);
+      // Connect to the running instance via CDP
+      this._browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
       const contexts = this._browser.contexts();
       if (contexts.length !== 1) {
         throw new Error(`expected browser to have only one contexts, received ${contexts.length}`);
@@ -58,6 +96,17 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       this._page = pages[0];
     } catch (err: unknown) {
       console.log(`Caught exception in startup: ${err}`);
+
+      // Kill the spawned process before re-throwing
+      if (this._electronProcess?.pid) {
+        try {
+          console.log(`Killing Electron process ${this._electronProcess.pid} due to startup failure`);
+          process.kill(this._electronProcess.pid);
+        } catch (killErr) {
+          console.log(`Failed to kill process: ${killErr}`);
+        }
+      }
+
       throw Error(`Podman Desktop could not be started correctly with error: ${err}`);
     }
 
@@ -70,18 +119,61 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     return this._page;
   }
 
-  override async close(): Promise<void> {
+  override async close(timeout = 30_000): Promise<void> {
+    const pid = this._electronProcess?.pid;
+    console.log(`Closing Podman Desktop with timeout of ${timeout}ms, PID: ${pid}`);
+
     // Stop playwright tracing
-    await this.stopTracing();
+    try {
+      await this.stopTracing();
+    } catch (err) {
+      console.log(`Error stopping tracing: ${err}`);
+    }
 
     if (!this.isRunning()) {
       throw Error('Podman Desktop is not running');
     }
 
-    await this._browser?.close();
+    // Close the CDP browser connection
+    if (this._browser) {
+      try {
+        await this.raceWithTimeout(
+          this._browser.close(),
+          timeout / 2,
+          `Browser close timed out after ${timeout / 2}ms`,
+        );
+      } catch (err) {
+        console.log(`Browser close failed: ${err}`);
+      }
+    }
+
+    // Kill the Electron process
+    if (this._electronProcess?.pid) {
+      try {
+        console.log(`Killing Electron process with PID: ${pid}`);
+        process.kill(pid!, 'SIGTERM');
+
+        // Wait briefly for graceful shutdown
+        await this.raceWithTimeout(
+          new Promise<void>(resolve => {
+            this._electronProcess?.on('exit', () => resolve());
+          }),
+          timeout / 2,
+          `Process ${pid} did not exit gracefully`,
+        );
+      } catch (err) {
+        console.log(`Graceful shutdown failed, force killing: ${err}`);
+        try {
+          process.kill(pid!, 'SIGKILL');
+        } catch (killErr) {
+          console.log(`Force kill failed: ${killErr}`);
+        }
+      }
+    }
 
     this._running = false;
     this._browser = undefined;
+    this._electronProcess = undefined;
     RunnerFactory.dispose();
 
     if (this._videoAndTraceName) {
@@ -127,5 +219,51 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       tracesDir,
       debugPort,
     };
+  }
+
+  private async startAppWithDebug(executablePath: string, debugPort: string, env: object): Promise<void> {
+    console.log(`Starting Podman Desktop with CDP enabled: ${executablePath} on port ${debugPort}`);
+
+    try {
+      // Spawn the Electron process with remote debugging enabled
+      this._electronProcess = spawn(executablePath, [`--remote-debugging-port=${debugPort}`], {
+        env: env as NodeJS.ProcessEnv,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      const pid = this._electronProcess.pid;
+      console.log(`Electron process started with PID: ${pid}`);
+
+      // Monitor process output
+      this._electronProcess.stdout?.on('data', data => {
+        console.log(`STDOUT: ${data}`);
+      });
+
+      this._electronProcess.stderr?.on('data', data => {
+        console.log(`STDERR: ${data}`);
+      });
+
+      this._electronProcess.on('error', error => {
+        console.error(`Electron process error: ${error}`);
+      });
+
+      this._electronProcess.on('exit', (code, signal) => {
+        console.log(`Electron process exited with code ${code} and signal ${signal}`);
+      });
+
+      // Wait for the CDP endpoint to become available
+      await this.waitForCDPEndpoint(debugPort);
+    } catch (err) {
+      // Clean up the process if startup fails
+      if (this._electronProcess?.pid) {
+        console.log(`Startup failed, killing process ${this._electronProcess.pid}`);
+        try {
+          process.kill(this._electronProcess.pid);
+        } catch (killErr) {
+          console.log(`Failed to kill process: ${killErr}`);
+        }
+      }
+      throw new Error(`Failed to start Electron app with CDP: ${err}`);
+    }
   }
 }
