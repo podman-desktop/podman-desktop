@@ -448,40 +448,42 @@ export class ColorRegistry {
   }
 
   protected initTitlebar(): void {
-    this.registerColor('titlebar-bg', {
+    const titlebar = 'titlebar-';
+
+    this.registerColor(`${titlebar}bg`, {
       dark: isWindows() ? '#202020' : charcoal[900],
       light: gray[50],
       hcDark: black,
       hcLight: white,
     });
 
-    this.registerColor('titlebar-text', {
+    this.registerColor(`${titlebar}text`, {
       dark: white,
       light: accent1[500],
       hcDark: white,
       hcLight: black,
     });
 
-    this.registerColor('titlebar-icon', {
+    this.registerColor(`${titlebar}icon`, {
       dark: white,
       light: accent1[500],
       hcDark: white,
       hcLight: black,
     });
 
-    this.registerColor('titlebar-hover-bg', {
+    this.registerColor(`${titlebar}hover-bg`, {
       dark: charcoal[300],
       light: gray[300],
       hcDark: accent1[800],
       hcLight: accent1[200],
     });
 
-    this.registerColor('titlebar-windows-hover-exit-bg', {
+    this.registerColor(`${titlebar}windows-hover-exit-bg`, {
       dark: '#c42b1c',
       light: '#c42b1c',
     });
 
-    this.registerColor('titlebar-windows-hover-bg', {
+    this.registerColor(`${titlebar}windows-hover-bg`, {
       dark: '#2d2d2d',
       light: '#dfdfdf',
     });
@@ -552,21 +554,23 @@ export class ColorRegistry {
   }
 
   protected initCardContent(): void {
-    this.registerColor(`card-bg`, {
+    const cCt = 'card-';
+
+    this.registerColor(`${cCt}bg`, {
       dark: charcoal[800],
       light: gray[300],
       hcDark: gray[900],
       hcLight: gray[100],
     });
 
-    this.registerColor(`card-header-text`, {
+    this.registerColor(`${cCt}header-text`, {
       dark: white,
       light: charcoal[900],
       hcDark: white,
       hcLight: black,
     });
 
-    this.registerColor(`card-text`, {
+    this.registerColor(`${cCt}text`, {
       dark: gray[300],
       light: charcoal[700],
       hcDark: white,
