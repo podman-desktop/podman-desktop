@@ -24,8 +24,9 @@ import type {
   PullEvent,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
+
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 
 import { CommandRegistry } from './command-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
@@ -121,7 +122,11 @@ export class CommandsInit implements IDisposable {
     this.#disposables.push(
       commandRegistry.registerCommand('openExternal', async (arg: Uri) => {
         if (arg) {
-          await shell.openExternal(arg.toString());
+          try {
+            await securityRestrictionCurrentHandler.handler?.(arg.toString());
+          } catch (error: unknown) {
+            console.error(`Unable to open external link ${arg.toString()}`, error);
+          }
         }
       }),
     );
