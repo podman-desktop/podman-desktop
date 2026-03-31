@@ -29,7 +29,7 @@ import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 
-import { PeerProperties } from './PeerProperties';
+import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './ConnectionResourceMetrics';
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
@@ -488,7 +488,6 @@ $effect(() => {
             message={provider.emptyConnectionMarkdownDescription}
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container, index (index)}
-            {@const peerProperties = new PeerProperties()}
             {@const rootfulInfo = getRootfulDisplayInfo(provider, container)}
             <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={container.name}>
               <div class="float-right">
@@ -531,41 +530,38 @@ $effect(() => {
                 class={container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}
                 path={container.endpoint.socketPath} />
               {#if providerContainerConfiguration.has(provider.internalId)}
-                {@const providerConfiguration = providerContainerConfiguration.get(provider.internalId) ?? []}
+                {@const connectionConfigs = (providerContainerConfiguration.get(provider.internalId) ?? []).filter(conf => conf.connection === container.name)}
+                {@const resourceMetrics = extractConnectionResourceMetrics(connectionConfigs)}
                 <div
                   class="flex mt-3 {container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}"
                   role="group"
                   aria-label="Provider Configuration">
-                  {#each providerConfiguration.filter(conf => conf.connection === container.name) as connectionSetting (connectionSetting.id)}
-                    {#if connectionSetting.format === 'cpu' || connectionSetting.format === 'cpuUsage'}
-                      {#if !peerProperties.isPeerProperty(connectionSetting.id)}
-                        {@const peerValue = peerProperties.getPeerProperty(
-                          connectionSetting.id,
-                          providerConfiguration.filter(conf => conf.connection === container.name),
-                        )}
-                        <div class="mr-4">
-                          <Donut
-                            title={connectionSetting.description}
-                            value={connectionSetting.value}
-                            percent={peerValue} />
-                        </div>
-                      {/if}
-                    {:else if connectionSetting.format === 'memory' || connectionSetting.format === 'memoryUsage' || connectionSetting.format === 'diskSize' || connectionSetting.format === 'diskSizeUsage'}
-                      {#if !peerProperties.isPeerProperty(connectionSetting.id)}
-                        {@const peerValue = peerProperties.getPeerProperty(
-                          connectionSetting.id,
-                          providerConfiguration.filter(conf => conf.connection === container.name),
-                        )}
-                        <div class="mr-4">
-                          <Donut
-                            title={connectionSetting.description}
-                            value={filesize(connectionSetting.value)}
-                            percent={peerValue} />
-                        </div>
-                      {/if}
-                    {:else if !connectionSetting.hidden}
-                      {connectionSetting.description}: {connectionSetting.value}
-                    {/if}
+                  {#if resourceMetrics?.cpu}
+                    <div class="mr-4">
+                      <Donut
+                        title={resourceMetrics.cpu.description}
+                        value={resourceMetrics.cpu.total}
+                        percent={resourceMetrics.cpu.usagePercent} />
+                    </div>
+                  {/if}
+                  {#if resourceMetrics?.memory}
+                    <div class="mr-4">
+                      <Donut
+                        title={resourceMetrics.memory.description}
+                        value={filesize(resourceMetrics.memory.total)}
+                        percent={resourceMetrics.memory.usagePercent} />
+                    </div>
+                  {/if}
+                  {#if resourceMetrics?.disk}
+                    <div class="mr-4">
+                      <Donut
+                        title={resourceMetrics.disk.description}
+                        value={filesize(resourceMetrics.disk.total)}
+                        percent={resourceMetrics.disk.usagePercent} />
+                    </div>
+                  {/if}
+                  {#each connectionConfigs.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden) as connectionSetting (connectionSetting.id)}
+                    {connectionSetting.description}: {connectionSetting.value}
                   {/each}
                 </div>
               {/if}

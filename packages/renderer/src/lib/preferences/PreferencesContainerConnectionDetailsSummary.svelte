@@ -6,7 +6,7 @@ import { filesize } from 'filesize';
 
 import Donut from '/@/lib/donut/Donut.svelte';
 
-import { PeerProperties } from './PeerProperties';
+import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './ConnectionResourceMetrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
 interface Props {
@@ -18,6 +18,7 @@ interface Props {
 const { properties = [], providerInternalId, containerConnectionInfo }: Props = $props();
 
 let providerContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $state([]);
+let resourceMetrics = $derived(extractConnectionResourceMetrics(providerContainerConfiguration));
 
 $effect(() => {
   Promise.all(
@@ -42,31 +43,33 @@ $effect(() => {
 
 <div class="h-full text-[var(--pd-details-body-text)]">
   {#if containerConnectionInfo}
-    {@const peerProperties = new PeerProperties()}
     <div class="flex pl-8 py-4 flex-col w-full text-sm">
       <div class="flex flex-row mt-5">
         <span class="font-semibold min-w-[150px]">Name</span>
         <span aria-label={containerConnectionInfo.name}>{containerConnectionInfo.name}</span>
       </div>
-      {#each providerContainerConfiguration as connectionSetting (connectionSetting.id)}
+      {#if resourceMetrics?.cpu}
+        <div class="flex flex-row mt-5">
+          <span class="font-semibold min-w-[150px]">{resourceMetrics.cpu.description}</span>
+          <Donut title={resourceMetrics.cpu.description} value={resourceMetrics.cpu.total} percent={resourceMetrics.cpu.usagePercent} />
+        </div>
+      {/if}
+      {#if resourceMetrics?.memory}
+        <div class="flex flex-row mt-5">
+          <span class="font-semibold min-w-[150px]">{resourceMetrics.memory.description}</span>
+          <Donut title={resourceMetrics.memory.description} value={filesize(resourceMetrics.memory.total)} percent={resourceMetrics.memory.usagePercent} />
+        </div>
+      {/if}
+      {#if resourceMetrics?.disk}
+        <div class="flex flex-row mt-5">
+          <span class="font-semibold min-w-[150px]">{resourceMetrics.disk.description}</span>
+          <Donut title={resourceMetrics.disk.description} value={filesize(resourceMetrics.disk.total)} percent={resourceMetrics.disk.usagePercent} />
+        </div>
+      {/if}
+      {#each providerContainerConfiguration.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden) as connectionSetting (connectionSetting.id)}
         <div class="flex flex-row mt-5">
           <span class="font-semibold min-w-[150px]">{connectionSetting.description}</span>
-          {#if connectionSetting.format === 'cpu' || connectionSetting.format === 'cpuUsage'}
-            {#if !peerProperties.isPeerProperty(connectionSetting.id)}
-              {@const peerValue = peerProperties.getPeerProperty(connectionSetting.id, providerContainerConfiguration)}
-              <Donut title={connectionSetting.description} value={connectionSetting.value} percent={peerValue} />
-            {/if}
-          {:else if connectionSetting.format === 'memory' || connectionSetting.format === 'memoryUsage' || connectionSetting.format === 'diskSize' || connectionSetting.format === 'diskSizeUsage'}
-            {#if !peerProperties.isPeerProperty(connectionSetting.id)}
-              {@const peerValue = peerProperties.getPeerProperty(connectionSetting.id, providerContainerConfiguration)}
-              <Donut
-                title={connectionSetting.description}
-                value={filesize(connectionSetting.value)}
-                percent={peerValue} />
-            {/if}
-          {:else}
-            <span>{connectionSetting.value}</span>
-          {/if}
+          <span>{connectionSetting.value}</span>
         </div>
       {/each}
       <div class="flex flex-row mt-5">
