@@ -795,6 +795,8 @@ describe('initTooltip', () => {
     expect(spyOnRegisterColor).toHaveBeenCalledWith('tooltip-text', {
       light: tailwindColorPalette.stone[900],
       dark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
+      hcDark: tailwindColorPalette.white,
     });
   });
 
@@ -805,6 +807,8 @@ describe('initTooltip', () => {
     expect(spyOnRegisterColor).toHaveBeenCalledWith('tooltip-border', {
       light: tailwindColorPalette.gray[500],
       dark: tailwindColorPalette.charcoal[500],
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 
