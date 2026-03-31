@@ -9,19 +9,19 @@ import Donut from '/@/lib/donut/Donut.svelte';
 import { PeerProperties } from './PeerProperties';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
-export let properties: IConfigurationPropertyRecordedSchema[] = [];
-export let providerInternalId: string | undefined = undefined;
-export let containerConnectionInfo: ProviderContainerConnectionInfo | undefined = undefined;
-
-let tmpProviderContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = [];
-
-function updateTmpProviderContainerConfiguration(value: IProviderConnectionConfigurationPropertyRecorded[]): void {
-  tmpProviderContainerConfiguration = value;
+interface Props {
+  properties?: IConfigurationPropertyRecordedSchema[];
+  providerInternalId?: string;
+  containerConnectionInfo?: ProviderContainerConnectionInfo;
 }
 
-$: Promise.all(
-  properties.map(async configurationKey => {
-    return {
+const { properties = [], providerInternalId, containerConnectionInfo }: Props = $props();
+
+let providerContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $state([]);
+
+$effect(() => {
+  Promise.all(
+    properties.map(async configurationKey => ({
       ...configurationKey,
       value: configurationKey.id
         ? await window.getConfigurationValue(
@@ -31,15 +31,13 @@ $: Promise.all(
         : undefined,
       connection: containerConnectionInfo?.name ?? '',
       providerId: providerInternalId ?? '',
-    };
-  }),
-)
-  .then(value => updateTmpProviderContainerConfiguration(value.flat()))
-  .catch((err: unknown) => console.error('Error collecting providers', err));
-
-$: providerContainerConfiguration = tmpProviderContainerConfiguration.filter(
-  configurationKey => configurationKey.value !== undefined,
-);
+    })),
+  )
+    .then(result => {
+      providerContainerConfiguration = result.filter(configurationKey => configurationKey.value !== undefined);
+    })
+    .catch((err: unknown) => console.error('Error collecting providers', err));
+});
 </script>
 
 <div class="h-full text-[var(--pd-details-body-text)]">
