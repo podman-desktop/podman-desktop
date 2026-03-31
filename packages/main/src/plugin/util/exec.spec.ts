@@ -18,6 +18,7 @@
 
 import type { ChildProcess, ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
+import { open } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';
 import { delimiter, join } from 'node:path';
 import type { Readable } from 'node:stream';
@@ -39,6 +40,8 @@ vi.mock(import('@expo/sudo-prompt'), async () => {
 });
 
 vi.mock(import('/@/util.js'));
+
+vi.mock(import('node:fs/promises'));
 
 vi.mock('child_process', () => {
   return {
@@ -539,9 +542,9 @@ describe('exec', () => {
     const args = ['--background'];
     const { spawnMock, unrefMock } = mockDetachedProcess('close', 0);
 
-    const result = await exec.exec(command, args, { detached: true, cwd });
+    const result = await exec.exec(command, args, { detached: {}, cwd });
 
-    const expectedOpts: Record<string, unknown> = { detached: true, stdio: 'ignore' };
+    const expectedOpts: Record<string, unknown> = { detached: true, stdio: ['ignore'] };
     if (cwd) expectedOpts['cwd'] = cwd;
     expect(spawnMock).toHaveBeenCalledWith(command, args, expect.objectContaining(expectedOpts));
     expect(unrefMock).toHaveBeenCalled();
@@ -564,10 +567,31 @@ describe('exec', () => {
   ])('should reject when detached process emits $description', async ({ event, eventArg, expectedError }) => {
     mockDetachedProcess(event, eventArg);
 
-    const execResult = exec.exec('failing-command', [], { detached: true });
+    const execResult = exec.exec('failing-command', [], { detached: {} });
 
     await expect(execResult).rejects.toThrowError(expectedError);
     await expect(execResult).rejects.toThrowError(Error);
+  });
+
+  test('should spawn a detached process with logFile and redirect stdio to the file', async () => {
+    const logFilePath = '/tmp/detached.log';
+    const fakeFd = 42;
+    const closeMock = vi.fn();
+    vi.mocked(open).mockResolvedValue({ fd: fakeFd, close: closeMock } as unknown as Awaited<ReturnType<typeof open>>);
+
+    const { spawnMock, unrefMock } = mockDetachedProcess('close', 0);
+
+    const result = await exec.exec('my-daemon', ['--run'], { detached: { logFile: logFilePath } });
+
+    expect(open).toHaveBeenCalledWith(logFilePath, 'a');
+    expect(spawnMock).toHaveBeenCalledWith(
+      'my-daemon',
+      ['--run'],
+      expect.objectContaining({ detached: true, stdio: ['ignore', fakeFd, fakeFd] }),
+    );
+    expect(unrefMock).toHaveBeenCalled();
+    expect(closeMock).toHaveBeenCalled();
+    expect(result).toEqual({ command: 'my-daemon', stdout: '', stderr: '' });
   });
 
   test('should run the command and set specific encoding', async () => {

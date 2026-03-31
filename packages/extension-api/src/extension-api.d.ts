@@ -4547,11 +4547,15 @@ declare module '@podman-desktop/api' {
     encoding?: BufferEncoding;
 
     /**
-     * If true, the child process will be detached from the parent and its stdio
-     * will be disconnected. The process will continue running independently even
-     * if Podman Desktop exits. Stdout/stderr will not be captured.
+     * If set, the child process will be detached from the parent and will
+     * continue running independently even if Podman Desktop exits.
+     *
+     * @property logFile - Path to a file where stdout and stderr will be
+     * appended. When omitted, stdio is discarded.
      */
-    detached?: boolean;
+    detached?: {
+      logFile?: string;
+    };
   }
 
   /**
