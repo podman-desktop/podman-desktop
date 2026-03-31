@@ -148,15 +148,15 @@ describe('CommandsInit', () => {
       expect(handlerMock).not.toHaveBeenCalled();
     });
 
-    test('should log error when handler rejects', async () => {
+    test('should log and rethrow when handler rejects', async () => {
       const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const error = new Error('handler failed');
-      securityRestrictionCurrentHandler.handler = vi.fn().mockRejectedValue(error);
+      const cause = new Error('handler failed');
+      securityRestrictionCurrentHandler.handler = vi.fn().mockRejectedValue(cause);
 
       const uri = { toString: (): string => 'https://example.com' };
-      await openExternalCallback(uri);
+      await expect(openExternalCallback(uri)).rejects.toThrow('Unable to open external link https://example.com');
 
-      expect(consoleErrorMock).toHaveBeenCalledWith('Unable to open external link https://example.com', error);
+      expect(consoleErrorMock).toHaveBeenCalledWith('Unable to open external link https://example.com', cause);
     });
   });
 });
