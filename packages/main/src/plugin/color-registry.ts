@@ -428,7 +428,7 @@ export class ColorRegistry {
     this.registerColor(`${glNav}icon-selected`, {
       dark: white,
       light: accent1[500],
-      hcDark: black,
+      hcDark: white,
       hcLight: white,
     });
 
