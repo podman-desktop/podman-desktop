@@ -16,8 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ChildProcess } from 'node:child_process';
+import type { ChildProcess, StdioOptions } from 'node:child_process';
 import { spawn } from 'node:child_process';
+import type { FileHandle } from 'node:fs/promises';
+import { open } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
 
@@ -153,8 +155,24 @@ export class Exec {
     const cwd = options?.cwd;
 
     if (options?.detached) {
-      const childProcess = spawn(command, args ?? [], { env, cwd, detached: true, stdio: 'ignore' });
+      // If passed as an array, the first element is used for `stdin`, the second for `stdout`, and the third for `stderr`.
+      const stdio: StdioOptions = ['ignore'];
+      let fileHandle: FileHandle | undefined;
+
+      if (options.detached.logFile) {
+        fileHandle = await open(options.detached.logFile, 'a');
+        // Stdout and stderr are redirected to the log file
+        stdio.push(fileHandle.fd);
+        stdio.push(fileHandle.fd);
+      }
+
+      const childProcess = spawn(command, args ?? [], { env, cwd, detached: true, stdio });
       childProcess.unref();
+
+      // The child holds its own duplicate of the fd; closing the parent's
+      // copy just releases our reference — the child keeps writing.
+      await fileHandle?.close();
+
       return this.awaitChildProcess(childProcess, command, { stdout: '', stderr: '' });
     }
 
