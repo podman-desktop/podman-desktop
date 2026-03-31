@@ -47,6 +47,22 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     this._options = this.defaultOptions();
   }
 
+  /**
+   * Get all pages (windows) from all browser contexts.
+   * This is equivalent to ElectronApplication.windows() in ElectronRunner.
+   */
+  public getWindows(): Page[] {
+    if (!this._browser) {
+      throw Error('Browser not connected. Call start() first.');
+    }
+
+    const allPages: Page[] = [];
+    for (const context of this._browser.contexts()) {
+      allPages.push(...context.pages());
+    }
+    return allPages;
+  }
+
   private async waitForCDPEndpoint(port: string, timeout = 30_000): Promise<void> {
     console.log(`Waiting for CDP endpoint at http://127.0.0.1:${port}/json/version`);
     await waitUntil(

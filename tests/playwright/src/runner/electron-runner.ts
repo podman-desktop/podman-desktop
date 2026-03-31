@@ -107,6 +107,14 @@ export class ElectronRunner extends Runner {
     throw Error('Application was not started yet');
   }
 
+  /**
+   * Get all pages (windows) from the Electron application.
+   * Returns all windows including webviews.
+   */
+  public getWindows(): Page[] {
+    return this.getElectronApp().windows();
+  }
+
   public async getBrowserWindow(): Promise<JSHandle<BrowserWindow>> {
     return await this.getElectronApp().browserWindow(this.getPage());
   }

@@ -54,6 +54,12 @@ export abstract class Runner {
   abstract close(timeout?: number): Promise<void>;
   protected abstract defaultOptions(): object;
 
+  /**
+   * Get all pages (windows) from the application.
+   * Returns all windows including webviews.
+   */
+  public abstract getWindows(): Page[];
+
   public getPage(): Page {
     if (this._page) {
       return this._page;
