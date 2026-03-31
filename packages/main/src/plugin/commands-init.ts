@@ -122,10 +122,11 @@ export class CommandsInit implements IDisposable {
     this.#disposables.push(
       commandRegistry.registerCommand('openExternal', async (arg: Uri) => {
         if (arg) {
+          const url = arg.toString();
           try {
-            await securityRestrictionCurrentHandler.handler?.(arg.toString());
+            await securityRestrictionCurrentHandler.handler?.(url);
           } catch (error: unknown) {
-            const message = `Unable to open external link ${arg.toString()}`;
+            const message = `Unable to open external link ${url}`;
             console.error(message, error);
             throw new Error(message, { cause: error });
           }
