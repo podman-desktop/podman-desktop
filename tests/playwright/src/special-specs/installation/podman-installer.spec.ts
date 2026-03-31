@@ -20,6 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { NavigationBar } from '/@/model/workbench/navigation';
+import type { ElectronRunner } from '/@/runner/electron-runner';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { isCI, isLinux, isMac, isWindows } from '/@/utility/platform';
 
@@ -75,7 +76,7 @@ test.describe
       console.log(
         `Trying to find podman installer artifact: ${podmanInstallerFilePrefix}-${archPart}.${fileFormatRegexp}`,
       );
-      const electronBinary = await runner.getElectronApp().evaluate(async ({ app }) => {
+      const electronBinary = await (runner as ElectronRunner).getElectronApp().evaluate(async ({ app }) => {
         return app.getPath('exe');
       });
       const electronResourcesPath = isWindows
