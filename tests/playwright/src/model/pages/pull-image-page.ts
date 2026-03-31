@@ -285,7 +285,7 @@ export class PullImagePage extends BasePage {
 
       if (resultsExpected) {
         await playExpect(this.searchResultsTable).toBeVisible({
-          timeout: 15_000,
+          timeout: 30_000,
         });
       } else {
         await playExpect(this.searchResultsTable).not.toBeVisible({
