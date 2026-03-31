@@ -48,7 +48,7 @@ class RunErrorImpl extends Error implements RunError {
 export class Exec {
   constructor(private proxy: Proxy) {}
 
-  exec(command: string, args?: string[], options?: RunOptions): Promise<RunResult> {
+  async exec(command: string, args?: string[], options?: RunOptions): Promise<RunResult> {
     let env = { ...process.env };
 
     if (options?.env) {
