@@ -1609,6 +1609,8 @@ export class ColorRegistry {
     this.registerColor(`${dropdown}item-hover-bg`, {
       dark: transparent,
       light: transparent,
+      hcDark: accent1[800],
+      hcLight: accent1[200],
     });
 
     this.registerColor(`${dropdown}item-hover-text`, {
