@@ -261,6 +261,7 @@ test('Show warning if multiple containers use the same port', async () => {
   render(PodCreateFromContainers, {});
   const warningLabel = await screen.findByRole('alert');
   expect(warningLabel).toBeInTheDocument();
+  expect(warningLabel).toHaveTextContent('Containers cont_1 and cont_1 use same port 80');
 });
 
 test('Do not show warning if multiple containers use different ports', async () => {
