@@ -35,6 +35,8 @@ const preview: Preview = {
       themes: {
         light: 'light',
         dark: 'dark',
+        'hc-light': 'hc-light',
+        'hc-dark': 'hc-dark',
       },
       defaultTheme: 'light',
       parentSelector: 'body',
