@@ -71,7 +71,12 @@ import { getPodmanCli } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
-import { checkRosettaMacArm } from './utils/rosetta';
+import {
+  checkRosettaMacArm,
+  needsRosettaEnableFile,
+  provisionAndRestartForRosetta,
+  ROSETTA_ENABLE_FILE,
+} from './utils/rosetta';
 import {
   appConfigDir,
   appHomeDir,
@@ -883,6 +888,23 @@ export async function startMachine(
     }
 
     await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
+
+    // Provision /etc/containers/enable-rosetta if needed (macOS Tahoe + AppleHV + Podman 5.6+).
+    // If the file was just created, restart the machine so the binfmt_misc handler registers.
+    // SSH/file-creation errors are caught inside provisionAndRestartForRosetta;
+    // stop/start errors propagate so the provider status stays accurate.
+    // https://blog.podman.io/2025/08/podman-5-6-released-rosetta-status-update/
+    const podmanInstallation = await podmanBinary.getBinaryInfo();
+    if (podmanInstallation?.version) {
+      await provisionAndRestartForRosetta(
+        machineInfo.name,
+        machineInfo.vmType,
+        podmanConfiguration,
+        podmanInstallation.version,
+        { logger: new LoggerDelegator(context, logger) },
+      );
+    }
+
     provider.updateStatus('started');
   } catch (err) {
     telemetryRecords.error = err;
@@ -2134,7 +2156,9 @@ export async function createMachine(
   }
 
   // name at the end
+  let machineName = 'podman-machine-default';
   if (params['podman.factory.machine.name'] && typeof params['podman.factory.machine.name'] === 'string') {
+    machineName = params['podman.factory.machine.name'];
     parameters.push(params['podman.factory.machine.name']);
     telemetryRecords.customName = params['podman.factory.machine.name'];
     telemetryRecords.defaultName = false;
@@ -2178,6 +2202,31 @@ export async function createMachine(
     telemetryRecords.duration = endTime - startTime;
     sendTelemetryRecords('podman.machine.init', telemetryRecords, false);
   }
+  // On macOS Tahoe with AppleHV + Podman 5.6+, provision /etc/containers/enable-rosetta
+  // inside the VM as part of machine creation so Rosetta is active from first use.
+  // https://blog.podman.io/2025/08/podman-5-6-released-rosetta-status-update/
+  if (extensionApi.env.isMac && version) {
+    try {
+      if (params['podman.factory.machine.now']) {
+        await provisionAndRestartForRosetta(machineName, provider, podmanConfiguration, version, { logger });
+      } else {
+        // Machine is stopped. Check conditions without SSH first; only start/stop
+        // the machine temporarily when actually needed.
+        const setupNeeded = await needsRosettaEnableFile(podmanConfiguration, version, provider);
+        if (setupNeeded) {
+          await execPodman(['machine', 'start', machineName], provider, { logger });
+          try {
+            await execPodman(['machine', 'ssh', machineName, `sudo touch ${ROSETTA_ENABLE_FILE}`], provider);
+          } finally {
+            await execPodman(['machine', 'stop', machineName], provider);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to set up Rosetta enable file during machine creation: ${err}`);
+    }
+  }
+
   extensionApi.context.setValue('podmanMachineExists', true, 'onboarding');
   extensionNotifications.disposeNotification();
 }
