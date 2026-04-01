@@ -886,6 +886,29 @@ test('if a machine is successfully started it changes its state to started', asy
   expect(spyUpdateStatus).toBeCalledWith('started');
 });
 
+test('if autoStart is true, machine start uses detached mode', async () => {
+  const spyUpdateStatus = vi.spyOn(provider, 'updateStatus');
+  spyUpdateStatus.mockImplementation(() => {
+    return;
+  });
+
+  const spyExecPromise = vi
+    .spyOn(extensionApi.process, 'exec')
+    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+
+  await extension.startMachine(provider, podmanConfiguration, machineInfo, undefined, undefined, undefined, true);
+
+  expect(spyExecPromise).toHaveBeenCalledWith(podmanCli.getPodmanCli(), ['machine', 'start', 'name'], {
+    env: {
+      CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
+    },
+    logger: new LoggerDelegator(),
+    detached: true,
+  });
+
+  expect(spyUpdateStatus).toHaveBeenCalledWith('started');
+});
+
 test('if a machine is successfully reporting telemetry', async () => {
   const spyExecPromise = vi
     .spyOn(extensionApi.process, 'exec')

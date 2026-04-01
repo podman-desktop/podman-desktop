@@ -874,9 +874,15 @@ export async function startMachine(
 
   try {
     // start the machine
-    await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, {
+    const runOptions: extensionApi.RunOptions = {
       logger: new LoggerDelegator(context, logger),
-    });
+    };
+
+    if (autoStart) {
+      runOptions.detached = true;
+    }
+
+    await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
     provider.updateStatus('started');
   } catch (err) {
     telemetryRecords.error = err;
