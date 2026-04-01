@@ -196,11 +196,6 @@ export class ElectronRunner extends Runner {
   protected override defaultOptions(): object {
     const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
     const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
-    if (pdArgs && pdBinary) {
-      throw new Error(
-        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY are both set, cannot run tests in development and production mode at the same time...',
-      );
-    }
     const directory = join(this._testOutput, 'videos');
     const tracesDir = join(this._testOutput, 'traces', 'raw');
     console.log(`video will be written to: ${directory}`);

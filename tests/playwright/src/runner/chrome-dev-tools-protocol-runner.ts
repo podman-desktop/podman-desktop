@@ -32,8 +32,6 @@ interface CDPOptions {
   executablePath: string;
   debugPort: string;
   env: object;
-  recordVideo?: object;
-  timeout?: number;
   tracesDir?: string;
 }
 
@@ -97,20 +95,15 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       // Start the Electron app with CDP enabled
       await this.startAppWithDebug(pdBinary, debugPort, env);
 
-      this._running = true;
-
       // Connect to the running instance via CDP
       this._browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
-      const contexts = this._browser.contexts();
-      if (contexts.length !== 1) {
-        throw new Error(`expected browser to have only one contexts, received ${contexts.length}`);
-      }
-      const context = contexts[0];
-      const pages = context.pages();
-      if (pages.length !== 1) {
-        throw new Error(`expected context to have a one page, received ${pages.length}`);
-      }
-      this._page = pages[0];
+      await waitUntil(
+        async () => this.getWindows().length > 0,
+        { timeout: 30_000, diff: 500, message: 'No renderer page appeared after the CDP connection' },
+      );
+      const pages = this.getWindows();
+      this._page = pages.find(page => page.url() !== 'about:blank') ?? pages[0];
+      this._running = true;
     } catch (err: unknown) {
       console.log(`Caught exception in startup: ${err}`);
 
@@ -140,11 +133,10 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     const pid = this._electronProcess?.pid;
     console.log(`Closing Podman Desktop with timeout of ${timeout}ms, PID: ${pid}`);
 
-    // Stop playwright tracing
     try {
-      await this.stopTracing();
-    } catch (err) {
-      console.log(`Error stopping tracing: ${err}`);
+      await this.raceWithTimeout(this.stopTracing(), timeout / 2, 'stopTracing timed out');
+    } catch (err: unknown) {
+      console.log(`stopTracing failed or timed out, continuing with close: ${err}`);
     }
 
     if (!this.isRunning()) {
@@ -203,36 +195,17 @@ export class ChromeDevToolsProtocolRunner extends Runner {
   }
 
   protected override defaultOptions(): object {
-    const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
     const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
     const debugPort = process.env.DEBUGGING_PORT;
-    if (pdArgs && (debugPort || pdBinary)) {
-      throw new Error(
-        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY or DEBUGGING_PORT are set, cannot run tests in development and production mode at the same time...',
-      );
-    }
-    if (!pdBinary || !debugPort) {
-      throw new Error('Both DEBUGGING_PORT and PODMAN_DESKTOP_BINARY must be set in order to run in CDP mode');
-    }
     const directory = join(this._testOutput, 'videos');
     const tracesDir = join(this._testOutput, 'traces', 'raw');
     console.log(`video will be written to: ${directory}`);
     const env = this.setupPodmanDesktopCustomFolder();
-    const recordVideo = {
-      dir: directory,
-      size: {
-        width: 1050,
-        height: 700,
-      },
-    };
     // executablePath defaults to this package's installation location: node_modules/.bin/electron
     const executablePath = pdBinary;
-    const timeout = 45000;
     return {
       executablePath,
       env,
-      recordVideo,
-      timeout,
       tracesDir,
       debugPort,
     };
@@ -246,6 +219,19 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       this._electronProcess = spawn(executablePath, [`--remote-debugging-port=${debugPort}`], {
         env: env as NodeJS.ProcessEnv,
         stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        const onSpawn = () => {
+          this._electronProcess?.off('error', onError);
+          resolve();
+        };
+        const onError = (error: Error) => {
+          this._electronProcess?.off('spawn', onSpawn);
+          reject(error);
+        };
+        this._electronProcess?.once('spawn', onSpawn);
+        this._electronProcess?.once('error', onError);
       });
 
       const pid = this._electronProcess.pid;
