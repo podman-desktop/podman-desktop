@@ -30,7 +30,7 @@ export class RunnerFactory {
   } = {}): Promise<Runner> {
     if (!this._instance) {
       if (process.env.DEBUGGING_PORT) {
-        console.log(`DEBUGGING_PORT env. var. defined: ${process.env.DEBUGGING_PORT}`);
+        console.log(`DEBUGGING_PORT env. var. is defined: ${process.env.DEBUGGING_PORT}`);
         this._instance = new ChromeDevToolsProtocolRunner({ runnerOptions });
       } else {
         this._instance = new ElectronRunner({ runnerOptions });

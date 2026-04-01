@@ -105,7 +105,8 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       if (contexts.length !== 1) {
         throw new Error(`expected browser to have only one contexts, received ${contexts.length}`);
       }
-      const pages = contexts[0].pages();
+      const context = contexts[0];
+      const pages = context.pages();
       if (pages.length !== 1) {
         throw new Error(`expected context to have a one page, received ${pages.length}`);
       }
@@ -205,13 +206,13 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
     const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
     const debugPort = process.env.DEBUGGING_PORT;
-    if (pdArgs) {
+    if (pdArgs && (debugPort || pdBinary)) {
       throw new Error(
-        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY are both set, cannot run tests in development and production mode at the same time...',
+        'PODMAN_DESKTOP_ARGS and PODMAN_DESKTOP_BINARY or DEBUGGING_PORT are set, cannot run tests in development and production mode at the same time...',
       );
     }
     if (!pdBinary || !debugPort) {
-      throw new Error('Cannot run app over CDP without DEBUGGING_PORT or PODMAN_DESKTOP_BINARY...');
+      throw new Error('Both DEBUGGING_PORT and PODMAN_DESKTOP_BINARY must be set in order to run in CDP mode');
     }
     const directory = join(this._testOutput, 'videos');
     const tracesDir = join(this._testOutput, 'traces', 'raw');
