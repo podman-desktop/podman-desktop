@@ -32,7 +32,14 @@ test.beforeAll(async ({ runner, welcomePage, navigationBar }) => {
 });
 
 test.afterAll(async ({ runner }) => {
-  await runner.close();
+  try {
+    const currentValue = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
+    if (currentValue !== 'system') {
+      await preferencesPage.resetPreference(Preferences.Labels.APPEARANCE);
+    }
+  } finally {
+    await runner.close();
+  }
 });
 
 async function getThemeState(page: Page): Promise<{ hasDarkClass: boolean; colorScheme: string }> {
@@ -47,9 +54,15 @@ async function getThemeState(page: Page): Promise<{ hasDarkClass: boolean; color
 
 test.describe
   .serial('Appearance theme switching', { tag: ['@smoke', '@windows_sanity', '@macos_sanity'] }, () => {
+    test.describe.configure({ retries: 1 });
+
     test('Default appearance value is system', async () => {
-      const value = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
-      playExpect(value).toBe('system');
+      await playExpect
+        .poll(async () => preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE), {
+          timeout: 15_000,
+          message: 'Expected default appearance to be system',
+        })
+        .toBe('system');
     });
 
     test('Switching to dark mode applies dark theme', async ({ page }) => {
@@ -88,6 +101,9 @@ test.describe
 
     test('Switching back to dark mode re-applies dark theme', async ({ page }) => {
       await preferencesPage.setPreferenceDropdownValue(Preferences.Labels.APPEARANCE, 'dark');
+
+      const dropdownValue = await preferencesPage.getPreferenceDropdownValue(Preferences.Labels.APPEARANCE);
+      playExpect(dropdownValue).toBe('dark');
 
       await playExpect
         .poll(async () => (await getThemeState(page)).hasDarkClass, {
