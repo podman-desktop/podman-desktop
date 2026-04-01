@@ -182,9 +182,10 @@ test.each<GitHubFeedbackCategory>([
   'bug',
   'feature',
 ])('Expect %s to be included in previewOnGitHub call', async category => {
+  const onCloseFormMock = vi.fn();
   const { preview, title, description } = renderGitHubIssueFeedback({
     category: category,
-    onCloseForm: vi.fn(),
+    onCloseForm: onCloseFormMock,
     contentChange: vi.fn(),
   });
 
@@ -205,6 +206,8 @@ test.each<GitHubFeedbackCategory>([
       category: category,
     }),
   );
+
+  expect(onCloseFormMock).toHaveBeenCalled();
 });
 
 describe('includeSystemInfo', () => {
@@ -365,4 +368,21 @@ test('Expect close confirmation to be true if cancel clicked', async () => {
   // expect close to have been call with confirmation=true
   expect(closeMock).toHaveBeenCalledOnce();
   expect(closeMock).toHaveBeenCalledWith(true);
+});
+
+test('Expect opening existing GitHub issues to not close the feedback window', async () => {
+  const onCloseFormMock = vi.fn();
+  const { getByLabelText } = renderGitHubIssueFeedback({
+    category: 'bug',
+    onCloseForm: onCloseFormMock,
+    contentChange: vi.fn(),
+  });
+
+  const gitHubLink = getByLabelText('GitHub issues');
+  expect(gitHubLink).toBeInTheDocument();
+
+  await userEvent.click(gitHubLink);
+
+  expect(window.openExternal).toHaveBeenCalled();
+  expect(onCloseFormMock).not.toHaveBeenCalled();
 });

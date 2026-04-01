@@ -56,7 +56,11 @@ function handleUpdate(e: boolean): void {
 
 {#if displayModal}
 <div class='z-40'>
+<<<<<<< HEAD
   <Modal name="Share your feedback" on:close={(): Promise<void> => hideModal()}>
+=======
+  <Modal name="Share your feedback" onclose={(): Promise<void> => hideModal()} ignoreFocusOut={true}>
+>>>>>>> 077405428 (chore: prevent feedback form from closing when clicking on a non-submission link (#16769))
     <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">
       <h1 class="grow text-lg font-bold capitalize">Share your feedback</h1>
       <CloseButton onclick={(): Promise<void> => hideModal()} />

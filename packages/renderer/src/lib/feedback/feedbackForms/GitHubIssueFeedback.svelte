@@ -48,7 +48,6 @@ onMount(async () => {
 });
 
 async function openGitHubIssues(): Promise<void> {
-  onCloseForm(false);
   await window.openExternal(existingIssuesLink);
 }
 
