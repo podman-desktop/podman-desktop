@@ -72,7 +72,7 @@
     "@podman-desktop/api": "workspace:*"
   },
   "devDependencies": {
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.5.17",
     "mkdirp": "^3.0.1",
     "vite": "^7.3.1",
     "vitest": "^4.1.2",

@@ -39,7 +39,7 @@
     "@kubernetes/client-node": "^1.4.0",
     "@podman-desktop/core-api": "workspace:*",
     "@segment/analytics-node": "^3.0.0",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.5.17",
     "check-disk-space": "^3.4.0",
     "chokidar": "^3.6.0",
     "culori": "^4.0.2",

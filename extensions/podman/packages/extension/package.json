@@ -461,7 +461,7 @@
     "@types/mustache": "^4.2.6",
     "@types/ssh2": "^1.15.5",
     "@types/sshpk": "^1.17.4",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.5.17",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",
     "msw": "^2.12.14",

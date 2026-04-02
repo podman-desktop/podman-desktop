@@ -234,8 +234,8 @@ importers:
         specifier: ^4.2.6
         version: 4.2.6
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -262,8 +262,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -293,8 +293,8 @@ importers:
         version: 2.8.3
     devDependencies:
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -324,8 +324,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -355,8 +355,8 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       byline:
         specifier: ^5.0.0
         version: 5.0.0
@@ -380,8 +380,8 @@ importers:
         version: link:../../packages/extension-api
     devDependencies:
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -405,8 +405,8 @@ importers:
         version: link:../docker/packages/api
     devDependencies:
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -466,8 +466,8 @@ importers:
         specifier: ^1.17.4
         version: 1.17.4
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       hasha:
         specifier: ^7.0.0
         version: 7.0.0
@@ -500,8 +500,8 @@ importers:
         version: link:../../packages/extension-api
     devDependencies:
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
@@ -545,8 +545,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.5.17
+        version: 0.5.17
       check-disk-space:
         specifier: ^3.4.0
         version: 3.4.0
@@ -4971,8 +4971,8 @@ packages:
     resolution: {integrity: sha512-4B/qKCfeE/ODUaAUpSwfzazo5x29WD4r3vXiWsB7I2mSDAihwEqKO+g8GELZUQSSAo5e1XTYh3ZVfLyxBc12nA==}
     engines: {node: '>= 10.0.0'}
 
-  adm-zip@0.5.16:
-    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
+  adm-zip@0.5.17:
+    resolution: {integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==}
     engines: {node: '>=12.0'}
 
   agent-base@7.1.4:
@@ -8529,6 +8529,9 @@ packages:
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -17254,7 +17257,7 @@ snapshots:
 
   address@1.2.2: {}
 
-  adm-zip@0.5.16: {}
+  adm-zip@0.5.17: {}
 
   agent-base@7.1.4: {}
 
@@ -19134,7 +19137,7 @@ snapshots:
       '@electron/asar': 3.4.1
       debug: 4.4.3
       fs-extra: 7.0.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       temp: 0.9.4
     optionalDependencies:
       '@electron/windows-sign': 1.2.2
@@ -21319,6 +21322,8 @@ snapshots:
   lodash.upperfirst@4.3.1: {}
 
   lodash@4.17.23: {}
+
+  lodash@4.18.1: {}
 
   log-symbols@4.1.0:
     dependencies:
