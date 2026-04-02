@@ -921,9 +921,9 @@ describe('initDefaults', () => {
   test('registers default-text-link color', () => {
     expect(spyOnRegisterColor).toHaveBeenCalledWith('default-text-link', {
       dark: tailwindColorPalette.accent1[400],
-      light: tailwindColorPalette.accent1[600],
+      light: tailwindColorPalette.accent1[700],
       hcDark: tailwindColorPalette.accent1[300],
-      hcLight: tailwindColorPalette.accent1[700],
+      hcLight: tailwindColorPalette.accent1[950],
     });
   });
 
@@ -935,6 +935,8 @@ describe('initDefaults', () => {
     expect(definition?.id).toBe('default-item-hover');
     expect(definition?.dark).toBeDefined();
     expect(definition?.light).toBeDefined();
+    expect(definition?.hcDark).toBeDefined();
+    expect(definition?.hcLight).toBeDefined();
 
     // verify both colors are strings (formatted CSS)
     expect(typeof definition?.dark).toBe('string');
@@ -943,6 +945,8 @@ describe('initDefaults', () => {
     // verify the colors contain alpha information (0.1)
     expect(definition?.dark).toContain('0.1');
     expect(definition?.light).toContain('0.1');
+    expect(definition?.hcDark).toContain('0.3');
+    expect(definition?.hcLight).toContain('0.4');
   });
 });
 
