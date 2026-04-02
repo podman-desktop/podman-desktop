@@ -91,6 +91,10 @@ class TestColorRegistry extends ColorRegistry {
     super.initCommon();
   }
 
+  override initDefaults(): void {
+    super.initDefaults();
+  }
+
   override initStatusColors(): void {
     super.initStatusColors();
   }
@@ -201,9 +205,9 @@ test('init', async () => {
 });
 
 test('initColors', async () => {
-  // mock the registerColor
+  // spy on registerColor but let it actually register colors
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
-  spyOnRegisterColor.mockReturnValue(undefined);
+  // Don't mock it - let it call through to the real implementation
 
   colorRegistry.initColors();
 
@@ -894,6 +898,51 @@ describe('initCommon', () => {
     // verify the colors contain alpha information (0.4)
     expect(definition?.dark).toContain('0.4');
     expect(definition?.light).toContain('0.4');
+  });
+});
+
+describe('initDefaults', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+  let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
+
+  beforeEach(() => {
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+    spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
+    spyOnRegisterColorDefinition.mockReturnValue(undefined);
+
+    colorRegistry.initDefaults();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('registers default-text-link color', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('default-text-link', {
+      dark: tailwindColorPalette.accent1[400],
+      light: tailwindColorPalette.accent1[600],
+      hcDark: tailwindColorPalette.accent1[300],
+      hcLight: tailwindColorPalette.accent1[700],
+    });
+  });
+
+  test('registers default-item-hover color using registerColorDefinition', () => {
+    const itemHoverCall = spyOnRegisterColorDefinition.mock.calls.find(call => call?.[0]?.id === 'default-item-hover');
+    expect(itemHoverCall).toBeDefined();
+
+    const definition = itemHoverCall?.[0];
+    expect(definition?.id).toBe('default-item-hover');
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toBeDefined();
+
+    // verify both colors are strings (formatted CSS)
+    expect(typeof definition?.dark).toBe('string');
+    expect(typeof definition?.light).toBe('string');
+
+    // verify the colors contain alpha information (0.1)
+    expect(definition?.dark).toContain('0.1');
+    expect(definition?.light).toContain('0.1');
   });
 });
 

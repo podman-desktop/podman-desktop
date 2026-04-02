@@ -330,6 +330,7 @@ export class ColorRegistry {
 
   protected initColors(): void {
     this.initDefaults();
+    this.initCommon();
     this.initNotificationDot();
     this.initGlobalNav();
     this.initSecondaryNav();
@@ -358,7 +359,6 @@ export class ColorRegistry {
     this.initTerminal();
     this.initProgressBar();
     this.initBadge();
-    this.initCommon();
   }
 
   protected initDefaults(): void {
@@ -371,6 +371,22 @@ export class ColorRegistry {
       hcDark: white,
       hcLight: black,
     });
+
+    this.registerColor(`${def}text-link`, {
+      dark: accent1[400],
+      light: accent1[700],
+      hcDark: accent1[300],
+      hcLight: accent1[950],
+    });
+
+    this.registerColorDefinition(
+      this.color(`${def}item-hover`)
+        .withLight(colorPaletteHelper(accent1[600]).withAlpha(0.1))
+        .withDark(colorPaletteHelper(accent1[200]).withAlpha(0.1))
+        .withHcLight(colorPaletteHelper(accent1[700]).withAlpha(0.4))
+        .withHcDark(colorPaletteHelper(accent1[300]).withAlpha(0.3))
+        .build(),
+    );
   }
 
   protected initNotificationDot(): void {
@@ -2143,8 +2159,10 @@ export class ColorRegistry {
   protected initCommon(): void {
     this.registerColorDefinition(
       this.color('item-disabled')
-        .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
         .withDark(colorPaletteHelper(stone[300]).withAlpha(0.4))
+        .withLight(colorPaletteHelper(stone[600]).withAlpha(0.4))
+        .withHcDark(colorPaletteHelper(stone[300]).withAlpha(0.9))
+        .withHcLight(colorPaletteHelper(stone[600]).withAlpha(0.9))
         .build(),
     );
   }
