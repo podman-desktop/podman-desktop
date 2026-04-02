@@ -906,16 +906,14 @@ describe('initDefaults', () => {
   let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
 
   beforeEach(() => {
+    vi.resetAllMocks();
+
     spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
     spyOnRegisterColor.mockReturnValue(undefined);
     spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
     spyOnRegisterColorDefinition.mockReturnValue(undefined);
 
     colorRegistry.initDefaults();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   test('registers default-text-link color', () => {
