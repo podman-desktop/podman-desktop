@@ -49,7 +49,6 @@ export class ElectronRunner extends Runner {
 
     try {
       // start the app with given properties
-      this._running = true;
       console.log('Starting Podman Desktop');
       console.log('Electron app launch options: ');
       Object.keys(this._options).forEach(key => {
@@ -60,6 +59,7 @@ export class ElectronRunner extends Runner {
       });
       // setup state
       this._page = await this.getElectronApp().firstWindow();
+      this._running = true;
       const exe = this.getElectronApp().evaluate(async ({ app }) => {
         return app.getPath('exe');
       });
@@ -73,7 +73,17 @@ export class ElectronRunner extends Runner {
       // const windowState = await this.getBrowserWindowState();
     } catch (err) {
       console.log(`Caught exception in startup: ${err}`);
-      throw Error(`Podman Desktop could not be started correctly with error: ${err}`);
+      if (this._app) {
+        try {
+          await this._app.close();
+        } catch (closeErr) {
+          console.log(`Failed to close app after startup error: ${closeErr}`);
+        }
+      }
+      this._app = undefined;
+      this._page = undefined;
+      this._running = false;
+      throw new Error(`Podman Desktop could not be started correctly with error: ${err}`);
     }
 
     // Direct Electron console to Node terminal.

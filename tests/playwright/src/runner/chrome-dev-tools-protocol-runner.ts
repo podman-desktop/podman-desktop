@@ -97,10 +97,11 @@ export class ChromeDevToolsProtocolRunner extends Runner {
 
       // Connect to the running instance via CDP
       this._browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
-      await waitUntil(
-        async () => this.getWindows().length > 0,
-        { timeout: 30_000, diff: 500, message: 'No renderer page appeared after the CDP connection' },
-      );
+      await waitUntil(async () => this.getWindows().length > 0, {
+        timeout: 30_000,
+        diff: 500,
+        message: 'No renderer page appeared after the CDP connection',
+      });
       const pages = this.getWindows();
       this._page = pages.find(page => page.url() !== 'about:blank') ?? pages[0];
       this._running = true;
@@ -222,11 +223,11 @@ export class ChromeDevToolsProtocolRunner extends Runner {
       });
 
       await new Promise<void>((resolve, reject) => {
-        const onSpawn = () => {
+        const onSpawn = (): void => {
           this._electronProcess?.off('error', onError);
           resolve();
         };
-        const onError = (error: Error) => {
+        const onError = (error: Error): void => {
           this._electronProcess?.off('spawn', onSpawn);
           reject(error);
         };

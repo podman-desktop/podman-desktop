@@ -32,13 +32,18 @@ export class RunnerFactory {
       const pdArgs = process.env.PODMAN_DESKTOP_ARGS;
       const pdBinary = process.env.PODMAN_DESKTOP_BINARY;
       const debugPort = process.env.DEBUGGING_PORT;
-      if ((pdArgs && !pdBinary && !debugPort) || (pdBinary && !pdArgs && !debugPort) || (!pdArgs && !pdBinary && !debugPort)) {
+      if (
+        (pdArgs && !pdBinary && !debugPort) ||
+        (pdBinary && !pdArgs && !debugPort) ||
+        (!pdArgs && !pdBinary && !debugPort)
+      ) {
         this._instance = new ElectronRunner({ runnerOptions });
       } else if (pdBinary && debugPort) {
         this._instance = new ChromeDevToolsProtocolRunner({ runnerOptions });
       } else {
         throw new Error(
-          'Allowed combinations are standalone PODMAN_DESKTOP_ARGS or PODMAN_DESKTOP_BINARY or neither of them for electron runner. Or PODMAN_DESKTOP_BINARY and DEBUGGING_PORT for CDP runner...');
+          'Allowed combinations are standalone PODMAN_DESKTOP_ARGS or PODMAN_DESKTOP_BINARY or neither of them for electron runner. Or PODMAN_DESKTOP_BINARY and DEBUGGING_PORT for CDP runner...',
+        );
       }
       await this._instance.start();
     }

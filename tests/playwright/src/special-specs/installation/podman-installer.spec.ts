@@ -76,7 +76,7 @@ test.describe
       console.log(
         `Trying to find podman installer artifact: ${podmanInstallerFilePrefix}-${archPart}.${fileFormatRegexp}`,
       );
-      let electronBinary;
+      let electronBinary: string | undefined;
       if (runner instanceof ElectronRunner) {
         electronBinary = await (runner as ElectronRunner).getElectronApp().evaluate(async ({ app }) => {
           return app.getPath('exe');
