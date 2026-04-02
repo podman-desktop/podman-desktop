@@ -19,7 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Octokit } from 'octokit';
-import type { OctokitOptions } from '@octokit/core/dist-types/types';
+import type { OctokitOptions } from '@octokit/core/types';
 import { hashFile } from 'hasha';
 import { fileURLToPath } from 'node:url';
 import { Writable } from 'node:stream';
