@@ -58,6 +58,6 @@
     "electron-context-menu": "4.1.2",
     "js-yaml": "^4.1.1",
     "tinro": "^0.6.12",
-    "validator": "^13.15.26"
+    "validator": "^13.15.35"
   }
 }
