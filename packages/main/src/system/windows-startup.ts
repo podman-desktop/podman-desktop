@@ -1,4 +1,3 @@
-/* eslint-disable simple-import-sort/imports */
 /**********************************************************************
  * Copyright (C) 2022 Red Hat, Inc.
  *
@@ -16,6 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
+/* eslint-disable simple-import-sort/imports */
 
 import { existsSync, unlink } from 'node:fs';
 import path from 'node:path';
