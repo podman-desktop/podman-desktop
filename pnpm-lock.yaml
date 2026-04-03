@@ -626,8 +626,8 @@ importers:
         specifier: ^3.1.8
         version: 3.1.8
       undici:
-        specifier: ^7.24.7
-        version: 7.24.7
+        specifier: ^8.0.0
+        version: 8.0.0
       validator:
         specifier: ^13.15.35
         version: 13.15.35
@@ -11497,6 +11497,10 @@ packages:
   undici@7.24.7:
     resolution: {integrity: sha512-H/nlJ/h0ggGC+uRL3ovD+G0i4bqhvsDOpbDv7At5eFLlj2b41L8QliGbnl2H7SnDiYhENphh1tQFJZf+MyfLsQ==}
     engines: {node: '>=20.18.1'}
+
+  undici@8.0.0:
+    resolution: {integrity: sha512-RGabV5g1ggSX5mU4k+B8BLWgb418gDbg0wAVFeiU00iOxtw4ufGsE6GFsuSd2uqOKooWSLf71JGapOFYpE8f+A==}
+    engines: {node: '>=22.19.0'}
 
   unicode-canonical-property-names-ecmascript@2.0.1:
     resolution: {integrity: sha512-dA8WbNeb2a6oQzAQ55YlT5vQAWGV9WXOsi3SskE3bcCdM0P4SDd+24zS/OCacdRq5BkdsRj9q3Pg6YyQoxIGqg==}
@@ -25045,6 +25049,8 @@ snapshots:
   undici-types@7.18.2: {}
 
   undici@7.24.7: {}
+
+  undici@8.0.0: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
