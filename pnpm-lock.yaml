@@ -816,8 +816,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       eslint-plugin-svelte:
-        specifier: ^3.16.0
-        version: 3.16.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
+        specifier: ^3.17.0
+        version: 3.17.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
       filesize:
         specifier: ^11.0.15
         version: 11.0.15
@@ -931,8 +931,8 @@ importers:
         specifier: ^8.58.0
         version: 8.58.0(@typescript-eslint/parser@8.58.0(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3))(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3)
       eslint-plugin-svelte:
-        specifier: ^3.16.0
-        version: 3.16.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
+        specifier: ^3.17.0
+        version: 3.17.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
       jsdom:
         specifier: ^28.0.0
         version: 28.0.0
@@ -1030,8 +1030,8 @@ importers:
         specifier: 10.3.3
         version: 10.3.3(eslint@10.1.0(jiti@2.6.1))(storybook@10.2.16(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3)
       eslint-plugin-svelte:
-        specifier: ^3.16.0
-        version: 3.16.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
+        specifier: ^3.17.0
+        version: 3.17.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7)
       postcss:
         specifier: ^8.5.8
         version: 8.5.8
@@ -6903,8 +6903,8 @@ packages:
       eslint: '>=8'
       storybook: ^10.3.3
 
-  eslint-plugin-svelte@3.16.0:
-    resolution: {integrity: sha512-DJXxqpYZUxcE0SfYo8EJzV2ZC+zAD7fJp1n1HwcEMRR1cOEUYvjT9GuzJeNghMjgb7uxuK3IJAzI+x6zzUxO5A==}
+  eslint-plugin-svelte@3.17.0:
+    resolution: {integrity: sha512-sF6wgd5FLS2P8CCaOy2HdYYYEcZ6TwL251dLHUkNmtLnWECk1Dwc+j6VeulmmnFxr7Xs0WNtjweOA+bJ0PnaFw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.1 || ^9.0.0 || ^10.0.0
@@ -19523,7 +19523,7 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-svelte@3.16.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7):
+  eslint-plugin-svelte@3.17.0(eslint@10.1.0(jiti@2.6.1))(svelte@5.53.7):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.1.0(jiti@2.6.1))
       '@jridgewell/sourcemap-codec': 1.5.5
