@@ -25,10 +25,19 @@
  * @param context - Optional context for the error message (e.g., "Extension foo activation")
  */
 export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, context?: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${context ?? 'Operation'} timed out after ${timeoutMs}ms`)), timeoutMs),
-    ),
-  ]);
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(
+      () => reject(new Error(`${context ?? 'Operation'} timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutHandle !== undefined) {
+      clearTimeout(timeoutHandle);
+    }
+  }
 }
