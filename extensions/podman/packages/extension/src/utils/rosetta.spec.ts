@@ -25,7 +25,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { PodmanConfiguration } from './podman-configuration';
 import { checkRosettaMacArm } from './rosetta';
 
-vi.mock('node:os', async () => {
+vi.mock(import('node:os'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const osActual = await vi.importActual<typeof import('node:os')>('node:os');
 

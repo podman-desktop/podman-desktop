@@ -16,14 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 
 import type { Tray } from 'electron';
-import { app, nativeTheme } from 'electron';
+import { app, nativeImage, nativeTheme } from 'electron';
 
 import product from '/@product.json' with { type: 'json' };
 
-import { isLinux, isMac } from './util.js';
+import { isMac, isWindows } from './util.js';
 
 export type TrayIconStatus = 'initialized' | 'updating' | 'error' | 'ready';
 
@@ -77,28 +78,19 @@ export class AnimatedTray {
   }
 
   // provide the path to the icon depending on theme and platform
-  protected getIconPath(iconName: string): string {
+  protected getIconPath(iconName: string): string | Electron.NativeImage {
     let name: string;
     if (iconName === 'default') {
       name = '';
     } else {
       name = `-${iconName}`;
     }
-    let suffix: string;
-    // on Linux, always pickup dark icon
-    if (isLinux()) {
-      suffix = 'Dark';
-    } else if (isMac()) {
-      // on Mac, always pickup template icon
+    let suffix = '';
+    // on Mac, always pickup template icon
+    if (isMac()) {
       suffix = 'Template';
-    } else {
-      // check based from the theme using electron nativeTheme
-      if (nativeTheme.shouldUseDarkColors) {
-        suffix = 'Dark';
-      } else {
-        suffix = 'Template';
-      }
     }
+    // on Windows and Linux, always use regular icon (no suffix)
 
     // Regardless what is the theme, if the user has set the color to light, we use the light icon, same as dark, etc.
     if (this.color === 'light') {
@@ -107,7 +99,21 @@ export class AnimatedTray {
       suffix = 'Dark';
     }
 
-    return path.resolve(this.getAssetsFolder(), `tray-icon${name}${suffix}.png`);
+    const assetsFolder = this.getAssetsFolder();
+
+    // On Windows, addRepresentation is silently ignored by Electron so we load
+    // the @2x asset directly via createFromBuffer with explicit logical dimensions
+    // to ensure sharp rendering on HiDPI displays (e.g. 200% scaling at 5K)
+    if (isWindows()) {
+      const path2x = path.resolve(assetsFolder, `tray-icon${name}${suffix}@2x.png`);
+      return nativeImage.createFromBuffer(readFileSync(path2x), {
+        width: 16,
+        height: 16,
+        scaleFactor: 1.0,
+      });
+    }
+
+    return path.resolve(assetsFolder, `tray-icon${name}${suffix}.png`);
   }
 
   protected updateIcon(): void {
@@ -140,7 +146,7 @@ export class AnimatedTray {
     }
   }
 
-  getDefaultImage(): string {
+  getDefaultImage(): string | Electron.NativeImage {
     return this.getIconPath('empty');
   }
 

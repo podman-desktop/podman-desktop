@@ -1448,18 +1448,9 @@ export function initExposure(): void {
     },
   );
 
-  contextBridge.exposeInMainWorld('troubleshootingSaveLogs', async (destinaton: string): Promise<string[]> => {
-    return ipcInvoke('troubleshooting:saveLogs', memoryLogs, destinaton);
+  contextBridge.exposeInMainWorld('troubleshootingSaveLogs', async (): Promise<string[]> => {
+    return ipcInvoke('troubleshooting:saveLogs', memoryLogs);
   });
-
-  contextBridge.exposeInMainWorld(
-    'troubleshootingGenerateLogFileUri',
-    async (filename: string, extension?: string): Promise<containerDesktopAPI.Uri> => {
-      const generatedFile = await ipcInvoke('troubleshooting:generateLogFileName', filename, extension);
-      // transform into URI Object
-      return { fsPath: generatedFile, scheme: 'file' } as containerDesktopAPI.Uri;
-    },
-  );
 
   contextBridge.exposeInMainWorld('getContributedMenus', async (context: string): Promise<Menu[]> => {
     return ipcInvoke('menu-registry:getContributedMenus', context);

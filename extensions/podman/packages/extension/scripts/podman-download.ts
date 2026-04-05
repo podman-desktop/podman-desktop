@@ -19,7 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Octokit } from 'octokit';
-import type { OctokitOptions } from '@octokit/core/dist-types/types';
+import type { OctokitOptions } from '@octokit/core/types';
 import { hashFile } from 'hasha';
 import { fileURLToPath } from 'node:url';
 import { Writable } from 'node:stream';
@@ -239,8 +239,11 @@ export class DownloadAndCheck {
       }
     }
 
-    if (!artifactRelease && !shasums) {
-      throw new Error(`Can't find assets to download and verify for ${tagVersion}`);
+    if (!artifactRelease) {
+      throw new Error(`Can't find artifact ${artifactName} for ${tagVersion}`);
+    }
+    if (!shasums) {
+      throw new Error(`Can't find shasums asset for ${tagVersion}`);
     }
 
     const shasumAsset = await this.#octokit.rest.repos.getReleaseAsset({

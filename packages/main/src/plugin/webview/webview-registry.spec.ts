@@ -37,7 +37,7 @@ vi.mock('express', () => ({
   default: (): typeof express =>
     ({
       use: vi.fn(),
-      listen: vi.fn().mockImplementation((_portNumber, func: () => void) => {
+      listen: vi.fn().mockImplementation((_portNumber, _hostname, func: () => void) => {
         func();
         return { on: vi.fn() };
       }),

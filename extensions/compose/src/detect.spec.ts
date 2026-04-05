@@ -37,11 +37,9 @@ const osMock: OS = {
 
 let detect: Detect;
 
-vi.mock('shell-path', () => {
-  return {
-    shellPath: vi.fn(),
-  };
-});
+vi.mock(import('shell-path'));
+vi.mock(import('node:fs'));
+vi.mock(import('node:http'));
 
 const originalConsoleDebug = console.debug;
 
@@ -117,7 +115,6 @@ describe('Check storage path', async () => {
   });
 
   test('found', async () => {
-    vi.mock('node:fs');
     const existSyncSpy = vi.mocked(fs.existsSync);
     existSyncSpy.mockImplementation(() => true);
 
@@ -225,14 +222,6 @@ describe('Check docker socket', async () => {
     const socketPathMock = vi.spyOn(detect, 'getSocketPath');
     socketPathMock.mockResolvedValue('/foo/docker.sock');
 
-    // mock http request
-
-    vi.mock('node:http', () => {
-      return {
-        get: vi.fn(),
-      };
-    });
-
     const spyGet: MockInstance<HttpGet> = vi.spyOn(http, 'get');
     const clientRequestEmitter = new EventEmitter();
     const myRequest = clientRequestEmitter as http.ClientRequest;
@@ -258,14 +247,6 @@ describe('Check docker socket', async () => {
     const socketPathMock = vi.spyOn(detect, 'getSocketPath');
     socketPathMock.mockResolvedValue('/foo/docker.sock');
 
-    // mock http request
-
-    vi.mock('node:http', () => {
-      return {
-        get: vi.fn(),
-      };
-    });
-
     const spyGet: MockInstance<HttpGet> = vi.spyOn(http, 'get');
     const clientRequestEmitter = new EventEmitter();
     const myRequest = clientRequestEmitter as http.ClientRequest;
@@ -287,14 +268,6 @@ describe('Check docker socket', async () => {
   test('test error', async () => {
     const socketPathMock = vi.spyOn(detect, 'getSocketPath');
     socketPathMock.mockResolvedValue('/foo/docker.sock');
-
-    // mock http request
-
-    vi.mock('node:http', () => {
-      return {
-        get: vi.fn(),
-      };
-    });
 
     const spyGet: MockInstance<HttpGet> = vi.spyOn(http, 'get');
     const clientRequestEmitter = new EventEmitter();

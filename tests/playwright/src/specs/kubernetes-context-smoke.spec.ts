@@ -46,7 +46,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe
-  .serial('Verification of kube context management', { tag: '@smoke' }, () => {
+  .serial('Verification of kube context management', { tag: ['@smoke', '@macos_sanity'] }, () => {
     test('Load custom kubeconfig in Preferences', async ({ navigationBar }) => {
       // open preferences page
       const settingsBar = await navigationBar.openSettings();

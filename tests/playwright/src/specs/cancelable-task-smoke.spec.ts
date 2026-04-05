@@ -20,12 +20,12 @@ import { TaskState } from '/@/model/core/states';
 import { CommandPalette } from '/@/model/pages/command-palette';
 import { ExperimentalPage } from '/@/model/pages/experimental-page';
 import { TasksPage } from '/@/model/pages/tasks-page';
-import { StatusBar } from '/@/model/workbench/status-bar';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const longRunningTaskName = 'quay.io/fbenoit/long-task-example:v1.0';
 const taskName = 'Dummy Long Task';
+const taskDisplayName = 'Doing something';
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('cancelable-task-e2e');
@@ -54,11 +54,10 @@ test.describe
       await extensionsPage.installExtensionFromOCIImage(longRunningTaskName);
     });
 
-    test('Cancel long running task', async ({ page }) => {
+    test('Cancel long running task', async ({ page, statusBar }) => {
       const commandPalettePage = new CommandPalette(page);
       await commandPalettePage.executeCommand(taskName);
 
-      const statusBar = new StatusBar(page);
       const tasksPage = await statusBar.openTasksPage();
       await playExpect(tasksPage.heading).toBeVisible();
       await tasksPage.cancelLatestTask();
@@ -76,6 +75,46 @@ test.describe
       await playExpect
         .poll(async () => await tasksPage.getStatusForLatestTask(), { timeout: 180_000 })
         .toContain(TaskState.Success);
+    });
+
+    test('Filter tasks by status', async ({ page }) => {
+      const tasksPage = new TasksPage(page);
+      await playExpect(tasksPage.heading).toBeVisible();
+
+      await tasksPage.canceledTasksButton.click();
+      await playExpect
+        .poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(1);
+      await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Canceled);
+
+      await tasksPage.successTasksButton.click();
+      await playExpect
+        .poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(1);
+      await playExpect.poll(async () => await tasksPage.getStatusForLatestTask()).toContain(TaskState.Success);
+
+      await tasksPage.allTasksButton.click();
+      await playExpect
+        .poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(2);
+    });
+
+    test('Search tasks by name', async ({ page }) => {
+      const tasksPage = new TasksPage(page);
+      await playExpect(tasksPage.heading).toBeVisible();
+
+      await tasksPage.searchTasks(taskDisplayName);
+      await playExpect
+        .poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(1);
+
+      await tasksPage.searchTasks('nonexistent-task-xyz');
+      await playExpect.poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 }).toBe(0);
+
+      await tasksPage.clearSearch();
+      await playExpect
+        .poll(async () => await tasksPage.getTaskRowCount(), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(2);
     });
 
     test('Clear all tasks', async ({ page }) => {

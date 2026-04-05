@@ -3,6 +3,10 @@
     {
       "event": "list.*",
       "frequency": "dailyPerInstance"
+    },
+    {
+      "event": "container-events-failure",
+      "frequency": "dailyPerInstance"
     }
   ]
 }

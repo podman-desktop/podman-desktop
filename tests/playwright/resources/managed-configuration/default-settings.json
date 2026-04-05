@@ -16,5 +16,8 @@
         "location": "quay.io"
       }
     }
-  ]
+  ],
+  "proxy.http": "http://managed-proxy.example.com:8080",
+  "proxy.https": "https://managed-proxy.example.com:8443",
+  "proxy.no": "localhost,127.0.0.1,.example.com"
 }

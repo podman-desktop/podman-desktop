@@ -27,14 +27,6 @@ import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PodmanBinary } from '/@/utils/podman-binary';
 
 vi.mock(import('/@/utils/podman-cli'));
-vi.mock('@podman-desktop/api', () => ({
-  process: {
-    exec: vi.fn(),
-  },
-  configuration: {
-    onDidChangeConfiguration: vi.fn(),
-  },
-}));
 
 const disposableMock: Disposable = {
   dispose: vi.fn(),

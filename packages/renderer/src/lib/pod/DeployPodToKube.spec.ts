@@ -567,7 +567,7 @@ test('ImagePullBackOff error should be reported', async () => {
     expect(window.telemetryTrack).toBeCalledWith('deployToKube', {
       errorMessage: 'ImagePullBackOff',
     });
-    expect(screen.getByLabelText('Deploy Error Message')).toHaveTextContent(
+    expect(screen.getByRole('alert')).toHaveTextContent(
       'ImagePullBackOff error, please check that the image is accessible from the Kubernetes cluster',
     );
   });

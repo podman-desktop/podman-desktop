@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,7 +25,7 @@ import { ArchitectureType } from '/@/model/core/platforms';
 import { ImageState } from '/@/model/core/states';
 import { ImageDetailsPage } from '/@/model/pages/image-details-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { untagImagesFromPodman } from '/@/utility/operations';
+import { ensureNoImagesPresentCLI, untagImagesFromPodman } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'ghcr.io/podmandesktop-ci/hello';
@@ -39,6 +41,7 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
 
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+  await ensureNoImagesPresentCLI(page);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -74,7 +77,7 @@ test.describe
       const searchResults = await pullImagePage.getAllSearchResultsFor(imageToSearch, true);
       playExpect(searchResults.length).toBeGreaterThan(0);
 
-      imagesPage = await pullImagePage.pullImageFromSearchResults(imageToSearch + ':' + imageTagToSearch);
+      imagesPage = await pullImagePage.pullImageFromSearchResults(`${imageToSearch}:${imageTagToSearch}`);
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect.poll(async () => await imagesPage.waitForImageExists(imageToSearch)).toBeTruthy();
 
@@ -87,6 +90,28 @@ test.describe
       await playExpect
         .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
         .toBeTruthy();
+    });
+
+    test('Cancel pull image', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
+
+      await pullImagePage.cancelPullImage(imageToSearch);
+      await playExpect(pullImagePage.heading).toBeVisible();
+    });
+
+    test('Pull image and view details', async ({ navigationBar }) => {
+      const imagesPage = await navigationBar.openImages();
+      await playExpect(imagesPage.heading).toBeVisible();
+
+      const pullImagePage = await imagesPage.openPullImage();
+      await playExpect(pullImagePage.heading).toBeVisible();
+
+      const imageDetailsPage = await pullImagePage.pullImageAndViewDetails(helloContainer);
+      await playExpect(imageDetailsPage.heading).toBeVisible();
     });
 
     test('Test navigation between pages', async ({ navigationBar }) => {
@@ -234,6 +259,8 @@ test.describe
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
 
+      const baselineNoneCount = await imagesPage.countImagesByName('<none>');
+
       for (const image of imageList) {
         await imagesPage.pullImage(helloContainer);
         await playExpect(imagesPage.heading).toBeVisible();
@@ -256,14 +283,14 @@ test.describe
 
       await untagImagesFromPodman(imageList[0]);
       await playExpect
-        .poll(async () => await imagesPage.waitForImageExists('<none>', 60_000), { timeout: 0 })
-        .toBeTruthy();
+        .poll(async () => await imagesPage.countImagesByName('<none>'), { timeout: 60_000 })
+        .toBeGreaterThan(baselineNoneCount);
 
       await imagesPage.pruneUntaggedImages();
       await playExpect(imagesPage.heading).toBeVisible();
       await playExpect
-        .poll(async () => await imagesPage.waitForImageDelete('<none>', 60_000), { timeout: 0 })
-        .toBeTruthy();
+        .poll(async () => await imagesPage.countImagesByName('<none>'), { timeout: 60_000 })
+        .toBeLessThanOrEqual(baselineNoneCount);
       await playExpect
         .poll(async () => await imagesPage.waitForImageExists(imageToSearch, 60_000), { timeout: 0 })
         .toBeTruthy();
@@ -274,5 +301,44 @@ test.describe
       await playExpect
         .poll(async () => await imagesPage.waitForImageDelete(imageToSearch, 60_000), { timeout: 0 })
         .toBeTruthy();
+    });
+
+    test('Save image as tar, delete, load from tar', async ({ navigationBar }) => {
+      test.setTimeout(180_000);
+
+      const tarFilePath = path.join(tmpdir(), 'podman-desktop-e2e-hello.tar');
+
+      try {
+        let imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
+
+        imagesPage = await imagesPage.pullImage(helloContainer);
+        await playExpect(imagesPage.heading).toBeVisible();
+
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(helloContainer, 15_000), { timeout: 0 })
+          .toBeTruthy();
+
+        const imageDetailsPage = await imagesPage.openImageDetails(helloContainer);
+        await playExpect(imageDetailsPage.heading).toBeVisible();
+
+        imagesPage = await imageDetailsPage.saveImage(tarFilePath);
+        await playExpect(imagesPage.heading).toBeVisible({ timeout: 60_000 });
+
+        const imageDetailsPageForDelete = await imagesPage.openImageDetails(helloContainer);
+        await playExpect(imageDetailsPageForDelete.heading).toBeVisible();
+
+        imagesPage = await imageDetailsPageForDelete.deleteImage();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageDelete(helloContainer, 60_000), { timeout: 0 })
+          .toBeTruthy();
+
+        await imagesPage.loadImages(tarFilePath);
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
+          .toBeTruthy();
+      } finally {
+        rmSync(tarFilePath, { force: true });
+      }
     });
   });

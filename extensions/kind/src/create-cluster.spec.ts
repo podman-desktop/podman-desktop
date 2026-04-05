@@ -31,16 +31,7 @@ import { getKindPath, getMemTotalInfo } from './util';
 vi.mock(import('./kind-cluster-watcher'));
 vi.mock(import('@kubernetes/client-node'));
 vi.mock(import('./util'));
-
-vi.mock('node:fs', () => ({
-  promises: {
-    writeFile: vi.fn(),
-    readFile: vi.fn(),
-    mkdtemp: vi.fn(),
-    rm: vi.fn(),
-  },
-  readFileSync: vi.fn(),
-}));
+vi.mock(import('node:fs'));
 
 beforeEach(() => {
   vi.resetAllMocks();

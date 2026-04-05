@@ -124,7 +124,7 @@ test('test download of kubectl passes and that mkdir and executable mocks are ca
   const downloadReleaseAssetMock = vi.spyOn(kubectlGitHubReleasesMock, 'downloadReleaseAsset');
 
   // Mock that the storage path does not exist
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return false;
   });

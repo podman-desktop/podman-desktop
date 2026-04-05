@@ -61,6 +61,24 @@ test('only experimental configuration should be displayed', async () => {
   });
 });
 
+test('hidden experimental configuration should not be displayed', async () => {
+  const hiddenExperimentalConfig: IConfigurationPropertyRecordedSchema = {
+    ...EXPERIMENTAL_CONFIG,
+    id: 'hidden-experimental-config',
+    title: 'Hidden Experimental Config',
+    hidden: true,
+  };
+
+  const { queryByText } = render(ExperimentalPage, {
+    properties: [hiddenExperimentalConfig, EXPERIMENTAL_CONFIG],
+  });
+
+  await vi.waitFor(() => {
+    expect(queryByText(hiddenExperimentalConfig.title)).toBeNull();
+    expect(queryByText(EXPERIMENTAL_CONFIG.title)).toBeDefined();
+  });
+});
+
 test('Enable all should update all configuration', async () => {
   const generated: IConfigurationPropertyRecordedSchema[] = Array.from({ length: 10 }, (_, index) => ({
     ...EXPERIMENTAL_CONFIG,

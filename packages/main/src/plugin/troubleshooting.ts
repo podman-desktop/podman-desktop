@@ -21,8 +21,11 @@ import * as os from 'node:os';
 
 import { LogType } from '@podman-desktop/core-api';
 import AdmZip from 'adm-zip';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import moment from 'moment';
+
+import { DialogRegistry } from '/@/plugin/dialog-registry.js';
+import { Uri } from '/@/plugin/types/uri.js';
 
 const SYSTEM_FILENAME = 'system';
 
@@ -33,14 +36,26 @@ export interface TroubleshootingFileMap {
 
 @injectable()
 export class Troubleshooting {
+  constructor(
+    @inject(DialogRegistry)
+    private dialogRegistry: DialogRegistry,
+  ) {}
+
   // The "main" function that is exposes that is used to gather
   // all the logs and save them to a zip file.
   // this also takes in the console logs and adds them to the zip file (see preload/src/index.ts) regarding memoryLogs
-  async saveLogs(console: { logType: LogType; message: string }[], destination: string): Promise<string[]> {
+  async saveLogs(console: { logType: LogType; message: string }[]): Promise<string[]> {
+    const defaultUri = this.generateLogFileName('podman-desktop', 'zip');
+    const uri = await this.dialogRegistry.saveDialog({ title: 'Save Logs as .zip', defaultUri: Uri.file(defaultUri) });
+
+    if (!uri) {
+      return [];
+    }
+
     const systemLogs = await this.getSystemLogs();
     const consoleLogs = this.getConsoleLogs(console);
     const fileMaps = [...systemLogs, ...consoleLogs];
-    await this.saveLogsToZip(fileMaps, destination);
+    await this.saveLogsToZip(fileMaps, uri.fsPath);
     return fileMaps.map(fileMap => fileMap.filename);
   }
 
@@ -100,6 +115,7 @@ export class Troubleshooting {
     }
     return logs;
   }
+
   generateLogFileName(filename: string, extension?: string): string {
     // If the filename has an extension like .log, move it to the end ofthe generated name
     // otherwise just use .txt

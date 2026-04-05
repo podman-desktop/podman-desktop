@@ -18,14 +18,14 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import type * as proc from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import { arch } from 'node:os';
 
-import type { ServiceIdentifier } from '@inversifyjs/common/lib/esm';
 import type { Configuration, ContainerEngineInfo, ContainerProviderConnection } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { Disposable } from '@podman-desktop/api';
-import type { Container as InversifyContainer } from 'inversify';
+import type { Container as InversifyContainer, ServiceIdentifier } from 'inversify';
 import type { Mock } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -152,7 +152,7 @@ async function waitTelemetryLoggerUsage() {
   await vi.waitFor(() => expect((telemetryLogger.logUsage as Mock).mock.calls).not.toHaveLength(0));
 }
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 // mock fs.promises.readdir and use string[] as return type
 const fsPromisesReaddirMock = vi.mocked(
   fs.promises.readdir as (path: string, options?: { withFileTypes: false }) => Promise<string[]>,
@@ -161,7 +161,7 @@ const fsPromisesReaddirMock = vi.mocked(
 vi.mock(import('./inject/inversify-binding'));
 
 // mock ps-list
-vi.mock('ps-list', async () => {
+vi.mock(import('ps-list'), async () => {
   return {
     default: vi.fn(),
   };
@@ -282,21 +282,16 @@ beforeEach(async () => {
 const originalConsoleError = console.error;
 const consoleErrorMock = vi.fn();
 
-vi.mock('node:child_process', async () => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const childProcessActual = await vi.importActual<typeof import('node:child_process')>('node:child_process');
+vi.mock(import('node:child_process'), async importOriginal => {
+  const childProcessActual = await importOriginal();
   return {
     ...childProcessActual,
     env: vi.fn(),
-    spawn: () => {
-      return {
-        on: vi.fn(),
-      } as unknown as proc.ChildProcess;
-    },
+    spawn: vi.fn(),
   };
 });
 
-vi.mock('node:os', async () => {
+vi.mock(import('node:os'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const osActual = await vi.importActual<typeof import('node:os')>('node:os');
 
@@ -329,6 +324,10 @@ beforeEach(() => {
   vi.mocked(extensionApi.env).isMac = false;
   vi.mocked(extensionApi.env).isLinux = false;
   vi.mocked(extensionApi.env).isWindows = false;
+
+  vi.mocked(spawn).mockReturnValue({
+    on: vi.fn(),
+  } as unknown as proc.ChildProcess);
 
   const mock = vi.spyOn(compatibilityModeLib, 'getSocketCompatibility');
   mock.mockReturnValue({
@@ -886,6 +885,29 @@ test('if a machine is successfully started it changes its state to started', asy
   expect(spyUpdateStatus).toBeCalledWith('started');
 });
 
+test('if autoStart is true, machine start uses detached mode', async () => {
+  const spyUpdateStatus = vi.spyOn(provider, 'updateStatus');
+  spyUpdateStatus.mockImplementation(() => {
+    return;
+  });
+
+  const spyExecPromise = vi
+    .spyOn(extensionApi.process, 'exec')
+    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+
+  await extension.startMachine(provider, podmanConfiguration, machineInfo, undefined, undefined, undefined, true);
+
+  expect(spyExecPromise).toHaveBeenCalledWith(podmanCli.getPodmanCli(), ['machine', 'start', 'name'], {
+    env: {
+      CONTAINERS_MACHINE_PROVIDER: VMTYPE.LIBKRUN,
+    },
+    logger: new LoggerDelegator(),
+    detached: true,
+  });
+
+  expect(spyUpdateStatus).toHaveBeenCalledWith('started');
+});
+
 test('if a machine is successfully reporting telemetry', async () => {
   const spyExecPromise = vi
     .spyOn(extensionApi.process, 'exec')
@@ -1160,7 +1182,7 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
   const spyPrompt = vi.mocked(extensionApi.window.showInformationMessage);
   spyPrompt.mockResolvedValue('Yes');
 
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return false;
@@ -1817,6 +1839,69 @@ test('provider is registered with limited edit capabilities on (HyperV) Windows'
     expect.arrayContaining(['machine', 'set', machineInfo.name, '--rootful=true']),
     expect.any(Object),
   );
+});
+
+test.each([
+  {
+    description: 'telemetry is tracked when rootful is set to true',
+    inspectRootful: false,
+    editParams: { 'podman.machine.rootful': true },
+    expectedTelemetry: { event: 'podman.machine.edit.rootful', data: { isRootful: true } },
+  },
+  {
+    description: 'telemetry is tracked when rootful is set to false',
+    inspectRootful: false,
+    editParams: { 'podman.machine.rootful': false },
+    expectedTelemetry: { event: 'podman.machine.edit.rootful', data: { isRootful: false } },
+  },
+  {
+    description: 'telemetry is not tracked when other settings are changed without rootful',
+    inspectRootful: true,
+    editParams: { 'podman.machine.cpus': '4', 'podman.machine.memory': '2048' },
+    expectedTelemetry: undefined,
+  },
+])('$description', async ({ inspectRootful, editParams, expectedTelemetry }) => {
+  vi.mocked(extensionApi.env).isMac = true;
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
+  spyExecPromise.mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>((resolve, reject) => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: inspectRootful }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'set') {
+          resolve({
+            stdout: '',
+          } as extensionApi.RunResult);
+        } else {
+          reject(new Error('Unexpected command'));
+        }
+      }),
+  );
+
+  let registeredConnection: ContainerProviderConnection | undefined;
+  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+    registeredConnection = connection;
+    return Disposable.from({ dispose: () => {} });
+  });
+
+  await extension.registerProviderFor(provider, podmanConfiguration, machineInfo, 'socket');
+  expect(registeredConnection).toBeDefined();
+  expect(registeredConnection?.lifecycle?.edit).toBeDefined();
+
+  vi.mocked(telemetryLogger.logUsage).mockClear();
+
+  await registeredConnection?.lifecycle?.edit?.({} as unknown as extensionApi.LifecycleContext, editParams);
+
+  if (expectedTelemetry) {
+    expect(telemetryLogger.logUsage).toHaveBeenCalledWith(expectedTelemetry.event, expectedTelemetry.data);
+  } else {
+    expect(telemetryLogger.logUsage).not.toHaveBeenCalled();
+  }
 });
 
 test('provider is registered without edit capabilities on Linux', async () => {
@@ -3351,7 +3436,7 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
       },
     });
 
-    vi.mock('./utils/warnings');
+    vi.mock(import('./utils/warnings'));
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {

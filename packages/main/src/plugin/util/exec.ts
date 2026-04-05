@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ChildProcessWithoutNullStreams } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
 import { delimiter, join } from 'node:path';
@@ -48,7 +48,7 @@ class RunErrorImpl extends Error implements RunError {
 export class Exec {
   constructor(private proxy: Proxy) {}
 
-  exec(command: string, args?: string[], options?: RunOptions): Promise<RunResult> {
+  async exec(command: string, args?: string[], options?: RunOptions): Promise<RunResult> {
     let env = { ...process.env };
 
     if (options?.env) {
@@ -150,81 +150,94 @@ export class Exec {
       command = 'flatpak-spawn';
     }
 
-    let cwd: string;
-    if (options?.cwd) {
-      cwd = options.cwd;
+    const cwd = options?.cwd;
+
+    if (options?.detached) {
+      const childProcess = spawn(command, args ?? [], { env, cwd, detached: true, stdio: 'ignore' });
+      childProcess.unref();
+      return this.awaitChildProcess(childProcess, command, { stdout: '', stderr: '' });
     }
 
+    const childProcess = spawn(command, args ?? [], { env, cwd });
+    const output = { stdout: '', stderr: '' };
+
+    childProcess.stdout.setEncoding(options?.encoding ?? 'utf8');
+    childProcess.stderr.setEncoding(options?.encoding ?? 'utf8');
+
+    childProcess.stdout.on('data', data => {
+      output.stdout += data.toString();
+      options?.logger?.log(data);
+    });
+
+    childProcess.stderr.on('data', data => {
+      output.stderr += data.toString();
+      options?.logger?.warn(data);
+    });
+
+    return this.awaitChildProcess(childProcess, command, output, options);
+  }
+
+  private awaitChildProcess(
+    childProcess: ChildProcess,
+    command: string,
+    output: { stdout: string; stderr: string },
+    options?: RunOptions,
+  ): Promise<RunResult> {
     return new Promise((resolve, reject) => {
-      let stdout = '';
-      let stderr = '';
-
-      const childProcess: ChildProcessWithoutNullStreams = spawn(command, args, { env, cwd });
-
       options?.token?.onCancellationRequested(() => {
         if (!childProcess.killed) {
           childProcess.kill();
           options?.logger?.error('Execution cancelled');
-          const errResult: RunError = new RunErrorImpl(
-            'Execution cancelled',
-            'Failed to execute command: Execution cancelled',
-            1,
-            command,
-            stdout.trim(),
-            stderr.trim(),
-            true,
-            childProcess.killed,
+          reject(
+            new RunErrorImpl(
+              'Execution cancelled',
+              'Failed to execute command: Execution cancelled',
+              1,
+              command,
+              output.stdout.trim(),
+              output.stderr.trim(),
+              true,
+              childProcess.killed,
+            ),
           );
-          reject(errResult);
         }
         options?.logger?.error('Failed to execute cancel: Process has been already killed');
-        const errResult: RunError = new RunErrorImpl(
-          'Failed to execute cancel: Process has been already killed',
-          'Failed to execute cancel: Process has been already killed',
-          1,
-          command,
-          stdout.trim(),
-          stderr.trim(),
-          false,
-          childProcess.killed,
+        reject(
+          new RunErrorImpl(
+            'Failed to execute cancel: Process has been already killed',
+            'Failed to execute cancel: Process has been already killed',
+            1,
+            command,
+            output.stdout.trim(),
+            output.stderr.trim(),
+            false,
+            childProcess.killed,
+          ),
         );
-        reject(errResult);
-      });
-
-      childProcess.stdout.setEncoding(options?.encoding ?? 'utf8');
-      childProcess.stderr.setEncoding(options?.encoding ?? 'utf8');
-
-      childProcess.stdout.on('data', data => {
-        stdout += data.toString();
-        options?.logger?.log(data);
-      });
-
-      childProcess.stderr.on('data', data => {
-        stderr += data.toString();
-        options?.logger?.warn(data);
       });
 
       childProcess.on('error', error => {
         options?.logger?.error(`Failed to execute command: ${error.message}`);
-        const errResult: RunError = new RunErrorImpl(
-          error.name,
-          `Failed to execute command: ${error.message}`,
-          1,
-          command,
-          stdout.trim(),
-          stderr.trim(),
-          false,
-          childProcess.killed,
+        reject(
+          new RunErrorImpl(
+            error.name,
+            `Failed to execute command: ${error.message}`,
+            1,
+            command,
+            output.stdout.trim(),
+            output.stderr.trim(),
+            false,
+            childProcess.killed,
+          ),
         );
-        reject(errResult);
       });
 
       childProcess.on('close', exitCode => {
         if (exitCode === 0) {
           const result: RunResult = {
             command,
-            stdout: stdout.trim(),
-            stderr: stderr.trim(),
+            stdout: output.stdout.trim(),
+            stderr: output.stderr.trim(),
           };
           resolve(result);
         } else {
@@ -234,8 +247,8 @@ export class Exec {
             `Command execution failed with exit code ${exitCode}`,
             exitCode ?? 1,
             command,
-            stdout.trim(),
-            stderr.trim(),
+            output.stdout.trim(),
+            output.stderr.trim(),
             false,
             childProcess.killed,
           );

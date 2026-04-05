@@ -3697,6 +3697,55 @@ test('check handleEvents is not calling the console.log for health_status event'
   expect(consoleLogSpy).not.toBeCalled();
 });
 
+test('check handleEvents tracks telemetry when stream emits error', async () => {
+  telemetryTrackMock.mockClear();
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  // keep the function passed in parameter of getEventsMock
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  // emit an error on the stream
+  const testError = new Error('stream connection error');
+  passThrough.emit('error', testError);
+
+  // wait for error handling
+  await vi.waitFor(() => expect(errorCallback).toHaveBeenCalled());
+
+  // check that telemetry was tracked with correct event name and properties
+  expect(telemetry.track).toHaveBeenCalledWith(
+    'container-events-failure',
+    expect.objectContaining({
+      nbEvents: expect.any(Number),
+      failureAfter: expect.any(Number),
+      error: testError,
+    }),
+  );
+
+  // verify error was logged
+  expect(consoleErrorSpy).toHaveBeenCalledWith('/event stream received an error.', testError);
+
+  // verify error callback was called with wrapped error
+  expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: 'Error in handling events' }));
+
+  consoleErrorSpy.mockRestore();
+});
+
 test('check volume mounted is replicated when executing replicatePodmanContainer with named volume', async () => {
   const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 
@@ -4745,6 +4794,31 @@ test('expect to fall back to compat api images if podman provider does not have 
   expect(images).toBeDefined();
   expect(images).toHaveLength(1);
   expect(images[0]?.Id).toBe('dummyImageId2');
+});
+
+test('pass options to compat api when using podmanListImages', async () => {
+  const imagesList = [{ Id: 'dummyImageId' }];
+  server = setupServer(http.get('http://localhost/images/json', () => HttpResponse.json(imagesList)));
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const api = new Dockerode({ protocol: 'http', host: 'localhost' });
+  const listImagesSpy = vi.spyOn(api, 'listImages');
+
+  containerRegistry.addInternalProvider('podman', {
+    name: 'podman',
+    id: 'podman1',
+    api,
+    connection: {
+      type: 'podman',
+    },
+  } as unknown as InternalContainerProvider);
+
+  await containerRegistry.podmanListImages({ all: true, filters: '{"dangling":["false"]}' });
+
+  expect(vi.mocked(listImagesSpy)).toHaveBeenCalledWith({
+    all: true,
+    filters: '{"dangling":["false"]}',
+  });
 });
 
 test('expect a blank array if there is no api or libpod API when doing podmanListImages', async () => {

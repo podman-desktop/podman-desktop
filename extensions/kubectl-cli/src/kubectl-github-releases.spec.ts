@@ -116,7 +116,7 @@ describe('Grab asset id for a given release id', async () => {
 });
 
 test('should download the file if parent folder does exist', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 
   getReleaseAssetMock.mockImplementation(() => {
     return { data: 'foo' };
@@ -140,7 +140,7 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 
   getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 

@@ -31,7 +31,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe
-  .serial('Preferences text persistence validation', () => {
+  .serial('Preferences text persistence validation', { tag: '@macos_sanity' }, () => {
     test('Check preferences text persistence', async ({ page, navigationBar }) => {
       //Open Settings/Preferences page
       const settingsBar = await navigationBar.openSettings();

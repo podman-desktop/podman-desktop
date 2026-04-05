@@ -19,6 +19,7 @@
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import type { KindClusterOptions } from '/@/model/core/types';
+import { withMockedOpenFileDialog } from '/@/utility/dialog';
 import { fillTextbox } from '/@/utility/operations';
 
 import { CreateClusterBasePage } from './cluster-creation-base-page';
@@ -31,6 +32,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
   readonly httpsPort: Locator;
   readonly containerImage: Locator;
   readonly configFileInput: Locator;
+  readonly configFileBrowseButton: Locator;
   readonly warning: Locator;
 
   constructor(page: Page) {
@@ -50,6 +52,7 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
       name: 'Custom path to Kind config file (Default is blank)',
       exact: true,
     });
+    this.configFileBrowseButton = this.clusterPropertiesInformation.getByRole('button', { name: 'browse' });
     this.warning = this.page.getByRole('alert', { name: 'warning' });
   }
 
@@ -77,8 +80,10 @@ export class CreateKindClusterPage extends CreateClusterBasePage {
 
       // Use the default cluster name if a custom config file is used; the default cluster name should be ignored in this case.
       if (configFilePath) {
-        await this.configFileInput.evaluate(node => node.removeAttribute('readonly'));
-        await this.configFileInput.fill(configFilePath);
+        await withMockedOpenFileDialog([configFilePath], async () => {
+          await this.configFileBrowseButton.click();
+        });
+        await playExpect(this.configFileInput).toHaveValue(configFilePath);
         await playExpect(this.warning).toBeVisible();
         await playExpect(this.warning).toContainText(
           'By specifying a config file, all other options will be ignored except for ingress controller deployment.',

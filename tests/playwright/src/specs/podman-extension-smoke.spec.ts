@@ -44,7 +44,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe
-  .serial('Verification of Podman extension', { tag: '@smoke' }, () => {
+  .serial('Verification of Podman extension', { tag: ['@smoke', '@macos_sanity'] }, () => {
     test('Podman is enabled and present', async () => {
       await verifyPodmanExtensionStatus(true);
     });

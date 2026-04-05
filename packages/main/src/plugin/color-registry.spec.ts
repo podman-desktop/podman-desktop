@@ -90,6 +90,14 @@ class TestColorRegistry extends ColorRegistry {
   override initCommon(): void {
     super.initCommon();
   }
+
+  override initDefaults(): void {
+    super.initDefaults();
+  }
+
+  override initStatusColors(): void {
+    super.initStatusColors();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -197,9 +205,9 @@ test('init', async () => {
 });
 
 test('initColors', async () => {
-  // mock the registerColor
+  // spy on registerColor but let it actually register colors
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
-  spyOnRegisterColor.mockReturnValue(undefined);
+  // Don't mock it - let it call through to the real implementation
 
   colorRegistry.initColors();
 
@@ -285,8 +293,22 @@ test('initContent', async () => {
 
   // check the first call
   expect(spyOnRegisterColor.mock.calls[0]?.[0]).toStrictEqual('content-breadcrumb');
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.purple[900]);
-  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.gray[400]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].light).toBe(tailwindColorPalette.accent1[500]);
+  expect(spyOnRegisterColor.mock.calls[0]?.[1].dark).toBe(tailwindColorPalette.accent1[400]);
+});
+
+test('initDropdown registers dropdown-border', async () => {
+  colorRegistry.initColors();
+
+  const colorsLight = colorRegistry.listColors('light');
+  const dropdownBorderLight = colorsLight.find(c => c.id === 'dropdown-border');
+  expect(dropdownBorderLight).toBeDefined();
+  expect(dropdownBorderLight?.value).toBe(tailwindColorPalette.accent1[500]);
+
+  const colorsDark = colorRegistry.listColors('dark');
+  const dropdownBorderDark = colorsDark.find(c => c.id === 'dropdown-border');
+  expect(dropdownBorderDark).toBeDefined();
+  expect(dropdownBorderDark?.value).toBe('transparent');
 });
 
 describe('registerColor', () => {
@@ -500,7 +522,7 @@ describe('registerExtensionThemes', () => {
     // now check for a color not defined in 'light-theme1'
     const titlebarTextColorLight = colorsLight.find(c => c.id === 'titlebar-text');
     expect(titlebarTextColorLight).toBeDefined();
-    expect(titlebarTextColorLight?.value).toBe('#37255d');
+    expect(titlebarTextColorLight?.value).toBe(tailwindColorPalette.accent1[500]);
   });
 
   test('check dispose on Windows', async () => {
@@ -662,12 +684,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[2]?.[0]).toStrictEqual('label-primary-bg');
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.purple[300]);
-    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.purple[700]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].light).toBe(tailwindColorPalette.accent1[200]);
+    expect(spyOnRegisterColor.mock.calls[2]?.[1].dark).toBe(tailwindColorPalette.accent1[900]);
 
     expect(spyOnRegisterColor.mock.calls[3]?.[0]).toStrictEqual('label-primary-text');
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.purple[700]);
-    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.purple[300]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].light).toBe(tailwindColorPalette.accent1[800]);
+    expect(spyOnRegisterColor.mock.calls[3]?.[1].dark).toBe(tailwindColorPalette.accent1[200]);
   });
 
   test('secondary color', () => {
@@ -777,6 +799,8 @@ describe('initTooltip', () => {
     expect(spyOnRegisterColor).toHaveBeenCalledWith('tooltip-text', {
       light: tailwindColorPalette.stone[900],
       dark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
+      hcDark: tailwindColorPalette.white,
     });
   });
 
@@ -787,6 +811,8 @@ describe('initTooltip', () => {
     expect(spyOnRegisterColor).toHaveBeenCalledWith('tooltip-border', {
       light: tailwindColorPalette.gray[500],
       dark: tailwindColorPalette.charcoal[500],
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 
@@ -872,6 +898,83 @@ describe('initCommon', () => {
     // verify the colors contain alpha information (0.4)
     expect(definition?.dark).toContain('0.4');
     expect(definition?.light).toContain('0.4');
+  });
+});
+
+describe('initDefaults', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+  let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+    spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
+    spyOnRegisterColorDefinition.mockReturnValue(undefined);
+
+    colorRegistry.initDefaults();
+  });
+
+  test('registers default-text-link color', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('default-text-link', {
+      dark: tailwindColorPalette.accent1[400],
+      light: tailwindColorPalette.accent1[700],
+      hcDark: tailwindColorPalette.accent1[300],
+      hcLight: tailwindColorPalette.accent1[950],
+    });
+  });
+
+  test('registers default-item-hover color using registerColorDefinition', () => {
+    const itemHoverCall = spyOnRegisterColorDefinition.mock.calls.find(call => call?.[0]?.id === 'default-item-hover');
+    expect(itemHoverCall).toBeDefined();
+
+    const definition = itemHoverCall?.[0];
+    expect(definition?.id).toBe('default-item-hover');
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toBeDefined();
+    expect(definition?.hcDark).toBeDefined();
+    expect(definition?.hcLight).toBeDefined();
+
+    // verify both colors are strings (formatted CSS)
+    expect(typeof definition?.dark).toBe('string');
+    expect(typeof definition?.light).toBe('string');
+
+    // verify the colors contain alpha information (0.1)
+    expect(definition?.dark).toContain('0.1');
+    expect(definition?.light).toContain('0.1');
+    expect(definition?.hcDark).toContain('0.3');
+    expect(definition?.hcLight).toContain('0.4');
+  });
+});
+
+describe('initStatusColors', () => {
+  beforeEach(() => {
+    vi.spyOn(colorRegistry, 'registerColor').mockReturnValue(undefined);
+    vi.spyOn(colorRegistry, 'registerColorDefinition').mockReturnValue(undefined);
+
+    colorRegistry.initStatusColors();
+  });
+
+  test.each([
+    { id: 'status-running-bg', description: 'green alpha background' },
+    { id: 'status-stopped-bg', description: 'gray/charcoal alpha background' },
+    { id: 'status-terminated-bg', description: 'red alpha background' },
+    { id: 'status-starting-bg', description: 'green alpha background' },
+    { id: 'status-unknown-bg', description: 'gray/charcoal alpha background' },
+  ])('registers $id with $description', ({ id }) => {
+    const call = vi.mocked(colorRegistry.registerColorDefinition).mock.calls.find(c => c?.[0]?.id === id);
+    expect(call).toBeDefined();
+    const definition = call?.[0];
+    expect(definition?.id).toBe(id);
+    expect(definition?.light).toBeDefined();
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toContain('0.2');
+    expect(definition?.dark).toContain('0.2');
+  });
+
+  test('registers exactly 5 color definitions for status backgrounds', () => {
+    expect(vi.mocked(colorRegistry.registerColorDefinition)).toHaveBeenCalledTimes(5);
   });
 });
 

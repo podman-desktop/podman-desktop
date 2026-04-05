@@ -24,7 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { PodmanRemoteConnections } from './podman-remote-connections';
 import type { PodmanRemoteSshTunnel } from './podman-remote-ssh-tunnel';
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const extensionContext = {} as extensionApi.ExtensionContext;
 

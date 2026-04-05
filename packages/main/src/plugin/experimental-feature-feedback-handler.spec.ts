@@ -130,7 +130,7 @@ describe('init', () => {
     expect(registerConfigurationsMock).toHaveBeenCalledTimes(1);
     expect(registerConfigurationsMock).toHaveBeenCalledWith([
       {
-        id: 'preferences',
+        id: 'preferences.feedback',
         title: 'Feedback dialog',
         type: 'object',
         properties: {
