@@ -684,7 +684,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
 
   expect(extensionLoader.getExtensionStateErrors().get(id)).toBeDefined();
   expect(extensionLoader.getExtensionStateErrors().get(id)?.toString()).toContain(
-    'Extension extension.id activation timed out after 1 seconds',
+    'Extension extension.id activation timed out after 1000ms',
   );
   expect(extensionLoader.getExtensionState().get(id)).toBe('failed');
 });
