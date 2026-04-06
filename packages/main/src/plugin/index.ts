@@ -168,6 +168,7 @@ import { Welcome } from '/@/plugin/welcome.js';
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 import { TrayMenu } from '/@/tray-menu.js';
 import { createHash, isMac } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { MainWindowDeferred } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
@@ -3183,6 +3184,10 @@ export class PluginSystem {
 
     this.ipcHandle('welcome:getWelcomeMessages', async (): Promise<WelcomeMessages> => {
       return welcome.getWelcomeMessages();
+    });
+
+    this.ipcHandle('product:getUrlProtocol', async (): Promise<string> => {
+      return product.urlProtocol;
     });
 
     this.ipcHandle(

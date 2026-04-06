@@ -1694,6 +1694,10 @@ export function initExposure(): void {
     return ipcInvoke('welcome:getWelcomeMessages');
   });
 
+  contextBridge.exposeInMainWorld('getUrlProtocol', async (): Promise<string> => {
+    return ipcInvoke('product:getUrlProtocol');
+  });
+
   contextBridge.exposeInMainWorld('stopExtension', async (extensionId: string): Promise<void> => {
     return ipcInvoke('extension-loader:stopExtension', extensionId);
   });
