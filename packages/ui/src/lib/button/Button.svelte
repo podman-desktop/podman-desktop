@@ -43,7 +43,7 @@ let {
 let actualPadding = $derived(padding ?? 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]'));
 
 let classes = $derived.by(() => {
-  let result: string = '';
+  let result: string;
   if (disabled || inProgress) {
     result = 'bg-[var(--pd-button-disabled-bg)] text-[var(--pd-button-disabled-text)] border border-transparent';
   } else if (type === 'primary') {
@@ -62,7 +62,9 @@ let classes = $derived.by(() => {
     result =
       'bg-[var(--pd-button-link-bg)] text-[var(--pd-button-link-text)] border border-transparent hover:bg-[var(--pd-button-link-hover-bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]';
   } else {
-    console.warn(`Unknown button type: ${type}`);
+    console.warn(`Unknown button type: ${type}, falling back to primary`);
+    result =
+      'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-primary-text)] border border-[var(--pd-button-primary-border)] hover:bg-[var(--pd-button-primary-hover-bg)] shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pd-button-focus-ring)]';
   }
 
   // Set cursor states
