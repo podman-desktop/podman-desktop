@@ -23,6 +23,7 @@ import '@testing-library/jest-dom/vitest';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { expect, test, vi } from 'vitest';
 
 import Button from './Button.svelte';
@@ -294,10 +295,10 @@ test('Icon-only button with aria-label should not log console warning', async ()
 
   render(Button, { icon: faTrash, 'aria-label': 'Delete' });
 
-  // Wait for onMount to execute, then verify no warning was logged
-  await vi.waitFor(() => {
-    expect(consoleWarnSpy).not.toHaveBeenCalled();
-  });
+  // Flush Svelte lifecycle so onMount completes before asserting
+  await tick();
+
+  expect(consoleWarnSpy).not.toHaveBeenCalled();
 
   consoleWarnSpy.mockRestore();
 });
@@ -307,10 +308,10 @@ test('Icon button with title should not log console warning', async () => {
 
   render(Button, { icon: faTrash, title: 'Delete' });
 
-  // Wait for onMount to execute, then verify no warning was logged
-  await vi.waitFor(() => {
-    expect(consoleWarnSpy).not.toHaveBeenCalled();
-  });
+  // Flush Svelte lifecycle so onMount completes before asserting
+  await tick();
+
+  expect(consoleWarnSpy).not.toHaveBeenCalled();
 
   consoleWarnSpy.mockRestore();
 });
