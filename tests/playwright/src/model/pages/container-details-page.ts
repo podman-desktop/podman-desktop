@@ -156,4 +156,8 @@ export class ContainerDetailsPage extends DetailsPage {
       await this.clearLogsButton.click();
     });
   }
+
+  async searchInInspectEditor(text: string): Promise<boolean> {
+    return this.searchInEditor(ContainerDetailsPage.INSPECT_TAB, text);
+  }
 }
