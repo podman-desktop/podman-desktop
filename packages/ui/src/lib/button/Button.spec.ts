@@ -281,10 +281,10 @@ test('Icon-only button with aria-label should not log console warning', async ()
 
   render(Button, { icon: faTrash, 'aria-label': 'Delete' });
 
-  // Give onMount time to execute
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  expect(consoleWarnSpy).not.toHaveBeenCalled();
+  // Wait for onMount to execute, then verify no warning was logged
+  await vi.waitFor(() => {
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
 
   consoleWarnSpy.mockRestore();
 });
@@ -294,10 +294,10 @@ test('Icon button with title should not log console warning', async () => {
 
   render(Button, { icon: faTrash, title: 'Delete' });
 
-  // Give onMount time to execute
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  expect(consoleWarnSpy).not.toHaveBeenCalled();
+  // Wait for onMount to execute, then verify no warning was logged
+  await vi.waitFor(() => {
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
 
   consoleWarnSpy.mockRestore();
 });
