@@ -319,8 +319,9 @@ export class AuthenticationImpl {
       const session = sessions[0];
       const accountId = session.account.id;
       const accountLabel = session.account.label || accountId; // Fallback to accountId if label is empty
-      const accessAllowed =
-        requestingExtension.whitelisted ?? this.isAccessAllowed(providerId, accountId, requestingExtension.id);
+      const accessAllowed = requestingExtension.whitelisted
+        ? true
+        : this.isAccessAllowed(providerId, accountId, requestingExtension.id);
 
       // If explicitly denied, don't return the session
       if (accessAllowed === false) {
