@@ -47,6 +47,8 @@ export interface ExtensionInfo {
   id: string;
   label: string;
   icon?: string | { light: string; dark: string };
+  // true for preinstalled/bundled extensions that can share sessions without user confirmation
+  whitelisted?: boolean;
 }
 
 export interface AllowedExtension {
@@ -317,7 +319,8 @@ export class AuthenticationImpl {
       const session = sessions[0];
       const accountId = session.account.id;
       const accountLabel = session.account.label || accountId; // Fallback to accountId if label is empty
-      const accessAllowed = this.isAccessAllowed(providerId, accountId, requestingExtension.id);
+      const accessAllowed =
+        requestingExtension.whitelisted ?? this.isAccessAllowed(providerId, accountId, requestingExtension.id);
 
       // If explicitly denied, don't return the session
       if (accessAllowed === false) {

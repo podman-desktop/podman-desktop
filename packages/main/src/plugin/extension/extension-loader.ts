@@ -921,6 +921,7 @@ export class ExtensionLoader implements IAsyncDisposable {
       name: extManifest.name,
       extensionPath,
       icon: extManifest.icon ? instance.updateImage(extManifest.icon, extensionPath) : undefined,
+      whitelisted: !analyzedExtension.removable,
     };
 
     const commandRegistry = this.commandRegistry;
