@@ -34,9 +34,9 @@ export class ProtocolLauncher {
     const singleColonPrefix = `${this.protocol}:`;
 
     if (url.startsWith(`${doubleSlashPrefix}extension/`)) {
-      url = url.replace(`${doubleSlashPrefix}extension/`, `${singleColonPrefix}extension/`);
+      return url.replace(`${doubleSlashPrefix}extension/`, `${singleColonPrefix}extension/`);
     } else if (url.startsWith(`${doubleSlashPrefix}preferences/experimental`)) {
-      url = url.replace(`${doubleSlashPrefix}preferences/experimental`, `${singleColonPrefix}experimental`);
+      return url.replace(`${doubleSlashPrefix}preferences/experimental`, `${singleColonPrefix}experimental`);
     }
 
     return url;
@@ -62,14 +62,14 @@ export class ProtocolLauncher {
     // if the url starts with ${this.protocol}:extension/<id>
     // we need to install the extension
 
-    // if url starts with '${this.protocol}://extension', replace it with 'podman-desktop:extension'
-    url = this.sanitizeProtocolForExtension(url);
+    // if url starts with '${this.protocol}://extension', replace it with '${this.protocol}:extension'
+    const normalizedUrl = this.sanitizeProtocolForExtension(url);
 
     const extensionPrefix = `${this.protocol}:extension/`;
     const experimentalPrefix = `${this.protocol}:experimental`;
 
-    if (url.startsWith(extensionPrefix)) {
-      const extensionId = url.substring(extensionPrefix.length);
+    if (normalizedUrl.startsWith(extensionPrefix)) {
+      const extensionId = normalizedUrl.substring(extensionPrefix.length);
 
       this.browserWindow.promise
         .then(w => {
@@ -78,7 +78,7 @@ export class ProtocolLauncher {
         .catch((error: unknown) => {
           console.error('Error sending open-url event to webcontents', error);
         });
-    } else if (url.startsWith(experimentalPrefix)) {
+    } else if (normalizedUrl.startsWith(experimentalPrefix)) {
       this.browserWindow.promise
         .then(w => {
           w.webContents.send('podman-desktop-protocol:open-experimental-features');
@@ -87,7 +87,7 @@ export class ProtocolLauncher {
           console.error('Error sending open-url event to webcontents', error);
         });
     } else {
-      console.log(`url ${url} does not start with ${extensionPrefix} or ${experimentalPrefix}, skipping.`);
+      console.log(`url ${normalizedUrl} does not start with ${extensionPrefix} or ${experimentalPrefix}, skipping.`);
       return;
     }
   }
