@@ -22,8 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { render, screen } from '@testing-library/svelte';
-import { tick } from 'svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import Button from './Button.svelte';
@@ -283,7 +282,7 @@ test('Icon-only button without aria-label should log console warning', async () 
   render(Button, { icon: faTrash });
 
   // Wait for onMount to execute
-  await vi.waitFor(() => {
+  await waitFor(() => {
     expect(consoleWarnSpy).toHaveBeenCalledWith('Icon buttons should have defined visible aria-label');
   });
 
@@ -295,8 +294,10 @@ test('Icon-only button with aria-label should not log console warning', async ()
 
   render(Button, { icon: faTrash, 'aria-label': 'Delete' });
 
-  // Flush Svelte lifecycle so onMount completes before asserting
-  await tick();
+  // Wait for the component to fully render and onMount to complete
+  await waitFor(() => {
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
 
   expect(consoleWarnSpy).not.toHaveBeenCalled();
 
@@ -308,8 +309,10 @@ test('Icon button with title should not log console warning', async () => {
 
   render(Button, { icon: faTrash, title: 'Delete' });
 
-  // Flush Svelte lifecycle so onMount completes before asserting
-  await tick();
+  // Wait for the component to fully render and onMount to complete
+  await waitFor(() => {
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
 
   expect(consoleWarnSpy).not.toHaveBeenCalled();
 
