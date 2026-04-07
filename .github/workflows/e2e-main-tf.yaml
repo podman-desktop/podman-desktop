@@ -28,14 +28,9 @@ on:
         type: string
         required: true
       npm_target:
-        description: npm tests target
-        type: choice
-        default: 'all'
-        options:
-          - e2e
-          - kubernetes
-          - smoke
-          - all
+        description: 'TMT plan target to run (e.g. smoke, e2e, kubernetes, all)'
+        type: string
+        default: 'e2e'
 
 jobs:
   pd-e2e-testing-farm-ci:
