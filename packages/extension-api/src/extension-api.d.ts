@@ -4510,6 +4510,12 @@ declare module '@podman-desktop/api' {
      * The system clipboard.
      */
     export const clipboard: Clipboard;
+
+    /**
+     * The custom URL protocol scheme registered by the application (e.g., 'podman-desktop').
+     * This is the protocol used for deep linking into the application.
+     */
+    export const urlProtocol: string;
   }
 
   /**

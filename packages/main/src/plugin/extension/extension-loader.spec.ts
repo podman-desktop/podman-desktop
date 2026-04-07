@@ -2914,4 +2914,9 @@ describe('env API', () => {
     const api = createApi();
     expect(api.env.appName).toBe(product.name);
   });
+
+  test('expect env.urlProtocol to be product urlProtocol', () => {
+    const api = createApi();
+    expect(api.env.urlProtocol).toBe(product.urlProtocol);
+  });
 });
