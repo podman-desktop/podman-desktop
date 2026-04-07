@@ -36,7 +36,6 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 test('Expect to have bold', async () => {
