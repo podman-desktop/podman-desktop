@@ -47,6 +47,7 @@ const {
   purple,
   red,
   sky,
+  slate,
   stone,
   white,
   transparent,
@@ -1307,86 +1308,177 @@ export class ColorRegistry {
 
   // button
   protected initButton(): void {
+    const itemDisabled = this.#definitions.get('item-disabled');
+    const textLink = this.#definitions.get('default-text-link');
+    const hoverItem = this.#definitions.get('default-item-hover');
+
+    if (!itemDisabled || !textLink || !hoverItem) {
+      throw new Error(
+        'item-disabled, default-text-link and default-item-hover colors must be defined before button colors',
+      );
+    }
+
     const button = 'button-';
 
     this.registerColor(`${button}primary-bg`, {
       dark: accent1[500],
       light: accent1[500],
       hcDark: accent1[600],
-      hcLight: accent1[700],
+      hcLight: accent1[600],
     });
 
     this.registerColor(`${button}primary-hover-bg`, {
-      dark: accent1[500],
-      light: accent1[500],
+      dark: accent1[400],
+      light: accent1[400],
       hcDark: accent1[600],
-      hcLight: accent1[700],
+      hcLight: accent1[600],
     });
 
+    this.registerColorDefinition(
+      this.color(`${button}primary-border`)
+        .withDark(colorPaletteHelper(accent1[300]).withAlpha(0.4))
+        .withLight(colorPaletteHelper(transparent))
+        .withHcDark(colorPaletteHelper(accent1[100]))
+        .withHcLight(colorPaletteHelper(accent1[900]))
+        .build(),
+    );
+
+    this.registerColor(`${button}primary-text`, {
+      dark: white,
+      light: white,
+      hcDark: white,
+      hcLight: white,
+    });
+
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Use `button-secondary-bg` instead
     this.registerColor(`${button}secondary`, {
-      dark: gray[200],
-      light: accent1[600],
-      hcDark: accent1[300],
-      hcLight: accent1[700],
+      dark: stone[700], // copied from secondary-bg/dark
+      light: accent1[100], // copied from secondary-bg/light
+      hcDark: stone[700], // copied from secondary-bg/hcDark
+      hcLight: accent1[100], // copied from secondary-bg/hcLight
     });
 
+    this.registerColor(`${button}secondary-bg`, {
+      dark: stone[700],
+      light: accent1[100],
+      hcDark: stone[700],
+      hcLight: accent1[100],
+    });
+
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Use `button-secondary-hover-bg` instead
     this.registerColor(`${button}secondary-hover`, {
-      dark: accent1[500],
+      dark: slate[600], // copied from secondary-hover-bg/dark
+      light: accent1[50], // copied from secondary-hover-bg/light
+      hcDark: stone[700], // copied from secondary-hover-bg/hcDark
+      hcLight: accent1[100], // copied from secondary-hover-bg/hcLight
+    });
+
+    this.registerColor(`${button}secondary-hover-bg`, {
+      dark: slate[600],
+      light: accent1[50],
+      hcDark: stone[700],
+      hcLight: accent1[100],
+    });
+
+    this.registerColorDefinition(
+      this.color(`${button}secondary-border`)
+        .withDark(colorPaletteHelper(gray[600]).withAlpha(0.4))
+        .withLight(colorPaletteHelper(accent1[500]))
+        .withHcDark(colorPaletteHelper(stone[300]))
+        .withHcLight(colorPaletteHelper(accent1[800]))
+        .build(),
+    );
+
+    this.registerColor(`${button}secondary-text`, {
+      dark: gray[200],
       light: accent1[500],
-      hcDark: accent1[300],
-      hcLight: accent1[700],
+      hcDark: white,
+      hcLight: accent1[950],
     });
 
     this.registerColor(`${button}text`, {
       dark: white,
       light: white,
+      hcDark: white,
+      hcLight: white,
     });
 
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Use `button-disabled-bg` instead
     this.registerColor(`${button}disabled`, {
-      dark: charcoal[300],
-      light: gray[600],
+      dark: stone[700], // copied from disabled-bg/dark
+      light: stone[300], // copied from disabled-bg/light
+      hcDark: stone[700], // copied from disabled-bg/hcDark
+      hcLight: stone[300], // copied from disabled-bg/hcLight
+    });
+
+    this.registerColor(`${button}disabled-bg`, {
+      dark: stone[700],
+      light: stone[300],
+      hcDark: stone[700],
+      hcLight: stone[300],
     });
 
     this.registerColor(`${button}disabled-text`, {
-      dark: charcoal[50],
-      light: gray[900],
+      dark: itemDisabled.dark,
+      light: itemDisabled.light,
+      hcDark: itemDisabled.hcDark,
+      hcLight: itemDisabled.hcLight,
+    });
+
+    this.registerColor(`${button}danger-bg`, {
+      dark: red[700],
+      light: red[200],
+      hcDark: red[700],
+      hcLight: red[200],
     });
 
     this.registerColor(`${button}danger-border`, {
       dark: red[550],
-      light: red[950],
-    });
-
-    this.registerColor(`${button}danger-bg`, {
-      dark: transparent,
-      light: transparent,
+      light: red[800],
+      hcDark: red[100],
+      hcLight: red[800],
     });
 
     this.registerColor(`${button}danger-text`, {
-      dark: red[550],
-      light: red[950],
+      dark: white,
+      light: red[800],
+      hcDark: white,
+      hcLight: red[950],
     });
 
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Button.svelte no longer uses separate hover text color for danger buttons
     this.registerColor(`${button}danger-hover-text`, {
       dark: white,
       light: white,
     });
 
     this.registerColor(`${button}danger-hover-bg`, {
-      dark: red[750],
-      light: red[750],
+      dark: red[600],
+      light: red[100],
+      hcDark: red[700],
+      hcLight: red[200],
     });
 
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Disabled buttons now use `button-disabled-bg` for all types
     this.registerColor(`${button}danger-disabled-border`, {
       dark: charcoal[50],
       light: gray[900],
     });
 
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Disabled buttons now use `button-disabled-text` for all types
     this.registerColor(`${button}danger-disabled-text`, {
       dark: charcoal[50],
       light: gray[900],
     });
 
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Disabled buttons now use `button-disabled-bg` for all types
     this.registerColor(`${button}danger-disabled-bg`, {
       dark: transparent,
       light: transparent,
@@ -1398,29 +1490,31 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${button}tab-border-selected`, {
-      dark: gray[275],
-      light: accent1[500],
+      dark: textLink.dark,
+      light: textLink.light,
       hcDark: accent1[300],
       hcLight: accent1[700],
     });
 
     this.registerColor(`${button}tab-hover-border`, {
-      dark: charcoal[100],
-      light: gray[350],
-      hcDark: accent1[800],
-      hcLight: accent1[200],
+      dark: hoverItem.dark,
+      light: hoverItem.light,
+      hcDark: hoverItem.hcDark,
+      hcLight: hoverItem.hcLight,
     });
 
     this.registerColor(`${button}tab-text`, {
-      dark: gray[600],
-      light: charcoal[200],
-      hcDark: white,
-      hcLight: black,
+      dark: textLink.dark,
+      light: textLink.light,
+      hcDark: textLink.hcDark,
+      hcLight: textLink.hcLight,
     });
 
     this.registerColor(`${button}tab-text-selected`, {
-      dark: white,
-      light: black,
+      dark: textLink.dark,
+      light: textLink.light,
+      hcDark: textLink.hcDark,
+      hcLight: textLink.hcLight,
     });
 
     this.registerColor(`${button}close-hover-bg`, {
@@ -1430,16 +1524,43 @@ export class ColorRegistry {
       hcLight: accent1[200],
     });
 
+    this.registerColor(`${button}link-bg`, {
+      dark: transparent,
+      light: transparent,
+      hcDark: transparent,
+      hcLight: transparent,
+    });
+
     this.registerColor(`${button}link-text`, {
-      dark: accent1[300],
-      light: accent1[600],
+      dark: textLink.dark,
+      light: textLink.light,
+      hcDark: textLink.hcDark,
+      hcLight: textLink.hcLight,
     });
 
     this.registerColor(`${button}link-hover-bg`, {
-      dark: transparent,
-      light: transparent,
+      dark: hoverItem.dark,
+      light: hoverItem.light,
+      hcDark: hoverItem.hcDark,
+      hcLight: hoverItem.hcLight,
     });
 
+    this.registerColor(`${button}focus-ring`, {
+      dark: textLink.dark,
+      light: textLink.light,
+      hcDark: accent1[300],
+      hcLight: accent1[700],
+    });
+
+    this.registerColor(`${button}focus-ring-danger`, {
+      dark: red[550],
+      light: red[750],
+      hcDark: red[550],
+      hcLight: red[950],
+    });
+
+    // @deprecated since 2026-04-01. See https://github.com/podman-desktop/podman-desktop/issues/16189
+    // Unused color
     this.registerColor(`${button}help-link-text`, {
       dark: gray[100],
       light: charcoal[900],
