@@ -334,7 +334,7 @@ export class AuthenticationImpl {
         const allowRsp = await this.messageBox.showMessageBox({
           title: 'Allow Access',
           message: `The extension '${requestingExtension.label}' wants to access the ${providerData?.label ?? providerId} account '${accountLabel}'.`,
-          buttons: ['Deny', 'Allow'],
+          buttons: ['Allow', 'Deny'],
           type: 'info',
         });
 
