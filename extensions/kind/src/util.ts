@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import { isAbsolute, join } from 'node:path';
@@ -196,4 +197,19 @@ export async function getMemTotalInfo(socketPath: string): Promise<number> {
 
 export function removeVersionPrefix(version: string): string {
   return version.replace('v', '').trim();
+}
+
+/**
+ * Returns a temp directory accessible from both the Flatpak sandbox and the host.
+ * In Flatpak, /tmp is a private tmpfs, so we use ~/.cache/kind-tmp/ which is
+ * shared via --filesystem=home.
+ */
+export async function getTempDir(): Promise<string> {
+  if (process.env['FLATPAK_ID']) {
+    const cacheHome = process.env['XDG_CACHE_HOME'] ?? join(os.homedir(), '.cache');
+    const tmpDir = join(cacheHome, 'kind-tmp');
+    await fs.promises.mkdir(tmpDir, { recursive: true });
+    return tmpDir;
+  }
+  return os.tmpdir();
 }
