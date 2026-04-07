@@ -201,6 +201,23 @@ test('Button hidden should be hidden', async () => {
   expect(button).not.toBeInTheDocument();
 });
 
+test('Unknown button type falls back to primary styling', async () => {
+  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  // Force an invalid type to exercise the else fallback branch
+  render(Button, { type: 'unknown-type' as never });
+
+  const button = screen.getByRole('button');
+  expect(button).toHaveClass('bg-[var(--pd-button-primary-bg)]');
+  expect(button).toHaveClass('text-[var(--pd-button-primary-text)]');
+
+  await vi.waitFor(() => {
+    expect(consoleWarnSpy).toHaveBeenCalledWith('Unknown button type: unknown-type, falling back to primary');
+  });
+
+  consoleWarnSpy.mockRestore();
+});
+
 test('Button should have aria-disabled when disabled', async () => {
   render(Button, { disabled: true });
   const button = screen.getByRole('button');
