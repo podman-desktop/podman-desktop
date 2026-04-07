@@ -1500,6 +1500,9 @@ export class ExtensionLoader implements IAsyncDisposable {
           },
         };
       },
+      get urlProtocol() {
+        return product.urlProtocol;
+      },
     };
 
     const process: typeof containerDesktopAPI.process = {
