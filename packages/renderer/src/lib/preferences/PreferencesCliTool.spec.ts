@@ -140,6 +140,7 @@ beforeAll(() => {
     value: {
       updateCliTool: vi.fn(),
       executeCommand: vi.fn(),
+      getUrlProtocol: vi.fn().mockResolvedValue('podman-desktop'),
       navigator: {
         clipboard: {
           writeText: vi.fn(),
@@ -152,6 +153,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 describe('CLI Tool item', () => {
