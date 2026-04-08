@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
+import type { Logger, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
 import { getSystemBinaryPath, installBinaryToSystem } from './cli-run';
@@ -71,6 +72,21 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   const composeGitHubReleases = new ComposeGitHubReleases(octokit);
   const composeDownload = new ComposeDownload(extensionContext, composeGitHubReleases, os);
+
+  // Need to "ADD" a provider so we can actually press the button!
+  // We set this to "unknown" so it does not appear on the dashboard (we only want it in preferences).
+  const providerOptions: extensionApi.ProviderOptions = {
+    name: composeDisplayName,
+    id: composeDisplayName,
+    status: 'unknown',
+    images: {
+      icon: imageLocation,
+    },
+  };
+
+  providerOptions.emptyConnectionMarkdownDescription = composeDescription;
+  const provider = extensionApi.provider.createProvider(providerOptions);
+  extensionContext.subscriptions.push(provider);
 
   // add a command to display the onboarding page
   const openOnboardingCommand = extensionApi.commands.registerCommand('compose.openComposeOnboarding', async () => {
@@ -135,7 +151,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
         // register the cli tool if necessary
         if (!composeCliTool) {
-          await registerCLITool(composeDownload, detect, extensionContext);
+          await registerCLITool(composeDownload, detect, extensionContext, provider);
         }
       } catch (error) {
         await extensionApi.window.showErrorMessage(`Unable to download docker-compose binary: ${error}`);
@@ -217,24 +233,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     onboardingInstallSystemWideCommand,
   );
 
-  // Need to "ADD" a provider so we can actually press the button!
-  // We set this to "unknown" so it does not appear on the dashboard (we only want it in preferences).
-  const providerOptions: extensionApi.ProviderOptions = {
-    name: composeDisplayName,
-    id: composeDisplayName,
-    status: 'unknown',
-    images: {
-      icon: imageLocation,
-    },
-  };
-
-  providerOptions.emptyConnectionMarkdownDescription = composeDescription;
-  const provider = extensionApi.provider.createProvider(providerOptions);
-  extensionContext.subscriptions.push(provider);
-
   // Push the CLI tool as well (but it will do it postActivation so it does not block the activate() function)
   // Post activation
-  registerCLITool(composeDownload, detect, extensionContext).catch((error: unknown) => {
+  registerCLITool(composeDownload, detect, extensionContext, provider).catch((error: unknown) => {
     console.error('Error activating extension', error);
   });
 }
@@ -244,6 +245,7 @@ async function registerCLITool(
   composeDownload: ComposeDownload,
   detect: Detect,
   context: extensionApi.ExtensionContext,
+  provider: extensionApi.Provider,
 ): Promise<void> {
   // build executable name for current platform
   const executable = os.isWindows() ? composeCliName + '.exe' : composeCliName;
@@ -311,6 +313,9 @@ async function registerCLITool(
 
   const latestVersion = latestVersionAsset ? removeVersionPrefix(latestVersionAsset.tag) : undefined;
 
+  let composeProviderUpdateDisposable: extensionApi.Disposable | undefined;
+  let composeProviderUpdate: ProviderUpdate | undefined;
+
   const update = {
     version: latestVersion !== composeCliTool.version ? latestVersion : undefined,
     selectVersion: async (): Promise<string> => {
@@ -345,12 +350,14 @@ async function registerCLITool(
       // get the binary in the extension folder
       const storagePath = await detect.getStoragePath();
       binaryPath = await installBinaryToSystem(storagePath, composeCliName);
+      const installedVersion = releaseVersionToUpdateTo;
       composeCliTool?.updateVersion({
-        version: releaseVersionToUpdateTo,
+        version: installedVersion,
         path: binaryPath,
         installationSource: 'extension',
       });
-      binaryVersion = releaseVersionToUpdateTo;
+      binaryVersion = installedVersion;
+      provider.updateVersion(installedVersion);
       releaseVersionToUpdateTo = undefined;
       releaseToUpdateTo = undefined;
     },
@@ -364,8 +371,14 @@ async function registerCLITool(
     composeCliTool.onDidUpdateVersion((version: string) => {
       if (version === latestVersion) {
         delete update.version;
+        composeProviderUpdateDisposable?.dispose();
       } else {
         update.version = latestVersion;
+        if (composeProviderUpdate) {
+          composeProviderUpdate.version = latestVersion ?? composeProviderUpdate.version;
+          composeProviderUpdateDisposable?.dispose();
+          composeProviderUpdateDisposable = provider.registerUpdate(composeProviderUpdate);
+        }
       }
     }),
   );
@@ -424,6 +437,7 @@ async function registerCLITool(
       binaryVersion = undefined;
       binaryPath = undefined;
       extensionApi.context.setValue('compose.isComposeInstalledSystemWide', false);
+      composeProviderUpdateDisposable?.dispose();
     },
   });
 
@@ -433,6 +447,18 @@ async function registerCLITool(
   }
 
   composeCliToolUpdaterDisposable = composeCliTool.registerUpdate(update);
+
+  if (update.version) {
+    composeProviderUpdate = {
+      version: update.version,
+      update: async (_logger: Logger): Promise<void> => {
+        releaseToUpdateTo = undefined;
+        releaseVersionToUpdateTo = undefined;
+        await update.doUpdate();
+      },
+    };
+    composeProviderUpdateDisposable = provider.registerUpdate(composeProviderUpdate);
+  }
 }
 
 async function deleteFile(filePath: string): Promise<void> {

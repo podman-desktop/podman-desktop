@@ -17,7 +17,7 @@
  ***********************************************************************/
 import * as fs from 'node:fs';
 
-import type { CliTool, Logger } from '@podman-desktop/api';
+import type { CliTool, Logger, Provider } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -49,6 +49,10 @@ beforeEach(() => {
     get: vi.fn(),
     has: vi.fn(),
   });
+  vi.mocked(extensionApi.provider.createProvider).mockReturnValue({
+    registerUpdate: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    updateVersion: vi.fn(),
+  } as unknown as Provider);
 });
 
 afterEach(() => {
