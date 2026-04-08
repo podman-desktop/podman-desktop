@@ -17,7 +17,7 @@
  ***********************************************************************/
 import * as fs from 'node:fs';
 
-import type { CliTool, Logger, Provider } from '@podman-desktop/api';
+import type { CliTool, Logger, Provider, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -478,5 +478,117 @@ describe('registerCLITool', () => {
     vi.mocked(extensionApi.window.showErrorMessage).mockResolvedValue(undefined);
     await downloadCommandHandler();
     expect(extensionApi.window.showErrorMessage).toHaveBeenCalledOnce();
+  });
+});
+
+describe('provider registerUpdate (Resources page)', () => {
+  let registerUpdateSpy: ReturnType<typeof vi.fn>;
+  let updateVersionSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    registerUpdateSpy = vi.fn().mockReturnValue({ dispose: vi.fn() });
+    updateVersionSpy = vi.fn();
+    vi.mocked(extensionApi.provider.createProvider).mockReturnValue({
+      registerUpdate: registerUpdateSpy,
+      updateVersion: updateVersionSpy,
+    } as unknown as Provider);
+  });
+
+  function mockExtensionInstalledCompose(): void {
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
+    vi.mocked(Detect.prototype.getDockerComposeBinaryInfo).mockResolvedValue({
+      version: 'v2.0.0',
+      path: 'system-wide-path',
+      updatable: true,
+    });
+    vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-wide-path');
+  }
+
+  function mockCliToolWithVersion(
+    resolveRegisterUpdate: (listener: extensionApi.CliToolSelectUpdate) => void,
+    options: { version?: string },
+  ): CliTool {
+    return {
+      registerUpdate: (listener: extensionApi.CliToolSelectUpdate | extensionApi.CliToolUpdate) => {
+        if ('selectVersion' in listener) {
+          resolveRegisterUpdate(listener);
+        }
+        return { dispose: vi.fn() };
+      },
+      registerInstaller: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+      updateVersion: vi.fn(),
+      dispose: vi.fn(),
+      onDidUpdateVersion: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+      get version(): string | undefined {
+        return options.version;
+      },
+    } as unknown as CliTool;
+  }
+
+  test('registers provider update when a newer compose version is available', async () => {
+    mockExtensionInstalledCompose();
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v2.5.0',
+    } as unknown as ComposeGithubReleaseArtifactMetadata);
+
+    const deferredCliUpdate: Promise<extensionApi.CliToolSelectUpdate> = new Promise(resolve => {
+      vi.mocked(extensionApi.cli.createCliTool).mockImplementation(opts =>
+        mockCliToolWithVersion(resolve, opts as { version?: string }),
+      );
+    });
+
+    await activate(extensionContextMock);
+    await deferredCliUpdate;
+
+    expect(registerUpdateSpy).toHaveBeenCalledOnce();
+    expect(registerUpdateSpy.mock.calls[0][0]).toEqual(expect.objectContaining({ version: '2.5.0' }));
+  });
+
+  test('does not register provider update when compose is already the latest version', async () => {
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
+    vi.mocked(Detect.prototype.getDockerComposeBinaryInfo).mockResolvedValue({
+      version: 'v2.5.0',
+      path: 'system-wide-path',
+      updatable: true,
+    });
+    vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-wide-path');
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v2.5.0',
+    } as unknown as ComposeGithubReleaseArtifactMetadata);
+
+    const deferredCliUpdate: Promise<extensionApi.CliToolSelectUpdate> = new Promise(resolve => {
+      vi.mocked(extensionApi.cli.createCliTool).mockImplementation(opts =>
+        mockCliToolWithVersion(resolve, opts as { version?: string }),
+      );
+    });
+
+    await activate(extensionContextMock);
+    await deferredCliUpdate;
+
+    expect(registerUpdateSpy).not.toHaveBeenCalled();
+  });
+
+  test('provider update callback downloads and installs compose', async () => {
+    mockExtensionInstalledCompose();
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v2.5.0',
+    } as unknown as ComposeGithubReleaseArtifactMetadata);
+    vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('storage-path');
+
+    const deferredCliUpdate: Promise<extensionApi.CliToolSelectUpdate> = new Promise(resolve => {
+      vi.mocked(extensionApi.cli.createCliTool).mockImplementation(opts =>
+        mockCliToolWithVersion(resolve, opts as { version?: string }),
+      );
+    });
+
+    await activate(extensionContextMock);
+    await deferredCliUpdate;
+
+    const providerUpdate = registerUpdateSpy.mock.calls[0][0] as ProviderUpdate;
+    await providerUpdate.update({} as unknown as Logger);
+
+    expect(ComposeDownload.prototype.download).toHaveBeenCalled();
+    expect(cliRun.installBinaryToSystem).toHaveBeenCalledWith('storage-path', 'docker-compose');
+    expect(updateVersionSpy).toHaveBeenCalledWith('2.5.0');
   });
 });
