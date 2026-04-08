@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 
-import type { CliToolSelectUpdate, Configuration, Logger, Provider } from '@podman-desktop/api';
+import type { CliToolSelectUpdate, Configuration, Logger, Provider, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -712,5 +712,137 @@ describe('postActivate', () => {
       [path.join(extensionContext.storagePath, 'bin', 'kubectl')],
       { isAdmin: true },
     );
+  });
+
+  describe('provider registerUpdate (Resources page)', () => {
+    let registerUpdateSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      registerUpdateSpy = vi.fn().mockReturnValue({ dispose: vi.fn() });
+      vi.mocked(extensionApi.provider.createProvider).mockReturnValue({
+        registerUpdate: registerUpdateSpy,
+        updateVersion: vi.fn(),
+      } as unknown as Provider);
+    });
+
+    function mockExtensionInstalledKubectl(): void {
+      vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-path');
+      vi.mocked(extensionApi.process.exec).mockImplementation(
+        (_command: string, _args?: string[], _options?: extensionApi.RunOptions) =>
+          new Promise<extensionApi.RunResult>(resolve => {
+            if (_args?.[0] === 'version') {
+              resolve({
+                stderr: '',
+                stdout: JSON.stringify(jsonStdout),
+                command: 'kubectl version --client=true -o=json',
+              });
+              return;
+            }
+            resolve({
+              stderr: '',
+              stdout: 'system-path',
+              command: 'which kubectl',
+            });
+          }),
+      );
+    }
+
+    /** Real CliTool exposes `version`; the extension compares it to the latest release tag. */
+    function mockCliToolWithVersion(
+      resolveRegisterUpdate: (listener: CliToolSelectUpdate) => void,
+      options: { version?: string },
+    ): extensionApi.CliTool {
+      return {
+        registerUpdate: (listener: CliToolSelectUpdate) => {
+          resolveRegisterUpdate(listener);
+          return {
+            dispose: vi.fn(),
+          };
+        },
+        registerInstaller: vi.fn(),
+        updateVersion: vi.fn(),
+        get version(): string | undefined {
+          return options.version;
+        },
+      } as unknown as extensionApi.CliTool;
+    }
+
+    test('registers provider update when a newer kubectl version is available', async () => {
+      mockExtensionInstalledKubectl();
+      const deferredCliUpdate: Promise<CliToolSelectUpdate> = new Promise<CliToolSelectUpdate>(resolve => {
+        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(opts =>
+          mockCliToolWithVersion(resolve, opts as { version?: string }),
+        );
+      });
+
+      await KubectlExtension.activate(extensionContext);
+      await deferredCliUpdate;
+
+      expect(registerUpdateSpy).toHaveBeenCalledOnce();
+      expect(registerUpdateSpy.mock.calls[0][0]).toEqual(expect.objectContaining({ version: '1.30.3' }));
+    });
+
+    test('does not register provider update when kubectl is already the latest version', async () => {
+      vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
+        {
+          label: 'Kubernetes v1.28.3',
+          tag: 'v1.28.3',
+          id: 165829199,
+        },
+      ]);
+      vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-path');
+      vi.mocked(extensionApi.process.exec).mockImplementation(
+        (_command: string, _args?: string[], _options?: extensionApi.RunOptions) =>
+          new Promise<extensionApi.RunResult>(resolve => {
+            if (_args?.[0] === 'version') {
+              resolve({
+                stderr: '',
+                stdout: JSON.stringify(jsonStdout),
+                command: 'kubectl version --client=true -o=json',
+              });
+              return;
+            }
+            resolve({
+              stderr: '',
+              stdout: 'system-path',
+              command: 'which kubectl',
+            });
+          }),
+      );
+      const deferredCliUpdate: Promise<CliToolSelectUpdate> = new Promise<CliToolSelectUpdate>(resolve => {
+        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(opts =>
+          mockCliToolWithVersion(resolve, opts as { version?: string }),
+        );
+      });
+
+      await KubectlExtension.activate(extensionContext);
+      await deferredCliUpdate;
+
+      expect(registerUpdateSpy).not.toHaveBeenCalled();
+    });
+
+    test('provider update callback downloads and installs kubectl', async () => {
+      mockExtensionInstalledKubectl();
+      const deferredCliUpdate: Promise<CliToolSelectUpdate> = new Promise<CliToolSelectUpdate>(resolve => {
+        vi.mocked(extensionApi.cli.createCliTool).mockImplementation(opts =>
+          mockCliToolWithVersion(resolve, opts as { version?: string }),
+        );
+      });
+
+      await KubectlExtension.activate(extensionContext);
+      await deferredCliUpdate;
+
+      const providerUpdate = registerUpdateSpy.mock.calls[0][0] as ProviderUpdate;
+      await providerUpdate.update({} as unknown as Logger);
+
+      expect(KubectlGitHubReleases.prototype.downloadReleaseAsset).toHaveBeenCalledWith(
+        'dummy download url',
+        expect.anything(),
+      );
+      expect(cliRun.installBinaryToSystem).toHaveBeenCalledWith(expect.anything(), 'kubectl');
+      expect(vi.mocked(cliRun.installBinaryToSystem).mock.calls[0][0]).toContain(
+        path.resolve(extensionContext.storagePath, 'bin', 'kubectl'),
+      );
+    });
   });
 });
