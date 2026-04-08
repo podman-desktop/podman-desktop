@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,7 +139,7 @@ test.describe
     test.describe
       .serial('Image Manifest Validation - Complex Containerfile', () => {
         test.skip(
-          isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
+          () => isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
           'Complex Containerfile uses RUN steps that require executing foreign-arch binaries, which fails on WSL without QEMU emulation. Simple Containerfile only defines CMD metadata and succeeds.',
         );
 
