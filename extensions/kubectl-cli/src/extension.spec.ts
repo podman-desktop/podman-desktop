@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 
-import type { CliToolSelectUpdate, Configuration, Logger } from '@podman-desktop/api';
+import type { CliToolSelectUpdate, Configuration, Logger, Provider } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -44,6 +44,10 @@ beforeEach(() => {
     update: vi.fn(),
   } as unknown as Configuration);
   vi.mocked(extensionApi.process.exec).mockClear();
+  vi.mocked(extensionApi.provider.createProvider).mockReturnValue({
+    registerUpdate: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    updateVersion: vi.fn(),
+  } as unknown as Provider);
 
   vi.mocked(KubectlGitHubReleases.prototype.grabLatestsReleasesMetadata).mockResolvedValue([
     {
