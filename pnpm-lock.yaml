@@ -1027,8 +1027,8 @@ importers:
         specifier: 10.1.0
         version: 10.1.0
       eslint-plugin-storybook:
-        specifier: 10.3.4
-        version: 10.3.4(eslint@10.2.0(jiti@2.6.1))(storybook@10.2.16(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3)
+        specifier: 10.3.5
+        version: 10.3.5(eslint@10.2.0(jiti@2.6.1))(storybook@10.2.16(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3)
       eslint-plugin-svelte:
         specifier: ^3.17.0
         version: 3.17.0(eslint@10.2.0(jiti@2.6.1))(svelte@5.53.7)
@@ -6897,11 +6897,11 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0 || ^10.0.0
 
-  eslint-plugin-storybook@10.3.4:
-    resolution: {integrity: sha512-6jRb9ucYWKRkbuxpN+83YA3wAWuKn6rp+OVXivy0FPa82v8eciHG8OidbznmzrfcRJYkNWUb7GrPjG/rf4Vqaw==}
+  eslint-plugin-storybook@10.3.5:
+    resolution: {integrity: sha512-rEFkfU3ypF44GpB4tiJ9EFDItueoGvGi3+weLHZax2ON2MB7VIDsxdSUGvIU5tMURg+oWYlpzCyLm4TpDq2deA==}
     peerDependencies:
       eslint: '>=8'
-      storybook: ^10.3.4
+      storybook: ^10.3.5
 
   eslint-plugin-svelte@3.17.0:
     resolution: {integrity: sha512-sF6wgd5FLS2P8CCaOy2HdYYYEcZ6TwL251dLHUkNmtLnWECk1Dwc+j6VeulmmnFxr7Xs0WNtjweOA+bJ0PnaFw==}
@@ -16722,8 +16722,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.58.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.58.0(typescript@5.9.3)
-      '@typescript-eslint/types': 8.58.0
+      '@typescript-eslint/tsconfig-utils': 8.58.1(typescript@5.9.3)
+      '@typescript-eslint/types': 8.58.1
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -19514,9 +19514,9 @@ snapshots:
       ts-api-utils: 2.4.0(typescript@5.9.3)
       typescript: 5.9.3
 
-  eslint-plugin-storybook@10.3.4(eslint@10.2.0(jiti@2.6.1))(storybook@10.2.16(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3):
+  eslint-plugin-storybook@10.3.5(eslint@10.2.0(jiti@2.6.1))(storybook@10.2.16(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0))(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/utils': 8.58.0(eslint@10.2.0(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.58.1(eslint@10.2.0(jiti@2.6.1))(typescript@5.9.3)
       eslint: 10.2.0(jiti@2.6.1)
       storybook: 10.2.16(@testing-library/dom@10.4.1)(prettier@3.8.1)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
     transitivePeerDependencies:
