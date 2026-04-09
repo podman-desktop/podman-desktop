@@ -153,5 +153,18 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.EXTENSIONS_CATALOG:
       router.goto(`/extensions?screen=catalog&searchTerm=${encodeURIComponent(request.parameters.searchTerm ?? '')}`);
       break;
+    case NavigationPage.CONTAINER_CONNECTION:
+      router.goto(
+        `/preferences/container-connection/view/${request.parameters.provider}/${Buffer.from(request.parameters.name).toString('base64')}/${Buffer.from(request.parameters.socketPath).toString('base64')}/summary`,
+      );
+      break;
+    case NavigationPage.KUBERNETES_CONNECTION:
+      router.goto(
+        `/preferences/kubernetes-connection/${request.parameters.provider}/${Buffer.from(request.parameters.apiURL).toString('base64')}/summary`,
+      );
+      break;
+    case NavigationPage.VM_CONNECTION:
+      router.goto(`/preferences/vm-connection/${request.parameters.provider}/${request.parameters.name}/terminal`);
+      break;
   }
 };

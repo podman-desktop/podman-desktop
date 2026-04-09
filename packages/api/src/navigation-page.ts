@@ -54,4 +54,7 @@ export enum NavigationPage {
   NETWORK = 'network',
   NETWORK_CREATE = 'network-create',
   EXTENSIONS_CATALOG = 'extensions-catalog',
+  CONTAINER_CONNECTION = 'container-connection',
+  VM_CONNECTION = 'vm-connection',
+  KUBERNETES_CONNECTION = 'kubernetes-connection',
 }
