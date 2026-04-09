@@ -20,7 +20,6 @@ name: pr-check
 on:
   merge_group:
   pull_request:
-    types: [labeled, synchronize, opened, ready_for_review, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}

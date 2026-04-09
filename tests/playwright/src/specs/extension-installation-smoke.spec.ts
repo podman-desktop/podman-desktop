@@ -33,7 +33,8 @@ import { ResourcesPage } from '/@/model/pages/resources-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { WelcomePage } from '/@/model/pages/welcome-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
-import { Runner } from '/@/runner/podman-desktop-runner';
+import type { Runner } from '/@/runner/podman-desktop-runner';
+import { RunnerFactory } from '/@/runner/runner-factory';
 import { isWindows } from '/@/utility/platform';
 
 let pdRunner: Runner;
@@ -46,7 +47,7 @@ let ociImageUrl: string;
 let navigationBar: NavigationBar;
 
 async function _startup(extensionLabel: string): Promise<void> {
-  pdRunner = await Runner.getInstance();
+  pdRunner = await RunnerFactory.getInstance();
   page = pdRunner.getPage();
   pdRunner.setVideoAndTraceName(`${extensionLabel}-installation-e2e`);
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ import type {
   PullEvent,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { shell } from 'electron';
 import { inject, injectable } from 'inversify';
+
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 
 import { CommandRegistry } from './command-registry.js';
 import { ContainerProviderRegistry } from './container-registry.js';
@@ -121,7 +122,14 @@ export class CommandsInit implements IDisposable {
     this.#disposables.push(
       commandRegistry.registerCommand('openExternal', async (arg: Uri) => {
         if (arg) {
-          await shell.openExternal(arg.toString());
+          const url = arg.toString();
+          try {
+            await securityRestrictionCurrentHandler.handler?.(url);
+          } catch (error: unknown) {
+            const message = `Unable to open external link ${url}`;
+            console.error(message, error);
+            throw new Error(message, { cause: error });
+          }
         }
       }),
     );
