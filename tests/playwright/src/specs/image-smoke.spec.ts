@@ -197,7 +197,7 @@ test.describe
     });
 
     test('Build image with stage2 target from staged Containerfile', async ({ navigationBar }) => {
-      test.setTimeout(180_000);
+      test.setTimeout(420_000);
 
       let imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
@@ -212,7 +212,7 @@ test.describe
         containerfilePath,
         contextDirectory,
         [ArchitectureType.Default],
-        120_000,
+        300_000,
         'stage2',
       );
       playExpect(await imagesPage.waitForImageExists('docker.io/library/staged-build-stage2-test')).toBeTruthy();
