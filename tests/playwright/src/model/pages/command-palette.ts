@@ -69,6 +69,7 @@ export class CommandPalette extends BasePage {
   async closeByClickingOutside(): Promise<void> {
     return test.step('Close command palette by clicking outside', async () => {
       const viewport = this.page.viewportSize();
+      // Fallback to 700px which is safely below the palette card (~300px tall) on a standard 720p viewport
       const y = viewport ? viewport.height - 10 : 700;
       await this.page.mouse.click(10, y);
       await playExpect(this.commandPaletteInputField).not.toBeVisible();
@@ -77,7 +78,8 @@ export class CommandPalette extends BasePage {
 
   async typeSearch(text: string): Promise<void> {
     return test.step(`Type in search bar: ${text}`, async () => {
-      await this.commandPaletteInputField.fill(text);
+      await this.commandPaletteInputField.clear();
+      await this.commandPaletteInputField.pressSequentially(text, { delay: 25 });
     });
   }
 

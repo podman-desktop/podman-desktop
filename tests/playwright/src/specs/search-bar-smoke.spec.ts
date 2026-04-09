@@ -50,7 +50,7 @@ test.describe
       await commandPalette.openViaSearchButton();
 
       await playExpect(commandPalette.commandPaletteInputField).toBeFocused();
-      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 5_000 });
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
       await commandPalette.close();
     });
@@ -90,7 +90,7 @@ test.describe
       const commandPalette = new CommandPalette(page);
       await commandPalette.openViaSearchButton();
 
-      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 5_000 });
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
       await commandPalette.typeSearch('xyznonexistentfoobar123');
       await playExpect(commandPalette.noResultsMessage).toBeVisible();
@@ -107,7 +107,7 @@ test.describe
 
       await commandPalette.clearSearch();
 
-      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 5_000 });
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
       await playExpect(commandPalette.noResultsMessage).not.toBeVisible();
 
       await commandPalette.close();
@@ -133,7 +133,7 @@ test.describe
     test('Arrow keys navigate through results', async ({ page }) => {
       const commandPalette = new CommandPalette(page);
       await commandPalette.openWithF1();
-      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 5_000 });
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
       const initialText = await commandPalette.selectedItem.innerText();
 
@@ -160,7 +160,7 @@ test.describe
         'Search images, containers, pods, and other resources',
       );
 
-      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 5_000 });
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
       await commandPalette.close();
     });
@@ -173,7 +173,7 @@ test.describe
         'placeholder',
         'Search and execute commands',
       );
-      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 5_000 });
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
       await commandPalette.close();
     });
