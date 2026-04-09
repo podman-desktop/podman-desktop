@@ -6,7 +6,7 @@ import { filesize } from 'filesize';
 
 import Donut from '/@/lib/donut/Donut.svelte';
 
-import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './ConnectionResourceMetrics';
+import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
 interface Props {

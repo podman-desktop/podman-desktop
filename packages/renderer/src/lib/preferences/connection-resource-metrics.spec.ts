@@ -18,7 +18,7 @@
 
 import { assert, describe, expect, test } from 'vitest';
 
-import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './ConnectionResourceMetrics';
+import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
 function makeConfig(
