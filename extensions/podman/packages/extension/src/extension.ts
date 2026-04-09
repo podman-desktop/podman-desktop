@@ -71,12 +71,7 @@ import { getPodmanCli } from './utils/podman-cli';
 import { PodmanConfiguration } from './utils/podman-configuration';
 import { ProviderConnectionShellAccessImpl } from './utils/podman-machine-stream';
 import { RegistrySetup } from './utils/registry-setup';
-import {
-  checkRosettaMacArm,
-  needsRosettaEnableFile,
-  provisionAndRestartForRosetta,
-  ROSETTA_ENABLE_FILE,
-} from './utils/rosetta';
+import { ROSETTA_ENABLE_FILE, RosettaProvisioner } from './utils/rosetta';
 import {
   appConfigDir,
   appHomeDir,
@@ -121,6 +116,7 @@ let telemetryLogger: extensionApi.TelemetryLogger;
 
 let winPlatform: WinPlatform;
 let podmanBinary: PodmanBinary;
+let rosettaProvisioner: RosettaProvisioner;
 
 let certificateDetectionService: CertificateDetectionService | undefined;
 let certificateDetectionInterval: NodeJS.Timeout | undefined;
@@ -875,7 +871,7 @@ export async function startMachine(
   telemetryRecords.provider = machineInfo.vmType;
   const startTime = performance.now();
 
-  await checkRosettaMacArm(podmanConfiguration);
+  await rosettaProvisioner.checkRosettaMacArm(podmanConfiguration);
 
   try {
     // start the machine
@@ -891,12 +887,12 @@ export async function startMachine(
 
     // Provision /etc/containers/enable-rosetta if needed (macOS Tahoe + AppleHV + Podman 5.6+).
     // If the file was just created, restart the machine so the binfmt_misc handler registers.
-    // SSH/file-creation errors are caught inside provisionAndRestartForRosetta;
+    // SSH/file-creation errors are caught inside rosettaProvisioner.provisionAndRestartForRosetta;
     // stop/start errors propagate so the provider status stays accurate.
     // https://blog.podman.io/2025/08/podman-5-6-released-rosetta-status-update/
     const podmanInstallation = await podmanBinary.getBinaryInfo();
     if (podmanInstallation?.version) {
-      await provisionAndRestartForRosetta(
+      await rosettaProvisioner.provisionAndRestartForRosetta(
         machineInfo.name,
         machineInfo.vmType,
         podmanConfiguration,
@@ -1295,6 +1291,7 @@ export async function initInversify(
   const podmanInstall = inversifyContainer.get(PodmanInstall);
   winPlatform = inversifyContainer.get(WinPlatform);
   podmanBinary = inversifyContainer.get(PodmanBinary);
+  rosettaProvisioner = inversifyContainer.get(RosettaProvisioner);
   const podmanProvider = await inversifyContainer.getAsync(PodmanProvider);
 
   return { podmanInstall, winPlatform, podmanProvider };
@@ -2208,11 +2205,13 @@ export async function createMachine(
   if (extensionApi.env.isMac && version) {
     try {
       if (params['podman.factory.machine.now']) {
-        await provisionAndRestartForRosetta(machineName, provider, podmanConfiguration, version, { logger });
+        await rosettaProvisioner.provisionAndRestartForRosetta(machineName, provider, podmanConfiguration, version, {
+          logger,
+        });
       } else {
         // Machine is stopped. Check conditions without SSH first; only start/stop
         // the machine temporarily when actually needed.
-        const setupNeeded = await needsRosettaEnableFile(podmanConfiguration, version, provider);
+        const setupNeeded = await rosettaProvisioner.needsRosettaEnableFile(podmanConfiguration, version, provider);
         if (setupNeeded) {
           await execPodman(['machine', 'start', machineName], provider, { logger });
           try {

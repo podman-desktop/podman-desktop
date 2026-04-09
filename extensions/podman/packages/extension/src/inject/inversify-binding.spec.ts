@@ -26,6 +26,7 @@ import { PodmanCleanupWindows } from '/@/cleanup/podman-cleanup-windows';
 import { Installer } from '/@/installer/installer';
 import { MacOSInstaller } from '/@/installer/mac-os-installer';
 import { WinInstaller } from '/@/installer/win-installer';
+import { RosettaProvisioner } from '/@/utils/rosetta';
 
 import { InversifyBinding } from './inversify-binding';
 import { ExtensionContextSymbol, ProviderCleanupSymbol, TelemetryLoggerSymbol } from './symbols';
@@ -51,6 +52,13 @@ describe('inversifyBinding', () => {
 
     expect(container.get(ExtensionContextSymbol)).toBe(extensionContextMock);
     expect(container.get(TelemetryLoggerSymbol)).toBe(telemetryLoggerMock);
+  });
+
+  test('should bind RosettaProvisioner', async () => {
+    const container: InversifyContainer = await inversifyBinding.init();
+
+    const value = container.get(RosettaProvisioner);
+    expect(value).toBeInstanceOf(RosettaProvisioner);
   });
 
   describe('windows', () => {

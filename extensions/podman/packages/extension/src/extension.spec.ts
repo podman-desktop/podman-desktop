@@ -65,7 +65,7 @@ import type { UpdateCheck } from './installer/podman-install';
 import { PodmanInstall } from './installer/podman-install';
 import * as podmanCli from './utils/podman-cli';
 import type { PodmanConfiguration } from './utils/podman-configuration';
-import { needsRosettaEnableFile, provisionAndRestartForRosetta } from './utils/rosetta';
+import { RosettaProvisioner } from './utils/rosetta';
 import * as util from './utils/util';
 import { getAssetsFolder, LIBKRUN_LABEL, LoggerDelegator, VMTYPE } from './utils/util';
 import { isDisguisedPodman } from './utils/warnings';
@@ -194,6 +194,12 @@ const PODMAN_BINARY_MOCK: PodmanBinary = {
   getBinaryInfo: vi.fn(),
   invalidate: vi.fn(),
 } as unknown as PodmanBinary;
+const ROSETTA_PROVISIONER_MOCK: RosettaProvisioner = {
+  checkRosettaMacArm: vi.fn(),
+  needsRosettaEnableFile: vi.fn(),
+  enableRosettaInMachine: vi.fn(),
+  provisionAndRestartForRosetta: vi.fn(),
+} as unknown as RosettaProvisioner;
 
 beforeEach(async () => {
   fakeMachineJSON = [
@@ -268,6 +274,8 @@ beforeEach(async () => {
         return PODMAN_BINARY_MOCK;
       case PodmanProvider:
         return PODMAN_PROVIDER_MOCK;
+      case RosettaProvisioner:
+        return ROSETTA_PROVISIONER_MOCK;
     }
     throw new Error(`Unknown identifier ${String(identifier)}`);
   }
@@ -997,11 +1005,11 @@ describe('startMachine rosetta enable-file provisioning', () => {
   test('calls provisionAndRestartForRosetta after successful start', async () => {
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
     vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.7.0' } as InstalledPodman);
-    vi.mocked(provisionAndRestartForRosetta).mockResolvedValue(false);
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).mockResolvedValue(false);
 
     await extension.startMachine(provider, podmanConfiguration, machineInfo);
 
-    expect(provisionAndRestartForRosetta).toHaveBeenCalledWith(
+    expect(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).toHaveBeenCalledWith(
       machineInfo.name,
       machineInfo.vmType,
       podmanConfiguration,
@@ -1014,7 +1022,7 @@ describe('startMachine rosetta enable-file provisioning', () => {
   test('does not report started when provisionAndRestartForRosetta throws (restart failed)', async () => {
     vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
     vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '5.7.0' } as InstalledPodman);
-    vi.mocked(provisionAndRestartForRosetta).mockRejectedValue(new Error('restart failed'));
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).mockRejectedValue(new Error('restart failed'));
 
     await expect(
       extension.startMachine(provider, podmanConfiguration, machineInfo, undefined, undefined, true),
@@ -1029,7 +1037,7 @@ describe('startMachine rosetta enable-file provisioning', () => {
 
     await extension.startMachine(provider, podmanConfiguration, machineInfo);
 
-    expect(provisionAndRestartForRosetta).not.toHaveBeenCalled();
+    expect(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).not.toHaveBeenCalled();
     expect(provider.updateStatus).toHaveBeenCalledWith('started');
   });
 });
@@ -1049,14 +1057,14 @@ describe('createMachine rosetta enable-file provisioning', () => {
   });
 
   test('--now branch calls provisionAndRestartForRosetta', async () => {
-    vi.mocked(provisionAndRestartForRosetta).mockResolvedValue(false);
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).mockResolvedValue(false);
 
     await extension.createMachine(
       { ...createMachineBaseParams, 'podman.factory.machine.now': true },
       podmanConfiguration,
     );
 
-    expect(provisionAndRestartForRosetta).toHaveBeenCalledWith(
+    expect(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).toHaveBeenCalledWith(
       'podman-machine-default',
       expect.any(String),
       podmanConfiguration,
@@ -1066,7 +1074,7 @@ describe('createMachine rosetta enable-file provisioning', () => {
   });
 
   test('--now branch catches error as warning', async () => {
-    vi.mocked(provisionAndRestartForRosetta).mockRejectedValue(new Error('rosetta ssh fail'));
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).mockRejectedValue(new Error('rosetta ssh fail'));
 
     await extension.createMachine(
       { ...createMachineBaseParams, 'podman.factory.machine.now': true },
@@ -1079,16 +1087,20 @@ describe('createMachine rosetta enable-file provisioning', () => {
   });
 
   test('stopped branch calls needsRosettaEnableFile with vmType', async () => {
-    vi.mocked(needsRosettaEnableFile).mockResolvedValue(false);
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.needsRosettaEnableFile).mockResolvedValue(false);
 
     await extension.createMachine(createMachineBaseParams, podmanConfiguration);
 
-    expect(needsRosettaEnableFile).toHaveBeenCalledWith(podmanConfiguration, '5.7.0', expect.any(String));
-    expect(provisionAndRestartForRosetta).not.toHaveBeenCalled();
+    expect(ROSETTA_PROVISIONER_MOCK.needsRosettaEnableFile).toHaveBeenCalledWith(
+      podmanConfiguration,
+      '5.7.0',
+      expect.any(String),
+    );
+    expect(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).not.toHaveBeenCalled();
   });
 
   test('stopped branch starts, touches file, then stops when setup is needed', async () => {
-    vi.mocked(needsRosettaEnableFile).mockResolvedValue(true);
+    vi.mocked(ROSETTA_PROVISIONER_MOCK.needsRosettaEnableFile).mockResolvedValue(true);
 
     await extension.createMachine(createMachineBaseParams, podmanConfiguration);
 
