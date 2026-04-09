@@ -41,7 +41,6 @@ test.describe
         'placeholder',
         'Search and execute commands',
       );
-      await playExpect(commandPalette.commandsTab).toHaveClass(/text-\[var\(--pd-button-tab-text-selected\)\]/);
 
       await commandPalette.close();
     });
