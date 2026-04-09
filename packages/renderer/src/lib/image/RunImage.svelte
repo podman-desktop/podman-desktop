@@ -710,11 +710,13 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === volumeMounts.length - 1}
                     on:click={(): void => deleteVolumeMount(index)}
+                    aria-label="Remove volume mount"
                     icon={faMinusCircle} />
                   <Button
                     type="link"
                     hidden={index < volumeMounts.length - 1}
                     on:click={addVolumeMount}
+                    aria-label="Add volume mount"
                     icon={faPlusCircle} />
                 </div>
               {/each}
@@ -781,11 +783,13 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === environmentVariables.length - 1}
                     on:click={(): void => deleteEnvVariable(index)}
+                    aria-label="Remove environment variable"
                     icon={faMinusCircle} />
                   <Button
                     type="link"
                     hidden={index < environmentVariables.length - 1}
                     on:click={addEnvVariable}
+                    aria-label="Add environment variable"
                     icon={faPlusCircle} />
                 </div>
               {/each}
@@ -958,11 +962,13 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === securityOpts.length - 1}
                     on:click={(): void => deleteSecurityOpt(index)}
+                    aria-label="Remove security option"
                     icon={faMinusCircle} />
                   <Button
                     type="link"
                     hidden={index < securityOpts.length - 1}
                     on:click={addSecurityOpt}
+                    aria-label="Add security option"
                     icon={faPlusCircle} />
                 </div>
               {/each}
@@ -1045,11 +1051,13 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === dnsServers.length - 1}
                     on:click={(): void => deleteDnsServer(index)}
+                    aria-label="Remove DNS server"
                     icon={faMinusCircle} />
                   <Button
                     type="link"
                     hidden={index < dnsServers.length - 1}
                     on:click={addDnsServer}
+                    aria-label="Add DNS server"
                     icon={faPlusCircle} />
                 </div>
               {/each}
@@ -1068,11 +1076,13 @@ const envDialogOptions: OpenDialogOptions = {
                     type="link"
                     hidden={index === extraHosts.length - 1}
                     on:click={(): void => deleteExtraHost(index)}
+                    aria-label="Remove extra host"
                     icon={faMinusCircle} />
                   <Button
                     type="link"
                     hidden={index < extraHosts.length - 1}
                     on:click={addExtraHost}
+                    aria-label="Add extra host"
                     icon={faPlusCircle} />
                 </div>
               {/each}
