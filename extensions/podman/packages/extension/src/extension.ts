@@ -2153,7 +2153,7 @@ export async function createMachine(
   }
 
   // name at the end
-  let machineName = 'podman-machine-default';
+  let machineName = '';
   if (params['podman.factory.machine.name'] && typeof params['podman.factory.machine.name'] === 'string') {
     machineName = params['podman.factory.machine.name'];
     parameters.push(params['podman.factory.machine.name']);
