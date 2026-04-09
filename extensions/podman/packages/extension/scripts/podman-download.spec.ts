@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { setupServer, SetupServerApi } from 'msw/node';
+import { setupServer, type SetupServer } from 'msw/node';
 import { beforeEach, afterEach, describe, expect, test, vi } from 'vitest';
 import { DownloadAndCheck, Podman5DownloadMachineOS, PodmanDownload, ShaCheck } from './podman-download';
 import * as podman5JSON from '../src/podman5.json';
@@ -79,7 +79,7 @@ class TestPodmanDownload extends PodmanDownload {
   }
 }
 
-let server: SetupServerApi | undefined = undefined;
+let server: SetupServer | undefined = undefined;
 
 afterEach(() => {
   server?.close();

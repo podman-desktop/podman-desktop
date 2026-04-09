@@ -19,7 +19,7 @@
 import type { Configuration, ProxySettings } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { delay, http, HttpResponse } from 'msw';
-import { setupServer, type SetupServerApi } from 'msw/node';
+import { type SetupServer, setupServer } from 'msw/node';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { Certificates } from '/@/plugin/certificates.js';
@@ -46,7 +46,7 @@ const extensionApiVersion: ExtensionApiVersion = {
   getApiVersion: vi.fn(),
 } as ExtensionApiVersion;
 
-let server: SetupServerApi | undefined = undefined;
+let server: SetupServer | undefined = undefined;
 
 // unlisted field is not present (assuming it should be listed then)
 const fakePublishedExtension1 = {

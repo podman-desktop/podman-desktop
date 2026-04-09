@@ -40,9 +40,9 @@ interface ButtonElement {
 }
 
 const BASE_BUTTON_CSS =
-  'flex flex-row items-center justify-center px-4 py-[6px] max-w-[200px] rounded-[4px] text-white text-[13px] whitespace-nowrap no-underline';
-const NORMAL_MODE_CSS = `${BASE_BUTTON_CSS} bg-purple-600 hover:bg-purple-500`;
-const ERROR_MODE_CSS = `${BASE_BUTTON_CSS} text-gray-400 bg-red-900 hover:bg-red-700`;
+  'flex flex-row items-center justify-center px-4 py-[6px] max-w-[200px] rounded-[4px] text-[var(--pd-button-text)] text-[13px] whitespace-nowrap no-underline';
+const NORMAL_MODE_CSS = `${BASE_BUTTON_CSS} bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)]`;
+const ERROR_MODE_CSS = `${BASE_BUTTON_CSS} text-[var(--pd-button-disabled-text)] bg-[var(--pd-button-danger-hover-bg)] hover:bg-[var(--pd-button-danger-hover-bg)]`;
 
 /**
  * it creates a new button by associating the command to it and returns its new generated button id
@@ -109,7 +109,7 @@ export async function executeButtonCommand(buttonId: string): Promise<void> {
 function createHtmlErrorContent(reason: string): string {
   // it uses inline style to constraint the height as tailwind max-height classes do not work with html injected
   return `
-    <div class='bg-black text-sm overflow-y-auto overflow-x-auto p-3' style='height: 150px'>
+    <div class='bg-[var(--pd-terminal-background)] text-sm overflow-y-auto overflow-x-auto p-3' style='height: 150px'>
     ${reason}
     </div>
     `;
@@ -162,7 +162,7 @@ function enableErrorMode(id: string, error: string): void {
 }
 
 /**
- * it disable the error mode so the button is reset to its normal state (purple color, hide expandable section)
+ * it disable the error mode so the button is reset to its normal state (primary color, hide expandable section)
  * @param id button id
  */
 function disableErrorMode(id: string): void {
@@ -200,8 +200,8 @@ function toggleButtonMode(id: string, isErrorMode: boolean): void {
 export function createUIButton(this: CompileContext, command: Command): void {
   const buttonId = createButton(command);
   this.tag(
-    `<button 
-      id='${buttonId}' 
+    `<button
+      id='${buttonId}'
       class='${NORMAL_MODE_CSS}'
       title='${command.title}'
     >`,
@@ -211,7 +211,9 @@ export function createUIButton(this: CompileContext, command: Command): void {
   this.tag(createSpinner(buttonId));
 
   // add the failed icon which gets visible in error mode
-  this.tag(`<i id='${buttonId}-failed-icon' class='fas fa-times text-gray-100 mr-1' style='display: none'></i>`);
+  this.tag(
+    `<i id='${buttonId}-failed-icon' class='fas fa-times text-[var(--pd-button-text)] mr-1' style='display: none'></i>`,
+  );
 
   // Add the command title
   this.raw(command.title);

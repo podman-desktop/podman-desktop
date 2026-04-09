@@ -17,13 +17,13 @@
  ***********************************************************************/
 
 import { delay, http, HttpResponse } from 'msw';
-import type { SetupServerApi } from 'msw/node';
+import type { SetupServer } from 'msw/node';
 import { setupServer } from 'msw/node';
 import { afterEach, expect, test } from 'vitest';
 
 import { isDisguisedPodmanPath } from './warnings';
 
-let server: SetupServerApi | undefined = undefined;
+let server: SetupServer | undefined = undefined;
 
 afterEach(() => {
   server?.close();
