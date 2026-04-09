@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { Component, Snippet } from 'svelte';
-import { createEventDispatcher, onMount } from 'svelte';
+import { createEventDispatcher, untrack } from 'svelte';
 
 import Icon from '../icons/Icon.svelte';
 import Spinner from '../progress/Spinner.svelte';
@@ -39,6 +39,10 @@ let {
   onclick = dispatch.bind(undefined, 'click'),
   children,
 }: Props = $props();
+
+if (untrack(() => icon !== undefined && !title && !children && !ariaLabel)) {
+  throw new Error('Icon-only buttons must have an aria-label for accessibility');
+}
 
 let actualPadding = $derived(padding ?? 'px-[16px] ' + (type === 'tab' ? 'pb-1' : 'py-[5px]'));
 
@@ -81,14 +85,6 @@ let classes = $derived.by(() => {
   }
 
   return result;
-});
-
-onMount(() => {
-  // Icon-only button: icon is present, no title, and no visible children/slot content
-  if (icon !== undefined && !title && !children) {
-    // Check if is the ariaLabel defined
-    if (!ariaLabel) console.warn('Icon buttons should have defined visible aria-label');
-  }
 });
 </script>
 

@@ -22,7 +22,7 @@ import '@testing-library/jest-dom/vitest';
 
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import { expect, test, vi } from 'vitest';
 
 import Button from './Button.svelte';
@@ -160,7 +160,7 @@ test('Check selected tab button styling', async () => {
 });
 
 test('Check icon button with fas prefix is visible', async () => {
-  render(Button, { icon: faTrash });
+  render(Button, { icon: faTrash, 'aria-label': 'Delete' });
 
   // check for a few elements of the styling
   const img = screen.getByRole('img', { hidden: true });
@@ -168,7 +168,7 @@ test('Check icon button with fas prefix is visible', async () => {
 });
 
 test('Check icon button with fab prefix is visible', async () => {
-  render(Button, { icon: faGithub });
+  render(Button, { icon: faGithub, 'aria-label': 'GitHub' });
 
   // check for a few elements of the styling
   const img = screen.getByRole('img', { hidden: true });
@@ -197,7 +197,7 @@ test('Button hidden should be hidden', async () => {
   expect(button).not.toBeInTheDocument();
 });
 
-test('Unknown button type falls back to primary styling', async () => {
+test('Unknown button type falls back to primary styling', () => {
   const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
   // Force an invalid type to exercise the else fallback branch
@@ -207,9 +207,7 @@ test('Unknown button type falls back to primary styling', async () => {
   expect(button).toHaveClass('bg-[var(--pd-button-primary-bg)]');
   expect(button).toHaveClass('text-[var(--pd-button-primary-text)]');
 
-  await vi.waitFor(() => {
-    expect(consoleWarnSpy).toHaveBeenCalledWith('Unknown button type: unknown-type, falling back to primary');
-  });
+  expect(consoleWarnSpy).toHaveBeenCalledWith('Unknown button type: unknown-type, falling back to primary');
 
   consoleWarnSpy.mockRestore();
 });
@@ -276,45 +274,18 @@ test('Button should have min-h-[28px] class', async () => {
   expect(button).toHaveClass('min-h-[28px]');
 });
 
-test('Icon-only button without aria-label should log console warning', async () => {
-  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-  render(Button, { icon: faTrash });
-
-  // Wait for onMount to execute
-  await waitFor(() => {
-    expect(consoleWarnSpy).toHaveBeenCalledWith('Icon buttons should have defined visible aria-label');
-  });
-
-  consoleWarnSpy.mockRestore();
+test('Icon-only button without aria-label should throw an error', () => {
+  expect(() => render(Button, { icon: faTrash })).toThrow(
+    'Icon-only buttons must have an aria-label for accessibility',
+  );
 });
 
-test('Icon-only button with aria-label should not log console warning', async () => {
-  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-  render(Button, { icon: faTrash, 'aria-label': 'Delete' });
-
-  // Wait for the component to fully render and onMount to complete
-  await waitFor(() => {
-    expect(screen.getByRole('button')).toBeInTheDocument();
-  });
-
-  expect(consoleWarnSpy).not.toHaveBeenCalled();
-
-  consoleWarnSpy.mockRestore();
+test('Icon-only button with aria-label should not throw', () => {
+  expect(() => render(Button, { icon: faTrash, 'aria-label': 'Delete' })).not.toThrow();
+  expect(screen.getByRole('button')).toBeInTheDocument();
 });
 
-test('Icon button with title should not log console warning', async () => {
-  const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-  render(Button, { icon: faTrash, title: 'Delete' });
-
-  // Wait for the component to fully render and onMount to complete
-  await waitFor(() => {
-    expect(screen.getByRole('button')).toBeInTheDocument();
-  });
-
-  expect(consoleWarnSpy).not.toHaveBeenCalled();
-
-  consoleWarnSpy.mockRestore();
+test('Icon button with title should not throw', () => {
+  expect(() => render(Button, { icon: faTrash, title: 'Delete' })).not.toThrow();
+  expect(screen.getByRole('button')).toBeInTheDocument();
 });
