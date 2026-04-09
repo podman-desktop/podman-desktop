@@ -338,6 +338,7 @@ test.describe
           .poll(async () => await imagesPage.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
           .toBeTruthy();
       } finally {
+        // eslint-disable-next-line n/no-sync
         rmSync(tarFilePath, { force: true });
       }
     });
