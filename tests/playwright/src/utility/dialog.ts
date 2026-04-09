@@ -18,11 +18,15 @@
 
 import type { ElectronApplication } from '@playwright/test';
 
-import { Runner } from '/@/runner/podman-desktop-runner';
+import { ElectronRunner } from '/@/runner/electron-runner';
+import { RunnerFactory } from '/@/runner/runner-factory';
 
 async function getElectronApp(): Promise<ElectronApplication> {
-  const runner = await Runner.getInstance();
-  return runner.getElectronApp();
+  const runner = await RunnerFactory.getInstance();
+  if (runner instanceof ElectronRunner) {
+    return (runner as ElectronRunner).getElectronApp();
+  }
+  throw new Error('ChromeDevToolsProtocol does not support evaluating main process...');
 }
 
 /**

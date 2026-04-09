@@ -188,4 +188,22 @@ export class RunImagePage extends BasePage {
       await containerPort.fill(customPortMapping.split(':')[1]);
     });
   }
+
+  async selectUserDefinedNetwork(networkName: string): Promise<void> {
+    return test.step(`Select user-defined network: ${networkName}`, async () => {
+      await this.activateTab('Networking');
+      // Open the Mode dropdown (shows current selection as button text) and pick User-defined network
+      const modeButton = this.page.getByRole('button', { name: /Creates a network stack/ });
+      await playExpect(modeButton).toBeVisible();
+      await modeButton.click();
+      await this.page.getByRole('button', { name: 'User-defined network' }).click();
+      // Open the Network dropdown and select the specific network
+      const networkDropdown = this.page.getByRole('button', { name: /\(used by \d+ containers\)/ }).first();
+      await playExpect(networkDropdown).toBeVisible();
+      await networkDropdown.click();
+      await this.page
+        .getByRole('button', { name: new RegExp(`^${networkName} \\(used by \\d+ containers\\)$`) })
+        .click();
+    });
+  }
 }
