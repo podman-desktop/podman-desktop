@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { describe, expect, test } from 'vitest';
+import { assert, describe, expect, test } from 'vitest';
 
 import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './ConnectionResourceMetrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
@@ -57,8 +57,8 @@ describe('extractConnectionResourceMetrics', () => {
 
     const result = extractConnectionResourceMetrics(configs);
 
-    expect(result).toBeDefined();
-    expect(result?.cpu).toEqual({
+    assert(result);
+    expect(result.cpu).toEqual({
       total: 4,
       used: 2,
       usagePercent: 50,
@@ -79,8 +79,8 @@ describe('extractConnectionResourceMetrics', () => {
 
     const result = extractConnectionResourceMetrics(configs);
 
-    expect(result).toBeDefined();
-    expect(result?.memory).toEqual({
+    assert(result);
+    expect(result.memory).toEqual({
       total: 8_000_000_000,
       used: 2_000_000_000,
       usagePercent: 25,
@@ -101,8 +101,8 @@ describe('extractConnectionResourceMetrics', () => {
 
     const result = extractConnectionResourceMetrics(configs);
 
-    expect(result).toBeDefined();
-    expect(result?.disk).toEqual({
+    assert(result);
+    expect(result.disk).toEqual({
       total: 100_000_000_000,
       used: 40_000_000_000,
       usagePercent: 40,
@@ -122,13 +122,13 @@ describe('extractConnectionResourceMetrics', () => {
 
     const result = extractConnectionResourceMetrics(configs);
 
-    expect(result).toBeDefined();
-    expect(result?.cpu?.total).toBe(8);
-    expect(result?.cpu?.usagePercent).toBe(75);
-    expect(result?.memory?.total).toBe(16_000_000_000);
-    expect(result?.memory?.usagePercent).toBe(50);
-    expect(result?.disk?.total).toBe(200_000_000_000);
-    expect(result?.disk?.usagePercent).toBe(30);
+    assert(result);
+    expect(result.cpu?.total).toBe(8);
+    expect(result.cpu?.usagePercent).toBe(75);
+    expect(result.memory?.total).toBe(16_000_000_000);
+    expect(result.memory?.usagePercent).toBe(50);
+    expect(result.disk?.total).toBe(200_000_000_000);
+    expect(result.disk?.usagePercent).toBe(30);
   });
 
   test('handles missing usage peer gracefully', () => {
@@ -136,8 +136,8 @@ describe('extractConnectionResourceMetrics', () => {
 
     const result = extractConnectionResourceMetrics(configs);
 
-    expect(result).toBeDefined();
-    expect(result?.cpu).toEqual({
+    assert(result);
+    expect(result.cpu).toEqual({
       total: 4,
       used: 0,
       usagePercent: 0,
@@ -153,25 +153,25 @@ describe('extractConnectionResourceMetrics', () => {
 
     const result = extractConnectionResourceMetrics(configs);
 
-    expect(result).toBeDefined();
-    expect(result?.cpu).toBeDefined();
-    expect(result?.memory).toBeUndefined();
-    expect(result?.disk).toBeUndefined();
+    assert(result);
+    expect(result.cpu).toBeDefined();
+    expect(result.memory).toBeUndefined();
+    expect(result.disk).toBeUndefined();
   });
 });
 
 describe('RESOURCE_FORMATS', () => {
   test('contains all resource format types', () => {
-    expect(RESOURCE_FORMATS.has('cpu')).toBe(true);
-    expect(RESOURCE_FORMATS.has('cpuUsage')).toBe(true);
-    expect(RESOURCE_FORMATS.has('memory')).toBe(true);
-    expect(RESOURCE_FORMATS.has('memoryUsage')).toBe(true);
-    expect(RESOURCE_FORMATS.has('diskSize')).toBe(true);
-    expect(RESOURCE_FORMATS.has('diskSizeUsage')).toBe(true);
+    expect(RESOURCE_FORMATS).toContain('cpu');
+    expect(RESOURCE_FORMATS).toContain('cpuUsage');
+    expect(RESOURCE_FORMATS).toContain('memory');
+    expect(RESOURCE_FORMATS).toContain('memoryUsage');
+    expect(RESOURCE_FORMATS).toContain('diskSize');
+    expect(RESOURCE_FORMATS).toContain('diskSizeUsage');
   });
 
   test('does not contain non-resource formats', () => {
-    expect(RESOURCE_FORMATS.has('boolean')).toBe(false);
-    expect(RESOURCE_FORMATS.has('string')).toBe(false);
+    expect(RESOURCE_FORMATS).not.toContain('boolean');
+    expect(RESOURCE_FORMATS).not.toContain('string');
   });
 });
