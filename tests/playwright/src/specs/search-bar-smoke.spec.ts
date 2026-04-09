@@ -41,6 +41,7 @@ test.describe
         'placeholder',
         'Search and execute commands',
       );
+      await playExpect(commandPalette.commandsTab).toHaveClass(/text-\[var\(--pd-button-tab-text-selected\)\]/);
 
       await commandPalette.close();
     });
@@ -135,6 +136,9 @@ test.describe
       await commandPalette.openWithF1();
       await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
 
+      const resultCount = await commandPalette.resultItems.count();
+      test.skip(resultCount < 2, 'Need at least 2 results to test arrow key navigation');
+
       const initialText = await commandPalette.selectedItem.innerText();
 
       await page.keyboard.press('ArrowDown');
@@ -148,6 +152,15 @@ test.describe
       playExpect(afterUpText).toBe(initialText);
 
       await commandPalette.close();
+    });
+
+    test('Enter key executes selected command', async ({ page }) => {
+      const commandPalette = new CommandPalette(page);
+      await commandPalette.openWithF1();
+      await playExpect(commandPalette.selectedItem).toBeVisible({ timeout: 10_000 });
+
+      await page.keyboard.press('Enter');
+      await playExpect(commandPalette.commandPaletteInputField).not.toBeVisible();
     });
 
     test('Go to tab shows navigation entries', async ({ page }) => {

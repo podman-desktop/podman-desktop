@@ -31,18 +31,20 @@ export class CommandPalette extends BasePage {
   readonly noResultsMessage: Locator;
   readonly clearButton: Locator;
   readonly selectedItem: Locator;
+  readonly resultItems: Locator;
 
   constructor(page: Page) {
     super(page);
     this.commandPaletteInputField = this.page.getByLabel('Command palette command input', { exact: true });
     this.searchButton = this.page.getByTitle('Search');
-    this.allTab = this.page.getByRole('button', { name: /P\s+All$/ });
-    this.commandsTab = this.page.getByRole('button', { name: />\s+Commands$/ });
-    this.documentationTab = this.page.getByRole('button', { name: /K\s+Documentation$/ });
-    this.goToTab = this.page.getByRole('button', { name: /F\s+Go to$/ });
+    this.allTab = this.page.getByRole('button', { name: /\bAll$/ });
+    this.commandsTab = this.page.getByRole('button', { name: /\bCommands$/ });
+    this.documentationTab = this.page.getByRole('button', { name: /\bDocumentation$/ });
+    this.goToTab = this.page.getByRole('button', { name: /\bGo to$/ });
     this.noResultsMessage = this.page.getByText(/No results matching .+ found/);
     this.clearButton = this.page.getByLabel('clear', { exact: true });
     this.selectedItem = this.page.locator('li > button.selected');
+    this.resultItems = this.page.locator('li > button');
   }
 
   async openWithF1(): Promise<void> {
@@ -69,9 +71,8 @@ export class CommandPalette extends BasePage {
   async closeByClickingOutside(): Promise<void> {
     return test.step('Close command palette by clicking outside', async () => {
       const viewport = this.page.viewportSize();
-      // Fallback to 700px which is safely below the palette card (~300px tall) on a standard 720p viewport
-      const y = viewport ? viewport.height - 10 : 700;
-      await this.page.mouse.click(10, y);
+      const height = viewport?.height ?? (await this.page.evaluate(() => window.innerHeight));
+      await this.page.mouse.click(10, height - 10);
       await playExpect(this.commandPaletteInputField).not.toBeVisible();
     });
   }
