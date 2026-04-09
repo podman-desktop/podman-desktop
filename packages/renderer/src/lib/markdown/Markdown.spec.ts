@@ -31,11 +31,11 @@ async function waitRender(customProperties: object): Promise<void> {
 
 beforeAll(() => {
   Object.defineProperty(window, 'executeCommand', { value: vi.fn() });
-  Object.defineProperty(window, 'getUrlProtocol', { value: vi.fn().mockResolvedValue('podman-desktop') });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 test('Expect to have bold', async () => {
