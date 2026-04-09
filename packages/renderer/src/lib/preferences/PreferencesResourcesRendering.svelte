@@ -7,7 +7,6 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 import { DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
-import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
@@ -29,7 +28,12 @@ import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 
-import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './connection-resource-metrics';
+import {
+  type ConnectionResourceMetricDisplay,
+  extractConnectionResourceMetrics,
+  RESOURCE_FORMATS,
+  toDisplayMetrics,
+} from './connection-resource-metrics';
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
@@ -364,6 +368,27 @@ function getRootfulDisplayInfo(
   return rootfulSetting;
 }
 
+function getConnectionResourceData(
+  provider: ProviderInfo,
+  container: ProviderConnectionInfo,
+):
+  | {
+      displayMetrics: ConnectionResourceMetricDisplay[];
+      nonResourceConfigs: IProviderConnectionConfigurationPropertyRecorded[];
+    }
+  | undefined {
+  if (!providerContainerConfiguration.has(provider.internalId)) {
+    return undefined;
+  }
+  const connectionConfigs = (providerContainerConfiguration.get(provider.internalId) ?? []).filter(
+    conf => conf.connection === container.name,
+  );
+  const resourceMetrics = extractConnectionResourceMetrics(connectionConfigs);
+  const displayMetrics = resourceMetrics ? toDisplayMetrics(resourceMetrics) : [];
+  const nonResourceConfigs = connectionConfigs.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden);
+  return { displayMetrics, nonResourceConfigs };
+}
+
 let { properties = [], focus }: Props = $props();
 let providerElementMap = $state<Record<string, HTMLElement>>({});
 
@@ -530,37 +555,17 @@ $effect(() => {
                 class={container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}
                 path={container.endpoint.socketPath} />
               {#if providerContainerConfiguration.has(provider.internalId)}
-                {@const connectionConfigs = (providerContainerConfiguration.get(provider.internalId) ?? []).filter(conf => conf.connection === container.name)}
-                {@const resourceMetrics = extractConnectionResourceMetrics(connectionConfigs)}
+                {@const { displayMetrics, nonResourceConfigs } = getConnectionResourceData(provider, container)!}
                 <div
                   class="flex mt-3 {container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}"
                   role="group"
                   aria-label="Provider Configuration">
-                  {#if resourceMetrics?.cpu}
+                  {#each displayMetrics as metric (metric.title)}
                     <div class="mr-4">
-                      <Donut
-                        title={resourceMetrics.cpu.description}
-                        value={resourceMetrics.cpu.total}
-                        percent={resourceMetrics.cpu.usagePercent} />
+                      <Donut title={metric.title} value={metric.value} percent={metric.percent} />
                     </div>
-                  {/if}
-                  {#if resourceMetrics?.memory}
-                    <div class="mr-4">
-                      <Donut
-                        title={resourceMetrics.memory.description}
-                        value={filesize(resourceMetrics.memory.total)}
-                        percent={resourceMetrics.memory.usagePercent} />
-                    </div>
-                  {/if}
-                  {#if resourceMetrics?.disk}
-                    <div class="mr-4">
-                      <Donut
-                        title={resourceMetrics.disk.description}
-                        value={filesize(resourceMetrics.disk.total)}
-                        percent={resourceMetrics.disk.usagePercent} />
-                    </div>
-                  {/if}
-                  {#each connectionConfigs.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden) as connectionSetting (connectionSetting.id)}
+                  {/each}
+                  {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
                     {connectionSetting.description}: {connectionSetting.value}
                   {/each}
                 </div>

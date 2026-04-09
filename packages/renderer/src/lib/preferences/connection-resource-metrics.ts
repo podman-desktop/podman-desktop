@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { filesize } from 'filesize';
+
 import { PeerProperties } from './PeerProperties';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
@@ -60,7 +62,7 @@ export function extractConnectionResourceMetrics(
   const connectionConfigs = configs.filter(config => config.value !== undefined);
   if (connectionConfigs.length === 0) return undefined;
 
-  const peerProperties = new PeerProperties('Usage');
+  const peerProperties = new PeerProperties();
 
   const cpu = extractMetric('cpu', connectionConfigs, peerProperties);
   const memory = extractMetric('memory', connectionConfigs, peerProperties);
@@ -69,4 +71,32 @@ export function extractConnectionResourceMetrics(
   if (!cpu && !memory && !disk) return undefined;
 
   return { cpu, memory, disk };
+}
+
+export interface ConnectionResourceMetricDisplay {
+  title?: string;
+  value: string | number;
+  percent: number;
+}
+
+export function toDisplayMetrics(metrics: ConnectionResourceMetrics): ConnectionResourceMetricDisplay[] {
+  const entries: ConnectionResourceMetricDisplay[] = [];
+  if (metrics.cpu) {
+    entries.push({ title: metrics.cpu.description, value: metrics.cpu.total, percent: metrics.cpu.usagePercent });
+  }
+  if (metrics.memory) {
+    entries.push({
+      title: metrics.memory.description,
+      value: filesize(metrics.memory.total),
+      percent: metrics.memory.usagePercent,
+    });
+  }
+  if (metrics.disk) {
+    entries.push({
+      title: metrics.disk.description,
+      value: filesize(metrics.disk.total),
+      percent: metrics.disk.usagePercent,
+    });
+  }
+  return entries;
 }

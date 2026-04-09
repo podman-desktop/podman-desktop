@@ -2,11 +2,10 @@
 import type { ContainerProviderConnection } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
-import { filesize } from 'filesize';
 
 import Donut from '/@/lib/donut/Donut.svelte';
 
-import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './connection-resource-metrics';
+import { extractConnectionResourceMetrics, RESOURCE_FORMATS, toDisplayMetrics } from './connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
 interface Props {
@@ -19,6 +18,10 @@ const { properties = [], providerInternalId, containerConnectionInfo }: Props = 
 
 let providerContainerConfiguration: IProviderConnectionConfigurationPropertyRecorded[] = $state([]);
 let resourceMetrics = $derived(extractConnectionResourceMetrics(providerContainerConfiguration));
+let displayMetrics = $derived(resourceMetrics ? toDisplayMetrics(resourceMetrics) : []);
+let nonResourceConfigs = $derived(
+  providerContainerConfiguration.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden),
+);
 
 $effect(() => {
   Promise.all(
@@ -48,25 +51,13 @@ $effect(() => {
         <span class="font-semibold min-w-[150px]">Name</span>
         <span aria-label={containerConnectionInfo.name}>{containerConnectionInfo.name}</span>
       </div>
-      {#if resourceMetrics?.cpu}
+      {#each displayMetrics as metric (metric.title)}
         <div class="flex flex-row mt-5">
-          <span class="font-semibold min-w-[150px]">{resourceMetrics.cpu.description}</span>
-          <Donut title={resourceMetrics.cpu.description} value={resourceMetrics.cpu.total} percent={resourceMetrics.cpu.usagePercent} />
+          <span class="font-semibold min-w-[150px]">{metric.title}</span>
+          <Donut title={metric.title} value={metric.value} percent={metric.percent} />
         </div>
-      {/if}
-      {#if resourceMetrics?.memory}
-        <div class="flex flex-row mt-5">
-          <span class="font-semibold min-w-[150px]">{resourceMetrics.memory.description}</span>
-          <Donut title={resourceMetrics.memory.description} value={filesize(resourceMetrics.memory.total)} percent={resourceMetrics.memory.usagePercent} />
-        </div>
-      {/if}
-      {#if resourceMetrics?.disk}
-        <div class="flex flex-row mt-5">
-          <span class="font-semibold min-w-[150px]">{resourceMetrics.disk.description}</span>
-          <Donut title={resourceMetrics.disk.description} value={filesize(resourceMetrics.disk.total)} percent={resourceMetrics.disk.usagePercent} />
-        </div>
-      {/if}
-      {#each providerContainerConfiguration.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden) as connectionSetting (connectionSetting.id)}
+      {/each}
+      {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
         <div class="flex flex-row mt-5">
           <span class="font-semibold min-w-[150px]">{connectionSetting.description}</span>
           <span>{connectionSetting.value}</span>
