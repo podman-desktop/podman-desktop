@@ -172,7 +172,11 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "minimist": "^1.2.8",
+<<<<<<< HEAD
     "msw": "^2.12.11",
+=======
+    "msw": "^2.13.2",
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     "prettier": "^3.8.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.57.0",

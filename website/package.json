@@ -50,11 +50,19 @@
     "markdownlint": "^0.40.0",
     "markdownlint-cli2": "^0.21.0",
     "markdownlint-cli2-formatter-summarize": "^0.0.8",
+<<<<<<< HEAD
     "msw": "^2.12.11",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
     "typedoc": "^0.28.17",
     "typedoc-plugin-markdown": "^4.10.0",
+=======
+    "msw": "^2.13.2",
+    "postcss": "^8.5.9",
+    "tailwindcss": "^4.2.2",
+    "typedoc": "^0.28.18",
+    "typedoc-plugin-markdown": "^4.11.0",
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
   },

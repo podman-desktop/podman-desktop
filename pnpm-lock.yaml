@@ -185,8 +185,13 @@ importers:
         specifier: ^1.2.8
         version: 1.2.8
       msw:
+<<<<<<< HEAD
         specifier: ^2.12.11
         version: 2.12.11(@types/node@25.5.0)(typescript@5.9.3)
+=======
+        specifier: ^2.13.2
+        version: 2.13.2(@types/node@25.5.2)(typescript@5.9.3)
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -203,8 +208,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       xvfb-maybe:
         specifier: ^0.2.1
         version: 0.2.1
@@ -237,8 +247,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/docker/packages/api:
     dependencies:
@@ -265,8 +280,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/kind:
     dependencies:
@@ -302,8 +322,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/kube-context:
     dependencies:
@@ -327,8 +352,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/kubectl-cli:
     dependencies:
@@ -364,8 +394,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/lima:
     dependencies:
@@ -386,8 +421,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/podman-docker-context:
     dependencies:
@@ -408,8 +448,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/podman/packages/api:
     dependencies:
@@ -469,8 +514,13 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       msw:
+<<<<<<< HEAD
         specifier: ^2.12.11
         version: 2.12.11(@types/node@25.5.0)(typescript@5.9.3)
+=======
+        specifier: ^2.13.2
+        version: 2.13.2(@types/node@25.5.2)(typescript@5.9.3)
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       octokit:
         specifier: ^5.0.5
         version: 5.0.5
@@ -484,8 +534,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   extensions/registries:
     dependencies:
@@ -503,8 +558,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/api:
     dependencies:
@@ -519,8 +579,13 @@ importers:
         specifier: ^4.3.0
         version: 4.5.4(@types/node@25.5.0)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/extension-api: {}
 
@@ -684,11 +749,19 @@ importers:
         specifier: ^1.2.36
         version: 1.2.36
       msw:
+<<<<<<< HEAD
         specifier: ^2.12.11
         version: 2.12.11(@types/node@24.10.11)(typescript@5.9.3)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@types/node@24.10.11)(jsdom@28.0.0)(msw@2.12.11(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.1(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^2.13.2
+        version: 2.13.2(@types/node@24.10.11)(typescript@5.9.3)
+      vitest:
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@24.10.11)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.2(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/preload:
     dependencies:
@@ -700,8 +773,13 @@ importers:
         version: 41.0.2
     devDependencies:
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/preload-docker-extension:
     dependencies:
@@ -716,8 +794,13 @@ importers:
         specifier: 0.4.2
         version: 0.4.2
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/preload-webview:
     devDependencies:
@@ -731,8 +814,13 @@ importers:
         specifier: 41.0.2
         version: 41.0.2
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/renderer:
     dependencies:
@@ -864,8 +952,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       vitest-canvas-mock:
         specifier: ^1.1.3
         version: 1.1.3(vitest@4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)))
@@ -955,8 +1048,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   packages/webview-api: {}
 
@@ -1060,8 +1158,13 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   tests/playwright:
     devDependencies:
@@ -1081,8 +1184,13 @@ importers:
         specifier: 1.0.0-beta.6
         version: 1.0.0-beta.6(@microsoft/api-extractor@7.55.2(@types/node@24.6.2))(esbuild@0.25.12)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))(webpack@5.105.0(esbuild@0.25.12))
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@24.6.2)(jsdom@28.0.0)(msw@2.12.11(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@24.6.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.2(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   website:
     dependencies:
@@ -1166,8 +1274,13 @@ importers:
         specifier: ^0.0.8
         version: 0.0.8(markdownlint-cli2@0.21.0)
       msw:
+<<<<<<< HEAD
         specifier: ^2.12.11
         version: 2.12.11(@types/node@25.5.0)(typescript@5.9.3)
+=======
+        specifier: ^2.13.2
+        version: 2.13.2(@types/node@25.5.2)(typescript@5.9.3)
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       postcss:
         specifier: ^8.5.8
         version: 8.5.8
@@ -1184,8 +1297,13 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       vitest:
+<<<<<<< HEAD
         specifier: ^4.1.0
         version: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+        specifier: ^4.1.3
+        version: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   website-argos:
     devDependencies:
@@ -7414,8 +7532,8 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  graphql@16.13.1:
-    resolution: {integrity: sha512-gGgrVCoDKlIZ8fIqXBBb0pPKqDgki0Z/FSKNiQzSGj2uEYHr1tq5wmBegGwJx6QB5S5cM0khSBpi/JFHMCvsmQ==}
+  graphql@16.13.2:
+    resolution: {integrity: sha512-5bJ+nf/UCpAjHM8i06fl7eLyVC9iuNAjm9qzkiu2ZGhM0VscSvS6WDPfAwkdkBuoXGM9FJSbKl6wylMwP9Ktig==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
   gray-matter@4.0.3:
@@ -8999,8 +9117,13 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
+<<<<<<< HEAD
   msw@2.12.11:
     resolution: {integrity: sha512-dVg20zi2I2EvnwH/+WupzsOC2mCa7qsIhyMAWtfRikn6RKtwL9+7SaF1IQ5LyZry4tlUtf6KyTVhnlQiZXozTQ==}
+=======
+  msw@2.13.2:
+    resolution: {integrity: sha512-go2H1TIERKkC48pXiwec5l6sbNqYuvqOk3/vHGo1Zd+pq/H63oFawDQerH+WQdUw/flJFHDG7F+QdWMwhntA/A==}
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -9398,8 +9521,8 @@ packages:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
 
-  path-to-regexp@0.1.12:
-    resolution: {integrity: sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ==}
+  path-to-regexp@0.1.13:
+    resolution: {integrity: sha512-A/AGNMFN3c8bOlvV9RreMdrv7jsmF9XIfDeCd87+I8RNg6s78BhJxMu69NEMHBSJFxKidViTEdruRwEk/WIKqA==}
 
   path-to-regexp@1.9.0:
     resolution: {integrity: sha512-xIp7/apCFJuUHdDLWe8O1HIkb0kQrOMb/0u6FXQjemHn/ii5LrIzU6bdECnsiTF/GjZkMEKg1xdiZwNqDYlZ6g==}
@@ -9410,8 +9533,8 @@ packages:
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
 
-  path-to-regexp@8.3.0:
-    resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
+  path-to-regexp@8.4.2:
+    resolution: {integrity: sha512-qRcuIdP69NPm4qbACK+aDogI5CBDMi1jKe0ry5rSQJz8JVLsC7jV8XpiJjGRLLol3N+R5ihGYcrPLTno6pAdBA==}
 
   path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
@@ -11168,11 +11291,19 @@ packages:
     resolution: {integrity: sha512-azl+t0z7pw/z958Gy9svOTuzqIk6xq+NSheJzn5MMWtWTFywIacg2wUlzKFGtt3cthx0r2SxMK0yzJOR0IES7Q==}
     engines: {node: '>=14.0.0'}
 
+<<<<<<< HEAD
   tldts-core@7.0.25:
     resolution: {integrity: sha512-ZjCZK0rppSBu7rjHYDYsEaMOIbbT+nWF57hKkv4IUmZWBNrBWBOjIElc0mKRgLM8bm7x/BBlof6t2gi/Oq/Asw==}
 
   tldts@7.0.25:
     resolution: {integrity: sha512-keinCnPbwXEUG3ilrWQZU+CqcTTzHq9m2HhoUP2l7Xmi8l1LuijAXLpAJ5zRW+ifKTNscs4NdCkfkDCBYm352w==}
+=======
+  tldts-core@7.0.28:
+    resolution: {integrity: sha512-7W5Efjhsc3chVdFhqtaU0KtK32J37Zcr9RKtID54nG+tIpcY79CQK/veYPODxtD/LJ4Lue66jvrQzIX2Z2/pUQ==}
+
+  tldts@7.0.28:
+    resolution: {integrity: sha512-+Zg3vWhRUv8B1maGSTFdev9mjoo8Etn2Ayfs4cnjlD3CsGkxXX4QyW3j2WJ0wdjYcYmy7Lx2RDsZMhgCWafKIw==}
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     hasBin: true
 
   tmp-promise@3.0.3:
@@ -16103,8 +16234,13 @@ snapshots:
       '@testing-library/svelte-core': 1.0.0(svelte@5.53.7)
       svelte: 5.53.7
     optionalDependencies:
+<<<<<<< HEAD
       vite: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
       vitest: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+      vite: 7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)
+      vitest: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
@@ -16852,7 +16988,11 @@ snapshots:
       obug: 2.1.1
       std-env: 4.0.0
       tinyrainbow: 3.1.0
+<<<<<<< HEAD
       vitest: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+      vitest: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   '@vitest/eslint-plugin@1.6.11(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)(vitest@4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)))':
     dependencies:
@@ -16861,7 +17001,11 @@ snapshots:
       eslint: 10.0.3(jiti@2.6.1)
     optionalDependencies:
       typescript: 5.9.3
+<<<<<<< HEAD
       vitest: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
+=======
+      vitest: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -16882,32 +17026,55 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
+<<<<<<< HEAD
   '@vitest/mocker@4.1.0(msw@2.12.11(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.1(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))':
+=======
+  '@vitest/mocker@4.1.3(msw@2.13.2(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.2(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))':
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     dependencies:
       '@vitest/spy': 4.1.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
+<<<<<<< HEAD
       msw: 2.12.11(@types/node@24.10.11)(typescript@5.9.3)
       vite: 7.3.1(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/mocker@4.1.0(msw@2.12.11(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))':
+=======
+      msw: 2.13.2(@types/node@24.10.11)(typescript@5.9.3)
+      vite: 7.3.2(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)
+
+  '@vitest/mocker@4.1.3(msw@2.13.2(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.2(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))':
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     dependencies:
       '@vitest/spy': 4.1.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
+<<<<<<< HEAD
       msw: 2.12.11(@types/node@24.6.2)(typescript@5.9.3)
       vite: 7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/mocker@4.1.0(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))':
+=======
+      msw: 2.13.2(@types/node@24.6.2)(typescript@5.9.3)
+      vite: 7.3.2(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)
+
+  '@vitest/mocker@4.1.3(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))':
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     dependencies:
       '@vitest/spy': 4.1.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
+<<<<<<< HEAD
       msw: 2.12.11(@types/node@25.5.0)(typescript@5.9.3)
       vite: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)
+=======
+      msw: 2.13.2(@types/node@25.5.2)(typescript@5.9.3)
+      vite: 7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -19589,7 +19756,7 @@ snapshots:
       methods: 1.1.2
       on-finished: 2.4.1
       parseurl: 1.3.3
-      path-to-regexp: 0.1.12
+      path-to-regexp: 0.1.13
       proxy-addr: 2.0.7
       qs: 6.15.0
       range-parser: 1.2.1
@@ -20106,7 +20273,7 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  graphql@16.13.1: {}
+  graphql@16.13.2: {}
 
   gray-matter@4.0.3:
     dependencies:
@@ -22012,14 +22179,18 @@ snapshots:
 
   ms@2.1.3: {}
 
+<<<<<<< HEAD
   msw@2.12.11(@types/node@24.10.11)(typescript@5.9.3):
+=======
+  msw@2.13.2(@types/node@24.10.11)(typescript@5.9.3):
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     dependencies:
       '@inquirer/confirm': 5.1.21(@types/node@24.10.11)
       '@mswjs/interceptors': 0.41.3
       '@open-draft/deferred-promise': 2.2.0
       '@types/statuses': 2.0.6
       cookie: 1.1.1
-      graphql: 16.13.1
+      graphql: 16.13.2
       headers-polyfill: 4.0.3
       is-node-process: 1.2.0
       outvariant: 1.4.3
@@ -22037,14 +22208,18 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
+<<<<<<< HEAD
   msw@2.12.11(@types/node@24.6.2)(typescript@5.9.3):
+=======
+  msw@2.13.2(@types/node@24.6.2)(typescript@5.9.3):
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     dependencies:
       '@inquirer/confirm': 5.1.21(@types/node@24.6.2)
       '@mswjs/interceptors': 0.41.3
       '@open-draft/deferred-promise': 2.2.0
       '@types/statuses': 2.0.6
       cookie: 1.1.1
-      graphql: 16.13.1
+      graphql: 16.13.2
       headers-polyfill: 4.0.3
       is-node-process: 1.2.0
       outvariant: 1.4.3
@@ -22063,14 +22238,18 @@ snapshots:
       - '@types/node'
     optional: true
 
+<<<<<<< HEAD
   msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3):
+=======
+  msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3):
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
     dependencies:
       '@inquirer/confirm': 5.1.21(@types/node@25.5.0)
       '@mswjs/interceptors': 0.41.3
       '@open-draft/deferred-promise': 2.2.0
       '@types/statuses': 2.0.6
       cookie: 1.1.1
-      graphql: 16.13.1
+      graphql: 16.13.2
       headers-polyfill: 4.0.3
       is-node-process: 1.2.0
       outvariant: 1.4.3
@@ -22501,7 +22680,7 @@ snapshots:
       lru-cache: 10.4.3
       minipass: 7.1.3
 
-  path-to-regexp@0.1.12: {}
+  path-to-regexp@0.1.13: {}
 
   path-to-regexp@1.9.0:
     dependencies:
@@ -22511,7 +22690,7 @@ snapshots:
 
   path-to-regexp@6.3.0: {}
 
-  path-to-regexp@8.3.0: {}
+  path-to-regexp@8.4.2: {}
 
   path-type@4.0.0: {}
 
@@ -23644,7 +23823,7 @@ snapshots:
       depd: 2.0.0
       is-promise: 4.0.0
       parseurl: 1.3.3
-      path-to-regexp: 8.3.0
+      path-to-regexp: 8.4.2
     transitivePeerDependencies:
       - supports-color
 
@@ -24630,11 +24809,19 @@ snapshots:
 
   tinyspy@4.0.4: {}
 
+<<<<<<< HEAD
   tldts-core@7.0.25: {}
 
   tldts@7.0.25:
     dependencies:
       tldts-core: 7.0.25
+=======
+  tldts-core@7.0.28: {}
+
+  tldts@7.0.28:
+    dependencies:
+      tldts-core: 7.0.28
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   tmp-promise@3.0.3:
     dependencies:
@@ -24654,11 +24841,19 @@ snapshots:
 
   tough-cookie@6.0.0:
     dependencies:
+<<<<<<< HEAD
       tldts: 7.0.25
 
   tough-cookie@6.0.1:
     dependencies:
       tldts: 7.0.25
+=======
+      tldts: 7.0.28
+
+  tough-cookie@6.0.1:
+    dependencies:
+      tldts: 7.0.28
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
 
   tr46@0.0.3: {}
 
@@ -25175,6 +25370,7 @@ snapshots:
     dependencies:
       cssfontparser: 1.2.1
       moo-color: 1.0.3
+<<<<<<< HEAD
       vitest: 4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2))
 
   vitest@4.1.0(@types/node@24.10.11)(jsdom@28.0.0)(msw@2.12.11(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.1(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)):
@@ -25186,6 +25382,19 @@ snapshots:
       '@vitest/snapshot': 4.1.0
       '@vitest/spy': 4.1.0
       '@vitest/utils': 4.1.0
+=======
+      vitest: 4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+
+  vitest@4.1.3(@types/node@24.10.11)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.2(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)):
+    dependencies:
+      '@vitest/expect': 4.1.3
+      '@vitest/mocker': 4.1.3(msw@2.13.2(@types/node@24.10.11)(typescript@5.9.3))(vite@7.3.2(@types/node@24.10.11)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/pretty-format': 4.1.3
+      '@vitest/runner': 4.1.3
+      '@vitest/snapshot': 4.1.3
+      '@vitest/spy': 4.1.3
+      '@vitest/utils': 4.1.3
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
@@ -25205,6 +25414,7 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
+<<<<<<< HEAD
   vitest@4.1.0(@types/node@24.6.2)(jsdom@28.0.0)(msw@2.12.11(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.1(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       '@vitest/expect': 4.1.0
@@ -25214,6 +25424,17 @@ snapshots:
       '@vitest/snapshot': 4.1.0
       '@vitest/spy': 4.1.0
       '@vitest/utils': 4.1.0
+=======
+  vitest@4.1.3(@types/node@24.6.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.2(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)):
+    dependencies:
+      '@vitest/expect': 4.1.3
+      '@vitest/mocker': 4.1.3(msw@2.13.2(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.2(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/pretty-format': 4.1.3
+      '@vitest/runner': 4.1.3
+      '@vitest/snapshot': 4.1.3
+      '@vitest/spy': 4.1.3
+      '@vitest/utils': 4.1.3
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
@@ -25233,6 +25454,7 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
+<<<<<<< HEAD
   vitest@4.1.0(@types/node@25.5.0)(jsdom@28.0.0)(msw@2.12.11(@types/node@25.5.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       '@vitest/expect': 4.1.0
@@ -25242,6 +25464,17 @@ snapshots:
       '@vitest/snapshot': 4.1.0
       '@vitest/spy': 4.1.0
       '@vitest/utils': 4.1.0
+=======
+  vitest@4.1.3(@types/node@25.5.2)(@vitest/coverage-v8@4.1.3)(jsdom@28.0.0)(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3)):
+    dependencies:
+      '@vitest/expect': 4.1.3
+      '@vitest/mocker': 4.1.3(msw@2.13.2(@types/node@25.5.2)(typescript@5.9.3))(vite@7.3.2(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/pretty-format': 4.1.3
+      '@vitest/runner': 4.1.3
+      '@vitest/snapshot': 4.1.3
+      '@vitest/spy': 4.1.3
+      '@vitest/utils': 4.1.3
+>>>>>>> 519cf9a03 (chore(deps-dev): bump msw from 2.12.14 to 2.13.2)
       es-module-lexer: 2.0.0
       expect-type: 1.3.0
       magic-string: 0.30.21
