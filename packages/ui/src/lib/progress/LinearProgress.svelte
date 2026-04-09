@@ -52,5 +52,5 @@
 }
 </style>
 
-<progress class="w-full appearance-none border-none h-0.5 text-[var(--pd-progressBar-text)] text-base pure-material-progress-linear"
+<progress class="w-full appearance-none border-none h-0.5 text-(--pd-progressBar-text) text-base pure-material-progress-linear"
 ></progress>

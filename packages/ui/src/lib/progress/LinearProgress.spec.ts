@@ -32,7 +32,7 @@ test('should render a progress element', () => {
 test('should use color-registry text color instead of hardcoded Tailwind color', () => {
   render(LinearProgress);
   const progress = screen.getByRole('progressbar');
-  expect(progress).toHaveClass('text-[var(--pd-progressBar-text)]');
+  expect(progress).toHaveClass('text-(--pd-progressBar-text)');
   expect(progress).not.toHaveClass('text-purple-500');
 });
 
