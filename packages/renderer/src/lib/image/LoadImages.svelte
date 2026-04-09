@@ -105,7 +105,7 @@ async function loadImages(): Promise<void> {
     {#each archivesToLoad as _, index (index)}
       <div class="flex flex-row justify-center w-full py-1">
         <Input bind:value={archivesToLoad[index]} aria-label="archive path" readonly={true} />
-        <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} />
+        <Button type="link" on:click={(): void => deleteImagesTarArchiveToLoad(index)} icon={faMinusCircle} aria-label="Remove archive" />
       </div>
     {/each}
 
