@@ -74,7 +74,9 @@ const showSetupButton = $derived(
   globalContext && (isOnboardingEnabled(provider, globalContext) || hasAnyConfiguration(provider)),
 );
 
-const showUpdateButton = $derived(provider.updateInfo?.version && provider.version !== provider.updateInfo?.version);
+const showUpdateButton = $derived(
+  provider.version && provider.updateInfo?.version && provider.version !== provider.updateInfo?.version,
+);
 
 function handleCreateNew(): Promise<void> {
   return onCreateNew(provider, providerDisplayName);

@@ -371,6 +371,29 @@ describe('ProviderActionButtons', () => {
     expect(ProviderUpdateButton).toHaveBeenCalled();
   });
 
+  test('does not show update button when provider has no version even if update is available', async () => {
+    const provider: ProviderInfo = {
+      ...baseProviderInfo,
+      status: 'unknown',
+      version: undefined,
+      updateInfo: {
+        version: '1.1.0',
+      },
+    };
+
+    render(ProviderActionButtons, {
+      provider,
+      globalContext: mockGlobalContext,
+      providerInstallationInProgress: false,
+      onCreateNew: vi.fn(),
+      onUpdatePreflightChecks: vi.fn(),
+      isOnboardingEnabled: vi.fn().mockReturnValue(false),
+      hasAnyConfiguration: vi.fn().mockReturnValue(false),
+    });
+
+    expect(ProviderUpdateButton).not.toHaveBeenCalled();
+  });
+
   test('does not show update button when no update is available', async () => {
     const provider: ProviderInfo = {
       ...baseProviderInfo,

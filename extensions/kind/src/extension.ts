@@ -370,7 +370,7 @@ export async function createProvider(
     }),
   );
 
-  if (latestAsset && latestAsset.tag.slice(1) !== kindCli?.version && providerUpdate) {
+  if (kindPath && latestAsset && latestAsset.tag.slice(1) !== kindCli?.version && providerUpdate) {
     currentUpdateDisposable = provider.registerUpdate(providerUpdate);
   }
 
