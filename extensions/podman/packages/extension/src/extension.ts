@@ -2153,8 +2153,10 @@ export async function createMachine(
   }
 
   // name at the end
+  const args = [];
   let machineName = '';
   if (params['podman.factory.machine.name'] && typeof params['podman.factory.machine.name'] === 'string') {
+    args.push(params['podman.factory.machine.name']);
     machineName = params['podman.factory.machine.name'];
     parameters.push(params['podman.factory.machine.name']);
     telemetryRecords.customName = params['podman.factory.machine.name'];
@@ -2213,11 +2215,11 @@ export async function createMachine(
         // the machine temporarily when actually needed.
         const setupNeeded = await rosettaProvisioner.needsRosettaEnableFile(podmanConfiguration, version, provider);
         if (setupNeeded) {
-          await execPodman(['machine', 'start', machineName], provider, { logger });
+          await execPodman(['machine', 'start', ...args], provider, { logger });
           try {
-            await execPodman(['machine', 'ssh', machineName, `sudo touch ${ROSETTA_ENABLE_FILE}`], provider);
+            await execPodman(['machine', 'ssh', ...args, `sudo touch ${ROSETTA_ENABLE_FILE}`], provider);
           } finally {
-            await execPodman(['machine', 'stop', machineName], provider);
+            await execPodman(['machine', 'stop', ...args], provider);
           }
         }
       }

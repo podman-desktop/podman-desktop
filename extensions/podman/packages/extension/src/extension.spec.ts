@@ -1065,7 +1065,7 @@ describe('createMachine rosetta enable-file provisioning', () => {
     );
 
     expect(ROSETTA_PROVISIONER_MOCK.provisionAndRestartForRosetta).toHaveBeenCalledWith(
-      'podman-machine-default',
+      '',
       expect.any(String),
       podmanConfiguration,
       '5.7.0',

@@ -218,6 +218,25 @@ describe('enableRosettaInMachine', () => {
       vmType,
     );
   });
+
+  test('omits machine name from ssh commands when machineName is empty', async () => {
+    vi.mocked(envAPI).isMac = true;
+    vi.mocked(arch).mockReturnValue('arm64');
+    vi.mocked(release).mockReturnValue(tahoeRelease);
+    vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(true);
+    vi.mocked(execPodman)
+      .mockRejectedValueOnce(new Error('exit code 1'))
+      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult);
+
+    const result = await rosettaProvisioner.enableRosettaInMachine('', vmType, podmanConfiguration, podmanVersion);
+    expect(result).toBe(true);
+    expect(execPodman).toHaveBeenNthCalledWith(1, ['machine', 'ssh', 'test -f /etc/containers/enable-rosetta'], vmType);
+    expect(execPodman).toHaveBeenNthCalledWith(
+      2,
+      ['machine', 'ssh', 'sudo touch /etc/containers/enable-rosetta'],
+      vmType,
+    );
+  });
 });
 
 describe('provisionAndRestartForRosetta', () => {
@@ -332,6 +351,35 @@ describe('provisionAndRestartForRosetta', () => {
     expect(warnSpy).toHaveBeenCalled();
     // stop/start should not have been attempted
     expect(execPodman).toHaveBeenCalledTimes(2);
+  });
+
+  test('omits machine name from stop/start commands when machineName is empty', async () => {
+    vi.mocked(envAPI).isMac = true;
+    vi.mocked(arch).mockReturnValue('arm64');
+    vi.mocked(release).mockReturnValue(tahoeRelease);
+    vi.mocked(podmanConfiguration.isRosettaEnabled).mockResolvedValue(true);
+    vi.mocked(execPodman)
+      .mockRejectedValueOnce(new Error('exit code 1'))
+      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
+      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult)
+      .mockResolvedValueOnce({ stdout: '', stderr: '', command: '' } as RunResult);
+
+    const result = await rosettaProvisioner.provisionAndRestartForRosetta(
+      '',
+      vmType,
+      podmanConfiguration,
+      podmanVersion,
+    );
+    expect(result).toBe(true);
+    expect(execPodman).toHaveBeenCalledTimes(4);
+    expect(execPodman).toHaveBeenNthCalledWith(1, ['machine', 'ssh', 'test -f /etc/containers/enable-rosetta'], vmType);
+    expect(execPodman).toHaveBeenNthCalledWith(
+      2,
+      ['machine', 'ssh', 'sudo touch /etc/containers/enable-rosetta'],
+      vmType,
+    );
+    expect(execPodman).toHaveBeenNthCalledWith(3, ['machine', 'stop'], vmType);
+    expect(execPodman).toHaveBeenNthCalledWith(4, ['machine', 'start'], vmType, undefined);
   });
 
   test('propagates error when machine start fails after stop', async () => {

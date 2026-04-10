@@ -86,15 +86,16 @@ export class RosettaProvisioner {
   ): Promise<boolean> {
     if (!(await this.needsRosettaEnableFile(podmanConfiguration, podmanVersion, vmType))) return false;
 
+    const args = machineName ? [machineName] : [];
     // Check if the file already exists so we avoid an unnecessary restart
     try {
-      await execPodman(['machine', 'ssh', machineName, `test -f ${ROSETTA_ENABLE_FILE}`], vmType);
+      await execPodman(['machine', 'ssh', ...args, `test -f ${ROSETTA_ENABLE_FILE}`], vmType);
       return false; // file already present, nothing to do
     } catch {
       // non-zero exit means the file is missing — fall through to create it
     }
 
-    await execPodman(['machine', 'ssh', machineName, `sudo touch ${ROSETTA_ENABLE_FILE}`], vmType);
+    await execPodman(['machine', 'ssh', ...args, `sudo touch ${ROSETTA_ENABLE_FILE}`], vmType);
     return true;
   }
 
@@ -125,10 +126,11 @@ export class RosettaProvisioner {
     }
     if (!fileCreated) return false;
 
+    const args = machineName ? [machineName] : [];
     // Stop/start errors propagate — the machine state has changed and the
     // caller must not report a stale status.
-    await execPodman(['machine', 'stop', machineName], vmType);
-    await execPodman(['machine', 'start', machineName], vmType, options);
+    await execPodman(['machine', 'stop', ...args], vmType);
+    await execPodman(['machine', 'start', ...args], vmType, options);
     return true;
   }
 
