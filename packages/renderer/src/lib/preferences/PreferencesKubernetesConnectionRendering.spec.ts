@@ -80,6 +80,7 @@ test('Expect that removing the connection is going back to the previous page', a
           apiURL: 'http://localhost:8181',
         },
         lifecycleMethods: ['delete'],
+        canDelete: true,
       },
       {
         connectionType: 'kubernetes',
@@ -177,6 +178,7 @@ test('Expect to see error message if action fails', async () => {
           apiURL,
         },
         lifecycleMethods: ['delete'],
+        canDelete: true,
       },
     ],
     kubernetesProviderConnectionCreation: true,

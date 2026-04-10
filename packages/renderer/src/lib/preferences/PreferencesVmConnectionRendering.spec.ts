@@ -69,6 +69,7 @@ test('Expect that removing the connection is going back to the previous page', a
         name: vm2,
         status: 'stopped',
         lifecycleMethods: ['delete'],
+        canDelete: true,
       },
       {
         connectionType: 'vm',
@@ -149,6 +150,7 @@ test('Expect to see error message if action fails', async () => {
         name: vm1,
         status: 'stopped',
         lifecycleMethods: ['delete'],
+        canDelete: true,
       },
     ],
     vmProviderConnectionCreation: true,

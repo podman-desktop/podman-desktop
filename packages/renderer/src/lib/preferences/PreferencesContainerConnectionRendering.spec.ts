@@ -162,6 +162,7 @@ test('Expect that removing the connection is going back to the previous page', a
         },
         type: 'podman',
         lifecycleMethods: ['delete'],
+        canDelete: true,
       },
       {
         connectionType: 'container',
@@ -248,6 +249,7 @@ test('Expect to see error message if action fails', async () => {
         },
         type: 'podman',
         lifecycleMethods: ['delete'],
+        canDelete: true,
       },
     ],
   };
@@ -311,6 +313,8 @@ test('Expect startContainerProvider to only be called once when restarting', asy
         },
         type: 'podman',
         lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
       },
     ],
   };
@@ -368,6 +372,8 @@ test('Expect display name to be used in favor of name for page title', async () 
         },
         type: 'podman',
         lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
       },
     ],
   };
