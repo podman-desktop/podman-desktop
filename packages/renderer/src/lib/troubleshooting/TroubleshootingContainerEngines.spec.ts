@@ -31,7 +31,6 @@ import { expect, test } from 'vitest';
 
 import TroubleshootingContainerEngines from './TroubleshootingContainerEngines.svelte';
 
-const containerConnectionLabel = 'Container Connections';
 // mock ProviderContainerInfo
 const socketPath = '/foo/socket.path';
 const name = 'fooEngine';
@@ -68,7 +67,7 @@ test('Check containers connections widget is there', async () => {
   render(TroubleshootingContainerEngines, {});
 
   // expect to be in a region with label Container Connections
-  const region = screen.getByRole('region', { name: containerConnectionLabel });
+  const region = screen.getByRole('region', { name: 'Container Connections' });
   expect(region).toBeInTheDocument();
 });
 
@@ -76,7 +75,7 @@ test('Check containers connections status show correct information', async () =>
   render(TroubleshootingContainerEngines, { providers });
 
   // expect to have the name label
-  const statusElement = screen.getByRole('status', { name: containerConnectionLabel });
+  const statusElement = screen.getByRole('status', { name: 'Container connections count' });
   expect(statusElement).toBeInTheDocument();
   expect(statusElement).toHaveTextContent('1 (1 running)');
 });
