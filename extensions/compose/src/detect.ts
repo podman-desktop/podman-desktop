@@ -18,8 +18,8 @@
 
 import * as fs from 'node:fs';
 import * as http from 'node:http';
-import { resolve } from 'node:path';
 import * as path from 'node:path';
+import { resolve } from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 import { shellPath } from 'shell-path';

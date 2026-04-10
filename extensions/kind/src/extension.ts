@@ -21,8 +21,8 @@ import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
 import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@podman-desktop/api';
-import { window } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
+import { window } from '@podman-desktop/api';
 
 import { connectionAuditor, createCluster } from './create-cluster';
 import type { ImageInfo } from './image-handler';
