@@ -422,7 +422,7 @@ let hasInvalidFields = $derived(
               icon={faMinusCircle}
               disabled={buildImageInfo.buildArgs.length === 1 && buildArg.key === '' && buildArg.value === ''}
               aria-label="Delete build argument" />
-            <Button on:click={addBuildArg} icon={faPlusCircle} title="Add build argument" />
+            <Button on:click={addBuildArg} icon={faPlusCircle} title="Add build argument" aria-label="Add build argument" />
           </div>
         {/each}
       </div>

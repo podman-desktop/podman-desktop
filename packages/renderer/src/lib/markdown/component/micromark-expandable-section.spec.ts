@@ -65,7 +65,7 @@ test('Expect createExpandableSection to return a button with an expandable secti
 
   const htmlSanitized = html.replace('\n', '').replace(/\s+/g, ' ');
   expect(htmlSanitized).toContain(
-    `<button class='flex space-x-2 text-purple-400 w-fit hover:bg-white hover:bg-opacity-10 text-xs items-center' data-expandable='micromark-expandable-1'`,
+    `<button class='flex space-x-2 text-[var(--pd-button-link-text)] w-fit hover:bg-[var(--pd-default-item-hover)] text-xs items-center' data-expandable='micromark-expandable-1'`,
   );
   expect(htmlSanitized).toContain(
     `<div class='flex-col w-[250px] text-sm micromark-expandable-1' style='display: none;'`,
@@ -90,7 +90,7 @@ test('Expect createExpandableSection to return a button and a visible expandable
 
   const htmlSanitized = html.replace('\n', '').replace(/\s+/g, ' ');
   expect(htmlSanitized).toContain(
-    `<button class='flex space-x-2 text-purple-400 w-fit hover:bg-white hover:bg-opacity-10 text-xs items-center' data-expandable='micromark-expandable-2'`,
+    `<button class='flex space-x-2 text-[var(--pd-button-link-text)] w-fit hover:bg-[var(--pd-default-item-hover)] text-xs items-center' data-expandable='micromark-expandable-2'`,
   );
   expect(htmlSanitized).toContain(
     `<div class='flex-col w-[250px] text-sm micromark-expandable-2' style='display: flex;'`,
@@ -115,7 +115,7 @@ test('Expect createExpandableSection to return a hidden button and expandable se
 
   const htmlSanitized = html.replace('\n', '').replace(/\s+/g, ' ');
   expect(htmlSanitized).toContain(
-    `<button class='flex space-x-2 text-purple-400 w-fit hover:bg-white hover:bg-opacity-10 text-xs items-center' data-expandable='micromark-expandable-3' style='display: none;'`,
+    `<button class='flex space-x-2 text-[var(--pd-button-link-text)] w-fit hover:bg-[var(--pd-default-item-hover)] text-xs items-center' data-expandable='micromark-expandable-3' style='display: none;'`,
   );
   expect(htmlSanitized).toContain(
     `<div class='flex-col w-[250px] text-sm micromark-expandable-3' style='display: none;'`,

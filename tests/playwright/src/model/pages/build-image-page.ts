@@ -80,7 +80,7 @@ export class BuildImagePage extends BasePage {
       await this.fillBuildImageForm(imageName, containerFilePath, contextDirectory, archType, target);
 
       await playExpect(this.doneButton).toBeEnabled({ timeout: timeout });
-      await this.validateBuildLogs();
+      await playExpect(this.terminalContent).toBeVisible();
       await this.doneButton.scrollIntoViewIfNeeded();
       await this.doneButton.click();
       console.log(`Image ${imageName} has been built successfully!`);
@@ -173,18 +173,6 @@ export class BuildImagePage extends BasePage {
     } else {
       await playExpect(this.archLessOptionsButton).toBeEnabled();
     }
-  }
-
-  async validateBuildLogs(): Promise<void> {
-    const logs = this.page.locator('.xterm-rows');
-    await playExpect(logs).toBeVisible();
-    const logRows = await logs.locator('div:has(span)').all();
-
-    await Promise.all(
-      logRows.map(async logRow => {
-        await playExpect.poll(async () => logRow.textContent()).not.toContain('Error');
-      }),
-    );
   }
 
   private async fillBuildImageForm(

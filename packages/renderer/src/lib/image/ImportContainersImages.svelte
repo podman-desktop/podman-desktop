@@ -135,7 +135,7 @@ async function importContainers(): Promise<void> {
           aria-label="container importing name"
           placeholder="Image Name when Importing (e.g. quay.io/namespace/my-image-name)"
           class="ml-2" />
-        <Button type="link" on:click={(): void => deleteContainerToImport(index)} icon={faMinusCircle} />
+        <Button type="link" on:click={(): void => deleteContainerToImport(index)} icon={faMinusCircle} aria-label="Remove container" />
       </div>
     {/each}
 

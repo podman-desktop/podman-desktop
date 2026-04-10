@@ -33,4 +33,4 @@ function onClick(): void {
 }
 </script>
 
-<Button title={title} on:click={onClick} inProgress={bulkDeleteInProgress} icon={faTrash} />
+<Button title={title} aria-label={title} on:click={onClick} inProgress={bulkDeleteInProgress} icon={faTrash} />

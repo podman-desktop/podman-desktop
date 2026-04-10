@@ -25,7 +25,7 @@ import type Dockerode from 'dockerode';
 import type { IpcMainEvent } from 'electron';
 import type { Method } from 'got';
 import { http, HttpResponse } from 'msw';
-import { setupServer, type SetupServerApi } from 'msw/node';
+import { type SetupServer, setupServer } from 'msw/node';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
@@ -66,7 +66,7 @@ const apiSender: ApiSenderType = {
   receive: vi.fn(),
 };
 
-let server: SetupServerApi | undefined = undefined;
+let server: SetupServer | undefined = undefined;
 
 class TestDockerDesktopInstallation extends DockerDesktopInstallation {
   // transform the method name to a got method
