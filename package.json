@@ -176,7 +176,7 @@
     "lint-staged": "^16.4.0",
     "minimist": "^1.2.8",
     "msw": "^2.13.2",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.58.1",
     "vite": "^7.3.2",
