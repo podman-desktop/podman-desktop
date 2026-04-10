@@ -52,6 +52,8 @@ const containerProviderInfo: ProviderInfo = {
   vmConnections: [],
   vmProviderConnectionCreation: false,
   vmProviderConnectionInitialization: false,
+  canStart: false,
+  canStop: false,
 };
 
 const containerConnection: ProviderContainerConnectionInfo = {
@@ -63,6 +65,10 @@ const containerConnection: ProviderContainerConnectionInfo = {
     socketPath: 'socket',
   },
   lifecycleMethods: ['start', 'stop', 'delete'],
+  canStart: true,
+  canStop: true,
+  canEdit: false,
+  canDelete: true,
   type: 'podman',
 };
 
@@ -74,6 +80,10 @@ const kubernetesConnection: ProviderKubernetesConnectionInfo = {
     apiURL: 'url',
   },
   lifecycleMethods: ['start', 'stop', 'delete'],
+  canStart: true,
+  canStop: true,
+  canEdit: false,
+  canDelete: true,
 };
 
 const updateConnectionStatus = (): void => {

@@ -746,6 +746,10 @@ export class ProviderRegistry {
         lifecycleMethods.push('edit');
       }
       providerConnection.lifecycleMethods = lifecycleMethods;
+      providerConnection.canStart = !!connection.lifecycle.start;
+      providerConnection.canStop = !!connection.lifecycle.stop;
+      providerConnection.canEdit = !!connection.lifecycle.edit;
+      providerConnection.canDelete = !!connection.lifecycle.delete;
     }
     return providerConnection;
   }
@@ -862,6 +866,9 @@ export class ProviderRegistry {
     if (this.providerLifecycles.has(provider.internalId)) {
       providerInfo.lifecycleMethods = ['start', 'stop'];
     }
+    const hasLifecycle = this.providerLifecycles.has(provider.internalId);
+    providerInfo.canStart = hasLifecycle;
+    providerInfo.canStop = hasLifecycle;
     return providerInfo;
   }
 
