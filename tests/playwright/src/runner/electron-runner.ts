@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
@@ -46,6 +47,8 @@ export class ElectronRunner extends Runner {
       console.log('Podman Desktop is already running');
       return this.getPage();
     }
+
+    this.killStaleElectronInstances();
 
     try {
       // start the app with given properties
@@ -178,12 +181,7 @@ export class ElectronRunner extends Runner {
     } catch (err: unknown) {
       console.log(`Caught exception in closing: ${err}`);
       if (pid) {
-        console.log(`Killing the electron app process with PID: ${pid}`);
-        try {
-          process.kill(pid);
-        } catch (error: unknown) {
-          console.log(`Exception thrown when killing the process: ${error}`);
-        }
+        this.forceKillProcess(pid);
       }
     }
 
@@ -201,6 +199,47 @@ export class ElectronRunner extends Runner {
       }
     }
     await this.removeTracesOnFinished();
+  }
+
+  /**
+   * Force-kill a process by PID. On Windows, uses `taskkill /F /T` to ensure
+   * the entire process tree is terminated and OS-level resources (such as
+   * Electron's single-instance lock) are released.
+   */
+  protected forceKillProcess(pid: number): void {
+    console.log(`Force-killing the electron app process with PID: ${pid}`);
+    try {
+      if (process.platform === 'win32') {
+        // eslint-disable-next-line sonarjs/os-command, n/no-sync
+        execSync(`taskkill /F /T /PID ${pid}`, { timeout: 30_000 });
+      } else {
+        process.kill(pid, 'SIGKILL');
+      }
+    } catch (error: unknown) {
+      console.log(`Exception thrown when force-killing process ${pid}: ${error}`);
+    }
+  }
+
+  /**
+   * Kill any stale Electron or Podman Desktop processes left over from a
+   * previous test run whose close sequence failed. On Windows, a dangling
+   * process keeps the Electron single-instance lock, blocking all subsequent
+   * launches with "An instance of Podman Desktop is already running".
+   */
+  protected killStaleElectronInstances(): void {
+    if (process.platform !== 'win32') {
+      return;
+    }
+
+    for (const processName of ['electron.exe', 'pd.exe', 'podman-desktop.exe', 'Podman Desktop.exe']) {
+      try {
+        // eslint-disable-next-line sonarjs/os-command, n/no-sync
+        execSync(`taskkill /F /IM "${processName}" /T`, { timeout: 30_000 });
+        console.log(`Killed stale process: ${processName}`);
+      } catch {
+        // Expected when no matching process is running
+      }
+    }
   }
 
   protected override defaultOptions(): object {
