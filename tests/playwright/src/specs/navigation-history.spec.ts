@@ -116,18 +116,24 @@ test.describe
       await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
       await navigationBar.goBack(); // Now on Containers with forward available
       await playExpect(containerPage.heading).toBeVisible({ timeout: 5_000 });
-      // Simulate trackpad swipe left (deltaX > 30 for forward)
-      await page.evaluate(() => {
-        const event = new WheelEvent('wheel', {
-          deltaX: 50, // > 30 threshold for forward navigation
-          deltaY: 0,
-          bubbles: true,
-        });
-        document.body.dispatchEvent(event);
-      });
 
-      // Verify navigation to Images
-      await playExpect(imagesPage.heading).toBeVisible({ timeout: 5_000 });
+      const forwardButton = page.getByRole('button', { name: 'Forward (hold for history)' });
+      await playExpect(forwardButton).toBeEnabled({ timeout: 5_000 });
+
+      // The app has a 500ms swipe cooldown (NavigationButtons.handleWheel) that may
+      // still be active from the previous trackpad-swipe-left test. Poll the dispatch
+      // so the event is retried once the cooldown expires.
+      await playExpect
+        .poll(
+          async () => {
+            await page.evaluate(() => {
+              document.body.dispatchEvent(new WheelEvent('wheel', { deltaX: 50, deltaY: 0, bubbles: true }));
+            });
+            return imagesPage.heading.isVisible();
+          },
+          { timeout: 5_000 },
+        )
+        .toBeTruthy();
     });
 
     test('Navigation shortcuts blocked when focus in input field', async ({ navigationBar, page }) => {
