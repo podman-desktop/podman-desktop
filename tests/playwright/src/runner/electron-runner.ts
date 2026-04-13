@@ -226,9 +226,11 @@ export class ElectronRunner extends Runner {
    * Electron single-instance lock, blocking all subsequent launches with
    * "An instance of Podman Desktop is already running".
    *
-   * Only targets processes whose executable path contains "podman-desktop"
-   * (covers electron.exe launched from the PD workspace, pd.exe, and
-   * podman-desktop.exe) so unrelated Electron apps are never affected.
+   * Uses WMIC to find processes whose command line contains "podman-desktop"
+   * or "podman desktop", then force-kills them by PID. This matches the
+   * Electron binary launched from the PD workspace as well as compiled
+   * binaries (pd.exe, podman-desktop.exe) without affecting unrelated
+   * Electron apps.
    */
   protected killStaleElectronInstances(): void {
     if (process.platform !== 'win32') {
