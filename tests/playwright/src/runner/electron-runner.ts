@@ -235,6 +235,7 @@ export class ElectronRunner extends Runner {
       return;
     }
 
+    // eslint-disable-next-line quotes
     const wmicFilter = "CommandLine like '%podman-desktop%' OR CommandLine like '%podman desktop%'";
     try {
       // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
