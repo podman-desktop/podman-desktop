@@ -39,13 +39,13 @@ export interface ProviderContainerConnectionInfo {
   };
   lifecycleMethods?: LifecycleMethod[];
   // can start the connection
-  canStart?: boolean;
+  canStart: boolean;
   // can stop the connection
-  canStop?: boolean;
+  canStop: boolean;
   // can edit the connection
-  canEdit?: boolean;
+  canEdit: boolean;
   // can delete the connection
-  canDelete?: boolean;
+  canDelete: boolean;
   /**
    * Specify if the corresponding {@link import('@podman-desktop/api').ProviderContainerConnection} instance
    * has a shellAccess available
@@ -64,13 +64,13 @@ export interface ProviderKubernetesConnectionInfo {
   };
   lifecycleMethods?: LifecycleMethod[];
   // can start the connection
-  canStart?: boolean;
+  canStart: boolean;
   // can stop the connection
-  canStop?: boolean;
+  canStop: boolean;
   // can edit the connection
-  canEdit?: boolean;
+  canEdit: boolean;
   // can delete the connection
-  canDelete?: boolean;
+  canDelete: boolean;
 }
 
 export interface ProviderVmConnectionInfo {
@@ -79,13 +79,13 @@ export interface ProviderVmConnectionInfo {
   status: ProviderConnectionStatus;
   lifecycleMethods?: LifecycleMethod[];
   // can start the connection
-  canStart?: boolean;
+  canStart: boolean;
   // can stop the connection
-  canStop?: boolean;
+  canStop: boolean;
   // can edit the connection
-  canEdit?: boolean;
+  canEdit: boolean;
   // can delete the connection
-  canDelete?: boolean;
+  canDelete: boolean;
 }
 
 export type ProviderConnectionInfo =
@@ -104,9 +104,9 @@ export interface ProviderInfo {
   status: ProviderStatus;
   lifecycleMethods?: LifecycleMethod[];
   // can start the provider
-  canStart?: boolean;
+  canStart: boolean;
   // can stop the provider
-  canStop?: boolean;
+  canStop: boolean;
   // can create provider connection from ContainerProviderConnectionFactory params
   containerProviderConnectionCreation: boolean;
   // can initialize provider connection from ContainerProviderConnectionFactory params
