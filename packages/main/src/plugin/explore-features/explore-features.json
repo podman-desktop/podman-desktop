@@ -42,7 +42,7 @@
       "buttonLink": "/preferences/docker-compatibility",
       "tutorialLink": "",
       "learnMore": "https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility",
-      "when": "!isDockerCompatibilityEnabled"
+      "when": "isDockerCompatibilityEnabled"
     }
   ]
 }
