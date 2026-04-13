@@ -24,7 +24,6 @@ import type { Browser, Page } from '@playwright/test';
 import { chromium } from '@playwright/test';
 
 import { Runner } from '/@/runner/podman-desktop-runner';
-import { RunnerFactory } from '/@/runner/runner-factory';
 import type { RunnerOptions } from '/@/runner/runner-options';
 import { waitUntil } from '/@/utility/wait';
 
@@ -184,7 +183,6 @@ export class ChromeDevToolsProtocolRunner extends Runner {
     this._running = false;
     this._browser = undefined;
     this._electronProcess = undefined;
-    RunnerFactory.dispose();
 
     if (this._videoAndTraceName) {
       const videoPath = join(this._testOutput, 'videos', `${this._videoAndTraceName}.webm`);

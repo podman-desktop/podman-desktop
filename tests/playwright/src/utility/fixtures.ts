@@ -41,8 +41,9 @@ export type FixtureOptions = {
 export const test = base.extend<TestFixtures & FixtureOptions>({
   runnerOptions: [new RunnerOptions(), { option: true }],
   runner: async ({ runnerOptions }, use) => {
-    const runner = await RunnerFactory.getInstance({ runnerOptions });
+    const runner = await RunnerFactory.getInstance(runnerOptions);
     await use(runner);
+    RunnerFactory.dispose();
   },
   page: async ({ runner }, use) => {
     await use(runner.getPage());

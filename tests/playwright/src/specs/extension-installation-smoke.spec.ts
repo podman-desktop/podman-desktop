@@ -72,6 +72,7 @@ for (const {
       });
       test.afterAll(async () => {
         await pdRunner.close();
+        RunnerFactory.dispose();
       });
 
       test('Initialize extension type', async () => {
