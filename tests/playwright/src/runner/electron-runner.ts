@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
@@ -210,8 +210,8 @@ export class ElectronRunner extends Runner {
     console.log(`Force-killing the electron app process with PID: ${pid}`);
     try {
       if (process.platform === 'win32') {
-        // eslint-disable-next-line sonarjs/os-command, n/no-sync
-        execSync(`taskkill /F /T /PID ${pid}`, { timeout: 30_000 });
+        // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+        execFileSync('taskkill', ['/F', '/T', '/PID', String(pid)], { timeout: 30_000 });
       } else {
         process.kill(pid, 'SIGKILL');
       }
@@ -221,24 +221,43 @@ export class ElectronRunner extends Runner {
   }
 
   /**
-   * Kill any stale Electron or Podman Desktop processes left over from a
-   * previous test run whose close sequence failed. On Windows, a dangling
-   * process keeps the Electron single-instance lock, blocking all subsequent
-   * launches with "An instance of Podman Desktop is already running".
+   * Kill stale Podman Desktop processes left over from a previous test run
+   * whose close sequence failed. On Windows, a dangling process keeps the
+   * Electron single-instance lock, blocking all subsequent launches with
+   * "An instance of Podman Desktop is already running".
+   *
+   * Only targets processes whose executable path contains "podman-desktop"
+   * (covers electron.exe launched from the PD workspace, pd.exe, and
+   * podman-desktop.exe) so unrelated Electron apps are never affected.
    */
   protected killStaleElectronInstances(): void {
     if (process.platform !== 'win32') {
       return;
     }
 
-    for (const processName of ['electron.exe', 'pd.exe', 'podman-desktop.exe', 'Podman Desktop.exe']) {
-      try {
-        // eslint-disable-next-line sonarjs/os-command, n/no-sync
-        execSync(`taskkill /F /IM "${processName}" /T`, { timeout: 30_000 });
-        console.log(`Killed stale process: ${processName}`);
-      } catch {
-        // Expected when no matching process is running
+    const wmicFilter = "CommandLine like '%podman-desktop%' OR CommandLine like '%podman desktop%'";
+    try {
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+      const output = execFileSync('wmic', ['process', 'where', wmicFilter, 'get', 'ProcessId', '/FORMAT:CSV'], {
+        timeout: 10_000,
+        encoding: 'utf-8',
+      });
+      const pids = output
+        .split(/\r?\n/)
+        .map(line => line.split(',').pop()?.trim())
+        .filter((pid): pid is string => !!pid && /^\d+$/.test(pid));
+
+      for (const pid of pids) {
+        try {
+          // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+          execFileSync('taskkill', ['/F', '/T', '/PID', pid], { timeout: 10_000 });
+          console.log(`Killed stale Podman Desktop process with PID: ${pid}`);
+        } catch {
+          // Process may have exited between query and kill
+        }
       }
+    } catch {
+      // wmic query returned no results or failed — nothing to clean up
     }
   }
 
