@@ -90,6 +90,12 @@ export class OrCheck extends BaseCheck {
       return leftResult;
     }
     const rightResult = await this.right.execute();
-    return rightResult.successful ? rightResult : leftResult;
+    if (rightResult.successful) {
+      return rightResult;
+    }
+    return {
+      successful: false,
+      description: `${this.left.title}: ${leftResult.description}\n${this.right.title}: ${rightResult.description}`,
+    };
   }
 }
