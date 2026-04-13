@@ -120,6 +120,7 @@ test('terminal active/ restarts connection after stopping and starting a contain
   } as unknown as ContainerInfoUI;
 
   let onDataCallback: (data: Buffer) => void = () => {};
+  let onEndCallback: () => void = () => {};
 
   const sendCallbackId = 12345;
   shellInContainerMock.mockImplementation(
@@ -131,10 +132,7 @@ test('terminal active/ restarts connection after stopping and starting a contain
       onEnd: () => void,
     ) => {
       onDataCallback = onData;
-      setTimeout(() => {
-        onEnd();
-      }, 500);
-      // return a callback id
+      onEndCallback = onEnd;
       return Promise.resolve(sendCallbackId);
     },
   );
@@ -142,21 +140,21 @@ test('terminal active/ restarts connection after stopping and starting a contain
   // render the component with a terminal
   const renderObject = render(ContainerDetailsTerminal, { container, screenReaderMode: true });
 
-  // wait shellInContainerMock is called
-  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalled());
+  // wait shellInContainerMock is called (initial connection)
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(1));
 
   // write some data on the terminal
   onDataCallback(Buffer.from('hello\nworld'));
 
-  // wait 1s
-  await waitFor(() => renderObject.container.querySelector('div[aria-live="assertive"]'));
-
   // check the content
   await waitFor(() => {
-    // search a div having aria-live="assertive" attribute
     const terminalLinesLiveRegion = renderObject.container.querySelector('div[aria-live="assertive"]');
     expect(terminalLinesLiveRegion).toHaveTextContent('hello world');
   });
+
+  // simulate the shell ending while container is still running — triggers reconnect
+  onEndCallback();
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(2));
 
   container.state = 'EXITED';
 
@@ -172,7 +170,8 @@ test('terminal active/ restarts connection after stopping and starting a contain
 
   await renderObject.rerender({ container: container, screenReaderMode: true });
 
-  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(10), { timeout: 2000 });
+  // STARTING → RUNNING transition triggers restartTerminal() via $effect, adding one more call
+  await waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(3));
 });
 
 test('terminal active/ restarts connection after restarting a container', async () => {
