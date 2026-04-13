@@ -51,6 +51,10 @@ const CONTAINER_CONNECTION_MOCK: ProviderContainerConnectionInfo = {
   endpoint: {
     socketPath: 'dummy/socket',
   },
+  canStart: false,
+  canStop: false,
+  canEdit: false,
+  canDelete: false,
   type: 'podman',
 };
 

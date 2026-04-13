@@ -57,6 +57,8 @@ const baseProviderInfo: ProviderInfo = {
   vmProviderConnectionCreation: false,
   vmProviderConnectionInitialization: false,
   version: '1.0.0',
+  canStart: false,
+  canStop: false,
 };
 
 const mockGlobalContext: ContextUI = {

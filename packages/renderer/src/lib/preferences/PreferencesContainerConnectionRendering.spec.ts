@@ -57,6 +57,8 @@ const EMPTY_PROVIDER_MOCK: ProviderInfo = {
   kubernetesProviderConnectionInitialization: false,
   extensionId: '',
   cleanupSupport: false,
+  canStart: false,
+  canStop: false,
 };
 
 beforeEach(() => {
@@ -84,6 +86,10 @@ test('Expect that the right machine is displayed', async () => {
         endpoint: {
           socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         type: 'podman',
       },
       {
@@ -94,6 +100,10 @@ test('Expect that the right machine is displayed', async () => {
         endpoint: {
           socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         type: 'podman',
       },
       {
@@ -104,6 +114,10 @@ test('Expect that the right machine is displayed', async () => {
         endpoint: {
           socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         type: 'podman',
       },
     ],
@@ -150,6 +164,10 @@ test('Expect that removing the connection is going back to the previous page', a
         endpoint: {
           socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         type: 'podman',
       },
       {
@@ -162,6 +180,9 @@ test('Expect that removing the connection is going back to the previous page', a
         },
         type: 'podman',
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
         canDelete: true,
       },
       {
@@ -172,6 +193,10 @@ test('Expect that removing the connection is going back to the previous page', a
         endpoint: {
           socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         type: 'podman',
       },
     ],
@@ -249,6 +274,9 @@ test('Expect to see error message if action fails', async () => {
         },
         type: 'podman',
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
         canDelete: true,
       },
     ],
@@ -315,6 +343,8 @@ test('Expect startContainerProvider to only be called once when restarting', asy
         lifecycleMethods: ['start', 'stop'],
         canStart: true,
         canStop: true,
+        canEdit: false,
+        canDelete: false,
       },
     ],
   };
@@ -374,6 +404,8 @@ test('Expect display name to be used in favor of name for page title', async () 
         lifecycleMethods: ['start', 'stop'],
         canStart: true,
         canStop: true,
+        canEdit: false,
+        canDelete: false,
       },
     ],
   };
@@ -414,6 +446,10 @@ test('expect terminal tab to be visible if shellAccess is truthy', async () => {
           socketPath,
         },
         shellAccess: true,
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         type: 'podman',
       },
     ],

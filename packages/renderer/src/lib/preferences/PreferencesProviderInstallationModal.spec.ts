@@ -45,6 +45,10 @@ const providerInfo: ProviderInfo = {
         socketPath: 'socket',
       },
       lifecycleMethods: ['start', 'stop', 'delete'],
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       type: 'podman',
     },
   ],
@@ -61,6 +65,8 @@ const providerInfo: ProviderInfo = {
   kubernetesProviderConnectionInitialization: false,
   extensionId: '',
   cleanupSupport: false,
+  canStart: false,
+  canStop: false,
 };
 
 const closeCallback = vi.fn();

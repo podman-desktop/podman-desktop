@@ -64,6 +64,7 @@ const providerInfo: ProviderInfo = {
       lifecycleMethods: ['start', 'stop', 'delete'],
       canStart: true,
       canStop: true,
+      canEdit: false,
       canDelete: true,
       type: 'podman',
       vmType: {
@@ -82,6 +83,7 @@ const providerInfo: ProviderInfo = {
       lifecycleMethods: ['start', 'stop', 'delete'],
       canStart: true,
       canStop: true,
+      canEdit: false,
       canDelete: true,
       type: 'podman',
       vmType: {
@@ -102,6 +104,8 @@ const providerInfo: ProviderInfo = {
   containerProviderConnectionCreationDisplayName: 'Podman machine',
   kubernetesProviderConnectionInitialization: false,
   cleanupSupport: false,
+  canStart: false,
+  canStop: false,
 };
 
 // mock the router
@@ -173,6 +177,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
           canStart: true,
           canStop: true,
+          canEdit: false,
           canDelete: true,
           type: 'podman',
           vmType: {
@@ -191,6 +196,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
           canStart: true,
           canStop: true,
+          canEdit: false,
           canDelete: true,
           type: 'podman',
           vmType: {
@@ -211,6 +217,8 @@ describe.each<{
       containerProviderConnectionCreationDisplayName: 'Podman machine',
       kubernetesProviderConnectionInitialization: false,
       cleanupSupport: false,
+      canStart: false,
+      canStop: false,
     },
     startFailedImplemented: true,
   },
@@ -248,6 +256,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
           canStart: true,
           canStop: true,
+          canEdit: false,
           canDelete: true,
         },
         {
@@ -260,6 +269,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
           canStart: true,
           canStop: true,
+          canEdit: false,
           canDelete: true,
         },
       ],
@@ -275,6 +285,8 @@ describe.each<{
       kubernetesProviderConnectionCreationDisplayName: 'Kluster',
       kubernetesProviderConnectionInitialization: false,
       cleanupSupport: false,
+      canStart: false,
+      canStop: false,
     },
     startFailedImplemented: false,
   },
@@ -309,6 +321,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
           canStart: true,
           canStop: true,
+          canEdit: false,
           canDelete: true,
         },
         {
@@ -318,6 +331,7 @@ describe.each<{
           lifecycleMethods: ['start', 'stop', 'delete'],
           canStart: true,
           canStop: true,
+          canEdit: false,
           canDelete: true,
         },
       ],
@@ -332,6 +346,8 @@ describe.each<{
       containerProviderConnectionInitialization: false,
       kubernetesProviderConnectionInitialization: false,
       cleanupSupport: false,
+      canStart: false,
+      canStop: false,
     },
     startFailedImplemented: true,
   },

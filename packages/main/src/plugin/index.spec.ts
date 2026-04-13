@@ -1052,6 +1052,10 @@ describe('container-provider-registry:playKube', () => {
     endpoint: {
       socketPath: '.sock',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
   };
 
   test('should call ContainerProviderRegistry#playKube', async () => {

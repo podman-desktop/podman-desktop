@@ -707,6 +707,10 @@ export class ProviderRegistry {
         endpoint: {
           socketPath: connection.endpoint.socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         shellAccess: !!connection.shellAccess,
         vmType: connection.vmType
           ? {
@@ -723,12 +727,20 @@ export class ProviderRegistry {
         endpoint: {
           apiURL: connection.endpoint.apiURL,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       };
     } else {
       providerConnection = {
         connectionType: 'vm',
         name: connection.name,
         status: connection.status(),
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       };
     }
     if (connection.lifecycle) {
@@ -854,6 +866,8 @@ export class ProviderRegistry {
       warnings: provider.warnings,
       installationSupport,
       cleanupSupport,
+      canStart: false,
+      canStop: false,
     };
 
     // handle update

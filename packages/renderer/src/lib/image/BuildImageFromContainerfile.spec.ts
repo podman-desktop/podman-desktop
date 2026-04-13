@@ -64,6 +64,10 @@ function setup(): void {
     endpoint: {
       socketPath: '',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     type: 'podman',
   };
   const providerInfo = {
