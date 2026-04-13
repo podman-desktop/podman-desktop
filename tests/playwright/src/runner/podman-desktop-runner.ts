@@ -98,6 +98,7 @@ export abstract class Runner {
     // create parent folder if missing
     const parentDir = dirname(settingsFile);
     if (!existsSync(parentDir)) {
+      // eslint-disable-next-line n/no-sync
       mkdirSync(parentDir, { recursive: true });
     }
 
@@ -105,6 +106,7 @@ export abstract class Runner {
 
     // write the file
     console.log(`disabling OpenDevTools in configuration file ${settingsFile}`);
+    // eslint-disable-next-line n/no-sync
     writeFileSync(settingsFile, settingsContent);
 
     return env;
@@ -149,6 +151,7 @@ export abstract class Runner {
 
     if (existsSync(rawTracesPath)) {
       console.log(`Removing raw traces folder: ${rawTracesPath}`);
+      // eslint-disable-next-line n/no-sync
       rmSync(rawTracesPath, { recursive: true, force: true, maxRetries: 5 });
     }
 
@@ -165,6 +168,7 @@ export abstract class Runner {
       const tracesPath = join(this._testOutput, 'traces', `${this._videoAndTraceName}_trace.zip`);
       if (existsSync(tracesPath)) {
         console.log(`Removing traces folder: ${tracesPath}`);
+        // eslint-disable-next-line n/no-sync
         rmSync(tracesPath, { recursive: true, force: true, maxRetries: 5 });
       }
     }
@@ -173,6 +177,7 @@ export abstract class Runner {
       const videoPath = join(this._testOutput, 'videos', `${this._videoAndTraceName}.webm`);
       if (existsSync(videoPath)) {
         console.log(`Removing video folder: ${videoPath}`);
+        // eslint-disable-next-line n/no-sync
         rmSync(videoPath, { recursive: true, force: true, maxRetries: 5 });
       }
     }

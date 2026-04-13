@@ -48,8 +48,6 @@ export class ElectronRunner extends Runner {
       return this.getPage();
     }
 
-    this.killStaleElectronInstances();
-
     try {
       // start the app with given properties
       console.log('Starting Podman Desktop');
@@ -217,50 +215,6 @@ export class ElectronRunner extends Runner {
       }
     } catch (error: unknown) {
       console.log(`Exception thrown when force-killing process ${pid}: ${error}`);
-    }
-  }
-
-  /**
-   * Kill stale Podman Desktop processes left over from a previous test run
-   * whose close sequence failed. On Windows, a dangling process keeps the
-   * Electron single-instance lock, blocking all subsequent launches with
-   * "An instance of Podman Desktop is already running".
-   *
-   * Uses WMIC to find processes whose command line contains "podman-desktop"
-   * or "podman desktop", then force-kills them by PID. This matches the
-   * Electron binary launched from the PD workspace as well as compiled
-   * binaries (pd.exe, podman-desktop.exe) without affecting unrelated
-   * Electron apps.
-   */
-  protected killStaleElectronInstances(): void {
-    if (process.platform !== 'win32') {
-      return;
-    }
-
-    // eslint-disable-next-line quotes
-    const wmicFilter = "CommandLine like '%podman-desktop%' OR CommandLine like '%podman desktop%'";
-    try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
-      const output = execFileSync('wmic', ['process', 'where', wmicFilter, 'get', 'ProcessId', '/FORMAT:CSV'], {
-        timeout: 10_000,
-        encoding: 'utf-8',
-      });
-      const pids = output
-        .split(/\r?\n/)
-        .map(line => line.split(',').pop()?.trim())
-        .filter((pid): pid is string => !!pid && /^\d+$/.test(pid));
-
-      for (const pid of pids) {
-        try {
-          // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
-          execFileSync('taskkill', ['/F', '/T', '/PID', pid], { timeout: 10_000 });
-          console.log(`Killed stale Podman Desktop process with PID: ${pid}`);
-        } catch {
-          // Process may have exited between query and kill
-        }
-      }
-    } catch {
-      // wmic query returned no results or failed — nothing to clean up
     }
   }
 
