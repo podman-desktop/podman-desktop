@@ -43,7 +43,6 @@ export const test = base.extend<TestFixtures & FixtureOptions>({
   runner: async ({ runnerOptions }, use) => {
     const runner = await RunnerFactory.getInstance(runnerOptions);
     await use(runner);
-    RunnerFactory.dispose();
   },
   page: async ({ runner }, use) => {
     await use(runner.getPage());

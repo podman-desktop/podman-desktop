@@ -24,6 +24,7 @@ import { _electron as electron } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
 import { Runner } from './podman-desktop-runner';
+import { RunnerFactory } from './runner-factory';
 import type { RunnerOptions } from './runner-options';
 
 type WindowState = {
@@ -182,6 +183,7 @@ export class ElectronRunner extends Runner {
     }
 
     this._running = false;
+    RunnerFactory.dispose();
 
     if (this._videoAndTraceName) {
       const videoPath = join(this._testOutput, 'videos', `${this._videoAndTraceName}.webm`);

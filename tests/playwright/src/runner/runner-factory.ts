@@ -58,6 +58,9 @@ export class RunnerFactory {
     if (debugPort && !pdBinary) {
       throw new Error('DEBUGGING_PORT requires PODMAN_DESKTOP_BINARY to be set');
     }
+    if (pdBinary && !debugPort) {
+      throw new Error('PODMAN_DESKTOP_BINARY requires DEBUGGING_PORT to be set');
+    }
 
     if (pdBinary && debugPort) {
       return new ChromeDevToolsProtocolRunner({ runnerOptions });
