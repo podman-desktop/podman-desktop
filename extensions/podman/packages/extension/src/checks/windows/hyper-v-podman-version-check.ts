@@ -46,7 +46,7 @@ export class HyperVPodmanVersionCheck extends BaseCheck {
 
   private async isPodmanVersionSupported(): Promise<boolean> {
     const binaryInfo = await this.podmanBinary.getBinaryInfo();
-    if (!binaryInfo) return false;
+    if (!binaryInfo) return true;
     return compare(binaryInfo?.version, HyperVPodmanVersionCheck.PODMAN_MINIMUM_VERSION_FOR_HYPERV) >= 0;
   }
 }
