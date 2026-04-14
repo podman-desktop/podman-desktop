@@ -22,11 +22,12 @@ import SearchString from 'search-string';
  * Parses a search string into plain-text terms and filter values,
  * respecting quoted values (double or single) via the `search-string` library.
  *
- * All terms and filter values are lowercased.
+ * Terms preserve the original casing of the input.
+ * Filter values are lowercased for case-insensitive comparison.
  *
  * @example
  * const parsed = new SearchTermParser('Foo category:"Extension Packs" is:installed', ['category', 'keyword', 'is', 'not']);
- * parsed.terms              // => ['foo']
+ * parsed.terms              // => ['Foo']
  * parsed.getFilter('category') // => ['extension packs']
  * parsed.getFilter('is')      // => ['installed']
  */
@@ -38,13 +39,12 @@ export class SearchTermParser<F extends string> {
     const terms: string[] = [];
     const filters = new Map<F, string[]>();
     const allowedSet = new Set<string>(allowedFilters);
-    const normalized = searchTerm.toLowerCase();
 
     for (const filter of allowedFilters) {
       filters.set(filter, []);
     }
 
-    const parsed = SearchString.parse(normalized);
+    const parsed = SearchString.parse(searchTerm);
 
     for (const segment of parsed.getTextSegments()) {
       if (!segment.negated && segment.text.length > 0) {
@@ -54,10 +54,10 @@ export class SearchTermParser<F extends string> {
 
     for (const condition of parsed.getConditionArray()) {
       if (condition.negated) continue;
-      const key = condition.keyword as F;
+      const key = condition.keyword.toLowerCase() as F;
       const bucket = allowedSet.has(key) ? filters.get(key) : undefined;
       if (bucket) {
-        bucket.push(condition.value);
+        bucket.push(condition.value.toLowerCase());
       } else {
         terms.push(`${condition.keyword}:${condition.value}`);
       }

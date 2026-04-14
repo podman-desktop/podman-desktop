@@ -222,7 +222,9 @@ export class ExtensionsUtils {
     return extensions.filter(extension => {
       return (
         (terms.length === 0 ||
-          terms.every(term => `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(term))) &&
+          terms.every(term =>
+            `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(term.toLowerCase()),
+          )) &&
         (categories.length === 0 ||
           categories.every(category => extension.categories.map(c => c.toLowerCase()).includes(category))) &&
         (keywords.length === 0 ||
