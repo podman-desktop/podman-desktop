@@ -1,0 +1,76 @@
+/**********************************************************************
+ * Copyright (C) 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
+import { createNavigationKubernetesPortForwardEntry } from '/@/stores/navigation/kubernetes/navigation-registry-k8s-port-forward.svelte';
+
+import { createNavigationKubernetesConfigMapSecretsEntry } from './kubernetes/navigation-registry-k8s-configmap-secrets.svelte';
+import { createNavigationKubernetesCronJobsEntry } from './kubernetes/navigation-registry-k8s-cronjobs.svelte';
+import { createNavigationKubernetesDashboardEntry } from './kubernetes/navigation-registry-k8s-dashboard.svelte';
+import { createNavigationKubernetesDeploymentsEntry } from './kubernetes/navigation-registry-k8s-deployments.svelte';
+import { createNavigationKubernetesIngressesRoutesEntry } from './kubernetes/navigation-registry-k8s-ingresses-routes.svelte';
+import { createNavigationKubernetesJobsEntry } from './kubernetes/navigation-registry-k8s-jobs.svelte';
+import { createNavigationKubernetesNodesEntry } from './kubernetes/navigation-registry-k8s-nodes.svelte';
+import { createNavigationKubernetesPersistentVolumeEntry } from './kubernetes/navigation-registry-k8s-persistent-volume.svelte';
+import { createNavigationKubernetesPodsEntry } from './kubernetes/navigation-registry-k8s-pods.svelte';
+import { createNavigationKubernetesServicesEntry } from './kubernetes/navigation-registry-k8s-services.svelte';
+import type { NavigationRegistryEntry } from './navigation-registry';
+
+// All the items for the menu
+let kubernetesNavigationGroupItems: NavigationRegistryEntry[] = $state([]);
+// Is there a Kubernetes context?
+let context = $state(true);
+// the items being returned to the caller, depending on the existence of a context
+const displayedItems = $derived(context ? kubernetesNavigationGroupItems : []);
+
+export function createNavigationKubernetesGroup(): NavigationRegistryEntry {
+  const newItems: NavigationRegistryEntry[] = [];
+  newItems.push(createNavigationKubernetesDashboardEntry());
+  newItems.push(createNavigationKubernetesNodesEntry());
+  newItems.push(createNavigationKubernetesDeploymentsEntry());
+  newItems.push(createNavigationKubernetesPodsEntry());
+  newItems.push(createNavigationKubernetesServicesEntry());
+  newItems.push(createNavigationKubernetesIngressesRoutesEntry());
+  newItems.push(createNavigationKubernetesPersistentVolumeEntry());
+  newItems.push(createNavigationKubernetesConfigMapSecretsEntry());
+  newItems.push(createNavigationKubernetesJobsEntry());
+  newItems.push(createNavigationKubernetesCronJobsEntry());
+  newItems.push(createNavigationKubernetesPortForwardEntry());
+  kubernetesNavigationGroupItems = newItems;
+
+  kubernetesNoCurrentContext.subscribe(value => {
+    context = !value;
+  });
+
+  const mainGroupEntry: NavigationRegistryEntry = {
+    name: 'Kubernetes',
+    icon: { iconComponent: KubeIcon },
+    link: '/kubernetes',
+    tooltip: 'Kubernetes',
+    type: 'submenu',
+    get counter() {
+      return 0;
+    },
+    get items() {
+      return displayedItems;
+    },
+  };
+
+  return mainGroupEntry;
+}

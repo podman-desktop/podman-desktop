@@ -1,0 +1,57 @@
+{
+  "name": "docker",
+  "displayName": "Docker",
+  "description": "Integration for Docker engine",
+  "version": "1.27.0-next",
+  "icon": "icon.png",
+  "publisher": "podman-desktop",
+  "license": "Apache-2.0",
+  "engines": {
+    "podman-desktop": "^0.0.1"
+  },
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "vite build && node ./scripts/build.js",
+    "test": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest watch --coverage --passWithNoTests",
+    "watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@podman-desktop/api": "workspace:*"
+  },
+  "devDependencies": {
+    "@podman-desktop/api": "workspace:*",
+    "@podman-desktop/docker-extension-api": "workspace:*",
+    "adm-zip": "^0.5.17",
+    "mkdirp": "^3.0.1",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.4"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "docker.cli.context.onChange",
+        "title": "Callback for Docker CLI context change",
+        "category": "Docker",
+        "enablement": "false"
+      }
+    ],
+    "configuration": {
+      "title": "Docker",
+      "properties": {
+        "docker.cli.context": {
+          "type": "string",
+          "enum": [],
+          "markdownDescription": "Select the active Docker CLI context:",
+          "group": "podman-desktop.docker",
+          "scope": "DockerCompatibility"
+        },
+        "docker.config": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Docker Config directory. See [documentation](https://docs.docker.com/reference/cli/docker/#configuration-files)"
+        }
+      }
+    }
+  }
+}

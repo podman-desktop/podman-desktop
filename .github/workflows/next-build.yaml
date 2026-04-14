@@ -1,0 +1,178 @@
+#
+# Copyright (C) 2022-2024 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: next build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  DEBUG: electron-builder
+
+permissions:
+  contents: read
+
+jobs:
+
+  tag:
+    name: Tagging
+    runs-on: ubuntu-24.04
+    # disable on forks as secrets are not available
+    if: github.event.repository.fork == false
+    outputs:
+      githubTag: ${{ steps.TAG_UTIL.outputs.githubTag}}
+      desktopVersion: ${{ steps.TAG_UTIL.outputs.desktopVersion}}
+      releaseId: ${{ steps.create_release.outputs.id}}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+         token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+         fetch-depth: 0
+      - name: Generate tag utilities
+        id: TAG_UTIL
+        run: |
+            CURRENT_DAY=$(date +'%Y%m%d')
+            SHORT_SHA1=$(git rev-parse --short HEAD)
+            # grab the version from the package.json
+            PODMAN_DEKSTOP_VERSION=$(jq -r '.version' package.json)
+            # remove the -next from the version
+            STRIPPED_VERSION=${PODMAN_DEKSTOP_VERSION%-next}
+            TAG_PATTERN=${STRIPPED_VERSION}-next.$(date +'%Y%m%d%H%M')-${SHORT_SHA1}
+            echo "githubTag=v$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+            echo "desktopVersion=$TAG_PATTERN" >> ${GITHUB_OUTPUT}
+      - name: tag
+        run: |
+          git config --local user.name ${{ github.actor }}
+          git config --local user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.desktopVersion }}\",#g" package.json
+          find extensions/* -maxdepth 2 -name "package.json" | xargs -I {} sed -i "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.desktopVersion }}\",#g" {}
+          find packages/* -maxdepth 1 -name "package.json" | xargs -I {} sed -i "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.desktopVersion }}\",#g" {}
+          # change the repository field to be the prerelease repository in package.json file
+          sed -i "s#\"repository\":\ \"\(.*\)\",#\"repository\":\ \"https://github.com/podman-desktop/prereleases\",#g" package.json
+          cat package.json
+          git add package.json extensions/*/package.json extensions/*/packages/extension/package.json packages/*/package.json
+          git commit -m "chore: tag ${{ steps.TAG_UTIL.outputs.githubTag }}"
+          echo "Tagging with ${{ steps.TAG_UTIL.outputs.githubTag }}"
+          git tag ${{ steps.TAG_UTIL.outputs.githubTag }}
+          # push tag to the prereleases repository
+          git remote add prereleases https://github.com/podman-desktop/prereleases
+          git push prereleases ${{ steps.TAG_UTIL.outputs.githubTag }}
+
+      - name: Create Release
+        id: create_release
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+        with:
+          tag: ${{ steps.TAG_UTIL.outputs.githubTag }}
+          name: ${{ steps.TAG_UTIL.outputs.githubTag }}
+          draft: true
+          prerelease: true
+          owner: podman-desktop
+          repo: prereleases
+          token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+
+  build:
+    name: Build / ${{ matrix.os }}
+    needs: tag
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, ubuntu-24.04, macos-15]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: podman-desktop/prereleases
+          ref: ${{ needs.tag.outputs.githubTag}}
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+
+      - name: setup telemetry key for production
+        run: |
+          jq --arg key "${{ secrets.SEGMENT_WRITE_KEY }}" '.telemetry.key = $key' product.json > product.json.tmp && rm product.json && mv product.json.tmp product.json
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Install flatpak on Linux
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install flatpak -y
+          sudo apt-get install flatpak-builder -y
+          sudo apt-get install elfutils -y
+          flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install flathub --user -y org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+
+      - name: Set macOS environment variables
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          echo "CSC_LINK=${{secrets.CSC_LINK}}" >> $GITHUB_ENV
+          echo "CSC_KEY_PASSWORD=${{secrets.CSC_KEY_PASSWORD}}" >> $GITHUB_ENV
+          echo "APPLE_ID=${{secrets.APPLE_ID}}" >> $GITHUB_ENV
+          echo "APPLE_APP_SPECIFIC_PASSWORD=${{secrets.APPLE_APP_SPECIFIC_PASSWORD}}" >> $GITHUB_ENV
+          echo "APPLE_TEAM_ID=${{secrets.APPLE_TEAM_ID}}" >> $GITHUB_ENV
+
+      - name: Install Azure SignTool on Windows
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          dotnet tool install --global AzureSignTool --version 3.0.0
+          echo "AZURE_KEY_VAULT_CERTIFICATE=${{secrets.AZURE_KEY_VAULT_CERTIFICATE}}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "AZURE_KEY_VAULT_CLIENT_ID=${{secrets.AZURE_KEY_VAULT_CLIENT_ID}}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "AZURE_KEY_VAULT_SECRET=${{secrets.AZURE_KEY_VAULT_SECRET}}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "AZURE_KEY_VAULT_TENANT_ID=${{secrets.AZURE_KEY_VAULT_TENANT_ID}}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "AZURE_KEY_VAULT_URL=${{secrets.AZURE_KEY_VAULT_URL}}" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Run Build
+        timeout-minutes: 40
+        run: pnpm compile:next
+        env:
+          GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+
+  release:
+    needs: [tag, build]
+    name: Release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: id
+        run: echo the release id is ${{ needs.tag.outputs.releaseId}}
+
+      - name: Publish release
+        uses: StuYarrow/publish-release@01f2a1365bacd77bad861873a7fdf274ab49eefd # v1.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+        with:
+          id: ${{ needs.tag.outputs.releaseId}}
+          repo: prereleases
+          owner: podman-desktop

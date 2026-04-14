@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["ES2017"],
+    "module": "esnext",
+    "sourceMap": true,
+    "rootDirs": ["src", "scripts"],
+    "outDir": "dist",
+    "target": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node"],
+    "paths": {
+      "/@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "types/*.d.ts", "scripts"]
+}

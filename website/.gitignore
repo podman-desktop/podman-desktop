@@ -1,0 +1,30 @@
+# Dependencies
+/node_modules
+
+# Production
+/build
+
+# Generated
+/api
+
+# Generated files
+.docusaurus
+.cache-loader
+static/release-notes
+docs.json
+tutorials.json
+
+# Cache
+.eslintcache
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/src/pages/storybook/sidebar.cjs

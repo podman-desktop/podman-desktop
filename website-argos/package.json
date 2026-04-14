@@ -1,0 +1,15 @@
+{
+  "name": "website-argos",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "screenshot": "playwright test",
+    "upload": "npx @argos-ci/cli upload ./screenshots"
+  },
+  "devDependencies": {
+    "@argos-ci/cli": "^4.1.4",
+    "@argos-ci/playwright": "^6.6.1",
+    "@playwright/test": "1.59.1",
+    "cheerio": "^1.2.0"
+  }
+}

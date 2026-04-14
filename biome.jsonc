@@ -1,0 +1,69 @@
+{
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 120,
+    "attributePosition": "auto"
+  },
+  "files": {
+    "maxSize": 1600000,
+    "includes": [
+      "**",
+      "!**/builtin/**/*.cdix/**",
+      "!**/coverage/**",
+      "!**/dist/**",
+      "!**/output/**",
+      "!**/packages/ui/.svelte-kit/**",
+      "!**/exposedIn*.d.ts",
+      "!**/website/.docusaurus/**",
+      "!**/website/api/**",
+      "!**/website/build/**",
+      "!**/website/src/pages/storybook/sidebar.cjs",
+      "!**/website/static/release-notes/**",
+      "!**/website-argos/screenshots/**",
+      "!**/storybook/.storybook/themes.css",
+      "!**/storybook/storybook-static/**"
+    ]
+  },
+  "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
+    "formatter": {
+      "arrowParentheses": "asNeeded",
+      "bracketSameLine": true,
+      "attributePosition": "auto",
+      "quoteStyle": "single"
+    }
+  },
+  "json": {
+    "formatter": {
+      "indentWidth": 2
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "style": {
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
+      }
+    }
+  },
+  "assist": { "actions": { "source": { "organizeImports": "off" } } }
+}

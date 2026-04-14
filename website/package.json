@@ -1,0 +1,73 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "typecheck": "tsc",
+    "format:check": "biome format && prettier --cache --check '**/*.md'",
+    "format:fix": "biome format --write && prettier --cache --write --check '**/*.md'",
+    "markdownlint:check": "markdownlint-cli2 --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\" \"#api\" ",
+    "markdownlint:fix": "markdownlint-cli2 --fix --config ../.markdownlint.yaml \"**/*.md\" \"#node_modules\"",
+    "lint:check": "cd .. && eslint --cache --cache-location website/.eslintcache website --ext js,ts,tsx",
+    "lint:fix": "cd .. && eslint --cache --cache-location website/.eslintcache website --fix --ext js,ts,tsx",
+    "lint:clean": "rimraf .eslintcache"
+  },
+  "dependencies": {
+    "@docusaurus/core": "^3.9.2",
+    "@docusaurus/plugin-client-redirects": "^3.9.2",
+    "@docusaurus/preset-classic": "^3.9.2",
+    "@docusaurus/theme-common": "^3.9.2",
+    "@docusaurus/theme-mermaid": "^3.9.2",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/free-brands-svg-icons": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.3.0",
+    "@mdx-js/react": "^3.1.1",
+    "clsx": "^2.1.1",
+    "docusaurus-plugin-goatcounter": "^4.0.0",
+    "docusaurus-plugin-typedoc": "^1.4.2",
+    "hosted-git-info": "^9.0.2",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-player": "^3.4.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "^3.9.2",
+    "@docusaurus/tsconfig": "^3.9.2",
+    "@docusaurus/types": "^3.9.2",
+    "@octokit/rest": "^22.0.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "markdownlint": "^0.40.0",
+    "markdownlint-cli2": "^0.22.0",
+    "markdownlint-cli2-formatter-summarize": "^0.0.8",
+    "msw": "^2.13.3",
+    "postcss": "^8.5.9",
+    "tailwindcss": "^4.2.2",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.4"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

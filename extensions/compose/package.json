@@ -1,0 +1,202 @@
+{
+  "name": "compose",
+  "displayName": "Compose",
+  "description": "Install Compose binary to work with Podman",
+  "version": "1.27.0-next",
+  "icon": "icon.png",
+  "publisher": "podman-desktop",
+  "license": "Apache-2.0",
+  "engines": {
+    "podman-desktop": "^0.0.1"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "compose.install",
+        "title": "Compose: Install..."
+      },
+      {
+        "command": "compose.checks",
+        "title": "Compose: Checks..."
+      },
+      {
+        "command": "compose.onboarding.checkDownloadedCommand",
+        "title": "Compose: Check Compose Downloaded"
+      },
+      {
+        "command": "compose.onboarding.downloadCommand",
+        "title": "Compose: Download Compose"
+      }
+    ],
+    "onboarding": {
+      "title": "Compose Setup",
+      "priority": 60,
+      "enablement": "!compose.isComposeInstalledSystemWide",
+      "steps": [
+        {
+          "id": "checkDownloadedCommand",
+          "label": "Check Compose",
+          "title": "Checking for Compose installation",
+          "command": "compose.onboarding.checkDownloadedCommand",
+          "completionEvents": [
+            "onCommand:compose.onboarding.checkDownloadedCommand"
+          ]
+        },
+        {
+          "id": "podmanComposeInstalledView",
+          "title": "Found podman-compose installed",
+          "when": "compose.isPodmanComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide",
+          "content": [
+            [
+              {
+                "value": "#### We detected `podman-compose` binary being installed. It won't try to install docker-compose on your system. Unless you remove first podman-compose."
+              }
+            ]
+          ]
+        },
+        {
+          "id": "welcomeDownloadView",
+          "label": "Compose Download",
+          "title": "Compose download",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "content": [
+            [
+              {
+                "value": "Podman Desktop provides optional command line support for Compose files with Podman."
+              }
+            ],
+            [
+              {
+                "value": "> ℹ️ **Note:** If you would like to use `docker compose up` or `docker-compose` with Podman, [enable Docker Compatibility](/preferences/default/preferences.dockerCompatibility).",
+                "highlight": true
+              }
+            ],
+            [
+              {
+                "value": "Compose will be downloaded in the next step (Version ${onboardingContext:composeDownloadVersion}). :link[Want to download a different version?]{command=compose.onboarding.promptUserForVersion}",
+                "when": "!onboardingContext:composeShowCustomDownloadDialog"
+              }
+            ]
+          ]
+        },
+        {
+          "id": "downloadCommand",
+          "title": "Downloading Compose ${onboardingContext:composeDownloadVersion}",
+          "description": "Downloading the binary.\n\nOnce downloaded, the next step will install Compose system-wide.",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "command": "compose.onboarding.downloadCommand",
+          "completionEvents": [
+            "onCommand:compose.onboarding.downloadCommand"
+          ]
+        },
+        {
+          "id": "downloadFailure",
+          "title": "Failed downloading Compose",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "state": "failed"
+        },
+        {
+          "id": "downloadSuccessfulView",
+          "title": "Compose successfully Downloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && !onboardingContext:composeIsNotDownloaded",
+          "content": [
+            [
+              {
+                "value": "Compose has been successfully downloaded! In order for `podman compose` (podman CLI v4.7.0+) to work correctly, it is required for Compose to be installed system-wide for `podman` to access the binary.\n\nThe next step will install Compose system-wide. **You will be prompted for system privileges when enabling this.**"
+              }
+            ]
+          ]
+        },
+        {
+          "id": "installSystemWideCommand",
+          "title": "Install Compose",
+          "description": "Installing the binary system-wide.\n\n You may be prompted for elevated system privileges.",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
+          "command": "compose.onboarding.installSystemWideCommand",
+          "completionEvents": [
+            "onCommand:compose.onboarding.installSystemWideCommand"
+          ]
+        },
+        {
+          "id": "installSystemWideFailure",
+          "title": "Failed installing Compose",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
+          "state": "failed"
+        },
+        {
+          "id": "installSystemWideSuccess",
+          "title": "Compose installed",
+          "when": "compose.isComposeInstalledSystemWide",
+          "state": "completed",
+          "content": [
+            [
+              {
+                "value": "#### How to use Compose\nRun `podman compose up` (podman CLI v4.7.0+) or `docker-compose` in a directory with a `compose.yaml`. Podman Desktop will automatically detect the Compose deployment and show it in the container list.'\n\n`$ podman compose up`",
+                "highlight": true
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Compose",
+      "properties": {
+        "compose.binary.installComposeSystemWide": {
+          "type": "boolean",
+          "default": false,
+          "scope": [
+            "DEFAULT",
+            "Onboarding"
+          ],
+          "hidden": true,
+          "description": "Install system-wide instead of just your user directory, so compose can be accessed on the command line. Note: You may be prompted for elevated system privileges when enabling this."
+        },
+        "podman.compose.cli.support.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Compose support installed. You can use `podman compose` using the podman CLI.",
+          "when": "(isMac || isWindows) && compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
+          "group": "podman-desktop.podman",
+          "scope": "DockerCompatibility"
+        },
+        "podman.compose.cli.support.missing": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Without compose support in podman you won't be able to use compose projects using the podman CLI. :button[Setup...]{command=compose.openComposeOnboarding}",
+          "when": "(isMac || isWindows) && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
+          "group": "podman-desktop.podman",
+          "scope": "DockerCompatibility"
+        },
+        "podman.compose.cli.support.podmancompose": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Compose support using `podman-compose` python implementation.",
+          "when": "compose.isPodmanComposeInstalledSystemWide",
+          "group": "podman-desktop.podman",
+          "scope": "DockerCompatibility"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "vite build && node ./scripts/build.js",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest watch --coverage",
+    "watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "mustache": "^4.2.0",
+    "shell-path": "^3.1.0"
+  },
+  "devDependencies": {
+    "@podman-desktop/api": "workspace:*",
+    "@types/mustache": "^4.2.6",
+    "adm-zip": "^0.5.17",
+    "mkdirp": "^3.0.1",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.4"
+  }
+}

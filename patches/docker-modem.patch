@@ -1,0 +1,22 @@
+diff --git a/lib/modem.js b/lib/modem.js
+index 3a91cd716895085c1dccef23fef3e9630dc9cf05..e4c14a37031bd77aa262c118c6c830c4a4926f85 100644
+--- a/lib/modem.js
++++ b/lib/modem.js
+@@ -203,14 +203,14 @@ Modem.prototype.dial = function (options, callback) {
+     } else {
+       data = options.file;
+     }
+-    optionsf.headers['Content-Type'] = 'application/tar';
++    optionsf.headers['Content-Type'] = optionsf.headers['Content-Type'] ?? 'application/tar';
+   } else if (opts && options.method === 'POST') {
+     data = JSON.stringify(opts._body || opts);
+     if (options.allowEmpty) {
+-      optionsf.headers['Content-Type'] = 'application/json';
++      optionsf.headers['Content-Type'] = optionsf.headers['Content-Type'] ?? 'application/json';
+     } else {
+       if (data !== '{}' && data !== '""') {
+-        optionsf.headers['Content-Type'] = 'application/json';
++        optionsf.headers['Content-Type'] = optionsf.headers['Content-Type'] ?? 'application/json';
+       } else {
+         data = undefined;
+       }

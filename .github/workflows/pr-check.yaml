@@ -1,0 +1,732 @@
+#
+# Copyright (C) 2022-2024 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: pr-check
+
+on:
+  merge_group:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: Windows
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run Build
+        timeout-minutes: 20
+        run: pnpm compile:pull-request
+
+      - name: List Build
+        run: ls ./dist/
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-installer-x64
+          path: ./dist/podman-desktop*-setup-x64.exe
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-installer-arm64
+          path: ./dist/podman-desktop*-setup-arm64.exe
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-exe-x64
+          path: ./dist/podman-desktop*-next-x64.exe
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-exe-arm64
+          path: ./dist/podman-desktop*-next-arm64.exe
+
+  linux:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: Linux
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Install flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install flatpak -y
+          sudo apt-get install flatpak-builder -y
+          sudo apt-get install elfutils -y
+          flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install flathub --user -y org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+
+      - name: Run Build
+        timeout-minutes: 20
+        run: pnpm compile:pull-request
+
+      - name: List Build
+        run: ls -la ./dist/
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux
+          path: ./dist/podman-desktop-*.tar.gz
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flatpak
+          path: ./dist/podman-desktop-*.flatpak
+
+  darwin:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: macOS
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run Build
+        timeout-minutes: 40
+        run: pnpm compile:pull-request
+
+      - name: List Build
+        run: ls -la ./dist/
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-x64-dmg
+          path: ./dist/podman-desktop-*x64.dmg
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-arm64-dmg
+          path: ./dist/podman-desktop-*arm64.dmg
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: macos-universal-dmg
+          path: ./dist/podman-desktop-*universal.dmg
+
+  website-build:
+    if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
+    name: build website
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run website
+        run: pnpm website:build
+
+      - name: Store pull request details for publish-cloudflare
+        run: |
+          echo "${{ github.event.number }}" > PR_NUMBER
+          echo "${{ github.event.pull_request.head.sha }}" > PR_SHA
+
+      - name: Upload artifact website-content
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: website-content
+          path: |
+            website/build
+            PR_NUMBER
+            PR_SHA
+
+  lint-format:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: linter, formatters
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run linter
+        run: pnpm lint:check
+
+      - name: Run formatter
+        run: pnpm format:check
+
+      # Check we don't have changes in git
+      - name: Check no changes in git
+        run: |
+          if ! git diff --exit-code; then
+            echo "Found changes in git"
+            exit 1
+          fi
+
+  typecheck:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
+  unit-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: unit tests / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, ubuntu-24.04, macos-15]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+        # run the unit tests with coverage on ubuntu
+      - name: Run unit tests with coverage
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        run: pnpm test:unit:coverage
+
+        # do not run coverage on non-ubuntu os
+      - name: Run unit tests
+        if: ${{ matrix.os!='ubuntu-24.04' }}
+        run: pnpm test:unit
+
+        # publish codecov report if linux
+      - name: publish codecov report
+        if: ${{ matrix.os=='ubuntu-24.04' }}
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  smoke-e2e-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: smoke e2e tests
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [production, development]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Podman v5 using external action
+        # Use the action from the other repository
+        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup testenv using external action
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run Smoke E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
+        run: |
+          if [ ${{ matrix.mode }} == 'production' ]; then
+            echo "Compiling the Podman Desktop in production mode"
+            export ELECTRON_ENABLE_INSPECT=true
+            pnpm compile:current --linux dir
+            path=$(realpath ./dist/linux-unpacked/podman-desktop)
+            echo "Podman Desktop built binary: $path"
+            export PODMAN_DESKTOP_BINARY=$path
+          fi
+          pnpm test:e2e:smoke
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ${{ matrix.mode }}-smoke-e2e-tests
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+
+  windows-sanity-check-e2e-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: windows sanity check e2e tests
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install latest Podman version using external action
+        uses: redhat-actions/podman-install@38597414074271e07efa9fb2292cff7eea8d374d
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run Windows Sanity Check E2E tests in Development Mode
+        run: pnpm test:e2e:windows-sanity
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: windows-sanity-e2e-tests
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+  
+  macos-sanity-check-e2e-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: macos sanity check e2e tests
+    runs-on: macos-26
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run macOS Sanity Check E2E tests in Development Mode
+        run: pnpm test:e2e:macos-sanity
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: macos-sanity-e2e-tests
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+
+  k8s-sanity-e2e-tests:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: k8s sanity e2e tests
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set the default provider type variable
+        env:
+          DEFAULT_KIND_PROVIDER: 'docker'
+        run: |
+          echo "KIND_PROVIDER=${{ env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
+
+      - name: Install Podman v5 using external action
+        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup testenv using external action
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Run k8s sanity E2E tests in Development Mode
+        env:
+          SKIP_KIND_INSTALL: 'true'
+          KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
+        run: pnpm test:e2e:k8s-sanity
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests: true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: k8s-sanity-e2e-tests
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+
+  detect_pnpm_changes:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    name: Detect pnpm lock or pr-check files changes
+    runs-on: ubuntu-24.04
+    outputs:
+      pnpm_lock_changed: ${{ steps.pnpm_changed.outputs.PNPM_LOCK_CHANGED }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+
+      - name: Evaluate changes in files
+        id: pnpm_changed
+        run: |
+          BASE_REF="${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || 'main' }}"
+          BASE_REF="${BASE_REF#refs/heads/}"  # Strip 'refs/heads/' if present
+          git fetch origin ${BASE_REF}
+          git diff --name-only origin/${BASE_REF} HEAD > changes.txt
+          if grep -q  -e 'pnpm-lock.yaml' -e 'pr-check.yaml' changes.txt; then
+            echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
+          else
+            echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
+          fi
+
+  win-update-e2e-test:
+    name: ${{ matrix.os }} update e2e tests
+    needs: detect_pnpm_changes
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Adjust/Downgrade local podman desktop version Windows
+        run: node tests/playwright/scripts/version-util.cjs ./package.json --update
+
+      - name: Build Podman Desktop locally with electron updater included, allow prereleases
+        env:
+          ELECTRON_ENABLE_INSPECT: true
+        run: |
+          (Get-Content packages/main/src/plugin/updater.ts).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content packages/main/src/plugin/updater.ts
+          pnpm compile:current --win nsis
+          $runnerArch=$env:RUNNER_ARCH
+          $unpackedPath = "dist/win-unpacked"
+          if ($runnerArch -eq 'ARM64') {
+            $unpackedPath = "dist/win-arm64-unpacked"
+          }
+          echo ("PD_DIST_PATH=" + $unpackedPath) >> $env:GITHUB_ENV
+          $path=("./$unpackedPath/Podman Desktop.exe" | resolve-path).ProviderPath
+          echo $path
+          echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease, which are more stable update target then the prerelease"
+          (Get-Content "$Env:PD_DIST_PATH/resources/app-update.yml").Replace('repo: podman-desktop', 'repo: testing-prereleases') | Set-Content "$Env:PD_DIST_PATH/resources/app-update.yml"
+          echo "Show app-update.yml after replace..."
+          cat "$Env:PD_DIST_PATH/resources/app-update.yml"
+
+      - name: Run E2E Update test
+        run: |
+          echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          pnpm test:e2e:update:run
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ${{ matrix.os }}-update-e2e-test
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+
+  mac-update-e2e-test:
+    name: ${{ matrix.os }} update e2e tests
+    needs: detect_pnpm_changes
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+
+      - name: Adjust/Downgrade local podman desktop version
+        run: |
+          node tests/playwright/scripts/version-util.cjs ./package.json --update
+          actualVersion=$(jq -r '.version' package.json)
+          echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
+
+      - name: Build Podman Desktop locally and allow prereleases on update
+        env:
+          ELECTRON_ENABLE_INSPECT: true
+        run: |
+          echo "Allow Prerelease when updating, setting it inline in the code"
+          sed -i '' '/autoUpdater.autoDownload = false;/a \
+          autoUpdater.allowPrerelease = true; \
+          ' packages/main/src/plugin/updater.ts
+          pnpm compile:current --mac dmg
+          dmgPath=$(realpath $(find ./dist -name "*.dmg"))
+          echo "DMG Path: $dmgPath"
+          # extract the dmg
+          hdiutil attach $dmgPath
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
+          echo "PD Volume path: $pdVolumePath"
+          sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
+          # codesign the extracted app
+          appPath="/Applications/Podman Desktop.app"
+          sudo codesign --force --deep --sign - "$appPath"
+          codesign --verify --deep --verbose=2 "$appPath"
+          binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
+          echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
+
+      - name: Manually set testing-prereleases as update target
+        run: |
+          echo "Replace app-update.yml repo to a testing-prerelease"
+          sudo sed -i '' 's/repo: podman-desktop/repo: testing-prereleases/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
+
+      - name: Run E2E Update test
+        env:
+          UPDATE_PODMAN_DESKTOP: true
+        run: |
+          echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          pnpm test:e2e:update:run
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        if: always() # always run even if the previous step fails
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests:  true
+          report_paths: '**/*results.xml'
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ${{ matrix.os}}-update-e2e-test
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
+
+  update-e2e-test:
+    name: update E2E test
+    runs-on: ubuntu-24.04
+    needs: [win-update-e2e-test, mac-update-e2e-test]
+    if: |
+      always()
+    steps:
+      - name: Evaluate the Windows and Mac E2E Update test results
+        run: |
+          echo "Windows updater result: ${{ needs.win-update-e2e-test.result }}"
+          echo "Mac updater result: ${{ needs.mac-update-e2e-test.result }}"
+          if [[ "${{ needs.win-update-e2e-test.result }}" = "failure" || "${{ needs.mac-update-e2e-test.result }}" = "failure" ]]; then
+            echo "Windows or Mac udpater test failed..."
+            exit 1
+          else
+            echo "Windows and Mac updater test succeeded or was skipped..."
+          fi

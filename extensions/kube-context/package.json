@@ -1,0 +1,51 @@
+{
+  "name": "kube-context",
+  "displayName": "Kube Context",
+  "description": "Easily switch between Kubernetes contexts",
+  "version": "1.27.0-next",
+  "icon": "icon.png",
+  "publisher": "podman-desktop",
+  "license": "Apache-2.0",
+  "engines": {
+    "podman-desktop": "^0.0.1"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "kubecontext.switch",
+        "title": "Kube Context: Switch context"
+      },
+      {
+        "command": "kubecontext.quickpick",
+        "title": "Kube Context: Select a context"
+      }
+    ],
+    "icons": {
+      "kube-icon": {
+        "description": "Kubernetes icon",
+        "default": {
+          "fontPath": "kube.woff2",
+          "fontCharacter": "\\0041"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "vite build && node ./scripts/build.js",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest watch --coverage",
+    "watch": "vite build -w"
+  },
+  "dependencies": {
+    "@podman-desktop/api": "workspace:*",
+    "js-yaml": "^4.1.1"
+  },
+  "devDependencies": {
+    "adm-zip": "^0.5.17",
+    "@types/js-yaml": "^4.0.9",
+    "mkdirp": "^3.0.1",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.4"
+  }
+}

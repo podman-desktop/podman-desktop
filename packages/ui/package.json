@@ -1,0 +1,186 @@
+{
+  "name": "@podman-desktop/ui-svelte",
+  "version": "1.27.0-next",
+  "type": "module",
+  "repository": "https://github.com/podman-desktop/podman-desktop",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
+  "scripts": {
+    "build": "svelte-package",
+    "watch": "svelte-package -w",
+    "test": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest watch --coverage --passWithNoTests",
+    "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
+    "publish:next": "pnpm publish  --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.spec.*",
+    "tsconfig.json",
+    "MIGRATION.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js"
+    },
+    "./Checkbox": {
+      "types": "./dist/checkbox/Checkbox.svelte.d.ts",
+      "svelte": "./dist/checkbox/Checkbox.svelte"
+    },
+    "./Input": {
+      "types": "./dist/inputs/input.svelte.d.ts",
+      "svelte": "./dist/inputs/input.svelte"
+    },
+    "./Spinner": {
+      "types": "./dist/progress/Spinner.svelte.d.ts",
+      "svelte": "./dist/progress/Spinner.svelte"
+    },
+    "./Button": {
+      "types": "./dist/button/Button.svelte.d.ts",
+      "svelte": "./dist/button/Button.svelte"
+    },
+    "./Table": {
+      "types": "./dist/table/Table.svelte.d.ts",
+      "svelte": "./dist/table/Table.svelte"
+    },
+    "./TableDurationColumn": {
+      "types": "./dist/table/DurationColumn.svelte.d.ts",
+      "svelte": "./dist/table/DurationColumn.svelte"
+    },
+    "./TableSimpleColumn": {
+      "types": "./dist/table/SimpleColumn.svelte.d.ts",
+      "svelte": "./dist/table/SimpleColumn.svelte"
+    },
+    "./Tooltip": {
+      "types": "./dist/tooltip/Tooltip.svelte.d.ts",
+      "svelte": "./dist/tooltip/Tooltip.svelte"
+    },
+    "./ErrorMessage": {
+      "types": "./dist/alert/ErrorMessage.svelte.d.ts",
+      "svelte": "./dist/alert/ErrorMessage.svelte"
+    },
+    "./Dropdown": {
+      "types": "./dist/dropdown/Dropdown.svelte.d.ts",
+      "svelte": "./dist/dropdown/Dropdown.svelte"
+    },
+    "./DropdownMenu": {
+      "types": "./dist/dropdownMenu/index.d.ts",
+      "svelte": "./dist/dropdownMenu/index.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "svelte": "./dist/icons/index.js"
+    },
+    "./icons/ContainerIcon": {
+      "types": "./dist/icons/ContainerIcon.d.ts",
+      "svelte": "./dist/icons/ContainerIcon.svelte"
+    },
+    "./icons/Icon": {
+      "types": "./dist/icons/Icon.d.ts",
+      "svelte": "./dist/icons/Icon.svelte"
+    },
+    "./icons/StarIcon": {
+      "types": "./dist/icons/StarIcon.d.ts",
+      "svelte": "./dist/icons/StarIcon.svelte"
+    },
+    "./Tab": {
+      "types": "./dist/tab/Tab.svelte.d.ts",
+      "svelte": "./dist/tab/Tab.svelte"
+    },
+    "./SearchInput": {
+      "types": "./dist/inputs/SearchInput.svelte.d.ts",
+      "svelte": "./dist/inputs/SearchInput.svelte"
+    },
+    "./LinearProgress": {
+      "types": "./dist/progress/LinearProgress.d.ts",
+      "svelte": "./dist/progress/LinearProgress.svelte"
+    },
+    "./Page": {
+      "types": "./dist/layouts/Page.d.ts",
+      "svelte": "./dist/layouts/Page.svelte"
+    },
+    "./FormPage": {
+      "types": "./dist/layouts/FormPage.d.ts",
+      "svelte": "./dist/layouts/FormPage.svelte"
+    },
+    "./NavPage": {
+      "types": "./dist/layouts/NavPage.d.ts",
+      "svelte": "./dist/layouts/NavPage.svelte"
+    },
+    "./Link": {
+      "types": "./dist/link/Link.d.ts",
+      "svelte": "./dist/link/Link.svelte"
+    },
+    "./EmptyScreen": {
+      "types": "./dist/screen/EmptyScreen.d.ts",
+      "svelte": "./dist/screen/EmptyScreen.svelte"
+    },
+    "./FilteredEmptyScreen": {
+      "types": "./dist/screen/FilteredEmptyScreen.d.ts",
+      "svelte": "./dist/screen/FilteredEmptyScreen.svelte"
+    },
+    "./SettingsNavItem": {
+      "types": "./dist/settingsNavItem/SettingsNavItem.d.ts",
+      "svelte": "./dist/settingsNavItem/SettingsNavItem.svelte"
+    },
+    "./DetailsPage": {
+      "types": "./dist/layouts/DetailsPage.d.ts",
+      "svelte": "./dist/layouts/DetailsPage.svelte"
+    },
+    "./StatusIcon": {
+      "types": "./dist/statusIcon/StatusIcon.d.ts",
+      "svelte": "./dist/statusIcon/StatusIcon.svelte"
+    },
+    "./NumberInput": {
+      "types": "./dist/inputs/NumberInput.svelte.d.ts",
+      "svelte": "./dist/inputs/NumberInput.svelte"
+    },
+    "./Carousel": {
+      "types": "./dist/carousel/Carousel.svelte.d.ts",
+      "svelte": "./dist/carousel/Carousel.svelte"
+    },
+    "./Expandable": {
+      "types": "./dist/button/Expandable.svelte.d.ts",
+      "svelte": "./dist/button/Expandable.svelte"
+    }
+  },
+  "peerDependencies": {
+    "svelte": "^4.0.0 || ^5.0.0",
+    "svelte-fa": "^4.0.0"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "@fortawesome/free-brands-svg-icons": "^7.2.0",
+    "@fortawesome/free-regular-svg-icons": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "moment": "^2.30.1",
+    "humanize-duration": "^3.33.2",
+    "svelte-fa": "^4.0.4"
+  },
+  "devDependencies": {
+    "@sveltejs/package": "^2.5.7",
+    "@sveltejs/vite-plugin-svelte": "6.2.4",
+    "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^5.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@tsconfig/svelte": "^5.0.8",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "eslint-plugin-svelte": "^3.17.0",
+    "jsdom": "^28.0.0",
+    "svelte": "5.53.7",
+    "svelte-check": "^4.4.6",
+    "svelte-eslint-parser": "^1.6.0",
+    "tailwindcss": "^4.2.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.4"
+  }
+}

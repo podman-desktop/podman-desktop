@@ -1,0 +1,126 @@
+{
+  "name": "kind",
+  "displayName": "Kind",
+  "description": "Integration for Kind: run local Kubernetes clusters using container “nodes”",
+  "version": "1.27.0-next",
+  "icon": "icon.png",
+  "publisher": "podman-desktop",
+  "license": "Apache-2.0",
+  "engines": {
+    "podman-desktop": "^0.0.1"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Kind",
+      "properties": {
+        "kind.cluster.creation.configFile": {
+          "type": "string",
+          "format": "file",
+          "default": "",
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "Custom path to Kind config file (Default is blank)"
+        },
+        "kind.cluster.creation.name": {
+          "type": "string",
+          "default": "kind-cluster",
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "Name"
+        },
+        "kind.cluster.creation.provider": {
+          "type": "string",
+          "default": "podman",
+          "enum": [
+            "podman",
+            "docker"
+          ],
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "Provider Type"
+        },
+        "kind.cluster.creation.http.port": {
+          "type": "number",
+          "default": 9090,
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "HTTP Port"
+        },
+        "kind.cluster.creation.https.port": {
+          "type": "number",
+          "default": 9443,
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "HTTPS Port"
+        },
+        "kind.cluster.creation.ingress": {
+          "type": "boolean",
+          "default": true,
+          "scope": "KubernetesProviderConnectionFactory",
+          "description": "Setup an ingress controller (Contour https://projectcontour.io)"
+        },
+        "kind.cluster.creation.controlPlaneImage": {
+          "type": "string",
+          "default": "",
+          "scope": "KubernetesProviderConnectionFactory",
+          "placeholder": "Leave empty for using latest.",
+          "markdownDescription": "Node’s container image (Available image tags on [kind/releases](https://github.com/kubernetes-sigs/kind/releases))"
+        }
+      }
+    },
+    "icons": {
+      "kind-icon": {
+        "description": "Kind icon",
+        "default": {
+          "fontPath": "kind-icon.woff2",
+          "fontCharacter": "\\EA01"
+        }
+      }
+    },
+    "menus": {
+      "dashboard/image": [
+        {
+          "command": "kind.image.move",
+          "title": "Push image to Kind cluster",
+          "disabled": "selectedImageId in imagesPushInProgressToKind"
+        }
+      ]
+    },
+    "views": {
+      "icons/containersList": [
+        {
+          "when": "io.x-k8s.kind.cluster in containerLabelKeys",
+          "icon": "${kind-icon}"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "kind.install",
+        "title": "Kind: Install..."
+      },
+      {
+        "command": "kind.image.move",
+        "title": "Kind: Move image to cluster..."
+      }
+    ]
+  },
+  "scripts": {
+    "install:contour": "tsx ./scripts/download.ts",
+    "build": "vite build && node ./scripts/build.js",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest watch --coverage",
+    "watch": "vite build -w"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "@kubernetes/client-node": "^1.4.0",
+    "@podman-desktop/api": "workspace:*",
+    "mustache": "^4.2.0",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "adm-zip": "^0.5.17",
+    "mkdirp": "^3.0.1",
+    "tmp-promise": "^3.0.3",
+    "tsx": "^4.21.0",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.4"
+  }
+}

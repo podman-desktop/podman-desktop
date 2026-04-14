@@ -1,0 +1,99 @@
+<script lang="ts">
+import { faFilePen, faGear } from '@fortawesome/free-solid-svg-icons';
+import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { onDestroy, onMount } from 'svelte';
+import { derived, get, type Readable, type Unsubscriber } from 'svelte/store';
+import { router } from 'tinro';
+
+import { ContextKeyExpr } from '/@/lib/context/contextKey';
+import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
+import { isDefaultScope, isPropertyValidInContext } from '/@/lib/preferences/Util';
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+import { configurationProperties } from '/@/stores/configurationProperties';
+import { context } from '/@/stores/context';
+import { onboardingList } from '/@/stores/onboarding';
+
+interface Props {
+  extension: CombinedExtensionInfoUI;
+}
+
+let { extension }: Props = $props();
+
+let onboardingEnabledUnsubscribe: Unsubscriber | undefined;
+let configurationPropertiesUnsubscribe: Unsubscriber | undefined;
+let onboardingEnabledReadable: Readable<boolean>;
+let isOnboardingEnabled = $state(false);
+
+let hasAnyConfiguration = $state(false);
+
+onMount(() => {
+  configurationPropertiesUnsubscribe = configurationProperties.subscribe(properties => {
+    let globalContext = get(context);
+
+    hasAnyConfiguration =
+      properties
+        .filter(
+          property =>
+            property.parentId.startsWith(`preferences.${extension.id}`) &&
+            isDefaultScope(property.scope) &&
+            !property.hidden,
+        )
+        .filter(property => isPropertyValidInContext(property.when, globalContext)).length > 0;
+  });
+
+  onboardingEnabledReadable = derived([onboardingList, context], ([$onboardingList, $context]) => {
+    if (extension.type === 'dd') {
+      return false;
+    }
+
+    const matchingOnBoarding = $onboardingList.findLast(o => o.extension === extension.id && o.enablement);
+
+    if (!matchingOnBoarding) {
+      return false;
+    } else {
+      const enablement = normalizeOnboardingWhenClause(matchingOnBoarding.enablement, extension.id);
+      const whenDeserialized = ContextKeyExpr.deserialize(enablement);
+      const isEnabled = whenDeserialized?.evaluate($context);
+      return !!isEnabled;
+    }
+  });
+
+  onboardingEnabledUnsubscribe = onboardingEnabledReadable.subscribe(value => {
+    isOnboardingEnabled = value;
+  });
+});
+
+onDestroy(() => {
+  onboardingEnabledUnsubscribe?.();
+  configurationPropertiesUnsubscribe?.();
+});
+
+function handleOnboarding(): void {
+  router.goto(`/preferences/onboarding/${extension.id}`);
+}
+
+function handleProperties(): void {
+  router.goto(`/preferences/default/preferences.${extension.id}`);
+}
+</script>
+
+<Button
+  aria-label="Onboarding {extension.name}"
+  title="Onboarding {extension.name}"
+  type="primary"
+  class="m-auto {!isOnboardingEnabled ? 'cursor-not-allowed' : ''}"
+  disabled={!isOnboardingEnabled}
+  on:click={handleOnboarding}>
+  <Icon size="1x" icon={faGear} />
+</Button>
+
+<Button
+  aria-label="Edit properties of {extension.name} extension"
+  title="Edit properties of {extension.name} extension"
+  type="secondary"
+  class="m-auto {!hasAnyConfiguration ? 'cursor-not-allowed' : ''}"
+  disabled={!hasAnyConfiguration}
+  on:click={handleProperties}>
+  <Icon size="1x" icon={faFilePen} />
+</Button>

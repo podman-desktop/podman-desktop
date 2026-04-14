@@ -1,0 +1,26 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "target": "esnext",
+    "sourceMap": false,
+    "moduleResolution": "node16",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "isolatedModules": true,
+    "exactOptionalPropertyTypes": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node"],
+
+    "baseUrl": ".",
+    "paths": {
+      "/@/*": ["./src/*"],
+      "/@tests/*": ["./tests/*"],
+      "/@product.json": ["../../product.json"]
+    }
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "../../types/**/*.d.ts"]
+}

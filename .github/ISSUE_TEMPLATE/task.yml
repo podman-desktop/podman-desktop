@@ -1,0 +1,20 @@
+name: Task
+description: A specific piece of work
+type: task
+projects: ["podman-desktop/4"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tasks are normally created by the development team to plan work unrelated to features or bugs.
+        The issue type can be switched to Technical debt or Release as necessary.
+
+  - type: textarea
+    id: content
+    attributes:
+      label: Task content
+      description: A clear and concise description of the task.
+      placeholder: Podman Desktop should [...]
+    validations:
+      required: true
