@@ -21,8 +21,7 @@
       "!**/website/static/release-notes/**",
       "!**/website-argos/screenshots/**",
       "!**/storybook/.storybook/themes.css",
-      "!**/storybook/storybook-static/**",
-      "!**/schemas/**"
+      "!**/storybook/storybook-static/**"
     ]
   },
   "javascript": {
