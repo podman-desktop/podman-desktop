@@ -134,7 +134,7 @@
       "biome format --write"
     ],
     "*.md": "prettier --cache --write",
-    "*.{css,json}": "biome format --write"
+    "*.{css,json}": "biome format --write --no-errors-on-unmatched"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
