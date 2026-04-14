@@ -18,7 +18,8 @@
 
 import { assert, describe, expect, test } from 'vitest';
 
-import { extractConnectionResourceMetrics, RESOURCE_FORMATS } from './connection-resource-metrics';
+import type { ConnectionResourceMetrics } from './connection-resource-metrics';
+import { extractConnectionResourceMetrics, RESOURCE_FORMATS, toDisplayMetrics } from './connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from './Util';
 
 function makeConfig(
@@ -157,6 +158,80 @@ describe('extractConnectionResourceMetrics', () => {
     expect(result.cpu).toBeDefined();
     expect(result.memory).toBeUndefined();
     expect(result.disk).toBeUndefined();
+  });
+});
+
+describe('toDisplayMetrics', () => {
+  test('returns empty array for empty metrics', () => {
+    const metrics: ConnectionResourceMetrics = {};
+    expect(toDisplayMetrics(metrics)).toEqual([]);
+  });
+
+  test('formats CPU metric with raw number value', () => {
+    const metrics: ConnectionResourceMetrics = {
+      cpu: { total: 4, used: 2, usagePercent: 50, description: 'CPUs' },
+    };
+
+    const result = toDisplayMetrics(metrics);
+
+    expect(result).toEqual([{ title: 'CPUs', value: 4, percent: 50 }]);
+  });
+
+  test('formats memory metric with filesize', () => {
+    const metrics: ConnectionResourceMetrics = {
+      memory: { total: 8_000_000_000, used: 2_000_000_000, usagePercent: 25, description: 'Memory' },
+    };
+
+    const result = toDisplayMetrics(metrics);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('Memory');
+    expect(result[0].value).toBe('8 GB');
+    expect(result[0].percent).toBe(25);
+  });
+
+  test('formats disk metric with filesize', () => {
+    const metrics: ConnectionResourceMetrics = {
+      disk: { total: 100_000_000_000, used: 40_000_000_000, usagePercent: 40, description: 'Disk size' },
+    };
+
+    const result = toDisplayMetrics(metrics);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('Disk size');
+    expect(result[0].value).toBe('100 GB');
+    expect(result[0].percent).toBe(40);
+  });
+
+  test('returns all three metrics in cpu/memory/disk order', () => {
+    const metrics: ConnectionResourceMetrics = {
+      cpu: { total: 8, used: 6, usagePercent: 75, description: 'CPUs' },
+      memory: { total: 16_000_000_000, used: 8_000_000_000, usagePercent: 50, description: 'Memory' },
+      disk: { total: 200_000_000_000, used: 60_000_000_000, usagePercent: 30, description: 'Disk size' },
+    };
+
+    const result = toDisplayMetrics(metrics);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].title).toBe('CPUs');
+    expect(result[0].value).toBe(8);
+    expect(result[1].title).toBe('Memory');
+    expect(result[1].value).toBe('16 GB');
+    expect(result[2].title).toBe('Disk size');
+    expect(result[2].value).toBe('200 GB');
+  });
+
+  test('returns partial results for partial metrics', () => {
+    const metrics: ConnectionResourceMetrics = {
+      cpu: { total: 2, used: 0.2, usagePercent: 10, description: 'CPUs' },
+      disk: { total: 50_000_000_000, used: 5_000_000_000, usagePercent: 10, description: 'Disk size' },
+    };
+
+    const result = toDisplayMetrics(metrics);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].title).toBe('CPUs');
+    expect(result[1].title).toBe('Disk size');
   });
 });
 

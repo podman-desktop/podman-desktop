@@ -16,17 +16,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-empty-function */
-
 import '@testing-library/jest-dom/vitest';
 
 import type { ProviderContainerConnectionInfo } from '@podman-desktop/core-api';
+import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PreferencesContainerConnectionDetailsSummary from './PreferencesContainerConnectionDetailsSummary.svelte';
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 const podmanContainerConnection: ProviderContainerConnectionInfo = {
   connectionType: 'container',
@@ -82,4 +83,116 @@ test('Expect that name, socket and type are displayed for Docker', async () => {
   const spanType = screen.getByLabelText('docker');
   expect(spanType).toBeInTheDocument();
   expect(spanType.textContent).toBe('Docker');
+});
+
+describe('resource metrics display', () => {
+  const resourceProperties: IConfigurationPropertyRecordedSchema[] = [
+    {
+      parentId: 'preferences.podman',
+      title: 'CPUs',
+      id: 'podman.machine.cpus',
+      type: 'number',
+      scope: 'ContainerConnection',
+      format: 'cpu',
+      description: 'CPUs',
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'CPU Usage',
+      id: 'podman.machine.cpusUsage',
+      type: 'number',
+      scope: 'ContainerConnection',
+      format: 'cpuUsage',
+      description: 'CPU Usage',
+      hidden: true,
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'Memory',
+      id: 'podman.machine.memory',
+      type: 'number',
+      scope: 'ContainerConnection',
+      format: 'memory',
+      description: 'Memory',
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'Memory Usage',
+      id: 'podman.machine.memoryUsage',
+      type: 'number',
+      scope: 'ContainerConnection',
+      format: 'memoryUsage',
+      description: 'Memory Usage',
+      hidden: true,
+    },
+  ];
+
+  test('renders Donut charts for resource metrics', async () => {
+    vi.mocked(window.getConfigurationValue)
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(50)
+      .mockResolvedValueOnce(8_000_000_000)
+      .mockResolvedValueOnce(25);
+
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: podmanContainerConnection,
+      providerInternalId: '0',
+      properties: resourceProperties,
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getAllByTestId('arc')).toHaveLength(2);
+      expect(screen.getByText('4')).toBeInTheDocument();
+      expect(screen.getByText('8 GB')).toBeInTheDocument();
+    });
+  });
+
+  test('renders non-resource configs as plain values', async () => {
+    const nonResourceProperty: IConfigurationPropertyRecordedSchema = {
+      parentId: 'preferences.podman',
+      title: 'User mode networking',
+      id: 'podman.machine.userModeNetworking',
+      type: 'boolean',
+      scope: 'ContainerConnection',
+      format: 'boolean',
+      description: 'User mode networking',
+    };
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: podmanContainerConnection,
+      providerInternalId: '0',
+      properties: [...resourceProperties, nonResourceProperty],
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('User mode networking')).toBeInTheDocument();
+    });
+  });
+
+  test('does not render resource-format configs as plain rows', async () => {
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(4);
+
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: podmanContainerConnection,
+      providerInternalId: '0',
+      properties: resourceProperties,
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getAllByTestId('arc')).toHaveLength(2);
+    });
+    expect(screen.queryByText('CPU Usage')).not.toBeInTheDocument();
+    expect(screen.queryByText('Memory Usage')).not.toBeInTheDocument();
+  });
+
+  test('renders no metrics when properties is empty', async () => {
+    render(PreferencesContainerConnectionDetailsSummary, {
+      containerConnectionInfo: podmanContainerConnection,
+      providerInternalId: '0',
+      properties: [],
+    });
+
+    expect(screen.queryAllByTestId('arc')).toHaveLength(0);
+  });
 });

@@ -838,6 +838,130 @@ describe('container provider connections', () => {
   });
 });
 
+describe('container connection resource metrics', () => {
+  const resourceConfigProperties = [
+    {
+      parentId: 'preferences.podman',
+      title: 'CPUs',
+      id: 'podman.machine.cpus',
+      type: 'number' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'cpu',
+      description: 'CPUs',
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'CPU Usage',
+      id: 'podman.machine.cpusUsage',
+      type: 'number' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'cpuUsage',
+      description: 'CPU Usage',
+      hidden: true,
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'Memory',
+      id: 'podman.machine.memory',
+      type: 'number' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'memory',
+      description: 'Memory',
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'Memory Usage',
+      id: 'podman.machine.memoryUsage',
+      type: 'number' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'memoryUsage',
+      description: 'Memory Usage',
+      hidden: true,
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'Disk Size',
+      id: 'podman.machine.diskSize',
+      type: 'number' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'diskSize',
+      description: 'Disk size',
+    },
+    {
+      parentId: 'preferences.podman',
+      title: 'Disk Size Usage',
+      id: 'podman.machine.diskSizeUsage',
+      type: 'number' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'diskSizeUsage',
+      description: 'Disk Size Usage',
+      hidden: true,
+    },
+  ];
+
+  test('renders Donut charts when resource metrics are available', async () => {
+    const singleProvider: ProviderInfo = structuredClone(providerInfo);
+    singleProvider.containerConnections = [providerInfo.containerConnections[0]];
+    providerInfos.set([singleProvider]);
+    configurationProperties.set(resourceConfigProperties);
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(4);
+
+    render(PreferencesResourcesRendering, {});
+
+    await vi.waitFor(() => {
+      const configGroup = screen.getByRole('group', { name: 'Provider Configuration' });
+      expect(configGroup).toBeInTheDocument();
+      expect(within(configGroup).getByText('CPUs')).toBeInTheDocument();
+      expect(within(configGroup).getByText('Memory')).toBeInTheDocument();
+      expect(within(configGroup).getByText('Disk size')).toBeInTheDocument();
+    });
+  });
+
+  test('renders non-resource configs as plain values', async () => {
+    const nonResourceConfig = {
+      parentId: 'preferences.podman',
+      title: 'User mode networking',
+      id: 'podman.machine.userModeNetworking',
+      type: 'boolean' as const,
+      scope: 'ContainerConnection' as const,
+      format: 'boolean',
+      description: 'User mode networking',
+    };
+    const singleProvider: ProviderInfo = structuredClone(providerInfo);
+    singleProvider.containerConnections = [providerInfo.containerConnections[0]];
+    providerInfos.set([singleProvider]);
+    configurationProperties.set([...resourceConfigProperties, nonResourceConfig]);
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+
+    render(PreferencesResourcesRendering, {});
+
+    await vi.waitFor(() => {
+      const configGroup = screen.getByRole('group', { name: 'Provider Configuration' });
+      expect(configGroup).toBeInTheDocument();
+      expect(within(configGroup).getByText(/User mode networking/)).toBeInTheDocument();
+    });
+  });
+
+  test('does not render resource-format configs as plain text rows', async () => {
+    const singleProvider: ProviderInfo = structuredClone(providerInfo);
+    singleProvider.containerConnections = [providerInfo.containerConnections[0]];
+    providerInfos.set([singleProvider]);
+    configurationProperties.set(resourceConfigProperties);
+    vi.mocked(window.getConfigurationValue).mockResolvedValue(4);
+
+    render(PreferencesResourcesRendering, {});
+
+    await vi.waitFor(() => {
+      const configGroup = screen.getByRole('group', { name: 'Provider Configuration' });
+      expect(configGroup).toBeInTheDocument();
+    });
+    const configGroup = screen.getByRole('group', { name: 'Provider Configuration' });
+    expect(within(configGroup).queryByText(/CPU Usage: /)).not.toBeInTheDocument();
+    expect(within(configGroup).queryByText(/Memory Usage: /)).not.toBeInTheDocument();
+    expect(within(configGroup).queryByText(/Disk Size Usage: /)).not.toBeInTheDocument();
+  });
+});
+
 test('Expect to see the no resource message when there is no providers', async () => {
   providerInfos.set([]);
   render(PreferencesResourcesRendering, {});
