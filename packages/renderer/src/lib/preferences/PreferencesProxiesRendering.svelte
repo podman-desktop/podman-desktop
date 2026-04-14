@@ -1,6 +1,6 @@
 <script lang="ts">
 import { faPen } from '@fortawesome/free-solid-svg-icons';
-import { PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
+import { type DialogType, PROXY_CONFIG_KEYS, ProxyState } from '@podman-desktop/core-api';
 import { Button, Dropdown, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
@@ -98,7 +98,7 @@ async function updateProxySettings(): Promise<void> {
   // show a simple message to confirm that the settings are applied,
   // or a longer warning if the user may need to take action
   let message = 'Proxy settings have been applied.';
-  let type = 'info';
+  let type: DialogType = 'info';
   if (runningProviders) {
     message += ' You might need to restart running container engines for the changes to take effect.';
     type = 'warning';

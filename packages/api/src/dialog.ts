@@ -32,6 +32,8 @@ export interface DropdownType extends BaseButtonType {
   type: 'dropdownButton';
 }
 
+export type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning' | 'danger';
+
 export type ButtonsType = string | DropdownType | IconButtonType;
 
 /**
@@ -57,7 +59,7 @@ export interface MessageBoxOptions {
   /**
    * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning' | 'danger'.
    */
-  type?: string;
+  type?: DialogType;
   /**
    * The (optional) index of the default button.
    */

@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { ButtonsType } from '@podman-desktop/core-api';
+import type { ButtonsType, DialogType } from '@podman-desktop/core-api';
 
 export interface MessageBoxOptions {
   id: number;
@@ -24,7 +24,7 @@ export interface MessageBoxOptions {
   message: string;
   detail?: string;
   buttons?: ButtonsType[];
-  type?: string;
+  type?: DialogType;
   defaultId?: number;
   cancelId?: number;
   footerMarkdownDescription?: string;
