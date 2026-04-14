@@ -233,6 +233,9 @@ jobs:
       - name: Run formatter
         run: pnpm format:check
 
+      - name: Generate schemas
+        run: pnpm generate:schemas
+
       # Check we don't have changes in git
       - name: Check no changes in git
         run: |

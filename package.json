@@ -120,6 +120,8 @@
     "website:prod": "pnpm run website:build && cd website/build && pnpm serve",
     "website:dev": "pnpm run storybook:build && cd website && pnpm run docusaurus start",
     "website:screenshots": "cd website-argos && pnpm run screenshot",
+    "generate:schemas": "pnpm run generate:schemas:extension",
+    "generate:schemas:extension": "pnpm run build:main && node packages/main/dist/generate-extension-schema.cjs",
     "storybook:css": "tsx ./scripts/generate-stylesheet.ts --output storybook/.storybook/themes.css",
     "storybook:dev": "pnpm run storybook:css && cd storybook && pnpm run dev",
     "storybook:build": "pnpm run build:ui && pnpm run storybook:css && cd storybook && pnpm run build",
