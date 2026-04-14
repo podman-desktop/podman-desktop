@@ -1260,7 +1260,7 @@ describe('initStatusColors', () => {
     { id: 'status-stopped-bg', description: 'gray/charcoal alpha background' },
     { id: 'status-terminated-bg', description: 'red alpha background' },
     { id: 'status-starting-bg', description: 'green alpha background' },
-    { id: 'status-unknown-bg', description: 'gray/charcoal alpha background' },
+    { id: 'status-unknown-bg', description: 'amber alpha background' },
   ])('registers $id with $description', ({ id }) => {
     const call = vi.mocked(colorRegistry.registerColorDefinition).mock.calls.find(c => c?.[0]?.id === id);
     expect(call).toBeDefined();

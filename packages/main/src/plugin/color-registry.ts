@@ -1919,10 +1919,9 @@ export class ColorRegistry {
       light: red[950],
     });
 
-    // If we don't know the status, use gray
     this.registerColor(`${status}unknown`, {
-      dark: gray[100],
-      light: gray[400],
+      dark: amber[600],
+      light: amber[950],
     });
 
     // Connections / login
