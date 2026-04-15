@@ -34,7 +34,7 @@ export const ExtensionManifestSchema = z
     displayName: z.string(),
     version: z.string(),
     publisher: z.string(),
-    description: z.string(),
+    description: z.string().optional(),
     main: z.string().optional(),
     icon: z.union([z.string(), z.object({ light: z.string(), dark: z.string() })]).optional(),
     extensionDependencies: z.array(z.string()).optional(),
