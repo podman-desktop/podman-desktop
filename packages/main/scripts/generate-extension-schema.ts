@@ -27,11 +27,17 @@ const DEFAULT_OUTPUT = join('schemas', 'extension-schema.json');
 
 export function parseArgs(args: string[]): { output: string } {
   const parsed = minimist(args);
-  const output: string | undefined = parsed['output'];
+  const rawOutput: unknown = parsed['output'];
 
-  if (!output) {
+  if (rawOutput === undefined || rawOutput === null || rawOutput === false) {
     return { output: resolve(process.cwd(), DEFAULT_OUTPUT) };
   }
+
+  if (typeof rawOutput !== 'string' || rawOutput.trim() === '') {
+    throw new Error('--output must be a non-empty string path');
+  }
+
+  const output = rawOutput;
 
   if (!isAbsolute(output)) {
     throw new Error('the output path should be absolute');
