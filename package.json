@@ -170,7 +170,7 @@
     "eslint-plugin-sonarjs": "^4.0.2",
     "eslint-plugin-unicorn": "^64.0.0",
     "fzstd": "^0.1.1",
-    "get-tsconfig": "^4.13.7",
+    "get-tsconfig": "^4.14.0",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
