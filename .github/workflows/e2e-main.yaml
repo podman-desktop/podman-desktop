@@ -110,6 +110,7 @@ jobs:
         uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          ubuntu-version: '24.04'
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
