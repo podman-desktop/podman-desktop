@@ -425,6 +425,7 @@ async function postActivate(
         installationSource: 'extension',
       });
       vpState.version = releaseVersionToInstall;
+      provider.updateVersion(releaseVersionToInstall);
       if (releaseToInstall === latestAsset) {
         delete update.version;
       } else {
@@ -448,6 +449,7 @@ async function postActivate(
 
       // update the version to undefined
       vpState.version = undefined;
+      provider.updateVersion('');
       kubectlProviderUpdateDisposable?.dispose();
     },
   });
