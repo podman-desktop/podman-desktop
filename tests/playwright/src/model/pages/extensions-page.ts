@@ -30,6 +30,7 @@ export class ExtensionsPage {
   readonly additionalActions: Locator;
   readonly installedTab: Locator;
   readonly catalogTab: Locator;
+  readonly localExtensionsTab: Locator;
   readonly installExtensionFromOCIImageButton: Locator;
 
   constructor(page: Page) {
@@ -42,6 +43,7 @@ export class ExtensionsPage {
     });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
     this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
+    this.localExtensionsTab = this.page.getByRole('button', { name: 'Local Extensions' });
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
   }
 

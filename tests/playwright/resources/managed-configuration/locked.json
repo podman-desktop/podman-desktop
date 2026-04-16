@@ -5,6 +5,8 @@
     "preferences.ExitOnClose",
     "registries.preferred",
     "proxy.http",
-    "proxy.https"
+    "proxy.https",
+    "extensions.catalog.enabled",
+    "extensions.localExtensions.enabled"
   ]
 }
