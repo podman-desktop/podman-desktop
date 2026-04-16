@@ -72,7 +72,7 @@ test('should work with invalid JSON auth file', async () => {
   existSyncSpy.mockReturnValue(true);
 
   // mock the readFile
-  vi.mocked(readFile).mockRejectedValue(new Error("'invalid json'"));
+  vi.mocked(readFile).mockResolvedValue('invalid json');
 
   // mock the location
   const authJsonLocation = '/tmp/containers/auth.json';
