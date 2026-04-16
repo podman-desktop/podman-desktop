@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "@podman-desktop/core-api": "workspace:*",
-    "electron": "41.2.0"
+    "electron": "41.2.1"
   }
 }
