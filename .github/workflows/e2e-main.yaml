@@ -81,12 +81,16 @@ permissions:
 
 jobs:
   e2e-tests:
-    name: Run All E2E tests
+    name: Run E2E tests - ${{ matrix.installation }}
     runs-on: ubuntu-24.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
+    strategy:
+      fail-fast: false
+      matrix:
+        installation: [source-build, flatpak-build]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -127,7 +131,16 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      - name: Install flatpak build dependencies
+        if: matrix.installation == 'flatpak-build'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder elfutils
+          flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.flatpak.Builder org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+
       - name: Run E2E tests in Production Mode
+        if: matrix.installation == 'source-build'
         env:
           PODMANDESKTOP_CI_BOT_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
           TEST_PODMAN_MACHINE: 'true'
@@ -139,6 +152,25 @@ jobs:
           pnpm compile:current --linux dir
           path=$(realpath ./dist/linux-unpacked/podman-desktop)
           echo "Podman Desktop built binary: $path"
+          export PODMAN_DESKTOP_BINARY=$path
+          pnpm ${{ env.NPM_TARGET }}
+
+      - name: Run E2E tests on Flatpak bundle
+        if: matrix.installation == 'flatpak-build'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PODMANDESKTOP_CI_BOT_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+          TEST_PODMAN_MACHINE: 'true'
+          SKIP_KIND_INSTALL: 'true'
+          KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
+          ELECTRON_ENABLE_INSPECT: true
+        run: |
+          echo "Building Podman Desktop flatpak bundle"
+          pnpm compile:current --linux flatpak
+          echo "Installing built flatpak bundle"
+          flatpak install --bundle --user -y dist/*.flatpak
+          path=$(realpath $(flatpak info --show-location io.podman_desktop.PodmanDesktop)/files/lib/io.podman_desktop.PodmanDesktop/podman-desktop)
+          echo "Podman Desktop flatpak binary: $path"
           export PODMAN_DESKTOP_BINARY=$path
           pnpm ${{ env.NPM_TARGET }}
 
@@ -156,7 +188,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: e2e-tests
+          name: e2e-tests-${{ matrix.installation }}
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
@@ -250,7 +282,7 @@ jobs:
             Set-Content -ErrorAction Stop $updateFile
           echo "Show app-update.yml after replace..."
           cat "$env:PD_DIST_PATH/resources/app-update.yml"
-          
+
       - name: Run E2E Update test
         env:
           INSTALLATION_TYPE: ${{ matrix.installation }}
@@ -282,7 +314,7 @@ jobs:
     name: ${{ matrix.os }} update e2e tests
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         os: [macos-26, macos-15-intel]
     runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
