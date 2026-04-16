@@ -471,6 +471,40 @@ describe('registerCLITool', () => {
     });
   });
 
+  test('checkDownloadedCommand sets composeVersionCheckFailed when version fetch fails', async () => {
+    vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('');
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(false);
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockRejectedValue(new Error('API rate limit exceeded'));
+
+    await activate(extensionContextMock);
+
+    const checkDownloadedHandler = vi.mocked(extensionApi.commands.registerCommand).mock.calls[1][1];
+    await checkDownloadedHandler();
+
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('composeVersionCheckFailed', true, 'onboarding');
+    expect(extensionApi.context.setValue).not.toHaveBeenCalledWith(
+      'composeDownloadVersion',
+      expect.anything(),
+      'onboarding',
+    );
+  });
+
+  test('checkDownloadedCommand sets composeDownloadVersion on success', async () => {
+    vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('');
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(false);
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v2.30.0',
+    } as unknown as ComposeGithubReleaseArtifactMetadata);
+
+    await activate(extensionContextMock);
+
+    const checkDownloadedHandler = vi.mocked(extensionApi.commands.registerCommand).mock.calls[1][1];
+    await checkDownloadedHandler();
+
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('composeDownloadVersion', 'v2.30.0', 'onboarding');
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('composeVersionCheckFailed', false, 'onboarding');
+  });
+
   test('onboarding download command shows error message if version list cannot be obtained', async () => {
     await activate(extensionContextMock);
     const downloadCommandHandler = vi.mocked(extensionApi.commands.registerCommand).mock.calls[2][1];

@@ -56,10 +56,23 @@
           ]
         },
         {
+          "id": "versionCheckFailedView",
+          "title": "Unable to retrieve Compose version",
+          "when": "onboardingContext:composeVersionCheckFailed",
+          "state": "failed",
+          "content": [
+            [
+              {
+                "value": "Podman Desktop was unable to retrieve the latest Compose version. This may be caused by a GitHub API rate limit or a network issue.\n\nPlease try again later or check your network connection."
+              }
+            ]
+          ]
+        },
+        {
           "id": "welcomeDownloadView",
           "label": "Compose Download",
           "title": "Compose download",
-          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded && !onboardingContext:composeVersionCheckFailed",
           "content": [
             [
               {
@@ -84,7 +97,7 @@
           "id": "downloadCommand",
           "title": "Downloading Compose ${onboardingContext:composeDownloadVersion}",
           "description": "Downloading the binary.\n\nOnce downloaded, the next step will install Compose system-wide.",
-          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded",
+          "when": "!compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide && onboardingContext:composeIsNotDownloaded && !onboardingContext:composeVersionCheckFailed",
           "command": "compose.onboarding.downloadCommand",
           "completionEvents": [
             "onCommand:compose.onboarding.downloadCommand"

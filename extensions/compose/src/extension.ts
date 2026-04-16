@@ -115,12 +115,16 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
       // we will run getLatestVersionAsset so we can show the user the latest
       // latest version of compose that is available.
       if (!isDownloaded) {
-        // Get the latest version and store the metadata in a local variable
-        const composeLatestVersion = await composeDownload.getLatestVersionAsset();
-        // Set the value in the context to the version we're downloading so it appears in the onboarding sequence
-        if (composeLatestVersion) {
-          composeVersionMetadata = composeLatestVersion;
-          extensionApi.context.setValue('composeDownloadVersion', composeVersionMetadata.tag, 'onboarding');
+        try {
+          const composeLatestVersion = await composeDownload.getLatestVersionAsset();
+          if (composeLatestVersion) {
+            composeVersionMetadata = composeLatestVersion;
+            extensionApi.context.setValue('composeDownloadVersion', composeVersionMetadata.tag, 'onboarding');
+            extensionApi.context.setValue('composeVersionCheckFailed', false, 'onboarding');
+          }
+        } catch (error: unknown) {
+          console.error('Failed to retrieve latest Compose version:', error);
+          extensionApi.context.setValue('composeVersionCheckFailed', true, 'onboarding');
         }
       }
 
