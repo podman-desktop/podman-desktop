@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -205,7 +205,13 @@ export class RegistrySetup {
     }
   }
 
-  protected writeAuthFile(data: string): Promise<void> {
-    return writeFile(this.getAuthFileLocation(), data, 'utf8');
+  protected async writeAuthFile(data: string): Promise<void> {
+    const path = this.getAuthFileLocation();
+    await writeFile(path, data, {
+      encoding: 'utf8',
+      mode: 0o600,
+    });
+    // writeFile is not updating the mode if the file already exist
+    await chmod(path, 0o600);
   }
 }
