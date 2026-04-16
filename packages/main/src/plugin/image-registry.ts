@@ -634,7 +634,7 @@ export class ImageRegistry {
 
     const blobURL = `${imageData.registryURL}/${imageData.name}/blobs/${digest}`;
 
-    const readStream = got.stream(blobURL, { ...options, isStream: true });
+    const readStream = got.stream(blobURL, options);
 
     readStream.on('downloadProgress', ({ transferred }) => {
       const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
