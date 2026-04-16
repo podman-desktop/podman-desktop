@@ -357,6 +357,9 @@ describe('registerCLITool', () => {
       installationSource: 'extension',
       version: '1.0.0',
     });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('1.0.0');
   });
 
   test('by uninstalling it should delete all executables', async () => {
@@ -390,6 +393,9 @@ describe('registerCLITool', () => {
     await installer?.doUninstall({} as unknown as Logger);
     expect(fs.promises.unlink).toHaveBeenNthCalledWith(1, 'storage-path');
     expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-wide-path'], { isAdmin: true });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('');
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {

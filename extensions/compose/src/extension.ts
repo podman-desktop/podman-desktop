@@ -416,6 +416,7 @@ async function registerCLITool(
         installationSource: 'extension',
       });
       binaryVersion = releaseVersionToInstall;
+      provider.updateVersion(releaseVersionToInstall);
       releaseVersionToInstall = undefined;
       releaseToInstall = undefined;
       extensionApi.context.setValue('compose.isComposeInstalledSystemWide', true);
@@ -436,6 +437,7 @@ async function registerCLITool(
       // update the version to undefined
       binaryVersion = undefined;
       binaryPath = undefined;
+      provider.updateVersion('');
       extensionApi.context.setValue('compose.isComposeInstalledSystemWide', false);
       composeProviderUpdateDisposable?.dispose();
     },
