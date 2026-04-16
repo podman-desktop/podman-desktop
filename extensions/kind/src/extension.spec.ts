@@ -316,6 +316,14 @@ describe('cli#update', () => {
 
     expect(disposeMock).toHaveBeenCalled();
   });
+
+  test('uninstall should clear the provider version', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(mockV1Release);
+
+    await (await getCliToolInstaller()).doUninstall({} as unknown as extensionApi.Logger);
+
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith('');
+  });
 });
 
 /**
@@ -395,6 +403,7 @@ describe('cli#install', () => {
       path: 'path',
       version: '1.0.2',
     });
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith('1.0.2');
   });
 
   test('if installing system wide fails, it should not throw', async () => {

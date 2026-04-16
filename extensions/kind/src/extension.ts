@@ -605,6 +605,7 @@ async function registerCliTool(
         installationSource: 'extension',
       });
       kindPath = cliPath;
+      provider.updateVersion(releaseVersionToInstall);
       if (releaseVersionToInstall === latestVersion) {
         delete update.version;
       } else {
@@ -629,6 +630,7 @@ async function registerCliTool(
       // update the version and path to undefined
       kindPath = undefined;
 
+      provider.updateVersion('');
       currentUpdateDisposable?.dispose();
     },
   });
