@@ -29,6 +29,7 @@ async function deleteConfigMapSecret(): Promise<void> {
     withConfirmation(
       deleteConfigMapSecret,
       `delete ${configmapSecretUtils.isSecret(configMapSecret) ? 'secret' : 'configmap'} ${configMapSecret.name}`,
+      { variant:'delete' }
     )}
   detailed={detailed}
   icon={faTrash} />

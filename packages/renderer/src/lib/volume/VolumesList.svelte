@@ -221,6 +221,7 @@ function label(obj: VolumeInfoUI): string {
           withBulkConfirmation(
             deleteSelectedVolumes,
             `delete ${selectedItemsNumber} volume${selectedItemsNumber > 1 ? 's' : ''}`,
+            { variant: 'delete' }
           )}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}

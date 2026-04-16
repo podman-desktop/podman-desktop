@@ -18,11 +18,16 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeAll, expect, test, vi } from 'vitest';
 
+import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 import ManifestActions from '/@/lib/image/ManifestActions.svelte';
+
+vi.mock(import('/@/lib/dialogs/messagebox-utils'), () => ({
+  withConfirmation: vi.fn(),
+}));
 
 const getContributedMenusMock = vi.fn();
 
@@ -62,4 +67,25 @@ test('Expect Push Manifest to be there', async () => {
 
   const button = screen.getByRole('button', { name: 'Push Manifest' });
   expect(button).toBeDefined();
+});
+
+test('Expect withConfirmation to be called with delete variant when clicking Delete Manifest', async () => {
+  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+
+  const manifest: ImageInfoUI = {
+    ...fakedManifest,
+    name: 'my-manifest',
+    status: 'UNUSED',
+  } as unknown as ImageInfoUI;
+
+  render(ManifestActions, { manifest, onPushManifest: vi.fn() });
+
+  const button = screen.getByRole('button', { name: 'Delete Manifest' });
+  await fireEvent.click(button);
+
+  await waitFor(() => {
+    expect(withConfirmation).toHaveBeenCalledWith(expect.anything(), 'delete manifest my-manifest', {
+      variant: 'delete',
+    });
+  });
 });

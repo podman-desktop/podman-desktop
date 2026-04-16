@@ -137,6 +137,7 @@ let selectedItemsNumber = $state<number>(0);
           withBulkConfirmation(
             deleteSelectedObjects,
             `delete ${selectedItemsNumber} ${selectedItemsNumber > 1 ? plural : singular}`,
+            { variant:'delete' }
           )}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}

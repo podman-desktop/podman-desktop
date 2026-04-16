@@ -75,6 +75,7 @@ function label(extensionFolder: SelectableExtensionDevelopmentFolderInfoUI): str
         withBulkConfirmation(
           deleteSelectedFolders,
           `Untrack loading extension from ${selectedItemsNumber} folder${selectedItemsNumber > 1 ? 's' : ''}`,
+          { variant: 'delete' },
         )}
       title="Untrack {selectedItemsNumber} selected items"
       inProgress={bulkDeleteInProgress}
