@@ -1385,6 +1385,10 @@ export function initExposure(): void {
     return ipcInvoke('app:get-release-notes');
   });
 
+  contextBridge.exposeInMainWorld('getTitleBarText', async (): Promise<string> => {
+    return ipcInvoke('app:getTitleBarText');
+  });
+
   contextBridge.exposeInMainWorld('getProviderInfos', async (): Promise<ProviderInfo[]> => {
     return ipcInvoke('provider-registry:getProviderInfos');
   });
@@ -1692,6 +1696,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('getWelcomeMessages', async (): Promise<WelcomeMessages> => {
     return ipcInvoke('welcome:getWelcomeMessages');
+  });
+
+  contextBridge.exposeInMainWorld('getUrlProtocol', async (): Promise<string> => {
+    return ipcInvoke('product:getUrlProtocol');
   });
 
   contextBridge.exposeInMainWorld('stopExtension', async (extensionId: string): Promise<void> => {

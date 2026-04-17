@@ -35,6 +35,10 @@ const kubernetesConnection: ProviderKubernetesConnectionInfo = {
     apiURL: 'url',
   },
   status: 'started',
+  canStart: false,
+  canStop: false,
+  canEdit: false,
+  canDelete: false,
 };
 
 test('Expect that name, url and kubernetes are displayed', async () => {

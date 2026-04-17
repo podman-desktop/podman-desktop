@@ -59,7 +59,7 @@ test('Expect to have readme with content', async () => {
   // expect Markdown
   const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
   expect(markdownContent).toBeInTheDocument();
-  expect(markdownContent).toContainHTML('<h1 id="my-readme">my README</h1>');
+  await vi.waitFor(() => expect(markdownContent).toContainHTML('<h1 id="my-readme">my README</h1>'));
 });
 
 test('Expect empty screen if no content', async () => {

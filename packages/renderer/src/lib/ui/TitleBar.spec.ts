@@ -34,6 +34,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getTitleBarText).mockResolvedValue('Podman Desktop');
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -122,7 +123,7 @@ describe('Windows', () => {
   test('Expect title and search', async () => {
     await waitRender({});
 
-    const title = screen.queryByText('Podman Desktop');
+    const title = await vi.waitUntil(() => screen.queryByText('Podman Desktop'));
     expect(title).toBeInTheDocument();
 
     const searchButton = screen.queryByText('Search');

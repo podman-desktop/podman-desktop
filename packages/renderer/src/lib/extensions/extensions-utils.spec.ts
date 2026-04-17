@@ -20,6 +20,7 @@ import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalo
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 import { ExtensionsUtils } from './extensions-utils';
@@ -535,5 +536,77 @@ describe('filters', () => {
     const filteredInstalledExtensions = extensionsUtils.filterInstalledExtensions(combined, 'bar');
     expect(filteredInstalledExtensions.length).toBe(1);
     expect(filteredInstalledExtensions[0].id).toBe('idAInstalled');
+  });
+
+  describe('quoted values with spaces', () => {
+    const extWithSpacedCategory: CatalogExtension = {
+      id: 'idSpacedCategory',
+      publisherName: 'FooPublisher',
+      shortDescription: 'extension with spaced category',
+      publisherDisplayName: 'Foo Publisher',
+      extensionName: 'spaced-category-extension',
+      displayName: 'Spaced Category Extension',
+      categories: ['Extension Packs', 'Containers'],
+      keywords: ['Vulnerability Scanner', 'security'],
+      unlisted: false,
+      versions: [
+        {
+          version: '1.0.0',
+          preview: false,
+          files: [{ assetType: 'icon', data: 'iconSpaced' }],
+          ociUri: 'linkSpaced',
+          lastUpdated: new Date(),
+        },
+      ],
+    };
+
+    test('filterCatalogExtensions with quoted category containing spaces', () => {
+      const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
+      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'category:"Extension Packs"');
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe('idSpacedCategory');
+    });
+
+    test('filterCatalogExtensions with quoted keyword containing spaces', () => {
+      const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
+      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'keyword:"Vulnerability Scanner"');
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe('idSpacedCategory');
+    });
+
+    test('filterCatalogExtensions with quoted category and additional search term', () => {
+      const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
+      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'spaced category:"Extension Packs"');
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe('idSpacedCategory');
+    });
+
+    test('filterCatalogExtensions with unquoted spaced category does not match', () => {
+      const extensions = extensionsUtils.extractCatalogExtensions([extWithSpacedCategory, bFakeExtension], [], []);
+      const filtered = extensionsUtils.filterCatalogExtensions(extensions, 'category:Extension Packs');
+      expect(filtered.length).toBe(0);
+    });
+
+    test('SearchTermParser separates terms from quoted filters', () => {
+      const parsed = new SearchTermParser('hello category:"Extension Packs" world', ExtensionsUtils.CATALOG_FILTERS);
+      expect(parsed.terms).toEqual(['hello', 'world']);
+      expect(parsed.getFilter('category')).toEqual(['extension packs']);
+    });
+
+    test('SearchTermParser extracts multiple category values', () => {
+      const parsed = new SearchTermParser(
+        'category:"Extension Packs" category:containers',
+        ExtensionsUtils.CATALOG_FILTERS,
+      );
+      expect(parsed.getFilter('category')).toEqual(['extension packs', 'containers']);
+    });
+
+    test('SearchTermParser extracts keyword values', () => {
+      const parsed = new SearchTermParser(
+        'keyword:"Vulnerability Scanner" keyword:security',
+        ExtensionsUtils.CATALOG_FILTERS,
+      );
+      expect(parsed.getFilter('keyword')).toEqual(['vulnerability scanner', 'security']);
+    });
   });
 });

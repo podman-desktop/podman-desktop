@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import type { BrowserWindow } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { ProtocolLauncher } from './protocol-launcher.js';
 
@@ -45,9 +46,11 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
+const PROTOCOL = product.urlProtocol;
+
 test('should send the URL to open when mainWindow is created', async () => {
   const protocol = getProtocolLauncher();
-  protocol.handleOpenUrl('podman-desktop:extension/my.extension');
+  protocol.handleOpenUrl(`${PROTOCOL}:extension/my.extension`);
 
   // wait sendMock being called
   await vi.waitFor(() => expect(BROWSER_WINDOW_MOCK.webContents.send).toHaveBeenCalled());
@@ -60,7 +63,7 @@ test('should send the URL to open when mainWindow is created', async () => {
 
 test('should send the URL to open when mainWindow is created with :// format', async () => {
   const protocol = getProtocolLauncher();
-  protocol.handleOpenUrl('podman-desktop://extension/my.extension');
+  protocol.handleOpenUrl(`${PROTOCOL}://extension/my.extension`);
 
   // wait sendMock being called
   await vi.waitFor(() =>
@@ -73,7 +76,7 @@ test('should send the URL to open when mainWindow is created with :// format', a
 
 test('should not send the URL for invalid URLs', async () => {
   const protocol = getProtocolLauncher();
-  protocol.handleOpenUrl('podman-desktop:foobar');
+  protocol.handleOpenUrl(`${PROTOCOL}:foobar`);
 
   // expect an error
   expect(vi.mocked(BROWSER_WINDOW_MOCK.webContents.send)).not.toHaveBeenCalled();
@@ -81,10 +84,10 @@ test('should not send the URL for invalid URLs', async () => {
 
 test.each([
   {
-    url: 'podman-desktop:extension/my.extension',
+    url: `${PROTOCOL}:extension/my.extension`,
     webContentsSend: ['podman-desktop-protocol:install-extension', 'my.extension'],
   },
-  { url: 'podman-desktop:experimental', webContentsSend: ['podman-desktop-protocol:open-experimental-features'] },
+  { url: `${PROTOCOL}:experimental`, webContentsSend: ['podman-desktop-protocol:open-experimental-features'] },
 ])('should handle valid URL on Windows', async ({ url, webContentsSend }) => {
   vi.mocked(isWindows).mockReturnValue(true);
 
@@ -96,8 +99,8 @@ test.each([
 });
 
 test.each([
-  'podman-desktop:extension/my.extension',
-  'podman-desktop:experimental',
+  `${PROTOCOL}:extension/my.extension`,
+  `${PROTOCOL}:experimental`,
 ])('should not do anything with valid URL on OS different than Windows', async url => {
   vi.mocked(isWindows).mockReturnValue(false);
 
@@ -113,15 +116,15 @@ describe('sanitizeProtocolForExtension', () => {
   test('handle sanitizeProtocolForExtension', () => {
     const protocol = getProtocolLauncher();
 
-    const fakeLink = 'podman-desktop://extension/my.extension';
-    const sanitizedLink = 'podman-desktop:extension/my.extension';
+    const fakeLink = `${PROTOCOL}://extension/my.extension`;
+    const sanitizedLink = `${PROTOCOL}:extension/my.extension`;
     expect(protocol.sanitizeProtocolForExtension(fakeLink)).toEqual(sanitizedLink);
   });
 
   test('handle sanitizeProtocolForExtension noop', () => {
     const protocol = getProtocolLauncher();
 
-    const sanitizedLink = 'podman-desktop:extension/my.extension';
+    const sanitizedLink = `${PROTOCOL}:extension/my.extension`;
     expect(protocol.sanitizeProtocolForExtension(sanitizedLink)).toEqual(sanitizedLink);
   });
 });

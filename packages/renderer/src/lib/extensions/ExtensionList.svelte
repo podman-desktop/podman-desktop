@@ -5,6 +5,7 @@ import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte'
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
+import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import { type CombinedExtensionInfoUI, combinedInstalledExtensions } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
@@ -67,7 +68,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
     return;
   }
   screen = newScreen;
-  searchTerm = extensionsUtils.filterTerms(searchTerm).join(' ');
+  searchTerm = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS).terms.join(' ');
 }
 </script>
 

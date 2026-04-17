@@ -29,6 +29,6 @@ test('Check TroubleshootingPageProviders page', async () => {
   render(TroubleshootingPageProviders, {});
 
   // check we have the container connections role
-  const containerConnections = screen.getByRole('status', { name: 'Container Connections' });
+  const containerConnections = screen.getByRole('status', { name: 'Container connections count' });
   expect(containerConnections).toBeInTheDocument();
 });

@@ -15,11 +15,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { ButtonsType, DropdownType, MessageBoxOptions, MessageBoxReturnValue } from '@podman-desktop/core-api';
+import type {
+  ButtonsType,
+  DialogType,
+  DropdownType,
+  MessageBoxOptions,
+  MessageBoxReturnValue,
+} from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
-
-type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
 @injectable()
 export class MessageBox {

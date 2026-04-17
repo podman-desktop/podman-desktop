@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,25 @@
 import type { BrowserWindow } from 'electron';
 
 import { isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 export class ProtocolLauncher {
+  private readonly protocol = product.urlProtocol;
+
   constructor(private browserWindow: PromiseWithResolvers<BrowserWindow>) {}
 
   /**
-   * if arg starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
+   * if arg starts with '<protocol>://extension', replace it with '<protocol>:extension'
    * @param url
    */
   sanitizeProtocolForExtension(url: string): string {
-    if (url.startsWith('podman-desktop://extension/')) {
-      url = url.replace('podman-desktop://extension/', 'podman-desktop:extension/');
-    } else if (url.startsWith('podman-desktop://preferences/experimental')) {
-      url = url.replace('podman-desktop://preferences/experimental', 'podman-desktop:experimental');
+    const doubleSlashPrefix = `${this.protocol}://`;
+    const singleColonPrefix = `${this.protocol}:`;
+
+    if (url.startsWith(`${doubleSlashPrefix}extension/`)) {
+      return url.replace(`${doubleSlashPrefix}extension/`, `${singleColonPrefix}extension/`);
+    } else if (url.startsWith(`${doubleSlashPrefix}preferences/experimental`)) {
+      return url.replace(`${doubleSlashPrefix}preferences/experimental`, `${singleColonPrefix}experimental`);
     }
 
     return url;
@@ -40,13 +46,12 @@ export class ProtocolLauncher {
     // On Windows protocol handler will call the app with '<url>' args
     // on macOS it's done with 'open-url' event
     if (isWindows()) {
-      // now search if we have 'open-url' in the list of args and give it to the handler
+      const extensionPrefix = `${this.protocol}:extension/`;
+      const experimentalPrefix = `${this.protocol}:experimental`;
+
       for (const arg of args) {
         const analyzedArg = this.sanitizeProtocolForExtension(arg);
-        if (
-          analyzedArg.startsWith('podman-desktop:extension/') ||
-          analyzedArg.startsWith('podman-desktop:experimental')
-        ) {
+        if (analyzedArg.startsWith(extensionPrefix) || analyzedArg.startsWith(experimentalPrefix)) {
           this.handleOpenUrl(analyzedArg);
         }
       }
@@ -54,17 +59,18 @@ export class ProtocolLauncher {
   }
 
   handleOpenUrl(url: string): void {
-    // if the url starts with podman-desktop:extension/<id>
+    // if the url starts with ${this.protocol}:extension/<id>
     // we need to install the extension
 
-    // if url starts with 'podman-desktop://extension', replace it with 'podman-desktop:extension'
-    url = this.sanitizeProtocolForExtension(url);
+    // if url starts with '${this.protocol}://extension', replace it with '${this.protocol}:extension'
+    const normalizedUrl = this.sanitizeProtocolForExtension(url);
 
-    if (url.startsWith('podman-desktop:extension/')) {
-      // grab the extension id
-      const extensionId = url.substring('podman-desktop:extension/'.length);
+    const extensionPrefix = `${this.protocol}:extension/`;
+    const experimentalPrefix = `${this.protocol}:experimental`;
 
-      // wait that the window is ready
+    if (normalizedUrl.startsWith(extensionPrefix)) {
+      const extensionId = normalizedUrl.substring(extensionPrefix.length);
+
       this.browserWindow.promise
         .then(w => {
           w.webContents.send('podman-desktop-protocol:install-extension', extensionId);
@@ -72,7 +78,7 @@ export class ProtocolLauncher {
         .catch((error: unknown) => {
           console.error('Error sending open-url event to webcontents', error);
         });
-    } else if (url.startsWith('podman-desktop:experimental')) {
+    } else if (normalizedUrl.startsWith(experimentalPrefix)) {
       this.browserWindow.promise
         .then(w => {
           w.webContents.send('podman-desktop-protocol:open-experimental-features');
@@ -81,7 +87,7 @@ export class ProtocolLauncher {
           console.error('Error sending open-url event to webcontents', error);
         });
     } else {
-      console.log(`url ${url} does not start with podman-desktop:extension/ or podman-desktop:experimental, skipping.`);
+      console.log(`url ${normalizedUrl} does not start with ${extensionPrefix} or ${experimentalPrefix}, skipping.`);
       return;
     }
   }

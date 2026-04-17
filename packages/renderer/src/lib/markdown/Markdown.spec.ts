@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 test('Expect to have bold', async () => {
@@ -57,7 +58,7 @@ describe('Custom button', () => {
     const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
     expect(markdownContent).toBeInTheDocument();
     expect(markdownContent).toContainHTML(
-      '<a class="px-4 py-[6px] rounded-[4px] text-white! text-[13px] whitespace-nowrap bg-purple-600 hover:bg-purple-500! no-underline!">Name of the button</a>',
+      '<a class="px-4 py-[6px] rounded-[4px] text-[var(--pd-button-text)]! text-[13px] whitespace-nowrap bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)]! no-underline!">Name of the button</a>',
     );
   });
 
@@ -75,7 +76,7 @@ describe('Custom button', () => {
     const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
     expect(markdownContent).toBeInTheDocument();
     expect(markdownContent).toContainHTML(
-      '<button class="px-4 py-[6px] rounded-[4px] text-white text-[13px] whitespace-nowrap bg-purple-600 hover:bg-purple-500 no-underline"',
+      '<button class="px-4 py-[6px] rounded-[4px] text-[var(--pd-button-text)] text-[13px] whitespace-nowrap bg-[var(--pd-button-primary-bg)] hover:bg-[var(--pd-button-primary-hover-bg)] no-underline"',
     );
     expect(markdownContent).toContainHTML('data-command="command"');
     expect(markdownContent).toContainHTML('Name of the button</button>');

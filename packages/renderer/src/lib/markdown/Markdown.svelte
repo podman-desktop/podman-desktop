@@ -88,7 +88,7 @@ function decode(htmlString: string): string {
   return textArea.value;
 }
 
-onMount(() => {
+onMount(async () => {
   if (markdown) {
     text = markdown;
   }
@@ -98,6 +98,9 @@ onMount(() => {
     extensions: [directive()],
     htmlExtensions: [directiveHtml({ button, image, link, warnings })],
   });
+
+  const urlProtocol: string = await window.getUrlProtocol();
+  const protocolPrefix = `${urlProtocol}://`;
 
   // remove href values in each anchor using # for links
   // and set the attribute data-pd-jump-in-page
@@ -119,8 +122,8 @@ onMount(() => {
 
       // add a class for cursor
       link.classList.add('cursor-pointer');
-    } else if (link.getAttribute('href')?.startsWith('podman-desktop://')) {
-      let internalLink = link.getAttribute('href')?.replace('podman-desktop://', '/') ?? '';
+    } else if (link.getAttribute('href')?.startsWith(protocolPrefix)) {
+      let internalLink = link.getAttribute('href')?.replace(protocolPrefix, '/') ?? '';
       link.setAttribute('href', internalLink);
     }
   });

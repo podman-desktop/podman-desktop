@@ -29,14 +29,14 @@ import type DockerModem from 'docker-modem';
 import Dockerode from 'dockerode';
 import type { DefaultBodyType, HttpResponseResolver, PathParams, ResponseResolverReturnType } from 'msw';
 import { http, HttpResponse } from 'msw';
-import { setupServer, type SetupServerApi } from 'msw/node';
+import { type SetupServer, setupServer } from 'msw/node';
 import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DockerodeInternals, LibPod } from '/@/plugin/dockerode/libpod-dockerode.js';
 import { LibpodDockerode } from '/@/plugin/dockerode/libpod-dockerode.js';
 import podmanInfo from '/@tests/resources/data/plugin/podman-info.json' with { type: 'json' };
 
-let server: SetupServerApi | undefined = undefined;
+let server: SetupServer | undefined = undefined;
 
 beforeAll(() => {
   const libpod = new LibpodDockerode();

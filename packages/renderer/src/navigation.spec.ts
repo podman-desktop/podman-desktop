@@ -307,3 +307,46 @@ test(`Test navigationHandle for ${NavigationPage.EXTENSIONS_CATALOG}`, () => {
     '/extensions?screen=catalog&searchTerm=not%3Ainstalled%20category%3Afoo%20keyword%3Abar%20red%20hat',
   );
 });
+
+test(`Test navigationHandle for ${NavigationPage.CONTAINER_CONNECTION}`, () => {
+  handleNavigation({
+    page: NavigationPage.CONTAINER_CONNECTION,
+    parameters: {
+      provider: 'dummyProviderId',
+      name: 'dummyProviderName',
+      socketPath: 'dummySocketPath',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
+    '/preferences/container-connection/view/dummyProviderId/ZHVtbXlQcm92aWRlck5hbWU=/ZHVtbXlTb2NrZXRQYXRo/summary',
+  );
+});
+
+test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CONNECTION}`, () => {
+  handleNavigation({
+    page: NavigationPage.KUBERNETES_CONNECTION,
+    parameters: {
+      provider: 'dummyProviderId',
+      apiURL: 'dummyApiURL',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
+    '/preferences/kubernetes-connection/dummyProviderId/ZHVtbXlBcGlVUkw=/summary',
+  );
+});
+
+test(`Test navigationHandle for ${NavigationPage.VM_CONNECTION}`, () => {
+  handleNavigation({
+    page: NavigationPage.VM_CONNECTION,
+    parameters: {
+      provider: 'dummyProviderId',
+      name: 'dummyProviderName',
+    },
+  });
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
+    '/preferences/vm-connection/dummyProviderId/dummyProviderName/terminal',
+  );
+});

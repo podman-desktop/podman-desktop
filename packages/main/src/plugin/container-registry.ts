@@ -95,6 +95,7 @@ import { LibpodApiSettings } from './libpod-api-enable/libpod-api-settings.js';
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
 import { guessIsManifest } from './util/manifest.js';
+import { withTimeout } from './util/timeout.js';
 
 const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } = require('tar-fs');
 
@@ -672,27 +673,6 @@ export class ContainerProviderRegistry {
       .get<number>(ContainerRegistrySettings.ProviderTimeout, DEFAULT_PROVIDER_TIMEOUT);
     const providerTimeoutMs = timeoutSeconds * 1000;
 
-    // Helper function to add timeout to provider operations
-    function withTimeout<T>(
-      promise: Promise<T>,
-      timeoutMs: number,
-      providerName: string,
-      providerId: string,
-    ): Promise<T> {
-      return Promise.race([
-        promise,
-        new Promise<T>((_, reject) =>
-          setTimeout(
-            () =>
-              reject(
-                new Error(`Provider ${providerName} (${providerId}): listing images timed out after ${timeoutMs}ms`),
-              ),
-            timeoutMs,
-          ),
-        ),
-      ]);
-    }
-
     // This gets all the available providers if no provider has been specified
     let providers: InternalContainerProvider[];
     if (options?.provider === undefined) {
@@ -721,15 +701,13 @@ export class ContainerProviderRegistry {
             fetchedImages = await withTimeout(
               provider.libpodApi.podmanListImages(listOptions),
               providerTimeoutMs,
-              provider.name,
-              provider.id,
+              `Provider ${provider.name} (${provider.id}): listing images`,
             );
           } else if (provider.api) {
             fetchedImages = await withTimeout(
               provider.api.listImages(listOptions),
               providerTimeoutMs,
-              provider.name,
-              provider.id,
+              `Provider ${provider.name} (${provider.id}): listing images`,
             );
           } else {
             console.log('Engine does not have an API or a libpod API, returning empty array', provider.name);

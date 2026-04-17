@@ -52,6 +52,8 @@ export async function verifyStatus<
     },
     extensionId: '',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   const initializationContext: InitializationContext = { mode: InitializeAndStartMode };

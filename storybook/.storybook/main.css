@@ -15,6 +15,16 @@ body.dark {
   color: #fff;
 }
 
+body.hc-light {
+  background-color: #fff;
+  color: #000;
+}
+
+body.hc-dark {
+  background-color: #000;
+  color: #fff;
+}
+
 /* Docs page story preview containers */
 body.light .docs-story {
   background-color: #f6f6f6;
@@ -24,6 +34,14 @@ body.dark .docs-story {
   background-color: #222222;
 }
 
+body.hc-light .docs-story {
+  background-color: #fff;
+}
+
+body.hc-dark .docs-story {
+  background-color: #000;
+}
+
 /* Storybook's canvas background */
 body.light .sb-show-main {
   background-color: #f6f6f6;
@@ -31,4 +49,12 @@ body.light .sb-show-main {
 
 body.dark .sb-show-main {
   background-color: #222222;
+}
+
+body.hc-light .sb-show-main {
+  background-color: #fff;
+}
+
+body.hc-dark .sb-show-main {
+  background-color: #000;
 }

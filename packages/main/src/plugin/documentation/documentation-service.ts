@@ -22,8 +22,8 @@ import { DocumentationBaseInfo, DocumentationInfo } from '@podman-desktop/core-a
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 
-import fallbackDocumentation from '/@/assets/fallback-documentation.json' with { type: 'json' };
 import { Disposable } from '/@/plugin/types/disposable.js';
+import product from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class DocumentationService extends Disposable {
@@ -42,21 +42,18 @@ export class DocumentationService extends Disposable {
 
   async fetchDocumentation(): Promise<void> {
     try {
-      const [docsJson, tutorialsJson] = await Promise.all([
-        this.fetchJsonContent('https://podman-desktop.io/docs.json'),
-        this.fetchJsonContent('https://podman-desktop.io/tutorials.json'),
-      ]);
-
-      if (docsJson && tutorialsJson) {
-        this.documentation = this.parseDocumentationFromJson(docsJson, tutorialsJson);
-      } else {
-        throw new Error('Failed to fetch documentation JSON files');
-      }
+      const documentationJsons = await Promise.all(
+        [...product.documentation.links].map(async item => {
+          const data = await this.fetchJsonContent(item.link);
+          return { category: item.category, data };
+        }),
+      );
+      this.documentation = this.parseDocumentationFromJson(documentationJsons);
       this.isInitialized = true;
     } catch (error: unknown) {
       console.error('Failed to fetch documentation at startup:', error);
       // Fallback to predefined documentation if fetching fails
-      this.documentation = fallbackDocumentation as DocumentationInfo[];
+      this.documentation = product.documentation.fallback as DocumentationInfo[];
       this.isInitialized = true;
     }
   }
@@ -99,53 +96,37 @@ export class DocumentationService extends Disposable {
   }
 
   private parseDocumentationFromJson(
-    docsJson: DocumentationBaseInfo[],
-    tutorialsJson: DocumentationBaseInfo[],
+    documentationJsons: { category?: string; data: DocumentationBaseInfo[] }[],
   ): DocumentationInfo[] {
     const documentation: DocumentationInfo[] = [];
 
-    // Validate input parameters
-    if (!docsJson || !tutorialsJson) {
+    // Check that there is some data
+    if (!documentationJsons.some(item => item.data.length > 0)) {
       console.warn('Missing JSON content for parsing documentation');
-      return fallbackDocumentation as DocumentationInfo[];
+      return product.documentation.fallback as DocumentationInfo[];
     }
 
-    // Parse both docs and tutorials using generic logic
-    const parseConfigs = [
-      {
-        data: docsJson,
-        category: 'Documentation',
-        errorMessage: 'Error parsing documentation JSON:',
-      },
-      {
-        data: tutorialsJson,
-        category: 'Tutorial',
-        errorMessage: 'Error parsing tutorials JSON:',
-      },
-    ];
-
-    for (const config of parseConfigs) {
-      try {
-        for (const item of config.data) {
-          if (item.name && item.url) {
+    for (const documentationJson of documentationJsons) {
+      for (const item of documentationJson.data) {
+        if (item.name && item.url) {
+          const id = createHash('sha256').update(item.name).digest('hex');
+          if (!documentation.find(doc => doc.id === id)) {
             documentation.push({
-              id: createHash('sha256').update(item.name).digest('hex'),
+              id: id,
               name: item.name,
-              description: `${config.category}: ${item.name}`,
+              description: `${documentationJson.category}: ${item.name}`,
               url: item.url,
-              category: config.category,
+              category: documentationJson.category ?? '',
             });
           }
         }
-      } catch (error: unknown) {
-        console.error(config.errorMessage, error);
       }
     }
 
     // If no documentation was parsed, use fallback
     if (documentation.length === 0) {
       console.error('DocumentationService: No items parsed, using fallback documentation');
-      return fallbackDocumentation as DocumentationInfo[];
+      return product.documentation.fallback as DocumentationInfo[];
     }
 
     return documentation;

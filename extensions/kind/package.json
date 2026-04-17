@@ -116,11 +116,11 @@
     "yaml": "^2.8.3"
   },
   "devDependencies": {
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.5.17",
     "mkdirp": "^3.0.1",
     "tmp-promise": "^3.0.3",
     "tsx": "^4.21.0",
-    "vite": "^7.3.1",
-    "vitest": "^4.1.2"
+    "vite": "^7.3.2",
+    "vitest": "^4.1.4"
   }
 }

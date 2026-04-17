@@ -21,6 +21,7 @@ import { homedir } from 'node:os';
 import { resolve } from 'node:path';
 import type { Readable, Writable } from 'node:stream';
 
+import * as clientNode from '@kubernetes/client-node';
 import {
   type AppsV1Api,
   BatchV1Api,
@@ -43,7 +44,6 @@ import {
   type V1Status,
   type Watch,
 } from '@kubernetes/client-node';
-import * as clientNode from '@kubernetes/client-node';
 import type { FileSystemWatcher } from '@podman-desktop/api';
 import { type ForwardConfig, type ForwardOptions, type V1Route, WorkloadKind } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';

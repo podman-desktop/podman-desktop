@@ -27,7 +27,7 @@ import type { Registry } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as fzstd from 'fzstd';
 import { http, HttpResponse } from 'msw';
-import { setupServer, type SetupServerApi } from 'msw/node';
+import { type SetupServer, setupServer } from 'msw/node';
 import * as nodeTar from 'tar';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
@@ -49,7 +49,7 @@ import type { EventType, Telemetry } from './telemetry/telemetry.js';
 import type { Disposable } from './types/disposable.js';
 
 let imageRegistry: ImageRegistry;
-let server: SetupServerApi | undefined = undefined;
+let server: SetupServer | undefined = undefined;
 
 const pxoxyIsEnabledMock = vi.fn();
 const proxyGetProxyMock = vi.fn();

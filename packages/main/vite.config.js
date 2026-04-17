@@ -43,7 +43,7 @@ const config = {
     assetsDir: '.',
     minify: process.env.MODE === 'production' ? 'esbuild' : false,
     lib: {
-      entry: ['src/index.ts', 'scripts/download-remote-extensions.ts'],
+      entry: ['src/index.ts', 'scripts/download-remote-extensions.ts', 'scripts/generate-extension-schema.ts'],
       formats: ['cjs'],
     },
     rollupOptions: {

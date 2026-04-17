@@ -2227,6 +2227,16 @@ declare module '@podman-desktop/api' {
     export function showErrorMessage(message: string, ...items: string[]): Promise<string | undefined>;
 
     /**
+     * Show a danger message. Optionally provide an array of items which will be presented as
+     * clickable buttons.
+     *
+     * @param message The message to show.
+     * @param items A set of items that will be rendered as actions in the message.
+     * @return A promise that resolves to the selected item or `undefined` when being dismissed.
+     */
+    export function showDangerMessage(message: string, ...items: string[]): Promise<string | undefined>;
+
+    /**
      * Show progress in Podman Desktop. Progress is shown while running the given callback
      * and while the promise it returned isn't resolved nor rejected. The location at which
      * progress should show (and other details) is defined via the passed {@linkcode ProgressOptions}.
@@ -4510,6 +4520,12 @@ declare module '@podman-desktop/api' {
      * The system clipboard.
      */
     export const clipboard: Clipboard;
+
+    /**
+     * The custom URL protocol scheme registered by the application (e.g., 'podman-desktop').
+     * This is the protocol used for deep linking into the application.
+     */
+    export const urlProtocol: string;
   }
 
   /**

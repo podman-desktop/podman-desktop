@@ -49,7 +49,7 @@ async function performUpdate(provider: ProviderInfo): Promise<void> {
 }
 </script>
 
-{#if provider?.updateInfo?.version}
+{#if provider?.version && provider?.updateInfo?.version && provider.version !== provider.updateInfo.version}
   <Button
     inProgress={updateInProgress}
     disabled={preflightChecksFailed}

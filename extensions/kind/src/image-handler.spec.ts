@@ -17,24 +17,27 @@
  ***********************************************************************/
 
 import { writeFileSync } from 'node:fs';
+import * as os from 'node:os';
 
 import * as extensionApi from '@podman-desktop/api';
 import type { Mock } from 'vitest';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { ImageHandler } from './image-handler';
-import { getKindPath } from './util';
+import { getKindPath, getTempDir } from './util';
 
 let imageHandler: ImageHandler;
 
 vi.mock(import('./util'), async () => {
   return {
     getKindPath: vi.fn(),
+    getTempDir: vi.fn(),
   };
 });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getTempDir).mockResolvedValue(os.tmpdir());
   imageHandler = new ImageHandler();
 });
 

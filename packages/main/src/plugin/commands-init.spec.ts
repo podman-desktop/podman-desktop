@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
  ***********************************************************************/
 
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 
 import type { CommandRegistry } from './command-registry.js';
 import { CommandsInit } from './commands-init.js';
@@ -109,5 +111,52 @@ describe('CommandsInit', () => {
 
   test('should register the openExternal command', () => {
     expect(commandRegistryMock.registerCommand).toBeCalledWith('openExternal', expect.anything());
+  });
+
+  describe('openExternal command', () => {
+    let openExternalCallback: (arg: { toString: () => string } | undefined) => Promise<void>;
+
+    beforeEach(() => {
+      const call = vi.mocked(commandRegistryMock.registerCommand).mock.calls.find(c => c[0] === 'openExternal');
+      assert(call);
+      openExternalCallback = call[1] as typeof openExternalCallback;
+    });
+
+    test('should route through securityRestrictionCurrentHandler', async () => {
+      const handlerMock = vi.fn().mockResolvedValue(true);
+      securityRestrictionCurrentHandler.handler = handlerMock;
+
+      const uri = { toString: (): string => 'https://example.com' };
+      await openExternalCallback(uri);
+
+      expect(handlerMock).toHaveBeenCalledWith('https://example.com');
+    });
+
+    test('should not throw when handler is undefined', async () => {
+      securityRestrictionCurrentHandler.handler = undefined;
+
+      const uri = { toString: (): string => 'https://example.com' };
+      await expect(openExternalCallback(uri)).resolves.toBeUndefined();
+    });
+
+    test('should do nothing when arg is falsy', async () => {
+      const handlerMock = vi.fn().mockResolvedValue(true);
+      securityRestrictionCurrentHandler.handler = handlerMock;
+
+      await openExternalCallback(undefined);
+
+      expect(handlerMock).not.toHaveBeenCalled();
+    });
+
+    test('should log and rethrow when handler rejects', async () => {
+      const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const cause = new Error('handler failed');
+      securityRestrictionCurrentHandler.handler = vi.fn().mockRejectedValue(cause);
+
+      const uri = { toString: (): string => 'https://example.com' };
+      await expect(openExternalCallback(uri)).rejects.toThrow('Unable to open external link https://example.com');
+
+      expect(consoleErrorMock).toHaveBeenCalledWith('Unable to open external link https://example.com', cause);
+    });
   });
 });

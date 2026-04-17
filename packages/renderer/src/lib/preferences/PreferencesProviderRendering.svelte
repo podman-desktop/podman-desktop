@@ -112,7 +112,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
 
         <div class="py-2 px-6 flex flex:row">
           <!-- start is enabled only in stopped mode-->
-          {#if providerInfo?.lifecycleMethods.includes('start')}
+          {#if providerInfo?.canStart}
             <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
               <Button disabled={providerInfo.status !== 'stopped'} on:click={startProvider} icon={faPlay}>
                 Start
@@ -121,7 +121,7 @@ async function stopReceivingLogs(providerInternalId: string): Promise<void> {
           {/if}
 
           <!-- stop is enabled only in started mode-->
-          {#if providerInfo.lifecycleMethods.includes('stop')}
+          {#if providerInfo.canStop}
             <div class="px-2 text-sm italic text-[var(--pd-content-text)]">
               <Button disabled={providerInfo.status !== 'started'} on:click={stopProvider} icon={faStop}>
                 Stop

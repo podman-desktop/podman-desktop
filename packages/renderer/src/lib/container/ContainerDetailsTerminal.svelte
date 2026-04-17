@@ -5,6 +5,7 @@ import { TerminalSettings } from '@podman-desktop/core-api/terminal';
 import { EmptyScreen } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { SerializeAddon } from '@xterm/addon-serialize';
+import type { IDisposable } from '@xterm/xterm';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
@@ -29,18 +30,58 @@ let terminalContent: string = '';
 let serializeAddon: SerializeAddon;
 let lastState = $state('');
 let containerState = $derived(container.state);
+let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+let onDataDisposable: IDisposable | undefined;
+let reconnecting = false;
+
+function registerInputHandler(callbackId: number): void {
+  onDataDisposable?.dispose();
+  onDataDisposable = shellTerminal?.onData(data => {
+    window.shellInContainerSend(callbackId, data).catch((error: unknown) => console.log(String(error)));
+  });
+}
 
 $effect(() => {
-  if (lastState === 'STARTING' && containerState === 'RUNNING') {
-    restartTerminal().catch((err: unknown) => console.error('Error restarting terminal', err));
+  if (lastState !== '' && lastState !== 'RUNNING' && containerState === 'RUNNING') {
+    restartTerminal().catch((err: unknown) => {
+      console.error('Error restarting terminal', err);
+      scheduleReconnect();
+    });
   }
   lastState = container.state;
 });
 
 async function restartTerminal(): Promise<void> {
-  ignoreFirstData = true;
-  await executeShellIntoContainer();
-  window.dispatchEvent(new Event('resize'));
+  if (reconnecting) return;
+  reconnecting = true;
+  try {
+    clearReconnectTimer();
+    ignoreFirstData = true;
+    await executeShellIntoContainer();
+    window.dispatchEvent(new Event('resize'));
+  } finally {
+    reconnecting = false;
+  }
+}
+
+function clearReconnectTimer(): void {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = undefined;
+  }
+}
+
+function scheduleReconnect(): void {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = undefined;
+    if (container.state === 'RUNNING') {
+      restartTerminal().catch((err: unknown) => {
+        console.error('Error restarting terminal', err);
+        scheduleReconnect();
+      });
+    }
+  }, 2000);
 }
 
 // update current route scheme
@@ -63,17 +104,20 @@ function createDataCallback(): (data: Buffer) => void {
 }
 
 function receiveEndCallback(): void {
-  // need to reopen a new terminal if container is running
-  if (sendCallbackId && containerState === 'RUNNING') {
-    window
-      .shellInContainer(container.engineId, container.id, createDataCallback(), () => {}, receiveEndCallback)
-      .then(id => {
-        sendCallbackId = id;
-        shellTerminal?.onData(async data => {
-          await window.shellInContainerSend(id, data);
-        });
-      })
-      .catch((err: unknown) => console.error(`Error opening terminal for container ${container.id}`, err));
+  if (!sendCallbackId) return;
+
+  if (reconnecting) {
+    scheduleReconnect();
+    return;
+  }
+
+  if (containerState === 'RUNNING') {
+    restartTerminal().catch((err: unknown) => {
+      console.error(`Error opening terminal for container ${container.id}`, err);
+      scheduleReconnect();
+    });
+  } else {
+    scheduleReconnect();
   }
 }
 
@@ -91,12 +135,7 @@ async function executeShellIntoContainer(): Promise<void> {
     receiveEndCallback,
   );
   await window.shellInContainerResize(callbackId, shellTerminal.cols, shellTerminal.rows);
-  // pass data from xterm to container
-  shellTerminal?.onData(data => {
-    window.shellInContainerSend(callbackId, data).catch((error: unknown) => console.log(String(error)));
-  });
-
-  // store it
+  registerInputHandler(callbackId);
   sendCallbackId = callbackId;
 }
 
@@ -164,8 +203,9 @@ onMount(async () => {
 });
 
 onDestroy(() => {
+  clearReconnectTimer();
+  onDataDisposable?.dispose();
   terminalContent = serializeAddon.serialize();
-  // register terminal for reusing it
   registerTerminal({
     engineId: container.engineId,
     containerId: container.id,

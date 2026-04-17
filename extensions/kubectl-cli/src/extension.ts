@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
-import type { CliTool } from '@podman-desktop/api';
+import type { CliTool, Logger, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
 import { getSystemBinaryPath, installBinaryToSystem } from './cli-run';
@@ -239,7 +239,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
 
   // Push the CLI tool as well (but it will do it postActivation so it does not block the activate() function)
   // Post activation
-  postActivate(extensionContext, kubectlDownload).catch((error: unknown) => {
+  postActivate(extensionContext, kubectlDownload, provider).catch((error: unknown) => {
     console.error('Error activating extension', error);
   });
 }
@@ -309,6 +309,7 @@ export async function findKubeCtl(extensionContext: extensionApi.ExtensionContex
 async function postActivate(
   extensionContext: extensionApi.ExtensionContext,
   kubectlDownload: KubectlDownload,
+  provider: extensionApi.Provider,
 ): Promise<void> {
   await findKubeCtl(extensionContext);
 
@@ -352,6 +353,9 @@ async function postActivate(
     console.error('Error when downloading kubectl CLI latest release information.', String(error));
   }
 
+  let kubectlProviderUpdateDisposable: extensionApi.Disposable | undefined;
+  let kubectlProviderUpdate: ProviderUpdate | undefined;
+
   const update = {
     version: latestAsset?.tag.slice(1) !== kubectlCliTool.version ? latestAsset?.tag.slice(1) : undefined,
     selectVersion: async (): Promise<string> => {
@@ -377,10 +381,17 @@ async function postActivate(
         installationSource: 'extension',
       });
       vpState.version = releaseVersionToUpdateTo;
+      provider.updateVersion(releaseVersionToUpdateTo);
       if (releaseToUpdateTo === latestAsset) {
         delete update.version;
+        kubectlProviderUpdateDisposable?.dispose();
       } else {
         update.version = latestAsset?.tag.slice(1);
+        if (kubectlProviderUpdate) {
+          kubectlProviderUpdate.version = latestAsset?.tag.slice(1) ?? kubectlProviderUpdate.version;
+          kubectlProviderUpdateDisposable?.dispose();
+          kubectlProviderUpdateDisposable = provider.registerUpdate(kubectlProviderUpdate);
+        }
       }
       releaseVersionToUpdateTo = undefined;
       releaseToUpdateTo = undefined;
@@ -437,6 +448,7 @@ async function postActivate(
 
       // update the version to undefined
       vpState.version = undefined;
+      kubectlProviderUpdateDisposable?.dispose();
     },
   });
 
@@ -450,6 +462,18 @@ async function postActivate(
   kubectlCliToolUpdaterDisposable = kubectlCliTool.registerUpdate(update);
 
   extensionContext.subscriptions.push(kubectlCliToolUpdaterDisposable);
+
+  if (update.version) {
+    kubectlProviderUpdate = {
+      version: update.version,
+      update: async (_logger: Logger): Promise<void> => {
+        releaseToUpdateTo = undefined;
+        releaseVersionToUpdateTo = undefined;
+        await update.doUpdate();
+      },
+    };
+    kubectlProviderUpdateDisposable = provider.registerUpdate(kubectlProviderUpdate);
+  }
 }
 
 function extractVersion(stdout: string): string {

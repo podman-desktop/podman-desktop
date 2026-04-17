@@ -487,7 +487,7 @@ test('getSession prompts for allowance when accessing session without prior deci
     expect.objectContaining({
       title: 'Allow Access',
       message: expect.stringContaining('Extension 2'),
-      buttons: ['Deny', 'Allow'],
+      buttons: ['Allow', 'Deny'],
     }),
   );
 

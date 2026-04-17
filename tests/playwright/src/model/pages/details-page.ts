@@ -16,8 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import test, { type Locator, type Page } from '@playwright/test';
+import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
+import { isMac } from '/@/utility/platform';
 import { waitUntil } from '/@/utility/wait';
 
 import { BasePage } from './base-page';
@@ -33,6 +34,8 @@ export abstract class DetailsPage extends BasePage {
   readonly resourceName: string;
   readonly heading: Locator;
   readonly breadcrumb: Locator;
+  readonly editorWidget: Locator;
+  readonly findTextArea: Locator;
 
   constructor(page: Page, resourceName: string) {
     super(page);
@@ -47,6 +50,8 @@ export abstract class DetailsPage extends BasePage {
     this.closeButton = this.breadcrumb.getByRole('button', { name: 'Close' });
     this.backLink = this.breadcrumb.getByRole('link', { name: 'Back' });
     this.pageName = this.breadcrumb.getByRole('region', { name: 'Page Name' });
+    this.editorWidget = page.getByRole('dialog', { name: 'Find / Replace' });
+    this.findTextArea = this.editorWidget.getByPlaceholder('Find');
   }
 
   async activateTab(tabName: string): Promise<this> {
@@ -57,6 +62,26 @@ export abstract class DetailsPage extends BasePage {
       });
       await tabItem.click();
       return this;
+    });
+  }
+
+  async searchInEditor(tabName: string, text: string): Promise<boolean> {
+    return test.step(`Search '${text}' in ${tabName} editor`, async () => {
+      await this.activateTab(tabName);
+      const presentation = this.tabContent.getByRole('presentation');
+      await playExpect(presentation).toBeVisible();
+      await presentation.click();
+      if (isMac) {
+        await this.page.keyboard.press('Meta+F');
+      } else {
+        await this.page.keyboard.press('Control+F');
+      }
+      await playExpect(this.editorWidget).toBeVisible();
+      await playExpect(this.findTextArea).toBeVisible();
+      await this.findTextArea.fill(text);
+      const noResults = this.editorWidget.getByText('No results');
+      const hasNoResults = await noResults.isVisible();
+      return !hasNoResults;
     });
   }
 }

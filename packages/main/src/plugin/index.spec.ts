@@ -143,7 +143,7 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  await inversifyContainer.unbindAll();
+  await inversifyContainer.unbindAllAsync();
 });
 
 beforeEach(() => {
@@ -1052,6 +1052,10 @@ describe('container-provider-registry:playKube', () => {
     endpoint: {
       socketPath: '.sock',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
   };
 
   test('should call ContainerProviderRegistry#playKube', async () => {

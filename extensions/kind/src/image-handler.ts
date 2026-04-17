@@ -16,12 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import * as fs from 'node:fs';
+import { join } from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
-import { tmpName } from 'tmp-promise';
 
 import type { KindCluster } from './extension';
-import { getKindPath } from './util';
+import { getKindPath, getTempDir } from './util';
 
 export type ImageInfo = { engineId: string; name?: string; tag?: string };
 
@@ -56,6 +56,7 @@ export class ImageHandler {
     // Only proceed if a cluster was selected
     if (selectedCluster) {
       let name = image.name;
+      let tmpDirectory: string | undefined;
       let filename: string | undefined;
       const env: { [key: string]: string } = {};
 
@@ -73,8 +74,12 @@ export class ImageHandler {
 
       env.PATH = getKindPath() ?? '';
       try {
-        // Create a temporary file to store the image
-        filename = await tmpName();
+        // Create a temporary directory to store the image archive.
+        // In Flatpak, /tmp is sandbox-private; getTempDir() returns a shared directory
+        // so the host-side `kind` process can access the file via flatpak-spawn.
+        const baseDir = await getTempDir();
+        tmpDirectory = await fs.promises.mkdtemp(join(baseDir, 'kind-image-'));
+        filename = join(tmpDirectory, 'image.tar');
 
         // Save the image to the temporary file
         await extensionApi.containerEngine.saveImage(image.engineId, name, filename);
@@ -98,9 +103,9 @@ export class ImageHandler {
         // Throw the errors to the console aswell
         throw new Error(`Unable to push image to Kind cluster: ${err}`);
       } finally {
-        // Remove the temporary file if one was created
-        if (filename !== undefined) {
-          await fs.promises.rm(filename);
+        // Remove the temporary directory and its contents
+        if (tmpDirectory !== undefined) {
+          await fs.promises.rm(tmpDirectory, { recursive: true });
         }
       }
     }

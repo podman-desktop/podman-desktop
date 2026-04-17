@@ -32,6 +32,10 @@ const MULTI_CONNECTIONS: ProviderContainerConnectionInfo[] = Array.from({ length
     socketPath: `socket-${index}`,
   },
   status: 'started',
+  canStart: false,
+  canStop: false,
+  canEdit: false,
+  canDelete: false,
   type: 'podman',
 }));
 

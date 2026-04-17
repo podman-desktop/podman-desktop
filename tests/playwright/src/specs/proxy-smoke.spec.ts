@@ -124,19 +124,24 @@ test.describe
       await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
     });
 
-    test('System proxy resets the values', async ({ navigationBar }) => {
+    test('System proxy preserves manual values for re-use', async ({ navigationBar }) => {
       await proxyPage.selectProxy(ProxyTypes.System);
       await proxyPage.updateProxySettings();
       await playExpect(proxyPage.toggleProxyButton).toHaveText(ProxyTypes.System);
       await playExpect(proxyPage.httpProxy).not.toBeEnabled();
       await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
       await playExpect(proxyPage.noProxy).not.toBeEnabled();
+      // navigate away and back to verify persistence
       await navigationBar.openDashboard();
       const settingsBar = await navigationBar.openSettings();
       await settingsBar.proxyTab.click();
       await playExpect(proxyPage.heading).toBeVisible();
-      await playExpect(proxyPage.httpProxy).not.toHaveValue(httpProxyUrl);
-      await playExpect(proxyPage.httpsProxy).not.toHaveValue(httpsProxyUrl);
-      await playExpect(proxyPage.noProxy).not.toHaveValue(hostsDomains);
+      // manual proxy values are preserved in System mode for easy re-enablement
+      await playExpect(proxyPage.httpProxy).toHaveValue(httpProxyUrl);
+      await playExpect(proxyPage.httpsProxy).toHaveValue(httpsProxyUrl);
+      await playExpect(proxyPage.noProxy).toHaveValue(hostsDomains);
+      await playExpect(proxyPage.httpProxy).not.toBeEnabled();
+      await playExpect(proxyPage.httpsProxy).not.toBeEnabled();
+      await playExpect(proxyPage.noProxy).not.toBeEnabled();
     });
   });

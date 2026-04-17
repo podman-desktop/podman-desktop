@@ -167,7 +167,9 @@ const apiSender: ApiSenderType = { send: vi.fn() } as unknown as ApiSenderType;
 
 const trayMenuRegistry: TrayMenuRegistry = {} as unknown as TrayMenuRegistry;
 
-const messageBox: MessageBox = {} as MessageBox;
+const messageBox: MessageBox = {
+  showDialog: vi.fn(),
+} as unknown as MessageBox;
 
 const progress: ProgressImpl = {
   withProgress: vi.fn(),
@@ -684,7 +686,7 @@ test('Verify extension activate with a long timeout is flagged as error', async 
 
   expect(extensionLoader.getExtensionStateErrors().get(id)).toBeDefined();
   expect(extensionLoader.getExtensionStateErrors().get(id)?.toString()).toContain(
-    'Extension extension.id activation timed out after 1 seconds',
+    'Extension extension.id activation timed out after 1000ms',
   );
   expect(extensionLoader.getExtensionState().get(id)).toBe('failed');
 });
@@ -1255,6 +1257,30 @@ describe('setContextValue', async () => {
 
     api.context.setValue('key', 'value', 'DockerCompatibility');
     expect(setValueSpy).toBeCalledWith('publisher.extension-name.DockerCompatibility.key', 'value');
+  });
+});
+
+describe('showDangerMessage', () => {
+  test('should call messageBox.showDialog with danger type', async () => {
+    const api = createApi();
+
+    vi.mocked(messageBox.showDialog).mockResolvedValue('Yes');
+
+    const result = await api.window.showDangerMessage('Are you sure?', 'Yes', 'No');
+
+    expect(messageBox.showDialog).toHaveBeenCalledWith('danger', 'dname', 'Are you sure?', ['Yes', 'No']);
+    expect(result).toBe('Yes');
+  });
+
+  test('should call messageBox.showDialog with no items', async () => {
+    const api = createApi();
+
+    vi.mocked(messageBox.showDialog).mockResolvedValue(undefined);
+
+    const result = await api.window.showDangerMessage('Danger message');
+
+    expect(messageBox.showDialog).toHaveBeenCalledWith('danger', 'dname', 'Danger message', []);
+    expect(result).toBeUndefined();
   });
 });
 
@@ -2913,5 +2939,10 @@ describe('env API', () => {
   test('expect env.appName to be product name', () => {
     const api = createApi();
     expect(api.env.appName).toBe(product.name);
+  });
+
+  test('expect env.urlProtocol to be product urlProtocol', () => {
+    const api = createApi();
+    expect(api.env.urlProtocol).toBe(product.urlProtocol);
   });
 });

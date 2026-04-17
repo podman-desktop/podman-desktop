@@ -601,6 +601,15 @@ describe('provider#update', () => {
     expect(PROVIDER_MOCK.registerUpdate).toHaveBeenCalled();
   });
 
+  test('Register update in provider is not called if CLI is not installed', async () => {
+    vi.mocked(util.getKindBinaryInfo).mockRejectedValue(new Error('not found'));
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v1.5.6',
+    } as unknown as KindGithubReleaseArtifactMetadata);
+    await activate();
+    expect(PROVIDER_MOCK.registerUpdate).not.toHaveBeenCalled();
+  });
+
   test('Register update in provider is not called if there is no update available', async () => {
     vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
       tag: 'v0.0.1',

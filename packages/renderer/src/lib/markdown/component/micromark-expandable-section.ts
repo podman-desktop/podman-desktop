@@ -25,8 +25,8 @@ import type { ExpandableSection, ExpandableSectionProps } from '/@/lib/markdown/
 let expandableCount = 0;
 const expandables = new Map<string, ExpandableSection>();
 
-const OPENED_STATE_TOGGLE_ICON = `<i class='fas fa-chevron-up text-gray-100 mr-1'></i>`;
-const CLOSED_STATE_TOGGLE_ICON = `<i class='fas fa-chevron-down text-gray-100 mr-1'></i>`;
+const OPENED_STATE_TOGGLE_ICON = `<i class='fas fa-chevron-up text-[var(--pd-button-text)] mr-1'></i>`;
+const CLOSED_STATE_TOGGLE_ICON = `<i class='fas fa-chevron-down text-[var(--pd-button-text)] mr-1'></i>`;
 
 /**
  * it creates a new expandable section object
@@ -77,7 +77,7 @@ export function createExpandableSection(this: CompileContext, expandable: Expand
 
   // create button (icon + label)
   this.tag(
-    `<button class='flex space-x-2 text-purple-400 w-fit hover:bg-white hover:bg-opacity-10 text-xs items-center' data-expandable='${
+    `<button class='flex space-x-2 text-[var(--pd-button-link-text)] w-fit hover:bg-[var(--pd-default-item-hover)] text-xs items-center' data-expandable='${
       expandableElement.id
     }' style='display: ${expandable.showToggle ? 'flex' : 'none'};' aria-label='${expandableElement.id}'>`,
   );

@@ -41,7 +41,7 @@ test('Check Troubleshooting Page', async () => {
   await fireEvent.click(repairConnectionsLink);
 
   // check we have the container connections role
-  const containerConnections = screen.getByRole('status', { name: 'Container Connections' });
+  const containerConnections = screen.getByRole('status', { name: 'Container connections count' });
   expect(containerConnections).toBeInTheDocument();
 
   // click on the stores tab

@@ -19,6 +19,7 @@
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 
+import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
@@ -213,16 +214,22 @@ export class ExtensionsUtils {
     });
   }
 
+  static readonly CATALOG_FILTERS = ['category', 'keyword', 'is', 'not'] as const;
+
   filterCatalogExtensions(extensions: CatalogExtensionInfoUI[], searchTerm: string): CatalogExtensionInfoUI[] {
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    const terms = this.filterTerms(lowerCaseSearchTerm);
-    const categories = this.filterCategories(lowerCaseSearchTerm);
-    const keywords = this.filterKeywords(lowerCaseSearchTerm);
-    const installed = this.filterBoolean(lowerCaseSearchTerm, 'installed');
+    const parsed = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS);
+    const terms = parsed.terms;
+    const categories = parsed.getFilter('category');
+    const keywords = parsed.getFilter('keyword');
+    const isValues = parsed.getFilter('is');
+    const notValues = parsed.getFilter('not');
+    const installed = isValues.includes('installed') ? true : notValues.includes('installed') ? false : undefined;
     return extensions.filter(extension => {
       return (
         (terms.length === 0 ||
-          terms.every(term => `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(term))) &&
+          terms.every(term =>
+            `${extension.displayName} ${extension.shortDescription}`.toLowerCase().includes(term.toLowerCase()),
+          )) &&
         (categories.length === 0 ||
           categories.every(category => extension.categories.map(c => c.toLowerCase()).includes(category))) &&
         (keywords.length === 0 ||
@@ -230,40 +237,5 @@ export class ExtensionsUtils {
         (installed === undefined || installed === extension.isInstalled)
       );
     });
-  }
-
-  filterTerms(searchTerm: string): string[] {
-    return searchTerm
-      .split(' ')
-      .filter(
-        part =>
-          !part.startsWith('category:') &&
-          !part.startsWith('keyword:') &&
-          !part.startsWith('is:') &&
-          !part.startsWith('not:'),
-      );
-  }
-
-  filterCategories(searchTerm: string): string[] {
-    return searchTerm
-      .split(' ')
-      .filter(part => part.startsWith('category:'))
-      .map(part => part.replace('category:', ''));
-  }
-
-  filterKeywords(searchTerm: string): string[] {
-    return searchTerm
-      .split(' ')
-      .filter(part => part.startsWith('keyword:'))
-      .map(part => part.replace('keyword:', ''));
-  }
-
-  // filter for boolean values like is:installed or not:installed, and only get the first value in consideration
-  filterBoolean(searchTerm: string, key: string): boolean | undefined {
-    const filter = searchTerm.split(' ').find(part => part === `is:${key}` || part === `not:${key}`);
-    if (!filter) {
-      return undefined;
-    }
-    return filter === `is:${key}`;
   }
 }

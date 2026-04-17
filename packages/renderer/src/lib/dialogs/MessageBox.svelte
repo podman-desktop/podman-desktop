@@ -1,7 +1,7 @@
 <script lang="ts">
 import { faCircle, faCircleQuestion } from '@fortawesome/free-regular-svg-icons';
 import { faCircleExclamation, faInfo, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { type ButtonsType, type DropdownType, type IconButtonType } from '@podman-desktop/core-api';
+import { type ButtonsType, type DialogType, type DropdownType, type IconButtonType } from '@podman-desktop/core-api';
 import { Button, type ButtonType, Dropdown } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { onDestroy, onMount } from 'svelte';
@@ -16,15 +16,13 @@ let title: string = $state('');
 let message: string = $state('');
 let detail: string | undefined = $state();
 let buttonsType: ButtonsType[] = $state([]);
-let type: string | undefined = $state();
+let type: DialogType | undefined = $state();
 let cancelId = $state(-1);
 let defaultId: number | undefined = $state();
 let buttonOrder: number[] = $state([]);
 let footerMarkdownDescription: string | undefined = $state();
 
 let display = $state(false);
-
-const DANGER_TYPE = 'danger';
 
 const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
   const options: MessageBoxOptions | undefined = messageBoxParameter as MessageBoxOptions;
@@ -109,7 +107,7 @@ async function onClose(): Promise<void> {
 
 function getButtonType(b: boolean): ButtonType {
   // eslint-disable-next-line sonarjs/no-selector-parameter
-  if (b && type === DANGER_TYPE) {
+  if (b && type === 'danger') {
     return 'danger';
   } else if (b) {
     return 'primary';
@@ -123,7 +121,7 @@ function getButtonType(b: boolean): ButtonType {
   <Dialog title={title} onclose={onClose}>
     {#snippet icon()}
       
-        {#if type === 'error' || type === DANGER_TYPE}
+        {#if type === 'error' || type === 'danger'}
           <Icon class="h-4 w-4 text-[var(--pd-state-error)]" icon={faCircleExclamation} />
         {:else if type === 'warning'}
           <Icon class="h-4 w-4 text-[var(--pd-state-warning)]" icon={faTriangleExclamation} />
