@@ -34,6 +34,7 @@ export interface ProviderContainerConnectionInfo {
   name: string;
   displayName: string;
   status: ProviderConnectionStatus;
+  error?: string;
   endpoint: {
     socketPath: string;
   };
@@ -59,6 +60,7 @@ export interface ProviderKubernetesConnectionInfo {
   connectionType: 'kubernetes';
   name: string;
   status: ProviderConnectionStatus;
+  error?: string;
   endpoint: {
     apiURL: string;
   };
@@ -77,6 +79,7 @@ export interface ProviderVmConnectionInfo {
   connectionType: 'vm';
   name: string;
   status: ProviderConnectionStatus;
+  error?: string;
   lifecycleMethods?: LifecycleMethod[];
   // can start the connection
   canStart: boolean;

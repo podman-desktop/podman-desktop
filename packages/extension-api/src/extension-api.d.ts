@@ -401,6 +401,13 @@ declare module '@podman-desktop/api' {
     shellAccess?: ProviderConnectionShellAccess;
     lifecycle?: ProviderConnectionLifecycle;
     status(): ProviderConnectionStatus;
+    /**
+     * Optional error message describing why this connection is in a failed state.
+     * The connection retains its lifecycle status (e.g. 'starting', 'stopped') while
+     * this field provides the error details. Cleared automatically on successful
+     * lifecycle transitions.
+     */
+    error?: string;
     vmType?: string;
     /**
      * the vmTypeDisplayName property cannot be set if vmType is undefined
@@ -528,6 +535,11 @@ declare module '@podman-desktop/api' {
     endpoint: KubernetesProviderConnectionEndpoint;
     lifecycle?: ProviderConnectionLifecycle;
     status(): ProviderConnectionStatus;
+    /**
+     * Optional error message describing why this connection is in a failed state.
+     * @see {@link ContainerProviderConnection.error}
+     */
+    error?: string;
   }
 
   export interface VmProviderConnection {
@@ -535,6 +547,11 @@ declare module '@podman-desktop/api' {
     shellAccess?: ProviderConnectionShellAccess;
     lifecycle?: ProviderConnectionLifecycle;
     status(): ProviderConnectionStatus;
+    /**
+     * Optional error message describing why this connection is in a failed state.
+     * @see {@link ContainerProviderConnection.error}
+     */
+    error?: string;
   }
 
   export type ProviderConnection = ContainerProviderConnection | KubernetesProviderConnection | VmProviderConnection;
@@ -807,18 +824,21 @@ declare module '@podman-desktop/api' {
     providerId: string;
     connection: ContainerProviderConnection;
     status: ProviderConnectionStatus;
+    error?: string;
   }
 
   export interface UpdateKubernetesConnectionEvent {
     providerId: string;
     connection: KubernetesProviderConnection;
     status: ProviderConnectionStatus;
+    error?: string;
   }
 
   export interface UpdateVmConnectionEvent {
     providerId: string;
     connection: VmProviderConnection;
     status: ProviderConnectionStatus;
+    error?: string;
   }
 
   export interface UnregisterContainerConnectionEvent {
