@@ -33,6 +33,8 @@ import { runImageInfo } from '/@/stores/run-image-store';
 
 import PullImage from './PullImage.svelte';
 
+vi.mock(import('/@/lib/ui/TerminalWindow.svelte'));
+
 beforeAll(() => {
   (window.events as unknown) = {
     receive: (_channel: string, func: () => void): void => {
