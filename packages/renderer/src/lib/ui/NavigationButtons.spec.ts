@@ -259,6 +259,17 @@ describe('trackpad swipe navigation', () => {
 
     render(NavigationButtons);
 
+    // Positive control: prove a direct horizontal wheel reaches the global handler.
+    await vi.waitFor(() => {
+      window.dispatchEvent(new WheelEvent('wheel', { deltaX: -50, deltaY: 0 }));
+      expect(goBack).toHaveBeenCalled();
+    });
+
+    // Clear invocation history and reset the swipe cooldown to avoid false positives.
+    vi.mocked(goBack).mockClear();
+    vi.mocked(goForward).mockClear();
+    vi.advanceTimersByTime(600);
+
     const nestedScrollable = document.createElement('div');
     nestedScrollable.addEventListener('wheel', event => {
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
@@ -267,19 +278,21 @@ describe('trackpad swipe navigation', () => {
     });
     document.body.appendChild(nestedScrollable);
 
-    const wheelEvent = new WheelEvent('wheel', {
-      deltaX: -50,
-      deltaY: 0,
-      bubbles: true,
-      cancelable: true,
-    });
+    try {
+      const wheelEvent = new WheelEvent('wheel', {
+        deltaX: -50,
+        deltaY: 0,
+        bubbles: true,
+        cancelable: true,
+      });
 
-    nestedScrollable.dispatchEvent(wheelEvent);
+      nestedScrollable.dispatchEvent(wheelEvent);
 
-    expect(goBack).not.toHaveBeenCalled();
-    expect(goForward).not.toHaveBeenCalled();
-
-    nestedScrollable.remove();
+      expect(goBack).not.toHaveBeenCalled();
+      expect(goForward).not.toHaveBeenCalled();
+    } finally {
+      nestedScrollable.remove();
+    }
   });
 });
 
