@@ -1632,6 +1632,55 @@ export class ProviderRegistry {
     this.onProviderConnectionApiAttached(`${providerId}.${providerConnectionInfo.name}`, () => sendEvents('started'));
   }
 
+  protected fireConnectionUpdateEvent(
+    providerId: string,
+    providerConnectionInfo: ProviderConnectionInfo,
+    status: ProviderConnectionStatus,
+    error?: string,
+  ): void {
+    if (this.isProviderContainerConnection(providerConnectionInfo)) {
+      const event = {
+        providerId,
+        connection: {
+          displayName: providerConnectionInfo.displayName,
+          name: providerConnectionInfo.name,
+          type: providerConnectionInfo.type,
+          endpoint: providerConnectionInfo.endpoint,
+          status: (): ProviderConnectionStatus => status,
+          error,
+        },
+        status,
+        error,
+      };
+      this._onBeforeDidUpdateContainerConnection.fire(event);
+      this._onDidUpdateContainerConnection.fire(event);
+      this._onAfterDidUpdateContainerConnection.fire(event);
+    } else if (this.isProviderKubernetesConnectionInfo(providerConnectionInfo)) {
+      this._onDidUpdateKubernetesConnection.fire({
+        providerId,
+        connection: {
+          name: providerConnectionInfo.name,
+          endpoint: providerConnectionInfo.endpoint,
+          status: (): ProviderConnectionStatus => status,
+          error,
+        },
+        status,
+        error,
+      });
+    } else {
+      this._onDidUpdateVmConnection.fire({
+        providerId,
+        connection: {
+          name: providerConnectionInfo.name,
+          status: (): ProviderConnectionStatus => status,
+          error,
+        },
+        status,
+        error,
+      });
+    }
+  }
+
   isContainerProviderConnectionRegistered(
     provider: ProviderImpl,
     containerProviderConnection: ContainerProviderConnection,
