@@ -63,6 +63,7 @@ function handleWheel(event: WheelEvent): void {
   if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
     // Natural horizontal scroll
     event.preventDefault();
+    event.stopPropagation();
     const scrollAmount = event.deltaX > 0 ? 25 : -25;
     scrollToPosition(scrollPosition + scrollAmount);
   }

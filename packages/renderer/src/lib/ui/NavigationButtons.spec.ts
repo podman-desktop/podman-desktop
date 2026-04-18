@@ -252,6 +252,35 @@ describe('trackpad swipe navigation', () => {
       expect(goForward).toHaveBeenCalled();
     });
   });
+
+  test('horizontal wheel handled by nested content should not trigger history navigation', async () => {
+    navigationHistory.stack = ['/dashboard', '/containers'];
+    navigationHistory.index = 1;
+
+    render(NavigationButtons);
+
+    const nestedScrollable = document.createElement('div');
+    nestedScrollable.addEventListener('wheel', event => {
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        event.stopPropagation();
+      }
+    });
+    document.body.appendChild(nestedScrollable);
+
+    const wheelEvent = new WheelEvent('wheel', {
+      deltaX: -50,
+      deltaY: 0,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    nestedScrollable.dispatchEvent(wheelEvent);
+
+    expect(goBack).not.toHaveBeenCalled();
+    expect(goForward).not.toHaveBeenCalled();
+
+    nestedScrollable.remove();
+  });
 });
 
 describe('long press dropdown', () => {
