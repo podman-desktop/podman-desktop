@@ -38,6 +38,10 @@ const containerConnection: ProviderContainerConnectionInfo = {
     socketPath: 'socket',
   },
   status: 'started',
+  canStart: false,
+  canStop: false,
+  canEdit: false,
+  canDelete: false,
   type: 'podman',
 };
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import moment from 'moment';
 
 import { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import { Uri } from '/@/plugin/types/uri.js';
+import product from '/@product.json' with { type: 'json' };
 
 const SYSTEM_FILENAME = 'system';
 
@@ -45,7 +46,7 @@ export class Troubleshooting {
   // all the logs and save them to a zip file.
   // this also takes in the console logs and adds them to the zip file (see preload/src/index.ts) regarding memoryLogs
   async saveLogs(console: { logType: LogType; message: string }[]): Promise<string[]> {
-    const defaultUri = this.generateLogFileName('podman-desktop', 'zip');
+    const defaultUri = this.generateLogFileName(product.artifactName, 'zip');
     const uri = await this.dialogRegistry.saveDialog({ title: 'Save Logs as .zip', defaultUri: Uri.file(defaultUri) });
 
     if (!uri) {
@@ -81,10 +82,10 @@ export class Troubleshooting {
       case 'darwin':
         return this.getLogsFromFiles(
           ['launchd-stdout.log', 'launchd-stderr.log'],
-          `${os.homedir()}/Library/Logs/Podman Desktop`,
+          `${os.homedir()}/Library/Logs/${product.name}`,
         );
       case 'win32':
-        return this.getLogsFromFiles(['podman-desktop'], `${os.homedir()}/AppData/Roaming/Podman Desktop/logs`);
+        return this.getLogsFromFiles([product.artifactName], `${os.homedir()}/AppData/Roaming/${product.name}/logs`);
       default:
         // Unsupported platform, so do not return anything
         return [];

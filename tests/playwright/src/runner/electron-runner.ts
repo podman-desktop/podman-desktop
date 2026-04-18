@@ -23,10 +23,9 @@ import type { ElectronApplication, JSHandle, Page } from '@playwright/test';
 import { _electron as electron } from '@playwright/test';
 import type { BrowserWindow } from 'electron';
 
+import { Runner } from '/@/runner/podman-desktop-runner';
 import { RunnerFactory } from '/@/runner/runner-factory';
-
-import { Runner } from './podman-desktop-runner';
-import type { RunnerOptions } from './runner-options';
+import type { RunnerOptions } from '/@/runner/runner-options';
 
 type WindowState = {
   isVisible: boolean;

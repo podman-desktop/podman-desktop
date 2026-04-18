@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import type { ContainerInfo } from '@podman-desktop/core-api';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -59,11 +59,21 @@ beforeAll(() => {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
+  vi.mocked(window.getCommandPaletteSearchOptions).mockResolvedValue([
+    { category: 'category 1', text: 'Category 1 text', placeholder: 'Enter category 1 item' },
+    { category: 'category 2', text: 'Category 2 text', placeholder: 'Enter category 2 item' },
+    { category: 'category 3', text: 'Category 3 text', placeholder: 'Enter category 3 item' },
+    { category: 'category 4', text: 'Category 4 text', placeholder: 'Enter category 4 item' },
+  ]);
 });
 
 describe('Command Palette', () => {
   test('Expect that F1 key is displaying the widget', async () => {
     render(CommandPalette);
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
 
     // check we have the command palette input field
     const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
@@ -79,6 +89,10 @@ describe('Command Palette', () => {
 
   test('Expect that esc key is hiding the widget', async () => {
     render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
 
     // check we have the command palette input field
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
@@ -108,11 +122,15 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
     // Wait for component to initialize and items to be rendered
     await screen.findByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
 
-    // Switch to Commands mode to ensure we're testing command navigation specifically
-    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    // Switch to Commands (category 2 in this test case) mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Category 2/ });
     await userEvent.click(commandsButton);
 
     // Wait for items to appear
@@ -170,11 +188,15 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
     // Wait for component to initialize and items to be rendered
     const input = await screen.findByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
 
-    // Switch to Commands mode to ensure we're testing command navigation specifically
-    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    // Switch to Commands (category 2 in this test case) mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Category 2/ });
     await userEvent.click(commandsButton);
 
     // Wait for all items to appear
@@ -235,11 +257,15 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
     // Wait for component to initialize and items to be rendered
     const input = await screen.findByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
 
-    // Switch to Commands mode to ensure we're testing command navigation specifically
-    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    // Switch to Commands (category 2 in this test case) mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Category 2/ });
     await userEvent.click(commandsButton);
 
     // Wait for items to appear
@@ -289,6 +315,10 @@ describe('Command Palette', () => {
     ]);
 
     render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
 
     // check we have the command palette input field
     const filterInput = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
@@ -362,12 +392,16 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
     // check we have the command palette input field
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
-    // Switch to Commands mode to ensure we're testing command navigation specifically
-    const commandsButton = screen.getByRole('button', { name: /Commands/ });
+    // Switch to Commands (category 2 in this test case) mode to ensure we're testing command navigation specifically
+    const commandsButton = screen.getByRole('button', { name: /Category 2/ });
     await userEvent.click(commandsButton);
 
     // Wait for items to appear
@@ -399,31 +433,31 @@ describe('Command Palette', () => {
     {
       description: 'Ctrl+Shift+P',
       shortcut: '{Control>}{Shift>}p{/Shift}{/Control}',
-      expectedTabText: 'Ctrl+Shift+P All',
+      expectedTabText: 'Ctrl+Shift+P Category 1 text',
       shouldOpen: false,
     },
     {
       description: 'F1 key',
       shortcut: '{F1}',
-      expectedTabText: 'F1 > Commands',
+      expectedTabText: 'F1 > Category 2 text',
       shouldOpen: true,
     },
     {
       description: '> key',
       shortcut: '>',
-      expectedTabText: 'F1 > Commands',
+      expectedTabText: 'F1 > Category 2 text',
       shouldOpen: false,
     },
     {
       description: 'Ctrl+K',
       shortcut: '{Control>}k{/Control}',
-      expectedTabText: 'Ctrl+K Documentation',
+      expectedTabText: 'Ctrl+K Category 3 text',
       shouldOpen: false,
     },
     {
       description: 'Ctrl+F',
       shortcut: '{Control>}f{/Control}',
-      expectedTabText: 'Ctrl+F Go to',
+      expectedTabText: 'Ctrl+F Category 4 text',
       shouldOpen: false,
     },
   ];
@@ -433,6 +467,10 @@ describe('Command Palette', () => {
     expectedTabText,
   }) => {
     render(CommandPalette, { display: true });
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
 
     // press the shortcut
     await userEvent.keyboard(shortcut);
@@ -445,10 +483,10 @@ describe('Command Palette', () => {
     expect(expectedTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
     expect(expectedTab).toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
-    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
-    const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
-    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
-    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
+    const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 
     [allTab, commandsTab, docsTab, gotoTab].forEach(button => {
       if (button !== expectedTab) {
@@ -463,6 +501,10 @@ describe('Command Palette', () => {
     shouldOpen,
   }) => {
     render(CommandPalette);
+
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
     // check command palette is not displayed initially
     const inputBefore = screen.queryByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(inputBefore).not.toBeInTheDocument();
@@ -490,16 +532,20 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
     // check command palette is displayed
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
     await screen.findByRole('button', { name: 'Test Command 1' });
 
-    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
-    const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
-    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
-    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
+    const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 
     // initially "All" tab should be selected (index 0)
     expect(allTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
@@ -540,14 +586,18 @@ describe('Command Palette', () => {
 
     render(CommandPalette, { display: true });
 
+    await waitFor(() => {
+      expect(window.getCommandPaletteSearchOptions).toHaveBeenCalled();
+    });
+
     // check command palette is displayed
     const input = screen.getByRole('textbox', { name: COMMAND_PALETTE_ARIA_LABEL });
     expect(input).toBeInTheDocument();
 
-    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P All' });
-    const commandsTab = screen.getByRole('button', { name: 'F1 > Commands' });
-    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Documentation' });
-    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Go to' });
+    const allTab = screen.getByRole('button', { name: 'Ctrl+Shift+P Category 1 text' });
+    const commandsTab = screen.getByRole('button', { name: 'F1 > Category 2 text' });
+    const docsTab = screen.getByRole('button', { name: 'Ctrl+K Category 3 text' });
+    const gotoTab = screen.getByRole('button', { name: 'Ctrl+F Category 4 text' });
 
     // Test that only one tab is selected at a time
     expect(allTab).toHaveClass('text-[var(--pd-button-tab-text-selected)]');
@@ -562,27 +612,23 @@ describe('Command Palette', () => {
     expect(gotoTab).not.toHaveClass('border-[var(--pd-button-tab-border-selected)]');
 
     // Test that placeholder text is correct for each tab
-    expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop, or type > for commands');
+    expect(input).toHaveAttribute('placeholder', 'Enter category 1 item');
 
     // Click Commands tab and verify placeholder changes
     await userEvent.click(commandsTab);
 
-    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Search and execute commands'));
+    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Enter category 2 item'));
 
     // Click Documentation tab and verify placeholder changes
     await userEvent.click(docsTab);
-    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Search documentation and tutorials'));
+    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Enter category 3 item'));
 
     // Click Go to tab and verify placeholder changes
     await userEvent.click(gotoTab);
-    await vi.waitFor(() =>
-      expect(input).toHaveAttribute('placeholder', 'Search images, containers, pods, and other resources'),
-    );
+    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Enter category 4 item'));
 
     // Click All tab and verify placeholder changes back
     await userEvent.click(allTab);
-    await vi.waitFor(() =>
-      expect(input).toHaveAttribute('placeholder', 'Search Podman Desktop, or type > for commands'),
-    );
+    await vi.waitFor(() => expect(input).toHaveAttribute('placeholder', 'Enter category 1 item'));
   });
 });

@@ -1,0 +1,573 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Podman Desktop Extension Manifest",
+  "description": "Schema for Podman Desktop extension package.json files",
+  "allOf": [
+    {
+      "$ref": "https://json.schemastore.org/package.json"
+    },
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "main": {
+          "type": "string"
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string"
+                },
+                "dark": {
+                  "type": "string"
+                }
+              },
+              "required": ["light", "dark"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "extensionDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensionPack": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "engines": {
+          "type": "object",
+          "properties": {
+            "podman-desktop": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "contributes": {
+          "type": "object",
+          "properties": {
+            "configuration": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": ["markdown", "string", "number", "integer", "boolean", "null", "array", "object"]
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": ["markdown", "string", "number", "integer", "boolean", "null", "array", "object"]
+                            }
+                          }
+                        ]
+                      },
+                      "default": {},
+                      "group": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "placeholder": {
+                        "type": "string"
+                      },
+                      "markdownDescription": {
+                        "type": "string"
+                      },
+                      "minimum": {
+                        "type": "number"
+                      },
+                      "maximum": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "format": {
+                        "type": "string"
+                      },
+                      "step": {
+                        "type": "number"
+                      },
+                      "scope": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "DEFAULT",
+                              "ContainerConnection",
+                              "KubernetesConnection",
+                              "VmConnection",
+                              "ContainerProviderConnectionFactory",
+                              "KubernetesProviderConnectionFactory",
+                              "VmProviderConnectionFactory",
+                              "DockerCompatibility",
+                              "Onboarding"
+                            ]
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "DEFAULT",
+                                "ContainerConnection",
+                                "KubernetesConnection",
+                                "VmConnection",
+                                "ContainerProviderConnectionFactory",
+                                "KubernetesProviderConnectionFactory",
+                                "VmProviderConnectionFactory",
+                                "DockerCompatibility",
+                                "Onboarding"
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "readonly": {
+                        "type": "boolean"
+                      },
+                      "hidden": {
+                        "type": "boolean"
+                      },
+                      "enum": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "when": {
+                        "type": "string"
+                      },
+                      "experimental": {
+                        "type": "object",
+                        "properties": {
+                          "githubDiscussionLink": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "DEFAULT",
+                    "ContainerConnection",
+                    "KubernetesConnection",
+                    "VmConnection",
+                    "ContainerProviderConnectionFactory",
+                    "KubernetesProviderConnectionFactory",
+                    "VmProviderConnectionFactory",
+                    "DockerCompatibility",
+                    "Onboarding"
+                  ]
+                },
+                "extension": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["id"],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["title"],
+              "additionalProperties": false
+            },
+            "commands": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "light": {
+                            "type": "string"
+                          },
+                          "dark": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["light", "dark"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "keybinding": {
+                    "type": "string"
+                  },
+                  "enablement": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "menus": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "command": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "when": {
+                      "type": "string"
+                    },
+                    "disabled": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["command", "title"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "icons": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string"
+                  },
+                  "default": {
+                    "type": "object",
+                    "properties": {
+                      "fontPath": {
+                        "type": "string"
+                      },
+                      "fontCharacter": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["fontCharacter"],
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "themes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "parent": {
+                    "type": "string"
+                  },
+                  "colors": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["id", "name", "parent", "colors"],
+                "additionalProperties": false
+              }
+            },
+            "views": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "when": {
+                          "type": "string"
+                        },
+                        "icon": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["icon"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "when": {
+                          "type": "string"
+                        },
+                        "badge": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string"
+                            },
+                            "color": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "light": {
+                                      "type": "string"
+                                    },
+                                    "dark": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["light", "dark"],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["label"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": ["badge"],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            },
+            "onboarding": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "number"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "media": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "altText": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["path", "altText"],
+                  "additionalProperties": false
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "media": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "altText": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "altText"],
+                        "additionalProperties": false
+                      },
+                      "command": {
+                        "type": "string"
+                      },
+                      "completionEvents": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "content": {
+                        "type": "array",
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string"
+                              },
+                              "highlight": {
+                                "type": "boolean"
+                              },
+                              "when": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["value"],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "component": {
+                        "type": "string",
+                        "enum": ["createContainerProviderConnection", "createKubernetesProviderConnection"]
+                      },
+                      "when": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["completed", "failed", "skipped"]
+                      },
+                      "state": {
+                        "type": "string",
+                        "enum": ["completed", "failed"]
+                      }
+                    },
+                    "required": ["id", "title"],
+                    "additionalProperties": false
+                  }
+                },
+                "enablement": {
+                  "type": "string"
+                }
+              },
+              "required": ["title", "steps", "enablement"],
+              "additionalProperties": false
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "displayName", "version", "publisher", "description"],
+      "additionalProperties": {}
+    }
+  ]
+}

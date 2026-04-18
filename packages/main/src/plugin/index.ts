@@ -46,6 +46,7 @@ import type {
   CliToolInfo,
   ColorInfo,
   CommandInfo,
+  CommandPaletteSearchOption,
   ContainerCreateOptions,
   ContainerExportOptions,
   ContainerImportOptions,
@@ -1758,6 +1759,10 @@ export class PluginSystem {
       return podmanDesktopUpdater.getReleaseNotes();
     });
 
+    this.ipcHandle('app:getTitleBarText', async (_listener): Promise<string> => {
+      return product.name;
+    });
+
     this.ipcHandle('provider-registry:getProviderInfos', async (): Promise<ProviderInfo[]> => {
       return providerRegistry.getProviderInfos();
     });
@@ -2358,6 +2363,10 @@ export class PluginSystem {
 
     this.ipcHandle('commands:getCommandPaletteCommands', async (): Promise<CommandInfo[]> => {
       return commandRegistry.getCommandPaletteCommands();
+    });
+
+    this.ipcHandle('commands:getCommandPaletteSearchOptions', async (): Promise<CommandPaletteSearchOption[]> => {
+      return commandRegistry.getCommandPaletteSearchOptions();
     });
 
     this.ipcHandle(

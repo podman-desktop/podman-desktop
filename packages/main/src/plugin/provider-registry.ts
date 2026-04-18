@@ -707,6 +707,10 @@ export class ProviderRegistry {
         endpoint: {
           socketPath: connection.endpoint.socketPath,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
         shellAccess: !!connection.shellAccess,
         vmType: connection.vmType
           ? {
@@ -723,12 +727,20 @@ export class ProviderRegistry {
         endpoint: {
           apiURL: connection.endpoint.apiURL,
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       };
     } else {
       providerConnection = {
         connectionType: 'vm',
         name: connection.name,
         status: connection.status(),
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       };
     }
     if (connection.lifecycle) {
@@ -746,6 +758,10 @@ export class ProviderRegistry {
         lifecycleMethods.push('edit');
       }
       providerConnection.lifecycleMethods = lifecycleMethods;
+      providerConnection.canStart = !!connection.lifecycle.start;
+      providerConnection.canStop = !!connection.lifecycle.stop;
+      providerConnection.canEdit = !!connection.lifecycle.edit;
+      providerConnection.canDelete = !!connection.lifecycle.delete;
     }
     return providerConnection;
   }
@@ -850,6 +866,8 @@ export class ProviderRegistry {
       warnings: provider.warnings,
       installationSupport,
       cleanupSupport,
+      canStart: false,
+      canStop: false,
     };
 
     // handle update
@@ -862,6 +880,9 @@ export class ProviderRegistry {
     if (this.providerLifecycles.has(provider.internalId)) {
       providerInfo.lifecycleMethods = ['start', 'stop'];
     }
+    const hasLifecycle = this.providerLifecycles.has(provider.internalId);
+    providerInfo.canStart = hasLifecycle;
+    providerInfo.canStop = hasLifecycle;
     return providerInfo;
   }
 

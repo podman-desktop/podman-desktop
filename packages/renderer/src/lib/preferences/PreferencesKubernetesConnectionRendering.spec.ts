@@ -71,6 +71,10 @@ test('Expect that removing the connection is going back to the previous page', a
         endpoint: {
           apiURL: 'http://localhost:8080',
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       },
       {
         connectionType: 'kubernetes',
@@ -80,6 +84,10 @@ test('Expect that removing the connection is going back to the previous page', a
           apiURL: 'http://localhost:8181',
         },
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: true,
       },
       {
         connectionType: 'kubernetes',
@@ -88,6 +96,10 @@ test('Expect that removing the connection is going back to the previous page', a
         endpoint: {
           apiURL: 'http://localhost:8282',
         },
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       },
     ],
     kubernetesProviderConnectionCreation: true,
@@ -100,6 +112,8 @@ test('Expect that removing the connection is going back to the previous page', a
     kubernetesProviderConnectionInitialization: false,
     extensionId: '',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   // 3 connections with the same socket path
@@ -177,6 +191,10 @@ test('Expect to see error message if action fails', async () => {
           apiURL,
         },
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: true,
       },
     ],
     kubernetesProviderConnectionCreation: true,
@@ -189,6 +207,8 @@ test('Expect to see error message if action fails', async () => {
     kubernetesProviderConnectionInitialization: false,
     extensionId: '',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   providerInfos.set([providerInfo]);

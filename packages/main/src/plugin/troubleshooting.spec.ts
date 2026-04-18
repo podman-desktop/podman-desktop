@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DialogRegistry } from '/@/plugin/dialog-registry.js';
 import { Uri } from '/@/plugin/types/uri.js';
+import product from '/@product.json' with { type: 'json' };
 
 import type { TroubleshootingFileMap } from './troubleshooting.js';
 import { Troubleshooting } from './troubleshooting.js';
@@ -52,8 +53,12 @@ vi.mock('adm-zip', () => {
   };
 });
 
+vi.mock(import('/@product.json'));
+
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(product).name = 'Test Id';
+  vi.mocked(product).artifactName = 'test-id';
 });
 
 describe('saveLogs', () => {
@@ -190,14 +195,8 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
   expect(readFileMock).toHaveBeenCalledTimes(2);
 
   // Expect readFileMock to have been called with /Library/Logs/Podman Desktop/launchd-stdout.log but CONTAINED in the path
-  expect(readFileMock).toHaveBeenCalledWith(
-    expect.stringContaining('/Library/Logs/Podman Desktop/launchd-stdout'),
-    'utf-8',
-  );
-  expect(readFileMock).toHaveBeenCalledWith(
-    expect.stringContaining('/Library/Logs/Podman Desktop/launchd-stderr'),
-    'utf-8',
-  );
+  expect(readFileMock).toHaveBeenCalledWith(expect.stringContaining('/Library/Logs/Test Id/launchd-stdout'), 'utf-8');
+  expect(readFileMock).toHaveBeenCalledWith(expect.stringContaining('/Library/Logs/Test Id/launchd-stderr'), 'utf-8');
 });
 
 // Should return getWindowsSystemLogs if the platform is win32
@@ -225,10 +224,7 @@ test('Should return getWindowsSystemLogs if the platform is win32', async () => 
   expect(readFileMock).toHaveBeenCalledTimes(1);
 
   // Expect readFileMock to have been called with ~/AppData/Roaming/Podman Desktop/logs/podman-desktop.log but CONTAINED in the path
-  expect(readFileMock).toHaveBeenCalledWith(
-    expect.stringContaining('/AppData/Roaming/Podman Desktop/logs/podman-desktop'),
-    'utf-8',
-  );
+  expect(readFileMock).toHaveBeenCalledWith(expect.stringContaining('/AppData/Roaming/Test Id/logs/test-id'), 'utf-8');
 });
 
 // test generateLogFileName for different cases

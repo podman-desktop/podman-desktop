@@ -7,7 +7,6 @@ import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-
 import { DropdownMenu, EmptyScreen, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { Buffer } from 'buffer';
-import { filesize } from 'filesize';
 import { onDestroy, onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { Unsubscriber } from 'svelte/store';
@@ -29,7 +28,12 @@ import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 import { providerInfos } from '/@/stores/providers';
 
-import { PeerProperties } from './PeerProperties';
+import {
+  type ConnectionResourceMetricDisplay,
+  extractConnectionResourceMetrics,
+  RESOURCE_FORMATS,
+  toDisplayMetrics,
+} from './connection-resource-metrics';
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
@@ -364,6 +368,27 @@ function getRootfulDisplayInfo(
   return rootfulSetting;
 }
 
+function getConnectionResourceData(
+  provider: ProviderInfo,
+  container: ProviderConnectionInfo,
+):
+  | {
+      displayMetrics: ConnectionResourceMetricDisplay[];
+      nonResourceConfigs: IProviderConnectionConfigurationPropertyRecorded[];
+    }
+  | undefined {
+  if (!providerContainerConfiguration.has(provider.internalId)) {
+    return undefined;
+  }
+  const connectionConfigs = (providerContainerConfiguration.get(provider.internalId) ?? []).filter(
+    conf => conf.connection === container.name,
+  );
+  const resourceMetrics = extractConnectionResourceMetrics(connectionConfigs);
+  const displayMetrics = resourceMetrics ? toDisplayMetrics(resourceMetrics) : [];
+  const nonResourceConfigs = connectionConfigs.filter(conf => !RESOURCE_FORMATS.has(conf.format ?? '') && !conf.hidden);
+  return { displayMetrics, nonResourceConfigs };
+}
+
 let { properties = [], focus }: Props = $props();
 let providerElementMap = $state<Record<string, HTMLElement>>({});
 
@@ -488,7 +513,6 @@ $effect(() => {
             message={provider.emptyConnectionMarkdownDescription}
             hidden={provider.containerConnections.length > 0 || provider.kubernetesConnections.length > 0 || provider.vmConnections.length > 0} />
           {#each provider.containerConnections as container, index (index)}
-            {@const peerProperties = new PeerProperties()}
             {@const rootfulInfo = getRootfulDisplayInfo(provider, container)}
             <div class="px-5 py-2 w-[240px] border-r border-[var(--pd-content-divider)]" role="region" aria-label={container.name}>
               <div class="float-right">
@@ -531,41 +555,18 @@ $effect(() => {
                 class={container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}
                 path={container.endpoint.socketPath} />
               {#if providerContainerConfiguration.has(provider.internalId)}
-                {@const providerConfiguration = providerContainerConfiguration.get(provider.internalId) ?? []}
+                {@const { displayMetrics, nonResourceConfigs } = getConnectionResourceData(provider, container)!}
                 <div
                   class="flex mt-3 {container.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}"
                   role="group"
                   aria-label="Provider Configuration">
-                  {#each providerConfiguration.filter(conf => conf.connection === container.name) as connectionSetting (connectionSetting.id)}
-                    {#if connectionSetting.format === 'cpu' || connectionSetting.format === 'cpuUsage'}
-                      {#if !peerProperties.isPeerProperty(connectionSetting.id)}
-                        {@const peerValue = peerProperties.getPeerProperty(
-                          connectionSetting.id,
-                          providerConfiguration.filter(conf => conf.connection === container.name),
-                        )}
-                        <div class="mr-4">
-                          <Donut
-                            title={connectionSetting.description}
-                            value={connectionSetting.value}
-                            percent={peerValue} />
-                        </div>
-                      {/if}
-                    {:else if connectionSetting.format === 'memory' || connectionSetting.format === 'memoryUsage' || connectionSetting.format === 'diskSize' || connectionSetting.format === 'diskSizeUsage'}
-                      {#if !peerProperties.isPeerProperty(connectionSetting.id)}
-                        {@const peerValue = peerProperties.getPeerProperty(
-                          connectionSetting.id,
-                          providerConfiguration.filter(conf => conf.connection === container.name),
-                        )}
-                        <div class="mr-4">
-                          <Donut
-                            title={connectionSetting.description}
-                            value={filesize(connectionSetting.value)}
-                            percent={peerValue} />
-                        </div>
-                      {/if}
-                    {:else if !connectionSetting.hidden}
-                      {connectionSetting.description}: {connectionSetting.value}
-                    {/if}
+                  {#each displayMetrics as metric (metric.title)}
+                    <div class="mr-4">
+                      <Donut title={metric.title} value={metric.value} percent={metric.percent} />
+                    </div>
+                  {/each}
+                  {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
+                    {connectionSetting.description}: {connectionSetting.value}
                   {/each}
                 </div>
               {/if}

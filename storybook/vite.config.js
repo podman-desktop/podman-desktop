@@ -17,17 +17,81 @@
  ***********************************************************************/
 
 /* eslint-env node */
-import { join } from 'path';
-import * as path from 'path';
+import { join } from 'node:path';
+import * as path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import chokidar from 'chokidar';
 
 import { defineConfig } from 'vite';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
+
+const execAsync = promisify(exec);
 
 let filename = fileURLToPath(import.meta.url);
 const PACKAGE_ROOT = path.dirname(filename);
+const ROOT_DIR = path.join(PACKAGE_ROOT, '..');
+
+// Vite plugin to watch color-registry and regenerate themes.css
+function colorRegistryWatcher() {
+  let isRegenerating = false;
+  let queuedRegeneration = false;
+
+  async function regenerate(server) {
+    try {
+      await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
+      console.log('[color-registry-watcher] themes.css regenerated successfully\n');
+
+      server.ws.send({
+        type: 'full-reload',
+        path: '*',
+      });
+    } catch (error) {
+      console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
+    }
+  }
+
+  return {
+    name: 'color-registry-watcher',
+    configureServer(server) {
+      const filesToWatch = [
+        path.join(ROOT_DIR, 'packages/main/src/plugin/color-registry.ts'),
+        path.join(ROOT_DIR, 'tailwind-color-palette.json'),
+      ];
+
+      const watcher = chokidar.watch(filesToWatch, {
+        persistent: true,
+        ignoreInitial: true,
+      });
+
+      watcher.on('change', async changedFile => {
+        if (isRegenerating) {
+          queuedRegeneration = true;
+          return;
+        }
+        isRegenerating = true;
+
+        console.log(`\n[color-registry-watcher] ${path.basename(changedFile)} changed, regenerating themes.css...`);
+        await regenerate(server);
+
+        while (queuedRegeneration) {
+          queuedRegeneration = false;
+          console.log('[color-registry-watcher] Processing queued change...');
+          await regenerate(server);
+        }
+
+        isRegenerating = false;
+      });
+
+      server.httpServer?.on('close', () => {
+        watcher.close();
+      });
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -38,7 +102,12 @@ export default defineConfig({
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte(), svelteTesting()],
+  plugins: [
+    tailwindcss(),
+    svelte({ configFile: '../svelte.config.js', hot: true }),
+    svelteTesting(),
+    colorRegistryWatcher(),
+  ],
   test: {
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     globals: true,
@@ -52,6 +121,10 @@ export default defineConfig({
   server: {
     fs: {
       strict: true,
+    },
+    watch: {
+      // Watch the UI package dist folder for changes
+      ignored: ['!**/node_modules/@podman-desktop/ui-svelte/**'],
     },
   },
   build: {

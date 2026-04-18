@@ -1383,6 +1383,10 @@ describe('buildImage', () => {
       },
       lifecycleMethods: undefined,
       status: 'started',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
     };
     await expect(
       containerRegistry.buildImage('context', () => {}, {
@@ -1467,6 +1471,10 @@ describe('buildImage', () => {
       },
       lifecycleMethods: undefined,
       status: 'started',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
     };
 
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
@@ -1553,6 +1561,10 @@ describe('buildImage', () => {
       },
       lifecycleMethods: undefined,
       status: 'started',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
     };
 
     vi.spyOn(util, 'isWindows').mockImplementation(() => true);
@@ -1656,6 +1668,10 @@ describe('buildImage', () => {
       },
       lifecycleMethods: undefined,
       status: 'started',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
     };
 
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
@@ -1761,6 +1777,10 @@ describe('buildImage', () => {
       },
       lifecycleMethods: undefined,
       status: 'started',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
     };
 
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
@@ -1842,6 +1862,10 @@ describe('buildImage', () => {
       },
       lifecycleMethods: undefined,
       status: 'started',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
     };
 
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
@@ -4037,6 +4061,10 @@ test('check createPod uses running podman connection if ProviderContainerConnect
     },
     status: 'started',
     type: 'podman',
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
   };
 
   const result = await containerRegistry.createPod({

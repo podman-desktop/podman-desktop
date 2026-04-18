@@ -48,6 +48,8 @@ test('Expect provider region', async () => {
     images: {} as ProviderImages,
     installationSupport: false,
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
   const { findByRole } = render(ProviderCard, { provider });
 
@@ -77,6 +79,8 @@ test('Expect provider name', async () => {
     images: {} as ProviderImages,
     installationSupport: false,
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
   const { findByLabelText } = render(ProviderCard, { provider });
 
@@ -107,6 +111,8 @@ test('Expect provider icon', async () => {
     images: { icon: 'test.png' } as ProviderImages,
     installationSupport: false,
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   const { findByRole } = render(ProviderCard, { provider });
@@ -141,6 +147,8 @@ test('Expect no provider version', async () => {
     images: {} as ProviderImages,
     installationSupport: false,
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
     // no version
   };
   const { queryByLabelText } = render(ProviderCard, { provider });
@@ -172,6 +180,8 @@ test('Expect provider version', async () => {
     installationSupport: false,
     version: '1.2.3',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
   const { findByLabelText } = render(ProviderCard, { provider });
 
@@ -202,6 +212,8 @@ test('Expect provider state', async () => {
     images: {} as ProviderImages,
     installationSupport: false,
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
   const { findByLabelText } = render(ProviderCard, { provider });
 

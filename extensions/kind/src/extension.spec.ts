@@ -316,6 +316,14 @@ describe('cli#update', () => {
 
     expect(disposeMock).toHaveBeenCalled();
   });
+
+  test('uninstall should clear the provider version', async () => {
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue(mockV1Release);
+
+    await (await getCliToolInstaller()).doUninstall({} as unknown as extensionApi.Logger);
+
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith('');
+  });
 });
 
 /**
@@ -395,6 +403,7 @@ describe('cli#install', () => {
       path: 'path',
       version: '1.0.2',
     });
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith('1.0.2');
   });
 
   test('if installing system wide fails, it should not throw', async () => {
@@ -599,6 +608,15 @@ describe('provider#update', () => {
     } as unknown as KindGithubReleaseArtifactMetadata);
     await activate();
     expect(PROVIDER_MOCK.registerUpdate).toHaveBeenCalled();
+  });
+
+  test('Register update in provider is not called if CLI is not installed', async () => {
+    vi.mocked(util.getKindBinaryInfo).mockRejectedValue(new Error('not found'));
+    vi.mocked(KindInstaller.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v1.5.6',
+    } as unknown as KindGithubReleaseArtifactMetadata);
+    await activate();
+    expect(PROVIDER_MOCK.registerUpdate).not.toHaveBeenCalled();
   });
 
   test('Register update in provider is not called if there is no update available', async () => {

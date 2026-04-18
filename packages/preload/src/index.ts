@@ -45,6 +45,7 @@ import type {
   CliToolInfo,
   ColorInfo,
   CommandInfo,
+  CommandPaletteSearchOption,
   ContainerCreateOptions,
   ContainerExportOptions,
   ContainerfileInfo,
@@ -1385,6 +1386,10 @@ export function initExposure(): void {
     return ipcInvoke('app:get-release-notes');
   });
 
+  contextBridge.exposeInMainWorld('getTitleBarText', async (): Promise<string> => {
+    return ipcInvoke('app:getTitleBarText');
+  });
+
   contextBridge.exposeInMainWorld('getProviderInfos', async (): Promise<ProviderInfo[]> => {
     return ipcInvoke('provider-registry:getProviderInfos');
   });
@@ -1684,6 +1689,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('getCommandPaletteCommands', async (): Promise<CommandInfo[]> => {
     return ipcInvoke('commands:getCommandPaletteCommands');
+  });
+
+  contextBridge.exposeInMainWorld('getCommandPaletteSearchOptions', async (): Promise<CommandPaletteSearchOption[]> => {
+    return ipcInvoke('commands:getCommandPaletteSearchOptions');
   });
 
   contextBridge.exposeInMainWorld('listExtensions', async (): Promise<ExtensionInfo[]> => {

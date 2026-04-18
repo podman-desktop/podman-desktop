@@ -91,7 +91,7 @@ describe('SearchTermParser', () => {
     },
     {
       input: 'FOO category:Containers keyword:"My Key"',
-      terms: ['foo'],
+      terms: ['FOO'],
       filters: { category: ['containers'], keyword: ['my key'] },
     },
     {

@@ -455,6 +455,10 @@ test('expect isProviderContainerConnection returns true with a ProviderContainer
       socketPath: '/endpoint1.sock',
     },
     lifecycleMethods: undefined,
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'started',
   };
   const res = providerRegistry.isProviderContainerConnection(connection);
@@ -469,6 +473,10 @@ test('expect isProviderContainerConnection returns false with a ProviderKubernet
       apiURL: 'url',
     },
     lifecycleMethods: undefined,
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'started',
   };
   const res = providerRegistry.isProviderContainerConnection(connection);
@@ -847,6 +855,10 @@ describe('should send events when starting a container connection', async () => 
       endpoint: {
         socketPath: '/endpoint1.sock',
       },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       status: 'started',
       vmType: {
         id: 'libkrun',
@@ -966,6 +978,10 @@ test('should send events when starting a Kubernetes connection', async () => {
     connectionType: 'kubernetes',
     name: 'connection',
     endpoint: { apiURL: 'endpoint' },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'started',
   };
 
@@ -1016,6 +1032,10 @@ test('should send events when starting a VM connection', async () => {
   const connection: ProviderVmConnectionInfo = {
     connectionType: 'vm',
     name: 'connection',
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'started',
   };
 
@@ -1085,6 +1105,10 @@ describe('when auto-starting a container connection', async () => {
       endpoint: {
         socketPath: '/endpoint1.sock',
       },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       status: 'started',
       vmType: {
         id: 'libkrun',
@@ -1263,6 +1287,10 @@ test('should send events when stopping a container connection', async () => {
     endpoint: {
       socketPath: '/endpoint1.sock',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'stopped',
     vmType: {
       id: 'libkrun',
@@ -1334,6 +1362,10 @@ test('should send events when container connection status change', async () => {
     endpoint: {
       socketPath: '/endpoint1.sock',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'stopped',
     vmType: {
       id: 'libkrun',
@@ -1413,6 +1445,10 @@ test('should send events when stopping a Kubernetes connection', async () => {
     endpoint: {
       apiURL: 'endpoint1',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'stopped',
   };
 
@@ -1463,6 +1499,10 @@ test('should send events when stopping a VM connection', async () => {
   const connection: ProviderVmConnectionInfo = {
     connectionType: 'vm',
     name: 'connection',
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'stopped',
   };
 
@@ -1562,6 +1602,10 @@ test('should retrieve context of container provider', async () => {
     endpoint: {
       socketPath: '/endpoint1.sock',
     },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
     status: 'stopped',
   };
 
@@ -1617,6 +1661,10 @@ test('should retrieve context of kubernetes provider', async () => {
       endpoint: {
         apiURL: 'url',
       },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       status: 'stopped',
     };
 
@@ -1673,6 +1721,10 @@ test('should retrieve context of VM provider', async () => {
     const connection: ProviderVmConnectionInfo = {
       connectionType: 'vm',
       name: 'connection',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       status: 'stopped',
     };
 
@@ -2341,6 +2393,10 @@ describe('shellInProviderConnection', () => {
       endpoint: {
         socketPath: '/endpoint1.sock',
       },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       status: 'started',
       vmType: {
         id: 'libkrun',
@@ -2434,6 +2490,10 @@ describe('shellInProviderConnection', () => {
     const connection: ProviderVmConnectionInfo = {
       connectionType: 'vm',
       name: 'connection',
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       status: 'started',
     };
 

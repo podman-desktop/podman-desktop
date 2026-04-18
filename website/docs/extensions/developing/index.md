@@ -139,6 +139,34 @@ Upon a successful start up via the `activate` function within your extension, `P
 - `extension-loader.ts`: Attempts to load the extension and sets the status accordingly (either `started`, `stopped`, `starting` or `stopping`). If an unknown error has occurred, the status is set to `unknown`. `extension-loader.ts` also sends an API call to Podman Desktop to update the UI of the extension.
 - `tray-menu.ts`: If `extensionApi.tray.registerMenuItem(item);` API call has been used, a tray menu of the extension will be created. When created, Podman Desktop will use the `ProviderConnectionStatus` to indicate the status within the tray menu.
 
+### Using the `error` property on connections
+
+Each connection interface (`ContainerProviderConnection`, `KubernetesProviderConnection`, `VmProviderConnection`) supports an optional `error?: string` property. This field provides a human-readable error message when the connection is in a failed state, while the `status()` retains the lifecycle state (e.g. `'starting'`, `'stopped'`).
+
+**How it works:**
+
+- When a lifecycle operation (start, stop) fails, Podman Desktop automatically sets the `error` on the connection info and fires update events that include the error.
+- When a lifecycle operation succeeds, the error is automatically cleared.
+- Extensions can also set the `error` property directly on their connection objects to report extension-specific errors (e.g. a container that exited unexpectedly).
+
+**UI behavior when `error` is set:**
+
+- The connection shows a critical/error indicator in both the dashboard and resources pages.
+- Action buttons remain enabled so users can retry the failed operation.
+- The error message is displayed to the user.
+
+**Example:**
+
+```ts
+const connection: extensionApi.KubernetesProviderConnection = {
+  name: 'my-cluster',
+  status: () => clusterStatus,
+  error: clusterError, // set to a string when an error occurs, undefined otherwise
+  endpoint: { apiURL: 'https://localhost:6443' },
+  lifecycle,
+};
+```
+
 ### Adding commands
 
 ## Commands

@@ -519,6 +519,9 @@ describe('postActivate', () => {
     expect(vi.mocked(cliRun.installBinaryToSystem).mock.calls[0][0]).toContain(
       path.resolve(extensionContext.storagePath, 'bin', 'kubectl'),
     );
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('1.2.0');
   });
 
   test('doInstall should download and install selected binary', async () => {
@@ -648,6 +651,9 @@ describe('postActivate', () => {
 
     expect(fs.promises.unlink).toHaveBeenCalledWith(path.join(extensionContext.storagePath, 'bin', 'kubectl'));
     expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-path'], { isAdmin: true });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('');
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {

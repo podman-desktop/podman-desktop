@@ -113,6 +113,10 @@ const providerInfoMock: ProviderInfo = {
       endpoint: {
         socketPath: '',
       },
+      canStart: false,
+      canStop: false,
+      canEdit: false,
+      canDelete: false,
       type: 'podman',
     },
   ],
@@ -131,6 +135,8 @@ const providerInfoMock: ProviderInfo = {
   images: {},
   installationSupport: false,
   cleanupSupport: false,
+  canStart: false,
+  canStop: false,
 };
 
 const extensionInfoMock: ExtensionInfo = {

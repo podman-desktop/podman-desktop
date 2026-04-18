@@ -16,10 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { CommandInfo } from '@podman-desktop/core-api';
+import type { CommandInfo, CommandPaletteSearchOption } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { inject, injectable } from 'inversify';
 import { z } from 'zod';
+
+import product from '/@product.json' with { type: 'json' };
 
 import { Telemetry } from './telemetry/telemetry.js';
 import { Disposable } from './types/disposable.js';
@@ -135,6 +137,10 @@ export class CommandRegistry {
     });
 
     return commandInfos;
+  }
+
+  getCommandPaletteSearchOptions(): CommandPaletteSearchOption[] {
+    return product.commandPalette.searchOptions;
   }
 
   registerCommandPalette(...extensionCommands: RawCommand[]): Disposable {

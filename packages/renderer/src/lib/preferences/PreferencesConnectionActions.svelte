@@ -156,7 +156,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
         class="flex bg-[var(--pd-action-button-details-bg)] w-fit rounded-lg m-auto"
         role="group"
         aria-label="Connection Actions">
-        {#if connection.lifecycleMethods.includes('start')}
+        {#if connection.canStart}
           <div class="ml-2">
             <LoadingIconButton
               clickAction={(): Promise<void> => startConnectionProvider(provider, connection)}
@@ -165,7 +165,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
               state={connectionStatus} />
           </div>
         {/if}
-        {#if connection.lifecycleMethods.includes('start') && connection.lifecycleMethods.includes('stop')}
+        {#if connection.canStart && connection.canStop}
           <LoadingIconButton
             clickAction={(): Promise<void> => restartConnectionProvider(provider, connection)}
             action="restart"
@@ -173,7 +173,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             state={connectionStatus}
             />
         {/if}
-        {#if connection.lifecycleMethods.includes('stop')}
+        {#if connection.canStop}
           <LoadingIconButton
             clickAction={(): Promise<void> => stopConnectionProvider(provider, connection)}
             action="stop"
@@ -181,7 +181,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             state={connectionStatus}
             />
         {/if}
-        {#if connection.lifecycleMethods.includes('edit')}
+        {#if connection.canEdit}
           <LoadingIconButton
             clickAction={(): Promise<void> => editConnectionProvider(provider, connection)}
             action="edit"
@@ -189,7 +189,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
             state={connectionStatus}
             />
         {/if}
-        {#if connection.lifecycleMethods.includes('delete')}
+        {#if connection.canDelete}
           <LoadingIconButton
             clickAction={withConfirmation.bind(undefined, deleteConnectionProvider.bind(undefined, provider, connection), `delete ${connection.name}`)}
             action="delete"

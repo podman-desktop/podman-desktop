@@ -19,10 +19,14 @@
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, expect, expectTypeOf, test, vi } from 'vitest';
 
+import product from '/@product.json' with { type: 'json' };
+
 import { CommandRegistry } from './command-registry.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 
 let commandRegistry: CommandRegistry;
+
+vi.mock(import('/@product.json'));
 
 /* eslint-disable @typescript-eslint/no-empty-function */
 beforeEach(() => {
@@ -36,6 +40,18 @@ beforeEach(() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(product).commandPalette.searchOptions = [
+    {
+      category: 'category1',
+      text: 'Category 1',
+      placeholder: 'Category 1 text',
+    },
+    {
+      category: 'category2',
+      text: 'Category 2',
+      placeholder: 'Category 2 text',
+    },
+  ];
 });
 
 test('Should dispose commands from an extension', async () => {
@@ -155,4 +171,19 @@ test('Should include category in the title', async () => {
 
   // should have category + title
   expect(myCommand?.title).toBe(`${category}: ${title1}`);
+});
+
+test('Expect getCommandPaletteSearchOptions to return SearchOptions from product.json', () => {
+  expect(commandRegistry.getCommandPaletteSearchOptions()).toStrictEqual([
+    {
+      category: 'category1',
+      text: 'Category 1',
+      placeholder: 'Category 1 text',
+    },
+    {
+      category: 'category2',
+      text: 'Category 2',
+      placeholder: 'Category 2 text',
+    },
+  ]);
 });

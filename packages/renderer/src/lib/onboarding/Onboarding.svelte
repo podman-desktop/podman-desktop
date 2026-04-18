@@ -55,50 +55,44 @@ import OnboardingComponent from './OnboardingComponent.svelte';
 import OnboardingItem from './OnboardingItem.svelte';
 import { OnboardingTelemetrySession } from './telemetry';
 
-export let extensionIds: string[] = [];
-export let global: boolean = false;
+interface Props {
+  extensionIds?: string[];
+  global?: boolean;
+}
 
-let onboardings: OnboardingInfo[] = [];
-$: onboardingItems = onboardings;
-let activeStep: ActiveOnboardingStep;
-let activeStepContent: OnboardingStepItem[][];
+let { extensionIds = [], global = false }: Props = $props();
 
-let executing = false;
-let globalContext: ContextUI;
-let displayCancelSetup = false;
+let onboardings: OnboardingInfo[] = $state(
+  $onboardingList.filter(o => extensionIds.find(extensionId => o.extension === extensionId)),
+);
+let activeStep: ActiveOnboardingStep | undefined = $state();
+let activeStepContent: OnboardingStepItem[][] = $derived(
+  activeStep?.step.content?.map(row => {
+    return row.filter(item => {
+      return evaluateWhen(item.when, activeStep?.onboarding.extension ?? '');
+    });
+  }) ?? [],
+);
+
+let executing: boolean = $state(false);
+let globalContext: ContextUI = $derived($context);
+let displayCancelSetup: boolean = $state(false);
 
 let executedCommands: string[] = [];
 
 let telemetrySession = new OnboardingTelemetrySession();
 
-let welcomeMessage = '';
+let welcomeMessage: string = $derived(activeStep?.onboarding.welcomeMessage ?? '');
 
-let onboardingUnsubscribe: Unsubscriber;
 let contextsUnsubscribe: Unsubscriber;
 // variable used to mark if the onboarding is running or not
-let started = false;
+let started = $state(false);
 onMount(() => {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  onboardingUnsubscribe = onboardingList.subscribe(onboardingItems => {
-    if (onboardings.length === 0) {
-      onboardings = onboardingItems.filter(o => extensionIds.find(extensionId => o.extension === extensionId));
-      startOnboarding().catch((err: unknown) => console.warn(String(err)));
-    }
-  });
+  if (onboardings.length === 0) {
+    startOnboarding().catch((err: unknown) => console.warn(String(err)));
+  }
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  contextsUnsubscribe = context.subscribe(value => {
-    globalContext = value;
-
-    // When the context is updated while on the content page,
-    // update the step content to show / hide rows based on the "when" clause
-    activeStepContent =
-      activeStep?.step.content?.map(row => {
-        return row.filter(item => {
-          return evaluateWhen(item.when, activeStep.onboarding.extension);
-        });
-      }) ?? [];
-
+  contextsUnsubscribe = context.subscribe(() => {
     // when the context is updated it checks if the onboarding already started
     if (started) {
       //if the onboarding is running, it means there is an active step and verifies if it is complete.
@@ -120,9 +114,6 @@ async function startOnboarding(): Promise<void> {
 }
 
 onDestroy(() => {
-  if (onboardingUnsubscribe) {
-    onboardingUnsubscribe();
-  }
   if (contextsUnsubscribe) {
     contextsUnsubscribe();
   }
@@ -149,15 +140,6 @@ async function setActiveStep(): Promise<void> {
               onboarding,
               step,
             };
-            welcomeMessage = activeStep.onboarding.welcomeMessage ?? '';
-            // When the context is updated while on the content page,
-            // update the step content to show / hide rows based on the "when" clause
-            activeStepContent =
-              step.content?.map(row => {
-                return row.filter(item => {
-                  return evaluateWhen(item.when, onboarding.extension);
-                });
-              }) ?? [];
             if (step.command) {
               try {
                 await doExecuteCommand(step.command);
@@ -233,7 +215,7 @@ function inProgressCommandExecution(
  *      if you need to verify that a step is completed by looking at some context values use `assertStepCompleted`
  */
 async function assertStepCompletedAfterCommandExecution(): Promise<void> {
-  if (isStepCompleted(activeStep, executedCommands)) {
+  if (activeStep && isStepCompleted(activeStep, executedCommands)) {
     await updateOnboardingStep();
   }
 }
@@ -244,7 +226,7 @@ async function assertStepCompletedAfterCommandExecution(): Promise<void> {
  * Most probably it is only called when the context is updated.
  */
 async function assertStepCompleted(): Promise<void> {
-  if (isStepCompleted(activeStep, executedCommands, globalContext)) {
+  if (activeStep && isStepCompleted(activeStep, executedCommands, globalContext)) {
     await updateOnboardingStep();
   }
 }
@@ -254,7 +236,7 @@ function setExecuting(isExecuting: boolean): void {
 }
 
 function next(): void {
-  const isCompleted = !activeStep.step.completionEvents || activeStep.step.completionEvents.length === 0;
+  const isCompleted = !activeStep?.step.completionEvents || activeStep?.step.completionEvents.length === 0;
   if (isCompleted) {
     updateOnboardingStep().catch((err: unknown) => console.warn(String(err)));
   }
@@ -264,7 +246,9 @@ function next(): void {
  * it update the status of the step in the backend and calculate which is the new active step to display
  */
 async function updateOnboardingStep(): Promise<void> {
-  await updateOnboardingStepStatus(activeStep.onboarding, activeStep.step, STATUS_COMPLETED);
+  if (activeStep) {
+    await updateOnboardingStepStatus(activeStep.onboarding, activeStep.step, STATUS_COMPLETED);
+  }
   // reset executeCommands list
   executedCommands = [];
   await setActiveStep();
@@ -297,7 +281,7 @@ function handleEscape({ key }: KeyboardEvent): void {
 async function skipCurrentOnboarding(): Promise<void> {
   if (activeStep) {
     // Find the current onboarding based on the activeStep's extension
-    const currentOnboarding = onboardings.find(o => o.extension === activeStep.onboarding.extension);
+    const currentOnboarding = onboardings.find(o => o.extension === activeStep?.onboarding.extension);
     if (currentOnboarding) {
       // Iterate over each step of the current onboarding
       for (const step of currentOnboarding.steps) {
@@ -313,8 +297,7 @@ async function skipCurrentOnboarding(): Promise<void> {
 // Below is reactive classes & variables for globalOnboarding, this is needed
 // when doing the "global onboarding" sequence, replacing some UI elements with
 // full-screen ones.
-let globalOnboarding: boolean;
-$: globalOnboarding = global;
+let globalOnboarding = $derived(global);
 </script>
 
 <svelte:window on:keydown={handleEscape} />
@@ -368,7 +351,7 @@ $: globalOnboarding = global;
             {/if}
             <button
               class="flex flex-row text-xs items-center hover:underline text-[var(--pd-content-sub-header)] mt-1"
-              on:click={(): void => setDisplayCancelSetup(true)}>
+              onclick={(): void => setDisplayCancelSetup(true)}>
               <span class="mr-1">Skip this entire setup</span>
               <Icon icon={faForward} size="0.8x" />
             </button>
@@ -377,7 +360,7 @@ $: globalOnboarding = global;
         <!-- New section for listing onboardings -->
         {#if globalOnboarding}
           <div class="flex justify-right mr-3">
-            {#each onboardingItems as onboarding, index (index)}
+            {#each onboardings as onboarding, index (index)}
               <div class="flex flex-col items-center ml-8">
                 <!-- Dot indicating active/inactive state -->
                 <span>
@@ -397,7 +380,7 @@ $: globalOnboarding = global;
                 {#if onboarding.extension === activeStep?.onboarding?.extension}
                   <button
                     class="mt-1 flex flex-row text-xs items-center hover:underline text-[var(--pd-content-sub-header)]"
-                    on:click={skipCurrentOnboarding}>
+                    onclick={skipCurrentOnboarding}>
                     <span class="mr-1">Skip</span>
                     <Icon icon={faForward} size="0.8x" />
                   </button>

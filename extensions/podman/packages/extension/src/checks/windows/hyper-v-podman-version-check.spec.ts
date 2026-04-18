@@ -67,6 +67,15 @@ interface FailureTestCase {
   errorDescription: string;
 }
 
+test('expect success if Podman is not installed', async () => {
+  vi.mocked(podmanBinaryMock.getBinaryInfo).mockResolvedValue(undefined);
+
+  const hyperVPodmanVersionCheck = new HyperVPodmanVersionCheck(podmanBinaryMock);
+  const result = await hyperVPodmanVersionCheck.execute();
+
+  expect(result.successful).toBeTruthy();
+});
+
 test.each<FailureTestCase>([
   {
     name: 'expect failure if Podman version minor bellow minimum',

@@ -63,17 +63,29 @@ test('Expect that removing the connection is going back to the previous page', a
         connectionType: 'vm',
         name: vm1,
         status: 'started',
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       },
       {
         connectionType: 'vm',
         name: vm2,
         status: 'stopped',
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: true,
       },
       {
         connectionType: 'vm',
         name: vm3,
         status: 'started',
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       },
     ],
     vmProviderConnectionCreation: true,
@@ -86,6 +98,8 @@ test('Expect that removing the connection is going back to the previous page', a
     kubernetesProviderConnectionInitialization: false,
     extensionId: '',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   providerInfos.set([providerInfo]);
@@ -149,6 +163,10 @@ test('Expect to see error message if action fails', async () => {
         name: vm1,
         status: 'stopped',
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: true,
       },
     ],
     vmProviderConnectionCreation: true,
@@ -161,6 +179,8 @@ test('Expect to see error message if action fails', async () => {
     kubernetesProviderConnectionInitialization: false,
     extensionId: '',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   providerInfos.set([providerInfo]);
@@ -214,6 +234,10 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
         name: 'vm 1',
         status: 'stopped',
         lifecycleMethods: ['delete'],
+        canStart: false,
+        canStop: false,
+        canEdit: false,
+        canDelete: false,
       },
     ],
     vmProviderConnectionCreation: true,
@@ -226,6 +250,8 @@ test('startProviderConnectionLifecycle is called when addConnectionToRestartingQ
     kubernetesProviderConnectionInitialization: false,
     extensionId: '',
     cleanupSupport: false,
+    canStart: false,
+    canStop: false,
   };
 
   providerInfos.set([providerInfo]);

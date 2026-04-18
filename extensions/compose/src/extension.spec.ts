@@ -357,6 +357,9 @@ describe('registerCLITool', () => {
       installationSource: 'extension',
       version: '1.0.0',
     });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('1.0.0');
   });
 
   test('by uninstalling it should delete all executables', async () => {
@@ -390,6 +393,9 @@ describe('registerCLITool', () => {
     await installer?.doUninstall({} as unknown as Logger);
     expect(fs.promises.unlink).toHaveBeenNthCalledWith(1, 'storage-path');
     expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-wide-path'], { isAdmin: true });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('');
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
@@ -469,6 +475,40 @@ describe('registerCLITool', () => {
       installationSource: 'extension',
       version: '1.0.0',
     });
+  });
+
+  test('checkDownloadedCommand sets composeVersionCheckFailed when version fetch fails', async () => {
+    vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('');
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(false);
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockRejectedValue(new Error('API rate limit exceeded'));
+
+    await activate(extensionContextMock);
+
+    const checkDownloadedHandler = vi.mocked(extensionApi.commands.registerCommand).mock.calls[1][1];
+    await checkDownloadedHandler();
+
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('composeVersionCheckFailed', true, 'onboarding');
+    expect(extensionApi.context.setValue).not.toHaveBeenCalledWith(
+      'composeDownloadVersion',
+      expect.anything(),
+      'onboarding',
+    );
+  });
+
+  test('checkDownloadedCommand sets composeDownloadVersion on success', async () => {
+    vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('');
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(false);
+    vi.mocked(ComposeDownload.prototype.getLatestVersionAsset).mockResolvedValue({
+      tag: 'v2.30.0',
+    } as unknown as ComposeGithubReleaseArtifactMetadata);
+
+    await activate(extensionContextMock);
+
+    const checkDownloadedHandler = vi.mocked(extensionApi.commands.registerCommand).mock.calls[1][1];
+    await checkDownloadedHandler();
+
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('composeDownloadVersion', 'v2.30.0', 'onboarding');
+    expect(extensionApi.context.setValue).toHaveBeenCalledWith('composeVersionCheckFailed', false, 'onboarding');
   });
 
   test('onboarding download command shows error message if version list cannot be obtained', async () => {
