@@ -32,9 +32,21 @@ let network: NetworkInfoUI | undefined = $derived(
 );
 let detailsPage: DetailsPage | undefined = $state();
 
+// track if the network has been deleted
+let deleted = false;
+
+$effect.pre(() => {
+  deleted = !network;
+});
+
 $effect(() => {
-  if (!network && detailsPage) {
-    detailsPage.close();
+  const page = detailsPage;
+  if (page) {
+    return (): void => {
+      if (deleted) {
+        page.close();
+      }
+    };
   }
 });
 </script>
