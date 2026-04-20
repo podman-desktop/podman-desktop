@@ -17,8 +17,8 @@
  ***********************************************************************/
 
 export const providerColors: Record<string, string> = {
-  podman: 'bg-purple-600',
-  docker: 'bg-sky-400',
-  kubernetes: 'bg-sky-600',
-  unknown: 'bg-gray-900',
+  podman: 'bg-(--pd-provider-podman)',
+  docker: 'bg-(--pd-provider-docker)',
+  kubernetes: 'bg-(--pd-provider-kubernetes)',
+  unknown: 'bg-(--pd-provider-unknown)',
 };
