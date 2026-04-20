@@ -372,7 +372,7 @@ describe.each<{
     const button = screen.getByRole('button', { name: 'Create new foo-provider' });
     expect(button).toBeInTheDocument();
     // expect default create title
-    expect(button).toHaveTextContent('Create new ...');
+    expect(button).toHaveTextContent('Create new...');
   });
 
   test('Expect to see elements regarding foo provider', async () => {
@@ -385,7 +385,7 @@ describe.each<{
     const button = screen.getByRole('button', { name: 'Create new foo' });
     expect(button).toBeInTheDocument();
     // expect custom create title
-    expect(button).toHaveTextContent('Connect ...');
+    expect(button).toHaveTextContent('Connect...');
   });
 
   test('Expect to scroll to the focused element if focus prop is provided', async () => {

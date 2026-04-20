@@ -30,6 +30,6 @@ basic information -->
     <KubePodSpecArtifact artifact={pod.spec} podName={pod.metadata?.name} namespace={pod.metadata?.namespace} />
     <KubeEventsArtifact events={events} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </Table>

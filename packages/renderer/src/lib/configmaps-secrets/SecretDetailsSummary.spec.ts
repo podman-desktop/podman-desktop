@@ -59,7 +59,7 @@ test('Confirm renders secret details summary', async () => {
 test('Expect to show loading if there is no data present', async () => {
   render(SecretDetailsSummary, {});
 
-  const loadingMessage = screen.getByText('Loading ...');
+  const loadingMessage = screen.getByText('Loading...');
   expect(loadingMessage).toBeInTheDocument();
 });
 

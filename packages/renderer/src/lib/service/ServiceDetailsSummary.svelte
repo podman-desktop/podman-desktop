@@ -27,6 +27,6 @@ basic information -->
     <KubeServiceArtifact serviceName={service.metadata?.name} namespace={service.metadata?.namespace} artifact={service.spec} />
     <KubeEventsArtifact events={events} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </Table>
