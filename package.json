@@ -203,7 +203,7 @@
       "serve-handler>path-to-regexp": "^3.3.0",
       "express>cookie": "^0.7.0",
       "qs": "^6.15.0",
-      "dompurify@^3": "^3.3.3",
+      "dompurify@^3": "^3.4.0",
       "webpack-dev-server>http-proxy-middleware": "^2.0.9",
       "esbuild-register>esbuild": "^0.25.0",
       "tsx>esbuild": "^0.25.0",
