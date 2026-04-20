@@ -18,7 +18,7 @@ let { extension }: Props = $props();
   <!-- left col  -->
   <InstalledExtensionCardLeft extension={extension} />
 
-  <div class="grow flex flex-wrap divide-gray-900 ml-2" role="region">
+  <div class="grow flex flex-wrap divide-[var(--pd-content-divider)] ml-2" role="region">
     <InstalledExtensionCardRight extension={extension} />
   </div>
 </div>
