@@ -614,8 +614,8 @@ importers:
         specifier: ^7.7.4
         version: 7.7.4
       stream-json:
-        specifier: ^1.9.1
-        version: 1.9.1
+        specifier: ^2.1.0
+        version: 2.1.0
       tar:
         specifier: ^7.5.3
         version: 7.5.13
@@ -674,9 +674,6 @@ importers:
       '@types/semver':
         specifier: ^7.7.1
         version: 7.7.1
-      '@types/stream-json':
-        specifier: ^1.7.8
-        version: 1.7.8
       '@types/tar-fs':
         specifier: ^2.0.4
         version: 2.0.4
@@ -4483,12 +4480,6 @@ packages:
 
   '@types/stream-buffers@3.0.7':
     resolution: {integrity: sha512-azOCy05sXVXrO+qklf0c/B07H/oHaIuDDAiHPVwlk3A9Ek+ksHyTeMajLZl3r76FxpPpxem//4Te61G1iW3Giw==}
-
-  '@types/stream-chain@2.1.0':
-    resolution: {integrity: sha512-guDyAl6s/CAzXUOWpGK2bHvdiopLIwpGu8v10+lb9hnQOyo4oj/ZUQFOvqFjKGsE3wJP1fpIesCcMvbXuWsqOg==}
-
-  '@types/stream-json@1.7.8':
-    resolution: {integrity: sha512-MU1OB1eFLcYWd1LjwKXrxdoPtXSRzRmAnnxs4Js/ayB5O/NvHraWwuOaqMWIebpYwM6khFlsJOHEhI9xK/ab4Q==}
 
   '@types/tar-fs@2.0.4':
     resolution: {integrity: sha512-ipPec0CjTmVDWE+QKr9cTmIIoTl7dFG/yARCM5MqK8i6CNLIG1P8x4kwDsOQY1ChZOZjH0wO9nvfgBvWl4R3kA==}
@@ -10928,11 +10919,11 @@ packages:
     resolution: {integrity: sha512-pqMqwQCso0PBJt2PQmDO0cFj0lyqmiwOMiMSkVtRokl7e+ZTRYgDHKnuZNbqjiJXgsg4nuqtD/zxuo9KqTp0Yw==}
     engines: {node: '>= 0.10.0'}
 
-  stream-chain@2.2.5:
-    resolution: {integrity: sha512-1TJmBx6aSWqZ4tx7aTpBDXK0/e2hhcNSTV8+CbFJtDjbb+I1mZ8lHit0Grw9GRT+6JbIrrDd8esncgBi8aBXGA==}
+  stream-chain@3.6.1:
+    resolution: {integrity: sha512-M4BQpNPI71uumkVXjl4y+mIormQXdo4R0pSR23mcLbn6D+kpvu7Kx2g1hf0jRB76Zb1IT1M06OIGghMTAtZdyQ==}
 
-  stream-json@1.9.1:
-    resolution: {integrity: sha512-uWkjJ+2Nt/LO9Z/JyKZbMusL8Dkh97uUBTv3AJQ74y07lVahLY4eEFsPsE97pxYBwr8nnjMAIch5eqI0gPShyw==}
+  stream-json@2.1.0:
+    resolution: {integrity: sha512-9gV/ywtebMn3DdKnNKYCb9iESvgR1dHbucNV+bRGvdvy+jV4c9FFgYKmENhpKv58jSwvs90Wk80RhfKk1KxHPg==}
 
   streamx@2.23.0:
     resolution: {integrity: sha512-kn+e44esVfn2Fa/O0CPFcex27fjIL6MkVae0Mm6q+E6f0hWv578YCERbv+4m02cjxvDsPKLnmxral/rR6lBMAg==}
@@ -16685,15 +16676,6 @@ snapshots:
   '@types/stream-buffers@3.0.7':
     dependencies:
       '@types/node': 24.10.11
-
-  '@types/stream-chain@2.1.0':
-    dependencies:
-      '@types/node': 24.10.11
-
-  '@types/stream-json@1.7.8':
-    dependencies:
-      '@types/node': 24.10.11
-      '@types/stream-chain': 2.1.0
 
   '@types/tar-fs@2.0.4':
     dependencies:
@@ -24465,11 +24447,11 @@ snapshots:
 
   stream-buffers@3.0.3: {}
 
-  stream-chain@2.2.5: {}
+  stream-chain@3.6.1: {}
 
-  stream-json@1.9.1:
+  stream-json@2.1.0:
     dependencies:
-      stream-chain: 2.2.5
+      stream-chain: 3.6.1
 
   streamx@2.23.0:
     dependencies:
