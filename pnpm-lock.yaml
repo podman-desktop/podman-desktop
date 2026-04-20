@@ -24,8 +24,8 @@ overrides:
   tar: ^7.5.3
   cheerio>undici: ^7.18.2
   minimatch>@isaacs/brace-expansion: ^5.0.1
-  lodash-es: ^4.17.23
-  lodash: ^4.17.23
+  lodash-es: ^4.18.1
+  lodash: ^4.18.1
   '@docusaurus/types>webpack': ^5.105.0
   minimatch@^3: ^3.1.5
   minimatch@^9: ^9.0.9
@@ -8517,8 +8517,8 @@ packages:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  lodash-es@4.17.23:
-    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -8559,9 +8559,6 @@ packages:
 
   lodash.upperfirst@4.3.1:
     resolution: {integrity: sha512-sReKOYJIJf74dhJONhU4e0/shzi1trVbSWDOhKYE5XV2O+H7Sb2Dihwuc7xWxVl+DgFPyTqIN3zMfT9cq5iWDg==}
-
-  lodash@4.17.23:
-    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -13223,12 +13220,12 @@ snapshots:
     dependencies:
       '@chevrotain/gast': 11.0.3
       '@chevrotain/types': 11.0.3
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
 
   '@chevrotain/gast@11.0.3':
     dependencies:
       '@chevrotain/types': 11.0.3
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
 
   '@chevrotain/regexp-to-ast@11.0.3': {}
 
@@ -13762,7 +13759,7 @@ snapshots:
       html-tags: 3.3.1
       html-webpack-plugin: 5.6.3(webpack@5.105.0)
       leven: 3.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       open: 8.4.2
       p-map: 4.0.0
       prompts: 2.4.2
@@ -13877,7 +13874,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.9.2(acorn@8.16.0)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       eta: 2.2.0
       fs-extra: 11.3.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       tslib: 2.8.1
@@ -13914,7 +13911,7 @@ snapshots:
       cheerio: 1.0.0-rc.12
       feed: 4.2.2
       fs-extra: 11.3.4
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       schema-dts: 1.1.5
@@ -13957,7 +13954,7 @@ snapshots:
       combine-promises: 1.2.0
       fs-extra: 11.3.4
       js-yaml: 4.1.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       schema-dts: 1.1.5
@@ -14280,7 +14277,7 @@ snapshots:
       '@mdx-js/react': 3.1.1(@types/react@18.3.12)(react@18.2.0)
       clsx: 2.1.1
       infima: 0.2.0-alpha.45
-      lodash: 4.17.23
+      lodash: 4.18.1
       nprogress: 0.2.0
       postcss: 8.5.10
       prism-react-renderer: 2.4.1(react@18.2.0)
@@ -14381,7 +14378,7 @@ snapshots:
       clsx: 2.1.1
       eta: 2.2.0
       fs-extra: 11.3.4
-      lodash: 4.17.23
+      lodash: 4.18.1
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       tslib: 2.8.1
@@ -14459,7 +14456,7 @@ snapshots:
       fs-extra: 11.3.4
       joi: 17.13.3
       js-yaml: 4.1.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
@@ -14485,7 +14482,7 @@ snapshots:
       gray-matter: 4.0.3
       jiti: 1.21.7
       js-yaml: 4.1.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       micromatch: 4.0.8
       p-queue: 6.6.2
       prompts: 2.4.2
@@ -15201,7 +15198,7 @@ snapshots:
     dependencies:
       debug: 4.4.3
       fs-extra: 9.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       tmp-promise: 3.0.3
     transitivePeerDependencies:
       - supports-color
@@ -15273,7 +15270,7 @@ snapshots:
       '@rushstack/terminal': 0.19.5(@types/node@24.6.2)
       '@rushstack/ts-command-line': 5.1.5(@types/node@24.6.2)
       diff: 8.0.3
-      lodash: 4.17.23
+      lodash: 4.18.1
       minimatch: 10.2.5
       resolve: 1.22.11
       semver: 7.5.4
@@ -15293,7 +15290,7 @@ snapshots:
       '@rushstack/terminal': 0.19.5(@types/node@25.6.0)
       '@rushstack/ts-command-line': 5.1.5(@types/node@25.6.0)
       diff: 8.0.3
-      lodash: 4.17.23
+      lodash: 4.18.1
       minimatch: 10.2.5
       resolve: 1.22.11
       semver: 7.5.4
@@ -18046,7 +18043,7 @@ snapshots:
   chevrotain-allstar@0.3.1(chevrotain@11.0.3):
     dependencies:
       chevrotain: 11.0.3
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
 
   chevrotain@11.0.3:
     dependencies:
@@ -18055,7 +18052,7 @@ snapshots:
       '@chevrotain/regexp-to-ast': 11.0.3
       '@chevrotain/types': 11.0.3
       '@chevrotain/utils': 11.0.3
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
 
   chokidar@3.6.0:
     dependencies:
@@ -18753,7 +18750,7 @@ snapshots:
   dagre-d3-es@7.0.11:
     dependencies:
       d3: 7.9.0
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
 
   dash-video-element@0.3.0:
     dependencies:
@@ -20571,7 +20568,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       pretty-error: 4.0.0
       tapable: 2.3.0
     optionalDependencies:
@@ -21364,7 +21361,7 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
-  lodash-es@4.17.23: {}
+  lodash-es@4.18.1: {}
 
   lodash.camelcase@4.3.0: {}
 
@@ -21391,8 +21388,6 @@ snapshots:
   lodash.uniq@4.5.0: {}
 
   lodash.upperfirst@4.3.1: {}
-
-  lodash@4.17.23: {}
 
   lodash@4.18.1: {}
 
@@ -21796,7 +21791,7 @@ snapshots:
       dompurify: 3.3.3
       katex: 0.16.25
       khroma: 2.1.0
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
       marked: 15.0.12
       roughjs: 4.6.6
       stylis: 4.3.6
@@ -23302,7 +23297,7 @@ snapshots:
 
   pretty-error@4.0.0:
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
       renderkid: 3.0.0
 
   pretty-format@27.5.1:
@@ -23760,7 +23755,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       strip-ansi: 6.0.1
 
   repeat-string@1.6.1: {}
