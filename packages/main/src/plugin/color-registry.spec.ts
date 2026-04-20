@@ -217,12 +217,16 @@ test('initColors', async () => {
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
   // Don't mock it - let it call through to the real implementation
 
+  const spyOnInitProviderInfo = vi.spyOn(colorRegistry, 'initProviderInfo');
+
   colorRegistry.initColors();
 
   expect(spyOnRegisterColor).toHaveBeenCalled();
 
   // at least > 20 times
   expect(spyOnRegisterColor.mock.calls.length).toBeGreaterThan(20);
+
+  expect(spyOnInitProviderInfo).toHaveBeenCalledOnce();
 });
 
 describe('initTitlebar', () => {
@@ -1527,8 +1531,8 @@ describe('initProviderInfo', () => {
     expect(spyOnRegisterColor).toBeCalledWith('provider-unknown', {
       dark: tailwindColorPalette.gray[900],
       light: tailwindColorPalette.gray[900],
-      hcDark: tailwindColorPalette.gray[700],
-      hcLight: tailwindColorPalette.gray[700],
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 });
