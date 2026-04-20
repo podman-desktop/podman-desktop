@@ -32,10 +32,10 @@ import * as health from '/@/stores/kubernetes-context-health';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts';
 import * as states from '/@/stores/kubernetes-contexts-state';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
-vi.mock('/@/stores/kubernetes-contexts');
-vi.mock('/@/lib/kube/resources-listen');
-vi.mock('/@/stores/kubernetes-context-health');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
+vi.mock(import('/@/stores/kubernetes-contexts'));
+vi.mock(import('/@/lib/kube/resources-listen'));
+vi.mock(import('/@/stores/kubernetes-context-health'));
 
 let delayed: Writable<Map<string, boolean>>;
 let contexts: Writable<KubeContext[]>;

@@ -36,7 +36,7 @@ import * as eventsTable from '/@/lib/kube/details/EventsTable.svelte';
 
 import PodDetailsSummary from './PodDetailsSummary.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
 const fakePod: V1Pod = {
   apiVersion: 'v1',

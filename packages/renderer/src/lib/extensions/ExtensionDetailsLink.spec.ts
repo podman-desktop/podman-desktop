@@ -27,13 +27,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import ExtensionDetailsLink from './ExtensionDetailsLink.svelte';
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();

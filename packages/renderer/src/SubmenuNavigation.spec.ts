@@ -27,9 +27,7 @@ import { lastSubmenuPages } from './stores/breadcrumb';
 import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
-vi.mock('@podman-desktop/ui-svelte', () => ({
-  SettingsNavItem: vi.fn(),
-}));
+vi.mock(import('@podman-desktop/ui-svelte'));
 
 test('SubmenuNavigation displays a title and builds SettingsNavItem components', async () => {
   const SettingsNavItemMock = vi.mocked(SettingsNavItem);

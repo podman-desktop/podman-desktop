@@ -43,7 +43,7 @@ const defaultProviderInfo = {
   installationSupport: undefined,
 } as unknown as ProviderInfo;
 
-vi.mock('./PreferencesConnectionCreationOrEditRendering.svelte');
+vi.mock(import('./PreferencesConnectionCreationOrEditRendering.svelte'));
 
 describe.each<{
   name: string;

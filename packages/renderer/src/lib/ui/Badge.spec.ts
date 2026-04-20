@@ -21,17 +21,19 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import type { AppearanceUtil } from '/@/lib/appearance/appearance-util';
+
 import Badge from './Badge.svelte';
 
 // mock window.getConfigurationValue
 const getConfigurationValueMock = vi.fn();
 const getImageMock = vi.fn();
 
-vi.mock('/@/lib/appearance/appearance-util', () => {
+vi.mock(import('/@/lib/appearance/appearance-util'), () => {
   return {
     AppearanceUtil: class {
       getImage = getImageMock;
-    },
+    } as unknown as typeof AppearanceUtil,
   };
 });
 

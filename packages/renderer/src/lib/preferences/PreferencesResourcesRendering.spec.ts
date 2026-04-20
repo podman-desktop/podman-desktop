@@ -109,13 +109,7 @@ const providerInfo: ProviderInfo = {
 };
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 // getOsPlatformMock is needed when using PreferencesResourcesRenderingCopyButton
 const getOsPlatformMock = vi.fn().mockResolvedValue('linux');
