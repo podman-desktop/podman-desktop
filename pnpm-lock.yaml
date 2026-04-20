@@ -40,6 +40,7 @@ overrides:
   electron-builder-squirrel-windows: ^26.8.2
   svelte>devalue: ^5.6.4
   protobufjs: ^7.5.5
+  smol-toml: ^1.6.1
 
 patchedDependencies:
   docker-modem:
@@ -449,7 +450,7 @@ importers:
         specifier: ^7.7.4
         version: 7.7.4
       smol-toml:
-        specifier: 1.6.1
+        specifier: ^1.6.1
         version: 1.6.1
       ssh2:
         specifier: ^1.17.0
@@ -10819,10 +10820,6 @@ packages:
   smart-buffer@4.2.0:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
-
-  smol-toml@1.6.0:
-    resolution: {integrity: sha512-4zemZi0HvTnYwLfrpk/CF9LOd9Lt87kAt50GnqhMpyF9U3poDAP2+iukq2bZsO/ufegbYehBkqINbsWxj4l4cw==}
-    engines: {node: '>= 18'}
 
   smol-toml@1.6.1:
     resolution: {integrity: sha512-dWUG8F5sIIARXih1DTaQAX4SsiTXhInKf1buxdY9DIg4ZYPZK5nGM1VRIYmEbDbsHt7USo99xSLFu5Q1IqTmsg==}
@@ -21580,7 +21577,7 @@ snapshots:
       markdownlint: 0.40.0
       markdownlint-cli2-formatter-default: 0.0.6(markdownlint-cli2@0.22.0)
       micromatch: 4.0.8
-      smol-toml: 1.6.0
+      smol-toml: 1.6.1
     transitivePeerDependencies:
       - supports-color
 
@@ -24364,8 +24361,6 @@ snapshots:
       is-fullwidth-code-point: 5.1.0
 
   smart-buffer@4.2.0: {}
-
-  smol-toml@1.6.0: {}
 
   smol-toml@1.6.1: {}
 
