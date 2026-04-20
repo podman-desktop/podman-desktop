@@ -27,7 +27,7 @@ import * as states from '/@/stores/kubernetes-contexts-state';
 
 import PVCList from './PVCList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
 beforeEach(() => {
   vi.resetAllMocks();

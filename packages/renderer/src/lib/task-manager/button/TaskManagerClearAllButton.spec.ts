@@ -25,7 +25,7 @@ import * as taskStores from '/@/stores/tasks';
 
 import TaskManagerClearAllButton from './TaskManagerClearAllButton.svelte';
 
-vi.mock('/@/stores/tasks');
+vi.mock(import('/@/stores/tasks'));
 
 test('Expect clear tasks is being called', async () => {
   const clearNotificationsSpy = vi.spyOn(taskStores, 'clearNotifications');

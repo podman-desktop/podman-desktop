@@ -34,13 +34,7 @@ import DeployPodToKube from './DeployPodToKube.svelte';
 vi.mock(import('/@/lib/editor/MonacoEditor.svelte'));
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();

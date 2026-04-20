@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -195,35 +196,16 @@ export class RegistrySetup {
       await this.writeAuthFile(JSON.stringify(emptyAuthFile, undefined, 8));
     }
 
-    return new Promise((resolve, reject) => {
-      fs.readFile(this.getAuthFileLocation(), 'utf-8', (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          let authFile: ContainersAuthConfigFile;
-          try {
-            authFile = JSON.parse(data);
-          } catch (error) {
-            console.error('Error parsing auth file', error);
-            // return empty auth file
-            resolve({});
-            return;
-          }
-          resolve(authFile);
-        }
-      });
-    });
+    try {
+      const content = await readFile(this.getAuthFileLocation(), 'utf-8');
+      return JSON.parse(content);
+    } catch (error: unknown) {
+      console.error('Error parsing auth file', error);
+      return {};
+    }
   }
 
   protected writeAuthFile(data: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(this.getAuthFileLocation(), data, 'utf8', err => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+    return writeFile(this.getAuthFileLocation(), data, 'utf8');
   }
 }

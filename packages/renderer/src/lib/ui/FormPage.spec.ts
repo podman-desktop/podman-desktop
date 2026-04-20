@@ -29,13 +29,7 @@ import { currentPage, lastPage } from '/@/stores/breadcrumb';
 import FormPage from './FormPage.svelte';
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.clearAllMocks();

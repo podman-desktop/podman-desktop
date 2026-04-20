@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { EventEmitter } from 'node:events';
 import * as fs from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 
@@ -23,7 +24,6 @@ import type { RunResult } from '@podman-desktop/api';
 import type { ContributionInfo, IDisposable } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import * as jsYaml from 'js-yaml';
-import { EventEmitter } from 'stream-json/Assembler.js';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as util from '/@/util.js';

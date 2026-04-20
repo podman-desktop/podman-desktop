@@ -26,7 +26,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import TerminalSearchControls from './TerminalSearchControls.svelte';
 
-vi.mock('@xterm/addon-search');
+vi.mock(import('@xterm/addon-search'));
 
 const TerminalMock: Terminal = {
   onWriteParsed: vi.fn(),

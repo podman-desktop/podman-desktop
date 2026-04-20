@@ -27,7 +27,7 @@ import { exploreFeaturesInfo } from '/@/stores/explore-features';
 
 import ExploreFeatures from './ExploreFeatures.svelte';
 
-vi.mock('svelte/transition', () => ({
+vi.mock(import('svelte/transition'), () => ({
   slide: (): { delay: number; duration: number } => ({
     delay: 0,
     duration: 0,

@@ -197,6 +197,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@xmldom/xmldom": "^0.8.12",
       "rollup": "^4.59.0",
       "react-router>path-to-regexp": "^1.9.0",
       "serve-handler>path-to-regexp": "^3.3.0",
@@ -216,8 +217,8 @@
       "tar": "^7.5.3",
       "cheerio>undici": "^7.18.2",
       "minimatch>@isaacs/brace-expansion": "^5.0.1",
-      "lodash-es": "^4.17.23",
-      "lodash": "^4.17.23",
+      "lodash-es": "^4.18.1",
+      "lodash": "^4.18.1",
       "@docusaurus/types>webpack": "^5.105.0",
       "minimatch@^3": "^3.1.5",
       "minimatch@^9": "^9.0.9",
@@ -229,7 +230,8 @@
       "ajv@^6": "^6.14.0",
       "ajv@^8": "^8.18.0",
       "electron-builder-squirrel-windows": "^26.8.2",
-      "svelte>devalue": "^5.6.4"
+      "svelte>devalue": "^5.6.4",
+      "protobufjs": "^7.5.5"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"

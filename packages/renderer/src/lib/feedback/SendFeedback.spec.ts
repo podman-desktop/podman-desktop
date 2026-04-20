@@ -26,13 +26,9 @@ import DirectFeedback from './feedbackForms/DirectFeedback.svelte';
 import GitHubIssueFeedback from './feedbackForms/GitHubIssueFeedback.svelte';
 import SendFeedback from './SendFeedback.svelte';
 
-vi.mock('./feedbackForms/GitHubIssueFeedback.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('./feedbackForms/GitHubIssueFeedback.svelte'));
 
-vi.mock('./feedbackForms/DirectFeedback.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('./feedbackForms/DirectFeedback.svelte'));
 
 beforeAll(() => {
   (window.events as unknown) = {

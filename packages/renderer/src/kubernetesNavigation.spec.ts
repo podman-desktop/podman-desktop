@@ -22,13 +22,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { navigateTo } from './kubernetesNavigation';
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();
