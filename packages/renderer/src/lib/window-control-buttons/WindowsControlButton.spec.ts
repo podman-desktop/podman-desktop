@@ -80,5 +80,5 @@ test('Check Windows Close control button colors', async () => {
 
   expect(customButton).toHaveClass('text-[var(--pd-titlebar-icon)]');
   expect(customButton).toHaveClass('hover:bg-[var(--pd-titlebar-windows-hover-exit-bg)]');
-  expect(customButton).toHaveClass('hover:text-white');
+  expect(customButton).toHaveClass('hover:text-[var(--pd-titlebar-windows-hover-exit-text)]');
 });

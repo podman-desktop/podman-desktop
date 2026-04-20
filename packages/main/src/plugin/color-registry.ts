@@ -500,6 +500,13 @@ export class ColorRegistry {
       light: '#c42b1c',
     });
 
+    this.registerColor(`${titlebar}windows-hover-exit-text`, {
+      dark: white,
+      light: white,
+      hcDark: white,
+      hcLight: white,
+    });
+
     this.registerColor(`${titlebar}windows-hover-bg`, {
       dark: '#2d2d2d',
       light: '#dfdfdf',
