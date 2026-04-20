@@ -16,29 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { createNotesFiles } from './release-notes-parser';
 
-const mocks = vi.hoisted(() => ({
-  existsSyncMock: vi.fn(),
-  mkdirMock: vi.fn(),
-  readFileMock: vi.fn(),
-  writeFileMock: vi.fn(),
-}));
-
-vi.mock('node:fs', () => {
-  return {
-    default: {
-      existsSync: mocks.existsSyncMock,
-      promises: {
-        mkdir: mocks.mkdirMock,
-        readFile: mocks.readFileMock,
-        writeFile: mocks.writeFileMock,
-      },
-    },
-  };
-});
+vi.mock(import('node:fs/promises'));
+vi.mock(import('node:fs'));
 
 const notesInfo =
   '--- title: test1\nslug: podman-desktop-release-test1\nimage: /img/blog/podman-desktop-release-test1/test1.png\n---';
@@ -71,23 +57,23 @@ const params = {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.readFileMock.mockReturnValue(notesInfo + notesText + notesPoints);
-  mocks.existsSyncMock.mockReturnValue(true);
+  vi.mocked(readFile).mockResolvedValue(notesInfo + notesText + notesPoints);
+  vi.mocked(existsSync).mockReturnValue(true);
   defaultParseFrontMatterMock.mockResolvedValue(defaultParseFrontMatterResultMock);
 });
 
 test('create release-notes directory when it does not exist', async () => {
-  mocks.existsSyncMock.mockReturnValue(false);
+  vi.mocked(existsSync).mockReturnValue(false);
   await createNotesFiles(params);
-  expect(mocks.mkdirMock).toHaveBeenCalled();
+  expect(mkdir).toHaveBeenCalled();
 });
 
 test('Do not create release-nnotes directory when it exists', async () => {
   await createNotesFiles(params);
-  expect(mocks.mkdirMock).not.toHaveBeenCalled();
+  expect(mkdir).not.toHaveBeenCalled();
 });
 
 test('parse provided release notes as expected', async () => {
   await createNotesFiles(params);
-  expect(mocks.writeFileMock).toBeCalledWith('./static/release-notes/1.0.json', JSON.stringify(jsonResult));
+  expect(writeFile).toBeCalledWith('./static/release-notes/1.0.json', JSON.stringify(jsonResult));
 });

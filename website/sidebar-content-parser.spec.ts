@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { extractNavigationFromSidebar, generateJsonOverviewFile } from './sidebar-content-parser';
 
 // Mock the writeFile function
-vi.mock('node:fs/promises', () => ({
+vi.mock(import('node:fs/promises'), () => ({
   writeFile: vi.fn(),
 }));
 

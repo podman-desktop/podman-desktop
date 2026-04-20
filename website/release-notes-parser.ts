@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import fs from 'node:fs';
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 import type {
   DefaultParseFrontMatter,
@@ -41,7 +42,7 @@ export async function createNotesFiles(
     const version = versionMatch ? versionMatch[0] : '';
     if (version) {
       const folderName = './static/release-notes';
-      const fileContent = await fs.promises.readFile(params.filePath, { encoding: 'utf-8' });
+      const fileContent = await readFile(params.filePath, { encoding: 'utf-8' });
       const resultText = fileContent.split('---', 3);
 
       // get release image url
@@ -65,15 +66,15 @@ export async function createNotesFiles(
 
       const jsonInput = { image: imageUrl, blog: blogUrl, title: titleText, summary: summaryText };
 
-      if (!fs.existsSync(folderName)) {
+      if (!existsSync(folderName)) {
         try {
-          await fs.promises.mkdir(folderName);
+          await mkdir(folderName);
         } catch (error) {
           // directory already exists
         }
       }
 
-      await fs.promises.writeFile(`${folderName}/${version}.json`, JSON.stringify(jsonInput));
+      await writeFile(`${folderName}/${version}.json`, JSON.stringify(jsonInput));
     }
   }
   return result;
