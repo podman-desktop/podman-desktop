@@ -320,7 +320,7 @@ function handleReset(): void {
             disabled={isResetDisabled}
             tabindex={isResetDisabled ? -1 : 0}
           >
-            <div class="flex items-center justify-start gap-3 flex-1 border-t border-gray-600 pt-2">
+            <div class="flex items-center justify-start gap-3 flex-1 border-t border-(--pd-dropdown-divider) pt-2">
               <div class="w-4 h-4 flex items-center justify-center flex-shrink-0">
                 <Icon icon={faUndo} size='0.8x'/>
               </div>
