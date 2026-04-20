@@ -42,10 +42,20 @@ const experimentalConfigurationManagerMock = {
 const getProviderInfosMock = vi.fn();
 const providerRegistryMock = {
   addProviderListener: vi.fn(),
+  removeProviderListener: vi.fn(),
   getProviderInfos: getProviderInfosMock,
+  onDidUpdateContainerConnection: vi.fn(),
+  onDidUpdateKubernetesConnection: vi.fn(),
+  onDidUpdateVmConnection: vi.fn(),
+  onDidRegisterContainerConnection: vi.fn(),
+  onDidUnregisterContainerConnection: vi.fn(),
+  onDidRegisterKubernetesConnection: vi.fn(),
+  onDidUnregisterKubernetesConnection: vi.fn(),
+  onDidRegisterVmConnection: vi.fn(),
+  onDidUnregisterVmConnection: vi.fn(),
 } as unknown as ProviderRegistry;
 
-function createProvider(connectionStatus: string): ProviderInfo {
+function createProvider(connectionStatus: string, error?: string): ProviderInfo {
   return {
     internalId: 'id',
     id: 'podman',
@@ -57,6 +67,7 @@ function createProvider(connectionStatus: string): ProviderInfo {
         name: 'podman-machine',
         displayName: 'Podman Machine',
         status: connectionStatus,
+        error,
         endpoint: { socketPath: '/run/podman/podman.sock' },
         type: 'podman',
       } as unknown as ProviderContainerConnectionInfo,
@@ -70,16 +81,30 @@ function createProvider(connectionStatus: string): ProviderInfo {
 function triggerProviderChange(): void {
   vi.mocked(providerRegistryMock.addProviderListener).mock.calls[0]?.[0](
     'provider:update-status',
-    createProvider('unknown'),
+    createProvider('stopped'),
   );
 }
 
 let dashboardService: DashboardService;
 
+function setupProviderRegistryMocks(): void {
+  const disposable = { dispose: vi.fn() };
+  vi.mocked(providerRegistryMock.onDidUpdateContainerConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidUpdateKubernetesConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidUpdateVmConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidRegisterContainerConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidUnregisterContainerConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidRegisterKubernetesConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidUnregisterKubernetesConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidRegisterVmConnection).mockReturnValue(disposable);
+  vi.mocked(providerRegistryMock.onDidUnregisterVmConnection).mockReturnValue(disposable);
+}
+
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.resetAllMocks();
   getProviderInfosMock.mockReturnValue([]);
+  setupProviderRegistryMocks();
   dashboardService = new DashboardService(
     configurationRegistryMock,
     providerRegistryMock,
@@ -144,8 +169,8 @@ describe('system overview status', () => {
 });
 
 describe('startup grace period', () => {
-  test('should send progressing status for unknown connections during grace period', () => {
-    getProviderInfosMock.mockReturnValue([createProvider('unknown')]);
+  test('should send progressing status for errored connections during grace period', () => {
+    getProviderInfosMock.mockReturnValue([createProvider('stopped', 'connection failed')]);
     triggerProviderChange();
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
@@ -154,8 +179,8 @@ describe('startup grace period', () => {
     });
   });
 
-  test('should send critical status for unknown connections after grace period expires', () => {
-    getProviderInfosMock.mockReturnValue([createProvider('unknown')]);
+  test('should send critical status for errored connections after grace period expires', () => {
+    getProviderInfosMock.mockReturnValue([createProvider('stopped', 'connection failed')]);
     vi.advanceTimersByTime(8_000);
 
     expect(apiSenderMock.send).toHaveBeenCalledWith('dashboard:system-overview-status', {
@@ -165,7 +190,7 @@ describe('startup grace period', () => {
   });
 
   test('should send healthy status if connection resolves before grace period ends', () => {
-    const provider = createProvider('unknown');
+    const provider = createProvider('stopped', 'connection failed');
     getProviderInfosMock.mockReturnValue([provider]);
     triggerProviderChange();
 
@@ -175,6 +200,7 @@ describe('startup grace period', () => {
     });
 
     provider.containerConnections[0]!.status = 'started';
+    (provider.containerConnections[0] as unknown as Record<string, unknown>)['error'] = undefined;
     vi.mocked(apiSenderMock.send).mockClear();
     triggerProviderChange();
 
@@ -182,5 +208,64 @@ describe('startup grace period', () => {
       status: 'healthy',
       text: 'All systems operational',
     });
+  });
+});
+
+describe('getStatus', () => {
+  test('should return current system overview status', () => {
+    getProviderInfosMock.mockReturnValue([createProvider('started')]);
+
+    const status = dashboardService.getStatus();
+
+    expect(status).toEqual({
+      status: 'healthy',
+      text: 'All systems operational',
+    });
+  });
+
+  test('should apply grace period override for critical status', () => {
+    getProviderInfosMock.mockReturnValue([createProvider('stopped', 'connection failed')]);
+
+    const status = dashboardService.getStatus();
+
+    expect(status).toEqual({
+      status: 'progressing',
+      text: 'Initializing...',
+    });
+  });
+
+  test('should return critical after grace period expires', () => {
+    getProviderInfosMock.mockReturnValue([createProvider('stopped', 'connection failed')]);
+    vi.advanceTimersByTime(8_000);
+    vi.mocked(apiSenderMock.send).mockClear();
+
+    const status = dashboardService.getStatus();
+
+    expect(status).toEqual({
+      status: 'critical',
+      text: 'Error detected',
+    });
+  });
+});
+
+describe('dispose', () => {
+  test('should clean up all disposables', () => {
+    dashboardService.dispose();
+
+    expect(providerRegistryMock.removeProviderListener).toHaveBeenCalled();
+  });
+});
+
+describe('connection event listeners', () => {
+  test('should register connection event listeners on init', () => {
+    expect(providerRegistryMock.onDidUpdateContainerConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidUpdateKubernetesConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidUpdateVmConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidRegisterContainerConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidUnregisterContainerConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidRegisterKubernetesConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidUnregisterKubernetesConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidRegisterVmConnection).toHaveBeenCalled();
+    expect(providerRegistryMock.onDidUnregisterVmConnection).toHaveBeenCalled();
   });
 });

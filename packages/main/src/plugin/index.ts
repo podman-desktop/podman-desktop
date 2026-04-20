@@ -114,6 +114,7 @@ import type {
   ResourceName,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
+  SystemOverviewStatusInfo,
   TelemetryMessages,
   V1Route,
   ViewInfoUI,
@@ -608,6 +609,10 @@ export class PluginSystem {
     container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
     const dashboardService = container.get<DashboardService>(DashboardService);
     dashboardService.init();
+
+    this.ipcHandle('dashboard:getSystemOverviewStatus', async (): Promise<SystemOverviewStatusInfo> => {
+      return dashboardService.getStatus();
+    });
 
     container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
     const helpMenu = container.get<HelpMenu>(HelpMenu);
