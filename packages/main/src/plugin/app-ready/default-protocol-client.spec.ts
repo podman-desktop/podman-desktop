@@ -24,7 +24,7 @@ import { isWindows } from '/@/util.js';
 
 import { DefaultProtocolClient } from './default-protocol-client.js';
 
-vi.mock('/@/util.js');
+vi.mock(import('/@/util.js'));
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   setAsDefaultProtocolClient: vi.fn(),

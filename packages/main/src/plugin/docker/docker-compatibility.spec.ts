@@ -22,6 +22,7 @@ import { promises } from 'node:fs';
 import type { ProviderContainerConnection } from '@podman-desktop/api';
 import type { DockerSocketServerInfoType, ProviderInfo } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type * as Dockerode from 'dockerode';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
@@ -50,13 +51,13 @@ class TestDockerCompatibility extends DockerCompatibility {
 }
 
 // mock exists sync
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 const dockerodeInfoMock = vi.fn();
 const dockerodePodmanInfoMock = vi.fn();
 
-vi.mock('dockerode', async () => {
-  class Dockerode {
+vi.mock(import('dockerode'), async () => {
+  class DockerodeMock {
     async info(): Promise<unknown> {
       return dockerodeInfoMock();
     }
@@ -65,7 +66,7 @@ vi.mock('dockerode', async () => {
     }
   }
 
-  return { default: Dockerode };
+  return { default: DockerodeMock } as unknown as typeof Dockerode;
 });
 
 vi.mock(import('/@/util.js'));

@@ -33,25 +33,25 @@ const END_CERTIFICATE = '-----END CERTIFICATE-----';
 const CR = '\n';
 
 // mock spawn
-vi.mock('node:child_process', () => {
+vi.mock(import('node:child_process'), () => {
   return {
     spawn: vi.fn(),
   };
 });
 
-vi.mock('./util/spawn-promise.js', () => {
+vi.mock(import('./util/spawn-promise.js'), () => {
   return {
     spawnWithPromise: vi.fn(),
   };
 });
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 // Fake root certificates for mocking tls.rootCertificates
 // These are simple fake PEM strings (not valid X.509, but sufficient for testing fallback behavior)
 const FAKE_ROOT_CERTIFICATES = ['fake-cert-1', 'fake-cert-2'];
 
-vi.mock('node:tls', () => {
+vi.mock(import('node:tls'), () => {
   return {
     rootCertificates: ['fake-cert-1', 'fake-cert-2'],
   };
@@ -73,7 +73,7 @@ interface WincaAPIOptions {
   onend?: () => void;
 }
 
-vi.mock('win-ca/api', () => {
+vi.mock(import('win-ca/api'), () => {
   const wincaAPI = vi.fn();
   (wincaAPI as unknown as WincaProcedure).exe = vi.fn();
   (wincaAPI as unknown as WincaProcedure).inject = vi.fn();

@@ -40,7 +40,7 @@ vi.mock(import('@expo/sudo-prompt'), async () => {
 
 vi.mock(import('/@/util.js'));
 
-vi.mock('child_process', () => {
+vi.mock(import('node:child_process'), () => {
   return {
     spawn: vi.fn(),
   };
@@ -142,7 +142,7 @@ describe('exec', () => {
   test('should reject with an error when the process error event received', async () => {
     const command = 'nonexistent-command';
 
-    vi.mock('child_process', () => {
+    vi.mock(import('node:child_process'), () => {
       return {
         spawn: vi.fn(),
       };
@@ -216,7 +216,7 @@ describe('exec', () => {
       callback(error);
     });
 
-    vi.mock('child_process', () => {
+    vi.mock(import('node:child_process'), () => {
       return {
         spawn: vi.fn(),
       };
@@ -610,7 +610,7 @@ describe('exec', () => {
   });
 });
 
-vi.mock('./util', () => {
+vi.mock(import('/@/util.js'), () => {
   return {
     isWindows: vi.fn(),
     isMac: vi.fn(),

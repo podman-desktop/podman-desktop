@@ -32,12 +32,12 @@ import {
 } from '/@/plugin/kubernetes/kubernetes-port-forward-service.js';
 import type { ConfigManagementService } from '/@/plugin/kubernetes/kubernetes-port-forward-storage.js';
 
-vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-connection.js');
-vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-storage.js');
-vi.mock('/@/plugin/kubernetes/kubernetes-port-forward-validation.js');
-vi.mock('/@/plugin/util/port.js');
-vi.mock('/@/plugin/directories.js');
-vi.mock('node:crypto');
+vi.mock(import('/@/plugin/kubernetes/kubernetes-port-forward-connection.js'));
+vi.mock(import('/@/plugin/kubernetes/kubernetes-port-forward-storage.js'));
+vi.mock(import('/@/plugin/kubernetes/kubernetes-port-forward-validation.js'));
+vi.mock(import('/@/plugin/util/port.js'));
+vi.mock(import('/@/plugin/directories.js'));
+vi.mock(import('node:crypto'));
 
 class TestKubernetesPortForwardServiceProvider extends KubernetesPortForwardServiceProvider {
   public override getKubeConfigKey(kubeConfig: KubeConfig): string {

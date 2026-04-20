@@ -421,25 +421,16 @@ const configurationRegistry = {
   getConfiguration: getConfigurationMock,
 } as unknown as ConfigurationRegistry;
 
-vi.mock('node:fs', async () => {
-  return {
-    promises: {
-      readdir: vi.fn(),
-    },
-    createWriteStream: vi.fn(),
-    existsSync: vi.fn(),
-  };
-});
-
-vi.mock('node:stream/promises', async () => {
+vi.mock(import('node:fs'));
+vi.mock(import('node:stream/promises'), async () => {
   return {
     pipeline: vi.fn(),
     readFile: vi.fn(),
   };
 });
 
-vi.mock('node:fs/promises');
-vi.mock('/@/plugin/podman/kube.js');
+vi.mock(import('node:fs/promises'));
+vi.mock(import('/@/plugin/podman/kube.js'));
 
 beforeEach(() => {
   vi.mocked(apiSender.receive).mockClear();

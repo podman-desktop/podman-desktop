@@ -15,7 +15,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import net from 'node:net';
+import type { Server } from 'node:net';
+import { createServer } from 'node:net';
 
 import type { V1Deployment, V1Pod, V1Service } from '@kubernetes/client-node';
 import { PortForward } from '@kubernetes/client-node';
@@ -91,8 +92,8 @@ export class PortForwardConnectionService {
    * @param forwardSetup - The forwarding setup information.
    * @returns The created server.
    */
-  protected createServer(forwardSetup: ForwardingSetup): net.Server {
-    return net.createServer(socket => {
+  protected createServer(forwardSetup: ForwardingSetup): Server {
+    return createServer(socket => {
       const kubernetesPortForward = new PortForward(this.kubeClient.getKubeConfig());
       kubernetesPortForward
         .portForward(

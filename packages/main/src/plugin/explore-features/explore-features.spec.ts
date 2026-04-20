@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { existsSync, promises } from 'node:fs';
+import { existsSync } from 'node:fs';
+import * as promises from 'node:fs/promises';
 import path from 'node:path';
 
 import type { Configuration } from '@podman-desktop/api';
@@ -27,6 +28,7 @@ import type {
   ProviderInfo,
   ProviderKubernetesConnectionInfo,
 } from '@podman-desktop/core-api';
+import type Electron from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
@@ -38,19 +40,19 @@ import type { ProviderRegistry } from '/@/plugin/provider-registry.js';
 
 import { ExploreFeatures } from './explore-features.js';
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     app: {
       getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
     },
-  };
+  } as unknown as typeof Electron;
 });
 
-vi.mock('node:fs', () => ({
-  promises: {
-    readFile: vi.fn(),
-  },
+vi.mock(import('node:fs'), () => ({
   existsSync: vi.fn(),
+}));
+vi.mock(import('node:fs/promises'), () => ({
+  readFile: vi.fn(),
 }));
 
 const configurationRegistryMock = {

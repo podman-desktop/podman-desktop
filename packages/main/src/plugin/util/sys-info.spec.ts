@@ -23,13 +23,13 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { getSystemInfo } from '/@/plugin/util/sys-info.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 
-vi.mock('/@/util.js', () => ({
+vi.mock(import('/@/util.js'), () => ({
   isLinux: vi.fn(),
   isMac: vi.fn(),
   isWindows: vi.fn(),
 }));
 
-vi.mock('node:os', () => ({
+vi.mock(import('node:os'), () => ({
   arch: vi.fn(),
   release: vi.fn(),
   version: vi.fn(),

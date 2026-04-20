@@ -19,6 +19,7 @@
 import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 
+import type Electron from 'electron';
 import { safeStorage } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -27,15 +28,19 @@ import { type Directories } from '/@/plugin/directories.js';
 import type { SecretStorageChangeEvent } from './safe-storage-registry.js';
 import { SafeStorageRegistry } from './safe-storage-registry.js';
 
-vi.mock('electron', () => ({
-  safeStorage: {
-    encryptString: vi.fn(),
-    decryptString: vi.fn(),
-  },
-}));
+vi.mock(
+  import('electron'),
+  () =>
+    ({
+      safeStorage: {
+        encryptString: vi.fn(),
+        decryptString: vi.fn(),
+      },
+    }) as unknown as typeof Electron,
+);
 
-vi.mock('node:fs');
-vi.mock('node:fs/promises');
+vi.mock(import('node:fs'));
+vi.mock(import('node:fs/promises'));
 
 let safeStorageRegistry: SafeStorageRegistry;
 

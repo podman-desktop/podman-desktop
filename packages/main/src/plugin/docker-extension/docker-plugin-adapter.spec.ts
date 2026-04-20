@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { SimpleContainerInfo } from '@podman-desktop/core-api';
+import type Electron from 'electron';
 import type { IpcMainEvent } from 'electron';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -27,11 +28,11 @@ import { DockerPluginAdapter } from './docker-plugin-adapter.js';
 
 let dockerPluginAdapter: TestDockerPluginAdapter;
 
-vi.mock('electron', () => {
+vi.mock(import('electron'), () => {
   const mockIpcMain = {
     on: vi.fn().mockReturnThis(),
   };
-  return { ipcMain: mockIpcMain };
+  return { ipcMain: mockIpcMain } as unknown as typeof Electron;
 });
 
 const contributionManager = {} as unknown as ContributionManager;

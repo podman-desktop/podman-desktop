@@ -16,7 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { IncomingMessage } from 'node:http';
+import type { ClientRequest, IncomingMessage, RequestOptions } from 'node:http';
+import { get } from 'node:https';
 
 import type { Configuration } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -37,20 +38,26 @@ import * as util from '/@/util.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+// eslint-disable-next-line no-restricted-imports
+import type PackageJSON from '../../../../package.json';
 import type { TaskManager } from './tasks/task-manager.js';
 
-vi.mock('electron', () => ({
-  app: {
-    getVersion: vi.fn(),
-    getPath: vi.fn(),
-    getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
-  },
-  shell: {
-    openExternal: vi.fn(),
-  },
-}));
+vi.mock(
+  import('electron'),
+  () =>
+    ({
+      app: {
+        getVersion: vi.fn(),
+        getPath: vi.fn(),
+        getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
+      },
+      shell: {
+        openExternal: vi.fn(),
+      },
+    }) as unknown as typeof Electron,
+);
 
-vi.mock('electron-updater', () => ({
+vi.mock(import('electron-updater'), () => ({
   autoUpdater: {
     downloadUpdate: vi.fn(),
     quitAndInstall: vi.fn(),
@@ -58,10 +65,10 @@ vi.mock('electron-updater', () => ({
     on: vi.fn(),
     autoDownload: true,
     disableDifferentialDownload: false,
-  },
+  } as unknown as AppUpdater,
 }));
 
-vi.mock('/@/util.js', () => ({
+vi.mock(import('/@/util.js'), () => ({
   isLinux: vi.fn(),
   isWindows: vi.fn(),
   isMac: vi.fn(),
@@ -69,17 +76,12 @@ vi.mock('/@/util.js', () => ({
 
 const getStatusCodeMock = { statusCode: 200 } as IncomingMessage;
 
-vi.mock('https', () => ({
-  get: (_: string, callback: (_: IncomingMessage) => void): void => {
-    callback(getStatusCodeMock);
-  },
-}));
-
-vi.mock('../../../../package.json', () => ({
+vi.mock(import('node:https'));
+vi.mock(import('../../../../package.json'), () => ({
   default: {
     homepage: 'appHomepage',
     repository: 'appRepo',
-  },
+  } as unknown as typeof PackageJSON,
 }));
 
 vi.mock(import('/@product.json'));
@@ -126,9 +128,28 @@ function mockConfiguration(options: Record<string, unknown>): void {
   });
 }
 
+/**
+ * The {@link import(`node:https`).get} has two signature.
+ * We need to make a weird function to be able to typesafely mock it
+ */
+function getMock(
+  _: RequestOptions | string | URL,
+  arg2: RequestOptions | ((res: IncomingMessage) => void),
+  arg3?: (res: IncomingMessage) => void,
+): ClientRequest {
+  if (typeof arg2 === 'function') {
+    arg2?.(getStatusCodeMock);
+  } else if (typeof arg3 === 'function') {
+    arg3?.(getStatusCodeMock);
+  }
+  return {} as unknown as ClientRequest;
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.resetAllMocks();
+
+  vi.mocked(get).mockImplementation(getMock);
 
   // Simulate PROD env
   vi.stubEnv('PROD', true);
