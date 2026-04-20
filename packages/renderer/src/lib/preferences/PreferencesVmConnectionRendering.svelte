@@ -7,6 +7,7 @@ import type { Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import IconImage from '/@/lib/appearance/IconImage.svelte';
+import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
@@ -118,6 +119,7 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
       {#if connectionInfo}
         <div class="flex flex-row">
           <ConnectionStatus status={connectionInfo.status} />
+          <ConnectionErrorIndicator error={connectionInfo.error} />
           <ConnectionErrorInfoButton status={connectionStatus} />
         </div>
       {/if}
