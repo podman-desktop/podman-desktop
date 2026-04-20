@@ -7,11 +7,12 @@ import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 
 interface Props {
   onCloseForm: (confirm: boolean) => void;
+  categoryLinks: { [category: string]: string } | undefined;
   category: GitHubFeedbackCategory;
   contentChange: (e: boolean) => void;
 }
 
-let { onCloseForm, category = 'bug', contentChange }: Props = $props();
+let { onCloseForm, categoryLinks = {}, category = 'bug', contentChange }: Props = $props();
 
 let issueTitle = $state('');
 let issueDescription = $state('');
@@ -33,13 +34,9 @@ let issueValidationError = $derived.by(() => {
   }
 });
 
-let titlePlaceholder = $state(category === 'bug' ? 'Bug Report Title' : 'Feature name');
-let descriptionPlaceholder = $state(category === 'bug' ? 'Bug description' : 'Feature description');
-let existingIssuesLink = $state(
-  category === 'bug'
-    ? 'https://github.com/podman-desktop/podman-desktop/issues?q=label%3A%22kind%2Fbug%20%F0%9F%90%9E%22'
-    : 'https://github.com/podman-desktop/podman-desktop/issues?q=label%3A%22kind%2Ffeature%20%F0%9F%92%A1%22',
-);
+let titlePlaceholder = $derived(category === 'bug' ? 'Bug Report Title' : 'Feature name');
+let descriptionPlaceholder = $derived(category === 'bug' ? 'Bug description' : 'Feature description');
+let existingIssuesLink = $derived(category === 'bug' ? categoryLinks.bug : categoryLinks.feature);
 
 $effect(() => contentChange(Boolean(issueTitle || issueDescription)));
 
@@ -48,7 +45,9 @@ onMount(async () => {
 });
 
 async function openGitHubIssues(): Promise<void> {
-  await window.openExternal(existingIssuesLink);
+  if (existingIssuesLink || categoryLinks.issues) {
+    await window.openExternal(existingIssuesLink ?? categoryLinks.issues);
+  }
 }
 
 async function previewOnGitHub(): Promise<void> {
@@ -80,7 +79,7 @@ async function previewOnGitHub(): Promise<void> {
 
 <FeedbackForm>
   <svelte:fragment slot="content">
-    <div class="text-sm text-[var(--pd-state-warning)]">You can search existing {category} issues on <Link aria-label="GitHub issues" onclick={openGitHubIssues}>github.com/podman-desktop/podman-desktop/issues</Link></div>
+    <div class="text-sm text-[var(--pd-state-warning)]">You can search <Link aria-label="GitHub issues" onclick={openGitHubIssues}>existing {category} issues on GitHub</Link></div>
     <!-- issue title -->
     <label for="issueTitle" class="block mt-4 mb-2 text-sm font-medium text-[var(--pd-modal-text)]">Title</label>
     <input

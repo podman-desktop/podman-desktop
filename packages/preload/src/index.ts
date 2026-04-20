@@ -2444,6 +2444,17 @@ export function initExposure(): void {
     return ipcInvoke('feedback:GitHubPreview', feedback);
   });
 
+  contextBridge.exposeInMainWorld(
+    'getGitHubFeedbackLinks',
+    async (): Promise<{ [category: string]: string } | undefined> => {
+      return ipcInvoke('feedback:getGitHubFeedbackLinks');
+    },
+  );
+
+  contextBridge.exposeInMainWorld('getFeedbackLinks', async (): Promise<{ [category: string]: string } | undefined> => {
+    return ipcInvoke('feedback:getFeedbackLinks');
+  });
+
   contextBridge.exposeInMainWorld('getFeedbackMessages', async (): Promise<FeedbackMessages> => {
     return ipcInvoke('feedback:getFeedbackMessages');
   });

@@ -44,10 +44,16 @@ beforeAll(() => {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(window.getGitHubFeedbackLinks).mockResolvedValue({
+    bug: '/bug/link',
+    feature: '/feature/link',
+  });
 });
 
-test('Expect developers feedback form to be rendered by default', () => {
+test('Expect developers feedback form to be rendered by default', async () => {
   render(SendFeedback);
+
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
 
   expect(DirectFeedback).toHaveBeenCalledOnce();
   expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
@@ -60,6 +66,8 @@ test('Expect developers feedback form to be rendered by default', () => {
 
 test('Expect confirmation dialog to be displayed if content changed', async () => {
   render(SendFeedback, {});
+
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
 
   expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
     onCloseForm: expect.any(Function),
@@ -87,6 +95,8 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
 test('Expect no confirmation dialog to be displayed if content has not changed', async () => {
   render(SendFeedback, {});
 
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
+
   expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
     onCloseForm: expect.any(Function),
     category: 'developers',
@@ -104,6 +114,8 @@ test('Expect no confirmation dialog to be displayed if content has not changed',
 
 test('Expect DirectFeedback form to be rendered when design category is selected', async () => {
   render(SendFeedback, {});
+
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
 
   const categorySelect = screen.getByRole('button', { name: /Direct your words to the developers/ });
   expect(categorySelect).toBeInTheDocument();
@@ -126,6 +138,8 @@ test('Expect DirectFeedback form to be rendered when design category is selected
 test('Expect GitHubIssue feedback form to be rendered if category is not developers', async () => {
   render(SendFeedback, {});
 
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
+
   const categorySelect = screen.getByRole('button', { name: /Direct your words to the developers/ });
   expect(categorySelect).toBeInTheDocument();
   categorySelect.focus();
@@ -138,6 +152,10 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
   // click on a smiley
   expect(vi.mocked(GitHubIssueFeedback)).toHaveBeenNthCalledWith(1, expect.anything(), {
     onCloseForm: expect.any(Function),
+    categoryLinks: {
+      bug: '/bug/link',
+      feature: '/feature/link',
+    },
     category: 'bug',
     contentChange: expect.any(Function),
   });
@@ -150,7 +168,71 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
   await fireEvent.click(featureCategory);
   expect(vi.mocked(GitHubIssueFeedback)).toHaveBeenNthCalledWith(1, expect.anything(), {
     onCloseForm: expect.any(Function),
+    categoryLinks: {
+      bug: '/bug/link',
+      feature: '/feature/link',
+    },
     category: 'feature',
     contentChange: expect.any(Function),
   });
+});
+
+test('Expect if there no GitHub links to have a new category other with other feedback links', async () => {
+  vi.mocked(window.getGitHubFeedbackLinks).mockResolvedValue(undefined);
+  vi.mocked(window.getFeedbackLinks).mockResolvedValue({
+    category1: '/catgory1/link',
+    category2: '/catgory2/link',
+    category3: '/catgory3/link',
+  });
+
+  render(SendFeedback);
+
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
+
+  const categorySelect = screen.getByRole('button', { name: /Direct your words to the developers/ });
+  expect(categorySelect).toBeInTheDocument();
+  categorySelect.focus();
+
+  // open feedback categories dropdown
+  await userEvent.keyboard('[ArrowDown]');
+
+  const bugCategory = screen.queryByRole('button', { name: /Bug/ });
+  expect(bugCategory).not.toBeInTheDocument();
+
+  const featureCategory = screen.queryByRole('button', { name: /Feature/ });
+  expect(featureCategory).not.toBeInTheDocument();
+
+  const otherCategory = screen.getByRole('button', { name: /Other/ });
+  expect(otherCategory).toBeInTheDocument();
+
+  await fireEvent.click(otherCategory);
+
+  expect(screen.getByText('category1')).toBeInTheDocument();
+  expect(screen.getByText('category2')).toBeInTheDocument();
+  expect(screen.getByText('category3')).toBeInTheDocument();
+});
+
+test('Expect if there no GitHub links to not have a new category other if there are also no other feedback links', async () => {
+  vi.mocked(window.getGitHubFeedbackLinks).mockResolvedValue(undefined);
+  vi.mocked(window.getFeedbackLinks).mockResolvedValue({});
+
+  render(SendFeedback);
+
+  await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
+
+  const categorySelect = screen.getByRole('button', { name: /Direct your words to the developers/ });
+  expect(categorySelect).toBeInTheDocument();
+  categorySelect.focus();
+
+  // open feedback categories dropdown
+  await userEvent.keyboard('[ArrowDown]');
+
+  const bugCategory = screen.queryByRole('button', { name: /Bug/ });
+  expect(bugCategory).not.toBeInTheDocument();
+
+  const featureCategory = screen.queryByRole('button', { name: /Feature/ });
+  expect(featureCategory).not.toBeInTheDocument();
+
+  const otherCategory = screen.queryByRole('button', { name: /Other/ });
+  expect(otherCategory).not.toBeInTheDocument();
 });

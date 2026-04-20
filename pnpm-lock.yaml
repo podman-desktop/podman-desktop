@@ -822,8 +822,8 @@ importers:
         specifier: ^3.17.0
         version: 3.17.0(eslint@10.2.0(jiti@2.6.1))(svelte@5.53.7)
       filesize:
-        specifier: ^11.0.15
-        version: 11.0.15
+        specifier: ^11.0.16
+        version: 11.0.16
       humanize-duration:
         specifier: ^3.33.2
         version: 3.33.2
@@ -7195,8 +7195,8 @@ packages:
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
 
-  filesize@11.0.15:
-    resolution: {integrity: sha512-30TpbYxQxCpi4XdVjkwXYQ37CzZltV38+P7MYroQ+4NK/Dmx9mxixFNrolzcmEIBsjT/uowC9T7kiy2+C12r1A==}
+  filesize@11.0.16:
+    resolution: {integrity: sha512-XMcUu0Zxnh0L8rY5b5vrdKKs0H3l3osTp9vNEBulRmwLqYfuQe5SJCagpA0/sGMJx2KHbD+IWOyd6QsJQuYEkQ==}
     engines: {node: '>= 10.8.0'}
 
   fill-range@7.1.1:
@@ -19965,7 +19965,7 @@ snapshots:
     dependencies:
       minimatch: 5.1.9
 
-  filesize@11.0.15: {}
+  filesize@11.0.16: {}
 
   fill-range@7.1.1:
     dependencies:

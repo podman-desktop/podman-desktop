@@ -43,15 +43,29 @@ export class FeedbackHandler {
   }
 
   async openGitHubIssue(issueProperties: GitHubIssue): Promise<void> {
-    let additionalContent: string | undefined;
-    if (issueProperties.includeExtensionInfo) {
-      const extensions = await this.getStartedExtensions();
-      additionalContent = `**Enabled Extensions**\n${extensions}`;
-    }
+    if (productJSONFile.GitHubFeedbackLinks?.issues) {
+      let additionalContent: string | undefined;
+      if (issueProperties.includeExtensionInfo) {
+        const extensions = await this.getStartedExtensions();
+        additionalContent = `**Enabled Extensions**\n${extensions}`;
+      }
 
-    const urlSearchParams = new URLSearchParams(this.toQueryParameters(issueProperties, additionalContent)).toString();
-    const link = `https://github.com/containers/podman-desktop/issues/new?${urlSearchParams}`;
-    await shell.openExternal(link);
+      const urlSearchParams = new URLSearchParams(
+        this.toQueryParameters(issueProperties, additionalContent),
+      ).toString();
+      const link = `${productJSONFile.GitHubFeedbackLinks?.issues}/new?${urlSearchParams}`;
+      await shell.openExternal(link);
+    } else {
+      console.log('No GitHub issues link found, cannot preview new GitHub issue');
+    }
+  }
+
+  getGitHubFeedbackLinks(): { [category: string]: string } | undefined {
+    return productJSONFile.GitHubFeedbackLinks;
+  }
+
+  getFeedbackLinks(): { [category: string]: string } | undefined {
+    return productJSONFile.feedbackLinks;
   }
 
   protected async getStartedExtensions(): Promise<string> {

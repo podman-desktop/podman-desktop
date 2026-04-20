@@ -3079,6 +3079,20 @@ export class PluginSystem {
       return feedback.openGitHubIssue(properties);
     });
 
+    this.ipcHandle(
+      'feedback:getGitHubFeedbackLinks',
+      async (_listener): Promise<{ [category: string]: string } | undefined> => {
+        return feedback.getGitHubFeedbackLinks();
+      },
+    );
+
+    this.ipcHandle(
+      'feedback:getFeedbackLinks',
+      async (_listener): Promise<{ [category: string]: string } | undefined> => {
+        return feedback.getFeedbackLinks();
+      },
+    );
+
     this.ipcHandle('feedback:getFeedbackMessages', async (): Promise<FeedbackMessages> => {
       return feedback.getFeedbackMessages();
     });
