@@ -654,6 +654,13 @@ export class ColorRegistry {
       dark: accent1[400],
       light: accent1[500],
     });
+
+    this.registerColor(`${invCt}divider`, {
+      dark: charcoal[400],
+      light: gray[700],
+      hcDark: white,
+      hcLight: black,
+    });
   }
 
   protected initContent(): void {

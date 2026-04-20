@@ -109,6 +109,16 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+test('Expect context detail div to use invert-content-divider token', async () => {
+  vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
+  vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
+  kubernetesGetCurrentContextNameMock.mockResolvedValue('my-current-context');
+  const { container } = render(PreferencesKubernetesContextsRendering, {});
+  await screen.findByText('context-name');
+  const div = container.querySelector('.divide-\\[var\\(--pd-invert-content-divider\\)\\]');
+  expect(div).not.toBeNull();
+});
+
 test('test that name, cluster and the server is displayed when rendering', async () => {
   vi.mocked(kubernetesContextsState).kubernetesContextsState = readable<Map<string, ContextGeneralState>>(new Map());
   vi.mocked(kubernetesContextsState).kubernetesContextsCheckingStateDelayed = readable<Map<string, boolean>>(new Map());
