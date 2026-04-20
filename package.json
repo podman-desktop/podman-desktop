@@ -232,7 +232,8 @@
       "electron-builder-squirrel-windows": "^26.8.2",
       "svelte>devalue": "^5.6.4",
       "protobufjs": "^7.5.5",
-      "smol-toml": "^1.6.1"
+      "smol-toml": "^1.6.1",
+      "follow-redirects": "^1.16.0"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"
