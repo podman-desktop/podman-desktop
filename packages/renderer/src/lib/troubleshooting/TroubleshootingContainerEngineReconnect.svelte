@@ -10,7 +10,7 @@ async function reconnectContainerProviders(): Promise<void> {
   const start = performance.now();
   reconnectInProgress = true;
   reconnectError = '';
-  reconnectResult = '...Waiting for response...';
+  reconnectResult = 'Waiting for response...';
   try {
     await window.reconnectContainerProviders();
   } catch (e) {
