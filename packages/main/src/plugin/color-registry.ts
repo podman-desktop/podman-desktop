@@ -2319,8 +2319,8 @@ export class ColorRegistry {
     this.registerColor(`${provider}unknown`, {
       dark: gray[900],
       light: gray[900],
-      hcDark: gray[700],
-      hcLight: gray[700],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
