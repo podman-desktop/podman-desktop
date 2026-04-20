@@ -612,8 +612,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       proxy:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^4.0.0
+        version: 4.0.0
       semver:
         specifier: ^7.7.4
         version: 7.7.4
@@ -10145,9 +10145,9 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  proxy@3.0.0:
-    resolution: {integrity: sha512-3JQGizbKR8edoC+4EFkxCflh8toCZ3KbjYO10veRowcj+wHVJNIAavWo/BRUeez1kEHdvqad2ZZsCzSC2wOO+w==}
-    engines: {node: '>= 14'}
+  proxy@4.0.0:
+    resolution: {integrity: sha512-qYi7N3kisRTQW0Y13JL0upO8e9mVLpu4yuxrXvWzCsaJVA9yqVF+iQkC/rCdnx2lGPQhC+qjefWSY7M6SHclhQ==}
+    engines: {node: '>= 20'}
     hasBin: true
 
   ps-list@9.0.0:
@@ -23443,7 +23443,7 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  proxy@3.0.0:
+  proxy@4.0.0:
     dependencies:
       args: 5.0.3
       basic-auth-parser: 0.0.2-1

@@ -59,7 +59,7 @@
     "minimist": "^1.2.8",
     "moment": "^2.30.1",
     "os-locale": "^8.0.0",
-    "proxy": "^3.0.0",
+    "proxy": "^4.0.0",
     "semver": "^7.7.4",
     "stream-json": "^2.1.0",
     "tar": "^7.5.13",
