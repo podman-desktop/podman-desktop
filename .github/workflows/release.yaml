@@ -66,6 +66,10 @@ jobs:
           sed -i  "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.desktopVersion }}\",#g" package.json
           find packages/* -maxdepth 1 -name "package.json" | xargs -I {} sed -i "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.desktopVersion }}\",#g" {}
           find extensions/* -maxdepth 5 -name "package.json" | xargs -I {} sed -i "s#version\":\ \"\(.*\)\",#version\":\ \"${{ steps.TAG_UTIL.outputs.desktopVersion }}\",#g" {}
+
+          # Update $schema URLs in extension package.json files to point to the tagged version
+          find extensions/* -maxdepth 5 -name "package.json" | xargs -I {} sed -i "s#/podman-desktop/main/schemas/#/podman-desktop/${{ steps.TAG_UTIL.outputs.githubTag }}/schemas/#g" {}
+
           git add package.json extensions/*/package.json extensions/*/packages/extension/package.json packages/*/package.json
 
           # Update the issue template with the new version and move old version below
