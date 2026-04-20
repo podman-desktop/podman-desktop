@@ -34,7 +34,7 @@ overrides:
   picomatch@^2: ^2.3.2
   picomatch@^3: ^3.0.2
   picomatch@^4: ^4.0.4
-  serialize-javascript: ^7.0.4
+  serialize-javascript: ^7.0.5
   ajv@^6: ^6.14.0
   ajv@^8: ^8.18.0
   electron-builder-squirrel-windows: ^26.8.2
@@ -10673,8 +10673,8 @@ packages:
     resolution: {integrity: sha512-8I8TjW5KMOKsZQTvoxjuSIa7foAwPWGOts+6o7sgjz41/qMD9VQHEDxi6PBvK2l0MXUmqZyNpUK+T2tQaaElvw==}
     engines: {node: '>=10'}
 
-  serialize-javascript@7.0.4:
-    resolution: {integrity: sha512-DuGdB+Po43Q5Jxwpzt1lhyFSYKryqoNjQSA9M92tyw0lyHIOur+XCalOUe0KTJpyqzT8+fQ5A0Jf7vCx/NKmIg==}
+  serialize-javascript@7.0.5:
+    resolution: {integrity: sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==}
     engines: {node: '>=20.0.0'}
 
   serve-handler@6.1.6:
@@ -18385,7 +18385,7 @@ snapshots:
       globby: 13.2.2
       normalize-path: 3.0.0
       schema-utils: 4.2.0
-      serialize-javascript: 7.0.4
+      serialize-javascript: 7.0.5
       webpack: 5.105.0
 
   copyfiles@2.4.1:
@@ -18509,7 +18509,7 @@ snapshots:
       jest-worker: 29.7.0
       postcss: 8.5.10
       schema-utils: 4.2.0
-      serialize-javascript: 7.0.4
+      serialize-javascript: 7.0.5
       webpack: 5.105.0
     optionalDependencies:
       clean-css: 5.3.3
@@ -24150,7 +24150,7 @@ snapshots:
       type-fest: 0.13.1
     optional: true
 
-  serialize-javascript@7.0.4: {}
+  serialize-javascript@7.0.5: {}
 
   serve-handler@6.1.6:
     dependencies:
@@ -24865,7 +24865,7 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 3.3.0
-      serialize-javascript: 7.0.4
+      serialize-javascript: 7.0.5
       terser: 5.36.0
       webpack: 5.105.0
 
@@ -24874,7 +24874,7 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
-      serialize-javascript: 7.0.4
+      serialize-javascript: 7.0.5
       terser: 5.36.0
       webpack: 5.105.0(esbuild@0.25.12)
     optionalDependencies:
@@ -24886,7 +24886,7 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
-      serialize-javascript: 7.0.4
+      serialize-javascript: 7.0.5
       terser: 5.36.0
       webpack: 5.105.0
 

@@ -226,7 +226,7 @@
       "picomatch@^2": "^2.3.2",
       "picomatch@^3": "^3.0.2",
       "picomatch@^4": "^4.0.4",
-      "serialize-javascript": "^7.0.4",
+      "serialize-javascript": "^7.0.5",
       "ajv@^6": "^6.14.0",
       "ajv@^8": "^8.18.0",
       "electron-builder-squirrel-windows": "^26.8.2",
