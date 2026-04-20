@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/extension-schema.json",
   "name": "podman-docker-context",
   "displayName": "Podman Docker Context",
   "description": "Synchronize Docker Contexts with Podman",

@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/extension-schema.json",
   "name": "kind",
   "displayName": "Kind",
   "description": "Integration for Kind: run local Kubernetes clusters using container “nodes”",
