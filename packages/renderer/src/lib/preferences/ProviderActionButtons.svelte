@@ -97,7 +97,7 @@ function handleSetup(): void {
       aria-label="Setup {provider.name}"
       title="Setup {provider.name}"
       onclick={handleSetup}>
-      Setup ...
+      Setup...
     </Button>
   {:else}
     <div class="flex flex-row justify-around flex-wrap gap-2">
@@ -108,7 +108,7 @@ function handleSetup(): void {
             inProgress={providerInstallationInProgress}
             disabled={isCreateButtonDisabled}
             onclick={handleCreateNew}>
-            {buttonTitle} ...
+            {buttonTitle}...
           </Button>
         </Tooltip>
       {/if}

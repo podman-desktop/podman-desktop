@@ -27,6 +27,6 @@ basic information -->
     <KubeCronJobStatusArtifact artifact={cronjob.status} />
     <KubeCronJobArtifact artifact={cronjob.spec} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </Table>

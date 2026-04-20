@@ -139,7 +139,7 @@ async function saveImages(): Promise<void> {
         <Button
           on:click={selectOutputPath}
           title="Open dialog to select the output folder"
-          aria-label="Select output folder">Browse ...</Button>
+          aria-label="Select output folder">Browse...</Button>
       </div>
 
       {#if !singleItemMode && imagesToSave.length > 0}
