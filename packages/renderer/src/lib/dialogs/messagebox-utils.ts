@@ -20,6 +20,7 @@ type ConfirmationVariant = 'default' | 'delete';
 export interface ConfirmationOptions {
   variant?: ConfirmationVariant;
   title?: string;
+  buttonLabel?: string;
 }
 
 /**
@@ -37,8 +38,7 @@ export function withConfirmation(
   options?: ConfirmationOptions,
 ): void {
   const isDelete = options?.variant === 'delete';
-  const verb = action.trim().split(/\s+/)[0] ?? '';
-  const activationButton = isDelete ? 'Delete' : verb.charAt(0).toUpperCase() + verb.slice(1);
+  const activationButton = isDelete ? 'Delete' : (options?.buttonLabel ?? 'Yes');
   const title = options?.title ?? 'Confirmation';
   window
     .showMessageBox({
