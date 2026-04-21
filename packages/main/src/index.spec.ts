@@ -19,7 +19,6 @@
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import type Electron from 'electron';
 import type { App } from 'electron';
-import type Electron from 'electron';
 import { app, BrowserWindow, Menu } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { afterEach, assert, beforeEach, expect, test, vi } from 'vitest';

@@ -19,7 +19,6 @@
 import type { SimpleContainerInfo } from '@podman-desktop/core-api';
 import type Electron from 'electron';
 import type { IpcMainEvent } from 'electron';
-import type Electron from 'electron';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContainerProviderRegistry } from '/@/plugin/container-registry.js';
