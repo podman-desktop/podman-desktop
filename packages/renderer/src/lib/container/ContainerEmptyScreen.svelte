@@ -64,7 +64,7 @@ async function runContainer(commandLine: string): Promise<void> {
         await window.createAndStartContainer(image.engineId, { Image: helloImage });
       } else {
         await window.showMessageBox({
-          title: `Error when running container`,
+          title: 'Run Container Failed',
           message: `Could not find ${helloImage} in images`,
         });
       }
@@ -72,7 +72,7 @@ async function runContainer(commandLine: string): Promise<void> {
     }
   } catch (err) {
     await window.showMessageBox({
-      title: `Error when running container`,
+      title: 'Run Container Failed',
       message: `Error while executing ${commandLine}: ${String(err)}`,
     });
   }

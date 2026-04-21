@@ -88,7 +88,7 @@ async function showLayersImage(): Promise<void> {
 
 async function onError(error: string): Promise<void> {
   await window.showMessageBox({
-    title: 'Something went wrong.',
+    title: 'Push Image Failed',
     message: error,
     type: 'error',
   });
