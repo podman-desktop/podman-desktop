@@ -64,9 +64,9 @@ test('Check cleanupProviders is called and button is in progress', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Yes', 'Cancel'],
+    buttons: ['Clean Up', 'Cancel'],
     message: 'This action may delete data. Proceed?',
-    title: 'Cleanup',
+    title: 'Clean Up Data?',
   });
 
   // check that we're calling the cleanupProvidersMock
@@ -91,9 +91,9 @@ test('Check errors are displayed with clipboard button', async () => {
 
   // check that we asked for confirmation
   expect(window.showMessageBox).toBeCalledWith({
-    buttons: ['Yes', 'Cancel'],
+    buttons: ['Clean Up', 'Cancel'],
     message: 'This action may delete data. Proceed?',
-    title: 'Cleanup',
+    title: 'Clean Up Data?',
   });
 
   // check that we're calling the cleanupProvidersMock

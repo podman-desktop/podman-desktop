@@ -34,11 +34,11 @@ async function openPruneDialog(): Promise<void> {
     buttons.push(LABEL_IMAGE_UNUSED);
     buttons.push(LABEL_IMAGE_UNTAGGED);
   } else {
-    buttons.push('Yes');
+    buttons.push('Prune');
   }
 
   const result = await window.showMessageBox({
-    title: 'Prune',
+    title: `Prune ${type.charAt(0).toUpperCase() + type.slice(1)}?`,
     message: message,
     buttons,
   });

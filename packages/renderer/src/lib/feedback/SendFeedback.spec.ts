@@ -81,10 +81,10 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
 
   // expect confirm dialog
   expect(window.showMessageBox).toHaveBeenCalledWith({
-    title: 'Close Feedback form',
+    title: 'Close Feedback Form?',
     message: 'Do you want to close the Feedback form?\nClosing will erase your input.',
     type: 'warning',
-    buttons: ['Yes', 'No'],
+    buttons: ['Close', 'Cancel'],
   });
 });
 

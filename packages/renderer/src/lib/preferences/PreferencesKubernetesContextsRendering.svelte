@@ -93,10 +93,10 @@ async function handleSetContext(contextName: string): Promise<void> {
 async function handleDeleteContext(contextName: string): Promise<void> {
   if (currentContextName === contextName) {
     const result = await window.showMessageBox({
-      title: 'Delete Context',
+      title: 'Delete Context?',
       message:
         'You will delete the current context. If you delete it, you will need to switch to another context. Continue?',
-      buttons: ['Yes', 'Cancel'],
+      buttons: ['Delete', 'Cancel'],
     });
     if (result.response !== 0) {
       return;

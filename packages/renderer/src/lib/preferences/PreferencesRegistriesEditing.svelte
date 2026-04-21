@@ -200,10 +200,10 @@ async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<
     ) {
       showNewRegistryForm = false;
       const result = await window.showMessageBox({
-        title: 'Invalid Certificate',
+        title: 'Add Untrusted Registry?',
         type: 'warning',
         message: 'The certificate for this registry is not trusted / verifiable. Would you like to still add it?',
-        buttons: ['Yes', 'Cancel'],
+        buttons: ['Add', 'Cancel'],
       });
       if (result?.response === 0) {
         registry.insecure = true;
