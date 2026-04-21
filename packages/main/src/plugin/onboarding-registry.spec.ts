@@ -77,7 +77,7 @@ describe('an OnboardingRegistry instance exists', () => {
     registerOnboardingDisposable = onboardingRegistry.registerOnboarding(extension, manifest.contributes.onboarding);
     getConfigMock.mockReturnValue(true);
 
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
     readFileSync.mockReturnValue(JSON.stringify({}));
   });
 

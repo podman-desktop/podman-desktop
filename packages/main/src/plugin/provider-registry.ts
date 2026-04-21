@@ -1152,29 +1152,8 @@ export class ProviderRegistry {
     } finally {
       if (this.isProviderContainerConnection(providerConnectionInfo)) {
         this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
-      } else if (this.isProviderKubernetesConnectionInfo(providerConnectionInfo)) {
-        this._onDidUpdateKubernetesConnection.fire({
-          providerId: provider.id,
-          connection: {
-            name: providerConnectionInfo.name,
-            endpoint: providerConnectionInfo.endpoint,
-            status: (): ProviderConnectionStatus => {
-              return 'started';
-            },
-          },
-          status: 'started',
-        });
       } else {
-        this._onDidUpdateVmConnection.fire({
-          providerId: provider.id,
-          connection: {
-            name: providerConnectionInfo.name,
-            status: (): ProviderConnectionStatus => {
-              return 'started';
-            },
-          },
-          status: 'started',
-        });
+        this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'started');
       }
     }
   }
@@ -1250,47 +1229,7 @@ export class ProviderRegistry {
     }
 
     try {
-      if (this.isProviderContainerConnection(providerConnectionInfo)) {
-        const event = {
-          providerId: provider.id,
-          connection: {
-            displayName: providerConnectionInfo.displayName,
-            name: providerConnectionInfo.name,
-            type: providerConnectionInfo.type,
-            endpoint: providerConnectionInfo.endpoint,
-            status: (): ProviderConnectionStatus => {
-              return 'stopped';
-            },
-          },
-          status: 'stopped' as ProviderConnectionStatus,
-        };
-        this._onBeforeDidUpdateContainerConnection.fire(event);
-        this._onDidUpdateContainerConnection.fire(event);
-        this._onAfterDidUpdateContainerConnection.fire(event);
-      } else if (this.isProviderKubernetesConnectionInfo(providerConnectionInfo)) {
-        this._onDidUpdateKubernetesConnection.fire({
-          providerId: provider.id,
-          connection: {
-            name: providerConnectionInfo.name,
-            endpoint: providerConnectionInfo.endpoint,
-            status: (): ProviderConnectionStatus => {
-              return 'stopped';
-            },
-          },
-          status: 'stopped',
-        });
-      } else {
-        this._onDidUpdateVmConnection.fire({
-          providerId: provider.id,
-          connection: {
-            name: providerConnectionInfo.name,
-            status: (): ProviderConnectionStatus => {
-              return 'stopped';
-            },
-          },
-          status: 'stopped',
-        });
-      }
+      this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'stopped');
       await lifecycle.stop(context, logHandler);
     } catch (err) {
       console.warn(`Can't stop connection ${provider.id}.${providerConnectionInfo.name}`, err);
@@ -1601,6 +1540,48 @@ export class ProviderRegistry {
       return this.toProviderInfo(provider);
     }
     return undefined;
+  }
+
+  protected fireConnectionUpdateEvent(
+    providerId: string,
+    providerConnectionInfo: ProviderConnectionInfo,
+    status: ProviderConnectionStatus,
+  ): void {
+    if (this.isProviderContainerConnection(providerConnectionInfo)) {
+      const event = {
+        providerId,
+        connection: {
+          displayName: providerConnectionInfo.displayName,
+          name: providerConnectionInfo.name,
+          type: providerConnectionInfo.type,
+          endpoint: providerConnectionInfo.endpoint,
+          status: (): ProviderConnectionStatus => status,
+        },
+        status,
+      };
+      this._onBeforeDidUpdateContainerConnection.fire(event);
+      this._onDidUpdateContainerConnection.fire(event);
+      this._onAfterDidUpdateContainerConnection.fire(event);
+    } else if (this.isProviderKubernetesConnectionInfo(providerConnectionInfo)) {
+      this._onDidUpdateKubernetesConnection.fire({
+        providerId,
+        connection: {
+          name: providerConnectionInfo.name,
+          endpoint: providerConnectionInfo.endpoint,
+          status: (): ProviderConnectionStatus => status,
+        },
+        status,
+      });
+    } else {
+      this._onDidUpdateVmConnection.fire({
+        providerId,
+        connection: {
+          name: providerConnectionInfo.name,
+          status: (): ProviderConnectionStatus => status,
+        },
+        status,
+      });
+    }
   }
 
   protected fireUpdateContainerConnectionEvents(

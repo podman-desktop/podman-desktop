@@ -25,11 +25,11 @@ import { isLinux } from '/@/util.js';
 import { DirectoryStrategy } from './directory-strategy.js';
 
 // Mock the external modules
-vi.mock('node:fs', () => ({
+vi.mock(import('node:fs'), () => ({
   existsSync: vi.fn(),
 }));
 
-vi.mock('/@/util.js', () => ({
+vi.mock(import('/@/util.js'), () => ({
   isLinux: vi.fn(),
 }));
 

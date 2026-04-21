@@ -282,7 +282,7 @@ describe('handleExtensionVMServiceRequest', () => {
 });
 
 test('Check handlePluginInstall', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 
   const allReplies: string[] = [];
 

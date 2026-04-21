@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 test('Check extractExtensionFiles', async () => {
-  vi.mock('node:fs/promises');
+  vi.mock(import('node:fs/promises'));
 
   const metadataJson = {
     name: 'My Extension',

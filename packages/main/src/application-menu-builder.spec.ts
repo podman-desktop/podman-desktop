@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type * as Electron from 'electron';
 import { Menu } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -23,7 +24,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { ApplicationMenuBuilder } from './application-menu-builder.js';
 import type { ZoomLevelHandler } from './plugin/zoom-level-handler.js';
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   class MyCustomWindow {
     static readonly singleton = new MyCustomWindow();
 
@@ -53,10 +54,10 @@ vi.mock('electron', async () => {
       getApplicationMenu: vi.fn(),
       setApplicationMenu: vi.fn(),
     },
-  };
+  } as unknown as typeof Electron;
 });
 
-vi.mock('electron-util/main', async () => {
+vi.mock(import('electron-util/main'), async () => {
   return {
     aboutMenuItem: vi.fn(),
   };

@@ -325,12 +325,12 @@ const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesk
   return extensionLoader.createApi(analyzedExtension);
 };
 
-vi.mock('electron', () => {
+vi.mock(import('electron'), () => {
   return {
     app: {
       getVersion: vi.fn(),
     },
-  };
+  } as unknown as typeof Electron;
 });
 
 vi.mock(import('/@/util.js'));
@@ -392,7 +392,7 @@ beforeEach(() => {
   );
 });
 
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 
 beforeEach(() => {
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
@@ -548,7 +548,7 @@ test('Should load file from watching scanning folder', async () => {
   // reduce timeout delay for tests
   extensionLoader.setWatchTimeout(50);
 
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   // mock fs.watch
   const fsWatchMock = vi.spyOn(fs, 'watch');
   fsWatchMock.mockImplementation((filename: fs.PathLike, listener?: fs.WatchListener<string>): fs.FSWatcher => {
@@ -1340,7 +1340,7 @@ describe('Removing extension by user', async () => {
 });
 
 test('check dispose when deactivating', async () => {
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 
   const extensionId = 'fooPublisher.fooName';
   extensionLoader.setActivatedExtension(extensionId, {
@@ -2437,7 +2437,7 @@ describe('containerEngine', async () => {
 
 describe('extensionContext', async () => {
   test('secrets', async () => {
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
 
     vi.mocked(fs.existsSync).mockReturnValue(true);
 

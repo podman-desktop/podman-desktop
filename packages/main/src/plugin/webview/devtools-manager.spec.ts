@@ -21,14 +21,18 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DevToolsManager } from './devtools-manager.js';
 
-vi.mock('electron', () => ({
-  webContents: {
-    fromId: vi.fn(),
-  },
-  BrowserWindow: {
-    getAllWindows: vi.fn(),
-  },
-}));
+vi.mock(
+  import('electron'),
+  () =>
+    ({
+      webContents: {
+        fromId: vi.fn(),
+      },
+      BrowserWindow: {
+        getAllWindows: vi.fn(),
+      },
+    }) as unknown as typeof Electron,
+);
 
 const mockWebContents = vi.mocked(webContents);
 const mockBrowserWindow = vi.mocked(BrowserWindow);

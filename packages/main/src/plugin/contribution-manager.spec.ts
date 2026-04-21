@@ -35,6 +35,11 @@ import type { Directories } from './directories.js';
 import type { Proxy } from './proxy.js';
 import { Exec } from './util/exec.js';
 
+vi.mock(import('node:fs'));
+vi.mock(import('/@/plugin/util/exec.js'));
+vi.mock(import('/@/util.js'));
+vi.mock(import('js-yaml'));
+
 let contributionManager: TestContributionManager;
 
 let composeFileExample: ComposeObject;
@@ -216,9 +221,6 @@ test('Should add a service to expose port if socket', async () => {
 });
 
 test('Check invalid port file', async () => {
-  vi.mock('node:fs');
-  vi.mock('js-yaml');
-
   const metadata = {
     vm: {
       composefile: 'dummy-compose-file',
@@ -314,20 +316,7 @@ test('waitForAContainerConnection delayed twice', async () => {
 });
 
 describe('findComposeBinary', () => {
-  vi.mock('./util', () => {
-    return {
-      isWindows: vi.fn(),
-      isMac: vi.fn(),
-      isUnixLike: vi.fn(),
-      exec: vi.fn(),
-    };
-  });
-
-  vi.mock(import('/@/plugin/util/exec.js'));
-
   test('Check findComposeBinary on Windows', async () => {
-    vi.mock('node:fs');
-
     vi.spyOn(util, 'isWindows').mockImplementation(() => true);
 
     // mock exec
@@ -339,8 +328,6 @@ describe('findComposeBinary', () => {
   });
 
   test('Check findComposeBinary not exists on Windows', async () => {
-    vi.mock('node:fs');
-
     vi.spyOn(util, 'isWindows').mockImplementation(() => true);
 
     // mock exec
@@ -353,8 +340,6 @@ describe('findComposeBinary', () => {
   });
 
   test('Check findComposeBinary on macOS', async () => {
-    vi.mock('node:fs');
-
     vi.spyOn(util, 'isMac').mockImplementation(() => true);
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
 
@@ -371,8 +356,6 @@ describe('findComposeBinary', () => {
   });
 
   test('Check findComposeBinary on Linux', async () => {
-    vi.mock('node:fs');
-
     vi.spyOn(util, 'isUnixLike').mockImplementation(() => true);
     vi.spyOn(util, 'isMac').mockImplementation(() => false);
     vi.spyOn(util, 'isWindows').mockImplementation(() => false);
@@ -698,8 +681,6 @@ test('delete extension', async () => {
 });
 
 test('init', async () => {
-  vi.mock('node:fs');
-
   // mock existsSync as always returning true
   vi.mocked(fs.existsSync).mockReturnValue(true);
 

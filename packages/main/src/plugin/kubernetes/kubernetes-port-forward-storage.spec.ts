@@ -33,7 +33,7 @@ import {
   PreferenceFolderBasedStorage,
 } from '/@/plugin/kubernetes/kubernetes-port-forward-storage.js';
 
-vi.mock('node:fs/promises', () => ({
+vi.mock(import('node:fs/promises'), () => ({
   mkdir: vi.fn(),
   access: vi.fn(),
   writeFile: vi.fn(),

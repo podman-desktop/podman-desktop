@@ -25,8 +25,8 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import { ExtensionTypeScriptConfigParser } from './extension-tsconfig-parser.js';
 
-vi.mock('node:fs');
-vi.mock('get-tsconfig');
+vi.mock(import('node:fs'));
+vi.mock(import('get-tsconfig'));
 
 beforeEach(() => {
   vi.restoreAllMocks();

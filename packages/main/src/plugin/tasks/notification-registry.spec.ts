@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type Electron from 'electron';
 import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { Disposable } from '/@/plugin/types/disposable.js';
@@ -42,7 +43,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   class Notification {
     show(): void {}
     close(): void {}
@@ -50,7 +51,7 @@ vi.mock('electron', async () => {
 
   return {
     Notification,
-  };
+  } as unknown as typeof Electron;
 });
 
 test('expect notification added to the queue', async () => {

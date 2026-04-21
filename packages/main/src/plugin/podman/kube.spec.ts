@@ -25,9 +25,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getImageNamePrefix, KubePlayContext } from '/@/plugin/podman/kube.js';
 
-vi.mock('node:fs');
-vi.mock('node:fs/promises');
-vi.mock('tar-fs');
+vi.mock(import('node:fs'));
+vi.mock(import('node:fs/promises'));
+vi.mock(import('tar-fs'));
 
 beforeEach(() => {
   vi.resetAllMocks();

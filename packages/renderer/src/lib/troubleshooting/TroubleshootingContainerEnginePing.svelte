@@ -18,7 +18,7 @@ async function pingConnection(): Promise<void> {
   const start = performance.now();
   pingInProgress = true;
   pingError = '';
-  pingResult = '...Waiting for response...';
+  pingResult = 'Waiting for response...';
   try {
     const result = await window.pingContainerEngine($state.snapshot(providerContainerEngine));
     pingResult = `Responded: ${Buffer.from(String(result)).toString()}`;

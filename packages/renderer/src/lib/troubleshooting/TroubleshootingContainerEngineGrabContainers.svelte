@@ -17,7 +17,7 @@ async function grabContainers(): Promise<void> {
   const start = performance.now();
   listInProgress = true;
   listError = '';
-  listContainersResult = '...Waiting for response...';
+  listContainersResult = 'Waiting for response...';
   try {
     const result = await window.listContainersFromEngine($state.snapshot(providerContainerEngine));
     listContainersResult = `Responded: ${result.length} containers`;

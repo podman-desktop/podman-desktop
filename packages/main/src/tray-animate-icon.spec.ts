@@ -45,7 +45,7 @@ const mockNativeImage = vi.hoisted(() => ({
   createFromBuffer: vi.fn().mockReturnValue({ isEmpty: () => false }),
 }));
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     app: {
       getAppPath: (): string => 'a-custom-appPath',
@@ -56,14 +56,14 @@ vi.mock('electron', async () => {
       shouldUseDarkColors: false,
     },
     nativeImage: mockNativeImage,
-  };
+  } as unknown as typeof Electron;
 });
 
-vi.mock('node:fs', () => ({
+vi.mock(import('node:fs'), () => ({
   readFileSync: vi.fn().mockReturnValue(Buffer.from('')),
 }));
 
-vi.mock('./util.js', () => ({
+vi.mock(import('./util.js'), () => ({
   isMac: vi.fn(),
   isWindows: vi.fn(),
 }));

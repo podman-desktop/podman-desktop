@@ -22,7 +22,7 @@
 import { get } from 'node:http';
 import * as nodeurl from 'node:url';
 
-import type { HttpsProxyAgentOptions } from 'hpagent';
+import type * as hpagent from 'hpagent';
 import { HttpsProxyAgent } from 'hpagent';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -30,22 +30,21 @@ import type { Certificates } from './certificates.js';
 import type { Proxy } from './proxy.js';
 import * as ProxyResolver from './proxy-resolver.js';
 
-vi.mock('http', () => {
+vi.mock(import('node:http'), () => {
   return {
     get: vi.fn(),
     request: vi.fn(),
   };
 });
 
-vi.mock('https', () => {
+vi.mock(import('node:https'), () => {
   return {
     get: vi.fn(),
     request: vi.fn(),
-    Agent: vi.fn(),
   };
 });
 
-vi.mock('hpagent', () => {
+vi.mock(import('hpagent'), () => {
   return {
     HttpProxyAgent: function (): void {
       // @ts-ignore: this implicit any type
@@ -55,7 +54,7 @@ vi.mock('hpagent', () => {
       // @ts-ignore: this implicit any type
       this.https = true;
     },
-  };
+  } as unknown as typeof hpagent;
 });
 
 function createProxy(enabled: boolean, httpsProxy?: string, httpProxy?: string): Proxy {
@@ -148,7 +147,7 @@ test('patched http get when called with url and callback calls original with opt
   expect(get).toHaveBeenCalledTimes(2);
   expect(get).toBeCalledWith(
     {
-      agent: new HttpsProxyAgent({} as HttpsProxyAgentOptions),
+      agent: new HttpsProxyAgent({} as hpagent.HttpsProxyAgentOptions),
       hostname: `fe80${colon}${colon}1802${colon}20ff${colon}fe8d${colon}d4ce`,
       path: '/',
       port: '',
@@ -171,7 +170,7 @@ test('patched http get translates username@password in url to auth option', () =
   expect(get).toHaveBeenCalledTimes(2);
   expect(get).toBeCalledWith(
     {
-      agent: new HttpsProxyAgent({} as HttpsProxyAgentOptions),
+      agent: new HttpsProxyAgent({} as hpagent.HttpsProxyAgentOptions),
       hostname: 'rest.url',
       path: '/',
       port: '',
@@ -198,7 +197,7 @@ test('patched http get works when url passed as protocol and hostname in options
   }
   expect(get).toBeCalledWith(
     {
-      agent: new HttpsProxyAgent({} as HttpsProxyAgentOptions),
+      agent: new HttpsProxyAgent({} as hpagent.HttpsProxyAgentOptions),
       ...options,
     },
     callback,

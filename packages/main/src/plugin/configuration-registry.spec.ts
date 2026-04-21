@@ -17,7 +17,8 @@
  ***********************************************************************/
 
 // Import to access mocked functionionalities such as using vi.mock (we don't want to actually call node:fs methods)
-import * as fs from 'node:fs';
+import { cpSync, readFileSync, writeFileSync } from 'node:fs';
+import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
@@ -35,17 +36,18 @@ import type { LockedConfiguration } from './locked-configuration.js';
 import type { NotificationRegistry } from './tasks/notification-registry.js';
 
 // mock the fs module
-vi.mock('node:fs', () => ({
+vi.mock(import('node:fs'), () => ({
   readFileSync: vi.fn(),
   writeFileSync: vi.fn(),
   cpSync: vi.fn(),
-  promises: {
-    access: vi.fn(),
-    mkdir: vi.fn(),
-    writeFile: vi.fn(),
-    readFile: vi.fn(),
-    copyFile: vi.fn(),
-  },
+}));
+
+vi.mock(import('node:fs/promises'), () => ({
+  access: vi.fn(),
+  mkdir: vi.fn(),
+  writeFile: vi.fn(),
+  readFile: vi.fn(),
+  copyFile: vi.fn(),
 }));
 
 // mock DefaultConfiguration for the new managed defaults functionality
@@ -93,19 +95,19 @@ beforeEach(async () => {
   getManagedDefaultsDirectoryMock.mockReturnValue('/usr/share/podman-desktop');
 
   // Mock basic fs functions needed for initialization
-  const readFileSync = vi.mocked(fs.readFileSync);
-  const accessMock = vi.mocked(fs.promises.access);
-  const mkdirMock = vi.mocked(fs.promises.mkdir);
-  const writeFileMock = vi.mocked(fs.promises.writeFile);
-  const readFileMock = vi.mocked(fs.promises.readFile);
-  const cpSync = vi.mocked(fs.cpSync);
+  const readFileSyncMock = vi.mocked(readFileSync);
+  const accessMock = vi.mocked(access);
+  const mkdirMock = vi.mocked(mkdir);
+  const writeFileMock = vi.mocked(writeFile);
+  const readFileMock = vi.mocked(readFile);
+  const cpSyncMock = vi.mocked(cpSync);
 
-  readFileSync.mockReturnValue(JSON.stringify({}));
+  readFileSyncMock.mockReturnValue(JSON.stringify({}));
   accessMock.mockResolvedValue(undefined);
   mkdirMock.mockResolvedValue(undefined);
   writeFileMock.mockResolvedValue(undefined);
   readFileMock.mockResolvedValue(JSON.stringify({}));
-  cpSync.mockReturnValue(undefined);
+  cpSyncMock.mockReturnValue(undefined);
 
   // Setup DefaultConfiguration mock for the new functionality
   getContentMock.mockResolvedValue({});
@@ -224,17 +226,17 @@ test('Should not find configuration after dispose', async () => {
 
 test('should work with an invalid configuration file', async () => {
   // Mock fs functions needed for this specific test
-  const readFileSync = vi.mocked(fs.readFileSync);
-  const accessMock = vi.mocked(fs.promises.access);
-  const readFileMock = vi.mocked(fs.promises.readFile);
-  const copyFileMock = vi.mocked(fs.promises.copyFile);
+  const readFileSyncMock = vi.mocked(readFileSync);
+  const accessMock = vi.mocked(access);
+  const readFileMock = vi.mocked(readFile);
+  const copyFileMock = vi.mocked(copyFile);
 
   getConfigurationDirectoryMock.mockReturnValue('/my-config-dir');
 
   configurationRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
-  readFileSync.mockReturnValue('invalid JSON content');
+  readFileSyncMock.mockReturnValue('invalid JSON content');
 
-  // Mock fs.promises methods for this test
+  // Mock promises methods for this test
   accessMock.mockResolvedValue(undefined);
   readFileMock.mockResolvedValue('invalid JSON content');
   copyFileMock.mockResolvedValue(undefined);
@@ -394,7 +396,7 @@ describe('should be notified when a configuration is updated', async () => {
 
 test('should remove the object configuration if value is equal to default one', async () => {
   // Mock fs function needed for this specific test
-  const writeFileSync = vi.mocked(fs.writeFileSync);
+  const writeFileSyncMock = vi.mocked(writeFileSync);
 
   const node: IConfigurationNode = {
     id: 'custom',
@@ -434,7 +436,7 @@ test('should remove the object configuration if value is equal to default one', 
     { label: 'bar', value: 2 },
   ]);
 
-  expect(writeFileSync).toHaveBeenNthCalledWith(
+  expect(writeFileSyncMock).toHaveBeenNthCalledWith(
     2,
     expect.anything(),
     expect.stringContaining(JSON.stringify({}, undefined, 2)),
@@ -443,11 +445,11 @@ test('should remove the object configuration if value is equal to default one', 
 
 // Tests for applyManagedDefaults method
 describe('applyManagedDefaults function tests', () => {
-  let writeFileSync: ReturnType<typeof vi.mocked<typeof fs.writeFileSync>>;
+  let writeFileSyncMock: ReturnType<typeof vi.mocked<typeof writeFileSync>>;
 
   beforeEach(() => {
-    writeFileSync = vi.mocked(fs.writeFileSync);
-    writeFileSync.mockClear();
+    writeFileSyncMock = vi.mocked(writeFileSync);
+    writeFileSyncMock.mockClear();
   });
 
   test('apply default-config.json values to undefined keys in config', async () => {
@@ -482,8 +484,8 @@ describe('applyManagedDefaults function tests', () => {
       'setting.bar': 'defaultValue2',
     };
 
-    // Mock fs.promises.readFile to return user settings.json
-    const readFileMock = vi.mocked(fs.promises.readFile);
+    // Mock readFile to return user settings.json
+    const readFileMock = vi.mocked(readFile);
     readFileMock.mockResolvedValue(JSON.stringify(userSettings));
 
     getContentMock.mockResolvedValue(managedDefaults);
@@ -650,12 +652,12 @@ describe('applyManagedDefaults function tests', () => {
 
     // Clear previous calls and trigger saveDefault to check what would be written
     // now that configurations are registered
-    writeFileSync.mockClear();
+    writeFileSyncMock.mockClear();
     testRegistry.saveDefault();
 
     // The value should NOT be in the settings.json since it matches the schema default
-    expect(writeFileSync).toHaveBeenCalled();
-    const writtenContent = JSON.parse(writeFileSync.mock.calls[0]?.[1] as string);
+    expect(writeFileSyncMock).toHaveBeenCalled();
+    const writtenContent = JSON.parse(writeFileSyncMock.mock.calls[0]?.[1] as string);
     expect(writtenContent['my.fake.property']).toBeUndefined();
   });
 
@@ -686,12 +688,12 @@ describe('applyManagedDefaults function tests', () => {
     testRegistry.registerConfigurations([node]);
 
     // Clear previous calls and trigger saveDefault to check what would be written
-    writeFileSync.mockClear();
+    writeFileSyncMock.mockClear();
     testRegistry.saveDefault();
 
     // The value SHOULD be in the settings.json since it differs from schema default
-    expect(writeFileSync).toHaveBeenCalled();
-    const writtenContent = JSON.parse(writeFileSync.mock.calls[0]?.[1] as string);
+    expect(writeFileSyncMock).toHaveBeenCalled();
+    const writtenContent = JSON.parse(writeFileSyncMock.mock.calls[0]?.[1] as string);
     expect(writtenContent['my.fake.property']).toEqual('customValue');
   });
 });

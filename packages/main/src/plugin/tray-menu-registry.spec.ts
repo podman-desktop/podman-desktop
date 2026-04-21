@@ -30,13 +30,13 @@ import { TrayMenuRegistry } from './tray-menu-registry.js';
 let menuRegistry: TrayMenuRegistry;
 let trayMenu: TrayMenu;
 
-vi.mock('electron', () => {
+vi.mock(import('electron'), () => {
   return {
     ipcMain: {
       emit: vi.fn(),
       on: vi.fn(),
     },
-  };
+  } as unknown as typeof Electron;
 });
 
 beforeAll(() => {

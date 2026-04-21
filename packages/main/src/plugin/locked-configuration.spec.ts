@@ -24,7 +24,7 @@ import type { Directories } from './directories.js';
 import { LockedConfiguration } from './locked-configuration.js';
 
 // mock the fs/promises module
-vi.mock('node:fs/promises');
+vi.mock(import('node:fs/promises'));
 
 let lockedConfiguration: LockedConfiguration;
 const getManagedDefaultsDirectoryMock = vi.fn();
