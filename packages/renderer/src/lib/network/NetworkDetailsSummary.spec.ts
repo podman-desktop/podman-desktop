@@ -43,7 +43,7 @@ const network: NetworkInfoUI = {
   ],
 };
 
-vi.mock('tinro');
+vi.mock(import('tinro'));
 
 test('Expect all details to show up', () => {
   render(NetworkDetailsSummary, { network: network });

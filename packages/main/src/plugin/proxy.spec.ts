@@ -38,14 +38,14 @@ import { getProxySettingsFromSystem } from './proxy-system.js';
 
 const URL = 'https://podman-desktop.io';
 
-vi.mock('./proxy-system.js', () => {
+vi.mock(import('./proxy-system.js'), () => {
   return {
     getProxySettingsFromSystem: vi.fn(),
   };
 });
 
 // Mock the fs module
-vi.mock('node:fs');
+vi.mock(import('node:fs'));
 const readFileSync = vi.spyOn(fs, 'readFileSync');
 const writeFileSync = vi.spyOn(fs, 'writeFileSync');
 const existsSync = vi.spyOn(fs, 'existsSync');

@@ -36,26 +36,20 @@ import * as kubernetesReourcesCount from '/@/stores/kubernetes-resources-count';
 import KubernetesDashboard from './KubernetesDashboard.svelte';
 import KubernetesDashboardResourceCard from './KubernetesDashboardResourceCard.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
-  return {};
-});
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
-vi.mock('/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte'));
 
-vi.mock('./KubernetesDashboardResourceCard.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('./KubernetesDashboardResourceCard.svelte'));
 
-vi.mock('/@/stores/kubernetes-experimental');
+vi.mock(import('/@/stores/kubernetes-experimental'));
 
-vi.mock('/@/stores/kubernetes-resources-count');
+vi.mock(import('/@/stores/kubernetes-resources-count'));
 
-vi.mock('/@/lib/kube/active-resources-count-listen');
+vi.mock(import('/@/lib/kube/active-resources-count-listen'));
 
-vi.mock('/@/stores/kubernetes-context-permission');
-vi.mock('/@/stores/kubernetes-no-current-context');
+vi.mock(import('/@/stores/kubernetes-context-permission'));
+vi.mock(import('/@/stores/kubernetes-no-current-context'));
 
 const openExternalMock = vi.fn();
 

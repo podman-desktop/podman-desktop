@@ -83,13 +83,13 @@ afterEach(() => {
   server?.close();
 });
 
-vi.mock('fzstd', () => {
+vi.mock(import('fzstd'), () => {
   return {
     decompress: vi.fn(),
   };
 });
 
-vi.mock('tar', async () => {
+vi.mock(import('tar'), async () => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const tarActual = await vi.importActual<typeof import('tar')>('tar');
 

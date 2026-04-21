@@ -54,7 +54,7 @@ vi.mock(import('/@/lib/kube/resources-listen'), async importOriginal => {
   };
 });
 
-vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
 beforeEach(() => {
   vi.resetAllMocks();

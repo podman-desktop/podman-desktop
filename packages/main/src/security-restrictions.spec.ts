@@ -27,11 +27,15 @@ import type {
 import { shell } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-vi.mock('electron', () => ({
-  shell: {
-    openExternal: vi.fn(),
-  },
-}));
+vi.mock(
+  import('electron'),
+  () =>
+    ({
+      shell: {
+        openExternal: vi.fn(),
+      },
+    }) as unknown as typeof Electron,
+);
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   on: vi.fn(),

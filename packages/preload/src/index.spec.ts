@@ -21,29 +21,29 @@
 import type { OpenDialogOptions, SaveDialogOptions } from '@podman-desktop/api';
 import type { ForwardConfig } from '@podman-desktop/core-api';
 import { WorkloadKind } from '@podman-desktop/core-api';
-import type { IpcRenderer, IpcRendererEvent } from 'electron';
+import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { buildApiSender, initExposure } from './index.js';
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     contextBridge: {
       exposeInMainWorld: vi.fn(),
-    },
+    } as unknown as ContextBridge,
     ipcRenderer: {
       on: vi.fn(),
       emit: vi.fn(),
       handle: vi.fn(),
       send: vi.fn(),
       invoke: vi.fn(),
-    },
+    } as unknown as IpcRenderer,
     ipcMain: {
       on: vi.fn(),
       emit: vi.fn(),
       handle: vi.fn(),
-    },
+    } as unknown as IpcMain,
   };
 });
 

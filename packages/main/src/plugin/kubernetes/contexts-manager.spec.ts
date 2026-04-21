@@ -22,6 +22,7 @@ import type { CheckingState, ContextGeneralState, KubeContext, ResourceName } fr
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type * as ContextConstant from './contexts-constants.js';
 import type { ContextsInformersRegistry } from './contexts-informers-registry.js';
 import { ContextsManager } from './contexts-manager.js';
 import type { ContextsStatesRegistry } from './contexts-states-registry.js';
@@ -112,7 +113,7 @@ function contextHasBeenChecked(contextName: string): boolean {
   return false;
 }
 
-vi.mock('@kubernetes/client-node', async importOriginal => {
+vi.mock(import('@kubernetes/client-node'), async importOriginal => {
   const actual = await importOriginal<typeof kubeclient>();
   return {
     ...actual,
@@ -128,7 +129,7 @@ const backoffLimitMock = vi.fn();
 const backoffLimitCurrentContextMock = vi.fn();
 const backoffJitterMock = vi.fn();
 const dispatchTimeoutMock = vi.fn();
-vi.mock('./contexts-constants.js', () => {
+vi.mock(import('./contexts-constants.js'), () => {
   return {
     get connectTimeout(): number {
       return connectTimeoutMock();
@@ -154,7 +155,7 @@ vi.mock('./contexts-constants.js', () => {
     get dispatchTimeout(): number {
       return dispatchTimeoutMock();
     },
-  };
+  } as unknown as typeof ContextConstant;
 });
 
 const originalConsoleDebug = console.debug;

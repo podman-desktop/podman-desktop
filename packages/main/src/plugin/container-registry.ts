@@ -78,7 +78,7 @@ import Dockerode from 'dockerode';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
 import { coerce, gtr } from 'semver';
-import StreamValues from 'stream-json/streamers/StreamValues.js';
+import { withParserAsStream } from 'stream-json/streamers/stream-values.js';
 import type { Headers, Pack, PackOptions } from 'tar-fs';
 
 import { KubePlayContext } from '/@/plugin/podman/kube.js';
@@ -271,7 +271,7 @@ export class ContainerProviderRegistry {
         errorCallback(new Error('Error in handling events', error));
       });
 
-      const pipeline = stream?.pipe(StreamValues.withParser());
+      const pipeline = stream?.pipe(withParserAsStream());
       pipeline?.on('error', error => {
         console.error('Error while parsing events', error);
       });
@@ -2534,7 +2534,7 @@ export class ContainerProviderRegistry {
         stream = (await containerObject.stats({ stream: true })) as unknown as NodeJS.ReadableStream;
         this.statsConsumer.set(this.statsConsumerId, stream);
 
-        const pipeline = stream?.pipe(StreamValues.withParser());
+        const pipeline = stream?.pipe(withParserAsStream());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pipeline?.on('error', (error: any) => {
           console.error('Error while grabbing stats', error);

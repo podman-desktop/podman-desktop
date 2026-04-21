@@ -16,12 +16,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type Electron from 'electron';
 import { BrowserWindow } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { findWindow } from './electron-util.js';
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   class MyCustomWindow {
     static readonly singleton = new MyCustomWindow();
 
@@ -46,7 +47,7 @@ vi.mock('electron', async () => {
 
   return {
     BrowserWindow: MyCustomWindow,
-  };
+  } as unknown as typeof Electron;
 });
 
 beforeEach(() => {

@@ -28,8 +28,8 @@ import * as kubernetesContextsStateStore from '/@/stores/kubernetes-contexts-sta
 
 import KubernetesCheckConnection from './KubernetesCheckConnection.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
-vi.mock('/@/stores/kubernetes-contexts');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
+vi.mock(import('/@/stores/kubernetes-contexts'));
 
 test('button is displayed and active if current context is defined and is not reachable', async () => {
   vi.mocked(kubernetesContextsStore).kubernetesContexts = writable<KubeContext[]>([

@@ -23,6 +23,7 @@ import { render, screen } from '@testing-library/svelte';
 import { router } from 'tinro';
 import { expect, test, vi } from 'vitest';
 
+import type { AppearanceUtil } from '/@/lib/appearance/appearance-util';
 import ImageIcon from '/@/lib/images/ImageIcon.svelte';
 
 import ImageColumnName from './ImageColumnName.svelte';
@@ -49,11 +50,11 @@ const image: ImageInfoUI = {
 };
 const getImageMock = vi.fn();
 
-vi.mock('/@/lib/appearance/appearance-util', () => {
+vi.mock(import('/@/lib/appearance/appearance-util'), () => {
   return {
     AppearanceUtil: class {
       getImage = getImageMock;
-    },
+    } as unknown as typeof AppearanceUtil,
   };
 });
 

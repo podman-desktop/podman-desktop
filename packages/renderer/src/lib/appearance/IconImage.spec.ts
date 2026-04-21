@@ -24,16 +24,17 @@ import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import type { AppearanceUtil } from './appearance-util';
 import IconImage from './IconImage.svelte';
 
 const getConfigurationValueMock = vi.fn();
 const getImageMock = vi.fn();
 
-vi.mock('./appearance-util', () => {
+vi.mock(import('./appearance-util'), () => {
   return {
     AppearanceUtil: class {
       getImage = getImageMock;
-    },
+    } as unknown as typeof AppearanceUtil,
   };
 });
 

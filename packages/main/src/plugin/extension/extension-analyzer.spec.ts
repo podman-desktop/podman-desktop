@@ -29,8 +29,8 @@ import type { ExtensionManifest } from './extension-manifest-schema.js';
 
 let extensionAnalyzer: ExtensionAnalyzer;
 
-vi.mock('node:fs');
-vi.mock('node:fs/promises');
+vi.mock(import('node:fs'));
+vi.mock(import('node:fs/promises'));
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -72,8 +72,8 @@ describe('analyze extension and main', () => {
   });
 
   test('check for extension with linked folder', async () => {
-    vi.mock('node:fs');
-    vi.mock('node:fs/promises');
+    vi.mock(import('node:fs'));
+    vi.mock(import('node:fs/promises'));
 
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
@@ -108,7 +108,7 @@ describe('analyze extension and main', () => {
   });
 
   test('check for extension without main entry', async () => {
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
 
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
@@ -140,7 +140,7 @@ describe('analyze extension and main', () => {
   });
 
   test('check for extension with devMode', async () => {
-    vi.mock('node:fs');
+    vi.mock(import('node:fs'));
 
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');

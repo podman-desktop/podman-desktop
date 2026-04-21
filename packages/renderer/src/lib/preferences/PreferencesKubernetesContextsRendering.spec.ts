@@ -31,11 +31,7 @@ import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
 
 import PreferencesKubernetesContextsRendering from './PreferencesKubernetesContextsRendering.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
-  return {
-    kubernetesContextsState: vi.fn(),
-  };
-});
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
 // Create a fake KubeContextUI
 const mockContext1: KubeContext = {

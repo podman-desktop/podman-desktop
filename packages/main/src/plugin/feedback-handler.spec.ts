@@ -28,19 +28,23 @@ import productJSONFile from '/@product.json' with { type: 'json' };
 
 import { FeedbackHandler } from './feedback-handler.js';
 
-vi.mock('electron', () => ({
-  shell: {
-    openExternal: vi.fn(),
-  },
-}));
+vi.mock(
+  import('electron'),
+  () =>
+    ({
+      shell: {
+        openExternal: vi.fn(),
+      },
+    }) as unknown as typeof Electron,
+);
 
-vi.mock('/@/util.js', () => ({
+vi.mock(import('/@/util.js'), () => ({
   isLinux: vi.fn(),
   isMac: vi.fn(),
   isWindows: vi.fn(),
 }));
 
-vi.mock('node:os', () => ({
+vi.mock(import('node:os'), () => ({
   homedir: vi.fn(() => '/home/user'),
   release: vi.fn(),
 }));

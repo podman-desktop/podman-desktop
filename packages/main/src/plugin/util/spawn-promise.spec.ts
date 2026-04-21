@@ -25,7 +25,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { spawnWithPromise } from './spawn-promise.js';
 
 // mock spawn
-vi.mock('node:child_process', () => {
+vi.mock(import('node:child_process'), () => {
   return {
     spawn: vi.fn(),
   };

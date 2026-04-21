@@ -46,12 +46,12 @@ const browserWindowMock = {
   getBounds: vi.fn(),
 } as unknown as BrowserWindow;
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     screen: {
       getDisplayMatching: vi.fn(),
     },
-  };
+  } as unknown as typeof Electron;
 });
 
 beforeEach(() => {

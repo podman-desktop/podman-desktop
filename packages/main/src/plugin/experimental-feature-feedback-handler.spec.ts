@@ -18,6 +18,7 @@
 
 import type { Configuration } from '@podman-desktop/api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import type Electron from 'electron';
 import { shell } from 'electron';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -27,11 +28,15 @@ import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedb
 import type { MessageBox } from './message-box.js';
 import type { Telemetry } from './telemetry/telemetry.js';
 
-vi.mock('electron', () => ({
-  shell: {
-    openExternal: vi.fn().mockResolvedValue(undefined),
-  },
-}));
+vi.mock(
+  import('electron'),
+  () =>
+    ({
+      shell: {
+        openExternal: vi.fn().mockResolvedValue(undefined),
+      },
+    }) as unknown as typeof Electron,
+);
 
 const features: Record<string, IConfigurationPropertyRecordedSchema> = {
   'feat.feature1': {

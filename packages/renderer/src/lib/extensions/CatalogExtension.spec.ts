@@ -26,13 +26,7 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtension from './CatalogExtension.svelte';
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });

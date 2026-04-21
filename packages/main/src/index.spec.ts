@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { IConfigurationChangeEvent, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
+import type Electron from 'electron';
 import type { App } from 'electron';
 import { app, BrowserWindow, Menu } from 'electron';
 import { aboutMenuItem } from 'electron-util/main';
@@ -43,15 +44,16 @@ const constants = vi.hoisted(() => {
 });
 
 /* eslint-disable @typescript-eslint/no-empty-function */
-vi.mock('electron-is-dev', async () => {
+/* eslint-disable import/no-extraneous-dependencies */
+vi.mock(import('electron-is-dev'), async () => {
   return {};
 });
-vi.mock('electron-context-menu', async () => {
+vi.mock(import('electron-context-menu'), async () => {
   return {
     default: vi.fn(),
   };
 });
-vi.mock('electron-util/main', async () => {
+vi.mock(import('electron-util/main'), async () => {
   return {
     aboutMenuItem: vi.fn().mockReturnValue({ label: 'foo' }),
   };
@@ -85,7 +87,7 @@ vi.mock(import('./util.js'), () => ({
   isLinux: vi.fn().mockReturnValue(false),
 }));
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     autoUpdater: {
       on: vi.fn(),
@@ -154,7 +156,7 @@ vi.mock('electron', async () => {
         setContextMenu = vi.fn();
       },
     ),
-  };
+  } as unknown as typeof Electron;
 });
 
 beforeEach(() => {

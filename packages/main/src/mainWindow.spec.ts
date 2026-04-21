@@ -17,6 +17,7 @@
  ***********************************************************************/
 
 import type { Configuration } from '@podman-desktop/api';
+import type Electron from 'electron';
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -40,7 +41,7 @@ vi.mock(import('./util.js'), async () => ({
   stoppedExtensions: { val: true },
 }));
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     autoUpdater: {
       on: vi.fn(),
@@ -70,7 +71,7 @@ vi.mock('electron', async () => {
     BrowserWindow: Object.assign(vi.fn(), {
       getAllWindows: vi.fn().mockReturnValue([]),
     }),
-  };
+  } as unknown as typeof Electron;
 });
 
 let originalArgv: string[] = [];

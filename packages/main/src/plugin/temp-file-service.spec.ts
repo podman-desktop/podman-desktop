@@ -24,16 +24,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TempFileService } from './temp-file-service.js';
 
-vi.mock('node:fs/promises', () => ({
+vi.mock(import('node:fs/promises'), () => ({
   writeFile: vi.fn(),
   unlink: vi.fn(),
 }));
 
-vi.mock('node:os', () => ({
+vi.mock(import('node:os'), () => ({
   tmpdir: vi.fn().mockReturnValue('/tmp'),
 }));
 
-vi.mock('node:path', () => ({
+vi.mock(import('node:path'), () => ({
   join: vi.fn().mockImplementation((...args) => args.join('/')),
 }));
 

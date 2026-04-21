@@ -38,7 +38,7 @@ const eventsMock = vi.fn();
 
 const callbacks = new Map<string, (arg: unknown) => void>();
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
 

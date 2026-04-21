@@ -26,6 +26,8 @@ import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-c
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { Featured } from '/@/plugin/featured/featured.js';
 
+// eslint-disable-next-line no-restricted-imports
+import type * as Recommendations from '../../../../../recommendations.json';
 import { RecommendationsRegistry } from './recommendations-registry.js';
 
 let recommendationsRegistry: RecommendationsRegistry;
@@ -33,26 +35,30 @@ let recommendationsRegistry: RecommendationsRegistry;
 const registerConfigurationsMock = vi.fn();
 const getRecommendationIgnored = vi.fn();
 
-vi.mock('../../../../../recommendations.json', () => ({
-  default: {
-    extensions: Array.from({ length: 10 }, (_, i) => ({
-      extensionId: `dummy.id-${i}`,
-      title: 'dummy title',
-      description: 'dummy description',
-      icon: 'data:image/png;base64-icon',
-      thumbnail: 'data:image/png;base64-thumbnail',
-      publishDate: '2020-01-01',
-    })),
-    registries: [
-      {
-        id: 'my.registry.com',
-        name: 'My Extension',
-        extensionId: 'my.extensionId',
-        errors: ['is denied'],
+vi.mock(
+  import('../../../../../recommendations.json'),
+  () =>
+    ({
+      default: {
+        extensions: Array.from({ length: 10 }, (_, i) => ({
+          extensionId: `dummy.id-${i}`,
+          title: 'dummy title',
+          description: 'dummy description',
+          icon: 'data:image/png;base64-icon',
+          thumbnail: 'data:image/png;base64-thumbnail',
+          publishDate: '2020-01-01',
+        })),
+        registries: [
+          {
+            id: 'my.registry.com',
+            name: 'My Extension',
+            extensionId: 'my.extensionId',
+            errors: ['is denied'],
+          },
+        ],
       },
-    ],
-  },
-}));
+    }) as unknown as typeof Recommendations,
+);
 
 const configurationRegistryMock = {
   registerConfigurations: registerConfigurationsMock,

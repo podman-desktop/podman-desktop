@@ -27,9 +27,9 @@ import { isLinux, isMac, isWindows } from '/@/util.js';
 import { Main } from './main.js';
 
 // mock electron
-vi.mock('electron');
-vi.mock('/@/util.js');
-vi.mock('/@/security-restrictions.js');
+vi.mock(import('electron'));
+vi.mock(import('/@/util.js'));
+vi.mock(import('/@/security-restrictions.js'));
 vi.mock(import('electron-context-menu'), () => ({
   default: vi.fn(),
 }));

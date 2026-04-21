@@ -26,7 +26,7 @@ import * as kubernetesCheckConnection from '/@/lib/ui/KubernetesCheckConnection.
 import KubernetesEmptyScreen from './KubernetesEmptyScreen.svelte';
 import { listenResourcePermitted } from './resource-permission';
 
-vi.mock('./resource-permission');
+vi.mock(import('./resource-permission'));
 
 beforeEach(() => {
   vi.resetAllMocks();

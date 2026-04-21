@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import net from 'node:net';
+import { createServer, type Server, type Socket } from 'node:net';
 
 import {
   AppsV1Api,
@@ -66,18 +66,11 @@ const mockAppsV1Api = {
 
 vi.mock(import('@kubernetes/client-node'));
 
-vi.mock('node:net', async () => {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const { Server } = await vi.importActual<typeof import('node:net')>('node:net');
+vi.mock(import('node:net'), async importOriginal => {
+  const { Server } = await importOriginal();
   return {
     Server,
-    default: {
-      createServer: vi.fn(() => ({
-        listen: vi.fn(),
-        on: vi.fn(),
-        close: vi.fn(),
-      })),
-    },
+    createServer: vi.fn(),
   };
 });
 
@@ -150,7 +143,7 @@ class TestablePortForwardConnectionService extends PortForwardConnectionService 
     return super.getForwardingSetup(resource, forward);
   }
 
-  public override createServer(forwardSetup: ForwardingSetup): net.Server {
+  public override createServer(forwardSetup: ForwardingSetup): Server {
     return super.createServer(forwardSetup);
   }
 
@@ -208,16 +201,14 @@ describe('PortForwardConnectionService', () => {
       close: vi.fn(),
     };
 
-    (net.createServer as unknown as MockedFunction<typeof net.createServer>).mockReturnValue(
-      server as unknown as net.Server,
-    );
+    vi.mocked(createServer).mockReturnValue(server as unknown as Server);
     (global.fetch as unknown as MockedFunction<typeof fetch>).mockResolvedValueOnce(
       new Response(undefined, { status: 200 }),
     );
 
     const disposable = await service.performForward(forwardSetup);
 
-    expect(net.createServer).toHaveBeenCalled();
+    expect(createServer).toHaveBeenCalled();
     expect(server.listen).toHaveBeenCalledWith(3000, 'localhost');
     expect(disposable.dispose).toBeInstanceOf(Function);
   });
@@ -232,7 +223,7 @@ describe('PortForwardConnectionService', () => {
     const socket = {
       on: vi.fn(),
       end: vi.fn(),
-    } as unknown as net.Socket;
+    } as unknown as Socket;
 
     const server = {
       listen: vi.fn(),
@@ -240,13 +231,13 @@ describe('PortForwardConnectionService', () => {
       close: vi.fn(),
     };
 
-    (net.createServer as unknown as MockedFunction<typeof net.createServer>).mockImplementation(
+    vi.mocked(createServer).mockImplementation(
       // @ts-expect-error we're sure in the method signature
       (connectionListener?: (socket: net.Socket) => void) => {
         if (connectionListener) {
           connectionListener(socket);
         }
-        return server as unknown as net.Server;
+        return server as unknown as Server;
       },
     );
 
@@ -263,7 +254,7 @@ describe('PortForwardConnectionService', () => {
 
     const createdServer = service.createServer(forwardSetup as never);
 
-    expect(net.createServer).toHaveBeenCalled();
+    expect(createServer).toHaveBeenCalled();
     expect(PortForward.prototype.portForward).toHaveBeenCalledWith(
       forwardSetup.namespace,
       forwardSetup.name,

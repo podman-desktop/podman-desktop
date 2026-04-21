@@ -24,7 +24,7 @@ import { DefaultConfiguration } from './default-configuration.js';
 import type { Directories } from './directories.js';
 
 // mock the fs module
-vi.mock('node:fs/promises');
+vi.mock(import('node:fs/promises'));
 
 let defaultConfiguration: DefaultConfiguration;
 const getManagedDefaultsDirectoryMock = vi.fn();

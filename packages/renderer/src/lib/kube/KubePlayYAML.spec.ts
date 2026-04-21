@@ -70,13 +70,7 @@ const mockedErroredPlayKubeInfo: PlayKubeInfo = {
 };
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeAll(() => {
   (window.events as unknown) = {

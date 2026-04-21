@@ -31,6 +31,6 @@ basic information -->
     <KubeDeploymentArtifact deploymentName={deployment.metadata?.name} namespace={deployment.metadata?.namespace} artifact={deployment.spec} />
     <KubeEventsArtifact events={events} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </Table>

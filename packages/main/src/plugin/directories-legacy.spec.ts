@@ -37,7 +37,7 @@ beforeEach(() => {
   process.env = { ...originalProcessEnv };
 
   // Mock file system
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockReturnValue(true);
   vi.spyOn(fs, 'mkdirSync').mockImplementation(() => '');
 });

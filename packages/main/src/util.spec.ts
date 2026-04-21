@@ -23,7 +23,7 @@ import { createHash, formatName, getBase64Image, requireNonUndefined } from './u
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
 });
 
 test('getBase64Image - return undefined if path do not exists', () => {

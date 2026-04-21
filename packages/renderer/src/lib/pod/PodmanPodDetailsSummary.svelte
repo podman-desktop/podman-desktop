@@ -76,6 +76,6 @@ function navigateToLogs(container: PodInfoContainerUI): void {
       </tr>
     {/if}
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </DetailsTable>

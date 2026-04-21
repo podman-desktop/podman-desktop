@@ -56,6 +56,6 @@ test('Expect to show error message when there is a kube error', async () => {
 test('Expect to show loading indicator when PVC data is not available', async () => {
   render(PVCDetailsSummary, {});
 
-  const loadingMessage = screen.getByText('Loading ...');
+  const loadingMessage = screen.getByText('Loading...');
   expect(loadingMessage).toBeInTheDocument();
 });

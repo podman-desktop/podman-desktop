@@ -95,7 +95,7 @@ const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
 const handlers = new Map<string, any>();
 
 beforeAll(async () => {
-  vi.mock('electron', () => {
+  vi.mock(import('electron'), () => {
     return {
       shell: {
         openExternal: vi.fn(),
@@ -116,7 +116,7 @@ beforeAll(async () => {
       BrowserWindow: {
         getAllWindows: vi.fn(),
       },
-    };
+    } as unknown as typeof Electron;
   });
   const trayMenuMock = {} as unknown as TrayMenu;
   pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);

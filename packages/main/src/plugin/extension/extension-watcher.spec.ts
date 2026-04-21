@@ -26,7 +26,7 @@ import type { AnalyzedExtension } from './extension-analyzer.js';
 import type { ActivatedExtension } from './extension-loader.js';
 import { ExtensionWatcher } from './extension-watcher.js';
 
-vi.mock('get-tsconfig');
+vi.mock(import('get-tsconfig'));
 
 const fileSystemMonitoring = {
   createFileSystemWatcher: vi.fn(),

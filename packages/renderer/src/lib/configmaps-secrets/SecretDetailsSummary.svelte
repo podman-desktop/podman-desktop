@@ -21,6 +21,6 @@ basic information -->
     <KubeObjectMetaArtifact artifact={secret.metadata} />
     <KubeSecretArtifact artifact={secret} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </Table>

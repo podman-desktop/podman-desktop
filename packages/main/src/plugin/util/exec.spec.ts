@@ -27,24 +27,14 @@ import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Proxy } from '/@/plugin/proxy.js';
-import * as util from '/@/util.js';
+import { isLinux, isMac, isWindows } from '/@/util.js';
 
 import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
 
 // Mock sudo-prompt exec to resolve everytime.
-vi.mock(import('@expo/sudo-prompt'), async () => {
-  return {
-    exec: vi.fn(),
-  };
-});
-
+vi.mock(import('@expo/sudo-prompt'));
 vi.mock(import('/@/util.js'));
-
-vi.mock('child_process', () => {
-  return {
-    spawn: vi.fn(),
-  };
-});
+vi.mock(import('node:child_process'));
 
 const setEncodingMock = vi.fn();
 
@@ -55,7 +45,6 @@ describe('exec', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.clearAllMocks();
   });
 
   const exec = new Exec(proxy);
@@ -142,7 +131,7 @@ describe('exec', () => {
   test('should reject with an error when the process error event received', async () => {
     const command = 'nonexistent-command';
 
-    vi.mock('child_process', () => {
+    vi.mock(import('node:child_process'), () => {
       return {
         spawn: vi.fn(),
       };
@@ -210,16 +199,10 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
     const error = new Error('Error message');
-    (util.isWindows as Mock).mockReturnValue(true);
+    vi.mocked(isWindows).mockReturnValue(true);
 
     (sudo.exec as Mock).mockImplementation((_command, _options, callback) => {
       callback(error);
-    });
-
-    vi.mock('child_process', () => {
-      return {
-        spawn: vi.fn(),
-      };
     });
 
     const execResult = exec.exec(command, args, { isAdmin: true });
@@ -341,7 +324,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, "World"!'];
 
-    (util.isMac as Mock).mockReturnValue(true);
+    vi.mocked(isMac).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
@@ -377,7 +360,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    (util.isLinux as Mock).mockReturnValue(true);
+    vi.mocked(isLinux).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
@@ -410,7 +393,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    (util.isLinux as Mock).mockReturnValue(true);
+    vi.mocked(isLinux).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
@@ -446,7 +429,7 @@ describe('exec', () => {
   test('should run the command with privileges using exec on Windows', async () => {
     const command = 'echo';
     const args = ['Hello, World!'];
-    (util.isWindows as Mock).mockReturnValue(true);
+    vi.mocked(isWindows).mockReturnValue(true);
 
     (sudo.exec as Mock).mockImplementation((_command, _options, callback) => {
       callback(undefined);
@@ -477,7 +460,7 @@ describe('exec', () => {
   test('should run the command with privileges on Windows and remove unsupported environment', async () => {
     const command = 'echo';
     const args = ['Hello, World!'];
-    (util.isWindows as Mock).mockReturnValue(true);
+    vi.mocked(isWindows).mockReturnValue(true);
     let options:
       | {
           env?: { [p: string]: string };
@@ -574,7 +557,7 @@ describe('exec', () => {
     const command = 'echo';
     const args = ['Hello, World!'];
 
-    (util.isLinux as Mock).mockReturnValue(true);
+    vi.mocked(isLinux).mockReturnValue(true);
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
@@ -610,13 +593,6 @@ describe('exec', () => {
   });
 });
 
-vi.mock('./util', () => {
-  return {
-    isWindows: vi.fn(),
-    isMac: vi.fn(),
-  };
-});
-
 describe('getInstallationPath', () => {
   let originalPath: string | undefined;
 
@@ -634,8 +610,8 @@ describe('getInstallationPath', () => {
     skip: platform() !== 'win32',
   }, () => {
     beforeEach(() => {
-      vi.spyOn(util, 'isWindows').mockImplementation(() => true);
-      vi.spyOn(util, 'isMac').mockImplementation(() => false);
+      vi.mocked(isWindows).mockReturnValue(true);
+      vi.mocked(isMac).mockReturnValue(false);
     });
 
     test('should return the installation paths for Windows', () => {
@@ -672,8 +648,8 @@ describe('getInstallationPath', () => {
   });
 
   test('should return the installation path for macOS', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
-    vi.spyOn(util, 'isMac').mockImplementation(() => true);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isMac).mockReturnValue(true);
 
     process.env['PATH'] = '/usr/bin';
 
@@ -683,8 +659,8 @@ describe('getInstallationPath', () => {
   });
 
   test('should return the installation path for macOS with defined param', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
-    vi.spyOn(util, 'isMac').mockImplementation(() => true);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isMac).mockReturnValue(true);
 
     process.env['PATH'] = '/usr/bin';
 
@@ -694,8 +670,8 @@ describe('getInstallationPath', () => {
   });
 
   test('should return the installation path for other platforms', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
-    vi.spyOn(util, 'isMac').mockImplementation(() => false);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isMac).mockReturnValue(false);
     process.env['PATH'] = '/usr/bin'; // Example PATH for other platforms
 
     const path = getInstallationPath();
@@ -704,8 +680,8 @@ describe('getInstallationPath', () => {
   });
 
   test('should return the installation path for other platforms with defined param', () => {
-    vi.spyOn(util, 'isWindows').mockImplementation(() => false);
-    vi.spyOn(util, 'isMac').mockImplementation(() => false);
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(isMac).mockReturnValue(false);
     process.env['PATH'] = '/usr/bin'; // Example PATH for other platforms
 
     const path = getInstallationPath('/usr/other');
