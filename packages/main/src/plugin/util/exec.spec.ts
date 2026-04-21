@@ -35,11 +35,6 @@ import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
 vi.mock(import('@expo/sudo-prompt'));
 vi.mock(import('/@/util.js'));
 vi.mock(import('node:child_process'));
-vi.mock(import('node:child_process'), () => {
-  return {
-    spawn: vi.fn(),
-  };
-});
 
 const setEncodingMock = vi.fn();
 
