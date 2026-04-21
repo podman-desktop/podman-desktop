@@ -55,6 +55,29 @@ import { Disposable } from './types/disposable.js';
 import { HttpServer } from './webview/webview-registry.js';
 
 vi.mock(import('./extension/extension-api-version.js'));
+vi.mock(import('electron'), () => {
+  return {
+    shell: {
+      openExternal: vi.fn(),
+    },
+    app: {
+      on: vi.fn(),
+      getVersion: vi.fn(),
+      getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
+    },
+    clipboard: {
+      writeText: vi.fn(),
+    },
+    ipcMain: {
+      handle: vi.fn(),
+      emit: vi.fn().mockReturnValue(true),
+      on: vi.fn(),
+    },
+    BrowserWindow: {
+      getAllWindows: vi.fn(),
+    },
+  } as unknown as typeof Electron;
+});
 
 let pluginSystem: TestPluginSystem;
 
@@ -95,29 +118,6 @@ const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
 const handlers = new Map<string, any>();
 
 beforeAll(async () => {
-  vi.mock(import('electron'), () => {
-    return {
-      shell: {
-        openExternal: vi.fn(),
-      },
-      app: {
-        on: vi.fn(),
-        getVersion: vi.fn(),
-        getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
-      },
-      clipboard: {
-        writeText: vi.fn(),
-      },
-      ipcMain: {
-        handle: vi.fn(),
-        emit: vi.fn().mockReturnValue(true),
-        on: vi.fn(),
-      },
-      BrowserWindow: {
-        getAllWindows: vi.fn(),
-      },
-    } as unknown as typeof Electron;
-  });
   const trayMenuMock = {} as unknown as TrayMenu;
   pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
 

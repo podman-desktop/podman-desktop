@@ -38,6 +38,7 @@ vi.mock(import('node:os'), async () => {
     homedir: vi.fn(),
   };
 });
+vi.mock(import('node:fs'));
 
 const listReleasesMock = vi.fn();
 const listReleaseAssetsMock = vi.fn();
@@ -239,7 +240,7 @@ describe('install', () => {
     });
     vi.mocked(os.platform).mockReturnValue('win32');
     vi.mocked(os.arch).mockReturnValue('x64');
-    vi.mock(import('node:fs'));
+
     vi.mocked(fs.existsSync).mockReturnValue(true);
     const chmodMock = vi.spyOn(fs.promises, 'chmod');
     const downloadReleaseAssetMock = vi
@@ -264,7 +265,6 @@ describe('install', () => {
     });
     vi.mocked(os.platform).mockReturnValue('darwin');
     vi.mocked(os.arch).mockReturnValue('x64');
-    vi.mock(import('node:fs'));
     vi.mocked(fs.existsSync).mockReturnValue(true);
     const chmodMock = vi.spyOn(fs.promises, 'chmod').mockResolvedValue();
     const downloadReleaseAssetMock = vi
@@ -278,8 +278,6 @@ describe('install', () => {
 
 describe('downloadReleaseAsset', () => {
   test('should download the file if parent folder does exist', async () => {
-    vi.mock(import('node:fs'));
-
     getReleaseAssetMock.mockImplementation(() => {
       return { data: 'foo' };
     });
@@ -302,8 +300,6 @@ describe('downloadReleaseAsset', () => {
   });
 
   test('should download the file if parent folder does not exist', async () => {
-    vi.mock(import('node:fs'));
-
     getReleaseAssetMock.mockImplementation(() => {
       return { data: 'foo' };
     });

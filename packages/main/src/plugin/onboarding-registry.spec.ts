@@ -28,6 +28,8 @@ import { Context } from './context/context.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
 import type { Disposable } from './types/disposable.js';
 
+vi.mock(import('node:fs'));
+
 let onboardingRegistry: OnboardingRegistry;
 const extensionId = 'myextension.id';
 const stepId = 'checkInstalledCommand';
@@ -77,7 +79,6 @@ describe('an OnboardingRegistry instance exists', () => {
     registerOnboardingDisposable = onboardingRegistry.registerOnboarding(extension, manifest.contributes.onboarding);
     getConfigMock.mockReturnValue(true);
 
-    vi.mock(import('node:fs'));
     readFileSync.mockReturnValue(JSON.stringify({}));
   });
 

@@ -35,6 +35,11 @@ import { Exec, getInstallationPath, macosExtraPath } from './exec.js';
 vi.mock(import('@expo/sudo-prompt'));
 vi.mock(import('/@/util.js'));
 vi.mock(import('node:child_process'));
+vi.mock(import('node:child_process'), () => {
+  return {
+    spawn: vi.fn(),
+  };
+});
 
 const setEncodingMock = vi.fn();
 
@@ -130,12 +135,6 @@ describe('exec', () => {
 
   test('should reject with an error when the process error event received', async () => {
     const command = 'nonexistent-command';
-
-    vi.mock(import('node:child_process'), () => {
-      return {
-        spawn: vi.fn(),
-      };
-    });
 
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {

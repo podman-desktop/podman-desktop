@@ -37,6 +37,7 @@ const DIALOG_REGISTRY_MOCK: DialogRegistry = {
 const writeZipMock = vi.fn();
 const addFileMock = vi.fn();
 
+vi.mock(import('node:fs'));
 vi.mock(import('electron'), () => {
   return {
     ipcMain: {
@@ -182,7 +183,6 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
   readFileMock.mockResolvedValue('content');
 
   // Mock exists to be true
-  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return true;
   });
@@ -205,7 +205,6 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
 // ~/AppData/Roaming/Podman Desktop/logs/podman-desktop.log
 test('Should return getWindowsSystemLogs if the platform is win32', async () => {
   // Mock exists to be true
-  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return true;
   });
