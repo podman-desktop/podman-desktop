@@ -17,7 +17,7 @@
  ***********************************************************************/
 
 import * as fs from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
 
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
@@ -37,6 +37,10 @@ export class TestRegistrySetup extends RegistrySetup {
 
   updateRegistries(): Promise<void> {
     return super.updateRegistries();
+  }
+
+  publicWriteAuthFile(data: string): Promise<void> {
+    return super.writeAuthFile(data);
   }
 }
 
@@ -238,4 +242,19 @@ test.each([
   onRegisterRegistry?.(registeredRegistry);
 
   await vi.waitFor(() => expect(writeFile).toHaveBeenCalledTimes(timesCalled));
+});
+
+test('writeAuthFile should call writeFile and chmod with 0o600', async () => {
+  const data = JSON.stringify({ auth: {} });
+  const authJsonLocation = '/tmp/containers/auth.json';
+  const mockGetAuthFileLocation = vi.spyOn(registrySetup, 'getAuthFileLocation');
+  mockGetAuthFileLocation.mockReturnValue(authJsonLocation);
+
+  await registrySetup.publicWriteAuthFile(data);
+
+  expect(writeFile).toHaveBeenCalledWith(authJsonLocation, data, {
+    encoding: 'utf8',
+    mode: 0o600,
+  });
+  expect(chmod).toHaveBeenCalledWith(authJsonLocation, 0o600);
 });
