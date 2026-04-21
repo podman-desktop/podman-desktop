@@ -134,14 +134,19 @@ test.describe
       await welcomePage.nextStepButton.click();
     });
 
-    test('Check other versions for compose', async ({ welcomePage, page }) => {
+    test('Check other versions for compose', async ({ welcomePage }) => {
       await playExpect(welcomePage.onboardingMessageStatus).toBeVisible({ timeout: 10_000 });
 
-      // Wait for compose step to be shown (either "Compose installed" or "Compose download")
-      await playExpect(welcomePage.onboardingMessageStatus).toContainText(/Compose (installed|download)/, {
-        timeout: 10_000,
-      });
+      await playExpect(welcomePage.onboardingMessageStatus).toContainText(
+        /Compose (installed|download)|Unable to retrieve Compose version/,
+        { timeout: 10_000 },
+      );
       composeOnboardingStatusText = await welcomePage.onboardingMessageStatus.innerText();
+
+      if (composeOnboardingStatusText?.includes('Unable to retrieve Compose version') || rateLimitReachedFlag) {
+        test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
+        return;
+      }
 
       if (composeOnboardingStatusText?.toLowerCase().includes('compose installed')) {
         test.skip(true, 'Compose already installed; see "Compose already installed" test');
@@ -151,12 +156,7 @@ test.describe
       await playExpect(welcomePage.onboardingMessageStatus).toContainText('Compose download', { timeout: 10_000 });
       await playExpect(welcomePage.otherVersionButton).toBeVisible();
 
-      const rateLimitExceededText = '${onboardingContext}';
-      const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
-
-      if ((await rateLimitExceededLocator.count()) > 0 || rateLimitReachedFlag) {
-        // we have hit the rate limit, we cannot continue, exit the test suite
-        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
+      if (rateLimitReachedFlag) {
         test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
       }
 

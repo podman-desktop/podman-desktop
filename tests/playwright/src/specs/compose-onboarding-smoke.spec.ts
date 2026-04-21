@@ -84,14 +84,16 @@ test.describe
       await playExpect(onboardingPage.heading).toBeVisible();
 
       const onboardingVersionPage = new ComposeVersionPage(page);
-      await playExpect(onboardingVersionPage.onboardingStatusMessage).toHaveText('Compose download');
+      await playExpect(onboardingVersionPage.onboardingStatusMessage).toContainText(
+        /Compose download|Unable to retrieve Compose version/,
+        { timeout: 10_000 },
+      );
 
-      const rateLimitExceededText = '${onboardingContext}';
-      const rateLimitExceededLocator = page.getByText(rateLimitExceededText);
+      const statusText = await onboardingVersionPage.onboardingStatusMessage.innerText();
 
-      if ((await rateLimitExceededLocator.count()) > 0 || cliToolsPage.wasRateLimitReached()) {
-        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for Compose download' });
-        test.skip(true, 'Rate limit exceeded; skipping compose onboarding checks');
+      if (statusText.includes('Unable to retrieve Compose version') || cliToolsPage.wasRateLimitReached()) {
+        test.skip(true, 'Unable to retrieve Compose version; likely GitHub API rate limit or network issue');
+        return;
       }
 
       await playExpect(onboardingVersionPage.versionStatusMessage).toBeVisible();
