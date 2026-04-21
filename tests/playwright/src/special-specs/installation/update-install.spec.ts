@@ -43,9 +43,9 @@ test.beforeAll(async ({ runner, page, statusBar }) => {
   runner.setVideoAndTraceName('update-e2e');
 
   sBar = statusBar;
-  updateAvailableDialog = page.getByRole('dialog', { name: 'Update Available now' });
-  updateDialog = page.getByRole('dialog', { name: 'Update', exact: true });
-  updateDownloadedDialog = page.getByRole('dialog', { name: 'Update Downloaded', exact: true });
+  updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
+  updateDialog = page.getByRole('dialog', { name: 'Update Podman Desktop', exact: true });
+  updateDownloadedDialog = page.getByRole('dialog', { name: 'Restart Podman Desktop?', exact: true });
 });
 
 test.afterAll(async ({ runner }) => {
@@ -125,7 +125,7 @@ test.describe
     test('User initiated update option is available', async ({ page }) => {
       await playExpect(sBar.updateButtonTitle).toHaveText(await sBar.versionButton.innerText());
       await sBar.updateButtonTitle.click();
-      await handleConfirmationDialog(page, 'Update Available now', false, '', 'Cancel');
+      await handleConfirmationDialog(page, 'Update Podman Desktop?', false, '', 'Cancel');
     });
 
     test('Update can be initiated', async () => {
@@ -145,7 +145,7 @@ test.describe
       // now it takes some time to perform, in case of failure, PD gets closed
       await playExpect(updateDownloadedDialog).toBeVisible({ timeout: 120000 });
       // some buttons
-      await handleConfirmationDialog(page, 'Update Downloaded', false, 'Restart', 'Cancel');
+      await handleConfirmationDialog(page, 'Restart Podman Desktop?', false, 'Restart', 'Cancel');
       await playExpect(updateDownloadedDialog).not.toBeVisible();
     });
 
