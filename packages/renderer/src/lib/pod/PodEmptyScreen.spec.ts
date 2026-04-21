@@ -63,7 +63,7 @@ const errorMessage = {
 };
 const imageErrorMessage = {
   title: 'Run Pod Failed',
-  message: `Could not find '${helloImage}'' in images`,
+  message: `Could not find '${helloImage}' in images`,
 };
 const providerErrorMessage = {
   title: 'Run Pod Failed',

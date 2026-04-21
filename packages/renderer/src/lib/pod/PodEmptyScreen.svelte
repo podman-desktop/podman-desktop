@@ -28,7 +28,7 @@ async function startPod(): Promise<void> {
       } else {
         await window.showMessageBox({
           title: 'Run Pod Failed',
-          message: `Could not find '${helloImage}'' in images`,
+          message: `Could not find '${helloImage}' in images`,
         });
       }
     } catch (error) {

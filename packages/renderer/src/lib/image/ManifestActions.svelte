@@ -35,7 +35,7 @@ async function deleteManifest(): Promise<void> {
 
 async function onError(error: string): Promise<void> {
   await window.showMessageBox({
-    title: 'Push Manifest Failed',
+    title: 'Delete Manifest Failed',
     message: error,
     type: 'error',
   });

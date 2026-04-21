@@ -66,6 +66,7 @@ async function runContainer(commandLine: string): Promise<void> {
         await window.showMessageBox({
           title: 'Run Container Failed',
           message: `Could not find ${helloImage} in images`,
+          buttons: ['Dismiss'],
         });
       }
       await window.telemetryTrack('startFirstContainerByButton');
@@ -74,6 +75,7 @@ async function runContainer(commandLine: string): Promise<void> {
     await window.showMessageBox({
       title: 'Run Container Failed',
       message: `Error while executing ${commandLine}: ${String(err)}`,
+      buttons: ['Dismiss'],
     });
   }
   inProgress = false;

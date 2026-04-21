@@ -53,7 +53,7 @@ async function applyToCluster(): Promise<void> {
     await window.showMessageBox({
       title: 'Apply Kubernetes YAML',
       type: 'info',
-      message: 'Succesfully applied Kubernetes YAML',
+      message: 'Successfully applied Kubernetes YAML',
       buttons: ['Dismiss'],
     });
 

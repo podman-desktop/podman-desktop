@@ -35,7 +35,7 @@ async function kubeApply(): Promise<void> {
       await window.showMessageBox({
         title: 'Apply Kubernetes YAML',
         type: 'warning',
-        message: `No resource(s) were applied.`,
+        message: 'No resource(s) were applied.',
         buttons: ['Dismiss'],
       });
     } else if (objects.length === 1) {
