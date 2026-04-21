@@ -21,6 +21,7 @@ import { ENHANCED_DASHBOARD_CONFIGURATION_KEY, SYSTEM_OVERVIEW_EXPANDED } from '
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import type { IPCHandle } from '/@/plugin/api.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
 import { DashboardService } from '/@/plugin/dashboard/dashboard-service.js';
 import type { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
@@ -38,6 +39,8 @@ const apiSenderMock = {
 const experimentalConfigurationManagerMock = {
   isExperimentalConfigurationEnabled: vi.fn(),
 } as unknown as ExperimentalConfigurationManager;
+
+const ipcHandleMock = vi.fn() as unknown as IPCHandle;
 
 const getProviderInfosMock = vi.fn();
 const providerRegistryMock = {
@@ -110,8 +113,13 @@ beforeEach(() => {
     providerRegistryMock,
     experimentalConfigurationManagerMock,
     apiSenderMock,
+    ipcHandleMock,
   );
   dashboardService.init();
+});
+
+test('should register IPC handler for dashboard:getSystemOverviewStatus', () => {
+  expect(ipcHandleMock).toHaveBeenCalledWith('dashboard:getSystemOverviewStatus', expect.any(Function));
 });
 
 test('should register a configuration', () => {
