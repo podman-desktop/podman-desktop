@@ -226,7 +226,7 @@ export class Updater {
       if (this.#updateAlreadyDownloaded) {
         const result = await this.messageBox.showMessageBox({
           type: 'info',
-          title: 'Restart Podman Desktop?',
+          title: `Restart ${product.name}?`,
           message: 'An update has been downloaded. Restart now to apply it?',
           cancelId: 1,
           buttons: ['Restart', 'Cancel'],
@@ -240,7 +240,7 @@ export class Updater {
       if (this.#updateInProgress) {
         await this.messageBox.showMessageBox({
           type: 'info',
-          title: 'Update Podman Desktop',
+          title: `Update ${product.name}`,
           message: 'An update is being downloaded. Please wait for it to complete.',
           buttons: ['Dismiss'],
         });
@@ -259,8 +259,8 @@ export class Updater {
 
       const result = await this.messageBox.showMessageBox({
         type: 'info',
-        title: 'Update Podman Desktop?',
-        message: `A new version ${updateVersion} of Podman Desktop is available. Do you want to update your current version ${this.#currentVersion}?`,
+        title: `Update ${product.name}?`,
+        message: `A new version ${updateVersion} of ${product.name} is available. Do you want to update your current version ${this.#currentVersion}?`,
         buttons: buttons,
         cancelId: 2,
       });
@@ -402,8 +402,8 @@ export class Updater {
 
     this.messageBox
       .showMessageBox({
-        title: 'Restart Podman Desktop?',
-        message: `Podman Desktop ${updatedDownloadedEvent.version} has been downloaded. Restart now to apply the update?`,
+        title: `Restart ${product.name}?`,
+        message: `${product.name} ${updatedDownloadedEvent.version} has been downloaded. Restart now to apply the update?`,
         cancelId: 1,
         type: 'info',
         buttons: ['Restart', 'Cancel'],

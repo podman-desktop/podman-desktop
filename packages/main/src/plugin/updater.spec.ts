@@ -158,6 +158,7 @@ beforeEach(() => {
   // eslint-disable-next-line no-null/no-null
   vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue(null);
 
+  vi.mocked(product).name = 'Podman Desktop';
   vi.mocked(product).releaseNotes = {
     url: '',
     blog: '',
