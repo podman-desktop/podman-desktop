@@ -26,7 +26,7 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state'; // Adju
 
 import KubeServiceSpecArtifact from './KubeServiceArtifact.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => ({}));
 
 const fakeServiceSpec = {
   type: 'ClusterIP',

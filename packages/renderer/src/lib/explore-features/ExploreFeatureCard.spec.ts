@@ -25,13 +25,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import ExploreFeatureCard from './ExploreFeatureCard.svelte';
 
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 const featureMock: ExploreFeature = {
   id: 'feature1',

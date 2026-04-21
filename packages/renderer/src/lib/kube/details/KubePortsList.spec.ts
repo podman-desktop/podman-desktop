@@ -27,7 +27,7 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import KubePortsList from './KubePortsList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => ({}));
 
 beforeEach(() => {
   vi.resetAllMocks();

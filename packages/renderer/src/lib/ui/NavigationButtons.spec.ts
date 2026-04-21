@@ -252,6 +252,48 @@ describe('trackpad swipe navigation', () => {
       expect(goForward).toHaveBeenCalled();
     });
   });
+
+  test('horizontal wheel handled by nested content should not trigger history navigation', async () => {
+    navigationHistory.stack = ['/dashboard', '/containers'];
+    navigationHistory.index = 1;
+
+    render(NavigationButtons);
+
+    // Positive control: prove a direct horizontal wheel reaches the global handler.
+    await vi.waitFor(() => {
+      window.dispatchEvent(new WheelEvent('wheel', { deltaX: -50, deltaY: 0 }));
+      expect(goBack).toHaveBeenCalled();
+    });
+
+    // Clear invocation history and reset the swipe cooldown to avoid false positives.
+    vi.mocked(goBack).mockClear();
+    vi.mocked(goForward).mockClear();
+    vi.advanceTimersByTime(600);
+
+    const nestedScrollable = document.createElement('div');
+    nestedScrollable.addEventListener('wheel', event => {
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        event.stopPropagation();
+      }
+    });
+    document.body.appendChild(nestedScrollable);
+
+    try {
+      const wheelEvent = new WheelEvent('wheel', {
+        deltaX: -50,
+        deltaY: 0,
+        bubbles: true,
+        cancelable: true,
+      });
+
+      nestedScrollable.dispatchEvent(wheelEvent);
+
+      expect(goBack).not.toHaveBeenCalled();
+      expect(goForward).not.toHaveBeenCalled();
+    } finally {
+      nestedScrollable.remove();
+    }
+  });
 });
 
 describe('long press dropdown', () => {

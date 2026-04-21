@@ -18,7 +18,7 @@
 
 import type { ColorInfo, WebviewInfo } from '@podman-desktop/core-api';
 import type { WebviewApi } from '@podman-desktop/webview-api';
-import type { IpcRendererEvent } from 'electron';
+import type { ContextBridge, IpcMain, IpcRenderer, IpcRendererEvent } from 'electron';
 import { contextBridge, ipcRenderer } from 'electron';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -68,22 +68,22 @@ const webviewInfo: WebviewInfo = {
   state: { foo: 'bar' },
 };
 
-vi.mock('electron', async () => {
+vi.mock(import('electron'), async () => {
   return {
     contextBridge: {
       exposeInMainWorld: vi.fn(),
-    },
+    } as unknown as ContextBridge,
     ipcRenderer: {
       on: vi.fn(),
       emit: vi.fn(),
       handle: vi.fn(),
       invoke: vi.fn(),
-    },
+    } as unknown as IpcRenderer,
     ipcMain: {
       on: vi.fn(),
       emit: vi.fn(),
       handle: vi.fn(),
-    },
+    } as unknown as IpcMain,
   };
 });
 

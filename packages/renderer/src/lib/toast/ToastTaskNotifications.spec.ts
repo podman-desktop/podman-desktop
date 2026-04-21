@@ -33,15 +33,7 @@ beforeAll(() => {
   });
 });
 
-vi.mock('@zerodevx/svelte-toast', async () => {
-  return {
-    toast: {
-      push: vi.fn(),
-      pop: vi.fn(),
-      set: vi.fn(),
-    },
-  };
-});
+vi.mock(import('@zerodevx/svelte-toast'));
 
 const started = new Date().getTime();
 

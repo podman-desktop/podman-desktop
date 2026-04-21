@@ -26,7 +26,7 @@ import { providerInfos } from '/@/stores/providers';
 
 import PodEmptyScreen from './PodEmptyScreen.svelte';
 
-vi.mock('/@/stores/providers', async () => {
+vi.mock(import('/@/stores/providers'), async () => {
   const store = await import('svelte/store');
   return {
     providerInfos: store.writable<ProviderInfo[]>([]),

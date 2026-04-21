@@ -25,11 +25,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import PodmanKubePlay from './PodmanKubePlay.svelte';
 
 // Mock the router
-vi.mock('tinro', () => ({
-  router: {
-    goto: vi.fn(),
-  },
-}));
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.clearAllMocks();

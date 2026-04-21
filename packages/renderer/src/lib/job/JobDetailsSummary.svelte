@@ -27,6 +27,6 @@ basic information -->
     <KubeJobStatusArtifact artifact={job.status} />
     <KubeJobArtifact artifact={job.spec} />
   {:else}
-    <p class="text-[var(--pd-state-info)] font-medium">Loading ...</p>
+    <p class="text-[var(--pd-state-info)] font-medium">Loading...</p>
   {/if}
 </Table>

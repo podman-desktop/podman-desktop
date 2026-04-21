@@ -30,13 +30,7 @@ import DetailsPage from './DetailsPage.svelte';
 import DetailsPageTest from './DetailsPageTest.svelte';
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.clearAllMocks();

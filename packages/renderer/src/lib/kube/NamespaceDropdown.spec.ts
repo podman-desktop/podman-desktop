@@ -31,7 +31,7 @@ import NamespaceDropdown from './NamespaceDropdown.svelte';
 const firstNS = 'ns1';
 const secondNS = 'ns2';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
 
 beforeAll(() => {
   vi.mocked(window.kubernetesListNamespaces).mockResolvedValue({

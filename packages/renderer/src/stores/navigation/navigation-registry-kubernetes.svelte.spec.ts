@@ -30,7 +30,7 @@ import { createNavigationKubernetesGroup } from './navigation-registry-kubernete
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
-vi.mock('/@/stores/kubernetes-no-current-context');
+vi.mock(import('/@/stores/kubernetes-no-current-context'));
 
 beforeEach(() => {
   vi.resetAllMocks();

@@ -275,15 +275,22 @@ test('carousel prevents horizontal wheel event default behavior', async () => {
   callback([{ contentRect: { width: 360 } }] as ResizeObserverEntry[], new ResizeObserver(callback));
 
   const carousel = screen.getByLabelText('Carousel container');
+  const windowWheelListener = vi.fn();
+  window.addEventListener('wheel', windowWheelListener);
 
-  // Create a horizontal wheel event with preventDefault method
-  const wheelEvent = new WheelEvent('wheel', { deltaX: 100, deltaY: 0 });
+  // Create a horizontal wheel event that would otherwise bubble to the global history handler.
+  const wheelEvent = new WheelEvent('wheel', { deltaX: 100, deltaY: 0, bubbles: true, cancelable: true });
   const preventDefaultSpy = vi.spyOn(wheelEvent, 'preventDefault');
+  const stopPropagationSpy = vi.spyOn(wheelEvent, 'stopPropagation');
 
   // Trigger wheel event
   carousel.dispatchEvent(wheelEvent);
 
   expect(preventDefaultSpy).toHaveBeenCalled();
+  expect(stopPropagationSpy).toHaveBeenCalled();
+  expect(windowWheelListener).not.toHaveBeenCalled();
+
+  window.removeEventListener('wheel', windowWheelListener);
 });
 
 test('carousel does not prevent vertical wheel event default behavior', async () => {

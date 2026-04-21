@@ -26,7 +26,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import PortForwardActions from '/@/lib/kubernetes-port-forward/PortForwardActions.svelte';
 import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => ({}));
 
 const MOCKED_USER_FORWARD_CONFIG: ForwardConfig = {
   id: 'fake-id',

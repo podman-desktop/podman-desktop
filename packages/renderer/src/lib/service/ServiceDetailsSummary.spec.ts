@@ -27,7 +27,7 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state';
 
 import ServiceDetailsSummary from './ServiceDetailsSummary.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => ({}));
 
 const service: V1Service = {
   metadata: {
