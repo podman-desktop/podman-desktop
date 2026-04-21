@@ -48,7 +48,7 @@ Object.defineProperty(global, 'window', {
 
 // We always mock findMatchInLeaves to return true so we can test image.ts without having to render
 // the component, as we are not testing the $searchPattern store / functionality.
-vi.mock('./search-util', () => ({
+vi.mock(import('./search-util'), () => ({
   findMatchInLeaves: vi.fn(() => true), // Assume it always finds a match unless specified otherwise
 }));
 

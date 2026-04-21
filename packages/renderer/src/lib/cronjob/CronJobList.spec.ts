@@ -29,8 +29,8 @@ import * as states from '/@/stores/kubernetes-contexts-state';
 
 import CronJobList from './CronJobList.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state');
-vi.mock('/@/lib/kube/resources-listen');
+vi.mock(import('/@/stores/kubernetes-contexts-state'));
+vi.mock(import('/@/lib/kube/resources-listen'));
 
 beforeEach(() => {
   vi.resetAllMocks();

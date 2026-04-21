@@ -52,13 +52,7 @@ const podmanConnectionInfo = {
 };
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 const getOsPlatformMock: Mock<() => Promise<string>> = vi.fn();
 const getSystemDockerSocketMappingStatusMock: Mock<() => Promise<DockerSocketMappingStatusInfo>> = vi.fn();

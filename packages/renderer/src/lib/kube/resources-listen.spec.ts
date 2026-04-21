@@ -27,7 +27,7 @@ import { listenResources } from './resources-listen';
 
 const callbacks = new Map<string, () => void>();
 
-vi.mock('/@/stores/kubernetes-contexts');
+vi.mock(import('/@/stores/kubernetes-contexts'));
 
 const eventEmitter = {
   receive: (message: string, callback: () => void): void => {

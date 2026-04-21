@@ -35,13 +35,7 @@ vi.mock(import('/@/lib/extensions/EmbeddableCatalogExtensionList.svelte'), () =>
 }));
 
 // mock the router
-vi.mock('tinro', () => {
-  return {
-    router: {
-      goto: vi.fn(),
-    },
-  };
-});
+vi.mock(import('tinro'));
 
 Object.defineProperty(window, 'telemetryTrack', { value: vi.fn() });
 

@@ -18,7 +18,7 @@
 
 import { writable } from 'svelte/store';
 import { router, type TinroRoute } from 'tinro';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
@@ -35,15 +35,7 @@ let routerSubscribeCallback = vi.hoisted(() => {
   return vi.fn() as unknown as (navigation: TinroRoute) => void;
 });
 
-vi.mock('tinro', () => ({
-  router: {
-    goto: vi.fn(),
-    subscribe: vi.fn((callback: (navigation: TinroRoute) => void) => {
-      routerSubscribeCallback = callback;
-      return vi.fn();
-    }),
-  },
-}));
+vi.mock(import('tinro'));
 
 vi.mock(import('/@/stores/kubernetes-no-current-context'));
 vi.mock(import('/@/stores/navigation/navigation-registry'));
@@ -99,6 +91,11 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
       unsubscribe: vi.fn(),
     },
   };
+});
+
+beforeAll(() => {
+  expect(router.subscribe).toHaveBeenCalledExactlyOnceWith(expect.any(Function));
+  routerSubscribeCallback = vi.mocked(router.subscribe).mock.calls[0][0];
 });
 
 beforeEach(() => {

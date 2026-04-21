@@ -28,7 +28,7 @@ import * as kubeContextStore from '/@/stores/kubernetes-contexts-state'; // Adju
 
 import KubeContainerArtifact from './KubeContainerArtifact.svelte';
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => ({}));
 
 const fakeContainer: V1Container = {
   name: 'fakeContainerName',

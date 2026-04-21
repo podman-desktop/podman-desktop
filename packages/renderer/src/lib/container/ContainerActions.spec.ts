@@ -51,7 +51,7 @@ const container: ContainerInfoUI = new ContainerInfoUIImpl(
 const getContributedMenusMock = vi.fn();
 const updateMock = vi.fn();
 
-vi.mock('/@/lib/actions/ContributionActions.svelte');
+vi.mock(import('/@/lib/actions/ContributionActions.svelte'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'startContainer', { value: vi.fn() });

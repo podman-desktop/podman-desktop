@@ -33,7 +33,7 @@ const DUMMY_MAPPING: PortMapping = {
   remotePort: 80,
 };
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => ({}));
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => ({}));
 
 beforeEach(() => {
   vi.resetAllMocks();

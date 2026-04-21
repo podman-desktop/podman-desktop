@@ -38,48 +38,40 @@ const mocks = vi.hoisted(() => ({
   KubernetesDashboard: vi.fn(),
 }));
 
-vi.mock('./lib/dashboard/DashboardPage.svelte', () => ({
+vi.mock(import('./lib/dashboard/DashboardPage.svelte'), () => ({
   default: mocks.DashboardPage,
 }));
-vi.mock('./lib/image/RunImage.svelte', () => ({
+vi.mock(import('./lib/image/RunImage.svelte'), () => ({
   default: mocks.RunImage,
 }));
-vi.mock('./lib/image/ImagesList.svelte', () => ({
+vi.mock(import('./lib/image/ImagesList.svelte'), () => ({
   default: mocks.ImagesList,
 }));
 
-vi.mock('./lib/ui/TitleBar.svelte', () => ({
-  default: vi.fn(),
-}));
-vi.mock('./lib/welcome/WelcomePage.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('./lib/ui/TitleBar.svelte'));
+vi.mock(import('./lib/welcome/WelcomePage.svelte'));
 
-vi.mock('./lib/context/ContextKey.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('./lib/context/ContextKey.svelte'));
 
-vi.mock('./lib/appearance/Appearance.svelte', () => ({
-  default: vi.fn(),
-}));
+vi.mock(import('./lib/appearance/Appearance.svelte'));
 
-vi.mock('./SubmenuNavigation.svelte', () => ({
+vi.mock(import('./SubmenuNavigation.svelte'), () => ({
   default: mocks.SubmenuNavigation,
 }));
 
-vi.mock('./lib/kube/KubernetesDashboard.svelte', () => ({
+vi.mock(import('./lib/kube/KubernetesDashboard.svelte'), () => ({
   default: mocks.KubernetesDashboard,
 }));
 
-vi.mock('./lib/deployments/DeploymentsList.svelte', () => ({
+vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
   default: mocks.DeploymentsList,
 }));
 
-vi.mock('/@/stores/kubernetes-contexts-state', async () => {
+vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
 
-vi.mock('/@/stores/kubernetes-no-current-context');
+vi.mock(import('/@/stores/kubernetes-no-current-context'));
 
 const dispatchEventMock = vi.fn();
 const messages = new Map<string, (args: unknown) => void>();

@@ -210,7 +210,7 @@ describe('ProviderActionButtons', () => {
       hasAnyConfiguration: vi.fn().mockReturnValue(false),
     });
 
-    const createButton = screen.getByText('Initialize ...');
+    const createButton = screen.getByText('Initialize...');
     expect(createButton).toBeInTheDocument();
   });
 

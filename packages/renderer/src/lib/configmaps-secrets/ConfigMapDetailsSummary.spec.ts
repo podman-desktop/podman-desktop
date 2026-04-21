@@ -60,7 +60,7 @@ test('Confirm renders configmap details summary', async () => {
 test('Expect to show loading if there is no data present', async () => {
   render(ConfigMapDetailsSummary, {});
 
-  const loadingMessage = screen.getByText('Loading ...');
+  const loadingMessage = screen.getByText('Loading...');
   expect(loadingMessage).toBeInTheDocument();
 });
 
