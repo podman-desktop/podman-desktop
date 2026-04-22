@@ -44,7 +44,7 @@ async function onError(error: string): Promise<void> {
 
 <ListItemButtonIcon
   title="Delete Manifest"
-  onClick={(): void => withConfirmation(deleteManifest, `delete manifest ${manifest.name}`)}
+  onClick={(): void => withConfirmation(deleteManifest, `delete manifest ${manifest.name}`, { variant:'delete' } )}
   detailed={detailed}
   icon={faTrash}
   enabled={manifest.status === 'UNUSED'} />

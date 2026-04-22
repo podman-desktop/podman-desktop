@@ -91,7 +91,7 @@ export class ImageDetailsPage extends DetailsPage {
     return test.step('Delete image', async () => {
       await playExpect(this.deleteButton).toBeEnabled({ timeout: 30_000 });
       await this.deleteButton.click();
-      await handleConfirmationDialog(this.page);
+      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
       return new ImagesPage(this.page);
     });
   }

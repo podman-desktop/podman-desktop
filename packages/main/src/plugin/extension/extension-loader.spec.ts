@@ -84,6 +84,8 @@ import { ExtensionLoader } from './extension-loader.js';
 import type { ExtensionManifest } from './extension-manifest-schema.js';
 import type { ExtensionWatcher } from './extension-watcher.js';
 
+vi.mock(import('node:fs'));
+
 class TestExtensionLoader extends ExtensionLoader {
   public override async setupScanningDirectory(): Promise<void> {
     return super.setupScanningDirectory();
@@ -548,7 +550,6 @@ test('Should load file from watching scanning folder', async () => {
   // reduce timeout delay for tests
   extensionLoader.setWatchTimeout(50);
 
-  vi.mock(import('node:fs'));
   // mock fs.watch
   const fsWatchMock = vi.spyOn(fs, 'watch');
   fsWatchMock.mockImplementation((filename: fs.PathLike, listener?: fs.WatchListener<string>): fs.FSWatcher => {
@@ -1340,8 +1341,6 @@ describe('Removing extension by user', async () => {
 });
 
 test('check dispose when deactivating', async () => {
-  vi.mock(import('node:fs'));
-
   const extensionId = 'fooPublisher.fooName';
   extensionLoader.setActivatedExtension(extensionId, {
     id: extensionId,
@@ -2437,8 +2436,6 @@ describe('containerEngine', async () => {
 
 describe('extensionContext', async () => {
   test('secrets', async () => {
-    vi.mock(import('node:fs'));
-
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
     const extension: AnalyzedExtension = {

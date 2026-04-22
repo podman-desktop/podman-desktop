@@ -34,6 +34,8 @@ import type { Directories } from '/@/plugin/directories.js';
 
 import { DockerDesktopInstallation } from './docker-desktop-installation.js';
 
+vi.mock(import('node:fs'));
+
 let dockerDesktopInstallation: TestDockerDesktopInstallation;
 
 const contributionManagerLoadMetadataMock = vi.fn();
@@ -282,8 +284,6 @@ describe('handleExtensionVMServiceRequest', () => {
 });
 
 test('Check handlePluginInstall', async () => {
-  vi.mock(import('node:fs'));
-
   const allReplies: string[] = [];
 
   const ipcMainEventReplyMock = vi.fn().mockImplementation((channel: string, ...args: unknown[]) => {

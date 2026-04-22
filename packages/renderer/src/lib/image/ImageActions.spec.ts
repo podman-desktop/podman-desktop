@@ -253,6 +253,8 @@ test('Expect withConfirmation to indicate image name and tag', async () => {
   await fireEvent.click(button);
 
   await waitFor(() => {
-    expect(withConfirmation).toHaveBeenNthCalledWith(1, expect.anything(), 'delete image image-name:1.0');
+    expect(withConfirmation).toHaveBeenNthCalledWith(1, expect.anything(), 'delete image image-name:1.0', {
+      variant: 'delete',
+    });
   });
 });

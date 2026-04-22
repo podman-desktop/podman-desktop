@@ -24,6 +24,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { KubectlGitHubReleases } from './kubectl-github-releases';
 
+vi.mock(import('node:fs'));
+
 let kubectlGitHubReleases: KubectlGitHubReleases;
 
 const listReleaseAssetsMock = vi.fn();
@@ -116,8 +118,6 @@ describe('Grab asset id for a given release id', async () => {
 });
 
 test('should download the file if parent folder does exist', async () => {
-  vi.mock(import('node:fs'));
-
   getReleaseAssetMock.mockImplementation(() => {
     return { data: 'foo' };
   });
@@ -140,8 +140,6 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  vi.mock(import('node:fs'));
-
   getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
   // mock fs

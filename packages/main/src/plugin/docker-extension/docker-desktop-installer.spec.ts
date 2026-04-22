@@ -24,6 +24,8 @@ import type { ContributionManager, DockerExtensionMetadata } from '/@/plugin/con
 
 import { DockerDesktopInstaller } from './docker-desktop-installer.js';
 
+vi.mock(import('node:fs/promises'));
+
 let dockerDesktopInstaller: TestDockerDesktopInstaller;
 
 const contributionManager = {
@@ -46,8 +48,6 @@ beforeEach(() => {
 });
 
 test('Check extractExtensionFiles', async () => {
-  vi.mock(import('node:fs/promises'));
-
   const metadataJson = {
     name: 'My Extension',
     icon: 'icon.png',

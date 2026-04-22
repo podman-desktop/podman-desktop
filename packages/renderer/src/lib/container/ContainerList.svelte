@@ -416,6 +416,7 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
               withBulkConfirmation(
                 deleteSelectedContainers,
                 `delete ${selectedItemsNumber} container${selectedItemsNumber > 1 ? 's' : ''}`,
+                { variant:'delete' }
               );
             }
           }}

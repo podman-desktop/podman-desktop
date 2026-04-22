@@ -39,7 +39,7 @@ async function openPruneDialog(): Promise<void> {
 
   const result = await window.showMessageBox({
     title: `Prune ${type.charAt(0).toUpperCase() + type.slice(1)}?`,
-    type: 'warning',
+    type: 'danger',
     message: message,
     buttons,
   });

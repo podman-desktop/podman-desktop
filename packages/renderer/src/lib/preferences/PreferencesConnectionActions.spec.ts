@@ -182,8 +182,8 @@ describe('delete', () => {
       expect(window.showMessageBox).toHaveBeenCalledExactlyOnceWith({
         title: 'Confirmation',
         message: `Are you sure you want to delete ${containerConnection.name}?`,
-        buttons: ['Yes', 'Cancel'],
-        type: 'question',
+        buttons: ['Delete', 'Cancel'],
+        type: 'danger',
       });
     });
   });
