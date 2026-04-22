@@ -338,7 +338,7 @@ export class AuthenticationImpl {
           type: 'info',
         });
 
-        const isAllowed = allowRsp.response === 1;
+        const isAllowed = allowRsp.response === 0;
 
         // Only store allowance when user allows, not when they deny
         // This way, denying will prompt again next time instead of permanently blocking
