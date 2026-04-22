@@ -11,9 +11,11 @@ let { error }: Props = $props();
 </script>
 
 {#if error}
-  <Tooltip bottom tip={error}>
-    <button aria-label="Connection Error: {error}" class="ml-2 flex items-center">
-      <Icon icon={faTriangleExclamation} class="text-[var(--pd-state-error)]" size="0.875x" />
-    </button>
-  </Tooltip>
+  <div class="pl-2 flex items-center">
+    <Tooltip bottom tip={error}>
+      <span role='button' tabindex='0'>
+        <Icon icon={faTriangleExclamation} class="text-[var(--pd-state-error)]" />
+      </span>
+    </Tooltip>
+  </div>
 {/if}
