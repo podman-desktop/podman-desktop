@@ -339,6 +339,66 @@ describe('postActivate', () => {
     return deferredCliUpdate;
   });
 
+  test('syncs detected version to provider on startup', async () => {
+    vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-path');
+    vi.mocked(extensionApi.process.exec).mockImplementation(
+      (_command: string, _args?: string[], _options?: extensionApi.RunOptions) =>
+        new Promise<extensionApi.RunResult>(resolve => {
+          if (_args?.[0] === 'version') {
+            resolve({
+              stderr: '',
+              stdout: JSON.stringify(jsonStdout),
+              command: 'kubectl version --client=true -o=json',
+            });
+            return;
+          }
+          resolve({
+            stderr: '',
+            stdout: 'system-path',
+            command: 'which kubectl',
+          });
+        }),
+    );
+    const deferredCliTool: Promise<void> = new Promise<void>(resolve => {
+      vi.mocked(extensionApi.cli.createCliTool).mockImplementation(() => {
+        resolve();
+        return {
+          registerUpdate: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+          registerInstaller: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+          updateVersion: vi.fn(),
+        } as unknown as extensionApi.CliTool;
+      });
+    });
+
+    await KubectlExtension.activate(extensionContext);
+    await deferredCliTool;
+
+    await vi.waitFor(() => {
+      const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+      expect(providerMock.updateVersion).toHaveBeenCalledWith('1.28.3');
+    });
+  });
+
+  test('does not sync version to provider when no binary is detected', async () => {
+    vi.mocked(extensionApi.process.exec).mockRejectedValue(new Error('Error running version command'));
+
+    const deferred = new Promise<void>(resolve => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {
+        resolve();
+      });
+    });
+
+    await KubectlExtension.activate(extensionContext);
+    await deferred;
+
+    await vi.waitFor(() => {
+      expect(extensionApi.cli.createCliTool).toHaveBeenCalled();
+    });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).not.toHaveBeenCalled();
+  });
+
   test('onUpdate should download and install binary', async () => {
     vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-path');
     vi.mocked(extensionApi.process.exec).mockImplementation(

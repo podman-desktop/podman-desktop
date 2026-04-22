@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../../schemas/extension-schema.json",
   "name": "podman",
   "displayName": "Podman",
   "description": "Integration for Podman and Podman Machines",

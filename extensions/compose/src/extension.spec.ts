@@ -187,6 +187,39 @@ describe('registerCLITool', () => {
     expect(cliToolMock.registerUpdate).toHaveBeenCalled();
   });
 
+  test('syncs detected version to provider on startup', async () => {
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
+    vi.mocked(Detect.prototype.getDockerComposeBinaryInfo).mockResolvedValue({
+      version: 'v2.0.0',
+      path: 'system-wide-path',
+      updatable: false,
+    });
+    vi.spyOn(cliRun, 'getSystemBinaryPath').mockReturnValue('system-wide-path');
+
+    await activate(extensionContextMock);
+
+    await vi.waitFor(() => {
+      expect(extensionApi.cli.createCliTool).toHaveBeenCalled();
+    });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).toHaveBeenCalledWith('2.0.0');
+  });
+
+  test('does not sync version to provider when no binary is detected', async () => {
+    vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(false);
+    vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('');
+
+    await activate(extensionContextMock);
+
+    await vi.waitFor(() => {
+      expect(extensionApi.cli.createCliTool).toHaveBeenCalled();
+    });
+
+    const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
+    expect(providerMock.updateVersion).not.toHaveBeenCalled();
+  });
+
   test('createCliTool already installed system wide by user', async () => {
     vi.mocked(Detect.prototype.checkSystemWideDockerCompose).mockResolvedValue(true);
     vi.mocked(Detect.prototype.getDockerComposeBinaryInfo).mockResolvedValue({
