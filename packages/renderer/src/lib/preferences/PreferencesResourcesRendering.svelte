@@ -19,6 +19,7 @@ import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
 import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
 import BooleanEnumDisplay from '/@/lib/ui/BooleanEnumDisplay.svelte';
+import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
 import ConnectionErrorInfoButton from '/@/lib/ui/ConnectionErrorInfoButton.svelte';
 import ConnectionStatus from '/@/lib/ui/ConnectionStatus.svelte';
 import EngineIcon from '/@/lib/ui/EngineIcon.svelte';
@@ -543,6 +544,7 @@ $effect(() => {
               </div>
               <div class="flex" aria-label="Connection Status">
                 <ConnectionStatus status={container.status} />
+                <ConnectionErrorIndicator error={container.error} />
                 {#if containerConnectionStatus.has(getProviderConnectionName(provider, container))}
                   {@const status = containerConnectionStatus.get(getProviderConnectionName(provider, container))}
                   <ConnectionErrorInfoButton status={status} />
@@ -628,6 +630,7 @@ $effect(() => {
               </div>
               <div class="flex mt-1" aria-label="Connection Status">
                 <ConnectionStatus status={kubeConnection.status} />
+                <ConnectionErrorIndicator error={kubeConnection.error} />
               </div>
               <div class="mt-2">
                 <div class="text-[var(--pd-content-text)] text-xs">Kubernetes endpoint</div>
@@ -664,6 +667,7 @@ $effect(() => {
             </div>
             <div class="flex mt-1" aria-label="Connection Status">
               <ConnectionStatus status={vmConnection.status} />
+              <ConnectionErrorIndicator error={vmConnection.error} />
               {#if containerConnectionStatus.has(getProviderConnectionName(provider, vmConnection))}
                 {@const status = containerConnectionStatus.get(getProviderConnectionName(provider, vmConnection))}
                 <ConnectionErrorInfoButton status={status} />

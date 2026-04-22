@@ -606,8 +606,7 @@ export class PluginSystem {
     statusbarProviders.init();
 
     container.bind<DashboardService>(DashboardService).toSelf().inSingletonScope();
-    const dashboardService = container.get<DashboardService>(DashboardService);
-    dashboardService.init();
+    container.get<DashboardService>(DashboardService);
 
     container.bind<HelpMenu>(HelpMenu).toSelf().inSingletonScope();
     const helpMenu = container.get<HelpMenu>(HelpMenu);

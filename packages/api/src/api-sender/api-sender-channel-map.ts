@@ -21,6 +21,7 @@ import type { ContributionInfo } from '/@/contribution-info.js';
 import type { CheckingState, ContextGeneralState } from '/@/kubernetes-contexts-states.js';
 import type { ForwardConfig } from '/@/kubernetes-port-forward-model.js';
 import type { PinOption } from '/@/status-bar/pin-option.js';
+import type { SystemOverviewStatusInfo } from '/@/system-overview-info.js';
 import type { NotificationTaskInfo, TaskInfo } from '/@/taskInfo.js';
 
 /**
@@ -56,6 +57,7 @@ export interface ApiSenderChannelMap {
   'dev-tools:open-extension': string;
   'dev-tools:open-webview': string;
   'display-feedback': never;
+  'dashboard:system-overview-status': SystemOverviewStatusInfo;
   'documentation-updated': never;
   'enhanced-dashboard-enabled': boolean;
   'explore-features-loaded': never;

@@ -85,6 +85,22 @@ test('Expect that name, socket and type are displayed for Docker', async () => {
   expect(spanType.textContent).toBe('Docker');
 });
 
+test('Expect error is displayed when connection has error', async () => {
+  render(PreferencesContainerConnectionDetailsSummary, {
+    containerConnectionInfo: { ...podmanContainerConnection, error: 'Machine failed to start' },
+  });
+  const errorAlert = screen.getByRole('alert');
+  expect(errorAlert).toBeInTheDocument();
+  expect(errorAlert).toHaveTextContent('Machine failed to start');
+});
+
+test('Expect error is not displayed when connection has no error', async () => {
+  render(PreferencesContainerConnectionDetailsSummary, {
+    containerConnectionInfo: podmanContainerConnection,
+  });
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
 describe('resource metrics display', () => {
   const resourceProperties: IConfigurationPropertyRecordedSchema[] = [
     {

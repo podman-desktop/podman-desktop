@@ -304,6 +304,10 @@ async function registerCLITool(
     });
   }
 
+  if (binaryVersion) {
+    provider.updateVersion(binaryVersion);
+  }
+
   // register the updater to allow users to upgrade/downgrade their cli
   let releaseToUpdateTo: ComposeGithubReleaseArtifactMetadata | undefined;
   let releaseVersionToUpdateTo: string | undefined;

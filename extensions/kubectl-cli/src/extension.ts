@@ -340,6 +340,10 @@ async function postActivate(
 
   extensionContext.subscriptions.push(kubectlCliTool);
 
+  if (vpState.version) {
+    provider.updateVersion(vpState.version);
+  }
+
   // create and register the installer
   let releaseToInstall: KubectlGithubReleaseArtifactMetadata | undefined;
   let releaseVersionToInstall: string | undefined;
