@@ -2461,6 +2461,9 @@ export class ContainerProviderRegistry {
           return await pipeline(imageStream, fs.createWriteStream(filename), { signal });
         } catch (err: unknown) {
           await rm(filename, { force: true });
+          if (signal.aborted) {
+            throw new Error('The operation was aborted');
+          }
           throw err;
         }
       }
