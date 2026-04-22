@@ -115,6 +115,8 @@ interface JSONEvent {
   status: string;
   id: string;
   Type?: string;
+  Action?: string;
+  Actor?: { ID: string };
 }
 
 @injectable()
@@ -190,15 +192,17 @@ export class ContainerProviderRegistry {
       // reconnected
       this.notify = true;
 
-      const status = jsonEvent.status;
-      const id = jsonEvent.id;
+      // Podman uses top-level `status`/`id`; Docker API v1.52+ uses `Action`/`Actor.ID` instead.
+      // Docker can emit compound Action values like "health_status: healthy" — keep only the base action.
+      const status = jsonEvent.status ?? jsonEvent.Action?.split(':')[0]?.trim();
+      const id = jsonEvent.id ?? jsonEvent.Actor?.ID;
 
       // do not log healthcheck(health_status) events
       // as it's too verbose/repeating a lot
       if (status !== 'health_status') {
         console.log('event is', jsonEvent);
       }
-      this._onEvent.fire(jsonEvent);
+      this._onEvent.fire({ ...jsonEvent, status: status ?? '', id: id ?? '' });
       if (status === 'stop' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been stopped
         this.apiSender.send('container-stopped-event', id);
