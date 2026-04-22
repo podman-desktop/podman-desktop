@@ -70,7 +70,7 @@ test('Expect Push Manifest to be there', async () => {
 });
 
 test('Expect withConfirmation to be called with delete variant when clicking Delete Manifest', async () => {
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   const manifest: ImageInfoUI = {
     ...fakedManifest,
