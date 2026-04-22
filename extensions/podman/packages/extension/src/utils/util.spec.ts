@@ -72,9 +72,7 @@ function strEncodeUTF16(str: string): Uint16Array {
 }
 
 test('expect exec called with CONTAINERS_MACHINE_PROVIDER if a provider is defined', async () => {
-  const execMock = vi
-    .spyOn(extensionApi.process, 'exec')
-    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  const execMock = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
 
   await execPodman(['machine', 'inspect'], 'libkrun', {
     env: {
@@ -91,9 +89,7 @@ test('expect exec called with CONTAINERS_MACHINE_PROVIDER if a provider is defin
 });
 
 test('expect exec called without CONTAINERS_MACHINE_PROVIDER if a provider is NOT defined', async () => {
-  const execMock = vi
-    .spyOn(extensionApi.process, 'exec')
-    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  const execMock = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
 
   await execPodman(['machine', 'inspect'], undefined, {
     env: {

@@ -144,7 +144,7 @@ describe('ipcInvoke', () => {
 
     const fakeResult = 'foo';
     // fake remote implementation sending no error and foo as result
-    spyIpcRendererInvoke.mockImplementation(() => Promise.resolve({ result: fakeResult, error: undefined }));
+    spyIpcRendererInvoke.mockResolvedValue({ result: fakeResult, error: undefined });
 
     const result = await webviewPreload.ipcInvoke('test', 'arg1');
 
@@ -158,7 +158,7 @@ describe('ipcInvoke', () => {
 
     const fakeError = new Error('dummy error');
     // fake remote implementation sending no error and foo as result
-    spyIpcRendererInvoke.mockImplementation(() => Promise.resolve({ result: undefined, error: fakeError }));
+    spyIpcRendererInvoke.mockResolvedValue({ result: undefined, error: fakeError });
 
     await expect(webviewPreload.ipcInvoke('test', 'arg1')).rejects.toThrow('dummy error');
 
@@ -287,7 +287,7 @@ test('check buildApi', async () => {
 
   // spy ipcInvoke
   const spyIpcInvoke = vi.spyOn(webviewPreload, 'ipcInvoke');
-  spyIpcInvoke.mockImplementation(() => Promise.resolve({ result: undefined, error: undefined }));
+  spyIpcInvoke.mockResolvedValue({ result: undefined, error: undefined });
 
   // remove spy on buildApi
   spyBuildApi.mockRestore();

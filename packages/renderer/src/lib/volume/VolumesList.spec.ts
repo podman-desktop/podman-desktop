@@ -47,7 +47,7 @@ beforeEach(async () => {
   vi.resetAllMocks();
   volumeListInfos.set([]);
 
-  vi.mocked(window.onDidUpdateProviderStatus).mockImplementation(() => Promise.resolve());
+  vi.mocked(window.onDidUpdateProviderStatus).mockResolvedValue(undefined);
   vi.mocked(window.getProviderInfos).mockResolvedValue([]);
   vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
   vi.mocked(window.listVolumes).mockResolvedValue([]);

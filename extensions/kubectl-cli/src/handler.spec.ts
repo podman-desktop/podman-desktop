@@ -37,9 +37,9 @@ beforeEach(() => {
 });
 
 test('updateConfigAndContextKubectlBinary: make sure configuration gets updated if checkSystemWideKubectl had returned true', async () => {
-  vi.mocked(Detect.prototype.checkSystemWideKubectl).mockReturnValue(Promise.resolve(true));
-  vi.mocked(Detect.prototype.checkForKubectl).mockReturnValue(Promise.resolve(true));
-  vi.mocked(Detect.prototype.getStoragePath).mockReturnValue(Promise.resolve('mockPath'));
+  vi.mocked(Detect.prototype.checkSystemWideKubectl).mockResolvedValue(true);
+  vi.mocked(Detect.prototype.checkForKubectl).mockResolvedValue(true);
+  vi.mocked(Detect.prototype.getStoragePath).mockResolvedValue('mockPath');
 
   // Spy on setValue and configuration updates
   const contextUpdateSpy = vi.spyOn(extensionApi.context, 'setValue');

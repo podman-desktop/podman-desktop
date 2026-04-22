@@ -41,7 +41,7 @@ beforeAll(() => {
 
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
   Object.defineProperty(window, 'hasAuthconfigForImage', {
-    value: vi.fn().mockImplementation(() => Promise.resolve(false)),
+    value: vi.fn().mockResolvedValue(false),
   });
 });
 
@@ -61,7 +61,7 @@ test('Expect Delete Manifest to be there', async () => {
 test('Expect Push Manifest to be there', async () => {
   // Mock the showMessageBox to return 0 (yes)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   render(ManifestActions, { manifest: fakedManifest, onPushManifest: vi.fn() });
 

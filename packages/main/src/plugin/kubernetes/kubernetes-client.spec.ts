@@ -530,9 +530,7 @@ test('Check update with empty kubeconfig file', async () => {
 
 test('test that blank kubeconfig path will be set to default one', async () => {
   const client = createTestClient('fooNS');
-  vi.spyOn(client, 'refresh').mockImplementation(() => {
-    return Promise.resolve();
-  });
+  vi.spyOn(client, 'refresh').mockResolvedValue(undefined);
   const setKubeconfigSpy = vi.spyOn(client, 'setKubeconfig');
 
   await client.init();

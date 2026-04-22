@@ -32,7 +32,7 @@ const getContributedMenusMock = vi.fn();
 vi.mock(import('./image-utils'), () => {
   return {
     ImageUtils: vi.fn().mockImplementation(() => ({
-      deleteImage: vi.fn().mockImplementation(() => Promise.reject(new Error('Cannot delete image in test'))),
+      deleteImage: vi.fn().mockRejectedValue(new Error('Cannot delete image in test')),
     })),
   };
 });
@@ -51,7 +51,7 @@ beforeAll(() => {
 
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
   Object.defineProperty(window, 'hasAuthconfigForImage', {
-    value: vi.fn().mockImplementation(() => Promise.resolve(false)),
+    value: vi.fn().mockResolvedValue(false),
   });
 });
 
@@ -84,7 +84,7 @@ beforeEach(() => {
 
 test('Expect showMessageBox to be called when error occurs', async () => {
   vi.mocked(withConfirmation).mockImplementation(f => f());
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   const image: ImageInfoUI = new Image('dummy', 'UNUSED') as unknown as ImageInfoUI;
 
@@ -194,7 +194,7 @@ test('Expect no dropdown when several contributions and dropdownMenu mode on', a
 });
 
 test('Expect Push image to be there', async () => {
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   const image: ImageInfoUI = {
     name: 'dummy',
@@ -212,7 +212,7 @@ test('Expect Push image to be there', async () => {
 });
 
 test('Expect Save image to be there', async () => {
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
   const goToMock = vi.spyOn(router, 'goto');
 
   const image: ImageInfoUI = {
@@ -235,7 +235,7 @@ test('Expect Save image to be there', async () => {
 });
 
 test('Expect withConfirmation to indicate image name and tag', async () => {
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   const image: ImageInfoUI = {
     name: 'image-name',

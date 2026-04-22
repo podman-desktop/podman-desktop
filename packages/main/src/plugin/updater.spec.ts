@@ -819,9 +819,7 @@ test('open release notes from GitHub', async () => {
 
 test('get release notes', async () => {
   const fetchJSONMock = vi.fn().mockResolvedValue({ data: 'some data' });
-  vi.spyOn(global, 'fetch').mockImplementation(() =>
-    Promise.resolve({ ok: true, json: fetchJSONMock } as unknown as Response),
-  );
+  vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: fetchJSONMock } as unknown as Response);
   vi.mocked(app.getVersion).mockReturnValue('1.1.0');
 
   const updater = new Updater(
@@ -907,9 +905,7 @@ test('get release notes with product override', async () => {
 
 test('get release notes in dev mode', async () => {
   const fetchJSONMock = vi.fn().mockResolvedValue({ data: 'some data' });
-  vi.spyOn(global, 'fetch').mockImplementation(() =>
-    Promise.resolve({ ok: true, json: fetchJSONMock } as unknown as Response),
-  );
+  vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: fetchJSONMock } as unknown as Response);
   vi.mocked(app.getVersion).mockReturnValue('1.1.0-next');
 
   // use dev mode

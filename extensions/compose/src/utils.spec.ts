@@ -33,7 +33,7 @@ describe('makeExecutable', async () => {
 
     // fake chmod
     const chmodMock = vi.spyOn(promises, 'chmod');
-    chmodMock.mockImplementation(() => Promise.resolve());
+    chmodMock.mockResolvedValue(undefined);
     await makeExecutable(fakePath);
     // check it has been called
     expect(chmodMock).toHaveBeenCalledWith(fakePath, 0o755);
@@ -44,7 +44,7 @@ describe('makeExecutable', async () => {
 
     // fake chmod
     const chmodMock = vi.spyOn(promises, 'chmod');
-    chmodMock.mockImplementation(() => Promise.resolve());
+    chmodMock.mockResolvedValue(undefined);
     await makeExecutable(fakePath);
     // check it has been called
     expect(chmodMock).toHaveBeenCalledWith(fakePath, 0o755);
@@ -55,7 +55,7 @@ describe('makeExecutable', async () => {
 
     // fake chmod
     const chmodMock = vi.spyOn(promises, 'chmod');
-    chmodMock.mockImplementation(() => Promise.resolve());
+    chmodMock.mockResolvedValue(undefined);
     await makeExecutable(fakePath);
     // check it has not been called on Windows
     expect(chmodMock).not.toHaveBeenCalled();

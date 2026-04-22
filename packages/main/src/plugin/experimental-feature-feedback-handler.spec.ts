@@ -67,7 +67,7 @@ const configurationRegistry: ConfigurationRegistry = {
 } as unknown as ConfigurationRegistry;
 
 const configurationGetMock = vi.fn();
-const updateMock = vi.fn().mockImplementation(() => Promise.resolve());
+const updateMock = vi.fn().mockResolvedValue(undefined);
 
 const telemetryTrackMock = vi.fn().mockResolvedValue({});
 const telemetry: Telemetry = { track: telemetryTrackMock } as unknown as Telemetry;
@@ -119,9 +119,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   feedbackForm = new TestExperimentalFeatureFeedbackHandler(configurationRegistry, messageBox, telemetry);
 
-  vi.spyOn(feedbackForm, 'save').mockImplementation(() => {
-    return Promise.resolve();
-  });
+  vi.spyOn(feedbackForm, 'save').mockResolvedValue(undefined);
 });
 
 describe('init', () => {
@@ -174,9 +172,7 @@ describe('init', () => {
     configurationGetMock.mockReturnValue(conf);
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
-    const showFeedbackDialogSpy = vi.spyOn(feedbackForm, 'showFeedbackDialog').mockImplementation(() => {
-      return Promise.resolve();
-    });
+    const showFeedbackDialogSpy = vi.spyOn(feedbackForm, 'showFeedbackDialog').mockResolvedValue(undefined);
     await feedbackForm.init();
 
     expect(setReminderSpy).not.toHaveBeenCalled();
@@ -305,9 +301,7 @@ describe('showFeedbackDialog', () => {
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 1 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
-    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
-      return Promise.resolve();
-    });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
@@ -324,9 +318,7 @@ describe('showFeedbackDialog', () => {
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 0 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
-    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
-      return Promise.resolve();
-    });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
@@ -342,9 +334,7 @@ describe('showFeedbackDialog', () => {
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 1 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
-    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
-      return Promise.resolve();
-    });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();
@@ -360,9 +350,7 @@ describe('showFeedbackDialog', () => {
     vi.mocked(configurationRegistry.getConfigurationProperties).mockReturnValue(features);
     vi.mocked(messageBox.showMessageBox).mockResolvedValue({ response: 0, dropdownIndex: 2 });
     vi.mocked(configurationRegistry.getConfiguration).mockReturnValue(configuration);
-    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockImplementation(() => {
-      return Promise.resolve();
-    });
+    const openExternalSpy = vi.spyOn(shell, 'openExternal').mockResolvedValue(undefined);
 
     feedbackForm.experimentalFeatures = new Map([['feat.feature1', existingTimestamps]]);
     await feedbackForm.showFeedbackDialog();

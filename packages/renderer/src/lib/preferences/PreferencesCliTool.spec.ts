@@ -249,7 +249,7 @@ describe('CLI Tool item', () => {
   });
 
   test('check version is sent to updateCliTool', async () => {
-    const selectCliToolVersionToUpdateMock = vi.fn().mockImplementation(() => Promise.resolve('1.1.1'));
+    const selectCliToolVersionToUpdateMock = vi.fn().mockResolvedValue('1.1.1');
     (window as any).selectCliToolVersionToUpdate = selectCliToolVersionToUpdateMock;
     render(PreferencesCliTool, {
       cliTool: cliToolInfoItem4,

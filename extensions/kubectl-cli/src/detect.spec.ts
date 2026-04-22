@@ -65,7 +65,7 @@ describe('Check for kubectl', async () => {
   });
 
   test('installed', async () => {
-    vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+    vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
     const result = await detect.checkForKubectl();
     expect(result).toBeTruthy();
   });
