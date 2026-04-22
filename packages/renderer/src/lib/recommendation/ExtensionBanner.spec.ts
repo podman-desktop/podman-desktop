@@ -161,7 +161,7 @@ test('opening messageBox and hiding banner', async () => {
 
   expect(window.showMessageBox).toBeCalledWith({
     title: 'Hide Extension Recommendations?',
-    message: `Do you want to hide extension recommendation banners?`,
+    message: 'Do you want to hide extension recommendation banners?',
     type: 'warning',
     buttons: ['Keep', 'Hide'],
   });
@@ -190,7 +190,7 @@ test('opening messageBox and keeping banner', async () => {
 
   expect(window.showMessageBox).toBeCalledWith({
     title: 'Hide Extension Recommendations?',
-    message: `Do you want to hide extension recommendation banners?`,
+    message: 'Do you want to hide extension recommendation banners?',
     type: 'warning',
     buttons: ['Keep', 'Hide'],
   });

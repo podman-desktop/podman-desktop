@@ -34,7 +34,7 @@ async function onClose(): Promise<void> {
   try {
     result = await window.showMessageBox({
       title: 'Hide Extension Recommendations?',
-      message: `Do you want to hide extension recommendation banners?`,
+      message: 'Do you want to hide extension recommendation banners?',
       type: 'warning',
       buttons: ['Keep', 'Hide'],
     });
