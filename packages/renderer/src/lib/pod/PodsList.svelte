@@ -198,6 +198,7 @@ function label(pod: PodInfoUI): string {
           withBulkConfirmation(
             deleteSelectedPods,
             `delete ${selectedItemsNumber} pod${selectedItemsNumber > 1 ? 's' : ''}`,
+            { variant:'delete' }
           )}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}

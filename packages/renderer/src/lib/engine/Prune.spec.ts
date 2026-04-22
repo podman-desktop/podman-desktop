@@ -63,8 +63,9 @@ describe('containers', () => {
 
     // check if the showMessageBox method was called with all the right parameters
     expect(window.showMessageBox).toHaveBeenCalledWith({
-      buttons: ['Cancel', 'Yes'],
+      buttons: ['Cancel', 'Delete'],
       title: 'Prune',
+      type: 'danger',
       message: 'This action will prune all unused containers from the Podman engine.',
     });
 
@@ -109,6 +110,7 @@ describe('images', () => {
     expect(window.showMessageBox).toHaveBeenCalledWith({
       buttons: IMAGE_BUTTONS,
       title: 'Prune',
+      type: 'danger',
       message: 'This action will prune images from the Podman engine.',
     });
 
@@ -133,6 +135,7 @@ describe('images', () => {
     expect(window.showMessageBox).toHaveBeenCalledWith({
       buttons: IMAGE_BUTTONS,
       title: 'Prune',
+      type: 'danger',
       message: 'This action will prune images from the Podman engine.',
     });
 
@@ -156,6 +159,7 @@ describe('images', () => {
     // check if the showMessageBox method was called with all the right parameters
     expect(window.showMessageBox).toHaveBeenCalledWith({
       buttons: IMAGE_BUTTONS,
+      type: 'danger',
       title: 'Prune',
       message: 'This action will prune images from the Podman engine.',
     });

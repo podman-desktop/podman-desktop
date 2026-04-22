@@ -21,9 +21,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createHash, formatName, getBase64Image, requireNonUndefined } from './util.js';
 
+vi.mock(import('node:fs'));
+
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mock(import('node:fs'));
 });
 
 test('getBase64Image - return undefined if path do not exists', () => {

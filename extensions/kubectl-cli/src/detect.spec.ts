@@ -34,6 +34,7 @@ const osMock: OS = {
 
 let detect: Detect;
 
+vi.mock(import('node:fs'));
 vi.mock(import('shell-path'), () => {
   return {
     shellPath: vi.fn(),
@@ -101,7 +102,6 @@ describe('Check storage path', async () => {
   });
 
   test('found', async () => {
-    vi.mock(import('node:fs'));
     const existSyncSpy = vi.spyOn(fs, 'existsSync');
     existSyncSpy.mockImplementation(() => true);
 

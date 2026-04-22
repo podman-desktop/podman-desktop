@@ -45,7 +45,7 @@ export class VolumeDetailsPage extends DetailsPage {
     return test.step('Delete Volume', async () => {
       await playExpect(this.deleteButton).toBeEnabled();
       await this.deleteButton.click();
-      await handleConfirmationDialog(this.page);
+      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
       return new VolumesPage(this.page);
     });
   }

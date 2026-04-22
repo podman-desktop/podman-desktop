@@ -651,3 +651,56 @@ expect(info).toMatchInlineSnapshot(`
 - **Use Inline for Small Data:** If the snapshot is less than 10 lines, prefer `toMatchInlineSnapshot()` for better visibility.
 
 For more details, see the [Vitest snapshot guide](https://vitest.dev/guide/snapshot.html).
+
+## Dialog language guide
+
+All dialogs (`showMessageBox` calls) must follow consistent language patterns for titles, body text, and buttons.
+
+### Titles
+
+Use `[Verb] [Object]` format. Add `?` for confirmations. No articles ("a", "the").
+
+| Dialog type  | Format                   | Examples                                      |
+| ------------ | ------------------------ | --------------------------------------------- |
+| Confirmation | `[Verb] [Object]?`       | `Delete Container?`, `Update Podman Desktop?` |
+| Action       | `[Verb] [Object]`        | `Push Image`, `Apply Kubernetes YAML`         |
+| Error result | `[Verb] [Object] Failed` | `Run Container Failed`, `Pull Image Failed`   |
+| Info         | `[Verb] [Object]`        | `View Version`, `Feedback Submitted`          |
+
+### Confirmation questions
+
+Format: `Are you sure you want to [verb] [object]?`
+
+Include the specific resource name: `Are you sure you want to delete container angry_vaughan?`
+
+### Button text
+
+- Use action verbs that match the title: `Delete`, `Install`, `Update`, `Prune`
+- Never use generic labels: no `Yes`, `No`, `OK`, `Confirm`
+- Use `Dismiss` for single-button info/error dialogs
+- Use `Cancel` for the cancel/escape action
+- Use title case for multi-word buttons: `View Release Notes`, `Copy Link`
+- Destructive actions use `variant: 'delete'` for danger styling
+
+### Using `withConfirmation`
+
+Pass an explicit `title` and `variant` via options. For non-delete actions, use `buttonLabel` to set the confirmation button text:
+
+```typescript
+withConfirmation(deleteContainer, `delete container ${name}`, {
+  title: 'Delete Container?',
+  variant: 'delete',
+});
+
+withConfirmation(cancelTask, `cancel task ${name}`, {
+  title: 'Cancel Task?',
+  buttonLabel: 'Cancel',
+});
+```
+
+### Tone
+
+- Professional but conversational
+- Direct and clear
+- Active voice
+- Specific, not generic

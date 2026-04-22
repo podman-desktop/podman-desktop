@@ -27,6 +27,8 @@ import type { KubectlGithubReleaseArtifactMetadata, KubectlGitHubReleases } from
 import { OS } from './os';
 import * as utils from './utils';
 
+vi.mock(import('node:fs'));
+
 // Create the OS class as well as fake extensionContext
 const os = new OS();
 const extensionContext: extensionApi.ExtensionContext = {
@@ -124,7 +126,6 @@ test('test download of kubectl passes and that mkdir and executable mocks are ca
   const downloadReleaseAssetMock = vi.spyOn(kubectlGitHubReleasesMock, 'downloadReleaseAsset');
 
   // Mock that the storage path does not exist
-  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return false;
   });

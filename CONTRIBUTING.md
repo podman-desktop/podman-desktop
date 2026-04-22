@@ -460,9 +460,8 @@ Each sprint a new "Triage manager" will be assigned.
 
 Your responsibilities include:
 
-- Review the [status/need-triage](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aopen+is%3Aissue+label%3Astatus%2Fneed-triage) label on new issues. As a maintainer, you will need to categorize these issues under the correct [domain labels](https://github.com/podman-desktop/podman-desktop/labels?q=domain%2F).
+- Review the [status/need-triage](https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aopen+is%3Aissue+label%3Astatus%2Fneed-triage) label on new issues. As a maintainer, you will need to categorize these issues under the correct `inreview` [domain labels](https://github.com/podman-desktop/podman-desktop/labels?q=domain%2F). for example if an issue is related to extensions, you need to add the label `domain/extensibility/inreview` . This will alert the domain owners to take a look at the issue and provide additional details as needed.
 - Validate the issue type. Since issues can be opened without templates or may not align with the chosen template, ensure the issue is correctly classified and update labels accordingly. For example, an issue opened as a bug may actually be a feature request and should be relabeled to reflect the correct type.
-- Add `dev/investigate` label if there is a need for the engineering team to take an initial look and provide some info on where the changes could be and categorize the issue in appropriate area. Add the issue to the current sprint.
 - Add `qe/review` label if we want QE to reproduce this issue.
 - Add `status/info-needed` label if logs are missing or additional info is needed from the user filing the issue
 - Add `external-user` label if the issue is opened by someone outside the Podman Desktop organization maintainers.

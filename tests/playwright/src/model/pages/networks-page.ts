@@ -55,7 +55,7 @@ export class NetworksPage extends MainPage {
       const networkDeleteButton = await this.getDeleteNetworkRowButton(networkName);
       await playExpect(networkDeleteButton).toBeEnabled();
       await networkDeleteButton.click();
-      await handleConfirmationDialog(this.page);
+      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
       return this;
     });
   }

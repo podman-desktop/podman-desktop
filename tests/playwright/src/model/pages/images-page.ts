@@ -217,7 +217,7 @@ export class ImagesPage extends MainPage {
 
       await playExpect(this.deleteAllSelectedButton).toBeEnabled();
       await this.deleteAllSelectedButton.click();
-      await handleConfirmationDialog(this.page);
+      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
     });
   }
 
@@ -256,7 +256,7 @@ export class ImagesPage extends MainPage {
     const deleteManifestButton = manifest.getByRole('button', { name: 'Delete Manifest' });
     await playExpect(deleteManifestButton).toBeEnabled();
     await deleteManifestButton.click();
-    await handleConfirmationDialog(this.page);
+    await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
   }
 
   async pushManifest(manifestName: string): Promise<void> {
