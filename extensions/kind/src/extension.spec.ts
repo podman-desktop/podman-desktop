@@ -139,6 +139,24 @@ describe('cli tool', () => {
     });
   });
 
+  test('syncs detected version to provider on startup', async () => {
+    await activate();
+
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith('0.0.1');
+  });
+
+  test('does not sync version to provider when no binary is detected', async () => {
+    vi.mocked(util.getKindBinaryInfo).mockRejectedValue(new Error('does not exist'));
+    vi.mocked(podmanDesktopApi.cli.createCliTool).mockReturnValue({
+      ...CLI_TOOL_MOCK,
+      version: undefined,
+    } as unknown as extensionApi.CliTool);
+
+    await activate();
+
+    expect(PROVIDER_MOCK.updateVersion).not.toHaveBeenCalled();
+  });
+
   test('activation should register cli tool when available, installed by user', async () => {
     vi.mocked(util.getSystemBinaryPath).mockReturnValue('user-kind');
 

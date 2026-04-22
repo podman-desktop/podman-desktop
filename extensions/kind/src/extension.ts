@@ -357,6 +357,10 @@ export async function createProvider(
 
   provider = extensionApi.provider.createProvider(providerOptions);
 
+  if (kindCli?.version) {
+    provider.updateVersion(kindCli.version);
+  }
+
   extensionContext.subscriptions.push(provider);
   await registerProvider(provider, telemetryLogger);
   extensionContext.subscriptions.push(
