@@ -32,15 +32,15 @@ Luckily, all but the last package are available from the pre-configured RHEL 9 r
 
 Navigate to [image builder](https://console.redhat.com/insights/image-builder)
 
-![image builder](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine1.png)
+![image builder](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine1.png)
 
 On the upper right menu, enable the **Preview** mode.
 
-![image builder preview](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine2.png)
+![image builder preview](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine2.png)
 
 Click **Add blueprint** to open the **Create image** dialog wizard.
 
-![image wizard](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine3.png)
+![image wizard](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine3.png)
 
 On the **Image output** page, select the following:
 
@@ -74,19 +74,19 @@ On the **Content** page, complete the following steps to add additional packages
 
 - On the Custom repositories step:
 
-![custom repositories](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine4.png)
+![custom repositories](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine4.png)
 
 Click on the [Create and manage repositories here](https://console.redhat.com/preview/settings/content) link. This will open a new tab
 
-![custom repositories](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine5.png)
+![custom repositories](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine5.png)
 
 Click **Add repositories now**
 
-![add custom repository](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine6.png)
+![add custom repository](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine6.png)
 
 Click **Add repositories**
 
-![add custom repository](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine7.png)
+![add custom repository](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine7.png)
 
 On the **Add custom repositories** page, select the following:
 
@@ -100,7 +100,7 @@ Close the tab and switch back to the previous one
 - In the filter input field, type EPEL
 - Select the EPEL 9 repository
 
-![custom repository created](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine8.png)
+![custom repository created](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine8.png)
 
 Click **Next**
 
@@ -136,7 +136,7 @@ On the **Review** page:
 
 - Click **Create blueprint and build image**.
 
-![images list](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine9.png)
+![images list](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine9.png)
 
 The image is being built. Once the build is finished, the download link will be available. Click on the **Download (.tar.gz)** link and save the downloaded file to one of your local folders.
 
@@ -144,30 +144,30 @@ The image is being built. Once the build is finished, the download link will be 
 
 Launch Podman Desktop and go to the **Settings -> Resources** page:
 
-![images list](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine10.png)
+![images list](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine10.png)
 
 On the Podman provider, click on **Create new ...**
 
 On the **Create Podman machine** page, click the **Browse** button for the **Image Path** field and select the file downloaded from Image Builder.
 
-![create podman machine](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine11.png)
+![create podman machine](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine11.png)
 
 Click on the **Create** button: the machine will be created and started. After a short time, the operation status should be reported.
 
-![podman machine created](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine12.png)
+![podman machine created](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine12.png)
 
 # Let's play with the RHEL WSL podman machine
 
 Go to the **Images** page and pull the **httpd** image
 
-![pull httpd image](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine13.png)
+![pull httpd image](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine13.png)
 
 Click on **Done**
 
-![images list](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine14.png)
+![images list](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine14.png)
 
 Start the image by clicking on the **Run image** icon
 
-![images list](img/using-rhel-wsl-podman-machine\rhel-wsl-podman-machine15.png)
+![images list](img/using-rhel-wsl-podman-machine/rhel-wsl-podman-machine15.png)
 
 Once the container is started, the Apache server can be accessed on [localhost:9000](http://localhost:9000)
