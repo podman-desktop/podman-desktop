@@ -129,9 +129,16 @@ test('Authentication creates new auth request when silent is true and session fo
 });
 
 test('Authentication does not create new auth request when silent is true and session exists', async () => {
+  const mb = {
+    showMessageBox: vi
+      .fn()
+      .mockResolvedValueOnce({ response: 1 }) // "Sign In?" dialog: Allow (index 1)
+      .mockResolvedValueOnce({ response: 0 }), // "Allow Access" dialog: Allow (index 0)
+  } as unknown as MessageBox;
+  const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvidrer1 = new AuthenticationProviderSingleAccount();
-  authModule.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
-  const session1 = await authModule.getSession(
+  authentication.registerAuthenticationProvider('company.auth-provider', 'Provider 1', authProvidrer1);
+  const session1 = await authentication.getSession(
     { id: 'ext1', label: 'Ext 2' },
     'company.auth-provider',
     ['scope1', 'scope2'],
@@ -140,7 +147,7 @@ test('Authentication does not create new auth request when silent is true and se
 
   expect(session1).toBeDefined();
 
-  const session2 = await authModule.getSession(
+  const session2 = await authentication.getSession(
     { id: 'ext2', label: 'Ext 2' },
     'company.auth-provider',
     ['scope1', 'scope2'],
@@ -148,7 +155,7 @@ test('Authentication does not create new auth request when silent is true and se
   );
 
   expect(session2).toBeDefined();
-  expect(authModule.getSessionRequests()).length(0);
+  expect(authentication.getSessionRequests()).length(0);
 });
 
 test('Authentication does not create session if user has not allowed it', async () => {
@@ -331,7 +338,9 @@ test('authentication shows confirmation request when signing out from a session'
   );
 
   vi.mocked(mb.showMessageBox).mockReset();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 });
+  vi.mocked(mb.showMessageBox)
+    .mockResolvedValueOnce({ response: 0 }) // "Allow Access" dialog: Allow (index 0) for ext2
+    .mockResolvedValueOnce({ response: 1 }); // "Sign Out?" dialog: Sign Out (index 1)
 
   await authentication.getSession({ id: 'ext2', label: 'Ext 2' }, 'company.auth-provider', ['scope1', 'scope2'], {
     createIfNone: true,
@@ -455,7 +464,7 @@ test('getSession returns session when extension access is allowed', async () => 
 
 test('getSession prompts for allowance when accessing session without prior decision', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // User clicks "Allow"
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // "Sign In?" dialog: Allow (index 1)
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
@@ -473,7 +482,7 @@ test('getSession prompts for allowance when accessing session without prior deci
 
   // Reset mock to track only the next call
   vi.mocked(mb.showMessageBox).mockClear();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 }); // User clicks "Allow"
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // "Allow Access" dialog: Allow (index 0)
 
   // ext2 tries to access the session - should prompt for allowance
   const sessionForExt2 = await authentication.getSession(
@@ -501,7 +510,7 @@ test('getSession prompts for allowance when accessing session without prior deci
 
 test('getSession denies access when user clicks Deny on allowance prompt but does not store denial', async () => {
   const mb = {
-    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // First call: Allow (for createIfNone)
+    showMessageBox: vi.fn().mockResolvedValue({ response: 1 }), // "Sign In?" dialog: Allow (index 1)
   } as unknown as MessageBox;
   const authentication = new AuthenticationImpl(apiSender, mb);
   const authProvider = new AuthenticationProviderSingleAccount();
@@ -519,7 +528,7 @@ test('getSession denies access when user clicks Deny on allowance prompt but doe
 
   // Reset mock - user will click "Deny" this time
   vi.mocked(mb.showMessageBox).mockClear();
-  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 0 }); // User clicks "Deny"
+  vi.mocked(mb.showMessageBox).mockResolvedValue({ response: 1 }); // User clicks "Deny"
 
   // ext2 tries to access the session - user denies
   const sessionForExt2 = await authentication.getSession(
