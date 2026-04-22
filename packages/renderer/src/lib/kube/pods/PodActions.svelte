@@ -58,7 +58,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Delete Pod"
-  onClick={():void => withConfirmation(deletePod, `delete pod ${pod.name}`)}
+  onClick={():void => withConfirmation(deletePod, `delete pod ${pod.name}`, { variant:'delete' } )}
   icon={faTrash}
   detailed={detailed}/>
 

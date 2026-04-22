@@ -131,12 +131,6 @@ describe('exec', () => {
   test('should reject with an error when the process error event received', async () => {
     const command = 'nonexistent-command';
 
-    vi.mock(import('node:child_process'), () => {
-      return {
-        spawn: vi.fn(),
-      };
-    });
-
     const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
       if (event === 'data') {
         cb('');

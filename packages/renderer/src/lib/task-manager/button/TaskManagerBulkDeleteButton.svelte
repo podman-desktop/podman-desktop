@@ -29,7 +29,7 @@ async function deleteSelectedTasks(): Promise<void> {
 }
 
 function onClick(): void {
-  withBulkConfirmation(deleteSelectedTasks, bulkOperationTitle);
+  withBulkConfirmation(deleteSelectedTasks, bulkOperationTitle, { variant: 'delete' });
 }
 </script>
 

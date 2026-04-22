@@ -30,14 +30,14 @@ import { LegacyDirectories } from './directories-legacy.js';
 
 const originalProcessEnv = process.env;
 
+// Mock file system
+vi.mock(import('node:fs'));
 vi.mock(import('/@/util.js'));
 
 beforeEach(() => {
   // Reset environment variables to clean state
   process.env = { ...originalProcessEnv };
 
-  // Mock file system
-  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockReturnValue(true);
   vi.spyOn(fs, 'mkdirSync').mockImplementation(() => '');
 });

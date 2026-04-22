@@ -33,6 +33,7 @@ const config: Configuration = {
 };
 
 vi.mock(import('node:fs'));
+vi.mock(import('./warnings'));
 
 const mockTelemetryLogger: extensionApi.TelemetryLogger = {
   logUsage: vi.fn(),
@@ -75,8 +76,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
         return '';
       },
     });
-
-    vi.mock(import('./warnings'));
   });
 
   test('when isDisguisedPodman is true, error message should NOT be shown', async () => {

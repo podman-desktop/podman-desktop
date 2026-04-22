@@ -72,9 +72,6 @@ describe('analyze extension and main', () => {
   });
 
   test('check for extension with linked folder', async () => {
-    vi.mock(import('node:fs'));
-    vi.mock(import('node:fs/promises'));
-
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
     fsExistsSyncMock.mockReturnValue(true);
@@ -108,8 +105,6 @@ describe('analyze extension and main', () => {
   });
 
   test('check for extension without main entry', async () => {
-    vi.mock(import('node:fs'));
-
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
     fsExistsSyncMock.mockReturnValue(true);
@@ -140,8 +135,6 @@ describe('analyze extension and main', () => {
   });
 
   test('check for extension with devMode', async () => {
-    vi.mock(import('node:fs'));
-
     // mock fs.existsSync
     const fsExistsSyncMock = vi.spyOn(fs, 'existsSync');
     fsExistsSyncMock.mockReturnValue(true);

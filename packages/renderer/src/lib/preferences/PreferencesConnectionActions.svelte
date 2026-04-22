@@ -191,7 +191,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
         {/if}
         {#if connection.canDelete}
           <LoadingIconButton
-            clickAction={withConfirmation.bind(undefined, deleteConnectionProvider.bind(undefined, provider, connection), `delete ${connection.name}`)}
+            clickAction={withConfirmation.bind(undefined, deleteConnectionProvider.bind(undefined, provider, connection), `delete ${connection.name}`, { variant: 'delete'})}
             action="delete"
             icon={faTrash}
             state={connectionStatus}

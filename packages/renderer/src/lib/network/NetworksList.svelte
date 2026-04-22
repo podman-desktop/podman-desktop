@@ -141,6 +141,7 @@ function key(network: NetworkInfoUI): string {
           withBulkConfirmation(
             deleteSelectedNetworks,
             `delete ${selectedItemsNumber} network${selectedItemsNumber > 1 ? 's' : ''}`,
+            { variant:'delete' }
           )}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}

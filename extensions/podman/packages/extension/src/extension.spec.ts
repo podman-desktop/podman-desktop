@@ -160,6 +160,7 @@ const fsPromisesReaddirMock = vi.mocked(
 );
 
 vi.mock(import('./inject/inversify-binding'));
+vi.mock(import('./utils/warnings'));
 
 // mock ps-list
 vi.mock(import('ps-list'), async () => {
@@ -295,6 +296,7 @@ const consoleWarnMock = vi.fn();
 const originalConsoleTrace = console.trace;
 const consoleTraceMock = vi.fn();
 
+vi.mock(import('node:fs'));
 vi.mock(import('node:child_process'), async importOriginal => {
   const childProcessActual = await importOriginal();
   return {
@@ -1319,8 +1321,6 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
 
   const spyPrompt = vi.mocked(extensionApi.window.showInformationMessage);
   spyPrompt.mockResolvedValue('Yes');
-
-  vi.mock(import('node:fs'));
 
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return false;
@@ -3573,8 +3573,6 @@ describe('macOS: tests for notifying if disguised podman socket fails / passes',
         return '';
       },
     });
-
-    vi.mock(import('./utils/warnings'));
   });
 
   test('do not show any notifications / messages if the provider is stopped', async () => {
