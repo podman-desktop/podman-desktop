@@ -360,6 +360,7 @@ export class ColorRegistry {
     this.initTerminal();
     this.initProgressBar();
     this.initBadge();
+    this.initProviderInfo();
   }
 
   protected initDefaults(): void {
@@ -498,6 +499,13 @@ export class ColorRegistry {
     this.registerColor(`${titlebar}windows-hover-exit-bg`, {
       dark: '#c42b1c',
       light: '#c42b1c',
+    });
+
+    this.registerColor(`${titlebar}windows-hover-exit-text`, {
+      dark: white,
+      light: white,
+      hcDark: white,
+      hcLight: white,
     });
 
     this.registerColor(`${titlebar}windows-hover-bg`, {
@@ -653,6 +661,13 @@ export class ColorRegistry {
     this.registerColor(`${invCt}info-icon`, {
       dark: accent1[400],
       light: accent1[500],
+    });
+
+    this.registerColor(`${invCt}divider`, {
+      dark: charcoal[400],
+      light: gray[700],
+      hcDark: white,
+      hcLight: black,
     });
   }
 
@@ -2274,6 +2289,38 @@ export class ColorRegistry {
     this.registerColor(`${badge}gray`, {
       dark: gray[600],
       light: gray[600],
+    });
+  }
+
+  protected initProviderInfo(): void {
+    const provider = 'provider-';
+
+    this.registerColor(`${provider}podman`, {
+      dark: purple[600],
+      light: purple[600],
+      hcDark: purple[400],
+      hcLight: purple[700],
+    });
+
+    this.registerColor(`${provider}docker`, {
+      dark: sky[400],
+      light: sky[400],
+      hcDark: sky[300],
+      hcLight: sky[600],
+    });
+
+    this.registerColor(`${provider}kubernetes`, {
+      dark: sky[600],
+      light: sky[600],
+      hcDark: sky[400],
+      hcLight: sky[700],
+    });
+
+    this.registerColor(`${provider}unknown`, {
+      dark: gray[900],
+      light: gray[900],
+      hcDark: white,
+      hcLight: black,
     });
   }
 

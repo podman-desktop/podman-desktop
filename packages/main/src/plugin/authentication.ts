@@ -164,7 +164,7 @@ export class AuthenticationImpl {
         }, []);
         const message = `${accountMessage}\n\n\t${extensionNames.join('\n\t')}\n\nSign out from ${multiple ? 'these' : 'this'} extension${multiple ? 's' : ''}?`;
         const choice = await this.messageBox.showMessageBox({
-          title: 'Sign Out Request',
+          title: 'Sign Out?',
           message,
           buttons: ['Cancel', 'Sign Out'],
         });
@@ -358,7 +358,7 @@ export class AuthenticationImpl {
     if (options.createIfNone) {
       if (providerData) {
         const allowRsp = await this.messageBox.showMessageBox({
-          title: 'Sign In Request',
+          title: 'Sign In?',
           message: `The extension '${requestingExtension.label}' wants to sign in using ${providerData.label}.`,
           buttons: ['Cancel', 'Allow'],
           type: 'info',

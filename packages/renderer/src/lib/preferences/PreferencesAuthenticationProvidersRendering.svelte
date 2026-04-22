@@ -110,7 +110,7 @@ import SettingsPage from './SettingsPage.svelte';
               <Tooltip bottomLeft tip="Sign in to use {request.extensionLabel}">
                 <Button
                   aria-label="Sign in"
-                  class="pl-2 mr-4 hover:cursor-pointer hover:text-white text-white"
+                  class="pl-2 mr-4"
                   on:click={(): Promise<void> => window.requestAuthenticationProviderSignIn(request.id)}>
                   <div class="flex flex-row items-center">
                     <Icon class="h-3 w-3 text-md mr-2" icon={faRightToBracket} />Sign in

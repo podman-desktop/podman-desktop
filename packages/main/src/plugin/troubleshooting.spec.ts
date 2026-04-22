@@ -19,6 +19,8 @@
 import * as fs from 'node:fs';
 
 import type { LogType } from '@podman-desktop/core-api';
+import type AdmZip from 'adm-zip';
+import type { IpcMain } from 'electron';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { DialogRegistry } from '/@/plugin/dialog-registry.js';
@@ -35,21 +37,21 @@ const DIALOG_REGISTRY_MOCK: DialogRegistry = {
 const writeZipMock = vi.fn();
 const addFileMock = vi.fn();
 
-vi.mock('electron', () => {
+vi.mock(import('electron'), () => {
   return {
     ipcMain: {
       emit: vi.fn(),
       on: vi.fn(),
-    },
+    } as unknown as IpcMain,
   };
 });
 
-vi.mock('adm-zip', () => {
+vi.mock(import('adm-zip'), () => {
   return {
     default: class {
       addFile = addFileMock;
       writeZip = writeZipMock;
-    },
+    } as unknown as typeof AdmZip,
   };
 });
 
@@ -180,7 +182,7 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
   readFileMock.mockResolvedValue('content');
 
   // Mock exists to be true
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return true;
   });
@@ -203,7 +205,7 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
 // ~/AppData/Roaming/Podman Desktop/logs/podman-desktop.log
 test('Should return getWindowsSystemLogs if the platform is win32', async () => {
   // Mock exists to be true
-  vi.mock('node:fs');
+  vi.mock(import('node:fs'));
   vi.spyOn(fs, 'existsSync').mockImplementation(() => {
     return true;
   });

@@ -281,7 +281,7 @@ async function connect(contextName: string): Promise<void> {
             <ErrorMessage class="text-sm" aria-label="Context Error" error={context.error} />
           {/if}
         </div>
-        <div class="grow flex-column divide-gray-900 text-[var(--pd-invert-content-card-text)]">
+        <div class="grow flex-column divide-(--pd-invert-content-divider) text-(--pd-invert-content-card-text)">
           <div class="flex flex-row">
             <div class="flex-none w-36">
               {#if context.isReachable || context.isOffline}

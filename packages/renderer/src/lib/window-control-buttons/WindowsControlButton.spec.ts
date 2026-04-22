@@ -58,8 +58,8 @@ test('Check Windows Maximize control button colors', async () => {
   const customButton = screen.getByRole('button', { name: 'Maximize' });
   expect(customButton).toBeInTheDocument();
 
-  expect(customButton).toHaveClass('text-[var(--pd-titlebar-icon)]');
-  expect(customButton).toHaveClass('hover:bg-[var(--pd-titlebar-windows-hover-bg)]');
+  expect(customButton).toHaveClass('text-(--pd-titlebar-icon)');
+  expect(customButton).toHaveClass('hover:bg-(--pd-titlebar-windows-hover-bg)');
 });
 
 test('Check Windows Minimize control button colors', async () => {
@@ -68,8 +68,8 @@ test('Check Windows Minimize control button colors', async () => {
   const customButton = screen.getByRole('button', { name: 'Minimize' });
   expect(customButton).toBeInTheDocument();
 
-  expect(customButton).toHaveClass('text-[var(--pd-titlebar-icon)]');
-  expect(customButton).toHaveClass('hover:bg-[var(--pd-titlebar-windows-hover-bg)]');
+  expect(customButton).toHaveClass('text-(--pd-titlebar-icon)');
+  expect(customButton).toHaveClass('hover:bg-(--pd-titlebar-windows-hover-bg)');
 });
 
 test('Check Windows Close control button colors', async () => {
@@ -78,7 +78,7 @@ test('Check Windows Close control button colors', async () => {
   const customButton = screen.getByRole('button', { name: 'Close' });
   expect(customButton).toBeInTheDocument();
 
-  expect(customButton).toHaveClass('text-[var(--pd-titlebar-icon)]');
-  expect(customButton).toHaveClass('hover:bg-[var(--pd-titlebar-windows-hover-exit-bg)]');
-  expect(customButton).toHaveClass('hover:text-white');
+  expect(customButton).toHaveClass('text-(--pd-titlebar-icon)');
+  expect(customButton).toHaveClass('hover:bg-(--pd-titlebar-windows-hover-exit-bg)');
+  expect(customButton).toHaveClass('hover:text-(--pd-titlebar-windows-hover-exit-text)');
 });

@@ -26,16 +26,22 @@ import { tooltipHidden } from './tooltip-store';
 import TooltipTestComponent from './TooltipTestComponent.svelte';
 import TooltipTestWithSnippet from './TooltipTestWithSnippet.svelte';
 
-vi.mock('@floating-ui/dom', () => ({
-  computePosition: vi.fn((): Promise<{ x: number; y: number }> => Promise.resolve({ x: 100, y: 200 })),
-  flip: vi.fn(() => ({})),
-  shift: vi.fn(() => ({})),
-  offset: vi.fn(() => ({})),
-  autoUpdate: vi.fn((_ref, _tooltip, update): (() => void) => {
+vi.mock(import('@floating-ui/dom'));
+
+beforeEach(() => {
+  vi.mocked(computePosition).mockResolvedValue({
+    middlewareData: {},
+    placement: 'bottom',
+    strategy: 'absolute',
+    x: 100,
+    y: 200,
+  });
+
+  vi.mocked(autoUpdate).mockImplementation((_ref, _tooltip, update) => {
     update();
     return (): void => {};
-  }),
-}));
+  });
+});
 
 describe('Tooltip', () => {
   beforeEach(() => {

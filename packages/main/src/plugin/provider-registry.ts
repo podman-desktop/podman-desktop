@@ -110,6 +110,7 @@ export class ProviderRegistry {
   private autostartEngine: AutostartEngine | undefined = undefined;
 
   private connectionLifecycleContexts: Map<ProviderConnection, LifecycleContextImpl> = new Map();
+  private connectionErrors: Map<ProviderConnection, string> = new Map();
   private listeners: ProviderEventListener[];
   private lifecycleListeners: ProviderLifecycleListener[];
   private containerConnectionLifecycleListeners: ContainerConnectionProviderLifecycleListener[];
@@ -697,12 +698,16 @@ export class ProviderRegistry {
 
   private getProviderConnectionInfo(connection: ProviderConnection): ProviderConnectionInfo {
     let providerConnection: ProviderConnectionInfo;
+    const lifecycleError = this.connectionErrors.get(connection);
+    const error = connection.error ?? lifecycleError;
+
     if (this.isContainerConnection(connection)) {
       providerConnection = {
         connectionType: 'container',
         name: connection.name,
         displayName: connection.displayName ?? connection.name,
         status: connection.status(),
+        error,
         type: connection.type,
         endpoint: {
           socketPath: connection.endpoint.socketPath,
@@ -724,6 +729,7 @@ export class ProviderRegistry {
         connectionType: 'kubernetes',
         name: connection.name,
         status: connection.status(),
+        error,
         endpoint: {
           apiURL: connection.endpoint.apiURL,
         },
@@ -737,6 +743,7 @@ export class ProviderRegistry {
         connectionType: 'vm',
         name: connection.name,
         status: connection.status(),
+        error,
         canStart: false,
         canStop: false,
         canEdit: false,
@@ -1149,12 +1156,17 @@ export class ProviderRegistry {
 
     try {
       await lifecycle.start(context, logHandler);
-    } finally {
+      this.connectionErrors.delete(connection);
       if (this.isProviderContainerConnection(providerConnectionInfo)) {
         this.fireUpdateContainerConnectionEvents(provider.id, providerConnectionInfo);
       } else {
         this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'started');
       }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.connectionErrors.set(connection, errorMessage);
+      this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'starting', errorMessage);
+      throw err;
     }
   }
 
@@ -1231,8 +1243,11 @@ export class ProviderRegistry {
     try {
       this.fireConnectionUpdateEvent(provider.id, providerConnectionInfo, 'stopped');
       await lifecycle.stop(context, logHandler);
+      this.connectionErrors.delete(connection);
     } catch (err) {
       console.warn(`Can't stop connection ${provider.id}.${providerConnectionInfo.name}`, err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.connectionErrors.set(connection, errorMessage);
     }
   }
 
@@ -1546,6 +1561,7 @@ export class ProviderRegistry {
     providerId: string,
     providerConnectionInfo: ProviderConnectionInfo,
     status: ProviderConnectionStatus,
+    error?: string,
   ): void {
     if (this.isProviderContainerConnection(providerConnectionInfo)) {
       const event = {
@@ -1556,8 +1572,10 @@ export class ProviderRegistry {
           type: providerConnectionInfo.type,
           endpoint: providerConnectionInfo.endpoint,
           status: (): ProviderConnectionStatus => status,
+          error,
         },
         status,
+        error,
       };
       this._onBeforeDidUpdateContainerConnection.fire(event);
       this._onDidUpdateContainerConnection.fire(event);
@@ -1569,8 +1587,10 @@ export class ProviderRegistry {
           name: providerConnectionInfo.name,
           endpoint: providerConnectionInfo.endpoint,
           status: (): ProviderConnectionStatus => status,
+          error,
         },
         status,
+        error,
       });
     } else {
       this._onDidUpdateVmConnection.fire({
@@ -1578,8 +1598,10 @@ export class ProviderRegistry {
         connection: {
           name: providerConnectionInfo.name,
           status: (): ProviderConnectionStatus => status,
+          error,
         },
         status,
+        error,
       });
     }
   }

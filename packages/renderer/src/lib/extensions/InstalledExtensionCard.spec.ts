@@ -30,6 +30,29 @@ beforeAll(() => {
   Object.defineProperty(window, 'removeExtension', { value: vi.fn() });
 });
 
+test('Expect inner div to use color-registry divider token', async () => {
+  const extension: CombinedExtensionInfoUI = {
+    type: 'pd',
+    id: 'myExtensionId',
+    name: 'foo',
+    description: 'my description',
+    displayName: '',
+    publisher: '',
+    removable: false,
+    devMode: false,
+    version: 'v1.2.3',
+    state: 'started',
+    path: '',
+    readme: '',
+    icon: 'iconOfMyExtension.png',
+  };
+  const { findByRole } = render(InstalledExtensionCard, { extension });
+
+  const inner = await findByRole('region', { name: 'myExtensionId' });
+  const innerDiv = inner.querySelector('.divide-\\[var\\(--pd-content-divider\\)\\]');
+  expect(innerDiv).not.toBeNull();
+});
+
 test('Expect to see a div with extension id title', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',

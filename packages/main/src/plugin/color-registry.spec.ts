@@ -102,6 +102,10 @@ class TestColorRegistry extends ColorRegistry {
   override initButton(): void {
     super.initButton();
   }
+
+  override initProviderInfo(): void {
+    super.initProviderInfo();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -213,12 +217,16 @@ test('initColors', async () => {
   const spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
   // Don't mock it - let it call through to the real implementation
 
+  const spyOnInitProviderInfo = vi.spyOn(colorRegistry, 'initProviderInfo');
+
   colorRegistry.initColors();
 
   expect(spyOnRegisterColor).toHaveBeenCalled();
 
   // at least > 20 times
   expect(spyOnRegisterColor.mock.calls.length).toBeGreaterThan(20);
+
+  expect(spyOnInitProviderInfo).toHaveBeenCalledOnce();
 });
 
 describe('initTitlebar', () => {
@@ -1479,5 +1487,52 @@ describe('color() fluent API', () => {
       .withDark(colorPaletteHelper('#000000'));
 
     expect(() => builder.build()).toThrow('Failed to parse color not-a-color');
+  });
+});
+
+describe('initProviderInfo', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initProviderInfo();
+  });
+
+  test('registers provider-podman with purple', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('provider-podman', {
+      dark: tailwindColorPalette.purple[600],
+      light: tailwindColorPalette.purple[600],
+      hcDark: tailwindColorPalette.purple[400],
+      hcLight: tailwindColorPalette.purple[700],
+    });
+  });
+
+  test('registers provider-docker with sky blue', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('provider-docker', {
+      dark: tailwindColorPalette.sky[400],
+      light: tailwindColorPalette.sky[400],
+      hcDark: tailwindColorPalette.sky[300],
+      hcLight: tailwindColorPalette.sky[600],
+    });
+  });
+
+  test('registers provider-kubernetes with sky blue', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('provider-kubernetes', {
+      dark: tailwindColorPalette.sky[600],
+      light: tailwindColorPalette.sky[600],
+      hcDark: tailwindColorPalette.sky[400],
+      hcLight: tailwindColorPalette.sky[700],
+    });
+  });
+
+  test('registers provider-unknown with gray', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('provider-unknown', {
+      dark: tailwindColorPalette.gray[900],
+      light: tailwindColorPalette.gray[900],
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
+    });
   });
 });

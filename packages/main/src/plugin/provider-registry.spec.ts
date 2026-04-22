@@ -1071,6 +1071,108 @@ test('should send events when starting a VM connection', async () => {
   expect(event?.connection.status()).toEqual('started');
 });
 
+test('should persist error in connectionErrors map when start fails', async () => {
+  const startMock = vi.fn().mockRejectedValue(new Error('Connection refused'));
+  const stopMock = vi.fn();
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+  const connection: ProviderContainerConnectionInfo = {
+    connectionType: 'container',
+    name: 'connection',
+    displayName: 'connection',
+    endpoint: { socketPath: '/endpoint1.sock' },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
+    status: 'stopped',
+    type: 'podman',
+  };
+
+  provider.registerContainerProviderConnection({
+    name: 'connection',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    type: 'podman',
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    status() {
+      return 'stopped';
+    },
+  });
+
+  const onDidUpdateMock = vi.fn();
+  providerRegistry.onDidUpdateContainerConnection(onDidUpdateMock);
+
+  await expect(providerRegistry.startProviderConnection('0', connection)).rejects.toThrow('Connection refused');
+
+  expect(onDidUpdateMock).toHaveBeenCalledWith(
+    expect.objectContaining({
+      status: 'starting',
+      error: 'Connection refused',
+    }),
+  );
+});
+
+test('should clear error from connectionErrors map when start succeeds', async () => {
+  const startMock = vi.fn();
+  const stopMock = vi.fn();
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'internal',
+    name: 'internal',
+    status: 'installed',
+  });
+
+  provider.registerKubernetesProviderConnection({
+    name: 'connection',
+    lifecycle: {
+      start: startMock,
+      stop: stopMock,
+    },
+    endpoint: {
+      apiURL: 'endpoint',
+    },
+    status() {
+      return 'started';
+    },
+  });
+
+  const connection: ProviderKubernetesConnectionInfo = {
+    connectionType: 'kubernetes',
+    name: 'connection',
+    endpoint: { apiURL: 'endpoint' },
+    canStart: false,
+    canStop: false,
+    canEdit: false,
+    canDelete: false,
+    status: 'stopped',
+  };
+
+  const onDidUpdateMock = vi.fn();
+  providerRegistry.onDidUpdateKubernetesConnection(onDidUpdateMock);
+
+  await providerRegistry.startProviderConnection('0', connection);
+
+  expect(onDidUpdateMock).toHaveBeenCalledWith(
+    expect.objectContaining({
+      status: 'started',
+    }),
+  );
+  expect(onDidUpdateMock).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      error: expect.any(String),
+    }),
+  );
+});
+
 describe('when auto-starting a container connection', async () => {
   let connection: ProviderContainerConnectionInfo;
   let provider: Provider;

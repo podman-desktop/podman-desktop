@@ -77,6 +77,23 @@ test('expect withConfirmation to use default variant when no options provided', 
   });
 });
 
+test('expect withConfirmation to use explicit title when provided', async () => {
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+
+  const callback = vi.fn();
+  withConfirmation(callback, 'Destroy world', { title: 'Destroy World?', buttonLabel: 'Destroy' });
+
+  await vi.waitFor(() => {
+    expect(window.showMessageBox).toHaveBeenCalledWith({
+      title: 'Destroy World?',
+      message: 'Are you sure you want to Destroy world?',
+      buttons: ['Destroy', 'Cancel'],
+      type: 'question',
+    });
+    expect(callback).toHaveBeenCalled();
+  });
+});
+
 test('expect withConfirmation to use delete variant with Delete button and danger type', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
@@ -98,13 +115,13 @@ test('expect withConfirmation to use default variant explicitly', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const callback = vi.fn();
-  withConfirmation(callback, 'continue', { variant: 'default' });
+  withConfirmation(callback, 'continue', { variant: 'default', buttonLabel: 'Continue' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledWith({
       title: 'Confirmation',
       message: 'Are you sure you want to continue?',
-      buttons: ['Yes', 'Cancel'],
+      buttons: ['Continue', 'Cancel'],
       type: 'question',
     });
     expect(callback).toHaveBeenCalled();

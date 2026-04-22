@@ -219,7 +219,7 @@ function removeDnsServer(index: number): void {
               {#if providerConnections.length > 1}
                 <div>
                   <label for="providerChoice" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                    >Container engine <span class="text-red-500">*</span></label>
+                    >Container engine <span class="text-(--pd-state-error)">*</span></label>
                   <ContainerConnectionDropdown
                     id="providerChoice"
                     name="providerChoice"
@@ -231,7 +231,7 @@ function removeDnsServer(index: number): void {
 
               <div>
                 <label for="networkName" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]"
-                  >Name <span class="text-red-500">*</span></label>
+                  >Name <span class="text-(--pd-state-error)">*</span></label>
                 <Input
                   bind:value={networkInfo.networkName}
                   name="networkName"
@@ -260,7 +260,7 @@ function removeDnsServer(index: number): void {
                 <label for="subnet" class="block mb-2 font-semibold text-[var(--pd-content-card-header-text)]">
                   Subnet
                   {#if requiresSubnet}
-                    <span class="text-red-500">*</span>
+                    <span class="text-(--pd-state-error)">*</span>
                   {/if}
                 </label>
                 <Input

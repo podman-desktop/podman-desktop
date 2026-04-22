@@ -203,9 +203,9 @@ export class ExperimentalFeatureFeedbackHandler {
 
       this.messageBox
         .showMessageBox({
-          title: `Share Your Feedback`,
+          title: 'Share Feedback',
           message: `We are testing something new!\n\nHow's your experience so far with [${featureName}](${featureGitHubLink})? Let us know on GitHub!`,
-          type: `info`,
+          type: 'info',
           buttons: [
             {
               heading: 'Remind me later',

@@ -24,7 +24,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 import Expandable from './Expandable.svelte';
 
-vi.mock('svelte/transition', () => ({
+vi.mock(import('svelte/transition'), () => ({
   slide: (): { delay: number; duration: number } => ({
     delay: 0,
     duration: 0,

@@ -27,7 +27,7 @@ let { title = '', searchTerm = $bindable(''), oninput = bubble('input'), class: 
   {#snippet left()}
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      class="w-4 h-4 mx-1 text-gray-700"
+      class="w-4 h-4 mx-1 text-(--pd-input-field-icon)"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
