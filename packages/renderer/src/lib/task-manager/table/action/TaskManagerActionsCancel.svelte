@@ -15,7 +15,7 @@ function cancelTask(): void {
   if (task.cancellable && tokenId) {
     withConfirmation((): Promise<void> => window.cancelToken(tokenId), `Cancel task ${task.name}`, {
       title: 'Cancel Task?',
-      buttonLabel: 'Cancel',
+      buttonLabel: 'Cancel Task',
     });
   }
 }
