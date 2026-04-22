@@ -3145,10 +3145,13 @@ declare module '@podman-desktop/api' {
   }
 
   interface ContainerJSONEvent {
-    type: string;
+    /**
+     * The object type relevant to the event (e.g. 'container', 'image', 'volume', 'network', 'pod').
+     * Uppercase to match the Docker/Podman API JSON serialization.
+     */
+    Type: string;
     status: string;
     id: string;
-    Type?: string;
   }
 
   /**
