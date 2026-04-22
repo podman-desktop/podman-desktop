@@ -22,6 +22,7 @@ async function openCleanupDialog(): Promise<void> {
 
   const result = await window.showMessageBox({
     title: 'Clean Up Data?',
+    type: 'warning',
     message: message,
     buttons: ['Clean Up', 'Cancel'],
   });

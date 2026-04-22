@@ -105,7 +105,7 @@ async function updateProxySettings(): Promise<void> {
   }
 
   await window.showMessageBox({
-    title: 'Update Proxy Settings',
+    title: 'Proxy Settings Updated',
     type: type,
     message: message,
     buttons: ['Dismiss'],
