@@ -118,6 +118,7 @@ import type {
   ResourceName,
   SimpleContainerInfo,
   StatusBarEntryDescriptor,
+  SystemOverviewStatusInfo,
   TelemetryMessages,
   V1Route,
   ViewInfoUI,
@@ -256,6 +257,10 @@ export function initExposure(): void {
 
   contextBridge.exposeInMainWorld('extensionSystemIsExtensionsStarted', async (): Promise<boolean> => {
     return ipcInvoke('extension-system:isExtensionsStarted');
+  });
+
+  contextBridge.exposeInMainWorld('getDashboardSystemOverviewStatus', async (): Promise<SystemOverviewStatusInfo> => {
+    return ipcInvoke('dashboard:getSystemOverviewStatus');
   });
 
   contextBridge.exposeInMainWorld(

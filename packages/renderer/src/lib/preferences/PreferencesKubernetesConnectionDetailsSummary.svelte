@@ -40,6 +40,12 @@ $: providerConnectionConfiguration = tmpProviderContainerConfiguration.filter(
 <div class="h-full text-[var(--pd-table-body-text)]">
   {#if kubernetesConnectionInfo}
     <div class="flex pl-8 py-4 flex-col w-full text-sm">
+      {#if kubernetesConnectionInfo.error}
+        <div class="flex flex-row mt-5 text-[var(--pd-state-error)]" role="alert" aria-label="Connection error">
+          <span class="font-semibold min-w-[150px]">Error</span>
+          <span>{kubernetesConnectionInfo.error}</span>
+        </div>
+      {/if}
       <div class="flex flex-row mt-5">
         <span class="font-semibold min-w-[150px]">Name</span>
         <span aria-label={kubernetesConnectionInfo.name}>{kubernetesConnectionInfo.name}</span>

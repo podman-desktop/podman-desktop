@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Disposable } from '@podman-desktop/api';
+import type { IDisposable } from '@podman-desktop/core-api';
 import {
   ENHANCED_DASHBOARD_CONFIGURATION_KEY,
   HEALTH_MONITOR_STATUS,
@@ -30,13 +30,16 @@ import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 
+import { IPCHandle } from '/@/plugin/api.js';
 import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
 
 const STARTUP_GRACE_PERIOD_DURATION = 8_000;
 
 @injectable()
-export class DashboardService implements Disposable {
+export class DashboardService implements IDisposable {
+  private disposables: IDisposable[] = [];
   private isEnhancedDashboardEnabled = false;
   private startupGracePeriod = true;
   private timeout: NodeJS.Timeout | undefined = undefined;
@@ -48,10 +51,14 @@ export class DashboardService implements Disposable {
     private experimentalConfigurationManager: ExperimentalConfigurationManager,
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
+    @inject(IPCHandle)
+    private readonly ipcHandle: IPCHandle,
   ) {}
 
   @preDestroy()
   dispose(): void {
+    this.disposables.forEach(disposable => disposable.dispose());
+    this.disposables = [];
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
@@ -60,6 +67,10 @@ export class DashboardService implements Disposable {
 
   @postConstruct()
   init(): void {
+    this.ipcHandle('dashboard:getSystemOverviewStatus', async (): Promise<SystemOverviewStatusInfo> => {
+      return this.getStatus();
+    });
+
     const dashboardConfiguration: IConfigurationNode = {
       id: 'preferences.experimental.enhancedDashboard',
       title: 'Experimental (Enhanced Dashboard)',
@@ -101,13 +112,49 @@ export class DashboardService implements Disposable {
       ENHANCED_DASHBOARD_CONFIGURATION_KEY,
     );
 
-    this.providerRegistry.addProviderListener(() => this.updateSystemOverviewStatus());
+    const providerListener = (): void => {
+      this.updateSystemOverviewStatus();
+    };
+    this.providerRegistry.addProviderListener(providerListener);
+    this.disposables.push(new Disposable(() => this.providerRegistry.removeProviderListener(providerListener)));
+
+    this.disposables.push(
+      this.providerRegistry.onDidUpdateContainerConnection(() => this.updateSystemOverviewStatus()),
+    );
+    this.disposables.push(
+      this.providerRegistry.onDidUpdateKubernetesConnection(() => this.updateSystemOverviewStatus()),
+    );
+    this.disposables.push(this.providerRegistry.onDidUpdateVmConnection(() => this.updateSystemOverviewStatus()));
+
+    this.disposables.push(
+      this.providerRegistry.onDidRegisterContainerConnection(() => this.updateSystemOverviewStatus()),
+    );
+    this.disposables.push(
+      this.providerRegistry.onDidUnregisterContainerConnection(() => this.updateSystemOverviewStatus()),
+    );
+    this.disposables.push(
+      this.providerRegistry.onDidRegisterKubernetesConnection(() => this.updateSystemOverviewStatus()),
+    );
+    this.disposables.push(
+      this.providerRegistry.onDidUnregisterKubernetesConnection(() => this.updateSystemOverviewStatus()),
+    );
+    this.disposables.push(this.providerRegistry.onDidRegisterVmConnection(() => this.updateSystemOverviewStatus()));
+    this.disposables.push(this.providerRegistry.onDidUnregisterVmConnection(() => this.updateSystemOverviewStatus()));
 
     this.timeout = setTimeout(() => {
       this.timeout = undefined;
       this.startupGracePeriod = false;
       this.updateSystemOverviewStatus();
     }, STARTUP_GRACE_PERIOD_DURATION);
+  }
+
+  getStatus(): SystemOverviewStatusInfo {
+    const statusInfo = this.getSystemOverviewStatus();
+    if (this.startupGracePeriod && statusInfo.status === HEALTH_MONITOR_STATUS.CRITICAL) {
+      statusInfo.status = HEALTH_MONITOR_STATUS.PROGRESSING;
+      statusInfo.text = 'Initializing...';
+    }
+    return statusInfo;
   }
 
   private getSystemOverviewStatus(): SystemOverviewStatusInfo {
@@ -133,7 +180,7 @@ export class DashboardService implements Disposable {
       };
     }
 
-    const hasCritical = allConnections.some(c => c.status === 'unknown');
+    const hasCritical = allConnections.some(c => !!c.error);
     const hasProgressing = allConnections.some(c => c.status === 'starting' || c.status === 'stopping');
     const hasContainerStarted = providers.some(p => p.containerConnections.some(c => c.status === 'started'));
 
@@ -159,7 +206,7 @@ export class DashboardService implements Disposable {
     allConnections: ProviderConnectionInfo[],
     providers: ProviderInfo[],
   ): string {
-    const errorConnections = allConnections.filter(connection => connection.status === 'unknown').length;
+    const errorConnections = allConnections.filter(connection => !!connection.error).length;
     const errorProviders = providers.filter(provider => provider.status === 'error').length;
 
     switch (status) {
@@ -168,7 +215,6 @@ export class DashboardService implements Disposable {
       case HEALTH_MONITOR_STATUS.STABLE:
         return 'Some systems are stopped';
       case HEALTH_MONITOR_STATUS.PROGRESSING:
-        // Check if starting or stopping
         if (allConnections.filter(connection => connection.status === 'starting').length) {
           return 'Starting up...';
         } else {
@@ -186,13 +232,6 @@ export class DashboardService implements Disposable {
   }
 
   private updateSystemOverviewStatus(): void {
-    const statusInfo = this.getSystemOverviewStatus();
-
-    if (this.startupGracePeriod && statusInfo.status === HEALTH_MONITOR_STATUS.CRITICAL) {
-      statusInfo.status = HEALTH_MONITOR_STATUS.PROGRESSING;
-      statusInfo.text = 'Initializing...';
-    }
-
-    this.apiSender.send('dashboard:system-overview-status', statusInfo);
+    this.apiSender.send('dashboard:system-overview-status', this.getStatus());
   }
 }
