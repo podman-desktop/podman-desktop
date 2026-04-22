@@ -30,6 +30,7 @@ async function deleteIngressRoute(): Promise<void> {
     withConfirmation(
       deleteIngressRoute,
       `delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'ingress' : 'route'} ${ingressRoute.name}`,
+      { title: `Delete ${ingressRouteUtils.isIngress(ingressRoute) ? 'Ingress' : 'Route'}?`, variant: 'delete' },
     )}
   detailed={detailed}
   icon={faTrash} />

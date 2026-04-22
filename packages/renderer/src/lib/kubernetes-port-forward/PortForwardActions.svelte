@@ -39,5 +39,5 @@ async function openExternal(): Promise<void> {
   icon={faSquareUpRight} />
 <ListItemButtonIcon
   title="Delete forwarded port"
-  onClick={(): void => withConfirmation(deletePortForward, `Delete port forward`)}
+  onClick={(): void => withConfirmation(deletePortForward, `Delete port forward`, { title: 'Delete Port Forward?', variant: 'delete' })}
   icon={faTrash} />
