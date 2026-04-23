@@ -123,7 +123,7 @@ export class VolumesPage extends MainPage {
     return test.step('Prune Volumes', async () => {
       await playExpect(this.pruneVolumesButton).toBeEnabled();
       await this.pruneVolumesButton.click();
-      await handleConfirmationDialog(this.page, 'Prune', true, 'Delete');
+      await handleConfirmationDialog(this.page, 'Prune Volumes?', true, 'Prune');
       return this;
     });
   }

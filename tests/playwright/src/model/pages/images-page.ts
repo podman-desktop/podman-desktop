@@ -109,7 +109,7 @@ export class ImagesPage extends MainPage {
   async pruneImages(): Promise<ImagesPage> {
     return test.step('Prune all images', async () => {
       await this.pruneImagesButton.click();
-      await handleConfirmationDialog(this.page, 'Prune', true, 'All unused images');
+      await handleConfirmationDialog(this.page, 'Prune Images?', true, 'All unused images');
       return this;
     });
   }
@@ -117,7 +117,7 @@ export class ImagesPage extends MainPage {
   async pruneUntaggedImages(): Promise<ImagesPage> {
     return test.step('Prune untagged images', async () => {
       await this.pruneImagesButton.click();
-      await handleConfirmationDialog(this.page, 'Prune', true, 'All untagged images');
+      await handleConfirmationDialog(this.page, 'Prune Images?', true, 'All untagged images');
       return this;
     });
   }

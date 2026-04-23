@@ -125,7 +125,7 @@ export class CLIToolsPage extends SettingsPage {
 
       await playExpect(this.getUninstallButton(toolName)).toBeEnabled();
       await this.getUninstallButton(toolName).click();
-      await handleConfirmationDialog(this.page, 'Uninstall');
+      await handleConfirmationDialog(this.page, `Uninstall ${toolName}?`, true, 'Uninstall');
 
       await playExpect.poll(async () => await this.getCurrentToolVersion(toolName), { timeout: timeout }).toBeFalsy();
       return this;
