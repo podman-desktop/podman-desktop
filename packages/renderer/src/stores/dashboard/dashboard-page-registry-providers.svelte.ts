@@ -23,7 +23,7 @@ import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelt
 export function createProviders(): DashboardPageRegistryEntry {
   return {
     id: 'Providers',
-    originalOrder: 4,
+    originalOrder: 5,
     component: ProvidersSection,
   };
 }

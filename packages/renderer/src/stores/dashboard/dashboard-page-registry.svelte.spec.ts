@@ -52,10 +52,10 @@ describe('defaultSection', () => {
     const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
     expect(sectionNames).toEqual([
       'Release Notes',
+      'System Overview',
       'Extension Banners',
       'Explore Features',
       'Learning Center',
-      'System Overview',
     ]);
 
     expect(defaultSection.names).toEqual(sectionNames);
@@ -95,7 +95,7 @@ describe('convertFromListOrganizerItems', () => {
         id: 'Extension Banners',
         label: 'Extension Banners',
         enabled: false,
-        originalOrder: 1,
+        originalOrder: 2,
       },
     ];
 
@@ -107,7 +107,7 @@ describe('convertFromListOrganizerItems', () => {
       },
       {
         id: 'Extension Banners',
-        originalOrder: 1,
+        originalOrder: 2,
         component: 'ExtensionBanners' as unknown as Component,
       },
     ];
@@ -124,7 +124,7 @@ describe('convertFromListOrganizerItems', () => {
       {
         id: 'Extension Banners',
         hidden: true,
-        originalOrder: 1,
+        originalOrder: 2,
         component: 'ExtensionBanners' as unknown as Component,
       },
     ]);
