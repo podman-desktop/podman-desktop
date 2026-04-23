@@ -80,7 +80,7 @@ export class KubernetesResourceDetailsPage extends DetailsPage {
       await playExpect(this.revertChagesButton).toBeEnabled();
       await playExpect(this.applyChangesButton).toBeEnabled();
       await this.applyChangesButton.click();
-      await handleConfirmationDialog(this.page, 'Kubernetes', true, 'OK');
+      await handleConfirmationDialog(this.page, 'Apply Kubernetes YAML', true, 'Dismiss');
     });
   }
 }
