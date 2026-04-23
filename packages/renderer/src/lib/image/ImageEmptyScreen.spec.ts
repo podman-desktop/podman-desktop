@@ -97,7 +97,7 @@ test('expect error to show up in message box when pull has an error', async () =
   await userEvent.click(pullButton);
 
   expect(window.showMessageBox).toBeCalledWith({
-    title: `Error while pulling image`,
+    title: 'Pull Image Failed',
     message: `Error while pulling image from test: Cannot pull image`,
   });
 });
@@ -111,7 +111,7 @@ test('expect error to show up in message box with no providers', async () => {
   await userEvent.click(pullButton);
 
   expect(window.showMessageBox).toBeCalledWith({
-    title: `Error while pulling image`,
+    title: 'Pull Image Failed',
     message: `No provider connections found`,
   });
 });

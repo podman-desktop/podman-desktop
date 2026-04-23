@@ -18,7 +18,7 @@ let pullInProgress = $state(false);
 async function pullFirstImage(): Promise<void> {
   if (!selectedProviderConnection) {
     await window.showMessageBox({
-      title: `Error while pulling image`,
+      title: 'Pull Image Failed',
       message: `No provider connections found`,
     });
     return;
@@ -30,7 +30,7 @@ async function pullFirstImage(): Promise<void> {
   } catch (error: unknown) {
     const errorMessage = error && typeof error === 'object' && 'message' in error ? error.message : error;
     await window.showMessageBox({
-      title: `Error while pulling image`,
+      title: 'Pull Image Failed',
       message: `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`,
     });
   }

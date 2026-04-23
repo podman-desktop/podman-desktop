@@ -27,13 +27,13 @@ async function startPod(): Promise<void> {
         await window.createAndStartContainer(image.engineId, { Image: helloImage, pod: myFirstPod });
       } else {
         await window.showMessageBox({
-          title: `Error when running a pod`,
-          message: `Could not find '${helloImage}'' in images`,
+          title: 'Run Pod Failed',
+          message: `Could not find '${helloImage}' in images`,
         });
       }
     } catch (error) {
       await window.showMessageBox({
-        title: `Error when running a pod`,
+        title: 'Run Pod Failed',
         message: String(error),
       });
     } finally {
@@ -41,7 +41,7 @@ async function startPod(): Promise<void> {
     }
   } else {
     await window.showMessageBox({
-      title: `Error when running a pod`,
+      title: 'Run Pod Failed',
       message: `No provider connections found`,
     });
   }

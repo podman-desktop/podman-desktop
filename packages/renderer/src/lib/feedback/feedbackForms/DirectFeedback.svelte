@@ -62,10 +62,10 @@ async function sendFeedback(): Promise<void> {
 
   // 3. Display confirmation dialog
   await window.showMessageBox({
-    title: 'Thanks for your feedback',
+    title: 'Feedback Submitted',
     message: feedbackMessages?.thankYouMessage ?? '',
     type: 'info',
-    buttons: ['OK'],
+    buttons: ['Dismiss'],
   });
 }
 

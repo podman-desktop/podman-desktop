@@ -58,15 +58,15 @@ beforeEach(() => {
 const helloImage = 'quay.io/podman/hello:latest';
 const error = new Error('Error message');
 const errorMessage = {
-  title: 'Error when running a pod',
+  title: 'Run Pod Failed',
   message: String(error),
 };
 const imageErrorMessage = {
-  title: `Error when running a pod`,
-  message: `Could not find '${helloImage}'' in images`,
+  title: 'Run Pod Failed',
+  message: `Could not find '${helloImage}' in images`,
 };
 const providerErrorMessage = {
-  title: `Error when running a pod`,
+  title: 'Run Pod Failed',
   message: `No provider connections found`,
 };
 const buttonName = 'Start your first pod';

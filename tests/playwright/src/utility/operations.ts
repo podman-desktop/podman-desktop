@@ -212,8 +212,9 @@ export async function handleConfirmationDialog(
   // Note: Intentionally not wrapped in test.step to allow proper try-catch handling
   // by callers. test.step has special failure semantics that can interfere with
   // exception handling when this function is used in "try and see" patterns.
+  let errMessage = `Timeout (${timeout} ms) reached waiting for ${dialogTitle} dialog to show up`;
   const dialog = page.getByRole('dialog', { name: dialogTitle, exact: true });
-  await waitUntil(async () => await dialog.isVisible(), { timeout: timeout });
+  await waitUntil(async () => await dialog.isVisible(), { timeout: timeout, message: errMessage });
   const button = confirm
     ? dialog.getByRole('button', { name: confirmationButton })
     : dialog.getByRole('button', { name: cancelButton });
@@ -226,7 +227,8 @@ export async function handleConfirmationDialog(
     await doneButton.click();
   }
 
-  await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout });
+  errMessage = `Timeout (${timeout} ms) reached waiting for ${dialogTitle} dialog to disolve when clicking: ${confirm ? confirmationButton : cancelButton}`;
+  await waitUntil(async () => !(await dialog.isVisible()), { timeout: timeout, message: errMessage });
 }
 
 /**

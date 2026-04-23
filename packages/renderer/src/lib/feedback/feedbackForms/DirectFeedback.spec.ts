@@ -202,10 +202,10 @@ test('Expect category to be sent', async () => {
 
   // expect nice message to be displayed
   expect(window.showMessageBox).toHaveBeenCalledWith({
-    title: 'Thanks for your feedback',
+    title: 'Feedback Submitted',
     message: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
     type: 'info',
-    buttons: ['OK'],
+    buttons: ['Dismiss'],
   });
 
   // expect close to have been call with confirmation=false
@@ -235,10 +235,10 @@ test('Expect design category to be sent when design category is used', async () 
 
   // expect nice message to be displayed
   expect(window.showMessageBox).toHaveBeenCalledWith({
-    title: 'Thanks for your feedback',
+    title: 'Feedback Submitted',
     message: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
     type: 'info',
-    buttons: ['OK'],
+    buttons: ['Dismiss'],
   });
 
   // expect close to have been call with confirmation=false

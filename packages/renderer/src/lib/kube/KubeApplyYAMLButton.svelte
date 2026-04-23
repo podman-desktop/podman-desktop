@@ -33,17 +33,17 @@ async function kubeApply(): Promise<void> {
     let objects: KubernetesObject[] = await window.kubernetesApplyResourcesFromFile(contextName, result, namespace);
     if (objects.length === 0) {
       await window.showMessageBox({
-        title: 'Kubernetes',
+        title: 'Apply Kubernetes YAML',
         type: 'warning',
-        message: `No resource(s) were applied.`,
-        buttons: ['OK'],
+        message: 'No resource(s) were applied.',
+        buttons: ['Dismiss'],
       });
     } else if (objects.length === 1) {
       await window.showMessageBox({
-        title: 'Kubernetes',
+        title: 'Apply Kubernetes YAML',
         type: 'info',
         message: `Successfully applied 1 ${objects[0].kind ?? 'unknown resource'}.`,
-        buttons: ['OK'],
+        buttons: ['Dismiss'],
       });
     } else {
       const counts = objects.reduce(
@@ -58,18 +58,18 @@ async function kubeApply(): Promise<void> {
         .join(', ');
 
       await window.showMessageBox({
-        title: 'Kubernetes',
+        title: 'Apply Kubernetes YAML',
         type: 'info',
         message: `Successfully applied ${objects.length} resources (${resources}).`,
-        buttons: ['OK'],
+        buttons: ['Dismiss'],
       });
     }
   } catch (error) {
     await window.showMessageBox({
-      title: 'Kubernetes',
+      title: 'Apply Kubernetes YAML Failed',
       type: 'error',
       message: 'Could not apply Kubernetes YAML: ' + error,
-      buttons: ['OK'],
+      buttons: ['Dismiss'],
     });
   }
   inProgress = false;
