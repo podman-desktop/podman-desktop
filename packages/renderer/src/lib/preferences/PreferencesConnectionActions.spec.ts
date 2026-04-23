@@ -277,3 +277,63 @@ test('if kubernetes connection has delete lifecycle method, delete button has to
   const button = screen.getByRole('button', { name: 'Delete' });
   expect(button).toBeInTheDocument();
 });
+
+describe('restart', () => {
+  test('restart should add to restarting queue before calling stop', async () => {
+    const stopMock = vi.fn();
+    (window as unknown as Record<string, unknown>).stopProviderConnectionLifecycle = stopMock;
+
+    const callOrder: string[] = [];
+    const trackingAddConnectionToRestartingQueue = vi.fn().mockImplementation(() => {
+      callOrder.push('addConnectionToRestartingQueue');
+    });
+    stopMock.mockImplementation(async () => {
+      callOrder.push('stopProviderConnectionLifecycle');
+    });
+
+    render(PreferencesConnectionActions, {
+      connectionStatus: { status: 'started', inProgress: false },
+      provider: containerProviderInfo,
+      connection: containerConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue: trackingAddConnectionToRestartingQueue,
+    });
+
+    const restartButton = screen.getByRole('button', { name: 'Restart' });
+    await fireEvent.click(restartButton);
+
+    await vi.waitFor(() => {
+      expect(stopMock).toHaveBeenCalled();
+    });
+
+    expect(trackingAddConnectionToRestartingQueue).toHaveBeenCalledOnce();
+    expect(callOrder.indexOf('addConnectionToRestartingQueue')).toBeLessThan(
+      callOrder.indexOf('stopProviderConnectionLifecycle'),
+    );
+  });
+
+  test('restart should call stop with correct parameters', async () => {
+    const stopMock = vi.fn();
+    (window as unknown as Record<string, unknown>).stopProviderConnectionLifecycle = stopMock;
+
+    render(PreferencesConnectionActions, {
+      connectionStatus: { status: 'started', inProgress: false },
+      provider: containerProviderInfo,
+      connection: containerConnection,
+      updateConnectionStatus,
+      addConnectionToRestartingQueue: vi.fn(),
+    });
+
+    const restartButton = screen.getByRole('button', { name: 'Restart' });
+    await fireEvent.click(restartButton);
+
+    await vi.waitFor(() => {
+      expect(stopMock).toHaveBeenCalledWith(
+        containerProviderInfo.internalId,
+        expect.objectContaining({ name: containerConnection.name }),
+        expect.any(Symbol),
+        expect.any(Function),
+      );
+    });
+  });
+});

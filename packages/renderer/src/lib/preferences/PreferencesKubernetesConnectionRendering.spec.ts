@@ -26,11 +26,13 @@ import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { assert, beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 
+import * as preferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesKubernetesConnectionRendering from './PreferencesKubernetesConnectionRendering.svelte';
+import type { IConnectionRestart } from './Util';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -243,4 +245,156 @@ test('Expect to see error message if action fails', async () => {
 
   // expect to see the delete failed button
   expect(deleteFailedButton).toBeInTheDocument();
+});
+
+test('restart should not trigger start during intermediate stopping state', async () => {
+  vi.spyOn(preferencesConnectionActions, 'default');
+  const apiURL = 'http://localhost:8080';
+  const kindCluster = 'kind cluster';
+
+  const providerInfo: ProviderInfo = {
+    id: 'kind',
+    name: 'kind',
+    images: {
+      icon: 'img',
+    },
+    status: 'started',
+    warnings: [],
+    containerProviderConnectionCreation: true,
+    detectionChecks: [],
+    containerConnections: [],
+    installationSupport: false,
+    internalId: '0',
+    kubernetesConnections: [
+      {
+        connectionType: 'kubernetes',
+        name: kindCluster,
+        status: 'started',
+        endpoint: {
+          apiURL,
+        },
+        lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
+        canEdit: false,
+        canDelete: false,
+      },
+    ],
+    kubernetesProviderConnectionCreation: true,
+    vmConnections: [],
+    vmProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    containerProviderConnectionInitialization: false,
+    containerProviderConnectionCreationDisplayName: 'Podman machine',
+    kubernetesProviderConnectionInitialization: false,
+    extensionId: '',
+    cleanupSupport: false,
+    canStart: false,
+    canStop: false,
+  };
+
+  providerInfos.set([providerInfo]);
+
+  const apiUrlBase64 = Buffer.from(apiURL).toString('base64');
+
+  render(PreferencesKubernetesConnectionRendering, {
+    apiUrlBase64,
+    providerInternalId: '0',
+  });
+
+  // simulate PreferencesConnectionActions calling addConnectionToRestartingQueue
+  expect(preferencesConnectionActions.default).toHaveBeenCalledOnce();
+  const params = vi.mocked(preferencesConnectionActions.default).mock.calls[0][1];
+  assert(params);
+  const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
+
+  addConnectionToRestartingQueue({
+    loggerHandlerKey: Symbol('test-key'),
+  } as unknown as IConnectionRestart);
+
+  // transition to intermediate 'stopping' state
+  providerInfo.kubernetesConnections[0].status = 'stopping';
+  providerInfos.set([providerInfo]);
+
+  // start should NOT be called during intermediate state
+  expect(window.startProviderConnectionLifecycle).not.toHaveBeenCalled();
+
+  // now transition to 'stopped' - start should be triggered
+  providerInfo.kubernetesConnections[0].status = 'stopped';
+  providerInfos.set([providerInfo]);
+
+  expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
+});
+
+test('startProviderConnectionLifecycle is called when addConnectionToRestartingQueue is called and status reaches stopped', async () => {
+  vi.spyOn(preferencesConnectionActions, 'default');
+  const apiURL = 'http://localhost:8080';
+  const kindCluster = 'kind cluster';
+
+  const providerInfo: ProviderInfo = {
+    id: 'kind',
+    name: 'kind',
+    images: {
+      icon: 'img',
+    },
+    status: 'started',
+    warnings: [],
+    containerProviderConnectionCreation: true,
+    detectionChecks: [],
+    containerConnections: [],
+    installationSupport: false,
+    internalId: '0',
+    kubernetesConnections: [
+      {
+        connectionType: 'kubernetes',
+        name: kindCluster,
+        status: 'started',
+        endpoint: {
+          apiURL,
+        },
+        lifecycleMethods: ['start', 'stop'],
+        canStart: true,
+        canStop: true,
+        canEdit: false,
+        canDelete: false,
+      },
+    ],
+    kubernetesProviderConnectionCreation: true,
+    vmConnections: [],
+    vmProviderConnectionCreation: false,
+    vmProviderConnectionInitialization: false,
+    links: [],
+    containerProviderConnectionInitialization: false,
+    containerProviderConnectionCreationDisplayName: 'Podman machine',
+    kubernetesProviderConnectionInitialization: false,
+    extensionId: '',
+    cleanupSupport: false,
+    canStart: false,
+    canStop: false,
+  };
+
+  providerInfos.set([providerInfo]);
+
+  const apiUrlBase64 = Buffer.from(apiURL).toString('base64');
+
+  render(PreferencesKubernetesConnectionRendering, {
+    apiUrlBase64,
+    providerInternalId: '0',
+  });
+
+  // simulate PreferencesConnectionActions calling addConnectionToRestartingQueue
+  expect(preferencesConnectionActions.default).toHaveBeenCalledOnce();
+  const params = vi.mocked(preferencesConnectionActions.default).mock.calls[0][1];
+  assert(params);
+  const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
+
+  addConnectionToRestartingQueue({
+    loggerHandlerKey: Symbol('test-key'),
+  } as unknown as IConnectionRestart);
+
+  // transition to 'stopped' triggers the start phase of the restart
+  providerInfo.kubernetesConnections[0].status = 'stopped';
+  providerInfos.set([providerInfo]);
+  expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
 });

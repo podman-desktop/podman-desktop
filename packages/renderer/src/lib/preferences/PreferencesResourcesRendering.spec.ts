@@ -470,6 +470,32 @@ describe.each<{
       expect(vi.mocked(window.startProviderConnectionLifecycle)).toHaveBeenCalled();
     });
 
+    test('restart should not trigger start during intermediate stopping state', async () => {
+      vi.mocked(window.startProviderConnectionLifecycle).mockClear();
+      const customProviderInfo: ProviderInfo = { ...providerInfo };
+      setConnectionStatus(customProviderInfo, 0, 'started');
+      providerInfos.set([customProviderInfo]);
+      const { getByRole } = render(PreferencesResourcesRendering, {});
+
+      const region = getByRole('region', { name: defaultName });
+
+      const restartButton = within(region).getByRole('button', { name: 'Restart' });
+      await userEvent.click(restartButton);
+
+      // transition to intermediate 'stopping' state
+      setConnectionStatus(customProviderInfo, 0, 'stopping');
+      providerInfos.set([customProviderInfo]);
+
+      // start should NOT be called during intermediate state
+      expect(vi.mocked(window.startProviderConnectionLifecycle)).not.toHaveBeenCalled();
+
+      // now transition to 'stopped' - start should be triggered
+      setConnectionStatus(customProviderInfo, 0, 'stopped');
+      providerInfos.set([customProviderInfo]);
+
+      expect(vi.mocked(window.startProviderConnectionLifecycle)).toHaveBeenCalledOnce();
+    });
+
     test('click start and make it fail', {
       skip: !startFailedImplemented,
     }, async () => {
