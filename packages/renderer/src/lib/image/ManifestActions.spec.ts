@@ -85,6 +85,7 @@ test('Expect withConfirmation to be called with delete variant when clicking Del
 
   await waitFor(() => {
     expect(withConfirmation).toHaveBeenCalledWith(expect.anything(), 'delete manifest my-manifest', {
+      title: 'Delete Manifest?',
       variant: 'delete',
     });
   });

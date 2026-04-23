@@ -256,8 +256,20 @@ test.describe
         });
         test('Delete the ConfigMap and Secret resources', async ({ page }) => {
           await deletePod(page, SECRET_POD_NAME);
-          await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, SECRET_NAME);
-          await deleteKubernetesResource(page, KubernetesResources.ConfigMapsSecrets, CONFIG_MAP_NAME);
+          await deleteKubernetesResource(
+            page,
+            KubernetesResources.ConfigMapsSecrets,
+            SECRET_NAME,
+            30_000,
+            'Delete Secret?',
+          );
+          await deleteKubernetesResource(
+            page,
+            KubernetesResources.ConfigMapsSecrets,
+            CONFIG_MAP_NAME,
+            30_000,
+            'Delete ConfigMap?',
+          );
         });
       });
 

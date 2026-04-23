@@ -74,7 +74,7 @@ export class VolumesPage extends MainPage {
       const containerRowDeleteButton = volumeRow.getByRole('button', { name: 'Delete Volume' });
       await playExpect(containerRowDeleteButton).toBeEnabled();
       await containerRowDeleteButton.click();
-      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
+      await handleConfirmationDialog(this.page, 'Delete Volume?', true, 'Delete');
 
       return this;
     });

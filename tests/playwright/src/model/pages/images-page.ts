@@ -256,7 +256,7 @@ export class ImagesPage extends MainPage {
     const deleteManifestButton = manifest.getByRole('button', { name: 'Delete Manifest' });
     await playExpect(deleteManifestButton).toBeEnabled();
     await deleteManifestButton.click();
-    await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
+    await handleConfirmationDialog(this.page, 'Delete Manifest?', true, 'Delete');
   }
 
   async pushManifest(manifestName: string): Promise<void> {

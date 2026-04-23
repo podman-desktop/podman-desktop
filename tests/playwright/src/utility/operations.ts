@@ -60,7 +60,7 @@ export async function deleteContainer(page: Page, name: string): Promise<void> {
       // delete the container
       const deleteButton = container.getByRole('button').and(container.getByLabel('Delete Container'));
       await deleteButton.click();
-      await handleConfirmationDialog(page, 'Confirmation', true, 'Delete');
+      await handleConfirmationDialog(page, 'Delete Container?', true, 'Delete');
       // wait for container to disappear
       try {
         console.log('Waiting for container to get deleted ...');
@@ -93,7 +93,7 @@ export async function deleteImage(page: Page, name: string): Promise<void> {
       const deleteButton = row.getByRole('button', { name: 'Delete Image' });
       if (await deleteButton.isEnabled()) {
         await deleteButton.click();
-        await handleConfirmationDialog(page, 'Confirmation', true, 'Delete');
+        await handleConfirmationDialog(page, 'Delete Image?', true, 'Delete');
       } else {
         throw Error(`Cannot delete image ${name}, because it is in use`);
       }
@@ -149,7 +149,7 @@ export async function deletePod(page: Page, name: string, timeout = 50_000): Pro
       const deleteButton = pod.getByRole('button').and(pod.getByLabel('Delete Pod'));
       await deleteButton.click();
       // config delete dialog
-      await handleConfirmationDialog(page, 'Confirmation', true, 'Delete');
+      await handleConfirmationDialog(page, 'Delete Pod?', true, 'Delete');
       // wait for pod to disappear
       try {
         console.log('Waiting for pod to get deleted ...');

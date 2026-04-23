@@ -58,7 +58,7 @@ export class NetworkDetailsPage extends DetailsPage {
     return test.step('Delete network from details page', async () => {
       await playExpect(this.deleteButton).toBeEnabled();
       await this.deleteButton.click();
-      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
+      await handleConfirmationDialog(this.page, 'Delete Network?', true, 'Delete');
       return new NetworksPage(this.page);
     });
   }
