@@ -56,10 +56,24 @@ const stderrFilterPatterns = [
  * @param {{name: string; configFile: string; writeBundle: import('rollup').OutputPlugin['writeBundle'] }} param0
  */
 const getWatcher = ({ name, configFile, writeBundle }) => {
-  return build({
-    ...sharedConfig,
-    configFile,
-    plugins: [{ name, writeBundle }],
+  return new Promise((resolve, reject) => {
+    let resolved = false;
+    build({
+      ...sharedConfig,
+      configFile,
+      plugins: [
+        {
+          name,
+          writeBundle(...args) {
+            writeBundle?.(...args);
+            if (!resolved) {
+              resolved = true;
+              resolve();
+            }
+          },
+        },
+      ],
+    }).catch(reject);
   });
 };
 
