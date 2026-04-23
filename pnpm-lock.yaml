@@ -43,6 +43,7 @@ overrides:
   protobufjs: ^7.5.5
   smol-toml: ^1.6.1
   follow-redirects: ^1.16.0
+  uuid: ^14.0.0
 
 patchedDependencies:
   docker-modem:
@@ -11788,16 +11789,8 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@10.0.0:
-    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
-    hasBin: true
-
-  uuid@11.1.0:
-    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
-    hasBin: true
-
-  uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
   validate-npm-package-license@3.0.4:
@@ -19128,7 +19121,7 @@ snapshots:
       docker-modem: 5.0.6(patch_hash=5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e)
       protobufjs: 7.5.5
       tar-fs: 2.1.4
-      uuid: 10.0.0
+      uuid: 14.0.0
     transitivePeerDependencies:
       - supports-color
 
@@ -21949,7 +21942,7 @@ snapshots:
       roughjs: 4.6.6
       stylis: 4.3.6
       ts-dedent: 2.2.0
-      uuid: 11.1.0
+      uuid: 14.0.0
     transitivePeerDependencies:
       - supports-color
 
@@ -24462,7 +24455,7 @@ snapshots:
   sockjs@0.3.24:
     dependencies:
       faye-websocket: 0.11.4
-      uuid: 8.3.2
+      uuid: 14.0.0
       websocket-driver: 0.7.4
 
   socks-proxy-agent@8.0.5:
@@ -25474,11 +25467,7 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@10.0.0: {}
-
-  uuid@11.1.0: {}
-
-  uuid@8.3.2: {}
+  uuid@14.0.0: {}
 
   validate-npm-package-license@3.0.4:
     dependencies:
