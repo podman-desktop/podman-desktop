@@ -19,6 +19,8 @@
 import type { ListOrganizerItem } from '@podman-desktop/ui-svelte';
 import type { Component } from 'svelte';
 
+import { createSystemOverview } from '/@/stores/dashboard/dashboard-page-registry-system-overview';
+
 import { createExploreFeatures } from './dashboard-page-registry-explore-features';
 import { createExtensionBanners } from './dashboard-page-registry-extension-banners.svelte';
 import { createLearningCenter } from './dashboard-page-registry-learning-center.svelte';
@@ -37,7 +39,7 @@ export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntr
 const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
 
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
-  const providers = !enhancedDashboard.enabled ? [createProviders()] : [];
+  const providers = !enhancedDashboard.enabled ? [createProviders()] : [createSystemOverview()];
   return [
     createReleaseNotesBox(),
     createExtensionBanners(),
@@ -59,6 +61,7 @@ window.events?.receive('enhanced-dashboard-enabled', (value: unknown) => {
 export async function setupDashboardPageRegistry(): Promise<void> {
   enhancedDashboard.enabled = await window.isExperimentalConfigurationEnabled('dashboard.enhancedDashboard');
   dashboardPageRegistry.entries = getDashboardPageRegistry();
+  defaultSection.names = dashboardPageRegistry.entries.map(entry => entry.id);
 }
 
 // Get default section names in their registry order
