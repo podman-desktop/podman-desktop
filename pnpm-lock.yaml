@@ -133,8 +133,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       electron:
-        specifier: 41.2.2
-        version: 41.2.2
+        specifier: 41.3.0
+        version: 41.3.0
       electron-builder:
         specifier: 26.8.2
         version: 26.8.2(electron-builder-squirrel-windows@26.8.2(dmg-builder@26.8.2))
@@ -568,8 +568,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
       electron:
-        specifier: 41.2.2
-        version: 41.2.2
+        specifier: 41.3.0
+        version: 41.3.0
       electron-context-menu:
         specifier: 4.1.2
         version: 4.1.2
@@ -701,8 +701,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 41.2.2
-        version: 41.2.2
+        specifier: 41.3.0
+        version: 41.3.0
     devDependencies:
       vitest:
         specifier: ^4.1.5
@@ -714,8 +714,8 @@ importers:
         specifier: workspace:*
         version: link:../api
       electron:
-        specifier: 41.2.2
-        version: 41.2.2
+        specifier: 41.3.0
+        version: 41.3.0
     devDependencies:
       '@docker/extension-api-client-types':
         specifier: 0.4.2
@@ -733,8 +733,8 @@ importers:
         specifier: workspace:*
         version: link:../webview-api
       electron:
-        specifier: 41.2.2
-        version: 41.2.2
+        specifier: 41.3.0
+        version: 41.3.0
       vitest:
         specifier: ^4.1.5
         version: 4.1.5(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@29.0.2)(msw@2.13.4(@types/node@25.6.0)(typescript@5.9.3))(vite@7.3.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.21.0)(yaml@2.8.3))
@@ -1080,8 +1080,8 @@ importers:
         specifier: ^24
         version: 24.6.2
       electron:
-        specifier: 41.2.2
-        version: 41.2.2
+        specifier: 41.3.0
+        version: 41.3.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -6725,8 +6725,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@41.2.2:
-    resolution: {integrity: sha512-3rzz/hVIpF726W9g7nleQzyF2IOEZbzZnUTUYGhMaEfsoab8fDyOYAWbdBdo4+DczS1Ifz11rdYo8IAAGcRx/g==}
+  electron@41.3.0:
+    resolution: {integrity: sha512-2Q5aeocmFdeheZGDUTrAvSR3t+n0c3d104AJWWEnt7syJU0tE4VdibMYaPtQ47QuXSoUf0/xSsfUUvu/uSXIfg==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -16674,7 +16674,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
       form-data: 4.0.4
 
   '@types/node-forge@1.3.11':
@@ -16798,7 +16798,7 @@ snapshots:
 
   '@types/stream-buffers@3.0.7':
     dependencies:
-      '@types/node': 24.6.2
+      '@types/node': 24.10.11
 
   '@types/tar-fs@2.0.4':
     dependencies:
@@ -19347,7 +19347,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@41.2.2:
+  electron@41.3.0:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.10.11
