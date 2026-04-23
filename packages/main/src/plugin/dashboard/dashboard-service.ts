@@ -33,8 +33,8 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { IPCHandle } from '/@/plugin/api.js';
 import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
-import { Disposable } from '/@/plugin/types/disposable.js';
 import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
+import { Disposable } from '/@/plugin/types/disposable.js';
 
 const STARTUP_GRACE_PERIOD_DURATION = 8_000;
 
