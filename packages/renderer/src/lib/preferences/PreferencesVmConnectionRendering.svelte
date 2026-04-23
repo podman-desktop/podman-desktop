@@ -48,7 +48,7 @@ onMount(async () => {
     }
     const vmConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
     if (vmConnectionName && connectionStatus?.status !== connectionInfo.status) {
-      if (loggerHandlerKey !== undefined) {
+      if (loggerHandlerKey !== undefined && connectionInfo.status === 'stopped') {
         connectionStatus = {
           inProgress: true,
           action: 'restart',
@@ -58,6 +58,11 @@ onMount(async () => {
           console.error(`Error starting provider ${connectionInfo?.name}`, err),
         );
         loggerHandlerKey = undefined;
+      } else if (loggerHandlerKey !== undefined) {
+        connectionStatus = {
+          ...connectionStatus,
+          status: connectionInfo.status,
+        };
       } else {
         connectionStatus = {
           inProgress: false,

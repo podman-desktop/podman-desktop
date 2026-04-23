@@ -97,7 +97,8 @@ onMount(async () => {
           !containerConnectionStatus.has(containerConnectionName) ||
           containerConnectionStatus.get(containerConnectionName)?.status !== container.status
         ) {
-          const containerToRestart = getContainerRestarting(provider.internalId, container.name);
+          const containerToRestart =
+            container.status === 'stopped' ? getContainerRestarting(provider.internalId, container.name) : undefined;
           if (containerToRestart) {
             containerConnectionStatus.set(containerConnectionName, {
               inProgress: true,
@@ -107,6 +108,14 @@ onMount(async () => {
             startConnectionProvider(provider, container, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
               console.error(`Error starting connection provider ${container.name}`, err),
             );
+          } else if (hasContainerRestarting(provider.internalId, container.name)) {
+            const currentStatus = containerConnectionStatus.get(containerConnectionName);
+            containerConnectionStatus.set(containerConnectionName, {
+              ...currentStatus,
+              inProgress: true,
+              action: 'restart',
+              status: container.status,
+            });
           } else {
             containerConnectionStatus.set(containerConnectionName, {
               inProgress: false,
@@ -124,7 +133,8 @@ onMount(async () => {
           !containerConnectionStatus.has(containerConnectionName) ||
           containerConnectionStatus.get(containerConnectionName)?.status !== connection.status
         ) {
-          const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
+          const containerToRestart =
+            connection.status === 'stopped' ? getContainerRestarting(provider.internalId, connection.name) : undefined;
           if (containerToRestart) {
             containerConnectionStatus.set(containerConnectionName, {
               inProgress: true,
@@ -134,6 +144,14 @@ onMount(async () => {
             startConnectionProvider(provider, connection, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
               console.error(`Error starting connection provider ${connection.name}`, err),
             );
+          } else if (hasContainerRestarting(provider.internalId, connection.name)) {
+            const currentStatus = containerConnectionStatus.get(containerConnectionName);
+            containerConnectionStatus.set(containerConnectionName, {
+              ...currentStatus,
+              inProgress: true,
+              action: 'restart',
+              status: connection.status,
+            });
           } else {
             containerConnectionStatus.set(containerConnectionName, {
               inProgress: false,
@@ -151,7 +169,8 @@ onMount(async () => {
           !containerConnectionStatus.has(vmConnectionName) ||
           containerConnectionStatus.get(vmConnectionName)?.status !== connection.status
         ) {
-          const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
+          const containerToRestart =
+            connection.status === 'stopped' ? getContainerRestarting(provider.internalId, connection.name) : undefined;
           if (containerToRestart) {
             containerConnectionStatus.set(vmConnectionName, {
               inProgress: true,
@@ -161,6 +180,14 @@ onMount(async () => {
             startConnectionProvider(provider, connection, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
               console.error(`Error starting connection provider ${connection.name}`, err),
             );
+          } else if (hasContainerRestarting(provider.internalId, connection.name)) {
+            const currentStatus = containerConnectionStatus.get(vmConnectionName);
+            containerConnectionStatus.set(vmConnectionName, {
+              ...currentStatus,
+              inProgress: true,
+              action: 'restart',
+              status: connection.status,
+            });
           } else {
             containerConnectionStatus.set(vmConnectionName, {
               inProgress: false,
@@ -199,9 +226,13 @@ onMount(async () => {
 function getContainerRestarting(provider: string, container: string): IConnectionRestart {
   const containerToRestart = restartingQueue.filter(c => c.provider === provider && c.container === container)[0];
   if (containerToRestart) {
-    restartingQueue = restartingQueue.filter(c => c.provider !== provider && c.container !== container);
+    restartingQueue = restartingQueue.filter(c => c.provider !== provider || c.container !== container);
   }
   return containerToRestart;
+}
+
+function hasContainerRestarting(provider: string, container: string): boolean {
+  return restartingQueue.some(c => c.provider === provider && c.container === container);
 }
 
 onDestroy(() => {

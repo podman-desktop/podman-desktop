@@ -69,17 +69,17 @@ async function restartConnectionProvider(
   if (providerConnectionInfo.status === 'started') {
     updateConnectionStatus(provider, providerConnectionInfo, 'restart');
     const loggerHandlerKey = registerConnectionCallback(getLoggerHandler(provider, providerConnectionInfo));
+    addConnectionToRestartingQueue({
+      container: providerConnectionInfo.name,
+      provider: provider.internalId,
+      loggerHandlerKey,
+    });
     await window.stopProviderConnectionLifecycle(
       provider.internalId,
       $state.snapshot(providerConnectionInfo),
       loggerHandlerKey,
       eventCollect,
     );
-    addConnectionToRestartingQueue({
-      container: providerConnectionInfo.name,
-      provider: provider.internalId,
-      loggerHandlerKey,
-    });
   }
 }
 
