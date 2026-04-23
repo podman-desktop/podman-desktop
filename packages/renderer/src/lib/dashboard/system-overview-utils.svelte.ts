@@ -17,12 +17,7 @@
  ***********************************************************************/
 
 import type { ProviderConnectionStatus, ProviderStatus } from '@podman-desktop/api';
-import type {
-  LifecycleMethod,
-  ProviderConnectionInfo,
-  ProviderInfo,
-  SystemOverviewStatus,
-} from '@podman-desktop/core-api';
+import type { ProviderConnectionInfo, ProviderInfo, SystemOverviewStatus } from '@podman-desktop/core-api';
 import type { ButtonType } from '@podman-desktop/ui-svelte';
 
 import {
@@ -51,8 +46,8 @@ export interface ConnectionStatusConfig {
   buttonType: ButtonType;
 }
 
-export function hasStartLifecycle(lifecycleMethods?: LifecycleMethod[]): boolean {
-  return lifecycleMethods?.includes('start') ?? false;
+export function hasStartLifecycle(provider: ProviderInfo): boolean {
+  return provider.canStart;
 }
 
 const CONNECTION_STATUS_LABELS: Record<ProviderConnectionStatus, string> = {
@@ -66,14 +61,13 @@ const CONNECTION_STATUS_LABELS: Record<ProviderConnectionStatus, string> = {
 export function getConnectionStatusConfig(
   status: ProviderConnectionStatus | ProviderStatus,
   provider: ProviderInfo,
-  lifecycleMethods?: LifecycleMethod[],
   error?: string,
 ): ConnectionStatusConfig {
   const label = error ? 'Error' : (CONNECTION_STATUS_LABELS[status as ProviderConnectionStatus] ?? status);
 
-  if (error && hasStartLifecycle(lifecycleMethods))
+  if (error && hasStartLifecycle(provider))
     return { label, buttonText: `Retry ${provider.name}`, buttonType: 'danger' };
-  if ((status === 'stopped' || status === 'configured') && hasStartLifecycle(lifecycleMethods))
+  if ((status === 'stopped' || status === 'configured') && hasStartLifecycle(provider))
     return { label, buttonText: `Start ${provider.name}`, buttonType: 'primary' };
   if (status === 'unknown') return { label, buttonText: 'See Details in Resources', buttonType: 'danger' };
   if (status === 'started' || status === 'starting' || status === 'stopping' || status === 'stopped')

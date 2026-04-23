@@ -29,9 +29,7 @@ let { connection, provider, childConnections = [] }: Props = $props();
 let errorMessage = $state<string | undefined>(undefined);
 
 let connectionStatus = $derived(getSystemOverviewStatus(connection.status, connection.error));
-let statusConfig = $derived(
-  getConnectionStatusConfig(connection.status, provider, connection.lifecycleMethods, connection.error),
-);
+let statusConfig = $derived(getConnectionStatusConfig(connection.status, provider, connection.error));
 let displayName = $derived(getConnectionDisplayName(connection));
 
 let vmType = $derived.by((): string | undefined => {
@@ -79,8 +77,7 @@ function navigateToConnection(): void {
 async function handleActionButtonClick(): Promise<void> {
   try {
     errorMessage = undefined;
-    const canStart =
-      (connection.status === 'stopped' || !!connection.error) && hasStartLifecycle(connection.lifecycleMethods);
+    const canStart = (connection.status === 'stopped' || !!connection.error) && hasStartLifecycle(provider);
     if (canStart) {
       await startConnection(provider.internalId, $state.snapshot(connection));
     } else {

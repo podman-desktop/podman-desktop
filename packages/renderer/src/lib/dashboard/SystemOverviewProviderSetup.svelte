@@ -16,8 +16,8 @@ let { provider }: Props = $props();
 let startInProgress = $state(false);
 
 let isConfigured = $derived(provider.status === 'configured');
-let canStart = $derived(isConfigured && hasStartLifecycle(provider.lifecycleMethods));
-let statusConfig = $derived(getConnectionStatusConfig(provider.status, provider, provider.lifecycleMethods));
+let canStart = $derived(isConfigured && hasStartLifecycle(provider));
+let statusConfig = $derived(getConnectionStatusConfig(provider.status, provider));
 
 let subtitleText = $derived.by(() => {
   if (provider.status === 'not-installed') {

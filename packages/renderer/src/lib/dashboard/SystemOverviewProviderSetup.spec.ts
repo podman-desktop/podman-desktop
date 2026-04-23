@@ -114,7 +114,7 @@ describe('configured provider', () => {
     ...baseProvider,
     status: 'configured',
     extensionId: 'podman',
-    lifecycleMethods: ['start'],
+    canStart: true,
   };
 
   test('should render provider name and message', async () => {
@@ -155,7 +155,7 @@ describe('configured provider', () => {
       ...baseProvider,
       status: 'configured',
       extensionId: 'podman',
-      lifecycleMethods: ['stop'],
+      canStart: false,
     };
     render(SystemOverviewProviderSetup, { provider: noStartProvider });
 

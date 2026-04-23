@@ -90,9 +90,8 @@ test('should render Start button when connection is stopped and supports start',
   const stoppedConnection = {
     ...containerConnection,
     status: 'stopped' as const,
-    lifecycleMethods: ['start' as const],
   };
-  const provider = { ...baseProvider, containerConnections: [stoppedConnection] };
+  const provider = { ...baseProvider, canStart: true, containerConnections: [stoppedConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: stoppedConnection,
     provider,
@@ -103,8 +102,8 @@ test('should render Start button when connection is stopped and supports start',
 });
 
 test('should render View button when connection is stopped but does not support start', async () => {
-  const stoppedConnection = { ...containerConnection, status: 'stopped' as const, lifecycleMethods: [] };
-  const provider = { ...baseProvider, containerConnections: [stoppedConnection] };
+  const stoppedConnection = { ...containerConnection, status: 'stopped' as const };
+  const provider = { ...baseProvider, canStart: false, containerConnections: [stoppedConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: stoppedConnection,
     provider,
@@ -138,7 +137,7 @@ describe('stable subtitle text by connection type', () => {
     { type: 'vm', pattern: /Not running/ },
   ])('should show helper text for $type connection when stopped', async ({ type, pattern }) => {
     const connections: Record<string, ProviderConnectionInfo> = {
-      container: { ...containerConnection, status: 'stopped' as const, lifecycleMethods: [] },
+      container: { ...containerConnection, status: 'stopped' as const },
       kubernetes: {
         connectionType: 'kubernetes',
         name: 'minikube',
@@ -199,9 +198,8 @@ test('should render Retry button when connection has error and supports start li
     ...containerConnection,
     status: 'starting' as const,
     error: 'Connection refused',
-    lifecycleMethods: ['start' as const],
   };
-  const provider = { ...baseProvider, containerConnections: [errorConnection] };
+  const provider = { ...baseProvider, canStart: true, containerConnections: [errorConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: errorConnection,
     provider,
@@ -216,9 +214,8 @@ test('should render error message from connection when present', async () => {
     ...containerConnection,
     status: 'starting' as const,
     error: 'Connection refused',
-    lifecycleMethods: ['start' as const],
   };
-  const provider = { ...baseProvider, containerConnections: [errorConnection] };
+  const provider = { ...baseProvider, canStart: true, containerConnections: [errorConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: errorConnection,
     provider,
@@ -233,9 +230,8 @@ test('should render action button even during transitional state when error is p
     ...containerConnection,
     status: 'starting' as const,
     error: 'Timeout while starting',
-    lifecycleMethods: ['start' as const],
   };
-  const provider = { ...baseProvider, containerConnections: [errorConnection] };
+  const provider = { ...baseProvider, canStart: true, containerConnections: [errorConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: errorConnection,
     provider,

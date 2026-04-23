@@ -79,26 +79,18 @@ describe('STATUS_BG_CLASS', () => {
 });
 
 describe('hasStartLifecycle', () => {
-  test('should return true when lifecycle includes start', () => {
-    expect(hasStartLifecycle(['start', 'stop'])).toBe(true);
+  test('should return true when canStart is true', () => {
+    expect(hasStartLifecycle({ ...baseProvider, canStart: true })).toBe(true);
   });
 
-  test('should return false when lifecycle does not include start', () => {
-    expect(hasStartLifecycle(['stop', 'delete'])).toBe(false);
-  });
-
-  test('should return false for empty array', () => {
-    expect(hasStartLifecycle([])).toBe(false);
-  });
-
-  test('should return false for undefined', () => {
-    expect(hasStartLifecycle()).toBe(false);
+  test('should return false when canStart is false', () => {
+    expect(hasStartLifecycle({ ...baseProvider, canStart: false })).toBe(false);
   });
 });
 
 describe('getConnectionStatusConfig', () => {
   test('should return Start for stopped with start lifecycle', () => {
-    const config = getConnectionStatusConfig('stopped', baseProvider, ['start']);
+    const config = getConnectionStatusConfig('stopped', { ...baseProvider, canStart: true });
     expect(config).toStrictEqual({
       label: 'Stopped',
       buttonText: 'Start Podman',
@@ -107,7 +99,7 @@ describe('getConnectionStatusConfig', () => {
   });
 
   test('should return Start for configured with start lifecycle', () => {
-    const config = getConnectionStatusConfig('configured', baseProvider, ['start']);
+    const config = getConnectionStatusConfig('configured', { ...baseProvider, canStart: true });
     expect(config).toMatchObject({
       buttonText: 'Start Podman',
       buttonType: 'primary',
@@ -115,7 +107,7 @@ describe('getConnectionStatusConfig', () => {
   });
 
   test('should return View (secondary) for stopped without start lifecycle', () => {
-    const config = getConnectionStatusConfig('stopped', baseProvider, []);
+    const config = getConnectionStatusConfig('stopped', { ...baseProvider, canStart: false });
     expect(config).toStrictEqual({
       label: 'Stopped',
       buttonText: 'View',
@@ -160,7 +152,7 @@ describe('getConnectionStatusConfig', () => {
   });
 
   test('should return Retry with danger type when error is present and start lifecycle exists', () => {
-    const config = getConnectionStatusConfig('starting', baseProvider, ['start'], 'Connection refused');
+    const config = getConnectionStatusConfig('starting', { ...baseProvider, canStart: true }, 'Connection refused');
     expect(config).toStrictEqual({
       label: 'Error',
       buttonText: 'Retry Podman',
@@ -169,7 +161,7 @@ describe('getConnectionStatusConfig', () => {
   });
 
   test('should return Error label when error is present regardless of status', () => {
-    const config = getConnectionStatusConfig('stopped', baseProvider, ['start'], 'Something went wrong');
+    const config = getConnectionStatusConfig('stopped', { ...baseProvider, canStart: true }, 'Something went wrong');
     expect(config).toStrictEqual({
       label: 'Error',
       buttonText: 'Retry Podman',
@@ -203,7 +195,7 @@ describe('getConnectionStatusConfig', () => {
 
   test('should return consistent buttonType for View regardless of connection status', () => {
     const startedConfig = getConnectionStatusConfig('started', baseProvider);
-    const stoppedNoStartConfig = getConnectionStatusConfig('stopped', baseProvider, []);
+    const stoppedNoStartConfig = getConnectionStatusConfig('stopped', { ...baseProvider, canStart: false });
 
     expect(startedConfig?.buttonText).toBe('View');
     expect(stoppedNoStartConfig?.buttonText).toBe('View');
