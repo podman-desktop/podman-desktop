@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ResourceElementActions } from '/@/model/core/operations';
 import { ResourceElementState } from '/@/model/core/states';
 import { PodmanMachinePrivileges, PodmanVirtualizationProviders } from '/@/model/core/types';
 import { CreateMachinePage } from '/@/model/pages/create-machine-page';
@@ -26,6 +27,7 @@ import { canRunKindTests } from '/@/setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
+  createPodmanMachineFromCLI,
   deletePodmanMachine,
   ensureCliInstalled,
   handleConfirmationDialog,
@@ -33,7 +35,7 @@ import {
   verifyMachinePrivileges,
   verifyVirtualizationProvider,
 } from '/@/utility/operations';
-import { isLinux } from '/@/utility/platform';
+import { isLinux, isMac } from '/@/utility/platform';
 import { getDefaultVirtualizationProvider, getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup, waitUntil } from '/@/utility/wait';
 
@@ -63,6 +65,9 @@ test.afterAll(async ({ runner, page, navigationBar }) => {
   if (test.info().status === 'failed') {
     await setStatusBarProvidersFeature(page, navigationBar, false);
     await deletePodmanMachine(page, newMachineName);
+    if (isMac) {
+      await createPodmanMachineFromCLI();
+    }
   }
   await deleteCluster(page, 'kind', kindNode, kindClusterName);
   await runner.close();
@@ -104,11 +109,21 @@ test.describe
         getVirtualizationProvider() === PodmanVirtualizationProviders.HyperV,
         'Podman Desktop is not able to have 2 HyperV machines running at the same time',
       );
-      test.setTimeout(350_000);
+      test.setTimeout(isMac ? 420_000 : 350_000);
 
-      //Create a new machine
       const settingsBar = new SettingsBar(page);
       await settingsBar.resourcesTab.click();
+
+      if (isMac) {
+        const defaultMachineCard = new ResourceConnectionCardPage(page, 'podman', defaultMachine);
+        await defaultMachineCard.performConnectionAction(ResourceElementActions.Stop);
+        await waitUntil(
+          async () =>
+            (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(ResourceElementState.Off),
+          { timeout: 30_000, sendError: true },
+        );
+      }
+
       const podmanResources = new ResourceConnectionCardPage(page, 'podman');
       await podmanResources.createButton.click();
       const createMachinePage = new CreateMachinePage(page);
@@ -144,6 +159,24 @@ test.describe
       }
 
       playExpect(await statusBar.isProviderResourceRunning(podmanProviderName, newMachineName)).toBeFalsy();
+
+      if (isMac) {
+        const defaultMachineCard = new ResourceConnectionCardPage(page, 'podman', defaultMachine);
+        await defaultMachineCard.performConnectionAction(ResourceElementActions.Start);
+        try {
+          await handleConfirmationDialog(page, 'Podman', true, 'Yes');
+          await handleConfirmationDialog(page, 'Podman', true, 'OK');
+        } catch (error) {
+          console.log('No handling dialog displayed', error);
+        }
+        await waitUntil(
+          async () =>
+            (await defaultMachineCard.resourceElementConnectionStatus.innerText()).includes(
+              ResourceElementState.Running,
+            ),
+          { timeout: 60_000, sendError: true },
+        );
+      }
     });
     test('Create new provider (Kind) and verify providers updated', async ({ page, statusBar }) => {
       test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
