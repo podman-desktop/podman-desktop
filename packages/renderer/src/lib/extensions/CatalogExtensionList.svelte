@@ -17,7 +17,7 @@ async function fetchCatalog(): Promise<void> {
   } catch (error) {
     await window.showMessageBox({
       type: 'error',
-      title: 'Error',
+      title: 'Refresh Catalog Failed',
       message: 'Failed to refresh the catalog',
       detail: String(error),
     });

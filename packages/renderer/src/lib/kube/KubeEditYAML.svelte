@@ -51,10 +51,10 @@ async function applyToCluster(): Promise<void> {
     inProgress = true;
     await window.kubernetesApplyResourcesFromYAML(contextName, editorContent);
     await window.showMessageBox({
-      title: 'Kubernetes',
+      title: 'Apply Kubernetes YAML',
       type: 'info',
-      message: 'Succesfully applied Kubernetes YAML',
-      buttons: ['OK'],
+      message: 'Successfully applied Kubernetes YAML',
+      buttons: ['Dismiss'],
     });
 
     // If the apply was successful, we update the originalContent to the new active content in the editor
@@ -64,10 +64,10 @@ async function applyToCluster(): Promise<void> {
   } catch (error) {
     console.error('error playing kube file', error);
     await window.showMessageBox({
-      title: 'Kubernetes',
+      title: 'Apply Kubernetes YAML Failed',
       type: 'error',
       message: 'Could not apply Kubernetes YAML: ' + error,
-      buttons: ['OK'],
+      buttons: ['Dismiss'],
     });
   } finally {
     inProgress = false;

@@ -87,7 +87,7 @@ test('Check with empty', async () => {
   expect(window.showMessageBox).toHaveBeenCalledWith({
     detail: 'Error: fake error',
     message: 'Failed to refresh the catalog',
-    title: 'Error',
+    title: 'Refresh Catalog Failed',
     type: 'error',
   });
 });

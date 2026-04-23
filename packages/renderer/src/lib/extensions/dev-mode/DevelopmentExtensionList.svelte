@@ -71,7 +71,7 @@ async function addLocalFolderExtension(): Promise<void> {
       await window.trackExtensionFolder(result[0]);
     } catch (error: unknown) {
       // show error
-      await window.showMessageBox({ title: 'Error adding the folder', message: String(error), type: 'error' });
+      await window.showMessageBox({ title: 'Add Extension Failed', message: String(error), type: 'error' });
     }
   }
 }
