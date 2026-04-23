@@ -112,7 +112,13 @@ function kubernetesResourceDialogTitle(resourceType: KubernetesResources): strin
     [KubernetesResources.Jobs]: 'Delete Job?',
     [KubernetesResources.PortForwarding]: 'Delete Port Forward?',
   };
-  return map[resourceType] ?? 'Confirmation';
+  const title = map[resourceType];
+  if (!title) {
+    throw new Error(
+      `No default dialog title for ${resourceType}; pass an explicit dialogTitle argument to deleteKubernetesResource`,
+    );
+  }
+  return title;
 }
 
 export async function checkDeploymentReplicasInfo(
