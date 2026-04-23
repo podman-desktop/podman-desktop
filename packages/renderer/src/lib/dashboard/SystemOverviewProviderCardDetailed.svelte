@@ -13,25 +13,12 @@ import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResource
 import { handleNavigation } from '/@/navigation';
 import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
 
-import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
-import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
-import { handleNavigation } from '/@/navigation';
-import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
-
 import {
   getConnectionStatusConfig,
   hasStartLifecycle,
   startConnection,
   STATUS_TEXT_CLASS,
 } from './system-overview-utils.svelte';
-
-const CONNECTION_STATUS_CONFIG: Record<ProviderConnectionStatus, ConnectionStatusConfig> = {
-  started: { label: 'Running', buttonType: 'secondary' },
-  stopped: { label: 'Stopped', buttonType: 'primary' },
-  unknown: { label: 'Unknown', buttonType: 'danger' },
-  starting: { label: 'Starting', buttonType: 'secondary' },
-  stopping: { label: 'Stopping', buttonType: 'secondary' },
-};
 
 export type ChildConnection = {
   connection: ProviderConnectionInfo;
@@ -50,7 +37,6 @@ let errorMessage = $state<string | undefined>(undefined);
 let connectionStatus = $derived(getSystemOverviewStatus(connection.status, connection.error));
 let statusConfig = $derived(getConnectionStatusConfig(connection.status, provider, connection.error));
 let displayName = $derived(getConnectionDisplayName(connection));
-let providerVersion = $derived(provider.version);
 
 let vmType = $derived.by((): string | undefined => {
   if (connection.connectionType === 'container') {
