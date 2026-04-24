@@ -43,7 +43,7 @@
     "chokidar": "^3.6.0",
     "culori": "^4.0.2",
     "date.js": "^0.3.3",
-    "dockerode": "^4.0.9",
+    "dockerode": "^5.0.0",
     "electron": "41.3.0",
     "electron-context-menu": "4.1.2",
     "electron-updater": "6.8.3",
