@@ -337,7 +337,7 @@ function label(item: ImageInfoUI): string {
           if (selectedItemsNumber) {withBulkConfirmation(
             deleteSelectedImages,
             `delete ${selectedItemsNumber} image${selectedItemsNumber > 1 ? 's' : ''}`,
-            { variant:'delete' }
+            { title: 'Delete Images?', variant:'delete' }
           );}}}
         title="Delete {selectedItemsNumber} selected items"
         inProgress={bulkDeleteInProgress}

@@ -19,7 +19,7 @@ type ConfirmationVariant = 'default' | 'delete';
 
 export interface ConfirmationOptions {
   variant?: ConfirmationVariant;
-  title?: string;
+  title: string;
   buttonLabel?: string;
 }
 
@@ -32,14 +32,10 @@ export interface ConfirmationOptions {
  * @param action the action label to use
  * @param options the options to use for the confirmation dialog
  */
-export function withConfirmation(
-  func: (err?: unknown) => unknown,
-  action: string,
-  options?: ConfirmationOptions,
-): void {
-  const isDelete = options?.variant === 'delete';
-  const activationButton = isDelete ? 'Delete' : (options?.buttonLabel ?? 'Yes');
-  const title = options?.title ?? 'Confirmation';
+export function withConfirmation(func: (err?: unknown) => unknown, action: string, options: ConfirmationOptions): void {
+  const isDelete = options.variant === 'delete';
+  const activationButton = isDelete ? 'Delete' : (options.buttonLabel ?? 'Yes');
+  const title = options.title;
   window
     .showMessageBox({
       title,

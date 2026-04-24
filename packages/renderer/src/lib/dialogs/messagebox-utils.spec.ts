@@ -28,7 +28,7 @@ test('expect withConfirmation call callback if result OK', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const callback = vi.fn();
-  withConfirmation(callback, 'Destroy world');
+  withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledOnce();
@@ -40,7 +40,7 @@ test('expect withConfirmation not to call callback if result not OK', async () =
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 1 });
 
   const callback = vi.fn();
-  withConfirmation(callback, 'Destroy world');
+  withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledOnce();
@@ -53,7 +53,7 @@ test('expect withConfirmation to propagate error', async () => {
   vi.mocked(window.showMessageBox).mockRejectedValue(error);
 
   const callback = vi.fn();
-  withConfirmation(callback, 'Destroy world');
+  withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledOnce();
@@ -61,15 +61,15 @@ test('expect withConfirmation to propagate error', async () => {
   });
 });
 
-test('expect withConfirmation to use default variant when no options provided', async () => {
+test('expect withConfirmation to use default variant', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const callback = vi.fn();
-  withConfirmation(callback, 'Destroy world');
+  withConfirmation(callback, 'Destroy world', { title: 'Destroy World?' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledWith({
-      title: 'Confirmation',
+      title: 'Destroy World?',
       message: 'Are you sure you want to Destroy world?',
       buttons: ['Yes', 'Cancel'],
       type: 'question',
@@ -98,11 +98,11 @@ test('expect withConfirmation to use delete variant with Delete button and dange
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const callback = vi.fn();
-  withConfirmation(callback, 'delete this resource', { variant: 'delete' });
+  withConfirmation(callback, 'delete this resource', { title: 'Delete Resource?', variant: 'delete' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledWith({
-      title: 'Confirmation',
+      title: 'Delete Resource?',
       message: 'Are you sure you want to delete this resource?',
       buttons: ['Delete', 'Cancel'],
       type: 'danger',
@@ -115,11 +115,11 @@ test('expect withConfirmation to use default variant explicitly', async () => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 
   const callback = vi.fn();
-  withConfirmation(callback, 'continue', { variant: 'default', buttonLabel: 'Continue' });
+  withConfirmation(callback, 'continue', { title: 'Continue?', variant: 'default', buttonLabel: 'Continue' });
 
   await vi.waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledWith({
-      title: 'Confirmation',
+      title: 'Continue?',
       message: 'Are you sure you want to continue?',
       buttons: ['Continue', 'Cancel'],
       type: 'question',

@@ -217,7 +217,7 @@ export class ImagesPage extends MainPage {
 
       await playExpect(this.deleteAllSelectedButton).toBeEnabled();
       await this.deleteAllSelectedButton.click();
-      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
+      await handleConfirmationDialog(this.page, 'Delete Images?', true, 'Delete');
     });
   }
 
