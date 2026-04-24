@@ -99,6 +99,8 @@ test('expect error to show up in message box when pull has an error', async () =
   expect(window.showMessageBox).toBeCalledWith({
     title: 'Pull Image Failed',
     message: `Error while pulling image from test: Cannot pull image`,
+    type: 'error',
+    buttons: ['Dismiss'],
   });
 });
 
@@ -113,6 +115,8 @@ test('expect error to show up in message box with no providers', async () => {
   expect(window.showMessageBox).toBeCalledWith({
     title: 'Pull Image Failed',
     message: `No provider connections found`,
+    type: 'error',
+    buttons: ['Dismiss'],
   });
 });
 

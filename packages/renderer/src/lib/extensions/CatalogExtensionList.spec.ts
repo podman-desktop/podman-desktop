@@ -89,6 +89,7 @@ test('Check with empty', async () => {
     message: 'Failed to refresh the catalog',
     title: 'Refresh Catalog Failed',
     type: 'error',
+    buttons: ['Dismiss'],
   });
 });
 

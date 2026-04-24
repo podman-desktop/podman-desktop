@@ -60,14 +60,20 @@ const error = new Error('Error message');
 const errorMessage = {
   title: 'Run Pod Failed',
   message: String(error),
+  type: 'error',
+  buttons: ['Dismiss'],
 };
 const imageErrorMessage = {
   title: 'Run Pod Failed',
   message: `Could not find '${helloImage}' in images`,
+  type: 'error',
+  buttons: ['Dismiss'],
 };
 const providerErrorMessage = {
   title: 'Run Pod Failed',
   message: `No provider connections found`,
+  type: 'error',
+  buttons: ['Dismiss'],
 };
 const buttonName = 'Start your first pod';
 const getButton = screen.getByRole.bind(screen, 'button', { name: buttonName });
