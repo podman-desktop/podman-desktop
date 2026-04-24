@@ -29,6 +29,7 @@ async function startPod(): Promise<void> {
         await window.showMessageBox({
           title: 'Run Pod Failed',
           message: `Could not find '${helloImage}' in images`,
+          type: 'error',
           buttons: ['Dismiss'],
         });
       }
@@ -36,6 +37,7 @@ async function startPod(): Promise<void> {
       await window.showMessageBox({
         title: 'Run Pod Failed',
         message: String(error),
+        type: 'error',
         buttons: ['Dismiss'],
       });
     } finally {
@@ -45,6 +47,7 @@ async function startPod(): Promise<void> {
     await window.showMessageBox({
       title: 'Run Pod Failed',
       message: `No provider connections found`,
+      type: 'error',
       buttons: ['Dismiss'],
     });
   }

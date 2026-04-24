@@ -20,6 +20,7 @@ async function pullFirstImage(): Promise<void> {
     await window.showMessageBox({
       title: 'Pull Image Failed',
       message: `No provider connections found`,
+      type: 'error',
       buttons: ['Dismiss'],
     });
     return;
@@ -33,6 +34,7 @@ async function pullFirstImage(): Promise<void> {
     await window.showMessageBox({
       title: 'Pull Image Failed',
       message: `Error while pulling image from ${selectedProviderConnection.name}: ${errorMessage}`,
+      type: 'error',
       buttons: ['Dismiss'],
     });
   }

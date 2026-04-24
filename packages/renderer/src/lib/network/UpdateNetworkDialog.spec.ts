@@ -43,7 +43,7 @@ const network: NetworkInfoUI = {
 
 const closeDialog = vi.fn();
 
-test('Expect podman used network to have edit option but not delete', async () => {
+test('Expect podman used network to have update option but not delete', async () => {
   render(UpdateNetworkDialog, { network: network, onClose: closeDialog });
 
   await tick();

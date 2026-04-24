@@ -234,7 +234,7 @@ export async function handleConfirmationDialog(
 /**
  * Handles the Update Network dialog by filling DNS server fields and clicking Cancel or Update button.
  * @param page playwright's page object
- * @param networkName name of the network being edited
+ * @param networkName name of the network being updated
  * @param options optional configuration for DNS servers and action
  */
 export async function handleEditNetworkDialog(
@@ -248,16 +248,16 @@ export async function handleEditNetworkDialog(
 ): Promise<void> {
   return test.step(`Handle Update Network dialog for: ${networkName}`, async () => {
     const dialogTitle = `Update Network ${networkName}`;
-    const editDialog = page.getByRole('dialog', { name: dialogTitle });
-    await playExpect(editDialog).toBeVisible();
+    const updateDialog = page.getByRole('dialog', { name: dialogTitle });
+    await playExpect(updateDialog).toBeVisible();
 
     // Get the two input fields (both have placeholder "8.8.8.8 1.1.1.1")
-    const inputFields = editDialog.getByPlaceholder('8.8.8.8 1.1.1.1');
+    const inputFields = updateDialog.getByPlaceholder('8.8.8.8 1.1.1.1');
     const dnsServersToAddInput = inputFields.nth(0);
     const dnsServersToRemoveInput = inputFields.nth(1);
 
-    const cancelButton = editDialog.getByRole('button', { name: 'Cancel', exact: true });
-    const updateButton = editDialog.getByRole('button', { name: 'Update', exact: true });
+    const cancelButton = updateDialog.getByRole('button', { name: 'Cancel', exact: true });
+    const updateButton = updateDialog.getByRole('button', { name: 'Update', exact: true });
 
     if (options?.dnsServersToAdd !== undefined) {
       await dnsServersToAddInput.clear();
@@ -284,7 +284,7 @@ export async function handleEditNetworkDialog(
       await updateButton.click();
     }
 
-    await playExpect(editDialog).not.toBeVisible();
+    await playExpect(updateDialog).not.toBeVisible();
   });
 }
 
