@@ -38,6 +38,7 @@ async function onError(error: string): Promise<void> {
     title: 'Delete Manifest Failed',
     message: error,
     type: 'error',
+    buttons: ['Dismiss'],
   });
 }
 </script>

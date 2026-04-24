@@ -37,11 +37,10 @@ const showMessageBoxCallback = (messageBoxParameter: unknown): void => {
 
   footerMarkdownDescription = options.footerMarkdownDescription;
 
-  // use provided buttons, or a single 'OK' button if none are provided
   if (options?.buttons && options.buttons.length > 0) {
     buttonsType = options.buttons;
   } else {
-    buttonsType = ['OK'];
+    buttonsType = ['Dismiss'];
   }
   type = options?.type;
 

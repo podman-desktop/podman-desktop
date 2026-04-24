@@ -99,9 +99,6 @@ async function fetch(): Promise<void> {
     </div>
   {/snippet}
   {#snippet buttons()}
-  
-      <Button aria-label="Cancel" class="mr-3" type="link" on:click={closeCallback}>Cancel</Button>
-      <Button type="primary" aria-label="OK" on:click={closeCallback}>OK</Button>
-    
+      <Button type="primary" aria-label="Close" on:click={closeCallback}>Close</Button>
   {/snippet}
 </Dialog>

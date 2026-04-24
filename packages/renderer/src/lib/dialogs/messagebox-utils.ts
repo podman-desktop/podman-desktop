@@ -38,7 +38,7 @@ export function withConfirmation(
   options?: ConfirmationOptions,
 ): void {
   const isDelete = options?.variant === 'delete';
-  const activationButton = isDelete ? 'Delete' : (options?.buttonLabel ?? 'Yes');
+  const activationButton = isDelete ? 'Delete' : (options?.buttonLabel ?? 'Continue');
   const title = options?.title ?? 'Confirmation';
   window
     .showMessageBox({

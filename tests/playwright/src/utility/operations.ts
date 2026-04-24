@@ -232,7 +232,7 @@ export async function handleConfirmationDialog(
 }
 
 /**
- * Handles the Edit Network dialog by filling DNS server fields and clicking Cancel or Update button.
+ * Handles the Update Network dialog by filling DNS server fields and clicking Cancel or Update button.
  * @param page playwright's page object
  * @param networkName name of the network being edited
  * @param options optional configuration for DNS servers and action
@@ -246,8 +246,8 @@ export async function handleEditNetworkDialog(
     action?: 'Cancel' | 'Update';
   },
 ): Promise<void> {
-  return test.step(`Handle Edit Network dialog for: ${networkName}`, async () => {
-    const dialogTitle = `Edit Network ${networkName}`;
+  return test.step(`Handle Update Network dialog for: ${networkName}`, async () => {
+    const dialogTitle = `Update Network ${networkName}`;
     const editDialog = page.getByRole('dialog', { name: dialogTitle });
     await playExpect(editDialog).toBeVisible();
 

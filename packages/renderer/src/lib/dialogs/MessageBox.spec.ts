@@ -44,7 +44,7 @@ describe('MessageBox', () => {
       message: 'My message',
       detail: 'A more detailed message',
       footerMarkdownDescription: 'Footer message in markdown',
-      buttons: ['OK', 'Not OK'],
+      buttons: ['Dismiss', 'Not OK'],
     };
 
     receiveFunctionMock.mockImplementation((message: string, callback: (options: MessageBoxOptions) => void) => {
@@ -69,7 +69,7 @@ describe('MessageBox', () => {
     expect(button2).toBeInTheDocument();
   });
 
-  test('Expect that default OK button is displayed and works', async () => {
+  test('Expect that default Dismiss button is displayed and works', async () => {
     const idRequest = 234;
 
     const messageBoxOptions: MessageBoxOptions = {
@@ -86,9 +86,9 @@ describe('MessageBox', () => {
 
     render(MessageBox, {});
 
-    const ok = await screen.findByText('OK');
-    expect(ok).toBeInTheDocument();
-    await fireEvent.click(ok);
+    const dismiss = await screen.findByText('Dismiss');
+    expect(dismiss).toBeInTheDocument();
+    await fireEvent.click(dismiss);
     expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest, 0, undefined);
   });
 
@@ -130,20 +130,17 @@ describe('MessageBox', () => {
 
     render(MessageBox, {});
 
-    // there are only two user controls in the messagebox, close and ok.
-    // tabbing twice should get you to ok
     await userEvent.keyboard('{Tab}');
     await userEvent.keyboard('{Tab}');
 
-    const ok = await screen.findByText('OK');
-    expect(ok).toEqual(document.activeElement);
-
-    // tabbing twice again should bring you away and back
-    await userEvent.keyboard('{Tab}');
-    expect(ok).not.toEqual(document.activeElement);
+    const dismiss = await screen.findByText('Dismiss');
+    expect(dismiss).toEqual(document.activeElement);
 
     await userEvent.keyboard('{Tab}');
-    expect(ok).toEqual(document.activeElement);
+    expect(dismiss).not.toEqual(document.activeElement);
+
+    await userEvent.keyboard('{Tab}');
+    expect(dismiss).toEqual(document.activeElement);
   });
 
   test('Expect to see two messagebox in a row', async () => {
@@ -174,25 +171,24 @@ describe('MessageBox', () => {
     // wait that the event callback is set
     await vi.waitFor(() => eventCallback !== undefined);
 
-    // ok ask to display a first quickpick
     expect(eventCallback).toBeDefined();
     eventCallback?.(messageBoxOptions1);
 
-    const ok1 = await screen.findByText('OK');
-    expect(ok1).toBeInTheDocument();
+    const dismiss1 = await screen.findByText('Dismiss');
+    expect(dismiss1).toBeInTheDocument();
 
     const title1 = await screen.findByText(messageBoxOptions1.title);
     expect(title1).toBeInTheDocument();
-    await fireEvent.click(ok1);
+    await fireEvent.click(dismiss1);
     await vi.waitFor(() => expect(window.sendShowMessageBoxOnSelect).toBeCalledWith(idRequest1, 0, undefined));
     eventCallback?.(messageBoxOptions2);
 
-    const ok2 = await screen.findByText('OK');
-    expect(ok2).toBeInTheDocument();
+    const dismiss2 = await screen.findByText('Dismiss');
+    expect(dismiss2).toBeInTheDocument();
 
     const title2 = await screen.findByText(messageBoxOptions2.title);
     expect(title2).toBeInTheDocument();
-    await fireEvent.click(ok2);
+    await fireEvent.click(dismiss2);
   });
 
   test('Expect danger type to keep default button first in layout', async () => {

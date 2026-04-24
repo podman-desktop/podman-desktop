@@ -20,6 +20,7 @@ async function fetchCatalog(): Promise<void> {
       title: 'Refresh Catalog Failed',
       message: 'Failed to refresh the catalog',
       detail: String(error),
+      buttons: ['Dismiss'],
     });
   }
 }

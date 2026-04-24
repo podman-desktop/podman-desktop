@@ -71,7 +71,7 @@ test('expect withConfirmation to use default variant when no options provided', 
     expect(window.showMessageBox).toHaveBeenCalledWith({
       title: 'Confirmation',
       message: 'Are you sure you want to Destroy world?',
-      buttons: ['Yes', 'Cancel'],
+      buttons: ['Continue', 'Cancel'],
       type: 'question',
     });
   });

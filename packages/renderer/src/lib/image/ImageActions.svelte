@@ -91,6 +91,7 @@ async function onError(error: string, title = 'Image Operation Failed'): Promise
     title,
     message: error,
     type: 'error',
+    buttons: ['Dismiss'],
   });
 }
 

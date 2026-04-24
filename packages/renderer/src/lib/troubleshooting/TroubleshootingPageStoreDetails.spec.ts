@@ -85,38 +85,14 @@ test('Check close button', async () => {
 
   render(TroubleshootingPageStoreDetails, { eventStoreInfo, closeCallback });
 
-  // expect to have the close button
-  const closeButton = screen.getByRole('button', { name: 'Close' });
-  expect(closeButton).toBeInTheDocument();
+  const closeButtons = screen.getAllByRole('button', { name: 'Close' });
+  expect(closeButtons.length).toBe(2);
 
-  // click on close button and expect close callback to be called
+  const primaryCloseButton = closeButtons.find(btn => btn.textContent?.trim() === 'Close');
+  expect(primaryCloseButton).toBeDefined();
+
   expect(closeCallback).not.toBeCalled();
-  await fireEvent.click(closeButton);
-  expect(closeCallback).toBeCalled();
-});
-
-test('Check Cancel button', async () => {
-  const clearEventsMock = vi.fn();
-  const fetchMock = vi.fn();
-  const closeCallback = vi.fn();
-
-  const eventStoreInfo: EventStoreInfo = {
-    name: 'my-test-store',
-    size: 3,
-    bufferEvents: [],
-    clearEvents: clearEventsMock,
-    fetch: fetchMock,
-  };
-
-  render(TroubleshootingPageStoreDetails, { eventStoreInfo, closeCallback });
-
-  // expect to have the close button
-  const cancelButton = screen.getByRole('button', { name: 'Cancel' });
-  expect(cancelButton).toBeInTheDocument();
-
-  // click on Cancel button and expect close callback to be called
-  expect(closeCallback).not.toBeCalled();
-  await fireEvent.click(cancelButton);
+  await fireEvent.click(primaryCloseButton!);
   expect(closeCallback).toBeCalled();
 });
 
