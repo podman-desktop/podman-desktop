@@ -5,20 +5,11 @@ import { router } from 'tinro';
 import App from './App.svelte';
 import SealRocket from './lib/images/SealRocket.svelte';
 import ColorsStyle from './lib/style/ColorsStyle.svelte';
+import { restoreRoutes } from './navigation';
 import { lastPage } from './stores/breadcrumb';
 
-// Key must match the one used in App.svelte's router subscription.
-const LAST_ROUTE_KEY = 'podman-desktop-last-route';
-
-// Set up memory mode and restore the saved route BEFORE App ever mounts.
-// By navigating synchronously here, App's route tree sees the correct URL
-// from its very first render — avoiding a Dashboard flash and async races
-// with WelcomePage or extension startup navigations.
-router.mode.memory();
-const savedRoute = sessionStorage.getItem(LAST_ROUTE_KEY);
-if (savedRoute) {
-  router.goto(savedRoute);
-}
+// Initialise router memory mode and restore routes BEFORE App ever mounts.
+restoreRoutes();
 
 let systemReady = false;
 

@@ -26,6 +26,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
 import App from './App.svelte';
+import { LAST_ROUTE_KEY, SETTINGS_PAGE_KEY } from './navigation';
 import { lastPage } from './stores/breadcrumb';
 import { navigationRegistry, type NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
@@ -238,18 +239,18 @@ describe('route persistence across reloads', () => {
     render(App);
     router.goto('/images');
     await tick();
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/images');
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
   });
 
   test('tab URLs are persisted including the tab segment', async () => {
     render(App);
     router.goto('/containers/abc123/logs');
     await tick();
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/containers/abc123/logs');
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/containers/abc123/logs');
 
     router.goto('/containers/abc123/inspect');
     await tick();
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/containers/abc123/inspect');
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/containers/abc123/inspect');
   });
 
   test('navigating to a preferences route saves the preferences URL', async () => {
@@ -258,8 +259,9 @@ describe('route persistence across reloads', () => {
     await tick();
     router.goto('/preferences/resources');
     await tick();
-    // preferences URL is now saved so a reload restores the preferences page
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/preferences/resources');
+    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBe('/preferences/resources');
+    // LAST_ROUTE_KEY keeps the regular page intact as the return destination
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
   });
 
   test('navigating to a preferences route saves the return page', async () => {
@@ -268,11 +270,11 @@ describe('route persistence across reloads', () => {
     await tick();
     router.goto('/preferences/resources');
     await tick();
-    // the page to return to on exit-settings is also persisted
-    expect(sessionStorage.getItem('podman-desktop-non-settings-page')).toBe('/images');
+    // the page to return to on exit-settings is preserved in LAST_ROUTE_KEY
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
   });
 
-  test('navigating from preferences back to a normal page clears NON_SETTINGS_PAGE_KEY', async () => {
+  test('navigating from preferences back to a normal page clears SETTINGS_PAGE_KEY', async () => {
     render(App);
     router.goto('/images');
     await tick();
@@ -280,25 +282,25 @@ describe('route persistence across reloads', () => {
     await tick();
     router.goto('/containers');
     await tick();
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/containers');
-    expect(sessionStorage.getItem('podman-desktop-non-settings-page')).toBeNull();
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/containers');
+    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBeNull();
   });
 
   test('navigating to dashboard clears the persisted route', async () => {
     render(App);
     router.goto('/images');
     await tick();
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/images');
-
+    router.goto('/preferences/resources');
+    await tick();
     router.goto('/');
     await tick();
-    expect(sessionStorage.getItem('podman-desktop-last-route')).toBeNull();
-    expect(sessionStorage.getItem('podman-desktop-non-settings-page')).toBeNull();
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBeNull();
+    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBeNull();
   });
 
   test('restores the saved route on mount', async () => {
     const gotoSpy = vi.spyOn(router, 'goto').mockImplementation(() => {});
-    sessionStorage.setItem('podman-desktop-last-route', '/images');
+    sessionStorage.setItem(LAST_ROUTE_KEY, '/images');
     render(App);
     // Route restore is handled by Loader.svelte, not App.svelte;
     // App.svelte should NOT call router.goto on its own

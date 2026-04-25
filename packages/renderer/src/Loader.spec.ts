@@ -27,6 +27,7 @@ import { router } from 'tinro';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import Loader from './Loader.svelte';
+import { LAST_ROUTE_KEY, SETTINGS_PAGE_KEY } from './navigation';
 import { lastPage } from './stores/breadcrumb';
 
 vi.mock(import('./App.svelte'));
@@ -65,6 +66,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   sessionStorage.clear();
+  vi.resetAllMocks();
 });
 
 test('Loader should redirect to the installation page when receiving the event', async () => {
@@ -143,7 +145,7 @@ test('Loader should send extensions-already-started event as soon as possible if
 });
 
 test('Loader restores the saved route synchronously at startup', () => {
-  sessionStorage.setItem('podman-desktop-last-route', '/images');
+  sessionStorage.setItem(LAST_ROUTE_KEY, '/images');
 
   render(Loader, { props: {} });
 
@@ -153,9 +155,22 @@ test('Loader restores the saved route synchronously at startup', () => {
 });
 
 test('Loader restores a tab URL including the tab segment synchronously', () => {
-  sessionStorage.setItem('podman-desktop-last-route', '/containers/abc123/logs');
+  sessionStorage.setItem(LAST_ROUTE_KEY, '/containers/abc123/logs');
 
   render(Loader, { props: {} });
 
   expect(router.goto).toHaveBeenCalledWith('/containers/abc123/logs');
+});
+
+test('Loader restores a preferences page when SETTINGS_PAGE_KEY is set', () => {
+  sessionStorage.setItem(LAST_ROUTE_KEY, '/images');
+  sessionStorage.setItem(SETTINGS_PAGE_KEY, '/preferences/resources');
+
+  render(Loader, { props: {} });
+
+  // Regular page is restored first so App's subscribe sets nonSettingsPage naturally,
+  // then preferences is restored on top.
+  expect(router.goto).toHaveBeenNthCalledWith(1, '/images');
+  expect(router.goto).toHaveBeenNthCalledWith(2, '/preferences/resources');
+  expect(router.goto).toHaveBeenCalledTimes(2);
 });
