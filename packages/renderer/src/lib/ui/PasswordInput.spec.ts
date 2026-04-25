@@ -63,7 +63,7 @@ test('expect default input#type to be password', async () => {
   const name = 'my-special-password';
   const { getByLabelText } = render(PasswordInput, { id: 'foo', name: name });
 
-  const input = getByLabelText('password foo');
+  const input = getByLabelText('Password foo');
   assert(input instanceof HTMLInputElement);
   expect(input).toHaveAttribute('type', 'password');
 });
@@ -75,7 +75,7 @@ test('expect hide button to set input#type to text', async () => {
   const btn = getByRole('button', { name: 'show/hide' });
   await fireEvent.click(btn);
 
-  const input = getByLabelText('password foo');
+  const input = getByLabelText('Password foo');
   await vi.waitFor(() => {
     expect(input).toHaveAttribute('type', 'text');
   });
@@ -85,7 +85,7 @@ test('typing should callback oninput listener', async () => {
   const oninput = vi.fn();
   const { getByLabelText } = render(PasswordInput, { id: 'foo', oninput: oninput });
 
-  const input = getByLabelText('password foo');
+  const input = getByLabelText('Password foo');
   assert(input instanceof HTMLInputElement);
   await fireEvent.input(input, { target: { value: 'potato' } });
 
@@ -103,7 +103,7 @@ test('check specific name is applied', async () => {
   const name = 'my-special-password';
   render(PasswordInput, { id: 'foo', name: name });
 
-  const input = screen.getByLabelText('password foo') as HTMLInputElement;
+  const input = screen.getByLabelText('Password foo') as HTMLInputElement;
   expect(input).toBeInTheDocument();
   expect(input.name).toBe(name);
 });
@@ -111,7 +111,7 @@ test('check specific name is applied', async () => {
 test('check default name is set if not specified', async () => {
   render(PasswordInput, { id: 'foo' });
 
-  const input = screen.getByLabelText('password foo') as HTMLInputElement;
+  const input = screen.getByLabelText('Password foo') as HTMLInputElement;
   expect(input).toBeInTheDocument();
   expect(input.name).toBe('password-foo');
 });
