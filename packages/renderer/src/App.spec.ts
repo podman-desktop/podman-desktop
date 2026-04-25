@@ -17,11 +17,11 @@
  ***********************************************************************/
 
 import { tablePersistence } from '@podman-desktop/ui-svelte';
-import { render, waitFor } from '@testing-library/svelte';
+import { cleanup, render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get, writable } from 'svelte/store';
 import { router } from 'tinro';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
@@ -67,6 +67,8 @@ vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
   default: mocks.DeploymentsList,
 }));
 
+vi.mock(import('./PreferencesNavigation.svelte'));
+
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
 });
@@ -78,6 +80,7 @@ const messages = new Map<string, (args: unknown) => void>();
 
 beforeEach(() => {
   vi.resetAllMocks();
+  sessionStorage.clear();
   router.goto('/');
   (window.events as unknown) = {
     receive: vi.fn().mockImplementation((channel, func) => {
@@ -224,6 +227,84 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
   router.goto('/pods');
   await tick();
   expect(get(lastPage).name).equals('Dashboard Page');
+});
+
+describe('route persistence across reloads', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  test('navigating to a route persists it in sessionStorage', async () => {
+    render(App);
+    router.goto('/images');
+    await tick();
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/images');
+  });
+
+  test('tab URLs are persisted including the tab segment', async () => {
+    render(App);
+    router.goto('/containers/abc123/logs');
+    await tick();
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/containers/abc123/logs');
+
+    router.goto('/containers/abc123/inspect');
+    await tick();
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/containers/abc123/inspect');
+  });
+
+  test('navigating to a preferences route saves the preferences URL', async () => {
+    render(App);
+    router.goto('/images');
+    await tick();
+    router.goto('/preferences/resources');
+    await tick();
+    // preferences URL is now saved so a reload restores the preferences page
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/preferences/resources');
+  });
+
+  test('navigating to a preferences route saves the return page', async () => {
+    render(App);
+    router.goto('/images');
+    await tick();
+    router.goto('/preferences/resources');
+    await tick();
+    // the page to return to on exit-settings is also persisted
+    expect(sessionStorage.getItem('podman-desktop-non-settings-page')).toBe('/images');
+  });
+
+  test('navigating from preferences back to a normal page clears NON_SETTINGS_PAGE_KEY', async () => {
+    render(App);
+    router.goto('/images');
+    await tick();
+    router.goto('/preferences/resources');
+    await tick();
+    router.goto('/containers');
+    await tick();
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/containers');
+    expect(sessionStorage.getItem('podman-desktop-non-settings-page')).toBeNull();
+  });
+
+  test('navigating to dashboard clears the persisted route', async () => {
+    render(App);
+    router.goto('/images');
+    await tick();
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBe('/images');
+
+    router.goto('/');
+    await tick();
+    expect(sessionStorage.getItem('podman-desktop-last-route')).toBeNull();
+    expect(sessionStorage.getItem('podman-desktop-non-settings-page')).toBeNull();
+  });
+
+  test('restores the saved route on mount', async () => {
+    const gotoSpy = vi.spyOn(router, 'goto').mockImplementation(() => {});
+    sessionStorage.setItem('podman-desktop-last-route', '/images');
+    render(App);
+    // Route restore is handled by Loader.svelte, not App.svelte;
+    // App.svelte should NOT call router.goto on its own
+    await tick();
+    expect(gotoSpy).not.toHaveBeenCalledWith('/images');
+  });
 });
 
 describe('Table persistence functionality', () => {

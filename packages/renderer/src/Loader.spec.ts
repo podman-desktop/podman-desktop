@@ -24,10 +24,12 @@ import { tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
 import { router } from 'tinro';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import Loader from './Loader.svelte';
 import { lastPage } from './stores/breadcrumb';
+
+vi.mock(import('./App.svelte'));
 
 // first, patch window object
 const callbacks = new Map<string, any>();
@@ -59,6 +61,10 @@ Object.defineProperty(global, 'window', {
 beforeAll(() => {
   vi.resetAllMocks();
   vi.clearAllMocks();
+});
+
+beforeEach(() => {
+  sessionStorage.clear();
 });
 
 test('Loader should redirect to the installation page when receiving the event', async () => {
@@ -134,4 +140,22 @@ test('Loader should send extensions-already-started event as soon as possible if
   // check we have received the 'extensions-already-started' event
   expect(dispatchEventMock.mock.calls.length).toBe(1);
   expect(dispatchEventMock.mock.calls[0][0].type).toBe('extensions-already-started');
+});
+
+test('Loader restores the saved route synchronously at startup', () => {
+  sessionStorage.setItem('podman-desktop-last-route', '/images');
+
+  render(Loader, { props: {} });
+
+  // router.goto is called synchronously from Loader's script block,
+  // before App even mounts — no need to wait for starting-extensions
+  expect(router.goto).toHaveBeenCalledWith('/images');
+});
+
+test('Loader restores a tab URL including the tab segment synchronously', () => {
+  sessionStorage.setItem('podman-desktop-last-route', '/containers/abc123/logs');
+
+  render(Loader, { props: {} });
+
+  expect(router.goto).toHaveBeenCalledWith('/containers/abc123/logs');
 });

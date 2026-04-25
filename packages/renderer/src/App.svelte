@@ -91,11 +91,38 @@ import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 router.mode.memory();
 
-//remember from where we come to preference pages
-let nonSettingsPage = '/';
+// Key shared with Loader.svelte which reads this value to restore the route on reload
+const LAST_ROUTE_KEY = 'podman-desktop-last-route';
+// Stores the non-preferences page to return to when closing the preferences panel
+const NON_SETTINGS_PAGE_KEY = 'podman-desktop-non-settings-page';
+
+// On reload from a preferences page, restore the page that was open before preferences
+// so the exit-settings button navigates back to the right place.
+let nonSettingsPage = sessionStorage.getItem(NON_SETTINGS_PAGE_KEY) ?? '/';
+
 router.subscribe(function (navigation) {
-  if (navigation.url !== undefined && !navigation.url.startsWith('/preferences')) {
+  if (navigation.url === undefined || navigation.url.includes('.html')) return;
+
+  // Track the last non-preferences page so the exit-settings button knows where to go
+  if (!navigation.url.startsWith('/preferences')) {
     nonSettingsPage = navigation.url;
+  }
+
+  // Persist routing state for reload restoration
+  if (!navigation.url.startsWith('/')) return;
+
+  if (navigation.url === '/') {
+    // Dashboard: clear all saved routing state
+    sessionStorage.removeItem(LAST_ROUTE_KEY);
+    sessionStorage.removeItem(NON_SETTINGS_PAGE_KEY);
+  } else if (navigation.url.startsWith('/preferences')) {
+    // Preferences: save both the preferences URL and the page to return to on exit
+    sessionStorage.setItem(LAST_ROUTE_KEY, navigation.url);
+    sessionStorage.setItem(NON_SETTINGS_PAGE_KEY, nonSettingsPage);
+  } else {
+    // Normal page: save the URL, clear preferences session state
+    sessionStorage.setItem(LAST_ROUTE_KEY, navigation.url);
+    sessionStorage.removeItem(NON_SETTINGS_PAGE_KEY);
   }
 });
 

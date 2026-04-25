@@ -55,8 +55,10 @@ onMount(async () => {
   if (!ver) {
     await welcomeUtils.updateVersion('initial');
     showWelcome = true;
+    // Only force-navigate to dashboard on first ever launch; on reload the
+    // saved route (if any) should be preserved.
+    router.goto('/');
   }
-  router.goto('/');
   welcomeMessages = await window.getWelcomeMessages();
 
   const telemetryPrompt = await welcomeUtils.havePromptedForTelemetry();
