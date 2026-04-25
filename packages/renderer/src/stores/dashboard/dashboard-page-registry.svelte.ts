@@ -39,9 +39,11 @@ export const dashboardPageRegistry = $state<{ entries: DashboardPageRegistryEntr
 const enhancedDashboard = $state<{ enabled: boolean }>({ enabled: false });
 
 function getDashboardPageRegistry(): DashboardPageRegistryEntry[] {
-  const providers = !enhancedDashboard.enabled ? [createProviders()] : [createSystemOverview()];
+  const systemOverview = enhancedDashboard.enabled ? [createSystemOverview()] : [];
+  const providers = !enhancedDashboard.enabled ? [createProviders()] : [];
   return [
     createReleaseNotesBox(),
+    ...systemOverview,
     createExtensionBanners(),
     createExploreFeatures(),
     createLearningCenter(),
