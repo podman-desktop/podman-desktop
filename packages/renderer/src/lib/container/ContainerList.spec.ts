@@ -1232,15 +1232,15 @@ test('Expect create container dialog has secondary button before primary button'
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
   const dialogButtons = within(dialog).getAllByRole('button');
-  const existingImageIndex = dialogButtons.findIndex(b => b.textContent?.includes('Use Existing Image'));
-  const containerfileIndex = dialogButtons.findIndex(b => b.textContent?.includes('Use Containerfile'));
+  const existingImageIndex = dialogButtons.findIndex(b => b.textContent?.includes('Existing image'));
+  const containerfileIndex = dialogButtons.findIndex(b => b.textContent?.includes('Containerfile or Dockerfile'));
 
   expect(existingImageIndex).toBeGreaterThanOrEqual(0);
   expect(containerfileIndex).toBeGreaterThanOrEqual(0);
   expect(existingImageIndex).toBeLessThan(containerfileIndex);
 });
 
-test('Expect clicking Use Containerfile button navigates to build image page', async () => {
+test('Expect clicking Containerfile button navigates to build image page', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -1252,14 +1252,14 @@ test('Expect clicking Use Containerfile button navigates to build image page', a
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const containerfileButton = within(dialog).getByRole('button', { name: 'Use Containerfile' });
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Containerfile or Dockerfile' });
   await fireEvent.click(containerfileButton);
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
-test('Expect clicking Use Existing Image button closes dialog', async () => {
+test('Expect clicking Existing image button closes dialog', async () => {
   window.dispatchEvent(new CustomEvent('extensions-already-started'));
   window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
   window.dispatchEvent(new CustomEvent('tray:update-provider'));
@@ -1271,7 +1271,7 @@ test('Expect clicking Use Existing Image button closes dialog', async () => {
   await fireEvent.click(createButton);
 
   const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
-  const existingImageButton = within(dialog).getByRole('button', { name: 'Use Existing Image' });
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Existing image' });
   await fireEvent.click(existingImageButton);
 
   await waitFor(() => {

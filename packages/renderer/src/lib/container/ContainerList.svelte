@@ -495,15 +495,15 @@ function label(item: ContainerGroupInfoUI | ContainerInfoUI): string {
         <div  class="h-full flex flex-col justify-items-center text-[var(--pd-modal-text)]">
         <span class="pb-3">Choose the following:</span>
         <ul class="list-disc ml-8 space-y-2">
-          <li>Create a container from a Containerfile (aka Dockerfile)</li>
+          <li>Create a container from a Containerfile</li>
           <li>Create a container from an existing image stored in the local registry</li>
         </ul>
       </div>
       {/snippet}
     {#snippet buttons()}
 
-        <Button type="secondary" on:click={fromExistingImage}>Use Existing Image</Button>
-        <Button type="primary" on:click={fromDockerfile}>Use Containerfile</Button>
+        <Button type="secondary" on:click={fromExistingImage}>Existing image</Button>
+        <Button type="primary" on:click={fromDockerfile}>Containerfile or Dockerfile</Button>
 
       {/snippet}
   </Dialog>
