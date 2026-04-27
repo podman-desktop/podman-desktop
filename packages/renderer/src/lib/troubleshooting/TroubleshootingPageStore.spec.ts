@@ -71,12 +71,13 @@ test('Check store info is displayed and clicking on buttons works', async () => 
 
   expect(details).toBeInTheDocument();
 
-  // expect to have the Cancel button
-  const cancelButton = screen.getByRole('button', { name: 'Close' });
-  expect(cancelButton).toBeInTheDocument();
+  // expect to have the Close button in the footer
+  const closeButtons = screen.getAllByRole('button', { name: 'Close' });
+  const closeButton = closeButtons.find(btn => btn.textContent?.trim() === 'Close');
+  expect(closeButton).toBeDefined();
 
   // click on it
-  await fireEvent.click(cancelButton);
+  await fireEvent.click(closeButton!);
 
   // dialog should be hidden now
   expect(details).not.toBeInTheDocument();
