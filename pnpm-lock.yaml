@@ -305,9 +305,6 @@ importers:
       mkdirp:
         specifier: ^3.0.1
         version: 3.0.1
-      tmp-promise:
-        specifier: ^3.0.3
-        version: 3.0.3
       tsx:
         specifier: ^4.21.0
         version: 4.21.0

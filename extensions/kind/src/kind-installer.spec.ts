@@ -22,7 +22,6 @@ import * as path from 'node:path';
 
 import type { Octokit } from '@octokit/rest';
 import * as extensionApi from '@podman-desktop/api';
-import { tmpName } from 'tmp-promise';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { KindGithubReleaseArtifactMetadata } from './kind-installer';
@@ -71,8 +70,8 @@ beforeEach(() => {
 test.skip('expect installBinaryToSystem to succesfully pass with a binary', async () => {
   (extensionApi.env.isLinux as unknown as boolean) = true;
 
-  // Create a tmp file using tmp-promise
-  const filename = await tmpName();
+  // Create a tmp file using Node.js built-ins
+  const filename = path.join(os.tmpdir(), 'kind-tmp-binary');
 
   // "Install" the binary, this should pass sucessfully
   await expect(() => util.installBinaryToSystem(filename, 'tmpBinary')).rejects.toThrowError();
