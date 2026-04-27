@@ -235,7 +235,8 @@
       "protobufjs": "^7.5.5",
       "smol-toml": "^1.6.1",
       "follow-redirects": "^1.16.0",
-      "uuid": "^14.0.0"
+      "uuid": "^14.0.0",
+      "postcss": ">=8.5.12"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"
