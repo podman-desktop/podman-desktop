@@ -282,7 +282,7 @@ Before testing a locally built or release `.flatpak`:
    rm -rf ~/.var/app/io.podman_desktop.PodmanDesktop
    ```
 
-3. Install the bundle:
+3. Install the bundle (replace `<version>` with the version shown in the filename):
 
    ```sh
    flatpak install --user dist/podman-desktop-<version>.flatpak
@@ -291,7 +291,7 @@ Before testing a locally built or release `.flatpak`:
 4. Verify the active permissions match the expected manifest:
 
    ```sh
-   flatpak info --show-permissions io.podman_desktop.PodmanDesktop
+   flatpak info --user --show-permissions io.podman_desktop.PodmanDesktop
    ```
 
 For full instructions — including how to build from the Flathub manifest to test permission changes before a release — see the [Testing a Flatpak from a release](https://podman-desktop.io/docs/installation/linux-install/testing-flatpak-from-release) guide.

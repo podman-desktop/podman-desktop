@@ -39,20 +39,14 @@ When you install Podman Desktop from Flathub, the permissions declared in [`io.p
 
 2. (Optional) Remove cached application data for a completely clean environment:
 
-   For a user install:
-
    ```shell-session
    $ rm -rf ~/.var/app/io.podman_desktop.PodmanDesktop
    ```
 
-   For a system-wide install (requires elevated privileges):
-
-   ```shell-session
-   $ sudo rm -rf /var/lib/flatpak/app/io.podman_desktop.PodmanDesktop
-   ```
-
    :::caution
-   These commands remove all local Podman Desktop settings and data stored under the Flatpak sandbox. Only run the command that matches your install scope from Step 1.
+   This removes all local Podman Desktop settings and data stored under the Flatpak sandbox.
+   Flatpak stores per-user app data in `~/.var/app/` for both user and system-wide installs.
+   If multiple users have run Podman Desktop on the same machine, repeat this command for each user profile.
    :::
 
 3. Install the downloaded bundle using the same scope as Step 1:
@@ -124,7 +118,7 @@ When a pull request modifies Flatpak permissions, build the Flatpak locally from
 5. Check the active permissions:
 
    ```shell-session
-   $ flatpak info --show-permissions io.podman_desktop.PodmanDesktop
+   $ flatpak info --user --show-permissions io.podman_desktop.PodmanDesktop
    ```
 
 #### Reverting to the Flathub release
