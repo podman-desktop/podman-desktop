@@ -25,6 +25,7 @@ import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
+import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containersInfos } from '/@/stores/containers';
@@ -1196,4 +1197,46 @@ test('Expect environment dropdown to filter containers by selected environment',
     expect(screen.getByText('podman-container')).toBeInTheDocument();
     expect(screen.queryByText('docker-container')).not.toBeInTheDocument();
   });
+});
+
+test('Expect create container modal opens and Use Containerfile navigates to image build', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const goToMock = vi.spyOn(router, 'goto');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await fireEvent.click(createButton);
+
+  const modal = screen.getByRole('dialog', { name: 'Create a new container' });
+  expect(modal).toBeInTheDocument();
+  expect(screen.getByText(/Containerfile \(aka Dockerfile\)/)).toBeInTheDocument();
+
+  const useContainerfileButton = screen.getByRole('button', { name: 'Use Containerfile' });
+  await fireEvent.click(useContainerfileButton);
+
+  expect(goToMock).toHaveBeenCalledWith('/images/build');
+});
+
+test('Expect create container modal opens and Use Existing Image navigates to existing image', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const goToMock = vi.spyOn(router, 'goto');
+
+  const createButton = screen.getByRole('button', { name: 'Create' });
+  await fireEvent.click(createButton);
+
+  const useExistingImageButton = screen.getByRole('button', { name: 'Use Existing Image' });
+  await fireEvent.click(useExistingImageButton);
+
+  expect(goToMock).toHaveBeenCalledWith('/images/existing-image-create-container');
 });
