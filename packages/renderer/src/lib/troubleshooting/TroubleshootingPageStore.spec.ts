@@ -72,7 +72,7 @@ test('Check store info is displayed and clicking on buttons works', async () => 
   expect(details).toBeInTheDocument();
 
   // expect to have the Cancel button
-  const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+  const cancelButton = screen.getByRole('button', { name: 'Close' });
   expect(cancelButton).toBeInTheDocument();
 
   // click on it

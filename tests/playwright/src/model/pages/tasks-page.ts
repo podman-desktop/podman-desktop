@@ -83,7 +83,7 @@ export class TasksPage extends BasePage {
     await playExpect(cancelButton).toBeEnabled();
     await cancelButton.click();
     await handleConfirmationDialog(this.page, 'Cancel Task?', true, 'Cancel Task');
-    await handleConfirmationDialog(this.page, 'Long task example', true, 'OK');
+    await handleConfirmationDialog(this.page, 'Long task example', true, 'Dismiss');
   }
 
   async getStatusForLatestTask(): Promise<string> {

@@ -85,7 +85,7 @@ test('Expect podman used network to have edit option and disabled delete', async
 
   await tick();
 
-  expect(screen.getByText('Edit Network Network 2')).toBeInTheDocument();
+  expect(screen.getByText('Update Network Network 2')).toBeInTheDocument();
 
   const addField = screen.getAllByPlaceholderText('8.8.8.8 1.1.1.1')?.[0];
   const removeField = screen.getAllByPlaceholderText('8.8.8.8 1.1.1.1')?.[1];
@@ -102,5 +102,5 @@ test('Expect podman used network to have edit option and disabled delete', async
   await fireEvent.click(submitButton);
 
   expect(window.updateNetwork).toBeCalledWith('podman2', '123456789123456', ['0.0.0.1', '2.1.1.2'], ['1.1.1.1']);
-  expect(screen.queryByText('Edit Network Network 2')).not.toBeInTheDocument();
+  expect(screen.queryByText('Update Network Network 2')).not.toBeInTheDocument();
 });
