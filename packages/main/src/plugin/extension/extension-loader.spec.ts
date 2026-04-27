@@ -397,7 +397,7 @@ beforeEach(() => {
 vi.mock(import('node:fs'));
 
 beforeEach(() => {
-  telemetryTrackMock.mockImplementation(() => Promise.resolve());
+  telemetryTrackMock.mockResolvedValue(undefined);
   vi.clearAllMocks();
 
   vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([]);
@@ -1517,7 +1517,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const containerExistSpy = vi.spyOn(containerProviderRegistry, 'containerExist');
-    containerExistSpy.mockImplementation(() => Promise.resolve(true));
+    containerExistSpy.mockResolvedValue(true);
 
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
@@ -1557,7 +1557,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const containerExistSpy = vi.spyOn(containerProviderRegistry, 'containerExist');
-    containerExistSpy.mockImplementation(() => Promise.resolve(false));
+    containerExistSpy.mockResolvedValue(false);
 
     // Call the method provided
     let error = undefined;
@@ -1586,7 +1586,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const imageExistSpy = vi.spyOn(containerProviderRegistry, 'imageExist');
-    imageExistSpy.mockImplementation(() => Promise.resolve(true));
+    imageExistSpy.mockResolvedValue(true);
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
 
@@ -1611,7 +1611,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const imageExistSpy = vi.spyOn(containerProviderRegistry, 'imageExist');
-    imageExistSpy.mockImplementation(() => Promise.resolve(false));
+    imageExistSpy.mockResolvedValue(false);
 
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
@@ -1645,7 +1645,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const volumeExistSpy = vi.spyOn(containerProviderRegistry, 'volumeExist');
-    volumeExistSpy.mockImplementation(() => Promise.resolve(true));
+    volumeExistSpy.mockResolvedValue(true);
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
 
@@ -1669,7 +1669,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const volumeExistSpy = vi.spyOn(containerProviderRegistry, 'volumeExist');
-    volumeExistSpy.mockImplementation(() => Promise.resolve(false));
+    volumeExistSpy.mockResolvedValue(false);
 
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
@@ -1703,7 +1703,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const podExistSpy = vi.spyOn(containerProviderRegistry, 'podExist');
-    podExistSpy.mockImplementation(() => Promise.resolve(true));
+    podExistSpy.mockResolvedValue(true);
 
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
@@ -1728,7 +1728,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const podExistSpy = vi.spyOn(containerProviderRegistry, 'podExist');
-    podExistSpy.mockImplementation(() => Promise.resolve(false));
+    podExistSpy.mockResolvedValue(false);
 
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
@@ -1901,20 +1901,18 @@ test('check listWebviews', async () => {
 
   // Mock listSimpleWebviews implementation
   const listSimpleWebviewsSpy = vi.spyOn(webviewRegistry, 'listSimpleWebviews');
-  listSimpleWebviewsSpy.mockImplementation(() =>
-    Promise.resolve([
-      {
-        id: '123',
-        viewType: 'customView',
-        title: 'customTitle1',
-      },
-      {
-        id: '456',
-        viewType: 'anotherView',
-        title: 'customTitle2',
-      },
-    ]),
-  );
+  listSimpleWebviewsSpy.mockResolvedValue([
+    {
+      id: '123',
+      viewType: 'customView',
+      title: 'customTitle1',
+    },
+    {
+      id: '456',
+      viewType: 'anotherView',
+      title: 'customTitle2',
+    },
+  ]);
   // Call the method provided
   const result = await api.window.listWebviews();
 

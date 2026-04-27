@@ -21,6 +21,6 @@ async function deleteJob(): Promise<void> {
 
 <ListItemButtonIcon
   title="Delete Job"
-  onClick={(): void => withConfirmation(deleteJob, `delete job ${job.name}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(deleteJob, `delete job ${job.name}`, { title: 'Delete Job?', variant: 'delete' })}
   detailed={detailed}
   icon={faTrash} />

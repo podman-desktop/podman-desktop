@@ -66,7 +66,7 @@ beforeEach(() => {
 });
 
 test('expect update on windows to show notification in case of 0 exit code', async () => {
-  vi.mocked(extensionApi.process.exec).mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
 
   vi.mocked(existsSync).mockReturnValue(true);
   vi.mocked(readdirSync).mockReturnValue([]);

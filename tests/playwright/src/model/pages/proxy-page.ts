@@ -100,7 +100,7 @@ export class ProxyPage extends SettingsPage {
     await this.updateButton.click();
     // dialog can be a warning or info, both has only OK button.
     // on windows podman machine might needs to be restarted
-    await handleConfirmationDialog(this.page, 'Proxy Settings', true, 'OK');
+    await handleConfirmationDialog(this.page, 'Proxy Settings Updated', true, 'Dismiss');
   }
 
   public async fillHttpProxy(value: string): Promise<void> {

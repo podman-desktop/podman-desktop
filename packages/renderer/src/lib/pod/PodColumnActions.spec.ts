@@ -38,7 +38,7 @@ beforeEach(() => {
     { Id: 'pod', Ports: [{ PublicPort: 8080 } as Port] as Port[] } as ContainerInfo,
   ]);
 
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 });
 
 afterEach(() => {

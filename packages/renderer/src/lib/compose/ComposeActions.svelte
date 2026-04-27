@@ -155,7 +155,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Delete Compose"
-  onClick={(): void => withConfirmation(deleteCompose, `delete compose ${compose.name}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(deleteCompose, `delete compose ${compose.name}`, { title: 'Delete Compose?', variant: 'delete' })}
   icon={faTrash}
   detailed={detailed}
   inProgress={compose.actionInProgress && compose.status === 'DELETING'} />

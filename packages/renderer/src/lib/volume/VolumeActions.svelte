@@ -23,7 +23,7 @@ async function removeVolume(): Promise<void> {
 {#if volume.status === 'UNUSED'}
   <ListItemButtonIcon
     title="Delete Volume"
-    onClick={(): void => withConfirmation(removeVolume, `delete volume ${volume.name}`, { variant:'delete' } )}
+    onClick={(): void => withConfirmation(removeVolume, `delete volume ${volume.name}`, { title: 'Delete Volume?', variant: 'delete' })}
     detailed={detailed}
     icon={faTrash} />
 {/if}

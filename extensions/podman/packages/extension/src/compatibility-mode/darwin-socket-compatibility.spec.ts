@@ -78,9 +78,7 @@ test('darwin: DarwinSocketCompatibility class, test runMacHelperCommandWithAdmin
 
   // Mock that admin command ran successfully (since we cannot test interactive mode priv in vitest / has to be integration tests)
   const spyMacHelperCommand = vi.spyOn(socketCompatClass, 'runMacHelperCommandWithAdminPriv');
-  spyMacHelperCommand.mockImplementation(() => {
-    return Promise.resolve();
-  });
+  spyMacHelperCommand.mockResolvedValue(undefined);
 
   // Run the command
   await socketCompatClass.runCommand('enable', 'enabled');
@@ -92,18 +90,14 @@ test('darwin: DarwinSocketCompatibility class, test runMacHelperCommandWithAdmin
 test('darwin: DarwinSocketCompatibility class, test promptRestart ran within runCommand', async () => {
   const socketCompatClass = new DarwinSocketCompatibility();
 
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
 
   const spyFindRunningMachine = vi.spyOn(extension, 'findRunningMachine');
-  spyFindRunningMachine.mockImplementation(() => {
-    return Promise.resolve('default');
-  });
+  spyFindRunningMachine.mockResolvedValue('default');
 
   // Mock that enable ran successfully
   const spyEnable = vi.spyOn(socketCompatClass, 'runCommand');
-  spyEnable.mockImplementation(() => {
-    return Promise.resolve();
-  });
+  spyEnable.mockResolvedValue(undefined);
 
   const spyPromptRestart = vi.spyOn(socketCompatClass, 'promptRestart');
 

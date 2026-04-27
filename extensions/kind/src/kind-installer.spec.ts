@@ -243,9 +243,7 @@ describe('install', () => {
 
     vi.mocked(fs.existsSync).mockReturnValue(true);
     const chmodMock = vi.spyOn(fs.promises, 'chmod');
-    const downloadReleaseAssetMock = vi
-      .spyOn(installer, 'downloadReleaseAsset')
-      .mockImplementation(() => Promise.resolve());
+    const downloadReleaseAssetMock = vi.spyOn(installer, 'downloadReleaseAsset').mockResolvedValue(undefined);
     const output = await installer.download(resultREST[0]);
     expect(output).toStrictEqual(path.join(installer.getKindCliStoragePath()));
     expect(downloadReleaseAssetMock).toBeCalledWith(186178238, expect.any(String));
@@ -267,9 +265,7 @@ describe('install', () => {
     vi.mocked(os.arch).mockReturnValue('x64');
     vi.mocked(fs.existsSync).mockReturnValue(true);
     const chmodMock = vi.spyOn(fs.promises, 'chmod').mockResolvedValue();
-    const downloadReleaseAssetMock = vi
-      .spyOn(installer, 'downloadReleaseAsset')
-      .mockImplementation(() => Promise.resolve());
+    const downloadReleaseAssetMock = vi.spyOn(installer, 'downloadReleaseAsset').mockResolvedValue(undefined);
     await installer.download(resultREST[0]);
     expect(downloadReleaseAssetMock).toBeCalledWith(186178216, expect.any(String));
     expect(chmodMock).toBeCalledWith(expect.any(String), 0o755);

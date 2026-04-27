@@ -358,9 +358,7 @@ beforeEach(() => {
     },
   });
 
-  vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockImplementation(() => {
-    return Promise.resolve();
-  });
+  vi.mocked(PodmanInfoHelper.prototype.updateWithPodmanInfoRecords).mockResolvedValue(undefined);
 });
 
 afterEach(async () => {
@@ -876,9 +874,9 @@ test('checkDefaultMachine: do not prompt if the running machine is already the d
     },
   ];
 
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({ stdout: JSON.stringify(fakeConnectionJSON) } as extensionApi.RunResult),
-  );
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+    stdout: JSON.stringify(fakeConnectionJSON),
+  } as extensionApi.RunResult);
 
   await extension.checkDefaultMachine(fakeJSON);
   expect(extensionApi.window.showInformationMessage).not.toHaveBeenCalled();
@@ -890,9 +888,7 @@ test('if a machine is successfully started it changes its state to started', asy
     return;
   });
 
-  const spyExecPromise = vi
-    .spyOn(extensionApi.process, 'exec')
-    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
   await extension.startMachine(provider, podmanConfiguration, machineInfo);
 
   expect(spyExecPromise).toBeCalledWith(podmanCli.getPodmanCli(), ['machine', 'start', 'name'], {
@@ -911,9 +907,7 @@ test('if autoStart is true, machine start uses detached mode', async () => {
     return;
   });
 
-  const spyExecPromise = vi
-    .spyOn(extensionApi.process, 'exec')
-    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
 
   await extension.startMachine(provider, podmanConfiguration, machineInfo, undefined, undefined, undefined, true);
 
@@ -929,9 +923,7 @@ test('if autoStart is true, machine start uses detached mode', async () => {
 });
 
 test('if a machine is successfully reporting telemetry', async () => {
-  const spyExecPromise = vi
-    .spyOn(extensionApi.process, 'exec')
-    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
   await extension.startMachine(provider, podmanConfiguration, machineInfo);
 
   await waitTelemetryLoggerUsage();
@@ -989,9 +981,7 @@ test('if a machine failed to start with a wsl distro not found error, the user i
 
 test('if a machine failed to start with a wsl distro not found error but the skipHandleError is false, the error is thrown', async () => {
   const spyExecPromise = vi.spyOn(extensionApi.process, 'exec');
-  spyExecPromise.mockImplementation(() => {
-    return Promise.reject(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
-  });
+  spyExecPromise.mockRejectedValue(new Error('wsl bootstrap script failed: exit status 0xffffffff'));
   await expect(
     extension.startMachine(provider, podmanConfiguration, machineInfo, undefined, undefined, true),
   ).rejects.toThrow('wsl bootstrap script failed: exit status 0xffffffff');
@@ -1155,9 +1145,9 @@ test('test checkDefaultMachine - if there is no machine marked as default, take 
     },
   ];
 
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({ stdout: JSON.stringify(fakeConnectionJSON) } as extensionApi.RunResult),
-  );
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+    stdout: JSON.stringify(fakeConnectionJSON),
+  } as extensionApi.RunResult);
 
   await extension.checkDefaultMachine(fakeJSON);
 
@@ -1205,9 +1195,9 @@ test('test checkDefaultMachine - if there is no machine marked as default, take 
     },
   ];
 
-  vi.spyOn(extensionApi.process, 'exec').mockImplementation(() =>
-    Promise.resolve({ stdout: JSON.stringify(fakeConnectionJSON) } as extensionApi.RunResult),
-  );
+  vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({
+    stdout: JSON.stringify(fakeConnectionJSON),
+  } as extensionApi.RunResult);
 
   await extension.checkDefaultMachine(fakeJSON);
   expect(extensionApi.window.showInformationMessage).not.toHaveBeenCalled();
@@ -3005,9 +2995,7 @@ describe('sendTelemetryRecords', () => {
 test('if a machine stopped is successfully reporting telemetry', async () => {
   vi.mocked(extensionApi.env).isMac = true;
 
-  const spyExecPromise = vi
-    .spyOn(extensionApi.process, 'exec')
-    .mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+  const spyExecPromise = vi.spyOn(extensionApi.process, 'exec').mockResolvedValue({} as extensionApi.RunResult);
   vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({
     version: '5.1.2',
   });

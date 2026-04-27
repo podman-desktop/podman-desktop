@@ -18,6 +18,6 @@ async function deleteService(): Promise<void> {
 
 <ListItemButtonIcon
   title="Delete Service"
-  onClick={(): void => withConfirmation(deleteService, `delete service ${service.name}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(deleteService, `delete service ${service.name}`, { title: 'Delete Service?', variant: 'delete' })}
   detailed={detailed}
   icon={faTrash} />

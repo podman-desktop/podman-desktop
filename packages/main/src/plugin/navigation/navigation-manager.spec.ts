@@ -319,6 +319,10 @@ describe('register navigation commands', () => {
     expect(commandRegistry.registerCommand).toBeCalledWith('navigation.goForward', expect.anything());
   });
 
+  test('should register the navigateToResources command', () => {
+    expect(commandRegistry.registerCommand).toBeCalledWith('navigateToResources', expect.anything());
+  });
+
   test('should register navigation commands in command palette', () => {
     expect(commandRegistry.registerCommandPalette).toBeCalledWith(
       expect.objectContaining({ command: 'navigation.goBack', title: 'Go Back', category: 'Navigation' }),

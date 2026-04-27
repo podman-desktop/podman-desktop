@@ -65,7 +65,7 @@ describe('Check for Docker Compose', async () => {
   });
 
   test('installed', async () => {
-    vi.mocked(extensionApi.process.exec).mockImplementation(() => Promise.resolve({} as extensionApi.RunResult));
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
     const result = await detect.checkForDockerCompose();
     expect(result).toBeTruthy();
   });
@@ -125,9 +125,10 @@ describe('Check storage path', async () => {
 
 describe('Check getDockerComposePath uses proper tooling by platform', () => {
   beforeEach(() => {
-    vi.mocked(extensionApi.process.exec).mockImplementation(() =>
-      Promise.resolve({ exitCode: 0, stdout: 'hello-world' } as extensionApi.RunError),
-    );
+    vi.mocked(extensionApi.process.exec).mockResolvedValue({
+      exitCode: 0,
+      stdout: 'hello-world',
+    } as extensionApi.RunError);
   });
 
   test('linux should use which', async () => {

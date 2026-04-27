@@ -81,7 +81,7 @@ beforeAll(() => {
 beforeEach(() => {
   imagesInfos.set([]);
   viewsContributions.set([]);
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 });
 
 afterEach(() => {

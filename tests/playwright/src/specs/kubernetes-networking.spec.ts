@@ -219,7 +219,13 @@ test.describe
       });
 
       test('Delete Kubernetes resources', async ({ page }) => {
-        await deleteKubernetesResource(page, KubernetesResources.IngeressesRoutes, INGRESS_NAME);
+        await deleteKubernetesResource(
+          page,
+          KubernetesResources.IngeressesRoutes,
+          INGRESS_NAME,
+          30_000,
+          'Delete Ingress?',
+        );
         await deleteKubernetesResource(page, KubernetesResources.Services, SERVICE_NAME);
         await deleteKubernetesResource(page, KubernetesResources.Deployments, DEPLOYMENT_NAME);
       });

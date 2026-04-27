@@ -28,7 +28,7 @@ test.skip(isLinux, 'Podman installation is not supported on Linux');
 
 test.beforeAll(async ({ page, runner, welcomePage }) => {
   runner.setVideoAndTraceName('podman-install-e2e');
-  const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Available now' });
+  const updateAvailableDialog = page.getByRole('dialog', { name: 'Update Podman Desktop?' });
   try {
     await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
     const cancelButton = updateAvailableDialog.getByRole('button', { name: 'Cancel' });

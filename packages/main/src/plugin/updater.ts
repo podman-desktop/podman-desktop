@@ -206,10 +206,10 @@ export class Updater {
     this.commandRegistry.registerCommand('version', async () => {
       const result = await this.messageBox.showMessageBox({
         type: 'info',
-        title: 'Version',
+        title: 'View Version',
         message: `Using version ${this.#currentVersion}`,
         detail: detailMessage,
-        buttons: ['View release notes banner'],
+        buttons: ['View Release Notes'],
       });
       if (result.response === 0) {
         await this.configurationRegistry.updateConfigurationValue(`releaseNotesBanner.show`, 'show');
@@ -226,8 +226,8 @@ export class Updater {
       if (this.#updateAlreadyDownloaded) {
         const result = await this.messageBox.showMessageBox({
           type: 'info',
-          title: 'Update',
-          message: 'There is already an update downloaded. Please Restart Podman Desktop.',
+          title: `Restart ${product.name}?`,
+          message: 'An update has been downloaded. Restart now to apply it?',
           cancelId: 1,
           buttons: ['Restart', 'Cancel'],
         });
@@ -240,9 +240,9 @@ export class Updater {
       if (this.#updateInProgress) {
         await this.messageBox.showMessageBox({
           type: 'info',
-          title: 'Update',
-          message: 'There is already an update in progress. Please wait until it is downloaded',
-          buttons: ['OK'],
+          title: `Update ${product.name}`,
+          message: 'An update is being downloaded. Please wait for it to complete.',
+          buttons: ['Dismiss'],
         });
         return;
       }
@@ -259,8 +259,8 @@ export class Updater {
 
       const result = await this.messageBox.showMessageBox({
         type: 'info',
-        title: 'Update Available now',
-        message: `A new version ${updateVersion} of Podman Desktop is available. Do you want to update your current version ${this.#currentVersion}?`,
+        title: `Update ${product.name}?`,
+        message: `A new version ${updateVersion} of ${product.name} is available. Do you want to update your current version ${this.#currentVersion}?`,
         buttons: buttons,
         cancelId: 2,
       });
@@ -287,7 +287,7 @@ export class Updater {
             type: 'error',
             title: 'Update Failed',
             message: `An error occurred while trying to update to version ${updateVersion}. See the developer console for more information.`,
-            buttons: ['OK'],
+            buttons: ['Dismiss'],
           });
         }
       }
@@ -402,8 +402,8 @@ export class Updater {
 
     this.messageBox
       .showMessageBox({
-        title: 'Update Downloaded',
-        message: `v${updatedDownloadedEvent.version} update downloaded, Do you want to restart Podman Desktop ?`,
+        title: `Restart ${product.name}?`,
+        message: `${product.name} ${updatedDownloadedEvent.version} has been downloaded. Restart now to apply the update?`,
         cancelId: 1,
         type: 'info',
         buttons: ['Restart', 'Cancel'],

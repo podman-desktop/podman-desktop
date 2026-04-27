@@ -180,7 +180,7 @@ describe('delete', () => {
 
     await vi.waitFor(() => {
       expect(window.showMessageBox).toHaveBeenCalledExactlyOnceWith({
-        title: 'Confirmation',
+        title: 'Delete Connection?',
         message: `Are you sure you want to delete ${containerConnection.name}?`,
         buttons: ['Delete', 'Cancel'],
         type: 'danger',

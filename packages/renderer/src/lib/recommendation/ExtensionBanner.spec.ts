@@ -160,10 +160,10 @@ test('opening messageBox and hiding banner', async () => {
   closeButton.click();
 
   expect(window.showMessageBox).toBeCalledWith({
-    title: 'Hide extension recommendation banners',
-    message: `Do you want to hide extension recommendation banners?`,
+    title: 'Hide Extension Recommendations?',
+    message: 'Do you want to hide extension recommendation banners?',
     type: 'warning',
-    buttons: [`No, keep them`, 'Yes, hide'],
+    buttons: ['Keep', 'Hide'],
   });
 
   await waitFor(() =>
@@ -189,10 +189,10 @@ test('opening messageBox and keeping banner', async () => {
   closeButton.click();
 
   expect(window.showMessageBox).toBeCalledWith({
-    title: 'Hide extension recommendation banners',
-    message: `Do you want to hide extension recommendation banners?`,
+    title: 'Hide Extension Recommendations?',
+    message: 'Do you want to hide extension recommendation banners?',
     type: 'warning',
-    buttons: [`No, keep them`, 'Yes, hide'],
+    buttons: ['Keep', 'Hide'],
   });
 
   await waitFor(() =>

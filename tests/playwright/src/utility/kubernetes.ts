@@ -86,6 +86,7 @@ export async function deleteKubernetesResource(
   resourceType: KubernetesResources,
   resourceName: string,
   timeout = 30_000,
+  dialogTitle?: string,
 ): Promise<void> {
   return test.step(`Delete ${resourceType} kubernetes resource: ${resourceName}`, async () => {
     const navigationBar = new NavigationBar(page);
@@ -93,11 +94,31 @@ export async function deleteKubernetesResource(
     const kubernetesBar = await navigationBar.openKubernetes();
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
     await kubernetesResourcePage.deleteKubernetesResource(resourceName);
-    await handleConfirmationDialog(page, 'Confirmation', true, 'Delete');
+    const title = dialogTitle ?? kubernetesResourceDialogTitle(resourceType);
+    await handleConfirmationDialog(page, title, true, 'Delete');
     await playExpect
       .poll(async () => await kubernetesResourcePage.getRowByName(resourceName), { timeout: timeout })
       .not.toBeTruthy();
   });
+}
+
+function kubernetesResourceDialogTitle(resourceType: KubernetesResources): string {
+  const map: Partial<Record<KubernetesResources, string>> = {
+    [KubernetesResources.Pods]: 'Delete Pod?',
+    [KubernetesResources.Deployments]: 'Delete Deployment?',
+    [KubernetesResources.Services]: 'Delete Service?',
+    [KubernetesResources.PVCs]: 'Delete PVC?',
+    [KubernetesResources.Cronjobs]: 'Delete CronJob?',
+    [KubernetesResources.Jobs]: 'Delete Job?',
+    [KubernetesResources.PortForwarding]: 'Delete Port Forward?',
+  };
+  const title = map[resourceType];
+  if (!title) {
+    throw new Error(
+      `No default dialog title for ${resourceType}; pass an explicit dialogTitle argument to deleteKubernetesResource`,
+    );
+  }
+  return title;
 }
 
 export async function checkDeploymentReplicasInfo(

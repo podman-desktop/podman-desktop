@@ -104,7 +104,7 @@ function saveImage(): void {
 
 <ListItemButtonIcon
   title="Delete Image"
-  onClick={(): void => withConfirmation(deleteImage, `delete image ${image.name}:${image.tag}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(deleteImage, `delete image ${image.name}:${image.tag}`, { title: 'Delete Image?', variant: 'delete' })}
   detailed={detailed}
   icon={faTrash}
   enabled={image.status === 'UNUSED'} />

@@ -42,7 +42,7 @@ function closeUpdateDialog(): void {
 
 <ListItemButtonIcon
   title="Delete Network"
-  onClick={(): void => withConfirmation(removeNetwork, `delete network ${object.name}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(removeNetwork, `delete network ${object.name}`, { title: 'Delete Network?', variant: 'delete' })}
   icon={faTrash}
   detailed={detailed}
   enabled={object.status === 'UNUSED'} />

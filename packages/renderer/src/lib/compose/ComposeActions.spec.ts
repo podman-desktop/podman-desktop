@@ -90,7 +90,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 });
 
 afterEach(() => {

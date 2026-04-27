@@ -85,7 +85,7 @@ export class KubeContextPage extends SettingsPage {
     await playExpect(deleteButton).toBeEnabled();
     await deleteButton.click();
     if (handleConfirmation) {
-      await handleConfirmationDialog(this.page, 'Delete Context', true, 'Delete');
+      await handleConfirmationDialog(this.page, 'Delete Context?', true, 'Delete');
     }
   }
 

@@ -202,7 +202,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Delete Container"
-  onClick={(): void => withConfirmation(deleteContainer, `delete container ${container.name}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(deleteContainer, `delete container ${container.name}`, { title: 'Delete Container?', variant: 'delete' })}
   icon={faTrash}
   detailed={detailed}
   inProgress={container.actionInProgress && container.state === 'DELETING'} />

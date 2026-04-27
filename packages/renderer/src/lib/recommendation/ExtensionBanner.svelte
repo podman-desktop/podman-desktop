@@ -33,10 +33,10 @@ async function onClose(): Promise<void> {
   let result: MessageBoxReturnValue = { response: -1 };
   try {
     result = await window.showMessageBox({
-      title: 'Hide extension recommendation banners',
-      message: `Do you want to hide extension recommendation banners?`,
+      title: 'Hide Extension Recommendations?',
+      message: 'Do you want to hide extension recommendation banners?',
       type: 'warning',
-      buttons: [`No, keep them`, 'Yes, hide'],
+      buttons: ['Keep', 'Hide'],
     });
 
     if (result?.response === 1) {

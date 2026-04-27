@@ -257,7 +257,7 @@ beforeAll(() => {
   };
 
   (window as any).getContributedMenus = getContributedMenusMock;
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 });
 
 async function waitRender(customProperties: object): Promise<void> {

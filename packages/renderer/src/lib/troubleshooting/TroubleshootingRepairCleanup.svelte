@@ -21,9 +21,10 @@ async function openCleanupDialog(): Promise<void> {
   let message = 'This action may delete data. Proceed?';
 
   const result = await window.showMessageBox({
-    title: 'Cleanup',
+    title: 'Clean Up Data?',
+    type: 'danger',
     message: message,
-    buttons: ['Yes', 'Cancel'],
+    buttons: ['Clean Up', 'Cancel'],
   });
 
   if (result?.response === 0) {

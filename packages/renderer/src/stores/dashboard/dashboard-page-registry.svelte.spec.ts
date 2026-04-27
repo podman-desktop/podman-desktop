@@ -24,6 +24,7 @@ import {
   convertFromListOrganizerItems,
   dashboardPageRegistry,
   type DashboardPageRegistryEntry,
+  defaultSection,
   setupDashboardPageRegistry,
 } from './dashboard-page-registry.svelte';
 
@@ -44,14 +45,40 @@ describe('defaultSection', () => {
     vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(true);
     await setupDashboardPageRegistry();
 
-    // Now should have 4 items (without providers)
     await vi.waitFor(() => {
-      expect(dashboardPageRegistry.entries).toHaveLength(4);
+      expect(dashboardPageRegistry.entries).toHaveLength(5);
     });
 
-    // Check the section names from the registry entries
     const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
-    expect(sectionNames).toEqual(['Release Notes', 'Extension Banners', 'Explore Features', 'Learning Center']);
+    expect(sectionNames).toEqual([
+      'Release Notes',
+      'System Overview',
+      'Extension Banners',
+      'Explore Features',
+      'Learning Center',
+    ]);
+
+    expect(defaultSection.names).toEqual(sectionNames);
+  });
+
+  test('should return section names with Providers when enhanced dashboard is disabled', async () => {
+    vi.mocked(window.isExperimentalConfigurationEnabled).mockResolvedValue(false);
+    await setupDashboardPageRegistry();
+
+    await vi.waitFor(() => {
+      expect(dashboardPageRegistry.entries).toHaveLength(5);
+    });
+
+    const sectionNames = dashboardPageRegistry.entries.map(entry => entry.id);
+    expect(sectionNames).toEqual([
+      'Release Notes',
+      'Extension Banners',
+      'Explore Features',
+      'Learning Center',
+      'Providers',
+    ]);
+
+    expect(defaultSection.names).toEqual(sectionNames);
   });
 });
 
@@ -68,7 +95,7 @@ describe('convertFromListOrganizerItems', () => {
         id: 'Extension Banners',
         label: 'Extension Banners',
         enabled: false,
-        originalOrder: 1,
+        originalOrder: 2,
       },
     ];
 
@@ -80,7 +107,7 @@ describe('convertFromListOrganizerItems', () => {
       },
       {
         id: 'Extension Banners',
-        originalOrder: 1,
+        originalOrder: 2,
         component: 'ExtensionBanners' as unknown as Component,
       },
     ];
@@ -97,7 +124,7 @@ describe('convertFromListOrganizerItems', () => {
       {
         id: 'Extension Banners',
         hidden: true,
-        originalOrder: 1,
+        originalOrder: 2,
         component: 'ExtensionBanners' as unknown as Component,
       },
     ]);

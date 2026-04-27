@@ -88,7 +88,7 @@ export class PodDetailsPage extends DetailsPage {
     return test.step('Delete Pod', async () => {
       await playExpect(this.deleteButton).toBeEnabled({ timeout: 10_000 });
       await this.deleteButton.click();
-      await handleConfirmationDialog(this.page, 'Confirmation', true, 'Delete');
+      await handleConfirmationDialog(this.page, 'Delete Pod?', true, 'Delete');
       return new PodsPage(this.page);
     });
   }

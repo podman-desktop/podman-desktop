@@ -82,7 +82,7 @@ test('Expect bulk button is bringing confirmation but not deleting anything', as
   expect(window.showMessageBox).toHaveBeenCalledWith({
     buttons: ['Delete', 'Cancel'],
     message: 'Are you sure you want to bulk delete operation?',
-    title: 'Confirmation',
+    title: 'Delete Tasks?',
     type: 'danger',
   });
 

@@ -33,6 +33,7 @@ import { inject, injectable, postConstruct, preDestroy } from 'inversify';
 import { IPCHandle } from '/@/plugin/api.js';
 import { ExperimentalConfigurationManager } from '/@/plugin/experimental-configuration-manager.js';
 import { ProviderRegistry } from '/@/plugin/provider-registry.js';
+import { StatusBarRegistry } from '/@/plugin/statusbar/statusbar-registry.js';
 import { Disposable } from '/@/plugin/types/disposable.js';
 
 const STARTUP_GRACE_PERIOD_DURATION = 8_000;
@@ -46,6 +47,7 @@ export class DashboardService implements IDisposable {
 
   constructor(
     @inject(IConfigurationRegistry) private configurationRegistry: IConfigurationRegistry,
+    @inject(StatusBarRegistry) private statusBarRegistry: StatusBarRegistry,
     @inject(ProviderRegistry) private providerRegistry: ProviderRegistry,
     @inject(ExperimentalConfigurationManager)
     private experimentalConfigurationManager: ExperimentalConfigurationManager,
@@ -232,6 +234,29 @@ export class DashboardService implements IDisposable {
   }
 
   private updateSystemOverviewStatus(): void {
-    this.apiSender.send('dashboard:system-overview-status', this.getStatus());
+    const statusInfo = this.getStatus();
+    this.apiSender.send('dashboard:system-overview-status', statusInfo);
+
+    // Update statusbar (only for critical/progressing states)
+    this.updateSystemOverviewStatusBar(statusInfo);
+  }
+
+  private updateSystemOverviewStatusBar(statusInfo: SystemOverviewStatusInfo): void {
+    if (statusInfo.status === HEALTH_MONITOR_STATUS.CRITICAL && this.isEnhancedDashboardEnabled) {
+      const errorText = 'System issues detected';
+      this.statusBarRegistry.setEntry(
+        'system-overview-status',
+        true, // alignLeft
+        0, // priority
+        statusInfo.text ?? errorText, // text
+        errorText, // tooltip
+        'fas fa-triangle-exclamation', // icon
+        true, // enabled
+        'navigateToResources', // command to navigate to resources page
+      );
+    } else {
+      // Remove statusbar entry for healthy/stable states
+      this.statusBarRegistry.removeEntry('system-overview-status');
+    }
   }
 }

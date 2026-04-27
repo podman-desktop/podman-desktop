@@ -41,7 +41,7 @@ beforeAll(() => {
 
   Object.defineProperty(window, 'getContributedMenus', { value: getContributedMenusMock });
   Object.defineProperty(window, 'hasAuthconfigForImage', {
-    value: vi.fn().mockImplementation(() => Promise.resolve(false)),
+    value: vi.fn().mockResolvedValue(false),
   });
 });
 
@@ -61,7 +61,7 @@ test('Expect Delete Manifest to be there', async () => {
 test('Expect Push Manifest to be there', async () => {
   // Mock the showMessageBox to return 0 (yes)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   render(ManifestActions, { manifest: fakedManifest, onPushManifest: vi.fn() });
 
@@ -70,7 +70,7 @@ test('Expect Push Manifest to be there', async () => {
 });
 
 test('Expect withConfirmation to be called with delete variant when clicking Delete Manifest', async () => {
-  getContributedMenusMock.mockImplementation(() => Promise.resolve([]));
+  getContributedMenusMock.mockResolvedValue([]);
 
   const manifest: ImageInfoUI = {
     ...fakedManifest,
@@ -85,6 +85,7 @@ test('Expect withConfirmation to be called with delete variant when clicking Del
 
   await waitFor(() => {
     expect(withConfirmation).toHaveBeenCalledWith(expect.anything(), 'delete manifest my-manifest', {
+      title: 'Delete Manifest?',
       variant: 'delete',
     });
   });

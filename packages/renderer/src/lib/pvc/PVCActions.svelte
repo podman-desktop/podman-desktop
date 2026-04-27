@@ -18,6 +18,6 @@ async function deletePVC(): Promise<void> {
 
 <ListItemButtonIcon
   title="Delete PersistentVolumeClaim"
-  onClick={(): void => withConfirmation(deletePVC, `delete pvc ${pvc.name}`, { variant:'delete' } )}
+  onClick={(): void => withConfirmation(deletePVC, `delete pvc ${pvc.name}`, { title: 'Delete PVC?', variant: 'delete' })}
   detailed={detailed}
   icon={faTrash} />
