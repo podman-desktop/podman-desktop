@@ -8,9 +8,9 @@ keywords: [podman desktop, podman, containers, testing, linux, flatpak, release,
 
 # Testing a Flatpak from a release {#testing-flatpak-release}
 
-When Podman Desktop publishes a new release, a `.flatpak` bundle is attached to the [GitHub release assets](https://github.com/podman-desktop/podman-desktop/releases). This page explains how to correctly test that bundle, including when the Flatpak's sandbox permissions have changed between releases.
+Each Podman Desktop release includes a `.flatpak` bundle in the [GitHub release assets](https://github.com/podman-desktop/podman-desktop/releases). This page explains how to test that bundle correctly, including cases where sandbox permissions have changed between releases.
 
-Flatpak enforces sandbox permissions declared in the application manifest ([`io.podman_desktop.PodmanDesktop.yml`](https://github.com/flathub/io.podman_desktop.PodmanDesktop/blob/master/io.podman_desktop.PodmanDesktop.yml)). When you install Podman Desktop from Flathub, those permissions are applied automatically. However, if you install a `.flatpak` bundle over an existing Flathub installation, the old permission profile may remain cached on your system, causing unexpected failures such as filesystem access or D-Bus calls failing silently.
+When you install Podman Desktop from Flathub, the permissions declared in [`io.podman_desktop.PodmanDesktop.yml`](https://github.com/flathub/io.podman_desktop.PodmanDesktop/blob/master/io.podman_desktop.PodmanDesktop.yml) are applied automatically. Installing a `.flatpak` bundle over an existing Flathub installation can leave an older cached permission profile active, causing failures such as lost filesystem access or silent D-Bus errors.
 
 #### Prerequisites
 
@@ -39,18 +39,34 @@ Flatpak enforces sandbox permissions declared in the application manifest ([`io.
 
 2. (Optional) Remove cached application data for a completely clean environment:
 
+   For a user install:
+
    ```shell-session
    $ rm -rf ~/.var/app/io.podman_desktop.PodmanDesktop
    ```
 
+   For a system-wide install (requires elevated privileges):
+
+   ```shell-session
+   $ sudo rm -rf /var/lib/flatpak/app/io.podman_desktop.PodmanDesktop
+   ```
+
    :::caution
-   This removes all local Podman Desktop settings and data stored under the Flatpak sandbox.
+   These commands remove all local Podman Desktop settings and data stored under the Flatpak sandbox. Only run the command that matches your install scope from Step 1.
    :::
 
-3. Install the downloaded bundle:
+3. Install the downloaded bundle using the same scope as Step 1:
+
+   For a user install:
 
    ```shell-session
    $ flatpak install --user ~/Downloads/podman-desktop-<version>.flatpak
+   ```
+
+   For a system-wide install, omit `--user`:
+
+   ```shell-session
+   $ flatpak install ~/Downloads/podman-desktop-<version>.flatpak
    ```
 
 4. Run Podman Desktop:
@@ -60,6 +76,14 @@ Flatpak enforces sandbox permissions declared in the application manifest ([`io.
    ```
 
 5. Verify the active permissions match the expected manifest:
+
+   For a user install:
+
+   ```shell-session
+   $ flatpak info --user --show-permissions io.podman_desktop.PodmanDesktop
+   ```
+
+   For a system-wide install:
 
    ```shell-session
    $ flatpak info --show-permissions io.podman_desktop.PodmanDesktop
@@ -105,11 +129,20 @@ When a pull request modifies Flatpak permissions, build the Flatpak locally from
 
 #### Reverting to the Flathub release
 
-To go back to the stable Flathub version after testing:
+To go back to the stable Flathub version after testing, run the commands that match the scope you used when installing:
+
+For a user install:
 
 ```shell-session
 $ flatpak uninstall --user io.podman_desktop.PodmanDesktop
 $ flatpak install --user flathub io.podman_desktop.PodmanDesktop
+```
+
+For a system-wide install, omit `--user`:
+
+```shell-session
+$ flatpak uninstall io.podman_desktop.PodmanDesktop
+$ flatpak install flathub io.podman_desktop.PodmanDesktop
 ```
 
 #### Additional resources
