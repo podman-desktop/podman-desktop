@@ -23,8 +23,6 @@ import { beforeEach, expect, test, vi } from 'vitest';
 
 import ExpandableStateTest from './ExpandableStateTest.svelte';
 
-vi.mock(import('/@/stores/configurationProperties'));
-
 const CONFIG_KEY = 'test.expanded';
 
 beforeEach(() => {

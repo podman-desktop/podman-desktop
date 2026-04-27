@@ -47,8 +47,11 @@ export class ExpandableState {
 
     onMount(async () => {
       onDidChangeConfiguration.addEventListener(this.#configurationKey, this.#listener);
-      this.expanded = (await window.getConfigurationValue<boolean>(this.#configurationKey)) ?? true;
-      this.initialized = true;
+      try {
+        this.expanded = (await window.getConfigurationValue<boolean>(this.#configurationKey)) ?? true;
+      } finally {
+        this.initialized = true;
+      }
     });
 
     onDestroy(() => {
