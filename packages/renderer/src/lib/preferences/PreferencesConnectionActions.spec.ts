@@ -280,14 +280,11 @@ test('if kubernetes connection has delete lifecycle method, delete button has to
 
 describe('restart', () => {
   test('restart should add to restarting queue before calling stop', async () => {
-    const stopMock = vi.fn();
-    (window as unknown as Record<string, unknown>).stopProviderConnectionLifecycle = stopMock;
-
     const callOrder: string[] = [];
     const trackingAddConnectionToRestartingQueue = vi.fn().mockImplementation(() => {
       callOrder.push('addConnectionToRestartingQueue');
     });
-    stopMock.mockImplementation(async () => {
+    vi.mocked(window.stopProviderConnectionLifecycle).mockImplementation(async () => {
       callOrder.push('stopProviderConnectionLifecycle');
     });
 
@@ -303,7 +300,8 @@ describe('restart', () => {
     await fireEvent.click(restartButton);
 
     await vi.waitFor(() => {
-      expect(stopMock).toHaveBeenCalled();
+      expect(callOrder).toContain('addConnectionToRestartingQueue');
+      expect(callOrder).toContain('stopProviderConnectionLifecycle');
     });
 
     expect(trackingAddConnectionToRestartingQueue).toHaveBeenCalledOnce();
@@ -313,9 +311,6 @@ describe('restart', () => {
   });
 
   test('restart should call stop with correct parameters', async () => {
-    const stopMock = vi.fn();
-    (window as unknown as Record<string, unknown>).stopProviderConnectionLifecycle = stopMock;
-
     render(PreferencesConnectionActions, {
       connectionStatus: { status: 'started', inProgress: false },
       provider: containerProviderInfo,
@@ -328,7 +323,7 @@ describe('restart', () => {
     await fireEvent.click(restartButton);
 
     await vi.waitFor(() => {
-      expect(stopMock).toHaveBeenCalledWith(
+      expect(window.stopProviderConnectionLifecycle).toHaveBeenCalledWith(
         containerProviderInfo.internalId,
         expect.objectContaining({ name: containerConnection.name }),
         expect.any(Symbol),
