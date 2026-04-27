@@ -102,7 +102,7 @@ test('on windows setAppUserModelId should be called', async () => {
   const code = new Main(ELECTRON_APP_MOCK);
   code.main([]);
 
-  expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith(ELECTRON_APP_MOCK.name);
+  expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith('io.podman_desktop.PodmanDesktop');
 });
 
 describe('gtk-version', () => {
