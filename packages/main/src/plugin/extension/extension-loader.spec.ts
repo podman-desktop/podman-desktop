@@ -141,9 +141,13 @@ class TestExtensionLoader extends ExtensionLoader {
 
 let extensionLoader: TestExtensionLoader;
 
-const commandRegistry: CommandRegistry = {} as unknown as CommandRegistry;
+const commandRegistry: CommandRegistry = {
+  registerCommandsFromExtension: vi.fn(),
+} as unknown as CommandRegistry;
 
-const menuRegistry: MenuRegistry = {} as unknown as MenuRegistry;
+const menuRegistry: MenuRegistry = {
+  registerMenus: vi.fn(),
+} as unknown as MenuRegistry;
 
 const kubernetesGeneratorRegistry: KubeGeneratorRegistry = {} as unknown as KubeGeneratorRegistry;
 
@@ -213,16 +217,21 @@ const authenticationProviderRegistry: AuthenticationImpl = {
   registerAuthenticationProvider: vi.fn(),
 } as unknown as AuthenticationImpl;
 
-const iconRegistry: IconRegistry = {} as unknown as IconRegistry;
+const iconRegistry: IconRegistry = {
+  registerIconContribution: vi.fn(),
+} as unknown as IconRegistry;
 
 const onboardingRegistry: OnboardingRegistry = {
   getOnboarding: vi.fn(),
+  registerOnboarding: vi.fn(),
 } as unknown as OnboardingRegistry;
 
 const telemetryTrackMock = vi.fn();
 const telemetry: Telemetry = { aggregateTrack: vi.fn(), track: telemetryTrackMock } as unknown as Telemetry;
 
-const viewRegistry: ViewRegistry = {} as unknown as ViewRegistry;
+const viewRegistry: ViewRegistry = {
+  registerViews: vi.fn(),
+} as unknown as ViewRegistry;
 
 const context: Context = new Context(apiSender);
 
@@ -400,6 +409,14 @@ beforeEach(() => {
   telemetryTrackMock.mockResolvedValue(undefined);
   vi.clearAllMocks();
 
+  configurationRegistryGetConfigurationMock.mockReturnValue({
+    get: vi.fn().mockImplementation((key: string, defaultValue?: unknown) => {
+      if (key === 'disabled') {
+        return [];
+      }
+      return defaultValue;
+    }),
+  });
   vi.mocked(extensionDevelopmentFolder).getDevelopmentFolders.mockReturnValue([]);
 });
 
@@ -733,16 +750,111 @@ test('Verify extension load', async () => {
     dispose: vi.fn(),
   });
 
-  expect(telemetry.track).toBeCalledWith(
-    'loadExtension.error',
-    expect.objectContaining({ extensionId: id, extensionVersion: '1.1' }),
-  );
-
   expect(extensionDevelopmentFolder.addExternalExtensionId).toBeCalledWith(id);
 
   // remove extension
   await extensionLoader.removeExtension(id);
   expect(extensionDevelopmentFolder.removeExternalExtensionId).toBeCalledWith(id);
+});
+
+test('Verify disabled extension skips registering contributions and runtime activation', async () => {
+  const id = 'extension.disabled';
+
+  configurationRegistryGetConfigurationMock.mockReturnValue({
+    get: vi.fn().mockImplementation((key: string, defaultValue?: unknown) => {
+      if (key === 'disabled') {
+        return [id];
+      }
+      return defaultValue;
+    }),
+  });
+
+  const loadRuntimeSpy = vi.spyOn(extensionLoader, 'loadRuntime' as keyof TestExtensionLoader);
+
+  const subscriptions: IDisposable[] = [];
+
+  await extensionLoader.loadExtension({
+    id: id,
+    name: 'disabled-ext',
+    path: 'dummy',
+    api: {} as typeof containerDesktopAPI,
+    mainPath: 'main.js',
+    removable: true,
+    devMode: false,
+    manifest: {
+      version: '1.0',
+      contributes: {
+        commands: [{ command: 'ext.cmd', title: 'Test Command' }],
+        menus: { 'dashboard/image': [{ command: 'ext.cmd' }] },
+        icons: { 'ext-icon': { default: 'icon.png' } },
+        themes: [{ id: 'ext-theme', name: 'Theme', parent: 'dark', colors: {} }],
+        views: { icons: [{ id: 'ext-view', name: 'View', when: '' }] },
+        onboarding: { title: 'Onboarding', steps: [] },
+      },
+    } as unknown as ExtensionManifest,
+    subscriptions: subscriptions,
+    readme: '',
+    dispose: vi.fn(),
+  });
+
+  expect(commandRegistry.registerCommandsFromExtension).not.toHaveBeenCalled();
+  expect(menuRegistry.registerMenus).not.toHaveBeenCalled();
+  expect(iconRegistry.registerIconContribution).not.toHaveBeenCalled();
+  expect(colorRegistry.registerExtensionThemes).not.toHaveBeenCalled();
+  expect(viewRegistry.registerViews).not.toHaveBeenCalled();
+  expect(onboardingRegistry.registerOnboarding).not.toHaveBeenCalled();
+  expect(notificationRegistry.registerExtension).not.toHaveBeenCalled();
+
+  expect(loadRuntimeSpy).not.toHaveBeenCalled();
+});
+
+test('Verify enabled extension registers contributions and activates runtime', async () => {
+  const id = 'extension.enabled';
+
+  vi.mocked(commandRegistry.registerCommandsFromExtension).mockReturnValue(Disposable.create(() => {}));
+  vi.mocked(menuRegistry.registerMenus).mockReturnValue(Disposable.create(() => {}));
+  vi.mocked(colorRegistry.registerExtensionThemes).mockReturnValue(Disposable.create(() => {}));
+  vi.mocked(viewRegistry.registerViews).mockReturnValue(Disposable.create(() => {}));
+  vi.mocked(onboardingRegistry.registerOnboarding).mockReturnValue(Disposable.create(() => {}));
+  vi.mocked(notificationRegistry.registerExtension).mockReturnValue(Disposable.create(() => {}));
+
+  const subscriptions: IDisposable[] = [];
+
+  await extensionLoader.loadExtension({
+    id: id,
+    name: 'enabled-ext',
+    path: 'dummy',
+    api: {} as typeof containerDesktopAPI,
+    mainPath: '',
+    removable: true,
+    devMode: false,
+    manifest: {
+      version: '1.0',
+      contributes: {
+        commands: [{ command: 'ext.cmd', title: 'Test Command' }],
+        menus: { 'dashboard/image': [{ command: 'ext.cmd' }] },
+        icons: { 'ext-icon': { default: 'icon.png' } },
+        themes: [{ id: 'ext-theme', name: 'Theme', parent: 'dark', colors: {} }],
+        views: { icons: [{ id: 'ext-view', name: 'View', when: '' }] },
+        onboarding: { title: 'Onboarding', steps: [] },
+      },
+    } as unknown as ExtensionManifest,
+    subscriptions: subscriptions,
+    readme: '',
+    dispose: vi.fn(),
+  });
+
+  expect(commandRegistry.registerCommandsFromExtension).toHaveBeenCalledWith(id, [
+    { command: 'ext.cmd', title: 'Test Command' },
+  ]);
+  expect(menuRegistry.registerMenus).toHaveBeenCalledWith({ 'dashboard/image': [{ command: 'ext.cmd' }] });
+  expect(iconRegistry.registerIconContribution).toHaveBeenCalled();
+  expect(colorRegistry.registerExtensionThemes).toHaveBeenCalled();
+  expect(viewRegistry.registerViews).toHaveBeenCalledWith(id, {
+    icons: [{ id: 'ext-view', name: 'View', when: '' }],
+  });
+  expect(onboardingRegistry.registerOnboarding).toHaveBeenCalled();
+  expect(notificationRegistry.registerExtension).toHaveBeenCalledWith(id);
 });
 
 test('Verify extension do not add configuration to subscriptions', async () => {
