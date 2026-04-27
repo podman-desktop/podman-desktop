@@ -274,13 +274,21 @@ Before testing a locally built or release `.flatpak`:
    flatpak uninstall --user io.podman_desktop.PodmanDesktop
    ```
 
-2. Install the bundle:
+   If Podman Desktop was installed system-wide, omit `--user`.
+
+2. (Optional) Remove cached application data if you need a completely clean state:
+
+   ```sh
+   rm -rf ~/.var/app/io.podman_desktop.PodmanDesktop
+   ```
+
+3. Install the bundle:
 
    ```sh
    flatpak install --user dist/podman-desktop-<version>.flatpak
    ```
 
-3. Verify the active permissions match the expected manifest:
+4. Verify the active permissions match the expected manifest:
 
    ```sh
    flatpak info --show-permissions io.podman_desktop.PodmanDesktop

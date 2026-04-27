@@ -37,7 +37,7 @@ Flatpak enforces sandbox permissions declared in the application manifest ([`io.
    $ flatpak uninstall io.podman_desktop.PodmanDesktop
    ```
 
-1. (Optional) Remove cached application data for a completely clean environment:
+2. (Optional) Remove cached application data for a completely clean environment:
 
    ```shell-session
    $ rm -rf ~/.var/app/io.podman_desktop.PodmanDesktop
@@ -47,19 +47,19 @@ Flatpak enforces sandbox permissions declared in the application manifest ([`io.
    This removes all local Podman Desktop settings and data stored under the Flatpak sandbox.
    :::
 
-1. Install the downloaded bundle:
+3. Install the downloaded bundle:
 
    ```shell-session
    $ flatpak install --user ~/Downloads/podman-desktop-<version>.flatpak
    ```
 
-1. Run Podman Desktop:
+4. Run Podman Desktop:
 
    ```shell-session
    $ flatpak run io.podman_desktop.PodmanDesktop
    ```
 
-1. Verify the active permissions match the expected manifest:
+5. Verify the active permissions match the expected manifest:
 
    ```shell-session
    $ flatpak info --show-permissions io.podman_desktop.PodmanDesktop
@@ -78,9 +78,9 @@ When a pull request modifies Flatpak permissions, build the Flatpak locally from
    $ cd io.podman_desktop.PodmanDesktop
    ```
 
-1. Apply your changes to `io.podman_desktop.PodmanDesktop.yml`, for example, add or update `finish-args` entries.
+2. Apply your changes to `io.podman_desktop.PodmanDesktop.yml`, for example, add or update `finish-args` entries.
 
-1. Build and install locally:
+3. Build and install locally:
 
    ```shell-session
    $ flatpak run org.flatpak.Builder \
@@ -91,13 +91,13 @@ When a pull request modifies Flatpak permissions, build the Flatpak locally from
        io.podman_desktop.PodmanDesktop.yml
    ```
 
-1. Run Podman Desktop and verify the new permissions are in effect:
+4. Run Podman Desktop and verify the new permissions are in effect:
 
    ```shell-session
    $ flatpak run io.podman_desktop.PodmanDesktop
    ```
 
-1. Check the active permissions:
+5. Check the active permissions:
 
    ```shell-session
    $ flatpak info --show-permissions io.podman_desktop.PodmanDesktop
