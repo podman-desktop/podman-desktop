@@ -262,6 +262,32 @@ This will create a binary according to your local system and output it to the `d
 > codesign --force --deep --sign - "dist/mac-arm64/Podman Desktop.app"
 > ```
 
+### Step 9. Testing the Flatpak (Linux)
+
+On Linux, `pnpm compile:current` produces a `.flatpak` bundle in the `dist/` folder. When the Flatpak sandbox **permissions** have changed (for example, new `finish-args` entries in the [Flathub manifest](https://github.com/flathub/io.podman_desktop.PodmanDesktop/blob/master/io.podman_desktop.PodmanDesktop.yml)), installing a bundle over an existing Flathub installation can silently keep the old cached permissions, leading to unexpected failures.
+
+Before testing a locally built or release `.flatpak`:
+
+1. Uninstall any existing installation so the old permission profile is removed:
+
+   ```sh
+   flatpak uninstall --user io.podman_desktop.PodmanDesktop
+   ```
+
+2. Install the bundle:
+
+   ```sh
+   flatpak install --user dist/podman-desktop-<version>.flatpak
+   ```
+
+3. Verify the active permissions match the expected manifest:
+
+   ```sh
+   flatpak info --show-permissions io.podman_desktop.PodmanDesktop
+   ```
+
+For full instructions — including how to build from the Flathub manifest to test permission changes before a release — see the [Testing a Flatpak from a release](https://podman-desktop.io/docs/installation/linux-install/testing-flatpak-from-release) guide.
+
 ## Submitting Pull Requests
 
 ### Process
