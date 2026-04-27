@@ -25,12 +25,15 @@ import userEvent from '@testing-library/user-event';
 import { type Component, type ComponentProps, tick } from 'svelte';
 import { get } from 'svelte/store';
 /* eslint-enable import/no-duplicates */
+import { router } from 'tinro';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { containersInfos } from '/@/stores/containers';
 import { providerInfos } from '/@/stores/providers';
 
 import ContainerList from './ContainerList.svelte';
+
+vi.mock(import('tinro'));
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -1195,5 +1198,83 @@ test('Expect environment dropdown to filter containers by selected environment',
   await waitFor(() => {
     expect(screen.getByText('podman-container')).toBeInTheDocument();
     expect(screen.queryByText('docker-container')).not.toBeInTheDocument();
+  });
+});
+
+test('Expect create container dialog opens when Create button is clicked', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+  const createButton = screen.getByTitle('Create a container');
+  await fireEvent.click(createButton);
+
+  await waitFor(() => {
+    expect(screen.getByRole('dialog', { name: 'Create a new container' })).toBeInTheDocument();
+  });
+});
+
+test('Expect create container dialog has secondary button before primary button', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const createButton = screen.getByTitle('Create a container');
+  await fireEvent.click(createButton);
+
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
+  const dialogButtons = within(dialog).getAllByRole('button');
+  const existingImageIndex = dialogButtons.findIndex(b => b.textContent?.includes('Existing image'));
+  const containerfileIndex = dialogButtons.findIndex(b => b.textContent?.includes('Containerfile or Dockerfile'));
+
+  expect(existingImageIndex).toBeGreaterThanOrEqual(0);
+  expect(containerfileIndex).toBeGreaterThanOrEqual(0);
+  expect(existingImageIndex).toBeLessThan(containerfileIndex);
+});
+
+test('Expect clicking Containerfile button navigates to build image page', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const createButton = screen.getByTitle('Create a container');
+  await fireEvent.click(createButton);
+
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
+  const containerfileButton = within(dialog).getByRole('button', { name: 'Containerfile or Dockerfile' });
+  await fireEvent.click(containerfileButton);
+
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/images/build');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('Expect clicking Existing image button closes dialog', async () => {
+  window.dispatchEvent(new CustomEvent('extensions-already-started'));
+  window.dispatchEvent(new CustomEvent('provider-lifecycle-change'));
+  window.dispatchEvent(new CustomEvent('tray:update-provider'));
+
+  await waitFor(() => expect(get(providerInfos)).not.toHaveLength(0));
+  await waitRender({});
+
+  const createButton = screen.getByTitle('Create a container');
+  await fireEvent.click(createButton);
+
+  const dialog = await waitFor(() => screen.getByRole('dialog', { name: 'Create a new container' }));
+  const existingImageButton = within(dialog).getByRole('button', { name: 'Existing image' });
+  await fireEvent.click(existingImageButton);
+
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
