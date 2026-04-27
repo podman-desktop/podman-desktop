@@ -46,7 +46,9 @@ When you install Podman Desktop from Flathub, the permissions declared in [`io.p
    :::caution
    This removes all local Podman Desktop settings and data stored under the Flatpak sandbox.
    Flatpak stores per-user app data in `~/.var/app/` for both user and system-wide installs.
-   If multiple users have run Podman Desktop on the same machine, repeat this command for each user profile.
+   If multiple users have run Podman Desktop on the same machine, each user must run this command
+   while logged in as themselves, or an administrator can clean another user's profile with
+   `sudo -u <username> rm -rf /home/<username>/.var/app/io.podman_desktop.PodmanDesktop`.
    :::
 
 3. Install the downloaded bundle using the same scope as Step 1:
@@ -64,6 +66,14 @@ When you install Podman Desktop from Flathub, the permissions declared in [`io.p
    ```
 
 4. Run Podman Desktop:
+
+   For a user install:
+
+   ```shell-session
+   $ flatpak run io.podman_desktop.PodmanDesktop
+   ```
+
+   For a system-wide install, the command is the same:
 
    ```shell-session
    $ flatpak run io.podman_desktop.PodmanDesktop
