@@ -280,6 +280,8 @@ export class ExtensionLoader implements IAsyncDisposable {
       update: extension.update,
       readme: extension.readme,
       icon: extension.manifest.icon ? this.updateImage(extension.manifest.icon, extension.path) : undefined,
+      repository: extension.manifest.repository,
+      homepage: extension.manifest.homepage,
     }));
   }
 
