@@ -20,11 +20,13 @@ import { env, provider } from '@podman-desktop/api';
 import type { DockerExtensionApi } from '@podman-desktop/docker-extension-api';
 
 export function toDockerContextName(name: string): string {
-  return env.isWindows ? (name.startsWith('podman-') ? name : `podman-${name}`) : 'podman';
+  if (env.isMac) return 'podman';
+  return name.startsWith('podman-') ? name : `podman-${name}`;
 }
 
 export function toDescription(name: string): string {
-  return env.isWindows ? `Podman machine ${name}` : 'Podman';
+  if (env.isMac) return 'Podman';
+  return `Podman machine ${name}`;
 }
 
 export function toEndpoint(socketPath: string): string {
