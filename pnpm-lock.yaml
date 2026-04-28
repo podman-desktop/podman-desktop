@@ -207,7 +207,7 @@ importers:
         specifier: ^3.8.3
         version: 3.8.3
       typescript:
-        specifier: 5.9.3
+        specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
         specifier: ^8.59.1
