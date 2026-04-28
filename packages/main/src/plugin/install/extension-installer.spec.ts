@@ -23,7 +23,7 @@ import type { ExtensionInfo } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { CatalogFetchableExtension } from '@podman-desktop/core-api/extension-catalog';
 import type { IpcMain, IpcMainEvent } from 'electron';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ContributionManager } from '/@/plugin/contribution-manager.js';
 import type { Directories } from '/@/plugin/directories.js';
@@ -31,6 +31,7 @@ import type { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-c
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import type { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import type { ImageRegistry } from '/@/plugin/image-registry.js';
+import type { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import type { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 import { ExtensionInstaller } from './extension-installer.js';
@@ -83,11 +84,22 @@ const directories = {
 const contributionManager = {} as unknown as ContributionManager;
 const ipcMainOnMock = vi.fn();
 
+const createTaskMock = vi.fn();
+const taskManager = {
+  createTask: createTaskMock,
+} as unknown as TaskManager;
+
 vi.mock(import('node:fs'));
 vi.mock(import('/@/plugin/docker-extension/docker-desktop-installer.js'));
 
 beforeEach(() => {
   vi.resetAllMocks();
+
+  createTaskMock.mockReturnValue({
+    status: 'in-progress',
+    progress: undefined,
+    error: undefined,
+  });
 
   vi.mocked(rmSync).mockReturnValue(undefined);
   vi.mocked(directories.getPluginsDirectory).mockReturnValue('/fake/plugins/directory');
@@ -101,7 +113,40 @@ beforeEach(() => {
     directories,
     contributionManager,
     ipcMainOnMock,
+    taskManager,
   );
+});
+
+describe('installFromImage task lifecycle', () => {
+  const imageToPull = 'fake.io/fake-image:fake-tag';
+
+  test('should create a task with the image name on success', async () => {
+    getImageConfigLabelsMock.mockResolvedValueOnce({
+      'org.opencontainers.image.title': 'title',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'io.podman-desktop.api.version': '1.0.0',
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(createTaskMock).toHaveBeenCalledWith({ title: `Installing extension ${imageToPull}` });
+    const task = createTaskMock.mock.results[0]?.value;
+    expect(task.status).toBe('success');
+  });
+
+  test('should mark task as failed when installation errors', async () => {
+    getImageConfigLabelsMock.mockRejectedValueOnce(new Error('network failure'));
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    expect(createTaskMock).toHaveBeenCalledWith({ title: `Installing extension ${imageToPull}` });
+    const task = createTaskMock.mock.results[0]?.value;
+    expect(task.error).toBe('Error while analyzing image: Error: network failure');
+  });
 });
 
 test('should install an image if labels are correct', async () => {

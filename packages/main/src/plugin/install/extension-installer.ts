@@ -37,6 +37,7 @@ import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalo
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
+import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
 
 @injectable()
@@ -60,6 +61,8 @@ export class ExtensionInstaller {
     contributionManager: ContributionManager,
     @inject(IPCMainOn)
     private readonly ipcMainOn: IPCMainOn,
+    @inject(TaskManager)
+    private taskManager: TaskManager,
   ) {
     this.#dockerDesktopInstaller = new DockerDesktopInstaller(contributionManager);
   }
@@ -302,6 +305,42 @@ export class ExtensionInstaller {
   }
 
   async installFromImage(
+    sendLog: (message: string) => void,
+    sendError: (message: string) => void,
+    sendEnd: (message: string) => void,
+    imageName: string,
+    extensionAnalyzed?: (extension: AnalyzedExtension) => void,
+    catalogExtensionId?: string,
+  ): Promise<void> {
+    const task = this.taskManager.createTask({
+      title: `Installing extension ${imageName}`,
+    });
+
+    const wrappedSendError = (message: string): void => {
+      sendError(message);
+      task.error = message;
+    };
+
+    try {
+      await this.doInstallFromImage(
+        sendLog,
+        wrappedSendError,
+        sendEnd,
+        imageName,
+        extensionAnalyzed,
+        catalogExtensionId,
+      );
+    } catch (error: unknown) {
+      task.error = String(error);
+      throw error;
+    } finally {
+      if (!task.error) {
+        task.status = 'success';
+      }
+    }
+  }
+
+  protected async doInstallFromImage(
     sendLog: (message: string) => void,
     sendError: (message: string) => void,
     sendEnd: (message: string) => void,
