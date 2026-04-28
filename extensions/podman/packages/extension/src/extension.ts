@@ -298,7 +298,7 @@ async function doUpdateMachines(
           const podmanMachineInfo = podmanMachinesInfo.get(machineName);
           const { stdout: socket } = await execPodman(
             ['machine', 'inspect', '--format', '{{.ConnectionInfo.PodmanSocket.Path}}', machineName],
-            podmanMachineInfo?.vmType,
+            await resolveContainerMachineProvider(podmanMachineInfo?.vmType),
           );
           socketPath = socket;
         }
@@ -408,7 +408,10 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
         try {
           const connectionName = isRootful ? `${runningMachine.Name}${ROOTFUL_SUFFIX}` : runningMachine.Name;
           // make it the default to run the info command
-          await execPodman(['system', 'connection', 'default', connectionName], runningMachine.VMType);
+          await execPodman(
+            ['system', 'connection', 'default', connectionName],
+            await resolveContainerMachineProvider(runningMachine.VMType),
+          );
         } catch (error) {
           // eslint-disable-next-line quotes
           console.error("Error running 'podman system connection default': ", error);
@@ -445,7 +448,10 @@ export async function checkDefaultMachine(machines: MachineJSON[]): Promise<void
       try {
         const connectionName = machineIsRootful ? `${runningMachine.Name}${ROOTFUL_SUFFIX}` : runningMachine.Name;
         // make it the default to run the info command
-        await execPodman(['system', 'connection', 'default', connectionName], runningMachine.VMType);
+        await execPodman(
+          ['system', 'connection', 'default', connectionName],
+          await resolveContainerMachineProvider(runningMachine.VMType),
+        );
       } catch (error) {
         // eslint-disable-next-line quotes
         console.error("Error running 'podman system connection default': ", error);
@@ -477,7 +483,10 @@ async function isRootfulMachine(machineDetails: MachineJSON | MachineInfo): Prom
     vmType = machineDetails.VMType;
   }
   try {
-    const { stdout: machineInspectJson } = await execPodman(['machine', 'inspect', machineName], vmType);
+    const { stdout: machineInspectJson } = await execPodman(
+      ['machine', 'inspect', machineName],
+      await resolveContainerMachineProvider(vmType),
+    );
     const machinesInspect = JSON.parse(machineInspectJson);
     // find the machine name in the array
     const machineInspect = machinesInspect.find((machine: { Name: string }) => machine.Name === machineName);
@@ -765,9 +774,13 @@ export async function registerProviderFor(
       await stopMachine(provider, machineInfo, context, logger);
     },
     delete: async (logger): Promise<void> => {
-      await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
-        logger,
-      });
+      await execPodman(
+        ['machine', 'rm', '-f', machineInfo.name],
+        await resolveContainerMachineProvider(machineInfo.vmType),
+        {
+          logger,
+        },
+      );
     },
   };
   // support edit only on MacOS and Windows with limited editing capabilities for HyperV and WSL machines
@@ -799,7 +812,7 @@ export async function registerProviderFor(
           if (state === 'started') {
             await lifecycle.stop?.(context, logger);
           }
-          await execPodman(args, machineInfo.vmType, {
+          await execPodman(args, await resolveContainerMachineProvider(machineInfo.vmType), {
             logger: new LoggerDelegator(context, logger),
           });
 
@@ -883,7 +896,11 @@ export async function startMachine(
       runOptions.detached = true;
     }
 
-    await execPodman(['machine', 'start', machineInfo.name], machineInfo.vmType, runOptions);
+    await execPodman(
+      ['machine', 'start', machineInfo.name],
+      await resolveContainerMachineProvider(machineInfo.vmType),
+      runOptions,
+    );
 
     // Provision /etc/containers/enable-rosetta if needed (macOS Tahoe + AppleHV + Podman 5.6+).
     // If the file was just created, restart the machine so the binfmt_misc handler registers.
@@ -929,7 +946,7 @@ export async function stopMachine(
   const telemetryRecords: Record<string, unknown> = {};
   telemetryRecords.provider = machineInfo.vmType;
   try {
-    await execPodman(['machine', 'stop', machineInfo.name], machineInfo.vmType, {
+    await execPodman(['machine', 'stop', machineInfo.name], await resolveContainerMachineProvider(machineInfo.vmType), {
       logger: new LoggerDelegator(context, logger),
     });
     provider.updateStatus('stopped');
@@ -1791,12 +1808,43 @@ async function stopAutoStartedMachine(): Promise<void> {
     return;
   }
   console.log('stopping autostarted machine', autoMachineName);
-  await execPodman(['machine', 'stop', autoMachineName], currentMachine.VMType);
+  await execPodman(['machine', 'stop', autoMachineName], await resolveContainerMachineProvider(currentMachine.VMType));
+}
+
+/**
+ * Returns undefined when Podman >= 6.0 because CONTAINERS_MACHINE_PROVIDER is no longer needed
+ * to route machine operations (machine names are globally unique in 6.0+).
+ */
+async function resolveContainerMachineProvider(vmType: string | undefined): Promise<string | undefined> {
+  if (!vmType) return undefined;
+  const installedPodman = await podmanBinary.getBinaryInfo();
+  if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {
+    return undefined;
+  }
+  return vmType;
 }
 
 export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const installedPodman = await podmanBinary.getBinaryInfo();
 
+  // For Podman >= 6.0, machine list returns all machines across all providers by default,
+  // so a single call without specifying a provider is sufficient.
+  if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {
+    let hypervEnabled = false;
+    wslEnabled = await winPlatform.isWSLEnabled();
+    if (await winPlatform.isHyperVEnabled()) {
+      hypervEnabled = true;
+    }
+    updateWSLHyperVEnabledContextValue(wslEnabled && hypervEnabled);
+
+    const machineListOutput = await getJSONMachineListByProvider();
+    return {
+      list: JSON.parse(machineListOutput.stdout) as MachineJSON[],
+      error: machineListOutput.stderr,
+    };
+  }
+
+  // For Podman < 6.0, iterate per provider to collect all machines.
   const containerMachineProviders: (string | undefined)[] = [];
   // if libkrun is supported we want to show both applehv and libkrun machines
   if (installedPodman && isLibkrunSupported(installedPodman.version)) {
@@ -1914,6 +1962,14 @@ export function setWSLEnabled(enabled: boolean): void {
 
 export function isPodman5OrLater(podmanVersion: string): boolean {
   return compare(podmanVersion, '5.0.0') >= 0;
+}
+
+const PODMAN_MINIMUM_VERSION_FOR_MACHINE_LIST_ALL_PROVIDERS = '6.0.0';
+
+// For Podman >= 6.0, `podman machine list` returns all machines across all providers by default
+// (--all-providers defaults to true), so per-provider iteration is no longer needed.
+export function isMachineListAllProvidersSupported(podmanVersion: string): boolean {
+  return compare(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_MACHINE_LIST_ALL_PROVIDERS) >= 0;
 }
 
 export function sendTelemetryRecords(

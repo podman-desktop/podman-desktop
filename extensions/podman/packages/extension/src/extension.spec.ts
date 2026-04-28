@@ -3397,6 +3397,134 @@ test('getJSONMachineList should get machines from hyperv and wsl if both are ena
   expect(execPodmanSpy).toHaveBeenNthCalledWith(2, ['machine', 'list', '--format', 'json'], 'hyperv');
 });
 
+describe('isMachineListAllProvidersSupported', () => {
+  test.each([
+    { version: '6.0.0', expected: true },
+    { version: '6.1.0', expected: true },
+    { version: '7.0.0', expected: true },
+    { version: '5.9.9', expected: false },
+    { version: '5.0.0', expected: false },
+    { version: '4.0.0', expected: false },
+  ])('returns $expected for podman $version', ({ version, expected }) => {
+    expect(extension.isMachineListAllProvidersSupported(version)).toBe(expected);
+  });
+});
+
+test('getJSONMachineList should call podman machine list once without provider for podman >= 6.0 on macOS', async () => {
+  vi.mocked(extensionApi.env).isMac = true;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+
+  const fakeJSON: MachineJSON[] = [
+    {
+      Name: 'podman-machine-default',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: true,
+      Starting: false,
+      Default: true,
+      VMType: VMTYPE.APPLEHV,
+      Port: 123,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+    {
+      Name: 'podman-machine-libkrun',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: false,
+      Starting: false,
+      Default: false,
+      VMType: VMTYPE.LIBKRUN,
+      Port: 456,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+  ];
+  const execPodmanSpy = vi.spyOn(util, 'execPodman').mockResolvedValue({
+    stdout: JSON.stringify(fakeJSON),
+    stderr: '',
+    command: '',
+  });
+
+  const result = await extension.getJSONMachineList();
+
+  expect(execPodmanSpy).toHaveBeenCalledOnce();
+  expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'list', '--format', 'json'], undefined);
+  expect(result.list).toHaveLength(2);
+  expect(result.list[0].Name).toBe('podman-machine-default');
+  expect(result.list[1].Name).toBe('podman-machine-libkrun');
+});
+
+test('getJSONMachineList should call podman machine list once without provider for podman >= 6.0 on Windows', async () => {
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.1.0' });
+  vi.mocked(WIN_PLATFORM_MOCK.isWSLEnabled).mockResolvedValue(true);
+  vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(true);
+
+  const fakeJSON: MachineJSON[] = [
+    {
+      Name: 'podman-machine-wsl',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: true,
+      Starting: false,
+      Default: true,
+      VMType: VMTYPE.WSL,
+      Port: 123,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+    {
+      Name: 'podman-machine-hyperv',
+      CPUs: 2,
+      Memory: '1048000000',
+      DiskSize: '250000000000',
+      Running: false,
+      Starting: false,
+      Default: false,
+      VMType: VMTYPE.HYPERV,
+      Port: 456,
+      RemoteUsername: 'user',
+      IdentityPath: '/path/to/key',
+    },
+  ];
+  const execPodmanSpy = vi.spyOn(util, 'execPodman').mockResolvedValue({
+    stdout: JSON.stringify(fakeJSON),
+    stderr: '',
+    command: '',
+  });
+
+  const result = await extension.getJSONMachineList();
+
+  expect(execPodmanSpy).toHaveBeenCalledOnce();
+  expect(execPodmanSpy).toHaveBeenCalledWith(['machine', 'list', '--format', 'json'], undefined);
+  expect(result.list).toHaveLength(2);
+});
+
+test('getJSONMachineList should update WSL/HyperV context even for podman >= 6.0 on Windows', async () => {
+  // Reset wslAndHypervEnabledContextValue to false so the update triggers setValue
+  extension.updateWSLHyperVEnabledContextValue(false);
+  vi.clearAllMocks();
+
+  vi.mocked(extensionApi.env).isWindows = true;
+  vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValue({ version: '6.0.0' });
+  vi.mocked(WIN_PLATFORM_MOCK.isWSLEnabled).mockResolvedValue(true);
+  vi.mocked(WIN_PLATFORM_MOCK.isHyperVEnabled).mockResolvedValue(true);
+
+  vi.spyOn(util, 'execPodman').mockResolvedValue({
+    stdout: JSON.stringify([]),
+    stderr: '',
+    command: '',
+  });
+
+  await extension.getJSONMachineList();
+
+  expect(extensionApi.context.setValue).toBeCalledWith(WSL_HYPERV_ENABLED_KEY, true);
+});
+
 describe('updateWSLHyperVEnabledValue', () => {
   beforeEach(() => {
     extension.updateWSLHyperVEnabledContextValue(true);
