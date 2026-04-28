@@ -1815,7 +1815,7 @@ async function stopAutoStartedMachine(): Promise<void> {
  * Returns undefined when Podman >= 6.0 because CONTAINERS_MACHINE_PROVIDER is no longer needed
  * to route machine operations (machine names are globally unique in 6.0+).
  */
-async function resolveContainerMachineProvider(vmType: string | undefined): Promise<string | undefined> {
+export async function resolveContainerMachineProvider(vmType: string | undefined): Promise<string | undefined> {
   if (!vmType) return undefined;
   const installedPodman = await podmanBinary.getBinaryInfo();
   if (installedPodman && isMachineListAllProvidersSupported(installedPodman.version)) {

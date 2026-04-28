@@ -26,7 +26,7 @@ import { commands, env, window } from '@podman-desktop/api';
 import mustache from 'mustache';
 import * as toml from 'smol-toml';
 
-import { getJSONMachineList } from '/@/extension';
+import { getJSONMachineList, resolveContainerMachineProvider } from '/@/extension';
 import { execPodman } from '/@/utils/util';
 
 import { DefaultRegistryLoader } from './default-registry-loader';
@@ -121,7 +121,7 @@ export class RegistryConfigurationImpl implements RegistryConfiguration {
       ];
 
       // check if the file is mounted
-      const result = await execPodman(commandLineArgs, machine.VMType);
+      const result = await execPodman(commandLineArgs, await resolveContainerMachineProvider(machine.VMType));
       if (!result.stdout) {
         const warningMessage = `The registries configuration file is not mounted in the Podman VM ${machine.Name} in /etc/containers/registries.conf.d/ folder. Cannot continue. Recreate the machine using ${env.appName}.`;
         if (showWindowPopupError) {
