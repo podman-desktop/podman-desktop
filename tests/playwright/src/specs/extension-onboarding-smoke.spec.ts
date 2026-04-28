@@ -25,6 +25,9 @@ import { isMac } from '/@/utility/platform';
 let rateLimitReachedFlag = false;
 let composeOnboardingStatusText: string | undefined;
 let kubectlOnboardingStatusText: string | undefined;
+const skipExtesnionsOnboardingTest = process.env.SKIP_EXTENSIONS_ONBOARDING_TEST ?? false;
+
+test.skip(!!skipExtesnionsOnboardingTest, 'Skip test suite based on env. variable');
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {

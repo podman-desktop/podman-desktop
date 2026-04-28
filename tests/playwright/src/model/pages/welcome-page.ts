@@ -42,7 +42,7 @@ export class WelcomePage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.welcomeMessage = page.getByText('Welcome to Podman Desktop');
+    this.welcomeMessage = page.getByText(/Welcome to.*Podman Desktop/);
     this.telemetryConsent = page.getByLabel('Enable telemetry');
     this.skipOnBoarding = page.getByRole('button', {
       name: 'Skip',

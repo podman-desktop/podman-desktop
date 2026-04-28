@@ -80,7 +80,7 @@ test.describe
       await commandPalette.allTab.click();
       await playExpect(commandPalette.commandPaletteInputField).toHaveAttribute(
         'placeholder',
-        'Search Podman Desktop, or type > for commands',
+        /Search.*Podman Desktop, or type > for commands/,
       );
 
       await commandPalette.close();

@@ -50,6 +50,11 @@ test.afterAll(async ({ runner, page }) => {
   }
 });
 
+test.skip(
+  process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+  'Test is not supported with CDP runner',
+);
+
 test.describe
   .serial(`Play yaml file to pull images and create pod for app ${podAppName}`, {
     tag: ['@smoke', '@windows_sanity'],
