@@ -61,5 +61,6 @@ export class ExpandableState {
 
   async toggle(value: boolean): Promise<void> {
     await window.updateConfigurationValue(this.#configurationKey, value);
+    await window.telemetryTrack(`dashboard.healthCard.${value ? 'expanded' : 'collapsed'}`);
   }
 }

@@ -80,6 +80,7 @@ async function handleActionButtonClick(): Promise<void> {
     const canStart = (connection.status === 'stopped' || !!connection.error) && hasStartLifecycle(provider);
     if (canStart) {
       await startConnection(provider.internalId, $state.snapshot(connection));
+      await window.telemetryTrack('dashboard.healthCard.provider.started', { providerName: provider.name });
     } else {
       navigateToConnection();
     }

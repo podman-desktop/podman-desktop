@@ -7,6 +7,7 @@ import {
   type ProviderInfo,
 } from '@podman-desktop/core-api';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
+import { onMount } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
@@ -44,6 +45,18 @@ let nonContainerConnectionsWithProvider = $derived.by(() => {
     }
   }
   return result;
+});
+
+onMount(async () => {
+  const allConnections = [
+    ...containerConnectionsWithProvider.map(c => c.connection),
+    ...nonContainerConnectionsWithProvider.map(c => c.connection),
+  ];
+  await window.telemetryTrack('dashboard.healthCard.viewed', {
+    itemCount: allConnections.length,
+    healthyCount: allConnections.filter(c => c.status === 'started' && !c.error).length,
+    issueCount: allConnections.filter(c => c.error).length,
+  });
 });
 
 // Go through all containers and find the matching label to a connection name.

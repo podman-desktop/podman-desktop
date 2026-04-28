@@ -137,6 +137,19 @@ describe('configured provider', () => {
     await vi.waitFor(() => expect(window.startProvider).toHaveBeenCalledWith('podman-internal'));
   });
 
+  test('should track dashboard.healthCard.provider.started telemetry when starting a provider', async () => {
+    render(SystemOverviewProviderSetup, { provider: configuredProvider });
+
+    const button = screen.getByRole('button', { name: 'Start Podman' });
+    await fireEvent.click(button);
+
+    await vi.waitFor(() =>
+      expect(window.telemetryTrack).toHaveBeenCalledWith('dashboard.healthCard.provider.started', {
+        providerName: 'Podman',
+      }),
+    );
+  });
+
   test('should render View button instead of Start for remote machine without lifecycle methods', async () => {
     const remoteProvider: ProviderInfo = {
       ...baseProvider,
