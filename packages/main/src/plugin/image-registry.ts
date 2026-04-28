@@ -536,7 +536,7 @@ export class ImageRegistry {
   async downloadAndExtractImage(
     imageName: string,
     destFolder: string,
-    logger: (message: string) => void,
+    logger: (event: { message: string; progress: number }) => void,
   ): Promise<void> {
     const imageData = this.extractImageDataFromImageName(imageName);
 
@@ -608,7 +608,7 @@ export class ImageRegistry {
     token: string,
     currentDownloaded: number,
     totalSize: number,
-    logger: (message: string) => void,
+    logger: (event: { message: string; progress: number }) => void,
   ): Promise<void> {
     const options = this.getOptions();
     options.headers = options.headers ?? {};
@@ -638,9 +638,10 @@ export class ImageRegistry {
 
     readStream.on('downloadProgress', ({ transferred }) => {
       const globalPercentage = Math.round(((transferred + currentDownloaded) / totalSize) * 100);
-      logger(
-        `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
-      );
+      logger({
+        message: `Downloading ${digest}${suffix} - ${globalPercentage}% - (${transferred + currentDownloaded}/${totalSize})`,
+        progress: globalPercentage,
+      });
     });
     await pipeline(readStream, createWriteStream(tmpFileName));
     // in case of zstd, we need to unpack the file first

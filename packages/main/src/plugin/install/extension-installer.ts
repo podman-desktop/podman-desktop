@@ -110,6 +110,7 @@ export class ExtensionInstaller {
   async analyzeFromImage(
     sendLog: (message: string) => void,
     sendError: (message: string) => void,
+    onProgress: (progress: number) => void,
     imageName: string,
     catatlogExtensionId?: string,
   ): Promise<AnalyzedExtension | DockerDesktopContribution | undefined> {
@@ -187,7 +188,10 @@ export class ExtensionInstaller {
     }
 
     sendLog('Downloading and extract layers...');
-    await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, sendLog);
+    await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, event => {
+      sendLog(event.message);
+      onProgress(event.progress);
+    });
 
     sendLog('Filtering image content...');
     if (isPDExtension) {
@@ -235,6 +239,7 @@ export class ExtensionInstaller {
     errors: string[],
     sendLog: (message: string) => void,
     sendError: (message: string) => void,
+    onProgress: (progress: number) => void,
   ): Promise<boolean> {
     if (!analyzedExtension) {
       return false;
@@ -287,12 +292,19 @@ export class ExtensionInstaller {
       // now analyze all these dependencies
       for (const imageNameToAnalyze of imagesOfExtensionsToAnalyze) {
         try {
-          const imageToAnalyze = await this.analyzeFromImage(sendLog, sendError, imageNameToAnalyze);
+          const imageToAnalyze = await this.analyzeFromImage(sendLog, sendError, onProgress, imageNameToAnalyze);
 
           if (!imageToAnalyze || imageToAnalyze instanceof DockerDesktopContribution) {
             return false;
           }
-          await this.analyzeTransitiveDependencies(imageToAnalyze, analyzedExtensions, errors, sendLog, sendError);
+          await this.analyzeTransitiveDependencies(
+            imageToAnalyze,
+            analyzedExtensions,
+            errors,
+            sendLog,
+            sendError,
+            onProgress,
+          );
         } catch (error) {
           errors.push(`Error while analyzing extension ${imageNameToAnalyze}: ${error}`);
         }
@@ -305,6 +317,7 @@ export class ExtensionInstaller {
     sendLog: (message: string) => void,
     sendError: (message: string) => void,
     sendEnd: (message: string) => void,
+    onProgress: (progress: number) => void,
     imageName: string,
     extensionAnalyzed?: (extension: AnalyzedExtension) => void,
     catalogExtensionId?: string,
@@ -312,7 +325,13 @@ export class ExtensionInstaller {
     // now collect all transitive dependencies
     const analyzedExtensions: AnalyzedExtension[] = [];
     const errors: string[] = [];
-    const analyzedExtension = await this.analyzeFromImage(sendLog, sendError, imageName, catalogExtensionId);
+    const analyzedExtension = await this.analyzeFromImage(
+      sendLog,
+      sendError,
+      onProgress,
+      imageName,
+      catalogExtensionId,
+    );
     if (analyzedExtension instanceof DockerDesktopContribution) {
       sendEnd('Docker Desktop Extension Successfully installed.');
       return;
@@ -326,6 +345,7 @@ export class ExtensionInstaller {
       errors,
       sendLog,
       sendError,
+      onProgress,
     );
 
     // if we have some undefined objects, it is an error, cleanup extensions
@@ -376,13 +396,17 @@ export class ExtensionInstaller {
           event.reply('extension-installer:install-from-image-end', logCallbackId, message);
         };
 
+        const sendProgress = (progress: number): void => {
+          event.reply('extension-installer:install-from-image-progress', logCallbackId, progress);
+        };
+
         const extAnalyzed = (extension: AnalyzedExtension): void => {
           if (extension) {
             telemetryData.extensionId = extension.id;
           }
         };
 
-        this.installFromImage(sendLog, sendError, sendEnd, imageName, extAnalyzed, catalogExtensionId)
+        this.installFromImage(sendLog, sendError, sendEnd, sendProgress, imageName, extAnalyzed, catalogExtensionId)
           .catch((error: unknown) => {
             sendError('' + error);
             telemetryData.error = `${error}`;
