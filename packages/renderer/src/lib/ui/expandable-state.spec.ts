@@ -21,6 +21,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, waitFor } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import { onDidChangeConfiguration } from '/@/stores/configurationProperties';
+
 import ExpandableStateTest from './ExpandableStateTest.svelte';
 
 const CONFIG_KEY = 'test.expanded';
@@ -37,22 +39,17 @@ test('initialized defaults to false and becomes true after mount', async () => {
   await waitFor(() => expect(getByTestId('initialized')).toHaveTextContent('true'));
 });
 
-test('expanded defaults to true when no config value is set', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(undefined);
+test.each([
+  { configValue: undefined, expected: 'true', description: 'defaults to true when no config value is set' },
+  { configValue: false, expected: 'false', description: 'reflects false from getConfigurationValue' },
+  { configValue: true, expected: 'true', description: 'reflects true from getConfigurationValue' },
+])('expanded $description', async ({ configValue, expected }) => {
+  vi.mocked(window.getConfigurationValue).mockResolvedValue(configValue);
 
   const { getByTestId } = render(ExpandableStateTest, { configKey: CONFIG_KEY });
 
   await waitFor(() => expect(getByTestId('initialized')).toHaveTextContent('true'));
-  expect(getByTestId('expanded')).toHaveTextContent('true');
-});
-
-test('expanded reflects the value returned from getConfigurationValue', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(false);
-
-  const { getByTestId } = render(ExpandableStateTest, { configKey: CONFIG_KEY });
-
-  await waitFor(() => expect(getByTestId('initialized')).toHaveTextContent('true'));
-  expect(getByTestId('expanded')).toHaveTextContent('false');
+  expect(getByTestId('expanded')).toHaveTextContent(expected);
 });
 
 test('getConfigurationValue is called with the correct key on mount', async () => {
@@ -72,52 +69,35 @@ test('toggle calls updateConfigurationValue with correct key and value', async (
   await waitFor(() => expect(window.updateConfigurationValue).toHaveBeenCalledWith(CONFIG_KEY, false));
 });
 
-test('expanded state updates when configuration change event is fired', async () => {
+test.each([
+  {
+    description: 'updates when configuration change event is fired',
+    event: new CustomEvent(CONFIG_KEY, { detail: { key: CONFIG_KEY, value: false } }),
+    expected: 'false',
+  },
+  {
+    description: 'does not change when event has no detail property',
+    event: new Event(CONFIG_KEY),
+    expected: 'true',
+  },
+  {
+    description: 'does not change when event key does not match',
+    event: new CustomEvent(CONFIG_KEY, { detail: { key: 'other.key', value: false } }),
+    expected: 'true',
+  },
+])('expanded state $description', async ({ event, expected }) => {
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
 
   const { getByTestId } = render(ExpandableStateTest, { configKey: CONFIG_KEY });
 
   await waitFor(() => expect(getByTestId('expanded')).toHaveTextContent('true'));
 
-  // Simulate a configuration change event
-  const { onDidChangeConfiguration } = await import('/@/stores/configurationProperties');
-  onDidChangeConfiguration.dispatchEvent(new CustomEvent(CONFIG_KEY, { detail: { key: CONFIG_KEY, value: false } }));
+  onDidChangeConfiguration.dispatchEvent(event);
 
-  await waitFor(() => expect(getByTestId('expanded')).toHaveTextContent('false'));
-});
-
-test('expanded state does not change when event has no detail property', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-
-  const { getByTestId } = render(ExpandableStateTest, { configKey: CONFIG_KEY });
-
-  await waitFor(() => expect(getByTestId('expanded')).toHaveTextContent('true'));
-
-  const { onDidChangeConfiguration } = await import('/@/stores/configurationProperties');
-  // Dispatch an event without a detail property
-  onDidChangeConfiguration.dispatchEvent(new Event(CONFIG_KEY));
-
-  // State should remain unchanged
-  expect(getByTestId('expanded')).toHaveTextContent('true');
-});
-
-test('expanded state does not change when event key does not match', async () => {
-  vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
-
-  const { getByTestId } = render(ExpandableStateTest, { configKey: CONFIG_KEY });
-
-  await waitFor(() => expect(getByTestId('expanded')).toHaveTextContent('true'));
-
-  const { onDidChangeConfiguration } = await import('/@/stores/configurationProperties');
-  // Dispatch an event with a different key
-  onDidChangeConfiguration.dispatchEvent(new CustomEvent(CONFIG_KEY, { detail: { key: 'other.key', value: false } }));
-
-  // State should remain unchanged
-  expect(getByTestId('expanded')).toHaveTextContent('true');
+  await waitFor(() => expect(getByTestId('expanded')).toHaveTextContent(expected));
 });
 
 test('event listener is removed on destroy', async () => {
-  const { onDidChangeConfiguration } = await import('/@/stores/configurationProperties');
   const removeEventListenerSpy = vi.spyOn(onDidChangeConfiguration, 'removeEventListener');
 
   const { unmount } = render(ExpandableStateTest, { configKey: CONFIG_KEY });
