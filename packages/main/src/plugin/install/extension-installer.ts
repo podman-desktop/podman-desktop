@@ -115,6 +115,7 @@ export class ExtensionInstaller {
     sendError: (message: string) => void,
     imageName: string,
     catatlogExtensionId?: string,
+    onProgress?: (progress: number) => void,
   ): Promise<AnalyzedExtension | DockerDesktopContribution | undefined> {
     imageName = imageName.trim();
     sendLog(`Analyzing image ${imageName}...`);
@@ -190,7 +191,10 @@ export class ExtensionInstaller {
     }
 
     sendLog('Downloading and extract layers...');
-    await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, sendLog);
+    await this.imageRegistry.downloadAndExtractImage(imageName, tmpFolderPath, event => {
+      sendLog(event.message);
+      onProgress?.(event.progress);
+    });
 
     sendLog('Filtering image content...');
     if (isPDExtension) {
@@ -329,6 +333,9 @@ export class ExtensionInstaller {
         imageName,
         extensionAnalyzed,
         catalogExtensionId,
+        (progress: number) => {
+          task.progress = progress;
+        },
       );
     } catch (error: unknown) {
       task.error = String(error);
@@ -347,11 +354,18 @@ export class ExtensionInstaller {
     imageName: string,
     extensionAnalyzed?: (extension: AnalyzedExtension) => void,
     catalogExtensionId?: string,
+    onProgress?: (progress: number) => void,
   ): Promise<void> {
     // now collect all transitive dependencies
     const analyzedExtensions: AnalyzedExtension[] = [];
     const errors: string[] = [];
-    const analyzedExtension = await this.analyzeFromImage(sendLog, sendError, imageName, catalogExtensionId);
+    const analyzedExtension = await this.analyzeFromImage(
+      sendLog,
+      sendError,
+      imageName,
+      catalogExtensionId,
+      onProgress,
+    );
     if (analyzedExtension instanceof DockerDesktopContribution) {
       sendEnd('Docker Desktop Extension Successfully installed.');
       return;
