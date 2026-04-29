@@ -267,14 +267,14 @@ async function doCreateNew(provider: ProviderInfo, displayName: string): Promise
   if (provider.status === 'not-installed') {
     providerInstallationInProgress.set(provider.name, true);
     providerToBeInstalled = { provider, displayName };
-    doExecuteAfterInstallation = (): void => router.goto(`/preferences/provider/${provider.internalId}`);
+    doExecuteAfterInstallation = (): void => router.goto(`/preferences/resources/provider/${provider.internalId}`);
     await performInstallation(provider);
   } else {
     await window.telemetryTrack('createNewProviderConnectionPageRequested', {
       providerId: provider.id,
       name: provider.name,
     });
-    router.goto(`/preferences/provider/${provider.internalId}`);
+    router.goto(`/preferences/resources/provider/${provider.internalId}`);
   }
 }
 

@@ -222,7 +222,7 @@ test(`Test navigationHandle for ${NavigationPage.PROVIDER_TASK}`, () => {
     },
   });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/provider-task/dummyProviderId/55');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/resources/provider-task/dummyProviderId/55');
 });
 
 test(`Test navigationHandle for ${NavigationPage.WEBVIEW}`, () => {
@@ -276,7 +276,7 @@ test(`Test navigationHandle for ${NavigationPage.CREATE_PROVIDER_CONNECTION}`, (
     },
   });
 
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/provider/dummyProviderId');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/resources/provider/dummyProviderId');
 });
 
 test(`Test navigationHandle for ${NavigationPage.NETWORK}`, () => {

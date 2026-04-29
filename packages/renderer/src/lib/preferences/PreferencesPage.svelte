@@ -55,17 +55,17 @@ onMount(async () => {
   <Route path="/default/:key/*" breadcrumb="Preferences" let:meta>
     <PreferencesRendering key={meta.params.key} properties={properties} />
   </Route>
-  <Route path="/provider/:providerInternalId/*" breadcrumb="Resources" let:meta navigationHint="root">
+  <Route path="/resources" breadcrumb="Resources" navigationHint="root" let:meta>
+    <PreferencesResourcesRendering focus={meta.query.focus}/>
+  </Route>
+  <Route path="/resources/provider/:providerInternalId/*" breadcrumb="Resources" let:meta navigationHint="details">
     <PreferencesProviderRendering providerInternalId={meta.params.providerInternalId} properties={properties} />
   </Route>
-  <Route path="/provider-task/:providerInternalId/:taskId/*" breadcrumb="Resources" let:meta>
+  <Route path="/resources/provider-task/:providerInternalId/:taskId/*" breadcrumb="Resources" let:meta navigationHint="details">
     <PreferencesProviderRendering
       providerInternalId={meta.params.providerInternalId}
       properties={properties}
       taskId={+meta.params.taskId} />
-  </Route>
-  <Route path="/resources" breadcrumb="Resources" navigationHint="root" let:meta>
-    <PreferencesResourcesRendering focus={meta.query.focus}/>
   </Route>
   <Route path="/docker-compatibility" breadcrumb="Docker Compatibility">
     <PreferencesDockerCompatibilityRendering />

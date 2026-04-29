@@ -17,7 +17,7 @@ async function createNew(provider: ProviderInfo): Promise<void> {
   await window.telemetryTrack('kubernetes.nocontext.createNew', {
     provider: provider.id,
   });
-  router.goto(`/preferences/provider/${provider.internalId}`);
+  router.goto(`/preferences/resources/provider/${provider.internalId}`);
 }
 
 async function oninstall(extensionId: string): Promise<void> {
