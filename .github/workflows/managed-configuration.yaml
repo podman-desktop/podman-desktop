@@ -5,8 +5,14 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   managed-configuration:
+    permissions:
+      contents: read
+      checks: write
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     name: Managed configuration tests - ${{ matrix.os }}
