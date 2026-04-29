@@ -27,6 +27,9 @@ on:
 env:
   RELEASE_TAG: v${{ inputs.version }}
 
+permissions:
+  contents: read
+
 jobs:
   generate-sbom:
     name: Generate SBOM file
