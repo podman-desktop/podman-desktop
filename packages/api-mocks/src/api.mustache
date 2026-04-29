@@ -64,4 +64,16 @@ const extensionAPI = {
   QuickPickItemKind: { Separator: -1, Default: 0 },
 };
 
-module.exports = extensionAPI;
+export default extensionAPI;
+// Named exports for `import { commands, env } from '@podman-desktop/api'`
+{{#namespaces}}export const {{name}} = namespaceMocks.{{name}};
+{{/namespaces}}
+{{#classes}}export const {{name}} = classesMocks['{{name}}'] as Record<string, unknown>;
+{{/classes}}
+export { EventEmitter };
+export const ProgressLocation = { APP_ICON: 1, TASK_WIDGET: 2 };
+export const StatusBarAlignLeft = 'LEFT';
+export const StatusBarAlignRight = 'RIGHT';
+export const StatusBarItemDefaultPriority = 0;
+export const InputBoxValidationSeverity = { Info: 1, Warning: 2, Error: 3 };
+export const QuickPickItemKind = { Separator: -1, Default: 0 };

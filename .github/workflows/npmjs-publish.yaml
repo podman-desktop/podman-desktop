@@ -127,6 +127,7 @@ jobs:
       - name: Generate and publish API Mocks to npmjs
         run: |
           cd packages/api-mocks
+          pnpm build
           pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
 
       - name: Publish Webview API to npmjs

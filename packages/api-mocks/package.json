@@ -10,16 +10,16 @@
   "license": "Apache-2.0",
   "type": "module",
   "files": [
-    "src",
-    "!src/**/*.spec.*"
+    "dist",
+    "src/api.mustache"
   ],
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./setup": {
-      "default": "./src/vitest-generate-api-global-setup.js"
+      "default": "./dist/vitest-generate-api-global-setup.js"
     },
     "./@podman-desktop/api": {
       "default": "./src/@podman-desktop/api.js"
@@ -27,8 +27,8 @@
   },
   "scripts": {
     "prepare": "",
-    "clean": "rimraf lib *.tsbuildinfo",
-    "build": "",
+    "clean": "rimraf dist *.tsbuildinfo",
+    "build": "tsc -p tsconfig.json",
     "watch": "",
     "publish:next": "pnpm publish  --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
   },

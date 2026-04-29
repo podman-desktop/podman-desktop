@@ -94,7 +94,10 @@ function toTemplateData(data: { namespaces: Namespaces; classes: Classes; appNam
   appName: string;
 } {
   const namespaces = Object.entries(data.namespaces).map(([name, functions]) => ({ name, functions }));
-  const classes = Object.entries(data.classes).map(([name, methods]) => ({ name, methods }));
+  // EventEmitter is defined explicitly in the template; exclude it from the dynamic classes section
+  const classes = Object.entries(data.classes)
+    .filter(([name]) => name !== 'EventEmitter')
+    .map(([name, methods]) => ({ name, methods }));
   return { namespaces, classes, appName: data.appName };
 }
 
@@ -108,13 +111,21 @@ export default async function setup(): Promise<void> {
   const podmanDesktopApiMocksDir = path.join(packageRoot, 'src', '@podman-desktop');
   const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.ts');
   const templatePath = path.join(packageRoot, 'src', 'api.mustache');
+  const productJsonPath = path.join(repoRoot, 'product.json');
 
-  // skip if api.ts is already newer (from template or extension-api.d.ts file)
+  // skip if api.ts is already newer than all inputs
   const extensionApiPathStats = await fs.stat(extensionApiTypePath);
   const templatePathStats = await fs.stat(templatePath);
+  const generatorPathStats = await fs.stat(__filename);
+  const productJsonStats = await fs.stat(productJsonPath);
   try {
     const outputStats = await fs.stat(apiGeneratedFile);
-    const newestInputMtime = Math.max(extensionApiPathStats.mtimeMs, templatePathStats.mtimeMs);
+    const newestInputMtime = Math.max(
+      extensionApiPathStats.mtimeMs,
+      templatePathStats.mtimeMs,
+      generatorPathStats.mtimeMs,
+      productJsonStats.mtimeMs,
+    );
     if (outputStats.mtimeMs >= newestInputMtime) {
       console.debug(' 🚀 packages/api-mocks/src/@podman-desktop/api.ts up-to-date; skipping regeneration');
       return;
@@ -122,7 +133,6 @@ export default async function setup(): Promise<void> {
   } catch {
     console.debug(' ⚙️ packages/api-mocks/src/@podman-desktop/api.ts does not exist yet; generating it now…');
   }
-  const productJsonPath = path.join(repoRoot, 'product.json');
   const productJson = JSON.parse(await fs.readFile(productJsonPath, 'utf-8')) as { name: string };
   const data = await extractNamespacesAndClassesFromAPI(extensionApiTypePath);
   const template = await fs.readFile(templatePath, 'utf-8');
