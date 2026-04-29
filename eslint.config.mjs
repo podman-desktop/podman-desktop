@@ -66,7 +66,7 @@ export default [
       '**/dist/**/*',
       '**/test-resources',
       '**/__mocks__/',
-      '**/packages/api-mocks/src/@podman-desktop/',
+      '**/packages/api-mocks/dist/@podman-desktop/',
       '**/coverage/',
       '**/.svelte-kit/',
       '**/.storybook/',

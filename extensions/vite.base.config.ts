@@ -51,7 +51,7 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     globalSetup: [join(WORKSPACE_ROOT, 'packages', 'api-mocks', 'src', 'vitest-generate-api-global-setup.ts')],
     alias: {
-      '@podman-desktop/api': join(WORKSPACE_ROOT, 'packages', 'api-mocks', 'src', '@podman-desktop', 'api.js'),
+      '@podman-desktop/api': join(WORKSPACE_ROOT, 'packages', 'api-mocks', 'dist', '@podman-desktop', 'api.js'),
     },
   },
 });

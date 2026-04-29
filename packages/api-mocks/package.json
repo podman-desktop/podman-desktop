@@ -22,7 +22,7 @@
       "default": "./dist/vitest-generate-api-global-setup.js"
     },
     "./@podman-desktop/api": {
-      "default": "./src/@podman-desktop/api.js"
+      "default": "./dist/@podman-desktop/api.js"
     }
   },
   "scripts": {

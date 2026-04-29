@@ -24,7 +24,8 @@ import Mustache from 'mustache';
 import typescript from 'typescript';
 
 type Namespaces = { [key: string]: string[] };
-type Classes = { [key: string]: string[] };
+type ClassInfo = { methods: string[]; staticMethods: string[] };
+type Classes = { [key: string]: ClassInfo };
 
 async function extractNamespacesAndClassesFromAPI(
   filePath: string,
@@ -71,13 +72,23 @@ async function extractNamespacesAndClassesFromAPI(
       if (isExported) {
         const className = node.name.text;
         const methods: string[] = [];
+        const staticMethods: string[] = [];
         for (const member of node.members) {
           if (typescript.isMethodDeclaration(member) && member.name && typescript.isIdentifier(member.name)) {
-            methods.push(member.name.text);
+            const memberModifiers = typescript.getModifiers(member);
+            const isStatic = memberModifiers?.some(m => m.kind === typescript.SyntaxKind.StaticKeyword);
+            if (isStatic) {
+              staticMethods.push(member.name.text);
+            } else {
+              methods.push(member.name.text);
+            }
           }
         }
         // Deduplicate to handle method overloads
-        classes[className] = Array.from(new Set(methods));
+        classes[className] = {
+          methods: Array.from(new Set(methods)),
+          staticMethods: Array.from(new Set(staticMethods)),
+        };
       }
     }
 
@@ -90,15 +101,20 @@ async function extractNamespacesAndClassesFromAPI(
 
 function toTemplateData(data: { namespaces: Namespaces; classes: Classes; appName: string }): {
   namespaces: { name: string; functions: string[] }[];
-  classes: { name: string; methods: string[] }[];
+  classes: { name: string; methods: string[]; staticMethods: { className: string; method: string }[] }[];
   appName: string;
+  appNameJson: string;
 } {
   const namespaces = Object.entries(data.namespaces).map(([name, functions]) => ({ name, functions }));
   // EventEmitter is defined explicitly in the template; exclude it from the dynamic classes section
   const classes = Object.entries(data.classes)
     .filter(([name]) => name !== 'EventEmitter')
-    .map(([name, methods]) => ({ name, methods }));
-  return { namespaces, classes, appName: data.appName };
+    .map(([name, info]) => ({
+      name,
+      methods: info.methods,
+      staticMethods: info.staticMethods.map(method => ({ className: name, method })),
+    }));
+  return { namespaces, classes, appName: data.appName, appNameJson: JSON.stringify(data.appName) };
 }
 
 export default async function setup(): Promise<void> {
@@ -108,12 +124,12 @@ export default async function setup(): Promise<void> {
   const packageRoot = path.resolve(__dirname, '..');
   const repoRoot = path.resolve(packageRoot, '..', '..');
   const extensionApiTypePath = path.join(repoRoot, 'packages', 'extension-api', 'src', 'extension-api.d.ts');
-  const podmanDesktopApiMocksDir = path.join(packageRoot, 'src', '@podman-desktop');
-  const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.ts');
+  const podmanDesktopApiMocksDir = path.join(packageRoot, 'dist', '@podman-desktop');
+  const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.js');
   const templatePath = path.join(packageRoot, 'src', 'api.mustache');
   const productJsonPath = path.join(repoRoot, 'product.json');
 
-  // skip if api.ts is already newer than all inputs
+  // skip if api.js is already newer than all inputs
   const extensionApiPathStats = await fs.stat(extensionApiTypePath);
   const templatePathStats = await fs.stat(templatePath);
   const generatorPathStats = await fs.stat(__filename);
@@ -127,11 +143,11 @@ export default async function setup(): Promise<void> {
       productJsonStats.mtimeMs,
     );
     if (outputStats.mtimeMs >= newestInputMtime) {
-      console.debug(' 🚀 packages/api-mocks/src/@podman-desktop/api.ts up-to-date; skipping regeneration');
+      console.debug(' 🚀 packages/api-mocks/dist/@podman-desktop/api.js up-to-date; skipping regeneration');
       return;
     }
   } catch {
-    console.debug(' ⚙️ packages/api-mocks/src/@podman-desktop/api.ts does not exist yet; generating it now…');
+    console.debug(' ⚙️ packages/api-mocks/dist/@podman-desktop/api.js does not exist yet; generating it now…');
   }
   const productJson = JSON.parse(await fs.readFile(productJsonPath, 'utf-8')) as { name: string };
   const data = await extractNamespacesAndClassesFromAPI(extensionApiTypePath);
@@ -140,5 +156,10 @@ export default async function setup(): Promise<void> {
 
   await fs.mkdir(podmanDesktopApiMocksDir, { recursive: true });
   await fs.writeFile(apiGeneratedFile, content, 'utf-8');
-  console.debug(' ✅ packages/api-mocks/src/@podman-desktop/api.ts has been generated.');
+  console.debug(' ✅ packages/api-mocks/dist/@podman-desktop/api.js has been generated.');
+}
+
+// Run setup() when executed directly as a Node.js script (e.g. `node dist/vitest-generate-api-global-setup.js`)
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  await setup();
 }
