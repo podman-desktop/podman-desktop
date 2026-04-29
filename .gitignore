@@ -16,4 +16,5 @@ yarn.lock
 extensions/podman/assets/
 extensions-extra/
 __mocks__/@podman-desktop/api.ts
+packages/api-mocks/src/@podman-desktop/api.ts
 contexts/meta/

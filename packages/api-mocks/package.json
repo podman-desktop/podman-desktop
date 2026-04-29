@@ -1,0 +1,44 @@
+{
+  "name": "@podman-desktop/api-mocks",
+  "version": "1.28.0-next",
+  "description": "Mocks of the Podman Desktop extension API for use in 3rd party extension tests",
+  "repository": "https://github.com/podman-desktop/podman-desktop",
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "src",
+    "!src/**/*.spec.*"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./setup": {
+      "default": "./src/vitest-generate-api-global-setup.js"
+    },
+    "./@podman-desktop/api": {
+      "default": "./src/@podman-desktop/api.js"
+    }
+  },
+  "scripts": {
+    "prepare": "",
+    "clean": "rimraf lib *.tsbuildinfo",
+    "build": "",
+    "watch": "",
+    "publish:next": "pnpm publish  --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.6",
+    "mustache": "^4.2.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  }
+}
