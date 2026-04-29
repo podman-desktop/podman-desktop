@@ -130,12 +130,32 @@ export default async function setup(): Promise<void> {
   const productJsonPath = path.join(repoRoot, 'product.json');
 
   // skip if api.js is already newer than all inputs
-  const extensionApiPathStats = await fs.stat(extensionApiTypePath);
-  const templatePathStats = await fs.stat(templatePath);
-  const generatorPathStats = await fs.stat(__filename);
-  const productJsonStats = await fs.stat(productJsonPath);
-  try {
-    const outputStats = await fs.stat(apiGeneratedFile);
+  // All stat calls use .catch(() => undefined) so external consumers without a
+  // monorepo layout don't throw — they fall back to the bundled dist output.
+  const [extensionApiPathStats, templatePathStats, generatorPathStats, productJsonStats, outputStats] =
+    await Promise.all([
+      fs.stat(extensionApiTypePath).catch(() => undefined),
+      fs.stat(templatePath).catch(() => undefined),
+      fs.stat(__filename).catch(() => undefined),
+      fs.stat(productJsonPath).catch(() => undefined),
+      fs.stat(apiGeneratedFile).catch(() => undefined),
+    ]);
+
+  // If any input is missing (e.g. an npm consumer without the monorepo sources)…
+  if (!extensionApiPathStats || !templatePathStats || !generatorPathStats || !productJsonStats) {
+    if (outputStats) {
+      // …but a bundled output already exists, use it as-is.
+      console.debug(' 🚀 Using bundled packages/api-mocks/dist/@podman-desktop/api.js');
+      return;
+    }
+    throw new Error(
+      'Unable to locate API mock generation inputs (extension-api.d.ts, api.mustache, product.json). ' +
+        'Make sure @podman-desktop/api-mocks was installed from a full Podman Desktop checkout or that the ' +
+        'published dist/@podman-desktop/api.js artefact is present.',
+    );
+  }
+
+  if (outputStats) {
     const newestInputMtime = Math.max(
       extensionApiPathStats.mtimeMs,
       templatePathStats.mtimeMs,
@@ -146,7 +166,7 @@ export default async function setup(): Promise<void> {
       console.debug(' 🚀 packages/api-mocks/dist/@podman-desktop/api.js up-to-date; skipping regeneration');
       return;
     }
-  } catch {
+  } else {
     console.debug(' ⚙️ packages/api-mocks/dist/@podman-desktop/api.js does not exist yet; generating it now…');
   }
   const productJson = JSON.parse(await fs.readFile(productJsonPath, 'utf-8')) as { name: string };

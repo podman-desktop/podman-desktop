@@ -30,7 +30,7 @@
     "clean": "rimraf dist *.tsbuildinfo",
     "build": "tsc -p tsconfig.json",
     "watch": "",
-    "publish:next": "pnpm publish  --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
+    "publish:next": "pnpm version 0.0.1-\"$(date +%s)\" --no-git-tag-version && pnpm publish --registry=https://registry.npmjs.org/ --tag next --no-git-checks --access public"
   },
   "devDependencies": {
     "@types/mustache": "^4.2.6",

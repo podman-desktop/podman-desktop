@@ -41,9 +41,20 @@ classesMocks['{{className}}'].{{method}} = vi.fn();
 
 class EventEmitter {
   _listeners = [];
-  event(callback) { this._listeners.push(callback); }
-  fire(data) { for (const listener of this._listeners) { listener(data); } }
-  dispose() {}
+  event(callback) {
+    this._listeners.push(callback);
+    let disposed = false;
+    return {
+      dispose: vi.fn(() => {
+        if (disposed) return;
+        disposed = true;
+        const index = this._listeners.indexOf(callback);
+        if (index !== -1) this._listeners.splice(index, 1);
+      }),
+    };
+  }
+  fire(data) { for (const listener of [...this._listeners]) { listener(data); } }
+  dispose() { this._listeners = []; }
 }
 EventEmitter.prototype.dispose = vi.fn();
 
