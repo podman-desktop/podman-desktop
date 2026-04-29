@@ -30,13 +30,12 @@
  * import { createRequire } from 'node:module';
  *
  * const require = createRequire(import.meta.url);
- * const apiMocksDir = require.resolve('@podman-desktop/api-mocks');
+ * const apiMocksDir = require.resolve('@podman-desktop/api-mocks-vitest');
  * const apiMockPath = join(apiMocksDir, '..', '@podman-desktop', 'api.js');
  *
  * export default defineConfig({
  *   test: {
  *     globals: true,
- *     globalSetup: ['@podman-desktop/api-mocks/setup'],
  *     alias: {
  *       '@podman-desktop/api': apiMockPath,
  *     },

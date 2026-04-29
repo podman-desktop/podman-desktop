@@ -145,12 +145,12 @@ export default async function setup(): Promise<void> {
   if (!extensionApiPathStats || !templatePathStats || !generatorPathStats || !productJsonStats) {
     if (outputStats) {
       // …but a bundled output already exists, use it as-is.
-      console.debug(' 🚀 Using bundled packages/api-mocks/dist/@podman-desktop/api.js');
+      console.debug(' 🚀 Using bundled packages/api-mocks-vitest/dist/@podman-desktop/api.js');
       return;
     }
     throw new Error(
       'Unable to locate API mock generation inputs (extension-api.d.ts, api.mustache, product.json). ' +
-        'Make sure @podman-desktop/api-mocks was installed from a full Podman Desktop checkout or that the ' +
+        'Make sure @podman-desktop/api-mocks-vitest was installed from a full Podman Desktop checkout or that the ' +
         'published dist/@podman-desktop/api.js artefact is present.',
     );
   }
@@ -163,11 +163,11 @@ export default async function setup(): Promise<void> {
       productJsonStats.mtimeMs,
     );
     if (outputStats.mtimeMs >= newestInputMtime) {
-      console.debug(' 🚀 packages/api-mocks/dist/@podman-desktop/api.js up-to-date; skipping regeneration');
+      console.debug(' 🚀 packages/api-mocks-vitest/dist/@podman-desktop/api.js up-to-date; skipping regeneration');
       return;
     }
   } else {
-    console.debug(' ⚙️ packages/api-mocks/dist/@podman-desktop/api.js does not exist yet; generating it now…');
+    console.debug(' ⚙️ packages/api-mocks-vitest/dist/@podman-desktop/api.js does not exist yet; generating it now…');
   }
   const productJson = JSON.parse(await fs.readFile(productJsonPath, 'utf-8')) as { name: string };
   const data = await extractNamespacesAndClassesFromAPI(extensionApiTypePath);
@@ -176,7 +176,7 @@ export default async function setup(): Promise<void> {
 
   await fs.mkdir(podmanDesktopApiMocksDir, { recursive: true });
   await fs.writeFile(apiGeneratedFile, content, 'utf-8');
-  console.debug(' ✅ packages/api-mocks/dist/@podman-desktop/api.js has been generated.');
+  console.debug(' ✅ packages/api-mocks-vitest/dist/@podman-desktop/api.js has been generated.');
 }
 
 // Run setup() when executed directly as a Node.js script (e.g. `node dist/vitest-generate-api-global-setup.js`)

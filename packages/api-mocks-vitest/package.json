@@ -1,7 +1,7 @@
 {
-  "name": "@podman-desktop/api-mocks",
+  "name": "@podman-desktop/api-mocks-vitest",
   "version": "1.28.0-next",
-  "description": "Mocks of the Podman Desktop extension API for use in 3rd party extension tests",
+  "description": "Vitest mocks of the Podman Desktop extension API for use in third-party extension tests",
   "repository": "https://github.com/podman-desktop/podman-desktop",
   "publishConfig": {
     "provenance": true,
@@ -17,9 +17,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./setup": {
-      "default": "./dist/vitest-generate-api-global-setup.js"
     },
     "./@podman-desktop/api": {
       "default": "./dist/@podman-desktop/api.js"

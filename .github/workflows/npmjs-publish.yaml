@@ -112,7 +112,6 @@ jobs:
           echo "Setting version to ${VERSION}"
 
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/extension-api/package.json
-          sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/api-mocks/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/webview-api/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" packages/ui/package.json
           sed -i  "s#\"version\": \"\(.*\)\",#\"version\": \"${VERSION}\",#g" tests/playwright/package.json
@@ -122,13 +121,6 @@ jobs:
       - name: Publish Extension API to npmjs
         run: |
           cd packages/extension-api
-          pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
-
-      - name: Generate and publish API Mocks to npmjs
-        run: |
-          cd packages/api-mocks
-          pnpm build
-          node dist/vitest-generate-api-global-setup.js
           pnpm publish --provenance --tag ${{ needs.prepare-version.outputs.dist-tag }} --no-git-checks --access public
 
       - name: Publish Webview API to npmjs
