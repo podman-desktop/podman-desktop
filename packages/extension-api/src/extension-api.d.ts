@@ -2534,6 +2534,11 @@ declare module '@podman-desktop/api' {
 
     // isManifest will be returned and set to true if the image is identified to be a manifest list
     isManifest?: boolean;
+
+    /**
+     * CPU architecture of the image. Podman-specific, available since Podman v5.1.0.
+     */
+    Arch?: string;
   }
 
   export interface ImageInspectInfo {
