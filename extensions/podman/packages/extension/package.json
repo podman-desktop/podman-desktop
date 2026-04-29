@@ -430,12 +430,12 @@
         {
           "id": "welcomeCreatePodmanMachineView",
           "title": "We could not find any Podman machine. Let's create one!",
-          "when": "!onboardingContext:podmanMachineExists && !isLinux"
+          "when": "!onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists && !isLinux"
         },
         {
           "id": "createPodmanMachineCommand",
           "title": "Create a Podman machine",
-          "when": "!onboardingContext:podmanMachineExists && !isLinux",
+          "when": "!onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists && !isLinux",
           "completionEvents": [
             "onboardingContext:podmanMachineExists"
           ],
@@ -458,7 +458,7 @@
           ]
         }
       ],
-      "enablement": "(isLinux && onboardingContext:podmanIsNotInstalled) || (!isLinux && !onboardingContext:podmanMachineExists) || podman.needPodmanMachineCleanup"
+      "enablement": "(isLinux && onboardingContext:podmanIsNotInstalled) || (!isLinux && !onboardingContext:podmanMachineExists && !onboardingContext:podmanRemoteConnectionExists) || podman.needPodmanMachineCleanup"
     },
     "menus": {
       "dashboard/container-connection": [
