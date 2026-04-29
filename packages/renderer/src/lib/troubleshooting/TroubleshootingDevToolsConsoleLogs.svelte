@@ -19,8 +19,12 @@ onMount(async () => {
 
 onDestroy(() => {});
 
+function formatTimestamp(date: Date): string {
+  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
+
 async function copyLogsToClipboard(): Promise<void> {
-  const logsText = logs.map(log => `${log.logType} : ${log.message}`).join('\n');
+  const logsText = logs.map(log => `${formatTimestamp(log.date)} [${log.logType}] ${log.message}`).join('\n');
   await window.clipboardWriteText(logsText);
 }
 </script>
@@ -39,7 +43,10 @@ async function copyLogsToClipboard(): Promise<void> {
       <ul aria-label="logs">
         {#each logs as log, index (index)}
           <li>
-            <div class="flex flex-row align-middle items-center">
+            <div class="flex flex-row align-middle items-center gap-2">
+              <span class="font-mono text-[10px] font-thin text-[var(--pd-content-text-secondary)] shrink-0">
+                {formatTimestamp(log.date)}
+              </span>
               <div
                 class="font-mono text-[10px] font-thin {log.logType === 'error'
                   ? 'text-[var(--pd-state-error)]'

@@ -41,16 +41,17 @@ async function waitRender(customProperties: object): Promise<void> {
 }
 
 test('Check logs are displayed with clipboard button', async () => {
+  const fixedDate = new Date('2026-04-29T14:30:45');
   getDevtoolsConsoleLogsMock.mockReturnValue([
     {
       logType: 'log',
       message: 'test1',
-      date: new Date(),
+      date: fixedDate,
     },
     {
       logType: 'error',
       message: 'test2',
-      date: new Date(),
+      date: fixedDate,
     },
   ]);
 
@@ -72,5 +73,5 @@ test('Check logs are displayed with clipboard button', async () => {
   await fireEvent.click(clipboardButton);
 
   // check the content of the clipboard button
-  expect(clipboardWriteTextMock).toBeCalledWith('log : test1\nerror : test2');
+  expect(clipboardWriteTextMock).toHaveBeenCalledWith('14:30:45 [log] test1\n14:30:45 [error] test2');
 });
