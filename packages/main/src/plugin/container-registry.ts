@@ -278,6 +278,8 @@ export class ContainerProviderRegistry {
       const pipeline = stream?.pipe(withParserAsStream());
       pipeline?.on('error', error => {
         console.error('Error while parsing events', error);
+        pipeline.destroy();
+        errorCallback(new Error('Error while parsing events', error));
       });
       pipeline?.on('data', data => {
         if (data?.value !== undefined) {
