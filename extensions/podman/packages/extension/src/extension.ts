@@ -695,6 +695,7 @@ export async function doMonitorProvider(provider: extensionApi.Provider): Promis
 
     // update version
     if (!installedPodman) {
+      provider.updateVersion();
       provider.updateStatus('not-installed');
       extensionApi.context.setValue('podmanIsNotInstalled', true, 'onboarding');
       // if podman is not installed and the OS is linux we show the podman onboarding notification (if it has not been shown earlier)

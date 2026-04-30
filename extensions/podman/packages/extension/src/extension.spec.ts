@@ -3672,6 +3672,20 @@ describe('Check notify podman setup', () => {
     expect(extensionApi.window.showNotification).not.toHaveBeenCalled();
   });
 
+  test('clear provider version when podman is uninstalled', async () => {
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValueOnce({
+      version: '5.0.0',
+    });
+
+    await extension.doMonitorProvider(provider);
+    expect(provider.updateVersion).toHaveBeenCalledWith('5.0.0');
+
+    vi.mocked(PODMAN_BINARY_MOCK.getBinaryInfo).mockResolvedValueOnce(undefined);
+
+    await extension.doMonitorProvider(provider);
+    expect(provider.updateVersion).toHaveBeenCalledWith();
+  });
+
   test('reset the notification flag so if podman is uninstalled in future we can show the notification again', async () => {
     vi.mocked(extensionApi.env).isLinux = true;
 
