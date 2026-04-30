@@ -162,6 +162,14 @@ if [[ "$MODE" != "dev" ]]; then
   exit 1
 fi
 
+# Fail fast if a production Podman Desktop holds the single-instance lock
+if detect_production_pd; then
+  echo "ERROR: A production Podman Desktop is running — it holds the"
+  echo "       single-instance lock, preventing the dev instance from starting."
+  echo "       Close it first, then re-run this script."
+  exit 1
+fi
+
 # Kill any existing dev instance on the dev CDP port
 echo "[1/4] Stopping any running dev instance…"
 if lsof -ti :$DEV_PORT &>/dev/null; then
@@ -200,10 +208,10 @@ INSTALL_PID=$!
 ( sleep 300 && kill $INSTALL_PID 2>/dev/null ) &
 TIMER_PID=$!
 if wait $INSTALL_PID 2>/dev/null; then
-  kill $TIMER_PID 2>/dev/null; wait $TIMER_PID 2>/dev/null
+  kill $TIMER_PID 2>/dev/null; wait $TIMER_PID 2>/dev/null || true
   echo "      Dependencies up to date"
 else
-  kill $TIMER_PID 2>/dev/null; wait $TIMER_PID 2>/dev/null
+  kill $TIMER_PID 2>/dev/null; wait $TIMER_PID 2>/dev/null || true
   echo "ERROR: pnpm install failed or timed out after 5 minutes"
   exit 1
 fi

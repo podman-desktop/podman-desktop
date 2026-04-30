@@ -136,6 +136,14 @@ if ($Mode -eq "dev-fast") {
 
 # ── Mode: dev (full startup) ─────────────────────────────────────────────────
 
+# Fail fast if a production Podman Desktop holds the single-instance lock
+if (Test-ProductionPDRunning) {
+    Write-Host "ERROR: A production Podman Desktop is running — it holds the"
+    Write-Host "       single-instance lock, preventing the dev instance from starting."
+    Write-Host "       Close it first, then re-run this script."
+    exit 1
+}
+
 # Kill any existing pnpm watch
 Write-Host "[1/4] Stopping any running pnpm watch..."
 $killed = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
