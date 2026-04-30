@@ -21,10 +21,12 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import type { AppPlugin } from '/@/plugin/app-ready/app-plugin.js';
 import { isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { DefaultProtocolClient } from './default-protocol-client.js';
 
 vi.mock(import('/@/util.js'));
+vi.mock(import('/@product.json'));
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   setAsDefaultProtocolClient: vi.fn(),
@@ -36,6 +38,7 @@ let originalProcessArgv: string[];
 let plugin: AppPlugin;
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(product).urlProtocol = 'test-protocol';
 
   originalExecPath = process.execPath;
   originalProcessArgv = process.argv;
@@ -63,7 +66,7 @@ test('ElectronApp#setAsDefaultProtocolClient should be called when application i
   await plugin.onReady();
 
   expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledOnce();
-  expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('podman-desktop');
+  expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('test-protocol');
 });
 
 test('on windows ElectronApp#setAsDefaultProtocolClient should be called with process args', async () => {
@@ -72,7 +75,7 @@ test('on windows ElectronApp#setAsDefaultProtocolClient should be called with pr
   await plugin.onReady();
 
   expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledOnce();
-  expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('podman-desktop', '/foo/bar', [
+  expect(ELECTRON_APP_MOCK.setAsDefaultProtocolClient).toHaveBeenCalledWith('test-protocol', '/foo/bar', [
     'foo',
     'bar',
   ]);

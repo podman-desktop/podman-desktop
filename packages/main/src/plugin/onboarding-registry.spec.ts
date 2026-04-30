@@ -23,12 +23,15 @@ import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { Context } from './context/context.js';
 import { OnboardingRegistry } from './onboarding-registry.js';
 import type { Disposable } from './types/disposable.js';
 
 vi.mock(import('node:fs'));
+
+vi.mock(import('/@product.json'));
 
 let onboardingRegistry: OnboardingRegistry;
 const extensionId = 'myextension.id';
@@ -46,6 +49,11 @@ const context = new Context(apiSender);
 
 let registerOnboardingDisposable: Disposable;
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(product).name = 'Test app';
+});
+
 describe('an OnboardingRegistry instance exists', () => {
   /* eslint-disable @typescript-eslint/no-empty-function */
   beforeEach(() => {
@@ -54,7 +62,7 @@ describe('an OnboardingRegistry instance exists', () => {
     const manifest = {
       contributes: {
         onboarding: {
-          title: 'Get started with Podman Desktop',
+          title: 'Get started with Test app',
           priority: 1,
           removable: false,
           steps: [
@@ -95,8 +103,8 @@ describe('an OnboardingRegistry instance exists', () => {
   test('Should onboarding for known extension', async () => {
     const onboarding = onboardingRegistry.getOnboarding(extensionId);
     expect(onboarding).toBeDefined();
-    expect(onboarding?.title).toBe('Get started with Podman Desktop');
-    expect(onboarding?.welcomeMessage).toBe('Get started with Podman Desktop');
+    expect(onboarding?.title).toBe('Get started with Test app');
+    expect(onboarding?.welcomeMessage).toBe('Get started with Test app');
   });
 
   test('Should not find onboarding after dispose', async () => {
@@ -116,7 +124,7 @@ describe('an OnboardingRegistry instance exists', () => {
     expect(onboarding).toBeDefined();
     expectTypeOf(onboarding).toBeArray();
     expect(onboarding.length).toBe(1);
-    expect(onboarding[0]?.title).toBe('Get started with Podman Desktop');
+    expect(onboarding[0]?.title).toBe('Get started with Test app');
   });
 
   test('Should update state of step', async () => {
@@ -199,7 +207,7 @@ describe('checkIdsReadability tests', () => {
       id: extensionId,
     } as AnalyzedExtension;
     const onboarding = {
-      title: 'Get started with Podman Desktop',
+      title: 'Get started with Test app',
       priority: 50,
       steps: [
         {
@@ -280,7 +288,7 @@ describe('checkIdsReadability tests', () => {
           removable,
         } as AnalyzedExtension,
         {
-          title: `Get started with Podman Desktop ${id}`,
+          title: `Get started with Test app ${id}`,
           priority,
           enablement: '',
           steps: [

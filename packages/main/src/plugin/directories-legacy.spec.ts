@@ -33,10 +33,22 @@ const originalProcessEnv = process.env;
 // Mock file system
 vi.mock(import('node:fs'));
 vi.mock(import('/@/util.js'));
+vi.mock(import('/@product.json'));
 
 beforeEach(() => {
   // Reset environment variables to clean state
   process.env = { ...originalProcessEnv };
+
+  vi.mocked(product).appId = 'io.test_app.TestApp';
+  vi.mocked(product).paths = {
+    config: 'containers/test-app',
+    managed: {
+      macOS: '/Library/Application Support/io.test_app.TestApp',
+      windows: '%PROGRAMDATA%\\Test App',
+      linux: '/usr/share/test-app',
+      flatpak: '/run/host/usr/share/test-app',
+    },
+  };
 
   vi.spyOn(fs, 'existsSync').mockReturnValue(true);
   vi.spyOn(fs, 'mkdirSync').mockImplementation(() => '');
@@ -52,11 +64,17 @@ describe('LegacyDirectories', () => {
 
   describe('Default Directory Structure', () => {
     beforeEach(() => {
+      // Mock the static property that was evaluated at module load time
+      Object.defineProperty(LegacyDirectories, 'XDG_DATA_DIRECTORY', {
+        value: `.local${path.sep}share${path.sep}containers${path.sep}test-app`,
+        writable: true,
+        configurable: true,
+      });
       provider = new LegacyDirectories();
     });
 
     test('should use default legacy base directory', () => {
-      const expectedBaseDir = path.resolve(os.homedir(), '.local', 'share', 'containers', 'podman-desktop');
+      const expectedBaseDir = path.resolve(os.homedir(), '.local', 'share', 'containers', 'test-app');
       expect(provider.getDataDirectory()).toBe(expectedBaseDir);
     });
 
@@ -137,7 +155,7 @@ describe('LegacyDirectories', () => {
 
       // The macOS managed path folder should be the appId (macOS format is different vs Windows / Linux)
       // so make sure we still have the correct format
-      expect(provider.getManagedDefaultsDirectory()).toBe(`/Library/Application Support/${product.appId}`);
+      expect(provider.getManagedDefaultsDirectory()).toBe('/Library/Application Support/io.test_app.TestApp');
     });
 
     test('should map PROGRAMDATA into windows managed folder path', () => {

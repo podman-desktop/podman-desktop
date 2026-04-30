@@ -22,6 +22,8 @@ import type { IConfigurationNode } from '@podman-desktop/core-api/configuration'
 import { CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE } from '@podman-desktop/core-api/configuration';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import product from '/@product.json' with { type: 'json' };
+
 import { AutostartEngine } from './autostart-engine.js';
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
@@ -39,8 +41,11 @@ const extensionDisplayName = 'name';
 const mockRegisterConfiguration = vi.fn();
 const mockRunAutostart = vi.fn().mockResolvedValue('');
 
+vi.mock(import('/@product.json'));
+
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(product).name = 'Test app';
 });
 
 /* eslint-disable @typescript-eslint/no-empty-function */
@@ -74,7 +79,7 @@ test('Check that default value is true if provider autostart setting is not set'
     },
     properties: {
       [`preferences.${extensionId}.engine.autostart`]: {
-        description: `Autostart ${extensionDisplayName} engine when launching Podman Desktop`,
+        description: `Autostart ${extensionDisplayName} engine when launching Test app`,
         type: 'boolean',
         default: true,
         scope: [CONFIGURATION_DEFAULT_SCOPE, CONFIGURATION_ONBOARDING_SCOPE],

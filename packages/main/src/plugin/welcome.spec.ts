@@ -16,19 +16,24 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { Welcome } from '/@/plugin/welcome.js';
 import productJSONFile from '/@product.json' with { type: 'json' };
 
 vi.mock(import('/@product.json'));
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(productJSONFile).name = 'Test app';
+});
+
 test('should return welcome messages with default product name', () => {
   const welcome = new Welcome();
   const messages = welcome.getWelcomeMessages();
 
-  expect(messages.getStartedMessage).toBe('Get started with Podman Desktop');
-  expect(messages.welcomeMessage).toBe('Welcome to Podman Desktop');
+  expect(messages.getStartedMessage).toBe('Get started with Test app');
+  expect(messages.welcomeMessage).toBe('Welcome to Test app');
 });
 
 test('should return welcome messages with custom product name', () => {

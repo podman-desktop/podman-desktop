@@ -18,8 +18,12 @@
 
 import { beforeEach, expect, test, vi } from 'vitest';
 
+import product from '/@product.json' with { type: 'json' };
+
 import type { ConfigurationRegistry } from './configuration-registry.js';
 import { OpenDevToolsInit } from './open-devtools-init.js';
+
+vi.mock(import('/@product.json'));
 
 let openDevToolsInit: OpenDevToolsInit;
 
@@ -31,6 +35,7 @@ const configurationRegistryMock = {
 
 beforeEach(() => {
   openDevToolsInit = new OpenDevToolsInit(configurationRegistryMock);
+  vi.mocked(product).name = 'Test app';
 });
 test('should register a configuration', async () => {
   // register configuration
@@ -47,7 +52,7 @@ test('should register a configuration', async () => {
   expect(configurationNode?.properties).toBeDefined();
   expect(configurationNode?.properties?.['preferences.OpenDevTools']).toBeDefined();
   expect(configurationNode?.properties?.['preferences.OpenDevTools']?.description).toBe(
-    'Open DevTools when launching Podman Desktop in development mode.',
+    'Open DevTools when launching Test app in development mode.',
   );
   expect(configurationNode?.properties?.['preferences.OpenDevTools']?.type).toBe('string');
   expect(configurationNode?.properties?.['preferences.OpenDevTools']?.enum).toEqual([

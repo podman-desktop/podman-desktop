@@ -28,9 +28,21 @@ import { LinuxXDGDirectories } from './directories-linux-xdg.js';
 
 const originalProcessEnv = process.env;
 
+vi.mock(import('/@product.json'));
+
 beforeEach(() => {
   // Reset environment variables to clean state
   process.env = { ...originalProcessEnv };
+
+  vi.mocked(product).paths = {
+    config: 'containers/test-app',
+    managed: {
+      macOS: '/Library/Application Support/io.test_app.TestApp',
+      windows: '%PROGRAMDATA%\\Test App',
+      linux: '/usr/share/test-app',
+      flatpak: '/run/host/usr/share/test-app',
+    },
+  };
 
   // Clear XDG environment variables for clean tests
   // biome-ignore lint/complexity/useLiteralKeys: XDG_CONFIG_HOME comes from an index signature
@@ -55,13 +67,13 @@ describe('LinuxXDGDirectories', () => {
     });
 
     test('should use default XDG configuration directory', () => {
-      const expectedConfigDir = path.resolve(os.homedir(), '.config', 'containers', 'podman-desktop');
+      const expectedConfigDir = path.resolve(os.homedir(), '.config', 'containers', 'test-app');
 
       expect(provider.getConfigurationDirectory()).toBe(expectedConfigDir);
     });
 
     test('should use default XDG data directory', () => {
-      const expectedDataDir = path.resolve(os.homedir(), '.local', 'share', 'containers', 'podman-desktop');
+      const expectedDataDir = path.resolve(os.homedir(), '.local', 'share', 'containers', 'test-app');
 
       expect(provider.getDataDirectory()).toBe(expectedDataDir);
     });
@@ -102,8 +114,8 @@ describe('LinuxXDGDirectories', () => {
       const configDir = provider.getConfigurationDirectory();
       const dataDir = provider.getDataDirectory();
 
-      expect(configDir).toBe(path.resolve(customConfigHome, 'containers', 'podman-desktop'));
-      expect(dataDir).toBe(path.resolve(customDataHome, 'containers', 'podman-desktop'));
+      expect(configDir).toBe(path.resolve(customConfigHome, 'containers', 'test-app'));
+      expect(dataDir).toBe(path.resolve(customDataHome, 'containers', 'test-app'));
     });
 
     test('should use custom paths for data subdirectories', () => {
@@ -113,7 +125,7 @@ describe('LinuxXDGDirectories', () => {
 
       provider = new LinuxXDGDirectories();
 
-      const expectedDataDir = path.resolve(customDataHome, 'containers', 'podman-desktop');
+      const expectedDataDir = path.resolve(customDataHome, 'containers', 'test-app');
 
       expect(provider.getPluginsDirectory()).toBe(path.resolve(expectedDataDir, 'plugins'));
       expect(provider.getExtensionsStorageDirectory()).toBe(path.resolve(expectedDataDir, 'extensions-storage'));

@@ -399,17 +399,6 @@ describe('aggregateTrack', () => {
     expect(pending?.properties).toEqual([{ foo: 1 }, { bar: 2 }]);
   });
 
-  test('should return telemetry messages with default product name', async () => {
-    const messages = telemetry.getTelemetryMessages();
-    expect(messages.acceptMessage).toBe(
-      'Help improve Podman Desktop by allowing Red Hat to collect anonymous usage data.',
-    );
-    expect(messages.info?.link).toBe('For more information read our statement');
-    expect(messages.info?.url).toBe('https://developers.redhat.com/article/tool-data-collection');
-    expect(messages.privacy?.link).toBe('Read our privacy statement');
-    expect(messages.privacy?.url).toBe('https://www.redhat.com/en/about/privacy-policy');
-  });
-
   test('should register telemetry preference correctly', async () => {
     await telemetry.init();
 

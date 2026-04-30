@@ -23,6 +23,7 @@ import { DefaultProtocolClient } from '/@/plugin/app-ready/default-protocol-clie
 import { WindowPlugin } from '/@/plugin/app-ready/window-plugin.js';
 import { SecurityRestrictions } from '/@/security-restrictions.js';
 import { isLinux, isMac, isWindows } from '/@/util.js';
+import product from '/@product.json' with { type: 'json' };
 
 import { Main } from './main.js';
 
@@ -37,6 +38,7 @@ vi.mock(import('electron-context-menu'), () => ({
 // App Plugin
 vi.mock(import('/@/plugin/app-ready/default-protocol-client.js'));
 vi.mock(import('/@/plugin/app-ready/window-plugin.js'));
+vi.mock(import('/@product.json'));
 
 const ELECTRON_APP_MOCK: ElectronApp = {
   name: 'dummy-electron-mock',
@@ -57,6 +59,7 @@ let PROCESS_EXIT_ORIGINAL: typeof process.exit;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(product).appId = 'io.test_app.TestApp';
 
   // mock process.exit
   PROCESS_EXIT_ORIGINAL = process.exit;
@@ -102,7 +105,7 @@ test('on windows setAppUserModelId should be called', async () => {
   const code = new Main(ELECTRON_APP_MOCK);
   code.main([]);
 
-  expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith('io.podman_desktop.PodmanDesktop');
+  expect(ELECTRON_APP_MOCK.setAppUserModelId).toHaveBeenCalledWith('io.test_app.TestApp');
 });
 
 describe('gtk-version', () => {
