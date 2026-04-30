@@ -24,7 +24,7 @@ function formatTimestamp(date: Date): string {
 }
 
 async function copyLogsToClipboard(): Promise<void> {
-  const logsText = logs.map(log => `${formatTimestamp(log.date)} [${log.logType}] ${log.message}`).join('\n');
+  const logsText = logs.map(log => `${formatTimestamp(log.date)} ${log.logType} : ${log.message}`).join('\n');
   await window.clipboardWriteText(logsText);
 }
 </script>
@@ -42,9 +42,12 @@ async function copyLogsToClipboard(): Promise<void> {
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)]">
       <ul aria-label="logs">
         {#each logs as log, index (index)}
-          <li>
-            <div class="flex flex-row align-middle items-center gap-2">
-              <span class="font-mono text-[10px] font-thin text-[var(--pd-content-text-secondary)] shrink-0">
+          <li class="py-[3px]">
+            <div class="flex flex-row items-start gap-2">
+              <span
+                class="font-mono text-[10px] font-thin shrink-0 {log.logType === 'error'
+                  ? 'text-[var(--pd-state-error)]'
+                  : ''} {log.logType === 'warn' ? 'text-[var(--pd-state-warning)]' : 'text-[var(--pd-content-text)]'}">
                 {formatTimestamp(log.date)}
               </span>
               <div

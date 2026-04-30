@@ -73,5 +73,5 @@ test('Check logs are displayed with clipboard button', async () => {
   await fireEvent.click(clipboardButton);
 
   // check the content of the clipboard button
-  expect(clipboardWriteTextMock).toHaveBeenCalledWith('14:30:45 [log] test1\n14:30:45 [error] test2');
+  expect(clipboardWriteTextMock).toHaveBeenCalledWith('14:30:45 log : test1\n14:30:45 error : test2');
 });
