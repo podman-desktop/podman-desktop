@@ -383,16 +383,43 @@ The repository provides specialized AI skills in [.agents/skills/](../../.agents
 - "Why did E2E tests fail on this PR?"
 - "Analyze GitHub Actions run #12345"
 
+#### 4. [mcp-testing](../../.agents/skills/mcp-testing/SKILL.md)
+
+**Purpose:** Interactively explore and test the Podman Desktop UI using the `podman-desktop-mcp` MCP server — supports both production (installed app) and development (`pnpm watch`) modes
+
+**Use when:**
+
+- Quickly verifying a UI change during development without writing test code
+- Testing the production (installed) Podman Desktop app interactively
+- Exploring new or unfamiliar UI flows before writing page objects
+- Debugging a specific user workflow or UI issue interactively
+- Manual acceptance testing in development or production
+
+**Provides:**
+
+- Automated startup of production app or `pnpm watch` (cross-platform, no manual steps)
+- Live connection to the running Electron app via CDP
+- Screenshot, snapshot, click, fill, evaluate — all MCP-driven
+- Cross-platform support (macOS, Linux/Fedora/RHEL, Windows)
+- Troubleshooting guidance for DevTools targets, port conflicts, and CDP issues
+
+**Example prompts:**
+
+- "Explore the pods page"
+- "Show me what the Settings > Resources page looks like"
+- "Verify the image pull dialog works"
+- "Test the onboarding flow on the production app"
+
 ### Skills Workflow Integration
 
 These skills work together in the complete E2E testing lifecycle:
 
 ```
-Implementation → Execution → Investigation → Fix
-       ↓             ↓            ↓           ↓
-      [1]           CI          [3]         [1]
-                     ↓            ↓
-               (if fails)      [2]
+Explore UI → Implement tests → Execution → Investigation → Fix
+     ↓              ↓             ↓            ↓           ↓
+    [4]            [1]           CI          [3]         [1]
+                                  ↓            ↓
+                            (if fails)      [2]
 ```
 
 1. **playwright-testing** - Implement tests following POM patterns
@@ -400,18 +427,21 @@ Implementation → Execution → Investigation → Fix
 3. **investigate-gh-run** - Analyze CI failure, download artifacts (if tests fail)
 4. **playwright-trace-analysis** - Diagnose root cause from traces
 5. **playwright-testing** - Fix test or identify app bug
+6. **mcp-testing** - Interactively explore and test UI in dev or production mode
 
 ### Quick Skill Selection Guide
 
-| Scenario                               | Use This Skill              |
-| -------------------------------------- | --------------------------- |
-| Writing or modifying test code         | `playwright-testing`        |
-| Test failed in CI, need to investigate | `investigate-gh-run`        |
-| Have trace.zip, need diagnosis         | `playwright-trace-analysis` |
-| Understanding why test is flaky        | `playwright-trace-analysis` |
-| Comparing passing vs failing traces    | `playwright-trace-analysis` |
-| Creating page objects                  | `playwright-testing`        |
-| Understanding test framework patterns  | `playwright-testing`        |
+| Scenario                                 | Use This Skill              |
+| ---------------------------------------- | --------------------------- |
+| Writing or modifying test code           | `playwright-testing`        |
+| Exploring UI before writing tests        | `mcp-testing`               |
+| Quick manual verification of a UI change | `mcp-testing`               |
+| Test failed in CI, need to investigate   | `investigate-gh-run`        |
+| Have trace.zip, need diagnosis           | `playwright-trace-analysis` |
+| Understanding why test is flaky          | `playwright-trace-analysis` |
+| Comparing passing vs failing traces      | `playwright-trace-analysis` |
+| Creating page objects                    | `playwright-testing`        |
+| Understanding test framework patterns    | `playwright-testing`        |
 
 ## Resources
 
@@ -421,6 +451,7 @@ Implementation → Execution → Investigation → Fix
   - [`playwright-testing`](../../.agents/skills/playwright-testing/SKILL.md) - Core patterns (POM, locators, assertions, waits)
   - [`playwright-trace-analysis`](../../.agents/skills/playwright-trace-analysis/SKILL.md) - Trace analysis and failure diagnosis
   - [`investigate-gh-run`](../../.agents/skills/investigate-gh-run/SKILL.md) - CI/CD failure investigation
+  - [`mcp-testing`](../../.agents/skills/mcp-testing/SKILL.md) - Interactive UI testing via MCP (dev and production modes)
 - **[Reference docs](../../.agents/skills/playwright-testing/reference.md)** - Advanced features (fixtures, network mocking, etc.)
 - **[Examples](../../.agents/skills/playwright-testing/examples.md)** - Complete test examples
 
