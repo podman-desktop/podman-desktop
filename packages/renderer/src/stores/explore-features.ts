@@ -23,12 +23,12 @@ import { writable } from 'svelte/store';
 import { EventStore } from './event-store';
 
 const windowEvents = ['explore-features-loaded', 'provider-change', 'provider-container-connection-update-status'];
-const windowListeners = ['update-explore-features'];
+const windowListeners = ['update-explore-features', 'extensions-already-started'];
 
 let readyToUpdate = false;
 
 async function checkForUpdate(eventName: string): Promise<boolean> {
-  if ('explore-features-loaded' === eventName) {
+  if ('explore-features-loaded' === eventName || 'extensions-already-started' === eventName) {
     readyToUpdate = true;
   }
 
