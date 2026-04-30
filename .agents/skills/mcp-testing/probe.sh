@@ -12,7 +12,7 @@
 
 cdp_healthy_title() {
   local port=$1
-  curl -s --connect-timeout 2 "http://localhost:$port/json" 2>/dev/null | node -e '
+  curl -s --connect-timeout 2 --max-time 5 "http://localhost:$port/json" 2>/dev/null | node -e '
     const d = require("fs").readFileSync(0, "utf8");
     try {
       for (const t of JSON.parse(d)) {
@@ -47,7 +47,7 @@ prod_cdp_port=none
 prod_app_title=none
 if $prod_running; then
   for p in 9222 9223; do
-    if curl -s --connect-timeout 2 "http://localhost:$p/json/version" &>/dev/null; then
+    if curl -s --connect-timeout 2 --max-time 5 "http://localhost:$p/json/version" &>/dev/null; then
       title=$(cdp_healthy_title "$p") && {
         prod_cdp_port=$p
         prod_app_title=$title
@@ -64,7 +64,7 @@ pgrep -f 'pnpm.*watch' &>/dev/null && dev_running=true
 dev_cdp_port=none
 dev_app_title=none
 if $dev_running; then
-  if curl -s --connect-timeout 2 "http://localhost:9223/json/version" &>/dev/null; then
+  if curl -s --connect-timeout 2 --max-time 5 "http://localhost:9223/json/version" &>/dev/null; then
     title=$(cdp_healthy_title 9223) && {
       dev_cdp_port=9223
       dev_app_title=$title

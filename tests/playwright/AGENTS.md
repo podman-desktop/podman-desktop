@@ -415,19 +415,18 @@ The repository provides specialized AI skills in [.agents/skills/](../../.agents
 These skills work together in the complete E2E testing lifecycle:
 
 ```
-Explore UI → Implement tests → Execution → Investigation → Fix
-     ↓              ↓             ↓            ↓           ↓
-    [4]            [1]           CI          [3]         [1]
-                                  ↓            ↓
-                            (if fails)      [2]
+Explore UI → Write tests → CI execution → Investigate failure → Fix
+     ↓             ↓            ↓                ↓               ↓
+mcp-testing   playwright-   (GitHub       investigate-gh-run  playwright-
+              testing       Actions)            ↓              testing
+                               ↓         playwright-trace-
+                          (if fails)      analysis
 ```
 
-1. **playwright-testing** - Implement tests following POM patterns
-2. CI execution (GitHub Actions)
-3. **investigate-gh-run** - Analyze CI failure, download artifacts (if tests fail)
-4. **playwright-trace-analysis** - Diagnose root cause from traces
-5. **playwright-testing** - Fix test or identify app bug
-6. **mcp-testing** - Interactively explore and test UI in dev or production mode
+- **mcp-testing** — Explore UI interactively in dev or production mode
+- **playwright-testing** — Write, update, and fix E2E tests
+- **investigate-gh-run** — Analyze CI failure, download artifacts
+- **playwright-trace-analysis** — Diagnose root cause from traces
 
 ### Quick Skill Selection Guide
 

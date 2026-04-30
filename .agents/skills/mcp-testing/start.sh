@@ -19,12 +19,12 @@ DEV_PORT=9223
 # pnpm watch can spawn Electron properly.
 unset ELECTRON_RUN_AS_NODE
 
-cdp_ready() { curl -s "http://localhost:${1:-$DEV_PORT}/json/version" &>/dev/null; }
+cdp_ready() { curl -s --connect-timeout 2 --max-time 5 "http://localhost:${1:-$DEV_PORT}/json/version" &>/dev/null; }
 watch_running() { pgrep -f 'pnpm.*watch' &>/dev/null; }
 
 cdp_healthy_title() {
   local port=${1:-$DEV_PORT}
-  curl -s "http://localhost:$port/json" | node -e '
+  curl -s --connect-timeout 2 --max-time 5 "http://localhost:$port/json" | node -e '
     const d = require("fs").readFileSync(0, "utf8");
     try {
       for (const t of JSON.parse(d)) {
@@ -43,7 +43,7 @@ cdp_healthy_title() {
 close_devtools_targets() {
   local port=${1:-$DEV_PORT}
   local closed
-  closed=$(curl -s "http://localhost:$port/json" | CDP_PORT=$port node -e '
+  closed=$(curl -s --connect-timeout 2 --max-time 5 "http://localhost:$port/json" | CDP_PORT=$port node -e '
     const d = require("fs").readFileSync(0, "utf8");
     const port = process.env.CDP_PORT;
     let closed = 0;

@@ -31,7 +31,7 @@ if ($env:ELECTRON_RUN_AS_NODE) {
 function Test-CdpReady {
     param([int]$CdpPort = $DEV_PORT)
     try {
-        $null = Invoke-WebRequest -Uri "http://localhost:$CdpPort/json/version" -UseBasicParsing -ErrorAction Stop
+        $null = Invoke-WebRequest -Uri "http://localhost:$CdpPort/json/version" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
         return $true
     } catch { return $false }
 }
@@ -39,7 +39,7 @@ function Test-CdpReady {
 function Get-HealthyAppTitle {
     param([int]$CdpPort = $DEV_PORT)
     try {
-        $targets = (Invoke-WebRequest -Uri "http://localhost:$CdpPort/json" -UseBasicParsing -ErrorAction Stop).Content | ConvertFrom-Json
+        $targets = (Invoke-WebRequest -Uri "http://localhost:$CdpPort/json" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content | ConvertFrom-Json
         foreach ($t in $targets) {
             $url   = if ($t.url)   { $t.url.ToLower()   } else { "" }
             $title = if ($t.title) { $t.title.ToLower() } else { "" }
@@ -61,14 +61,14 @@ function Test-WatchRunning {
 function Close-DevToolsTargets {
     param([int]$CdpPort = $DEV_PORT)
     try {
-        $targets = (Invoke-WebRequest -Uri "http://localhost:$CdpPort/json" -UseBasicParsing -ErrorAction Stop).Content | ConvertFrom-Json
+        $targets = (Invoke-WebRequest -Uri "http://localhost:$CdpPort/json" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content | ConvertFrom-Json
         $closed = 0
         foreach ($t in $targets) {
             $url   = if ($t.url)   { $t.url.ToLower()   } else { "" }
             $title = if ($t.title) { $t.title.ToLower() } else { "" }
             if ($url -like "*devtools*" -or $title -eq "devtools") {
                 try {
-                    Invoke-WebRequest -Uri "http://localhost:$CdpPort/json/close/$($t.id)" -UseBasicParsing | Out-Null
+                    Invoke-WebRequest -Uri "http://localhost:$CdpPort/json/close/$($t.id)" -UseBasicParsing -TimeoutSec 5 | Out-Null
                     $closed++
                 } catch {}
             }
@@ -177,14 +177,24 @@ Write-Host "      Removed $($distDirs.Count) dist/ folder(s)"
 
 # Install deps (timeout after 5 minutes)
 Write-Host "[3/4] Installing dependencies..."
-$installJob = Start-Job -ScriptBlock { param($r) & pnpm --dir $r install } -ArgumentList $REPO
+$installJob = Start-Job -ScriptBlock {
+    param($r)
+    & pnpm --dir $r install
+    if ($LASTEXITCODE -ne 0) { throw "pnpm install exited with code $LASTEXITCODE" }
+} -ArgumentList $REPO
 $finished = $installJob | Wait-Job -Timeout 300
-if (-not $finished -or $installJob.State -ne 'Completed') {
+if (-not $finished -or $installJob.State -eq 'Running') {
     $installJob | Stop-Job; $installJob | Remove-Job -Force
-    Write-Host "ERROR: pnpm install failed or timed out after 5 minutes"
+    Write-Host "ERROR: pnpm install timed out after 5 minutes"
     exit 1
 }
-$installJob | Receive-Job
+try {
+    $installJob | Receive-Job -ErrorAction Stop
+} catch {
+    $installJob | Remove-Job -Force
+    Write-Host "ERROR: pnpm install failed: $_"
+    exit 1
+}
 $installJob | Remove-Job
 Write-Host "      Dependencies up to date"
 
