@@ -21,12 +21,12 @@
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.3.5",
-    "@storybook/addon-docs": "^10.3.5",
-    "@storybook/addon-links": "^10.3.5",
+    "@storybook/addon-a11y": "^10.3.6",
+    "@storybook/addon-docs": "^10.3.6",
+    "@storybook/addon-links": "^10.3.6",
     "@storybook/addon-svelte-csf": "5.1.2",
-    "@storybook/addon-themes": "^10.3.5",
-    "@storybook/svelte-vite": "^10.3.5",
+    "@storybook/addon-themes": "^10.3.6",
+    "@storybook/svelte-vite": "^10.3.6",
     "@sveltejs/package": "^2.5.7",
     "@sveltejs/vite-plugin-svelte": "6.2.4",
     "@tailwindcss/vite": "^4.2.4",
