@@ -80,7 +80,7 @@ onMount(async () => {
   });
 
   // Observe the terminal div
-  resizeObserver.observe(logsXtermDiv);
+  resizeObserver.disconnect();
 });
 
 onDestroy(() => {

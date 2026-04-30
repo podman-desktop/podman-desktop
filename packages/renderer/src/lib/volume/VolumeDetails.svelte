@@ -6,6 +6,7 @@ import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import VolumeDetailsSummary from '././VolumeDetailsSummary.svelte';
@@ -21,7 +22,7 @@ interface Props {
 let { volumeName, engineId }: Props = $props();
 
 const volumeUtils = new VolumeUtils();
-let detailsPage = $state<DetailsPage>();
+let hadVolume = $state(false);
 
 let volume: VolumeInfoUI | undefined = $derived.by(() => {
   const allVolumes = $volumeListInfos.map(volumeListInfo => volumeListInfo.Volumes).flat();
@@ -37,12 +38,16 @@ let volume: VolumeInfoUI | undefined = $derived.by(() => {
 });
 
 $effect(() => {
-  if (!volume) detailsPage?.close();
+  if (volume) {
+    hadVolume = true;
+  } else if (hadVolume) {
+    router.goto($lastPage.path);
+  }
 });
 </script>
 
 {#if volume}
-  <DetailsPage title={volume.shortName} subtitle={volume.humanSize} bind:this={detailsPage}>
+  <DetailsPage title={volume.shortName} subtitle={volume.humanSize}>
     {#snippet iconSnippet()}
       <StatusIcon icon={VolumeIcon} size={24} status={volume.status} />
     {/snippet}  

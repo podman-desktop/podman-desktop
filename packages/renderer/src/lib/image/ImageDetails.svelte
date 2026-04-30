@@ -14,6 +14,7 @@ import {
   IMAGE_VIEW_ICONS,
 } from '/@/lib/view/views';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
@@ -73,21 +74,22 @@ let image: ImageInfoUI | undefined = $derived(
     ? imageUtils.getImageInfoUI(imageInfo, base64RepoTag, $containersInfos, $context, viewContributions)
     : undefined,
 );
-let detailsPage: DetailsPage | undefined = $state();
-
 let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
 let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
+let hadImage = $state(false);
 
 $effect(() => {
-  if (!image) {
+  if (image) {
+    hadImage = true;
+  } else if (hadImage) {
     // the image has been deleted
-    detailsPage?.close();
+    router.goto($lastPage.path);
   }
 });
 </script>
 
 {#if image}
-  <DetailsPage title={image.name} titleDetail={image.shortId} subtitle={image.tag} bind:this={detailsPage}>
+  <DetailsPage title={image.name} titleDetail={image.shortId} subtitle={image.tag}>
     {#snippet iconSnippet()}
       {#if image}<StatusIcon icon={image.icon} size={24} status={image.status} />{/if}
     {/snippet}

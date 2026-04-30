@@ -10,6 +10,7 @@ import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import StateChange from '/@/lib/ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
 import { ContainerUtils } from './container-utils';
@@ -31,8 +32,8 @@ let { containerID }: Props = $props();
 
 const containerUtils = new ContainerUtils();
 
-let detailsPage = $state<DetailsPage | undefined>();
 let displayTty: boolean = $state(false);
+let hadContainer = $state(false);
 
 let container: ContainerInfoUI | undefined = $derived(
   getContainerInfoUI($containersInfos.find(c => c.Id === containerID)),
@@ -40,6 +41,7 @@ let container: ContainerInfoUI | undefined = $derived(
 
 $effect(() => {
   if (container) {
+    hadContainer = true;
     window
       .getContainerInspect(container.engineId, container.id)
       .then(inspect => {
@@ -55,8 +57,8 @@ $effect(() => {
         }
       })
       .catch((err: unknown) => console.error(`Error getting container inspect ${container?.id}: ${err}`));
-  } else {
-    detailsPage?.close();
+  } else if (hadContainer) {
+    router.goto($lastPage.path);
   }
 });
 
@@ -66,7 +68,7 @@ function getContainerInfoUI(cont: ContainerInfo | undefined): ContainerInfoUI | 
 </script>
 
 {#if container}
-  <DetailsPage title={container.name} bind:this={detailsPage}>
+  <DetailsPage title={container.name}>
     {#snippet iconSnippet()}
       <StatusIcon icon={ContainerIcon} size={24} status={container.state} />
     {/snippet}
