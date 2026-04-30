@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["mcp__podman-desktop-mcp__*"]
+  }
+}

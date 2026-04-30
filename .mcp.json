@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "podman-desktop-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["--yes", "electron-test-mcp"]
+    }
+  }
+}
