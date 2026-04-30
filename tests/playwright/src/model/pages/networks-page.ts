@@ -81,7 +81,7 @@ export class NetworksPage extends MainPage {
     return test.step('Delete selected networks', async () => {
       await playExpect(this.deleteSelectedButton).toBeEnabled();
       await this.deleteSelectedButton.click();
-      await handleConfirmationDialog(this.page);
+      await handleConfirmationDialog(this.page, 'Delete Networks?', true, 'Delete');
       return this;
     });
   }

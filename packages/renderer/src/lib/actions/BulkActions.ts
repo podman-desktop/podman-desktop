@@ -18,7 +18,7 @@
 
 import { type ConfirmationOptions, withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 
-export function withBulkConfirmation(callback: () => unknown, text: string, options?: ConfirmationOptions): void {
+export function withBulkConfirmation(callback: () => unknown, text: string, options: ConfirmationOptions): void {
   window
     .getConfigurationValue('userConfirmation.bulk')
     .then(confirm => (confirm ? withConfirmation(callback, text, options) : callback()))

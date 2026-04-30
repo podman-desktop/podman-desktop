@@ -535,10 +535,9 @@ const config = {
             </div>
             <div class="text-sm">
               <p class="mb-1">We are a <a href="https://cncf.io/" class="underline">Cloud Native Computing Foundation</a> sandbox project.</p>
-              <p class="mb-1">© Copyright Podman Desktop Contributors ${new Date().getFullYear()}. © ${new Date().getFullYear()} The Linux Foundation. All rights reserved.</p>
-              <p class="mb-1">The Linux Foundation has registered trademarks and uses trademarks.
-              For a list of trademarks of The Linux Foundation, please see our
-              <a href="https://www.linuxfoundation.org/trademark-usage/" class="underline"> Trademark Usage</a> page.</p>
+              <p class="mb-1">© ${new Date().getFullYear()} Podman Desktop, a Series of LF Projects, LLC.</p>
+              <p class="mb-1">For website terms of use, trademark policy and other project policies please see
+              <a href="https://lfprojects.org/policies/" class="underline">lfprojects.org/policies</a>.</p>
             </div>
           </div>
       `,

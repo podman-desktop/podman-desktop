@@ -57,6 +57,8 @@ function colorRegistryWatcher() {
   return {
     name: 'color-registry-watcher',
     configureServer(server) {
+      if (process.env.VITEST) return;
+
       const filesToWatch = [
         path.join(ROOT_DIR, 'packages/main/src/plugin/color-registry.ts'),
         path.join(ROOT_DIR, 'tailwind-color-palette.json'),

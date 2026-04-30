@@ -101,7 +101,7 @@ export class Main implements IDisposable {
      *  @see https://www.electronjs.org/docs/latest/api/app#appsetappusermodelidid-windows
      */
     if (isWindows()) {
-      this.app.setAppUserModelId(this.app.name);
+      this.app.setAppUserModelId(product.appId);
     }
 
     /**

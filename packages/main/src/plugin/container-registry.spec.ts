@@ -3712,6 +3712,151 @@ test('check handleEvents is not calling the console.log for health_status event'
   expect(consoleLogSpy).not.toBeCalled();
 });
 
+test('check handleEvents with Docker API v1.52+ event shape', async () => {
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  passThrough.emit(
+    'data',
+    JSON.stringify({
+      Type: 'container',
+      Action: 'start',
+      Actor: {
+        ID: 'abc123',
+      },
+    }),
+  );
+
+  await vi.waitFor(() => expect(apiSender.send).toBeCalledWith('container-started-event', 'abc123'));
+});
+
+test('check handleEvents normalizes Docker v1.52+ event before emitting to extensions', async () => {
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+  const receivedEvents: unknown[] = [];
+  containerRegistry.onEvent(event => receivedEvents.push(event));
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  passThrough.emit(
+    'data',
+    JSON.stringify({
+      Type: 'container',
+      Action: 'stop',
+      Actor: { ID: 'docker29-id' },
+    }),
+  );
+
+  await vi.waitFor(() => expect(receivedEvents.length).toBe(1));
+  expect(receivedEvents[0]).toMatchObject({
+    status: 'stop',
+    id: 'docker29-id',
+    Type: 'container',
+  });
+});
+
+test('check handleEvents does not log Docker compound health_status actions', async () => {
+  const consoleLogSpy = vi.spyOn(console, 'log');
+  consoleLogSpy.mockClear();
+
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  passThrough.emit(
+    'data',
+    JSON.stringify({
+      Type: 'container',
+      Action: 'health_status: healthy',
+      Actor: {
+        ID: 'abc123',
+      },
+    }),
+  );
+
+  await vi.waitFor(() => expect(eventsMockCallback).toBeDefined());
+  expect(consoleLogSpy).not.toBeCalled();
+});
+
+test('check handleEvents prefers Podman-style fields over Docker-style fields', async () => {
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  passThrough.emit(
+    'data',
+    JSON.stringify({
+      status: 'stop',
+      id: 'podman-id',
+      Type: 'container',
+      Action: 'start',
+      Actor: { ID: 'docker-id' },
+    }),
+  );
+
+  await vi.waitFor(() => expect(apiSender.send).toBeCalledWith('container-stopped-event', 'podman-id'));
+  expect(apiSender.send).not.toBeCalledWith('container-started-event', 'docker-id');
+});
+
 test('check handleEvents tracks telemetry when stream emits error', async () => {
   telemetryTrackMock.mockClear();
   const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

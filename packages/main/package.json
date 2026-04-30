@@ -30,14 +30,14 @@
     "@types/tar-fs": "^2.0.4",
     "@types/validator": "^13.15.10",
     "@types/winreg": "^1.2.36",
-    "msw": "^2.13.6",
+    "msw": "^2.14.2",
     "vitest": "^4.1.5"
   },
   "dependencies": {
     "@expo/sudo-prompt": "^9.3.2",
     "@kubernetes/client-node": "^1.4.0",
     "@podman-desktop/core-api": "workspace:*",
-    "@segment/analytics-node": "^3.0.0",
+    "@segment/analytics-node": "^3.1.0",
     "adm-zip": "^0.5.17",
     "check-disk-space": "^3.4.0",
     "chokidar": "^3.6.0",
@@ -64,12 +64,12 @@
     "stream-json": "^2.1.0",
     "tar": "^7.5.13",
     "tar-fs": "^3.1.2",
-    "tar-stream": "^3.1.8",
+    "tar-stream": "^3.2.0",
     "undici": "^7.25.0",
     "validator": "^13.15.35",
     "win-ca": "^3.5.1",
     "winreg": "^1.2.5",
     "yaml": "^2.8.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.1"
   }
 }

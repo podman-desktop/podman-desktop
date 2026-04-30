@@ -142,9 +142,8 @@ test.describe
       await playExpect(containerDetails.heading).toContainText(testContainerName);
 
       await containerDetails.stopContainer();
-      await playExpect
-        .poll(async () => await containerDetails.getState(), { timeout: 30_000 })
-        .toBe(ContainerState.Exited);
+      const regexp = new RegExp(`${ContainerState.Stopped}|${ContainerState.Exited}`);
+      await playExpect.poll(async () => await containerDetails.getState(), { timeout: 30_000 }).toMatch(regexp);
 
       const updatedContainersPage = await containerDetails.deleteContainer();
       await playExpect(updatedContainersPage.heading).toBeVisible();

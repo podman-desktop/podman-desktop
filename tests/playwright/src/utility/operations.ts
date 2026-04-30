@@ -202,7 +202,7 @@ export async function deleteNetwork(page: Page, name: string): Promise<void> {
 // Handles dialog that has accessible name `dialogTitle` and either confirms or rejects it.
 export async function handleConfirmationDialog(
   page: Page,
-  dialogTitle = 'Confirmation',
+  dialogTitle: string,
   confirm = true,
   confirmationButton = 'Yes',
   cancelButton = 'Cancel',
