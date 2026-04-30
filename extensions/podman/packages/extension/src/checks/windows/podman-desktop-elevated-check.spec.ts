@@ -15,7 +15,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
-import type { TelemetryLogger } from '@podman-desktop/api';
+import { env, type TelemetryLogger } from '@podman-desktop/api';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import type { PowerShellClient } from '/@/utils/powershell';
@@ -40,6 +40,7 @@ const POWERSHELL_CLIENT: PowerShellClient = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(env).appName = 'Test app';
   vi.mocked(getPowerShellClient).mockResolvedValue(POWERSHELL_CLIENT);
 });
 
@@ -49,9 +50,7 @@ test('expect PodmanDesktopElevatedCheck preflight check return failure result if
   const podmanDesktopElevatedCheck = new PodmanDesktopElevatedCheck(mockTelemetryLogger);
   const result = await podmanDesktopElevatedCheck.execute();
   expect(result.successful).toBeFalsy();
-  expect(result.description).equal(
-    'You must run Podman Desktop with administrative rights to run Hyper-V Podman machines.',
-  );
+  expect(result.description).equal('You must run Test app with administrative rights to run Hyper-V Podman machines.');
   expect(result.docLinks).toBeUndefined();
 });
 
