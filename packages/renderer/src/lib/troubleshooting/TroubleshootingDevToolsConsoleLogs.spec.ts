@@ -72,6 +72,51 @@ test('Check logs are displayed with clipboard button', async () => {
   expect(clipboardButton).toBeEnabled();
   await fireEvent.click(clipboardButton);
 
-  // check the content of the clipboard button
+  // timestamps are hidden by default, so clipboard should not include them
+  expect(clipboardWriteTextMock).toHaveBeenCalledWith('log : test1\nerror : test2');
+});
+
+test('Timestamps are hidden by default and shown after toggle', async () => {
+  const fixedDate = new Date('2026-04-29T14:30:45');
+  getDevtoolsConsoleLogsMock.mockReturnValue([{ logType: 'log', message: 'hello', date: fixedDate }]);
+
+  await waitRender({});
+
+  const logsList = screen.getByRole('list', { name: 'logs' });
+
+  // timestamps should be hidden by default
+  expect(logsList.textContent).not.toContain('14:30:45');
+  expect(logsList.textContent).toContain('hello');
+
+  // click the toggle timestamps button
+  const toggleButton = screen.getByRole('button', { name: 'Toggle Timestamps' });
+  expect(toggleButton).toBeInTheDocument();
+  await fireEvent.click(toggleButton);
+
+  // timestamps should now be visible
+  expect(logsList.textContent).toContain('14:30:45');
+
+  // click again to hide
+  await fireEvent.click(toggleButton);
+  expect(logsList.textContent).not.toContain('14:30:45');
+});
+
+test('Clipboard includes timestamps when toggle is enabled', async () => {
+  const fixedDate = new Date('2026-04-29T14:30:45');
+  getDevtoolsConsoleLogsMock.mockReturnValue([
+    { logType: 'log', message: 'test1', date: fixedDate },
+    { logType: 'error', message: 'test2', date: fixedDate },
+  ]);
+
+  await waitRender({});
+
+  // enable timestamps
+  const toggleButton = screen.getByRole('button', { name: 'Toggle Timestamps' });
+  await fireEvent.click(toggleButton);
+
+  // copy to clipboard
+  const clipboardButton = screen.getByRole('button', { name: 'Copy To Clipboard' });
+  await fireEvent.click(clipboardButton);
+
   expect(clipboardWriteTextMock).toHaveBeenCalledWith('14:30:45 log : test1\n14:30:45 error : test2');
 });
