@@ -42,7 +42,7 @@ async function copyLogsToClipboard(): Promise<void> {
     <div class="h-full overflow-auto p-2 bg-[var(--pd-invert-content-card-bg)]">
       <ul aria-label="logs">
         {#each logs as log, index (index)}
-          <li class="py-[3px]">
+          <li class="py-[3px] px-1 rounded-sm {index % 2 === 0 ? 'bg-black/4 dark:bg-white/4' : ''}">
             <div class="flex flex-row items-start gap-2">
               <span
                 class="font-mono text-[10px] font-thin shrink-0 {log.logType === 'error'
