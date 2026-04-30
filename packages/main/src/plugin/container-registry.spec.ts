@@ -3906,6 +3906,39 @@ test('check handleEvents tracks telemetry when stream emits error', async () => 
   consoleErrorSpy.mockRestore();
 });
 
+test('check handleEvents calls errorCallback and destroys pipeline on parse error', async () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const getEventsMock = vi.fn();
+  let eventsMockCallback: ((ignored: unknown, stream: PassThrough) => void) | undefined;
+  getEventsMock.mockImplementation((options: (ignored: unknown, stream: PassThrough) => void) => {
+    eventsMockCallback = options;
+  });
+
+  const passThrough = new PassThrough();
+  const fakeDockerode = {
+    getEvents: getEventsMock,
+  } as unknown as Dockerode;
+
+  const errorCallback = vi.fn();
+
+  containerRegistry.handleEvents(fakeDockerode, errorCallback);
+
+  if (eventsMockCallback) {
+    eventsMockCallback?.(undefined, passThrough);
+  }
+
+  // send malformed data to trigger a JSON parse error in the pipeline
+  passThrough.write('this is not valid JSON{{{');
+  passThrough.end();
+
+  await vi.waitFor(() => expect(errorCallback).toHaveBeenCalled());
+
+  expect(consoleErrorSpy).toHaveBeenCalledWith('Error while parsing events', expect.any(Error));
+  expect(errorCallback).toHaveBeenCalledWith(expect.objectContaining({ message: 'Error while parsing events' }));
+
+  consoleErrorSpy.mockRestore();
+});
+
 test('check volume mounted is replicated when executing replicatePodmanContainer with named volume', async () => {
   const dockerAPI = new Dockerode({ protocol: 'http', host: 'localhost' });
 
