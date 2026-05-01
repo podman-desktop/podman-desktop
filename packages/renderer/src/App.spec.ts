@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,15 @@
  ***********************************************************************/
 
 import { tablePersistence } from '@podman-desktop/ui-svelte';
-import { cleanup, render, waitFor } from '@testing-library/svelte';
+import { render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { get, writable } from 'svelte/store';
 import { router } from 'tinro';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
 
 import App from './App.svelte';
-import { LAST_ROUTE_KEY, SETTINGS_PAGE_KEY } from './navigation';
 import { lastPage } from './stores/breadcrumb';
 import { navigationRegistry, type NavigationRegistryEntry } from './stores/navigation/navigation-registry';
 
@@ -51,6 +50,7 @@ vi.mock(import('./lib/image/ImagesList.svelte'), () => ({
 
 vi.mock(import('./lib/ui/TitleBar.svelte'));
 vi.mock(import('./lib/welcome/WelcomePage.svelte'));
+vi.mock(import('./PreferencesNavigation.svelte'));
 
 vi.mock(import('./lib/context/ContextKey.svelte'));
 
@@ -67,8 +67,6 @@ vi.mock(import('./lib/kube/KubernetesDashboard.svelte'), () => ({
 vi.mock(import('./lib/deployments/DeploymentsList.svelte'), () => ({
   default: mocks.DeploymentsList,
 }));
-
-vi.mock(import('./PreferencesNavigation.svelte'));
 
 vi.mock(import('/@/stores/kubernetes-contexts-state'), async () => {
   return {};
@@ -231,50 +229,38 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
 });
 
 describe('route persistence across reloads', () => {
-  afterEach(() => {
-    cleanup();
-  });
+  const LAST_ROUTE_KEY = 'podman-desktop-last-route';
+  const SETTINGS_PAGE_KEY = 'podman-desktop-settings-page';
 
-  test('navigating to a route persists it in sessionStorage', async () => {
+  test('navigating to a regular page saves it in sessionStorage', async () => {
     render(App);
     router.goto('/images');
     await tick();
     expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
+    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBeNull();
   });
 
-  test('tab URLs are persisted including the tab segment', async () => {
+  test('navigating to Dashboard clears sessionStorage', async () => {
     render(App);
-    router.goto('/containers/abc123/logs');
+    router.goto('/images');
     await tick();
-    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/containers/abc123/logs');
-
-    router.goto('/containers/abc123/inspect');
+    router.goto('/');
     await tick();
-    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/containers/abc123/inspect');
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBeNull();
+    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBeNull();
   });
 
-  test('navigating to a preferences route saves the preferences URL', async () => {
+  test('navigating to a preferences page saves it without overwriting last regular page', async () => {
     render(App);
     router.goto('/images');
     await tick();
     router.goto('/preferences/resources');
     await tick();
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
     expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBe('/preferences/resources');
-    // LAST_ROUTE_KEY keeps the regular page intact as the return destination
-    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
   });
 
-  test('navigating to a preferences route saves the return page', async () => {
-    render(App);
-    router.goto('/images');
-    await tick();
-    router.goto('/preferences/resources');
-    await tick();
-    // the page to return to on exit-settings is preserved in LAST_ROUTE_KEY
-    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/images');
-  });
-
-  test('navigating from preferences back to a normal page clears SETTINGS_PAGE_KEY', async () => {
+  test('navigating away from preferences clears SETTINGS_PAGE_KEY', async () => {
     render(App);
     router.goto('/images');
     await tick();
@@ -284,28 +270,6 @@ describe('route persistence across reloads', () => {
     await tick();
     expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBe('/containers');
     expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBeNull();
-  });
-
-  test('navigating to dashboard clears the persisted route', async () => {
-    render(App);
-    router.goto('/images');
-    await tick();
-    router.goto('/preferences/resources');
-    await tick();
-    router.goto('/');
-    await tick();
-    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBeNull();
-    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBeNull();
-  });
-
-  test('restores the saved route on mount', async () => {
-    const gotoSpy = vi.spyOn(router, 'goto').mockImplementation(() => {});
-    sessionStorage.setItem(LAST_ROUTE_KEY, '/images');
-    render(App);
-    // Route restore is handled by Loader.svelte, not App.svelte;
-    // App.svelte should NOT call router.goto on its own
-    await tick();
-    expect(gotoSpy).not.toHaveBeenCalledWith('/images');
   });
 });
 

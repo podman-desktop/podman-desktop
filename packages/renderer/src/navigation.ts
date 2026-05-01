@@ -22,58 +22,6 @@ import { NavigationPage } from '@podman-desktop/core-api';
 import { Buffer } from 'buffer';
 import { router } from 'tinro';
 
-export const LAST_ROUTE_KEY = 'podman-desktop-last-route';
-export const SETTINGS_PAGE_KEY = 'podman-desktop-settings-page';
-
-/**
- * Initialises the router in memory mode and restores the routes that were active
- * before the last window reload.  Must be called synchronously before the root
- * Svelte component mounts so the route tree sees the correct URL on first render.
- */
-export function restoreRoutes(): void {
-  router.mode.memory();
-  const lastRoute = sessionStorage.getItem(LAST_ROUTE_KEY);
-  const settingsPage = sessionStorage.getItem(SETTINGS_PAGE_KEY);
-  // Restore the regular page first so the subscribe handler initialises
-  // nonSettingsPage naturally, then navigate to preferences on top if needed.
-  if (lastRoute) {
-    router.goto(lastRoute);
-  }
-  if (settingsPage) {
-    router.goto(settingsPage);
-  }
-}
-
-/**
- * Subscribes to router changes and persists the current route to sessionStorage
- * so it can be restored after a window reload.
- *
- * @param onNonSettingsNavigate - called with the URL whenever the user navigates
- *   to a non-preferences page; use this to keep the "exit settings" destination
- *   up to date.
- */
-export function setupRoutePersistence(onNonSettingsNavigate: (url: string) => void): void {
-  router.subscribe(navigation => {
-    if (navigation.url === undefined || navigation.url.includes('.html')) return;
-
-    if (!navigation.url.startsWith('/preferences')) {
-      onNonSettingsNavigate(navigation.url);
-    }
-
-    if (!navigation.url.startsWith('/')) return;
-
-    if (navigation.url === '/') {
-      sessionStorage.removeItem(LAST_ROUTE_KEY);
-      sessionStorage.removeItem(SETTINGS_PAGE_KEY);
-    } else if (navigation.url.startsWith('/preferences')) {
-      sessionStorage.setItem(SETTINGS_PAGE_KEY, navigation.url);
-    } else {
-      sessionStorage.setItem(LAST_ROUTE_KEY, navigation.url);
-      sessionStorage.removeItem(SETTINGS_PAGE_KEY);
-    }
-  });
-}
-
 // help method to ensure the handleNavigation is able to infer type properly through the switch
 // ref https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
 type InferredNavigationRequest<T extends NavigationPage> = T extends NavigationPage ? NavigationRequest<T> : never;

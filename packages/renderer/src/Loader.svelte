@@ -5,11 +5,7 @@ import { router } from 'tinro';
 import App from './App.svelte';
 import SealRocket from './lib/images/SealRocket.svelte';
 import ColorsStyle from './lib/style/ColorsStyle.svelte';
-import { restoreRoutes } from './navigation';
 import { lastPage } from './stores/breadcrumb';
-
-// Initialise router memory mode and restore routes BEFORE App ever mounts.
-restoreRoutes();
 
 let systemReady = false;
 

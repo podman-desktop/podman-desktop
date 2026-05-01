@@ -9,7 +9,7 @@ import { router } from 'tinro';
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
-import { handleNavigation, LAST_ROUTE_KEY, setupRoutePersistence } from '/@/navigation';
+import { handleNavigation } from '/@/navigation';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 
 import AppNavigation from './AppNavigation.svelte';
@@ -89,13 +89,55 @@ import Route from './Route.svelte';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
-// exitSettingsCallback target: seeded from sessionStorage in case App mounts after
-// Loader already navigated to preferences (the subscribe fires with preferences URL,
-// so onNonSettingsNavigate would never be called without this fallback).
-let nonSettingsPage = sessionStorage.getItem(LAST_ROUTE_KEY) ?? '/';
-setupRoutePersistence(url => {
-  nonSettingsPage = url;
+router.mode.memory();
+
+const LAST_ROUTE_KEY = 'podman-desktop-last-route';
+const SETTINGS_PAGE_KEY = 'podman-desktop-settings-page';
+
+// Routes to restore after the mandatory router.goto('/') fired by WelcomePage.onMount.
+// We intercept the first '/' event and re-navigate to where the user was before the reload.
+let pendingRoute = sessionStorage.getItem(LAST_ROUTE_KEY);
+let pendingSettingsRoute = sessionStorage.getItem(SETTINGS_PAGE_KEY);
+
+//remember from where we come to preference pages
+let nonSettingsPage = pendingRoute ?? '/';
+
+// tinro fires router.subscribe immediately (synchronously) with the current router state.
+// That initial call is not a real navigation — skip it so pendingRoute is still live when
+// WelcomePage.onMount fires its unconditional router.goto('/') asynchronously.
+let subscribeReady = false;
+router.subscribe(function (navigation) {
+  if (!subscribeReady) return;
+  if (navigation.url === undefined || navigation.url.includes('.html')) return;
+  if (!navigation.url.startsWith('/')) return;
+
+  // WelcomePage always emits router.goto('/') in its onMount.  Use that as
+  // the trigger to restore the pre-reload route on top of Dashboard.
+  if (pendingRoute !== null && navigation.url === '/') {
+    const route = pendingRoute;
+    const settingsRoute = pendingSettingsRoute;
+    pendingRoute = null;
+    pendingSettingsRoute = null;
+    router.goto(route);
+    if (settingsRoute) router.goto(settingsRoute);
+    return;
+  }
+  pendingRoute = null;
+  pendingSettingsRoute = null;
+
+  if (navigation.url === '/') {
+    sessionStorage.removeItem(LAST_ROUTE_KEY);
+    sessionStorage.removeItem(SETTINGS_PAGE_KEY);
+    nonSettingsPage = '/';
+  } else if (navigation.url.startsWith('/preferences')) {
+    sessionStorage.setItem(SETTINGS_PAGE_KEY, navigation.url);
+  } else {
+    sessionStorage.setItem(LAST_ROUTE_KEY, navigation.url);
+    sessionStorage.removeItem(SETTINGS_PAGE_KEY);
+    nonSettingsPage = navigation.url;
+  }
 });
+subscribeReady = true;
 
 window.events?.receive('context-menu:visible', visible => {
   if (visible) {

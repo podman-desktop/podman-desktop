@@ -64,15 +64,10 @@ test.describe
     });
 
     test('Buttons disabled when navigation not possible', async ({ navigationBar, page }) => {
-      // Clear sessionStorage before reload so route-restore doesn't navigate away
-      // from Dashboard (the default start page) to a page visited in a prior test.
+      // Clear sessionStorage so route-restoration lands on Dashboard (default),
+      // not on whatever page a prior test happened to leave in storage.
       await page.evaluate(() => sessionStorage.clear());
       await page.reload();
-      // Explicitly click Dashboard to seed '/' into the navigation-history stack.
-      // In development mode tinro's memory-mode router does not emit an initial '/'
-      // event, so the first user navigation would be the only stack entry and
-      // goBack() would have nothing to return to.
-      await navigationBar.openDashboard();
       await playExpect(navigationBar.backButton).toBeDisabled();
       await playExpect(navigationBar.forwardButton).toBeDisabled();
 
