@@ -1925,7 +1925,7 @@ It’s a cross-platform tool that helps streamline container workflows, offering
 <p>Apple Container is a Swift-based tool for running Linux containers using minimal virtual machines on macOS. To use this functionality, macOS 26 (Tahoe) and above is required.</p>
 <p>Until now, managing containers created with Apple Container required CLI interactions. This new extension enhances Podman Desktop, providing visibility into your containers and images without modifying the core Podman Desktop engine.</p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="underlying-architecture">Underlying Architecture<a href="https://podman-desktop.io/blog/apple-container-extension#underlying-architecture" class="hash-link" aria-label="Direct link to Underlying Architecture" title="Direct link to Underlying Architecture" translate="no">​</a></h2>
-<p>The extension uses a thin integration layer called <a href="https://github.com/socktainer/socktainer" target="_blank" rel="noopener noreferrer" class="">Socktainer</a>, written in Swift on top of the <a href="https://vapor.codes/" target="_blank" rel="noopener noreferrer" class="">Vapor</a> framework. Socktainer provides a REST API that aims to be compatible with the Docker REST API.</p>
+<p>The extension uses a thin integration layer called <a href="https://socktainer.github.io/" target="_blank" rel="noopener noreferrer" class="">Socktainer</a>, written in Swift on top of the <a href="https://vapor.codes/" target="_blank" rel="noopener noreferrer" class="">Vapor</a> framework. Socktainer provides a REST API that aims to be compatible with the Docker REST API.</p>
 <p>This design allows Podman Desktop to communicate with Apple Container containers as if they were Docker-compatible, without needing core changes ⚙️.</p>
 <p>Key points about the architecture:</p>
 <ul>
@@ -1972,7 +1972,12 @@ It’s a cross-platform tool that helps streamline container workflows, offering
 <p>And search for Apple container extension. Click on the install button ✅</p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="conclusion">Conclusion<a href="https://podman-desktop.io/blog/apple-container-extension#conclusion" class="hash-link" aria-label="Direct link to Conclusion" title="Direct link to Conclusion" translate="no">​</a></h2>
 <p>The Container extension brings Podman Desktop users a modern, native way to manage containers on Apple Silicon Macs 🍏. By leveraging Socktainer and Apple Container, developers can inspect containers and images without leaving the UI, streamlining local development workflows.</p>
-<p>Have feedback? Share it on the <a href="https://github.com/podman-desktop/extension-apple-container/issues" target="_blank" rel="noopener noreferrer" class="">Podman Desktop extension issue tracker</a>.</p>]]></content:encoded>
+<p>Have feedback? Share it on the <a href="https://github.com/podman-desktop/extension-apple-container/issues" target="_blank" rel="noopener noreferrer" class="">Podman Desktop extension issue tracker</a>.</p>
+<h3 class="anchor anchorTargetStickyNavbar_tleR" id="links">Links<a href="https://podman-desktop.io/blog/apple-container-extension#links" class="hash-link" aria-label="Direct link to Links" title="Direct link to Links" translate="no">​</a></h3>
+<ul>
+<li class=""><a href="https://socktainer.github.io/" target="_blank" rel="noopener noreferrer" class="">Socktainer Website</a></li>
+<li class=""><a href="https://github.com/socktainer/socktainer" target="_blank" rel="noopener noreferrer" class="">Socktainer GitHub</a></li>
+</ul>]]></content:encoded>
             <category>podman-desktop</category>
             <category>apple-container</category>
             <category>images</category>
