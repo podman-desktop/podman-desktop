@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import type { PropSidebarItem } from '@docusaurus/plugin-content-docs';
 import { useLocation } from '@docusaurus/router';
 import { ThemeClassNames, useColorMode } from '@docusaurus/theme-common';
@@ -120,10 +121,11 @@ function StorybookRoot(): JSX.Element {
 
 // to use `useColorMode` we need to be wrapped in Layout component
 // ref https://docusaurus.io/docs/api/themes/configuration#use-color-mode
+// BrowserOnly prevents useColorMode from being called during SSG
 export default function Storybook(): JSX.Element {
   return (
     <Layout title="Storybook">
-      <StorybookRoot />
+      <BrowserOnly>{() => <StorybookRoot />}</BrowserOnly>
     </Layout>
   );
 }
