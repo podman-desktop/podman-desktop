@@ -26,7 +26,7 @@ Until now, managing containers created with Apple Container required CLI interac
 
 ## Underlying Architecture
 
-The extension uses a thin integration layer called [Socktainer](https://github.com/socktainer/socktainer), written in Swift on top of the [Vapor](https://vapor.codes) framework. Socktainer provides a REST API that aims to be compatible with the Docker REST API.
+The extension uses a thin integration layer called [Socktainer](https://socktainer.github.io), written in Swift on top of the [Vapor](https://vapor.codes) framework. Socktainer provides a REST API that aims to be compatible with the Docker REST API.
 
 This design allows Podman Desktop to communicate with Apple Container containers as if they were Docker-compatible, without needing core changes ⚙️.
 
@@ -88,3 +88,8 @@ And search for Apple container extension. Click on the install button ✅
 The Container extension brings Podman Desktop users a modern, native way to manage containers on Apple Silicon Macs 🍏. By leveraging Socktainer and Apple Container, developers can inspect containers and images without leaving the UI, streamlining local development workflows.
 
 Have feedback? Share it on the [Podman Desktop extension issue tracker](https://github.com/podman-desktop/extension-apple-container/issues).
+
+### Links
+
+- [Socktainer Website](https://socktainer.github.io)
+- [Socktainer GitHub](https://github.com/socktainer/socktainer)
