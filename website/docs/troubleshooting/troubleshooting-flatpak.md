@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 50
 title: Testing a Flatpak from a release
 description: How to correctly test a Podman Desktop Flatpak bundle from the release page.
 tags: [podman-desktop, testing, linux, flatpak]

@@ -294,7 +294,7 @@ Before testing a locally built or release `.flatpak`:
    flatpak info --user --show-permissions io.podman_desktop.PodmanDesktop
    ```
 
-For full instructions — including how to build from the Flathub manifest to test permission changes before a release — see the [Testing a Flatpak from a release](https://podman-desktop.io/docs/installation/linux-install/testing-flatpak-from-release) guide.
+For full instructions — including how to build from the Flathub manifest to test permission changes before a release — see the [Testing a Flatpak from a release](https://podman-desktop.io/docs/troubleshooting/troubleshooting-flatpak) guide.
 
 ## Submitting Pull Requests
 

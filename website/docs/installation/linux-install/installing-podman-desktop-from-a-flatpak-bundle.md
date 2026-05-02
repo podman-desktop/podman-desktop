@@ -42,7 +42,7 @@ Consider installing a Flatpak bundle rather than [from Flathub](/docs/installati
 #### Additional resources
 
 - [Using Flatpak](https://docs.flatpak.org/en/latest/using-flatpak.html)
-- [Testing a Flatpak from a release](/docs/installation/linux-install/testing-flatpak-from-release)
+- [Testing a Flatpak from a release](/docs/troubleshooting/troubleshooting-flatpak)
 
 #### Next steps
 
