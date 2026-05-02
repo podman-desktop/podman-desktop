@@ -120,7 +120,7 @@ function toTemplateData(data: { namespaces: Namespaces; classes: Classes; appNam
 export default async function setup(): Promise<void> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  // this file lives in packages/api-mocks/src/
+  // this file lives in packages/api-mocks-vitest/src/
   const packageRoot = path.resolve(__dirname, '..');
   const repoRoot = path.resolve(packageRoot, '..', '..');
   const extensionApiTypePath = path.join(repoRoot, 'packages', 'extension-api', 'src', 'extension-api.d.ts');
