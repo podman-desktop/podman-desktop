@@ -735,7 +735,7 @@ declare module '@podman-desktop/api' {
 
     // version may not be defined
     readonly version: string | undefined;
-    updateVersion(version: string): void;
+    updateVersion(version?: string): void;
     onDidUpdateVersion: Event<string>;
 
     readonly images: ProviderImages;

@@ -161,9 +161,9 @@ export class ProviderImpl implements Provider, IDisposable {
     this._status = status;
   }
 
-  updateVersion(version: string): void {
+  updateVersion(version?: string): void {
     if (version !== this._version) {
-      this._onDidUpdateVersion.fire(version);
+      this._onDidUpdateVersion.fire(version ?? '');
     }
     this._version = version;
   }
