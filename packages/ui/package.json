@@ -175,7 +175,7 @@
     "eslint-plugin-svelte": "^3.17.1",
     "jsdom": "^29.1.1",
     "svelte": "5.53.7",
-    "svelte-check": "^4.4.6",
+    "svelte-check": "^4.4.7",
     "svelte-eslint-parser": "^1.6.0",
     "tailwindcss": "^4.2.4",
     "tslib": "^2.8.1",
