@@ -361,6 +361,7 @@ export class ColorRegistry {
     this.initProgressBar();
     this.initBadge();
     this.initProviderInfo();
+    this.initToast();
   }
 
   protected initDefaults(): void {
@@ -2321,6 +2322,94 @@ export class ColorRegistry {
       light: gray[900],
       hcDark: white,
       hcLight: black,
+    });
+  }
+
+  protected initToast(): void {
+    const toast = 'toast-';
+
+    this.registerColor(`${toast}success-bg`, {
+      dark: green[600],
+      light: green[700],
+      hcDark: green[400],
+      hcLight: green[800],
+    });
+
+    this.registerColor(`${toast}success-color`, {
+      dark: white,
+      light: white,
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${toast}success-bar-bg`, {
+      dark: green[800],
+      light: green[900],
+      hcDark: green[700],
+      hcLight: green[900],
+    });
+
+    this.registerColor(`${toast}error-bg`, {
+      dark: red[600],
+      light: red[700],
+      hcDark: red[400],
+      hcLight: red[900],
+    });
+
+    this.registerColor(`${toast}error-color`, {
+      dark: white,
+      light: white,
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${toast}error-bar-bg`, {
+      dark: red[800],
+      light: red[900],
+      hcDark: red[800],
+      hcLight: red[950],
+    });
+
+    this.registerColor(`${toast}warning-bg`, {
+      dark: amber[400],
+      light: amber[500],
+      hcDark: amber[300],
+      hcLight: amber[800],
+    });
+
+    this.registerColor(`${toast}warning-color`, {
+      dark: charcoal[900],
+      light: charcoal[900],
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${toast}warning-bar-bg`, {
+      dark: amber[700],
+      light: amber[800],
+      hcDark: amber[800],
+      hcLight: amber[950],
+    });
+
+    this.registerColor(`${toast}info-bg`, {
+      dark: accent1[400],
+      light: accent1[500],
+      hcDark: accent1[300],
+      hcLight: accent1[800],
+    });
+
+    this.registerColor(`${toast}info-color`, {
+      dark: white,
+      light: white,
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${toast}info-bar-bg`, {
+      dark: accent1[700],
+      light: accent1[800],
+      hcDark: accent1[800],
+      hcLight: accent1[950],
     });
   }
 
