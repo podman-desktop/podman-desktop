@@ -194,4 +194,26 @@ export const extensionsInstallationSmokeList = [
   openshiftDockerExtension,
   imageLayersExplorerExtension,
 ];
-export const extensionsAllExternalList = [...extensionsExternalList, headlampExtension];
+export const extensionsAllExternalList = [...extensionsExternalList, headlampExtension, openshiftDockerExtension];
+
+export interface ExtensionInstallConfig {
+  ociImageUrl?: string;
+  navigationBarIconName?: string;
+  resourceLabel?: string;
+}
+
+export const extensionInstallConfigs: Record<string, ExtensionInstallConfig> = {
+  [bootcExtension.extensionName]: {
+    ociImageUrl: 'ghcr.io/containers/podman-desktop-extension-bootc',
+    navigationBarIconName: 'Bootable Containers',
+    resourceLabel: 'bootc',
+  },
+  [podmanQuadletExtension.extensionName]: {
+    ociImageUrl: 'ghcr.io/podman-desktop/pd-extension-quadlet:latest',
+    navigationBarIconName: 'Quadlets',
+  },
+  [openshiftDockerExtension.extensionName]: {
+    ociImageUrl: 'redhatdeveloper/openshift-dd-ext:0.0.1-100',
+    navigationBarIconName: 'OpenShift',
+  },
+};

@@ -21,10 +21,10 @@ import { expect as playExpect, test } from '@playwright/test';
 
 import {
   bootcExtension,
+  extensionInstallConfigs,
+  extensionsAllExternalList,
   extensionsInstallationSmokeList,
-  imageLayersExplorerExtension,
   openshiftDockerExtension,
-  podmanQuadletExtension,
 } from '/@/model/core/extensions';
 import { ExtensionState } from '/@/model/core/states';
 import { ExtensionCatalogCardPage } from '/@/model/pages/extension-catalog-card-page';
@@ -42,9 +42,25 @@ let page: Page;
 
 let extensionNavigationBarIcon: Locator | undefined;
 let resourceLabel: string | undefined;
-let ociImageUrl: string;
+let ociImageUrl: string | undefined;
 
 let navigationBar: NavigationBar;
+
+// Set PODMAN_DESKTOP_EXTENSIONS env var to a comma-separated list of extension names to run only specific extensions.
+// Available extension names:
+//   minikube, Podman AI Lab, Red Hat Extension Pack, Bootable Container, Developer Sandbox,
+//   Image Layers Explorer, Podman Quadlet, Red Hat Authentication, Red Hat OpenShift Checker,
+//   Red Hat OpenShift Local, Headlamp, OpenShift
+const requestedExtensions = process.env.PODMAN_DESKTOP_EXTENSIONS;
+const extensionsToTest = requestedExtensions
+  ? extensionsAllExternalList.filter(ext => {
+      const extName = ext.extensionName.toLowerCase();
+      return requestedExtensions
+        .split(',')
+        .map(name => name.trim().toLowerCase())
+        .some(requested => extName.startsWith(requested) || requested.startsWith(extName));
+    })
+  : extensionsInstallationSmokeList;
 
 async function _startup(extensionLabel: string): Promise<void> {
   pdRunner = await RunnerFactory.getInstance();
@@ -57,12 +73,7 @@ async function _startup(extensionLabel: string): Promise<void> {
   navigationBar = new NavigationBar(page);
 }
 
-for (const {
-  extensionLabel,
-  extensionFullLabel,
-  extensionName,
-  extensionFullName,
-} of extensionsInstallationSmokeList) {
+for (const { extensionLabel, extensionFullLabel, extensionName, extensionFullName } of extensionsToTest) {
   test.describe
     .serial(`Extension installation for ${extensionName}`, { tag: '@smoke' }, () => {
       test.skip(extensionName === openshiftDockerExtension.extensionName && !!isWindows); // Currently timing out in azure cicd https://github.com/podman-desktop/e2e/issues/396
@@ -80,7 +91,7 @@ for (const {
       });
 
       test('Install extension through Extensions Catalog', async () => {
-        test.skip(extensionName !== imageLayersExplorerExtension.extensionName);
+        test.skip(!!ociImageUrl, 'Extension has OCI image configured, skipping catalog install');
         test.setTimeout(200_000);
 
         const extensionsPage = new ExtensionsPage(page);
@@ -98,11 +109,12 @@ for (const {
       });
 
       test('Install extension from OCI Image', async () => {
-        test.skip(extensionName === imageLayersExplorerExtension.extensionName);
+        test.skip(!ociImageUrl, 'No OCI image configured, skipping OCI install');
         test.setTimeout(200_000);
 
         const extensionsPage = new ExtensionsPage(page);
 
+        if (!ociImageUrl) throw new Error('ociImageUrl is required for OCI install');
         await extensionsPage.installExtensionFromOCIImage(ociImageUrl, 180_000);
         if (extensionName !== openshiftDockerExtension.extensionName) {
           await extensionsPage.openCatalogTab();
@@ -254,39 +266,14 @@ for (const {
 }
 
 function initializeLocators(extensionName: string): void {
-  const navigationBar = new NavigationBar(page);
-  switch (extensionName) {
-    case bootcExtension.extensionName: {
-      extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', {
-        name: 'Bootable Containers',
-        exact: true,
-      });
-      resourceLabel = 'bootc';
-      ociImageUrl = 'ghcr.io/containers/podman-desktop-extension-bootc';
-      break;
-    }
-    case podmanQuadletExtension.extensionName: {
-      extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', { name: 'Quadlets', exact: true });
-      resourceLabel = undefined;
-      ociImageUrl = 'ghcr.io/podman-desktop/pd-extension-quadlet:latest';
-      break;
-    }
-    case openshiftDockerExtension.extensionName: {
-      extensionNavigationBarIcon = navigationBar.navigationLocator.getByRole('link', {
-        name: 'OpenShift',
-        exact: true,
-      });
-      resourceLabel = undefined;
-      ociImageUrl = 'redhatdeveloper/openshift-dd-ext:0.0.1-100';
-      break;
-    }
-    case imageLayersExplorerExtension.extensionName: {
-      extensionNavigationBarIcon = undefined;
-      resourceLabel = undefined;
-      ociImageUrl = '';
-      break;
-    }
-  }
+  const nav = new NavigationBar(page);
+  const config = extensionInstallConfigs[extensionName];
+
+  ociImageUrl = config?.ociImageUrl;
+  resourceLabel = config?.resourceLabel;
+  extensionNavigationBarIcon = config?.navigationBarIconName
+    ? nav.navigationLocator.getByRole('link', { name: config.navigationBarIconName, exact: true })
+    : undefined;
 }
 
 async function goToDashboard(): Promise<void> {
