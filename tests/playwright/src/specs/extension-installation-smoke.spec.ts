@@ -45,9 +45,9 @@ let resourceLabel: string | undefined;
 let ociImageUrl: string | undefined;
 
 let navigationBar: NavigationBar;
-const skipExtesnionsTest = process.env.SKIP_EXTENSIONS_TEST ?? false;
+const skipExtensionsTest = process.env.SKIP_EXTENSIONS_TEST === 'true';
 
-test.skip(!!skipExtesnionsTest, 'Skip test suite based on env. variable');
+test.skip(skipExtensionsTest, 'Skip test suite based on env. variable');
 
 // Set PODMAN_DESKTOP_EXTENSIONS env var to a comma-separated list of extension names to run only specific extensions.
 // Available extension names:

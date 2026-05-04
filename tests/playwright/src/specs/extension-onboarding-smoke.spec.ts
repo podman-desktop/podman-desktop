@@ -25,9 +25,10 @@ import { isMac } from '/@/utility/platform';
 let rateLimitReachedFlag = false;
 let composeOnboardingStatusText: string | undefined;
 let kubectlOnboardingStatusText: string | undefined;
-const skipExtesnionsOnboardingTest = process.env.SKIP_EXTENSIONS_ONBOARDING_TEST ?? false;
+const skipExtensionsOnboardingTest = process.env.SKIP_EXTENSIONS_ONBOARDING_TEST === 'true';
 
-test.skip(!!skipExtesnionsOnboardingTest, 'Skip test suite based on env. variable');
+test.skip(skipExtensionsOnboardingTest, 'Skip test suite based on env. variable');
+test.skip(!!isMac, 'This test is not supported on Mac due to requiring admin permissions to install tools');
 
 test.use({ runnerOptions: new RunnerOptions({ customFolder: 'compose-onboarding' }) });
 test.beforeAll(async ({ runner, page }) => {
@@ -42,8 +43,6 @@ test.beforeAll(async ({ runner, page }) => {
     }
   });
 });
-
-test.skip(!!isMac, 'This test is not supported on Mac due to requiring admin permissions to install tools');
 
 test.afterAll(async ({ runner }) => {
   await runner.close();
