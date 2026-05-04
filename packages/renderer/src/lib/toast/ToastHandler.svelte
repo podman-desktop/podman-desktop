@@ -28,27 +28,27 @@ onMount(() => {
     } = {};
     if (object.type === 'success') {
       theme = {
-        '--toastBackground': '#16a34a',
-        '--toastColor': '#bbf7d0',
-        '--toastBarBackground': '#14532d',
+        '--toastBackground': 'var(--pd-toast-success-bg)',
+        '--toastColor': 'var(--pd-toast-success-color)',
+        '--toastBarBackground': 'var(--pd-toast-success-bar-bg)',
       };
     } else if (object.type === 'error') {
       theme = {
-        '--toastBackground': 'red',
-        '--toastColor': 'white',
-        '--toastBarBackground': 'maroon',
+        '--toastBackground': 'var(--pd-toast-error-bg)',
+        '--toastColor': 'var(--pd-toast-error-color)',
+        '--toastBarBackground': 'var(--pd-toast-error-bar-bg)',
       };
     } else if (object.type === 'warning') {
       theme = {
-        '--toastBackground': 'yellow',
-        '--toastColor': 'black',
-        '--toastBarBackground': 'olive',
+        '--toastBackground': 'var(--pd-toast-warning-bg)',
+        '--toastColor': 'var(--pd-toast-warning-color)',
+        '--toastBarBackground': 'var(--pd-toast-warning-bar-bg)',
       };
     } else if (object.type === 'info') {
       theme = {
-        '--toastBackground': 'blue',
-        '--toastColor': 'white',
-        '--toastBarBackground': 'navy',
+        '--toastBackground': 'var(--pd-toast-info-bg)',
+        '--toastColor': 'var(--pd-toast-info-color)',
+        '--toastBarBackground': 'var(--pd-toast-info-bar-bg)',
       };
     }
     toast.push(object.message, { pausable: true, theme });
