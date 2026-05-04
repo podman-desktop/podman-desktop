@@ -202,7 +202,7 @@ export interface ExtensionInstallConfig {
   resourceLabel?: string;
 }
 
-export const extensionInstallConfigs: Record<string, ExtensionInstallConfig> = {
+export const extensionInstallConfigs: Partial<Record<string, ExtensionInstallConfig>> = {
   [bootcExtension.extensionName]: {
     ociImageUrl: 'ghcr.io/containers/podman-desktop-extension-bootc',
     navigationBarIconName: 'Bootable Containers',
