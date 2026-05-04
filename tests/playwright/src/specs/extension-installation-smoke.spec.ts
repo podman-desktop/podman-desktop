@@ -62,6 +62,13 @@ const extensionsToTest = requestedExtensions
     })
   : extensionsInstallationSmokeList;
 
+if (requestedExtensions && extensionsToTest.length === 0) {
+  throw new Error(
+    `PODMAN_DESKTOP_EXTENSIONS="${requestedExtensions}" matched no known extensions. ` +
+      `Available: ${extensionsAllExternalList.map(e => e.extensionName).join(', ')}`,
+  );
+}
+
 async function _startup(extensionLabel: string): Promise<void> {
   pdRunner = await RunnerFactory.getInstance();
   page = pdRunner.getPage();
