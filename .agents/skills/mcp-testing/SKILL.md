@@ -53,7 +53,7 @@ bash .agents/skills/mcp-testing/probe.sh
 pwsh .agents/skills/mcp-testing/probe.ps1
 ```
 
-Parse the key=value output. You will get six variables:
+Parse the key=value output. You will get eleven variables:
 
 - `PROD_RUNNING` — whether a production (installed) Podman Desktop is running
 - `PROD_CDP_PORT` — CDP port for production (`none` if CDP not available)
@@ -61,6 +61,38 @@ Parse the key=value output. You will get six variables:
 - `DEV_RUNNING` — whether `pnpm watch` is running
 - `DEV_CDP_PORT` — CDP port for dev (`none` if not available)
 - `DEV_APP_TITLE` — window title of dev app (`none` if not available)
+- `STALE_SESSION` — `true` if a previous session left a state file without cleaning up
+- `PORT_9222_NAME` / `PORT_9222_PID` — process on port 9222 (`none` if free)
+- `PORT_9223_NAME` / `PORT_9223_PID` — process on port 9223 (`none` if free)
+
+**Stale session:** If `STALE_SESSION=true`, run the stop script immediately — no confirmation needed — then re-run the probe to get fresh state:
+
+**Linux / macOS:**
+
+```bash
+bash .agents/skills/mcp-testing/stop.sh
+```
+
+**Windows:**
+
+```powershell
+pwsh .agents/skills/mcp-testing/stop.ps1
+```
+
+**Port conflict:** For each port where `PORT_<port>_NAME` is not `none`, `electron`, `node`, or `Podman Desktop`, use `AskUserQuestion`:
+
+- **Question:** `Port {PORT} is in use by "{NAME}" (PID {PID}), which doesn't look like Podman Desktop. Kill it to free the port?`
+- **Header:** `Port conflict`
+- **Options:**
+  1. `Kill it` — Stop the process and free the port
+  2. `Skip` — Leave it running (choose a different mode or abort)
+
+If the user chooses "Kill it", kill the process using the PID from the probe output:
+
+**Linux / macOS:** `kill <PID>`
+**Windows:** `Stop-Process -Id <PID> -Force`
+
+If the user chooses Skip and neither port is usable, report the conflict and stop — do not run the start script.
 
 ### Phase 2: Choose Mode
 
@@ -108,117 +140,18 @@ Based on the chosen mode and probe results, prepare the app and run the startup 
 
 #### Production mode
 
-**If `DEV_RUNNING=true`** (dev holds the single-instance lock — must close it first):
+Run the startup script — it handles detecting the current state (including stopping any dev instance that holds the single-instance lock), relaunching with CDP if needed, waiting for the app, and verifying the connection:
 
 **Linux / macOS:**
 
 ```bash
-kill $(lsof -ti :9223) 2>/dev/null && sleep 3
+bash .agents/skills/mcp-testing/start.sh --mode prod
 ```
 
 **Windows:**
 
 ```powershell
-Get-NetTCPConnection -LocalPort 9223 -State Listen -ErrorAction SilentlyContinue |
-  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
-Start-Sleep 3
-```
-
-**If `PROD_RUNNING=true` and `PROD_CDP_PORT=none`** (running without CDP — must relaunch):
-
-Close the app, then relaunch with CDP:
-
-**macOS:**
-
-```bash
-osascript -e 'quit app "Podman Desktop"' && sleep 3
-open -a "Podman Desktop" --args --remote-debugging-port=9222
-```
-
-**Linux (Fedora/RHEL):**
-
-The executable name is `podman-desktop` (lowercase). It may be installed as:
-
-- Flatpak: `flatpak run io.podman_desktop.PodmanDesktop`
-- RPM/tar.gz: `/usr/bin/podman-desktop` or on `$PATH`
-
-```bash
-# Close running instance
-pkill -f podman-desktop && sleep 3
-
-# Relaunch — try direct binary first, fall back to flatpak
-if command -v podman-desktop &>/dev/null; then
-  podman-desktop --remote-debugging-port=9222 &
-elif flatpak list --app 2>/dev/null | grep -q podman_desktop; then
-  flatpak run io.podman_desktop.PodmanDesktop --remote-debugging-port=9222 &
-else
-  echo "ERROR: podman-desktop not found — install via RPM, Flatpak, or tar.gz"
-  exit 1
-fi
-```
-
-**Windows:**
-
-The process name is `Podman Desktop`. Installed via NSIS to `%LOCALAPPDATA%\Programs\Podman Desktop\`.
-
-```powershell
-Stop-Process -Name "Podman Desktop" -Force -ErrorAction SilentlyContinue; Start-Sleep 3
-Start-Process "$env:LOCALAPPDATA\Programs\Podman Desktop\Podman Desktop.exe" -ArgumentList "--remote-debugging-port=9222"
-```
-
-Wait for CDP to become available (poll up to 30s):
-
-**Linux / macOS:**
-
-```bash
-for i in $(seq 1 30); do curl -s http://localhost:9222/json/version &>/dev/null && break; sleep 1; done
-```
-
-**Windows:**
-
-```powershell
-for ($i = 1; $i -le 30; $i++) {
-  try { $null = Invoke-WebRequest -Uri "http://localhost:9222/json/version" -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop; break } catch { Start-Sleep 1 }
-}
-```
-
-**If `PROD_RUNNING=false`** (not running — launch with CDP):
-
-**macOS:**
-
-```bash
-open -a "Podman Desktop" --args --remote-debugging-port=9222
-```
-
-**Linux (Fedora/RHEL):**
-
-```bash
-if command -v podman-desktop &>/dev/null; then
-  podman-desktop --remote-debugging-port=9222 &
-elif flatpak list --app 2>/dev/null | grep -q podman_desktop; then
-  flatpak run io.podman_desktop.PodmanDesktop --remote-debugging-port=9222 &
-else
-  echo "ERROR: podman-desktop not found — install via RPM, Flatpak, or tar.gz"
-  exit 1
-fi
-```
-
-**Windows:**
-
-```powershell
-Start-Process "$env:LOCALAPPDATA\Programs\Podman Desktop\Podman Desktop.exe" -ArgumentList "--remote-debugging-port=9222"
-```
-
-Wait for CDP (same polling loops as above, up to 30s).
-
-**Once CDP is available** (or if `PROD_CDP_PORT` was already set), verify with the startup script. Use the probe's `PROD_CDP_PORT` if it was not `none`; otherwise use `9222` (the port you just launched with):
-
-```bash
-bash .agents/skills/mcp-testing/start.sh --mode prod {CDP_PORT}
-```
-
-```powershell
-pwsh .agents/skills/mcp-testing/start.ps1 -Mode prod -Port {CDP_PORT}
+pwsh .agents/skills/mcp-testing/start.ps1 -Mode prod
 ```
 
 #### Dev mode
@@ -237,29 +170,7 @@ pwsh .agents/skills/mcp-testing/start.ps1 -Mode dev-fast
 
 Use `--mode dev` (not `dev-fast`). The start script will kill the stale process and restart cleanly.
 
-**If `DEV_RUNNING=false`** (full startup):
-
-If `PROD_RUNNING=true`, close the production app first (Electron single-instance lock prevents both):
-
-**macOS:**
-
-```bash
-osascript -e 'quit app "Podman Desktop"' && sleep 3
-```
-
-**Linux:**
-
-```bash
-(pkill -f podman-desktop || flatpak kill io.podman_desktop.PodmanDesktop 2>/dev/null) && sleep 3
-```
-
-**Windows:**
-
-```powershell
-Stop-Process -Name "Podman Desktop" -Force -ErrorAction SilentlyContinue; Start-Sleep 3
-```
-
-Then run the full startup — set Bash tool timeout to `600000` (10 minutes):
+**If `DEV_RUNNING=false`** (full startup) — set Bash tool timeout to `600000` (10 minutes):
 
 ```bash
 bash .agents/skills/mcp-testing/start.sh --mode dev
@@ -281,7 +192,7 @@ Do not retry the script automatically — let the user decide after seeing the e
 
 #### Connect and verify (both modes)
 
-When the start script prints `Ready — call mcp__podman-desktop-mcp__connect(...)`, connect via MCP. Use port `9223` for dev mode, or `PROD_CDP_PORT` for prod mode (`9222` if you just launched the app):
+When the start script prints `Ready — call mcp__podman-desktop-mcp__connect(...)`, extract the port number from that line and connect:
 
 ```text
 mcp__podman-desktop-mcp__connect({ port: PORT })
@@ -296,43 +207,7 @@ mcp__podman-desktop-mcp__evaluate({ script: "document.title" })
 The result should contain "Podman Desktop". If it contains "DevTools":
 
 1. Disconnect immediately: `mcp__podman-desktop-mcp__disconnect()`
-2. Close the DevTools targets via CDP:
-
-   **Linux / macOS:**
-
-   ```bash
-   curl -s "http://localhost:PORT/json" | CDP_PORT=PORT node -e '
-     const d = require("fs").readFileSync(0, "utf8");
-     const port = process.env.CDP_PORT;
-     (async () => {
-       for (const t of JSON.parse(d)) {
-         const u = (t.url || "").toLowerCase();
-         const l = (t.title || "").toLowerCase();
-         if (u.includes("devtools") || l === "devtools") {
-           try { await fetch("http://localhost:" + port + "/json/close/" + t.id); } catch {}
-         }
-       }
-     })();'
-   ```
-
-   **Windows:**
-
-   ```powershell
-   $targets = (Invoke-WebRequest -Uri "http://localhost:PORT/json" -UseBasicParsing).Content | ConvertFrom-Json
-   foreach ($t in $targets) {
-     $url = if ($t.url) { $t.url.ToLower() } else { "" }
-     $title = if ($t.title) { $t.title.ToLower() } else { "" }
-     if ($url -like "*devtools*" -or $title -eq "devtools") {
-       try { Invoke-WebRequest -Uri "http://localhost:PORT/json/close/$($t.id)" -UseBasicParsing | Out-Null } catch {}
-     }
-   }
-   ```
-
-   (Replace PORT with the actual port.)
-
-3. Wait 10 seconds, then reconnect: `mcp__podman-desktop-mcp__connect({ port: PORT })`
-4. Run `mcp__podman-desktop-mcp__evaluate({ script: "document.title" })` again to verify the title is now "Podman Desktop".
-5. If the title is still "DevTools", re-run the startup script (`start.sh` / `start.ps1`) — it will kill the old session and start fresh. Then reconnect.
+2. Re-run the startup script — it closes any DevTools targets automatically via `close_devtools_targets`, then reconnect.
 
 ### Phase 4: Initial Setup (automatic)
 
@@ -419,41 +294,23 @@ Use `AskUserQuestion`:
   1. `Leave running` — Keep the app alive so you can reconnect later
   2. `Close it` — Stop the app and free the port
 
-If the user chooses "Close it":
+If the user chooses **"Leave running"** — remove the session file so the next invocation finds the app cleanly via probe (no process killing):
 
-**Production mode:**
+**Linux / macOS:** `bash .agents/skills/mcp-testing/stop.sh --session-only`
+**Windows:** `pwsh .agents/skills/mcp-testing/stop.ps1 -SessionOnly`
 
-macOS:
+If the user chooses **"Close it"** — run the stop script, which reads the session state and kills the right processes:
 
-```bash
-osascript -e 'quit app "Podman Desktop"'
-```
-
-Linux:
+**Linux / macOS:**
 
 ```bash
-pkill -f podman-desktop || flatpak kill io.podman_desktop.PodmanDesktop 2>/dev/null
+bash .agents/skills/mcp-testing/stop.sh
 ```
 
-Windows:
+**Windows:**
 
 ```powershell
-Stop-Process -Name "Podman Desktop" -Force
-```
-
-**Dev mode:**
-
-Linux / macOS:
-
-```bash
-kill $(lsof -ti :9223) 2>/dev/null && echo "App stopped"
-```
-
-Windows:
-
-```powershell
-Get-NetTCPConnection -LocalPort 9223 -State Listen -ErrorAction SilentlyContinue |
-  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+pwsh .agents/skills/mcp-testing/stop.ps1
 ```
 
 ## Selector Strategy
@@ -522,8 +379,8 @@ Then re-open your terminal and verify with `pnpm --version`.
 **Fix:**
 
 1. `mcp__podman-desktop-mcp__disconnect()`
-2. Re-run `start.sh --mode dev` (kills the old session and starts fresh)
-3. `mcp__podman-desktop-mcp__connect({ port: 9223 })`
+2. Re-run the startup script for your mode — it closes DevTools targets automatically via `close_devtools_targets`
+3. `mcp__podman-desktop-mcp__connect({ port: PORT })`
 
 ### Production App Without CDP
 
@@ -531,19 +388,13 @@ Then re-open your terminal and verify with `pnpm --version`.
 
 **Cause:** The production app was launched without the `--remote-debugging-port` flag.
 
-**Fix:** Close the production app and relaunch with:
-
-```bash
-podman-desktop --remote-debugging-port=9222
-```
+**Fix:** Run `start.sh --mode prod` (or `start.ps1 -Mode prod`) — it detects this case automatically, closes the running app, and relaunches it with CDP enabled.
 
 ### Production Blocks Dev Instance
 
-**Symptom:** `start.sh --mode dev` times out after 120s with a hint about the single-instance lock.
+`start.sh --mode dev` (and `start.ps1 -Mode dev`) automatically detects and closes a running production Podman Desktop before starting the dev instance — no manual action is needed.
 
-**Cause:** Electron allows only one instance via `requestSingleInstanceLock()`. The installed Podman Desktop holds the lock, so the dev Electron instance exits silently.
-
-**Fix:** Close the production app, then re-run in dev mode.
+**If startup still times out after 120s:** the production app may have restarted in the gap between detection and the kill, or a non-Podman-Desktop process holds port 9222. Run the stop script, verify port 9222 is free (`lsof -ti :9222`), then re-run the start script.
 
 ### MCP Tools Become Unavailable Mid-Session
 
@@ -586,7 +437,7 @@ Add to `~/.bashrc` or `~/.zshrc` to make it permanent.
 | `bash probe.sh`                                           | Detect environment (what's running, CDP ports) |
 | `bash start.sh --mode dev`                                | Full dev startup                               |
 | `bash start.sh --mode dev-fast`                           | Fast-path (dev already running)                |
-| `bash start.sh --mode prod PORT`                          | Connect to production CDP                      |
+| `bash start.sh --mode prod`                               | Launch/connect production app                  |
 | `mcp__podman-desktop-mcp__connect({ port: PORT })`        | Connect to app                                 |
 | `mcp__podman-desktop-mcp__disconnect()`                   | Disconnect from MCP                            |
 | `mcp__podman-desktop-mcp__snapshot()`                     | Get accessibility tree                         |

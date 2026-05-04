@@ -9,6 +9,9 @@
 #   DEV_RUNNING=true|false
 #   DEV_CDP_PORT=<port>|none
 #   DEV_APP_TITLE=<title>|none
+#   STALE_SESSION=true|false
+#   PORT_9222_NAME=<name>|none   PORT_9222_PID=<pid>|none
+#   PORT_9223_NAME=<name>|none   PORT_9223_PID=<pid>|none
 
 function Get-CdpHealthyTitle {
     param([int]$Port)
@@ -37,7 +40,7 @@ if ($null -ne $procs -and @($procs).Count -gt 0) {
 $prodCdpPort = "none"
 $prodAppTitle = "none"
 if ($prodRunning) {
-    foreach ($p in @(9222, 9223)) {
+    foreach ($p in @(9222)) {
         try {
             $null = Invoke-WebRequest -Uri "http://localhost:$p/json/version" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
             $title = Get-CdpHealthyTitle -Port $p
@@ -71,6 +74,30 @@ if ($devRunning) {
     } catch {}
 }
 
+# ── Stale session check ───────────────────────────────────────────────────────
+# Only stale if session file exists AND no healthy CDP is reachable.
+# If the app is running and accessible, the file is from a "Leave running" exit — not an orphan.
+$staleSession = $false
+if (Test-Path "$env:TEMP\mcp-testing-session") {
+    if ($prodCdpPort -eq "none" -and $devCdpPort -eq "none") {
+        $staleSession = $true
+    }
+}
+
+# ── Port conflict check ───────────────────────────────────────────────────────
+$portNames = @{}
+$portPids  = @{}
+foreach ($port in @(9222, 9223)) {
+    $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($conn) {
+        $portNames[$port] = (Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue).ProcessName ?? "unknown"
+        $portPids[$port]  = $conn.OwningProcess
+    } else {
+        $portNames[$port] = "none"
+        $portPids[$port]  = "none"
+    }
+}
+
 # ── Output ────────────────────────────────────────────────────────────────────
 Write-Output "PROD_RUNNING=$($prodRunning.ToString().ToLower())"
 Write-Output "PROD_CDP_PORT=$prodCdpPort"
@@ -78,3 +105,8 @@ Write-Output "PROD_APP_TITLE=$prodAppTitle"
 Write-Output "DEV_RUNNING=$($devRunning.ToString().ToLower())"
 Write-Output "DEV_CDP_PORT=$devCdpPort"
 Write-Output "DEV_APP_TITLE=$devAppTitle"
+Write-Output "STALE_SESSION=$($staleSession.ToString().ToLower())"
+Write-Output "PORT_9222_NAME=$($portNames[9222])"
+Write-Output "PORT_9222_PID=$($portPids[9222])"
+Write-Output "PORT_9223_NAME=$($portNames[9223])"
+Write-Output "PORT_9223_PID=$($portPids[9223])"

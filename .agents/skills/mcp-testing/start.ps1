@@ -5,16 +5,14 @@
 # Usage:
 #   pwsh start.ps1 -Mode dev          # full startup (clean, install, pnpm watch)
 #   pwsh start.ps1 -Mode dev-fast     # fast-path (pnpm watch already running)
-#   pwsh start.ps1 -Mode prod -Port 9222  # connect to production CDP
+#   pwsh start.ps1 -Mode prod             # launch/connect production app
 #
 # After exit 0, call mcp__podman-desktop-mcp__connect({ port: <PORT> }).
 
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("dev", "dev-fast", "prod")]
-    [string]$Mode,
-
-    [int]$Port = 0
+    [string]$Mode
 )
 
 $DEV_PORT = 9223
@@ -88,24 +86,79 @@ function Test-ProductionPDRunning {
 
 # ── Mode: prod ────────────────────────────────────────────────────────────────
 if ($Mode -eq "prod") {
-    if ($Port -eq 0) {
-        Write-Host "ERROR: -Mode prod requires -Port argument"
+    $PROD_PORT = 9222
+
+    # 1. Already running with CDP on the production port? (9223 is exclusively dev — never check it here)
+    foreach ($p in @(9222)) {
+        if (Test-CdpReady -CdpPort $p) {
+            $appTitle = $null
+            for ($j = 1; $j -le 10; $j++) {
+                $appTitle = Get-HealthyAppTitle -CdpPort $p
+                if ($appTitle) { break }
+                Start-Sleep -Seconds 1
+            }
+            if ($appTitle) {
+                "prod" | Out-File -FilePath "$env:TEMP\mcp-testing-session" -Encoding utf8 -NoNewline
+                Write-Host "Already running — $appTitle (port $p)"
+                Write-Host "Ready — call mcp__podman-desktop-mcp__connect({ port: $p })"
+                exit 0
+            }
+        }
+    }
+
+    # 2. Running but no CDP — relaunch with CDP flag
+    if (Test-ProductionPDRunning) {
+        Write-Host "Production Podman Desktop is running without CDP — relaunching with --remote-debugging-port=$PROD_PORT..."
+        Stop-Process -Name "Podman Desktop" -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 3
+    }
+
+    # 3. Kill dev instance if it holds the single-instance lock
+    if (Test-WatchRunning) {
+        Write-Host "      Dev instance (pnpm watch) running — stopping it to release the single-instance lock..."
+        Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -match 'pnpm.*watch' } |
+            ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+        $devConn = Get-NetTCPConnection -LocalPort $DEV_PORT -State Listen -ErrorAction SilentlyContinue
+        if ($devConn) { Stop-Process -Id $devConn.OwningProcess -Force -ErrorAction SilentlyContinue }
+        Start-Sleep -Seconds 3
+        Write-Host "      Dev instance stopped"
+    }
+
+    # 4. Not running (or just closed) — launch with CDP
+    Write-Host "Launching production Podman Desktop with --remote-debugging-port=$PROD_PORT..."
+    Start-Process "$env:LOCALAPPDATA\Programs\Podman Desktop\Podman Desktop.exe" -ArgumentList "--remote-debugging-port=$PROD_PORT"
+
+    Write-Host "      Waiting for CDP on port $PROD_PORT..."
+    $ready = $false
+    for ($i = 1; $i -le 30; $i++) {
+        if (Test-CdpReady -CdpPort $PROD_PORT) {
+            Write-Host "      CDP ready after ${i}s"
+            $ready = $true
+            break
+        }
+        Start-Sleep -Seconds 1
+    }
+    if (-not $ready) {
+        Write-Host "ERROR: App did not expose CDP on port $PROD_PORT within 30s"
         exit 1
     }
 
-    if (-not (Test-CdpReady -CdpPort $Port)) {
-        Write-Host "ERROR: No CDP response on port $Port"
-        exit 1
+    # Window title may not be set immediately — retry for up to 10s
+    $appTitle = $null
+    for ($i = 1; $i -le 10; $i++) {
+        $appTitle = Get-HealthyAppTitle -CdpPort $PROD_PORT
+        if ($appTitle) { break }
+        Start-Sleep -Seconds 1
     }
-
-    $appTitle = Get-HealthyAppTitle -CdpPort $Port
     if (-not $appTitle) {
-        Write-Host "ERROR: CDP on port $Port has no healthy app window"
+        Write-Host "ERROR: CDP on port $PROD_PORT has no healthy app window"
         exit 1
     }
 
-    Write-Host "Connected to production Podman Desktop — $appTitle (port $Port)"
-    Write-Host "Ready — call mcp__podman-desktop-mcp__connect({ port: $Port })"
+    "prod" | Out-File -FilePath "$env:TEMP\mcp-testing-session" -Encoding utf8 -NoNewline
+    Write-Host "Connected to production Podman Desktop — $appTitle (port $PROD_PORT)"
+    Write-Host "Ready — call mcp__podman-desktop-mcp__connect({ port: $PROD_PORT })"
     exit 0
 }
 
@@ -129,6 +182,7 @@ if ($Mode -eq "dev-fast") {
 
     Close-DevToolsTargets
 
+    "dev" | Out-File -FilePath "$env:TEMP\mcp-testing-session" -Encoding utf8 -NoNewline
     Write-Host "pnpm watch already running — $appTitle"
     Write-Host "Ready — call mcp__podman-desktop-mcp__connect({ port: $DEV_PORT })"
     exit 0
@@ -136,22 +190,32 @@ if ($Mode -eq "dev-fast") {
 
 # ── Mode: dev (full startup) ─────────────────────────────────────────────────
 
-# Fail fast if a production Podman Desktop holds the single-instance lock
+# Close production Podman Desktop if it holds the single-instance lock
 if (Test-ProductionPDRunning) {
-    Write-Host "ERROR: A production Podman Desktop is running — it holds the"
-    Write-Host "       single-instance lock, preventing the dev instance from starting."
-    Write-Host "       Close it first, then re-run this script."
-    exit 1
+    Write-Host "      Production Podman Desktop running — closing it to release the single-instance lock..."
+    Stop-Process -Name "Podman Desktop" -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 3
+    Write-Host "      Production app stopped"
 }
 
 # Kill any existing pnpm watch
-Write-Host "[1/4] Stopping any running pnpm watch..."
+Write-Host "[1/4] Stopping any running dev instance..."
 $killed = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
           Where-Object { $_.CommandLine -match 'pnpm.*watch' }
 if ($killed) {
     $killed | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
     Write-Host "      Stopped pnpm watch"
     Start-Sleep -Seconds 3
+}
+
+# Also kill the Electron app if it is still listening on the dev CDP port
+$conn = Get-NetTCPConnection -LocalPort $DEV_PORT -State Listen -ErrorAction SilentlyContinue
+if ($conn) {
+    $procName = (Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue).ProcessName ?? "unknown"
+    Write-Host "      Killing process on port $DEV_PORT ($procName)"
+    Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
+    Write-Host "      Stopped process on port $DEV_PORT"
+    Start-Sleep -Seconds 2
 }
 
 if (Test-CdpReady) {
@@ -174,6 +238,11 @@ foreach ($d in $distDirs) {
     Remove-Item -Recurse -Force $d.FullName
 }
 Write-Host "      Removed $($distDirs.Count) dist/ folder(s)"
+
+if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+    Write-Host "ERROR: pnpm not found in PATH — install with: npm install -g pnpm"
+    exit 1
+}
 
 # Install deps (timeout after 5 minutes)
 Write-Host "[3/4] Installing dependencies..."
@@ -231,4 +300,5 @@ if (-not $ready) {
 
 Close-DevToolsTargets
 
+"dev" | Out-File -FilePath "$env:TEMP\mcp-testing-session" -Encoding utf8 -NoNewline
 Write-Host "Ready — call mcp__podman-desktop-mcp__connect({ port: $DEV_PORT })"
