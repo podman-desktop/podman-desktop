@@ -453,7 +453,7 @@ async function postActivate(
 
       // update the version to undefined
       vpState.version = undefined;
-      provider.updateVersion('');
+      provider.updateVersion();
       kubectlProviderUpdateDisposable?.dispose();
     },
   });

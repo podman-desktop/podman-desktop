@@ -340,7 +340,7 @@ describe('cli#update', () => {
 
     await (await getCliToolInstaller()).doUninstall({} as unknown as extensionApi.Logger);
 
-    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith('');
+    expect(PROVIDER_MOCK.updateVersion).toHaveBeenCalledWith();
   });
 });
 

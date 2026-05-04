@@ -428,7 +428,7 @@ describe('registerCLITool', () => {
     expect(extensionApi.process.exec).toHaveBeenCalledWith('rm', ['system-wide-path'], { isAdmin: true });
 
     const providerMock = vi.mocked(extensionApi.provider.createProvider).mock.results[0].value as Provider;
-    expect(providerMock.updateVersion).toHaveBeenCalledWith('');
+    expect(providerMock.updateVersion).toHaveBeenCalledWith();
   });
 
   test('if unlink fails because of a permission issue, it should delete all binaries as admin', async () => {
