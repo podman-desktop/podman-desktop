@@ -28,11 +28,17 @@ import TroubleshootingDevToolsConsoleLogs from './TroubleshootingDevToolsConsole
 
 const getDevtoolsConsoleLogsMock = vi.fn();
 const clipboardWriteTextMock = vi.fn();
+const getConfigurationValueMock = vi.fn();
+const updateConfigurationValueMock = vi.fn();
 
 // fake the window.events object
 beforeAll(() => {
   (window as any).getDevtoolsConsoleLogs = getDevtoolsConsoleLogsMock;
   (window as any).clipboardWriteText = clipboardWriteTextMock;
+  (window as any).getConfigurationValue = getConfigurationValueMock;
+  (window as any).updateConfigurationValue = updateConfigurationValueMock;
+  getConfigurationValueMock.mockResolvedValue(false);
+  updateConfigurationValueMock.mockResolvedValue(undefined);
 });
 
 async function waitRender(customProperties: object): Promise<void> {
@@ -99,6 +105,21 @@ test('Timestamps are hidden by default and shown after toggle', async () => {
   // click again to hide
   await fireEvent.click(toggleButton);
   expect(logsList.textContent).not.toContain('14:30:45');
+});
+
+test('Toggle persists the setting via updateConfigurationValue', async () => {
+  getDevtoolsConsoleLogsMock.mockReturnValue([{ logType: 'log', message: 'hello', date: new Date() }]);
+
+  await waitRender({});
+
+  const toggleButton = screen.getByRole('button', { name: 'Toggle Timestamps' });
+  await fireEvent.click(toggleButton);
+
+  expect(updateConfigurationValueMock).toHaveBeenCalledWith('troubleshooting.logsTimestamps', true);
+
+  await fireEvent.click(toggleButton);
+
+  expect(updateConfigurationValueMock).toHaveBeenCalledWith('troubleshooting.logsTimestamps', false);
 });
 
 test('Clipboard includes timestamps when toggle is enabled', async () => {

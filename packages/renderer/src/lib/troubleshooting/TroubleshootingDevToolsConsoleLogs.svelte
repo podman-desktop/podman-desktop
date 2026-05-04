@@ -8,6 +8,8 @@ import { onDestroy, onMount } from 'svelte';
 
 import NoLogIcon from '/@/lib/ui/NoLogIcon.svelte';
 
+const TIMESTAMPS_CONFIG_KEY = 'troubleshooting.logsTimestamps';
+
 let logs: {
   logType: LogType;
   date: Date;
@@ -18,6 +20,7 @@ let showTimestamps = $state(false);
 
 onMount(async () => {
   logs = await window.getDevtoolsConsoleLogs();
+  showTimestamps = (await window.getConfigurationValue<boolean>(TIMESTAMPS_CONFIG_KEY)) ?? false;
 });
 
 onDestroy(() => {});
@@ -43,7 +46,7 @@ async function copyLogsToClipboard(): Promise<void> {
     <Icon size="1.875x" class="pr-3" icon={faFileLines} />
     <div class="text-xl">Logs</div>
     <div class="flex flex-1 justify-end items-center gap-1">
-      <Button title="Toggle Timestamps" on:click={(): boolean => (showTimestamps = !showTimestamps)} type="link"
+      <Button title="Toggle Timestamps" on:click={async (): Promise<void> => { showTimestamps = !showTimestamps; await window.updateConfigurationValue(TIMESTAMPS_CONFIG_KEY, showTimestamps); }} type="link"
         ><Icon class="h-5 w-5 cursor-pointer text-xl {showTimestamps ? 'text-[var(--pd-button-primary-bg)]' : 'text-[var(--pd-content-text)]'}" icon={faClock} /></Button>
       <Button title="Copy To Clipboard" on:click={async (): Promise<void> => await copyLogsToClipboard()} type="link"
         ><Icon class="h-5 w-5 cursor-pointer text-xl text-[var(--pd-button-primary-bg)]" icon={faPaste} /></Button>
