@@ -154,7 +154,9 @@ export async function downloadExtension(options: DownloadOptions): Promise<void>
     }
   }
 
-  await imageRegistry.downloadAndExtractImage(options.extension.oci, tmpFolderPath, console.log);
+  await imageRegistry.downloadAndExtractImage(options.extension.oci, tmpFolderPath, event =>
+    console.log(event.message),
+  );
 
   if (!existsSync(join(tmpFolderPath, 'extension', 'package.json'))) {
     throw new Error(
