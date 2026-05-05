@@ -834,6 +834,7 @@ export class PluginSystem {
     const cancellationTokenRegistry = container.get<CancellationTokenRegistry>(CancellationTokenRegistry);
     const cliToolRegistry = container.get<CliToolRegistry>(CliToolRegistry);
     const troubleshooting = container.get<Troubleshooting>(Troubleshooting);
+    troubleshooting.init();
     const menuRegistry = container.get<MenuRegistry>(MenuRegistry);
     const contributionManager = container.get<ContributionManager>(ContributionManager);
     const iconRegistry = container.get<IconRegistry>(IconRegistry);

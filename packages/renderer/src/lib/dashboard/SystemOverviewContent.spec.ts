@@ -156,3 +156,44 @@ test('should navigate to Resources on overall status button click', async () => 
 
   await vi.waitFor(() => expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/resources'));
 });
+
+describe('telemetry', () => {
+  test('should track dashboard.healthCard.viewed on mount with no connections', async () => {
+    providerInfos.set([baseProvider]);
+    render(SystemOverviewContent);
+
+    await vi.waitFor(() =>
+      expect(window.telemetryTrack).toHaveBeenCalledWith('dashboard.healthCard.viewed', {
+        itemCount: 0,
+        healthyCount: 0,
+        issueCount: 0,
+      }),
+    );
+  });
+
+  test('should track dashboard.healthCard.viewed with correct counts for mixed connections', async () => {
+    const errorConnection: ProviderContainerConnectionInfo = {
+      ...containerConnection,
+      name: 'error-machine',
+      displayName: 'Error Machine',
+      status: 'stopped',
+      error: 'Connection refused',
+    };
+
+    const provider: ProviderInfo = {
+      ...baseProvider,
+      containerConnections: [containerConnection, errorConnection],
+      kubernetesConnections: [kubernetesConnection],
+    };
+    providerInfos.set([provider]);
+    render(SystemOverviewContent);
+
+    await vi.waitFor(() =>
+      expect(window.telemetryTrack).toHaveBeenCalledWith('dashboard.healthCard.viewed', {
+        itemCount: 3,
+        healthyCount: 2,
+        issueCount: 1,
+      }),
+    );
+  });
+});

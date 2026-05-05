@@ -20,6 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 
 import { LogType } from '@podman-desktop/core-api';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import AdmZip from 'adm-zip';
 import { inject, injectable } from 'inversify';
 import moment from 'moment';
@@ -40,7 +41,26 @@ export class Troubleshooting {
   constructor(
     @inject(DialogRegistry)
     private dialogRegistry: DialogRegistry,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
   ) {}
+
+  init(): void {
+    const node: IConfigurationNode = {
+      id: 'troubleshooting.logs',
+      title: 'Troubleshooting',
+      type: 'object',
+      properties: {
+        ['troubleshooting.logsTimestamps']: {
+          description: 'Show timestamps in the troubleshooting console logs.',
+          type: 'boolean',
+          default: false,
+          hidden: true,
+        },
+      },
+    };
+    this.configurationRegistry.registerConfigurations([node]);
+  }
 
   // The "main" function that is exposes that is used to gather
   // all the logs and save them to a zip file.

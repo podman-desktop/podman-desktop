@@ -7,6 +7,7 @@
     "proxy.http",
     "proxy.https",
     "extensions.catalog.enabled",
-    "extensions.localExtensions.enabled"
+    "extensions.localExtensions.enabled",
+    "extensions.customExtensions.enabled"
   ]
 }

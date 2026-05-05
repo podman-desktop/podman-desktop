@@ -31,6 +31,7 @@ function handleClick(): void {
     startInProgress = true;
     window
       .startProvider(provider.internalId)
+      .then(() => window.telemetryTrack('dashboard.healthCard.provider.started', { providerName: provider.name }))
       .catch((err: unknown) => console.error('Provider failed to start:', err))
       .finally(() => (startInProgress = false));
   } else {

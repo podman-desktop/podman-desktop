@@ -258,3 +258,23 @@ test('should navigate to container connection on View button click', async () =>
     ),
   );
 });
+
+test('should track dashboard.healthCard.provider.started telemetry when starting a connection', async () => {
+  vi.mocked(window.startProviderConnectionLifecycle).mockResolvedValue(undefined);
+  const stoppedConnection = { ...containerConnection, status: 'stopped' as const };
+  const provider = { ...baseProvider, canStart: true, containerConnections: [stoppedConnection] };
+  render(SystemOverviewProviderCardDetailed, {
+    connection: stoppedConnection,
+    provider,
+    childConnections: [],
+  });
+
+  const button = await vi.waitFor(() => screen.getByRole('button', { name: 'Start Podman' }));
+  await fireEvent.click(button);
+
+  await vi.waitFor(() =>
+    expect(window.telemetryTrack).toHaveBeenCalledWith('dashboard.healthCard.provider.started', {
+      providerName: 'Podman',
+    }),
+  );
+});

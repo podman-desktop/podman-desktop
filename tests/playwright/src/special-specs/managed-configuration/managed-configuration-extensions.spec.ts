@@ -65,4 +65,11 @@ test.describe
           await playExpect(extensionsPage.localExtensionsTab).not.toBeAttached();
         });
       });
+
+    test.describe
+      .serial('Defaults + Locked setting: Custom Extensions disabled', () => {
+        test('Install custom button is not rendered when extensions.customExtensions.enabled is false', async () => {
+          await playExpect(extensionsPage.installExtensionFromOCIImageButton).not.toBeAttached();
+        });
+      });
   });
