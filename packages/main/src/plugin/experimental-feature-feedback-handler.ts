@@ -73,11 +73,11 @@ export class ExperimentalFeatureFeedbackHandler {
   async init(): Promise<void> {
     const feedbackConfiguration: IConfigurationNode = {
       id: 'preferences.feedback',
-      title: 'Feedback dialog',
+      title: 'Feedback reminder',
       type: 'object',
       properties: {
         ['feedback.dialog']: {
-          description: 'Show feedback dialog for experimental features',
+          description: 'Show periodic feedback reminder for experimental features',
           type: 'boolean',
           default: true,
         },

@@ -4,7 +4,7 @@
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 /* eslint-enable import/no-duplicates */
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
-import { Button, Input } from '@podman-desktop/ui-svelte';
+import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
@@ -30,15 +30,19 @@ onMount(async () => {
 });
 
 let createVolumeInProgress = false;
+let createError: string | undefined = undefined;
 onDestroy(() => {});
 
 async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
+  createError = undefined;
   createVolumeInProgress = true;
   try {
     await window.createVolume(providerConnectionInfo, { Name: volumeName });
+    createVolumeFinished = true;
+  } catch (error: unknown) {
+    createError = error instanceof Error ? error.message : String(error);
   } finally {
     createVolumeInProgress = false;
-    createVolumeFinished = true;
   }
 }
 
@@ -103,6 +107,10 @@ export let volumeName = '';
         <Button on:click={end} class="w-full">Done</Button>
       {/if}
     </div>
+
+    {#if createError}
+      <ErrorMessage class="text-sm" error={createError} />
+    {/if}
   </div>
   {/snippet}
 </EngineFormPage>
