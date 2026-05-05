@@ -200,7 +200,7 @@ const accessibilityVariants: { heading: string; label?: string; containerClass?:
       <div class="flex flex-col gap-2">
         <div class="text-sm font-semibold text-(--pd-content-header)">Markdown command button loading</div>
 
-        <button class="flex flex-row items-center px-4 py-[6px] rounded-[4px] text-white text-[13px] whitespace-nowrap bg-(--pd-button-primary-bg) hover:bg-(--pd-button-primary-hover-bg) no-underline">
+        <button class="flex flex-row items-center px-4 py-[6px] rounded-[4px] text-(--pd-button-primary-text) text-[13px] whitespace-nowrap bg-(--pd-button-primary-bg) hover:bg-(--pd-button-primary-hover-bg) no-underline">
           <div class="mr-2">
             <Spinner size="16px" />
           </div>
