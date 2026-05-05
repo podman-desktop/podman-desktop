@@ -59,7 +59,7 @@ close_devtools_targets() {
     })();
   ' 2>/dev/null || echo 0)
   if [[ "$closed" -gt 0 ]]; then
-    echo "      Closed $closed DevTools target(s) — waiting 10s for rendering surface…"
+    echo "      Closed ${closed} DevTools target(s) — waiting 10s for rendering surface…"
     sleep 10
   fi
 }
@@ -133,7 +133,7 @@ if [[ "$MODE" == "prod" ]]; then
 
   wait_cdp() {
     local port=$1
-    echo "      Waiting for CDP on port $port…"
+    echo "      Waiting for CDP on port ${port}…"
     for i in $(seq 1 30); do
       if cdp_ready "$port"; then
         echo "      CDP ready after ${i}s"
@@ -166,7 +166,7 @@ if [[ "$MODE" == "prod" ]]; then
 
   # 2. Running but no CDP — relaunch with CDP flag
   if detect_production_pd; then
-    echo "Production Podman Desktop is running without CDP — relaunching with --remote-debugging-port=$PROD_PORT…"
+    echo "Production Podman Desktop is running without CDP — relaunching with --remote-debugging-port=${PROD_PORT}…"
     case "$(uname -s)" in
       Darwin) osascript -e 'quit app "Podman Desktop"' 2>/dev/null || true ;;
       Linux)
@@ -187,7 +187,7 @@ if [[ "$MODE" == "prod" ]]; then
   fi
 
   # 4. Not running (or just closed) — launch with CDP
-  echo "Launching production Podman Desktop with --remote-debugging-port=$PROD_PORT…"
+  echo "Launching production Podman Desktop with --remote-debugging-port=${PROD_PORT}…"
   launch_prod
   wait_cdp "$PROD_PORT" || exit 1
 
