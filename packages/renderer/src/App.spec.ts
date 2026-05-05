@@ -260,6 +260,14 @@ describe('route persistence across reloads', () => {
     expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBe('/preferences/resources');
   });
 
+  test('navigating directly to a preferences page (no prior regular page) saves only SETTINGS_PAGE_KEY', async () => {
+    render(App);
+    router.goto('/preferences/onboarding/podman');
+    await tick();
+    expect(sessionStorage.getItem(SETTINGS_PAGE_KEY)).toBe('/preferences/onboarding/podman');
+    expect(sessionStorage.getItem(LAST_ROUTE_KEY)).toBeNull();
+  });
+
   test('navigating away from preferences clears SETTINGS_PAGE_KEY', async () => {
     render(App);
     router.goto('/images');

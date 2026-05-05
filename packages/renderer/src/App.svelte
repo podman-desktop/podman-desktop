@@ -91,39 +91,31 @@ import SubmenuNavigation from './SubmenuNavigation.svelte';
 
 router.mode.memory();
 
-const LAST_ROUTE_KEY = 'podman-desktop-last-route';
-const SETTINGS_PAGE_KEY = 'podman-desktop-settings-page';
+const LAST_ROUTE_KEY = 'last-route';
+const SETTINGS_PAGE_KEY = 'settings-page';
 
-// Routes to restore after the mandatory router.goto('/') fired by WelcomePage.onMount.
-// We intercept the first '/' event and re-navigate to where the user was before the reload.
-let pendingRoute = sessionStorage.getItem(LAST_ROUTE_KEY);
-let pendingSettingsRoute = sessionStorage.getItem(SETTINGS_PAGE_KEY);
+const savedRoute = sessionStorage.getItem(LAST_ROUTE_KEY);
+const savedSettingsPage = sessionStorage.getItem(SETTINGS_PAGE_KEY);
 
 //remember from where we come to preference pages
-let nonSettingsPage = pendingRoute ?? '/';
+let nonSettingsPage = savedRoute ?? '/';
 
-// tinro fires router.subscribe immediately (synchronously) with the current router state.
-// That initial call is not a real navigation — skip it so pendingRoute is still live when
-// WelcomePage.onMount fires its unconditional router.goto('/') asynchronously.
+// tinro fires router.subscribe synchronously with the current state on setup,
+// and WelcomePage always calls router.goto('/') in its onMount (even on reload).
+// We use that guaranteed '/' event as the trigger to restore the pre-reload
+// route on top of Dashboard.  subscribeReady skips the synchronous initial
+// fire so savedRoute is still available when the real '/' event arrives.
 let subscribeReady = false;
 router.subscribe(function (navigation) {
   if (!subscribeReady) return;
   if (navigation.url === undefined || navigation.url.includes('.html')) return;
   if (!navigation.url.startsWith('/')) return;
 
-  // WelcomePage always emits router.goto('/') in its onMount.  Use that as
-  // the trigger to restore the pre-reload route on top of Dashboard.
-  if (pendingRoute !== null && navigation.url === '/') {
-    const route = pendingRoute;
-    const settingsRoute = pendingSettingsRoute;
-    pendingRoute = null;
-    pendingSettingsRoute = null;
-    router.goto(route);
-    if (settingsRoute) router.goto(settingsRoute);
+  if ((savedRoute !== null || savedSettingsPage !== null) && navigation.url === '/') {
+    if (savedRoute) router.goto(savedRoute);
+    if (savedSettingsPage) router.goto(savedSettingsPage);
     return;
   }
-  pendingRoute = null;
-  pendingSettingsRoute = null;
 
   if (navigation.url === '/') {
     sessionStorage.removeItem(LAST_ROUTE_KEY);
