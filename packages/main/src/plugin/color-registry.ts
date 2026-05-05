@@ -2333,5 +2333,23 @@ export class ColorRegistry {
         .withHcLight(colorPaletteHelper(stone[600]).withAlpha(0.9))
         .build(),
     );
+
+    this.registerColorDefinition(
+      this.color('shadow-color')
+        .withDark(colorPaletteHelper(black).withAlpha(0.1))
+        .withLight(colorPaletteHelper(black).withAlpha(0.1))
+        .withHcDark(colorPaletteHelper(black).withAlpha(0.1))
+        .withHcLight(colorPaletteHelper(black).withAlpha(0.1))
+        .build(),
+    );
+
+    this.registerColorDefinition(
+      this.color('shadow-color-strong')
+        .withDark(colorPaletteHelper(black).withAlpha(0.3))
+        .withLight(colorPaletteHelper(black).withAlpha(0.3))
+        .withHcDark(colorPaletteHelper(black).withAlpha(0.3))
+        .withHcLight(colorPaletteHelper(black).withAlpha(0.3))
+        .build(),
+    );
   }
 }

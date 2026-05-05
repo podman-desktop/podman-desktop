@@ -160,7 +160,7 @@ $effect((): (() => void) => {
   {#if isVisible && !$tooltipHidden && (tip ?? tipSnippet)}
     <div
       bind:this={tooltipElement}
-      class="fixed tooltip-content pointer-events-none text-[12px] leading-[16px] z-[9999] rounded-[9px] border-[1px] border-[var(--pd-tooltip-outer-border)] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+      class="fixed tooltip-content pointer-events-none text-[12px] leading-[16px] z-[9999] rounded-[9px] border-[1px] border-[var(--pd-tooltip-outer-border)] shadow-[0_4px_12px_var(--pd-shadow-color)]"
       class:opacity-0={!isPositioned}
       style="left: 0; top: 0;">
       {#if tip}

@@ -893,11 +893,10 @@ describe('initCommon', () => {
   });
 
   test('registers item-disabled color using registerColorDefinition', () => {
-    expect(spyOnRegisterColorDefinition).toHaveBeenCalledTimes(1);
+    expect(spyOnRegisterColorDefinition).toHaveBeenCalledTimes(3);
 
-    // check the call
-    const call = spyOnRegisterColorDefinition.mock.calls[0];
-    const definition = call?.[0];
+    const itemDisabledCall = spyOnRegisterColorDefinition.mock.calls.find(call => call?.[0]?.id === 'item-disabled');
+    const definition = itemDisabledCall?.[0];
 
     expect(definition?.id).toBe('item-disabled');
     expect(definition?.dark).toBeDefined();
@@ -910,6 +909,30 @@ describe('initCommon', () => {
     // verify the colors contain alpha information (0.4)
     expect(definition?.dark).toContain('0.4');
     expect(definition?.light).toContain('0.4');
+  });
+
+  test('registers shadow-color with subtle opacity', () => {
+    const shadowColorCall = spyOnRegisterColorDefinition.mock.calls.find(call => call?.[0]?.id === 'shadow-color');
+    const definition = shadowColorCall?.[0];
+
+    expect(definition?.id).toBe('shadow-color');
+    expect(definition?.dark).toContain('0.1');
+    expect(definition?.light).toContain('0.1');
+    expect(definition?.hcDark).toContain('0.1');
+    expect(definition?.hcLight).toContain('0.1');
+  });
+
+  test('registers shadow-color-strong with stronger opacity', () => {
+    const shadowColorStrongCall = spyOnRegisterColorDefinition.mock.calls.find(
+      call => call?.[0]?.id === 'shadow-color-strong',
+    );
+    const definition = shadowColorStrongCall?.[0];
+
+    expect(definition?.id).toBe('shadow-color-strong');
+    expect(definition?.dark).toContain('0.3');
+    expect(definition?.light).toContain('0.3');
+    expect(definition?.hcDark).toContain('0.3');
+    expect(definition?.hcLight).toContain('0.3');
   });
 });
 

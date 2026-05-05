@@ -44,7 +44,7 @@ function expectCommonButtonClasses(button: HTMLElement, options: CommonClassOpti
     expect(button).toHaveClass('border');
   }
   if (hasShadow) {
-    expect(button).toHaveClass('shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1)]');
+    expect(button).toHaveClass('shadow-[0px_1px_4px_0px_var(--pd-shadow-color)]');
   }
   if (hasRounded) {
     expect(button).toHaveClass('rounded-[6px]');
