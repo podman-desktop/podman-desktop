@@ -229,8 +229,8 @@ test('leaving Dashboard Page saves it in lastPage storage', async () => {
 });
 
 describe('route persistence across reloads', () => {
-  const LAST_ROUTE_KEY = 'podman-desktop-last-route';
-  const SETTINGS_PAGE_KEY = 'podman-desktop-settings-page';
+  const LAST_ROUTE_KEY = 'last-route';
+  const SETTINGS_PAGE_KEY = 'settings-page';
 
   test('navigating to a regular page saves it in sessionStorage', async () => {
     render(App);
