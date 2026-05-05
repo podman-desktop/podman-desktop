@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -71,6 +71,27 @@ test('Expect non-podman unused network to have delete option and disabled edit',
   const deleteButton = screen.getByTitle('Delete Network');
   await fireEvent.click(deleteButton);
   expect(window.removeNetwork).toHaveBeenCalledWith(network1.engineId, network1.id);
+});
+
+test('Expect error dialog when network deletion fails', async () => {
+  const errorMessage = 'default network podman cannot be removed';
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.removeNetwork).mockRejectedValueOnce(new Error(errorMessage));
+
+  const network: NetworkInfoUI = { ...network1, status: 'UNUSED' };
+  render(NetworkActions, { object: network });
+
+  const deleteButton = screen.getByTitle('Delete Network');
+  await fireEvent.click(deleteButton);
+
+  await waitFor(() => {
+    expect(window.showMessageBox).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Delete Network Failed',
+        type: 'error',
+      }),
+    );
+  });
 });
 
 test('Expect podman used network to have edit option and disabled delete', async () => {
