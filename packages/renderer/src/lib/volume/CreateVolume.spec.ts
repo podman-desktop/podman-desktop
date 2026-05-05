@@ -127,6 +127,40 @@ test('Expect Create with a custom name', async () => {
   });
 });
 
+test('Expect error message when volume creation fails', async () => {
+  const errorMessage = 'volume name "bad/name" includes invalid characters';
+  createVolumeMock.mockRejectedValueOnce(new Error(errorMessage));
+
+  providerInfos.set([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'bad/name');
+
+  const createButton = screen.getByRole('button', { name: createButtonTitle });
+  await userEvent.click(createButton);
+
+  const errorElement = screen.getByText(errorMessage);
+  expect(errorElement).toBeInTheDocument();
+
+  // should not show the Done button on failure
+  const doneButton = screen.queryByRole('button', { name: 'Done' });
+  expect(doneButton).not.toBeInTheDocument();
+});
+
 test('Expect Create with a custom name and multiple providers', async () => {
   providerInfos.set([
     {
