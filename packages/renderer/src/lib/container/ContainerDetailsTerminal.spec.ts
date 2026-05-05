@@ -548,11 +548,10 @@ test('concurrent receiveEndCallback calls do not create duplicate connections', 
   await vi.waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(1));
 
   // Make the next shellInContainer call hang so we can test the guard
-  shellInContainerMock.mockImplementation(
-    () =>
-      new Promise<number>(resolve => {
-        resolveShell = resolve;
-      }),
+  shellInContainerMock.mockReturnValue(
+    new Promise<number>(resolve => {
+      resolveShell = resolve;
+    }),
   );
 
   // First exec dies — receiveEndCallback starts a reconnect (now in flight)
@@ -624,11 +623,10 @@ test('receiveEndCallback during reconnect schedules safety-net retry to prevent 
   await vi.waitFor(() => expect(shellInContainerMock).toHaveBeenCalledTimes(1));
 
   // Make reconnect hang so we can simulate the race
-  shellInContainerMock.mockImplementation(
-    () =>
-      new Promise<number>(resolve => {
-        resolveShell = resolve;
-      }),
+  shellInContainerMock.mockReturnValue(
+    new Promise<number>(resolve => {
+      resolveShell = resolve;
+    }),
   );
 
   // Exec dies → receiveEndCallback → restartTerminal starts (reconnecting = true)

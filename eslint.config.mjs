@@ -154,6 +154,7 @@ export default [
       'vitest/prefer-import-in-mock': 'error',
       'vitest/hoisted-apis-on-top': 'error',
       'vitest/prefer-mock-promise-shorthand': 'error',
+      'vitest/prefer-mock-return-shorthand': 'error',
       eqeqeq: 'error',
       'prefer-promise-reject-errors': 'error',
       semi: ['error', 'always'],

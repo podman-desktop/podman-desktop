@@ -94,7 +94,7 @@ function mockExtensionInstallFromImage(): {
     logCallback.mockImplementation((content: string) => mLogCallback(content));
     errorCallback.mockImplementation((content: string) => mErrorCallback(content));
     return new Promise((mResolve, mReject) => {
-      resolve.mockImplementation(() => mResolve());
+      resolve.mockReturnValue(mResolve());
       reject.mockImplementation((err: unknown) => mReject(err));
     });
   });

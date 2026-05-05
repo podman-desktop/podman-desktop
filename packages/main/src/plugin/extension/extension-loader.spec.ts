@@ -1868,7 +1868,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const listContributionsSpy = vi.spyOn(contributionManager, 'listContributions');
-    listContributionsSpy.mockImplementation(() => [
+    listContributionsSpy.mockReturnValue([
       {
         name: 'valid-name',
       } as unknown as ContributionInfo,
@@ -1895,7 +1895,7 @@ describe('Navigation', async () => {
 
     // Mock listContributions implementation
     const listContributionsSpy = vi.spyOn(contributionManager, 'listContributions');
-    listContributionsSpy.mockImplementation(() => []);
+    listContributionsSpy.mockReturnValue([]);
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
 

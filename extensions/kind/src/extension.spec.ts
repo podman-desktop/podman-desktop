@@ -227,12 +227,12 @@ test('Ensuring a progress task is created when calling kind.image.move command',
 
   const createProviderMock = vi.fn();
   podmanDesktopApi.provider.createProvider = createProviderMock;
-  createProviderMock.mockImplementation(() => ({
+  createProviderMock.mockReturnValue({
     setKubernetesProviderConnectionFactory: vi.fn(),
     onDidUpdateVersion: vi.fn(),
     updateVersion: vi.fn(),
     updateWarnings: vi.fn(),
-  }));
+  });
 
   const listContainersMock = vi.fn();
   podmanDesktopApi.containerEngine.listContainers = listContainersMock;
@@ -240,9 +240,7 @@ test('Ensuring a progress task is created when calling kind.image.move command',
 
   const withProgressMock = vi
     .fn()
-    .mockImplementation(() =>
-      extension.moveImage({ report: vi.fn() }, { id: 'id', image: 'hello:world', engineId: '1' }),
-    );
+    .mockReturnValue(extension.moveImage({ report: vi.fn() }, { id: 'id', image: 'hello:world', engineId: '1' }));
   podmanDesktopApi.window.withProgress = withProgressMock;
 
   const contextSetValueMock = vi.fn();
