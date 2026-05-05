@@ -94,7 +94,7 @@ async function handleActionButtonClick(): Promise<void> {
 <SystemOverviewProviderCardBase {provider} {connection} name={displayName} version={provider.version} {vmType}>
   {#snippet subtitle()}
     <div class="flex items-center gap-1.5 mt-0.5">
-      <span class="text-sm {STATUS_TEXT_CLASS[connectionStatus.status]}">{statusConfig.label}</span>
+      <span class="text-sm {STATUS_TEXT_CLASS[connectionStatus.status]}" aria-label='Connection status'>{statusConfig.label}</span>
       {#if connectionStatus.status === 'stable'}
         <div class="text-sm text-[var(--pd-content-text-sub)]">
           -
@@ -119,7 +119,7 @@ async function handleActionButtonClick(): Promise<void> {
   {/snippet}
 
   {#if provider.warnings.length || (connection.error ?? errorMessage)}
-    <div class="flex items-center gap-1.5 text-sm text-[var(--pd-status-terminated)]">
+    <div class="flex items-center gap-1.5 text-sm text-[var(--pd-status-terminated)]" aria-label='Connection error'>
       {#each provider.warnings as warning, index (index)}
         {warning.details ?? warning.name}
       {/each}

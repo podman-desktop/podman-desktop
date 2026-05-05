@@ -147,6 +147,50 @@ describe('vmType label', () => {
   });
 });
 
+describe('aria labels', () => {
+  test('should have Connection name aria label with provider name', async () => {
+    render(SystemOverviewProviderCardBase, {
+      provider: baseProvider,
+      connection: containerConnection,
+    });
+
+    const nameEl = await vi.waitFor(() => screen.getByLabelText('Connection name'));
+    expect(nameEl).toHaveTextContent('Podman');
+  });
+
+  test('should have Connection name aria label with custom name', async () => {
+    render(SystemOverviewProviderCardBase, {
+      provider: baseProvider,
+      connection: containerConnection,
+      name: 'Custom Engine',
+    });
+
+    const nameEl = await vi.waitFor(() => screen.getByLabelText('Connection name'));
+    expect(nameEl).toHaveTextContent('Custom Engine');
+  });
+
+  test('should have Connection version aria label when version is present', async () => {
+    render(SystemOverviewProviderCardBase, {
+      provider: baseProvider,
+      connection: containerConnection,
+    });
+
+    const versionEl = await vi.waitFor(() => screen.getByLabelText('Connection version'));
+    expect(versionEl).toBeInTheDocument();
+  });
+
+  test('should not have Connection version aria label when no version exists', async () => {
+    const providerWithoutVersion: ProviderInfo = { ...baseProvider, version: undefined };
+    render(SystemOverviewProviderCardBase, {
+      provider: providerWithoutVersion,
+      connection: containerConnection,
+    });
+
+    await vi.waitFor(() => screen.getByLabelText('Connection name'));
+    expect(screen.queryByLabelText('Connection version')).not.toBeInTheDocument();
+  });
+});
+
 describe('label text edge cases', () => {
   test('should not render label when neither vmType nor version exists', async () => {
     const providerWithoutVersion: ProviderInfo = { ...baseProvider, version: undefined };

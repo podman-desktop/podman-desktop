@@ -259,6 +259,65 @@ test('should navigate to container connection on View button click', async () =>
   );
 });
 
+describe('aria labels', () => {
+  test('should have Connection status aria label with status text', async () => {
+    const provider = { ...baseProvider, containerConnections: [containerConnection] };
+    render(SystemOverviewProviderCardDetailed, {
+      connection: containerConnection,
+      provider,
+      childConnections: [],
+    });
+
+    const statusEl = await vi.waitFor(() => screen.getByLabelText('Connection status'));
+    expect(statusEl).toBeInTheDocument();
+  });
+
+  test('should have Connection error aria label when connection has error', async () => {
+    const errorConnection = {
+      ...containerConnection,
+      status: 'starting' as const,
+      error: 'Connection refused',
+    };
+    const provider = { ...baseProvider, canStart: true, containerConnections: [errorConnection] };
+    render(SystemOverviewProviderCardDetailed, {
+      connection: errorConnection,
+      provider,
+      childConnections: [],
+    });
+
+    const errorEl = await vi.waitFor(() => screen.getByLabelText('Connection error'));
+    expect(errorEl).toHaveTextContent('Connection refused');
+  });
+
+  test('should have Connection error aria label when provider has warnings', async () => {
+    const provider: ProviderInfo = {
+      ...baseProvider,
+      containerConnections: [containerConnection],
+      warnings: [{ name: 'Low disk', details: 'Disk is almost full' }],
+    };
+    render(SystemOverviewProviderCardDetailed, {
+      connection: containerConnection,
+      provider,
+      childConnections: [],
+    });
+
+    const errorEl = await vi.waitFor(() => screen.getByLabelText('Connection error'));
+    expect(errorEl).toHaveTextContent('Disk is almost full');
+  });
+
+  test('should not have Connection error aria label when no errors or warnings', async () => {
+    const provider = { ...baseProvider, containerConnections: [containerConnection] };
+    render(SystemOverviewProviderCardDetailed, {
+      connection: containerConnection,
+      provider,
+      childConnections: [],
+    });
+
+    await vi.waitFor(() => screen.getByLabelText('Connection status'));
+    expect(screen.queryByLabelText('Connection error')).not.toBeInTheDocument();
+  });
+});
+
 test('should track dashboard.healthCard.provider.started telemetry when starting a connection', async () => {
   vi.mocked(window.startProviderConnectionLifecycle).mockResolvedValue(undefined);
   const stoppedConnection = { ...containerConnection, status: 'stopped' as const };

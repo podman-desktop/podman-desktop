@@ -31,9 +31,11 @@ let labelText = $derived([vmType, resolvedVersion ? `v${resolvedVersion}` : unde
     <div class="flex-1 min-w-0 flex flex-col gap-0.5">
       <div
         class="flex items-center gap-2 text-[var(--pd-content-card-text)] [--pd-label-bg:var(--pd-content-card-bg)] [--pd-label-text:var(--pd-content-text-sub)]">
-        <span class="font-medium">{name ?? provider.name}</span>
+        <span class="font-medium" aria-label='Connection name'>{name ?? provider.name}</span>
         {#if labelText}
-          <Label name={labelText} />
+          <span aria-label='Connection version'>
+            <Label name={labelText} />
+          </span>
         {/if}
       </div>
       {@render subtitle?.()}
