@@ -15,7 +15,7 @@ UI guidelines -->
   font-size: revert;
   line-height: normal;
   font-weight: revert;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--pd-content-divider);
   margin-bottom: 20px;
 }
 
