@@ -24,8 +24,7 @@ import Mustache from 'mustache';
 import typescript from 'typescript';
 
 type Namespaces = { [key: string]: string[] };
-type ClassInfo = { methods: string[]; staticMethods: string[] };
-type Classes = { [key: string]: ClassInfo };
+type Classes = { [key: string]: string[] };
 
 async function extractNamespacesAndClassesFromAPI(
   filePath: string,
@@ -72,23 +71,13 @@ async function extractNamespacesAndClassesFromAPI(
       if (isExported) {
         const className = node.name.text;
         const methods: string[] = [];
-        const staticMethods: string[] = [];
         for (const member of node.members) {
           if (typescript.isMethodDeclaration(member) && member.name && typescript.isIdentifier(member.name)) {
-            const memberModifiers = typescript.getModifiers(member);
-            const isStatic = memberModifiers?.some(m => m.kind === typescript.SyntaxKind.StaticKeyword);
-            if (isStatic) {
-              staticMethods.push(member.name.text);
-            } else {
-              methods.push(member.name.text);
-            }
+            methods.push(member.name.text);
           }
         }
         // Deduplicate to handle method overloads
-        classes[className] = {
-          methods: Array.from(new Set(methods)),
-          staticMethods: Array.from(new Set(staticMethods)),
-        };
+        classes[className] = Array.from(new Set(methods));
       }
     }
 
@@ -99,87 +88,52 @@ async function extractNamespacesAndClassesFromAPI(
   return { namespaces, classes };
 }
 
-function toTemplateData(data: { namespaces: Namespaces; classes: Classes; appName: string }): {
+function toTemplateData(data: { namespaces: Namespaces; classes: Classes }): {
   namespaces: { name: string; functions: string[] }[];
-  classes: { name: string; methods: string[]; staticMethods: { className: string; method: string }[] }[];
-  appName: string;
-  appNameJson: string;
+  classes: { name: string; methods: string[] }[];
 } {
   const namespaces = Object.entries(data.namespaces).map(([name, functions]) => ({ name, functions }));
-  // EventEmitter is defined explicitly in the template; exclude it from the dynamic classes section
-  const classes = Object.entries(data.classes)
-    .filter(([name]) => name !== 'EventEmitter')
-    .map(([name, info]) => ({
-      name,
-      methods: info.methods,
-      staticMethods: info.staticMethods.map(method => ({ className: name, method })),
-    }));
-  return { namespaces, classes, appName: data.appName, appNameJson: JSON.stringify(data.appName) };
+  const classes = Object.entries(data.classes).map(([name, methods]) => ({ name, methods }));
+  return { namespaces, classes };
 }
 
 export default async function setup(): Promise<void> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  // this file lives in packages/api-mocks-vitest/src/
   const packageRoot = path.resolve(__dirname, '..');
   const repoRoot = path.resolve(packageRoot, '..', '..');
   const extensionApiTypePath = path.join(repoRoot, 'packages', 'extension-api', 'src', 'extension-api.d.ts');
-  const podmanDesktopApiMocksDir = path.join(packageRoot, 'dist', '@podman-desktop');
-  const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.js');
+  const podmanDesktopApiMocksDir = path.join(packageRoot, 'src', '@podman-desktop');
+  const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.ts');
   const templatePath = path.join(packageRoot, 'src', 'api.mustache');
   const productJsonPath = path.join(repoRoot, 'product.json');
+  const packageProductJsonPath = path.join(packageRoot, 'product.json');
 
-  // skip if api.js is already newer than all inputs
-  // All stat calls use .catch(() => undefined) so external consumers without a
-  // monorepo layout don't throw — they fall back to the bundled dist output.
-  const [extensionApiPathStats, templatePathStats, generatorPathStats, productJsonStats, outputStats] =
-    await Promise.all([
-      fs.stat(extensionApiTypePath).catch(() => undefined),
-      fs.stat(templatePath).catch(() => undefined),
-      fs.stat(__filename).catch(() => undefined),
-      fs.stat(productJsonPath).catch(() => undefined),
-      fs.stat(apiGeneratedFile).catch(() => undefined),
-    ]);
-
-  // If any input is missing (e.g. an npm consumer without the monorepo sources)…
-  if (!extensionApiPathStats || !templatePathStats || !generatorPathStats || !productJsonStats) {
-    if (outputStats) {
-      // …but a bundled output already exists, use it as-is.
-      console.debug(' 🚀 Using bundled packages/api-mocks-vitest/dist/@podman-desktop/api.js');
-      return;
-    }
-    throw new Error(
-      'Unable to locate API mock generation inputs (extension-api.d.ts, api.mustache, product.json). ' +
-        'Make sure @podman-desktop/api-mocks-vitest was installed from a full Podman Desktop checkout or that the ' +
-        'published dist/@podman-desktop/api.js artefact is present.',
-    );
-  }
-
-  if (outputStats) {
+  // skip if api.ts is already newer (from template or extension-api.d.ts file)
+  const extensionApiPathStats = await fs.stat(extensionApiTypePath);
+  const templatePathStats = await fs.stat(templatePath);
+  const productJsonPathStats = await fs.stat(productJsonPath);
+  try {
+    const outputStats = await fs.stat(apiGeneratedFile);
+    await fs.stat(packageProductJsonPath);
     const newestInputMtime = Math.max(
       extensionApiPathStats.mtimeMs,
       templatePathStats.mtimeMs,
-      generatorPathStats.mtimeMs,
-      productJsonStats.mtimeMs,
+      productJsonPathStats.mtimeMs,
     );
     if (outputStats.mtimeMs >= newestInputMtime) {
-      console.debug(' 🚀 packages/api-mocks-vitest/dist/@podman-desktop/api.js up-to-date; skipping regeneration');
+      console.debug(' 🚀 packages/api-mocks-vitest/src/@podman-desktop/api.ts up-to-date; skipping regeneration');
       return;
     }
-  } else {
-    console.debug(' ⚙️ packages/api-mocks-vitest/dist/@podman-desktop/api.js does not exist yet; generating it now…');
+  } catch {
+    console.debug(' ⚙️ packages/api-mocks-vitest/src/@podman-desktop/api.ts does not exist yet; generating it now…');
   }
-  const productJson = JSON.parse(await fs.readFile(productJsonPath, 'utf-8')) as { name: string };
   const data = await extractNamespacesAndClassesFromAPI(extensionApiTypePath);
   const template = await fs.readFile(templatePath, 'utf-8');
-  const content = Mustache.render(template, toTemplateData({ ...data, appName: productJson.name }));
+  const content = Mustache.render(template, toTemplateData(data));
 
   await fs.mkdir(podmanDesktopApiMocksDir, { recursive: true });
+  await fs.copyFile(productJsonPath, packageProductJsonPath);
   await fs.writeFile(apiGeneratedFile, content, 'utf-8');
-  console.debug(' ✅ packages/api-mocks-vitest/dist/@podman-desktop/api.js has been generated.');
-}
-
-// Run setup() when executed directly as a Node.js script (e.g. `node dist/vitest-generate-api-global-setup.js`)
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
-  await setup();
+  console.debug(' ✅ packages/api-mocks-vitest/src/@podman-desktop/api.ts has been generated.');
 }

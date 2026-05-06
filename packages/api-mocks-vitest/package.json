@@ -11,15 +11,19 @@
   "type": "module",
   "files": [
     "dist",
-    "src/api.mustache"
+    "src/api.mustache",
+    "product.json"
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "default": "./dist/src/@podman-desktop/api.js"
+    },
+    "./plugin": {
+      "types": "./dist/src/plugin.d.ts",
+      "default": "./dist/src/plugin.js"
     },
     "./@podman-desktop/api": {
-      "default": "./dist/@podman-desktop/api.js"
+      "default": "./dist/src/@podman-desktop/api.js"
     }
   },
   "scripts": {

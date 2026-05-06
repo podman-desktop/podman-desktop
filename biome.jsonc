@@ -12,6 +12,8 @@
       "!**/coverage/**",
       "!**/dist/**",
       "!**/output/**",
+      "!**/packages/api-mocks-vitest/product.json",
+      "!**/packages/api-mocks-vitest/src/@podman-desktop/**",
       "!**/packages/ui/.svelte-kit/**",
       "!**/exposedIn*.d.ts",
       "!**/website/.docusaurus/**",

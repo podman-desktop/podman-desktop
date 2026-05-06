@@ -23,7 +23,7 @@ on:
     branches:
       - main
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
 
 permissions:
   contents: read
@@ -76,11 +76,10 @@ jobs:
 
   publish:
     name: Publish to npm
-    needs: [ prepare-version ]
+    needs: [prepare-version]
     runs-on: ubuntu-24.04
     # For tag releases, require an environment (so people can approve it)
-    environment: ${{ needs.prepare-version.outputs.is-tag == 'true' &&
-      'npmjs-publication' || '' }}
+    environment: ${{ needs.prepare-version.outputs.is-tag == 'true' && 'npmjs-publication' || '' }}
     permissions:
       id-token: write
     steps:
@@ -94,7 +93,7 @@ jobs:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24 # 24.x for npm publish with OIDC
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install

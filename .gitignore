@@ -15,5 +15,6 @@ dist
 yarn.lock
 extensions/podman/assets/
 extensions-extra/
-packages/api-mocks-vitest/dist/@podman-desktop/api.js
+packages/api-mocks-vitest/product.json
+packages/api-mocks-vitest/src/@podman-desktop/api.ts
 contexts/meta/

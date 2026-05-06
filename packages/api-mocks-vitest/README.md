@@ -14,22 +14,15 @@ pnpm add -D @podman-desktop/api-mocks-vitest
 
 ### 2. Configure vitest
 
-In your `vitest.config.ts` (or `vite.config.ts`), add the alias pointing to the bundled mock file:
+In your `vitest.config.ts` (or `vite.config.ts`), add the plugin:
 
 ```ts
 import { defineConfig } from 'vitest/config';
-import { createRequire } from 'node:module';
 
-const require = createRequire(import.meta.url);
-const apiMocksPath = require.resolve('@podman-desktop/api-mocks-vitest/@podman-desktop/api');
+import { podmanDesktopApiMockPlugin } from '@podman-desktop/api-mocks-vitest/plugin';
 
 export default defineConfig({
-  test: {
-    globals: true,
-    alias: {
-      '@podman-desktop/api': apiMocksPath,
-    },
-  },
+  plugins: [podmanDesktopApiMockPlugin()],
 });
 ```
 
