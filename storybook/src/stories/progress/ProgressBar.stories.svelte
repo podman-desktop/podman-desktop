@@ -64,7 +64,7 @@ const roundingVariants: ProgressVariant[] = [
 type DimensionVariant = { label: string; width: string; height: string; note?: string };
 
 const dimensionVariants: DimensionVariant[] = [
-  { label: 'Default (w-36, h-4)', width: 'w-36', height: 'h-4', note: 'Component defaults' },
+  { label: 'Default (w-36, h-2)', width: 'w-36', height: 'h-2', note: 'Component defaults' },
   { label: 'Compact (w-20, h-1)', width: 'w-20', height: 'h-1', note: 'Used in Task Manager and Status Bar' },
   { label: 'Wide (w-48, h-2)', width: 'w-48', height: 'h-2' },
   { label: 'Full width (w-full, h-2)', width: 'w-full', height: 'h-2' },

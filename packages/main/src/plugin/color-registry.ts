@@ -2255,8 +2255,8 @@ export class ColorRegistry {
     this.registerColor(`${pb}text`, {
       dark: accent1[400],
       light: accent1[500],
-      hcDark: black,
-      hcLight: white,
+      hcDark: white,
+      hcLight: black,
     });
   }
 

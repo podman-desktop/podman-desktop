@@ -110,6 +110,10 @@ class TestColorRegistry extends ColorRegistry {
   override initToast(): void {
     super.initToast();
   }
+
+  override initProgressBar(): void {
+    super.initProgressBar();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -1733,8 +1737,8 @@ describe('initProgressBar', () => {
     expect(spyOnRegisterColor).toBeCalledWith('progressBar-text', {
       dark: tailwindColorPalette.accent1[400],
       light: tailwindColorPalette.accent1[500],
-      hcDark: tailwindColorPalette.black,
-      hcLight: tailwindColorPalette.white,
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 });
