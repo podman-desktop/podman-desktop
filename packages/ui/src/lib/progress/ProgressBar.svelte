@@ -46,10 +46,18 @@ let { progress, width = 'w-36', height = 'h-4', class: className, ...restProps }
       <div
         class="{width} {height} bg-(--pd-progressBar-in-progress-bg) rounded-full progress-bar-incremental"
         role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
         style="width:{progress}%">
       </div>
     {:else}
-      <div class="{width} {height} bg-(--pd-progressBar-in-progress-bg) rounded-full progress-bar-indeterminate" role="progressbar"></div>
+      <div
+        class="{width} {height} bg-(--pd-progressBar-in-progress-bg) rounded-full progress-bar-indeterminate"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}>
+      </div>
     {/if}
   </div>
   {#if progress !== undefined}
