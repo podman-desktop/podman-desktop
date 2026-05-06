@@ -83,38 +83,42 @@ class TestDockerContextSynchronizer extends DockerContextSynchronizer {
 }
 
 describe('toDockerContextName', () => {
-  test.each(['Windows', 'Linux', 'MacOS'])('should return the name prefixed with podman- (%s)', platform => {
-    vi.mocked(env).isWindows = platform === 'Windows';
-    vi.mocked(env).isLinux = platform === 'Linux';
-    vi.mocked(env).isMac = platform === 'MacOS';
+  test('should return podman on macOS', () => {
+    vi.mocked(env).isMac = true;
     const name = toDockerContextName('foo');
-    expect(name).toBe(env.isWindows ? 'podman-foo' : 'podman');
+    expect(name).toBe('podman');
   });
 
-  test.each(['Windows', 'Linux', 'MacOS'])('should return the name (%s)', platform => {
+  test.each(['Windows', 'Linux'])('should prefix name with podman- on %s', platform => {
+    vi.mocked(env).isMac = false;
     vi.mocked(env).isWindows = platform === 'Windows';
     vi.mocked(env).isLinux = platform === 'Linux';
-    vi.mocked(env).isMac = platform === 'MacOS';
+    const name = toDockerContextName('foo');
+    expect(name).toBe('podman-foo');
+  });
+
+  test.each(['Windows', 'Linux'])('should not double-prefix name that already starts with podman- on %s', platform => {
+    vi.mocked(env).isMac = false;
+    vi.mocked(env).isWindows = platform === 'Windows';
+    vi.mocked(env).isLinux = platform === 'Linux';
     const name = toDockerContextName('podman-foo');
-    expect(name).toBe(env.isWindows ? 'podman-foo' : 'podman');
+    expect(name).toBe('podman-foo');
   });
 });
 
 describe('toDescription', () => {
-  test.each(['Windows', 'Linux', 'MacOS'])('should return the description (%s)', platform => {
-    vi.mocked(env).isWindows = platform === 'Windows';
-    vi.mocked(env).isLinux = platform === 'Linux';
-    vi.mocked(env).isMac = platform === 'MacOS';
-    const name = toDescription('foo');
-    expect(name).toBe(env.isWindows ? 'Podman machine foo' : 'Podman');
+  test('should return Podman on macOS', () => {
+    vi.mocked(env).isMac = true;
+    const desc = toDescription('foo');
+    expect(desc).toBe('Podman');
   });
 
-  test.each(['Windows', 'Linux', 'MacOS'])('should also return the description (%s)', platform => {
+  test.each(['Windows', 'Linux'])('should return Podman machine description on %s', platform => {
+    vi.mocked(env).isMac = false;
     vi.mocked(env).isWindows = platform === 'Windows';
     vi.mocked(env).isLinux = platform === 'Linux';
-    vi.mocked(env).isMac = platform === 'MacOS';
-    const name = toDescription('podman-foo');
-    expect(name).toBe(env.isWindows ? 'Podman machine podman-foo' : 'Podman');
+    const desc = toDescription('foo');
+    expect(desc).toBe('Podman machine foo');
   });
 });
 
@@ -177,6 +181,8 @@ describe('delete context', () => {
     expect(dockerExtensionAPI.createContext).toHaveBeenCalledTimes(2);
     vi.mocked(PODMAN_CONNECTION2.connection.status).mockReturnValue('stopped');
     await dockerContextSynchronizer.processUpdatedConnection(PODMAN_CONNECTION2.connection);
-    expect(dockerExtensionAPI.removeContext).toHaveBeenCalledTimes(1);
+    expect(dockerExtensionAPI.removeContext).toHaveBeenCalledWith(
+      toDockerContextName(PODMAN_CONNECTION2.connection.name),
+    );
   });
 });

@@ -46,6 +46,11 @@ const POD_BUILD_YAML_PATH: string = path.resolve(
   'podman-kube-play-build-test.yaml',
 );
 
+test.skip(
+  process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+  'Test is not supported with CDP runner',
+);
+
 test.describe
   .serial('Podman Kube Play Yaml - Create Pod from Scratch', { tag: '@smoke' }, () => {
     test.beforeAll(async ({ runner, page, welcomePage }) => {

@@ -304,6 +304,10 @@ test.describe
     });
 
     test('Save image as tar, delete, load from tar', async ({ navigationBar }) => {
+      test.skip(
+        process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+        'Test is not runnig with CDP runner',
+      );
       test.setTimeout(180_000);
 
       const tarFilePath = path.join(tmpdir(), 'podman-desktop-e2e-hello.tar');

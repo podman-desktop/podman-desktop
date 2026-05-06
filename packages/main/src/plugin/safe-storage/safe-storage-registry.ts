@@ -71,6 +71,8 @@ export class SafeStorageRegistry {
       // keep original file as a backup
       cpSync(safeStoragePath, backupFilename);
 
+      await writeFile(safeStoragePath, JSON.stringify({}), 'utf-8');
+
       // append notification for the user
       notifications.push({
         title: 'Corrupted secure storage',
