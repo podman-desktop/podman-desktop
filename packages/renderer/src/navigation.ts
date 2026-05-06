@@ -121,7 +121,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       router.goto(`/preferences/cli-tools`);
       break;
     case NavigationPage.PROVIDER_TASK:
-      router.goto(`/preferences/provider-task/${request.parameters.internalId}/${request.parameters.taskId}`);
+      router.goto(`/preferences/resources/provider-task/${request.parameters.internalId}/${request.parameters.taskId}`);
       break;
     case NavigationPage.WEBVIEW:
       router.goto(`/webviews/${request.parameters.id}`);
@@ -139,7 +139,7 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       router.goto('/preferences/experimental');
       break;
     case NavigationPage.CREATE_PROVIDER_CONNECTION:
-      router.goto(`/preferences/provider/${request.parameters.provider}`);
+      router.goto(`/preferences/resources/provider/${request.parameters.provider}`);
       break;
     case NavigationPage.NETWORKS:
       router.goto('/networks');

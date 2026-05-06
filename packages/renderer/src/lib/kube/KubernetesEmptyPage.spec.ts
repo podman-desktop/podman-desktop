@@ -108,14 +108,14 @@ test('expect to have links for each Kubernetes provider', async () => {
 
   const link1 = screen.getByLabelText('Go create');
   await fireEvent.click(link1);
-  expect(router.goto).toHaveBeenCalledWith('/preferences/provider/101');
+  expect(router.goto).toHaveBeenCalledWith('/preferences/resources/provider/101');
   expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith('kubernetes.nocontext.createNew', {
     provider: 'provider1',
   });
 
   const link2 = screen.getByLabelText('Create new');
   await fireEvent.click(link2);
-  expect(router.goto).toHaveBeenCalledWith('/preferences/provider/102');
+  expect(router.goto).toHaveBeenCalledWith('/preferences/resources/provider/102');
   expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith('kubernetes.nocontext.createNew', {
     provider: 'provider2',
   });
