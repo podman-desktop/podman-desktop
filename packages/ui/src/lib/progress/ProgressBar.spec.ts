@@ -21,7 +21,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/svelte';
 import { expect, test } from 'vitest';
 
-import ProgressBar from '/@/lib/task-manager/ProgressBar.svelte';
+import ProgressBar from './ProgressBar.svelte';
 
 test('Expect that the progress bar is indeterminate', async () => {
   render(ProgressBar, { progress: undefined });

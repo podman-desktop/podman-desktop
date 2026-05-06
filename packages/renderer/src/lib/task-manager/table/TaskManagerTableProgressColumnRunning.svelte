@@ -1,5 +1,6 @@
 <script lang="ts">
-import ProgressBar from '/@/lib/task-manager/ProgressBar.svelte';
+import { ProgressBar } from '@podman-desktop/ui-svelte';
+
 import type { TaskInfoUI } from '/@/stores/tasks';
 
 interface Props {

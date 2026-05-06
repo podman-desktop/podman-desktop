@@ -37,6 +37,7 @@ import Page from './layouts/Page.svelte';
 import Link from './link/Link.svelte';
 import Modal from './modal/Modal.svelte';
 import LinearProgress from './progress/LinearProgress.svelte';
+import ProgressBar from './progress/ProgressBar.svelte';
 import Spinner from './progress/Spinner.svelte';
 import EmptyScreen from './screen/EmptyScreen.svelte';
 import FilteredEmptyScreen from './screen/FilteredEmptyScreen.svelte';
@@ -74,6 +75,7 @@ export {
   NavPage,
   NumberInput,
   Page,
+  ProgressBar,
   SearchInput,
   SettingsNavItem,
   Spinner,

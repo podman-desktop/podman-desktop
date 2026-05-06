@@ -99,6 +99,10 @@
       "types": "./dist/progress/LinearProgress.d.ts",
       "svelte": "./dist/progress/LinearProgress.svelte"
     },
+    "./ProgressBar": {
+      "types": "./dist/progress/ProgressBar.svelte.d.ts",
+      "svelte": "./dist/progress/ProgressBar.svelte"
+    },
     "./Page": {
       "types": "./dist/layouts/Page.d.ts",
       "svelte": "./dist/layouts/Page.svelte"

@@ -1,9 +1,8 @@
 <script lang="ts">
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
-import { Tooltip } from '@podman-desktop/ui-svelte';
+import { ProgressBar, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
-import ProgressBar from '/@/lib/task-manager/ProgressBar.svelte';
 import { tasksInfo } from '/@/stores/tasks';
 
 let runningTasks = $derived($tasksInfo.filter(task => task.state === 'running'));
