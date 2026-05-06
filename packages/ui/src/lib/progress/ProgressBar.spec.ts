@@ -26,19 +26,23 @@ import ProgressBar from './ProgressBar.svelte';
 test('Expect that the progress bar is indeterminate', async () => {
   render(ProgressBar, { progress: undefined });
 
-  // expect the progress bar to have the indeterminate class
   const progressBar = screen.getByRole('progressbar');
   expect(progressBar).toHaveClass('progress-bar-indeterminate');
   expect(progressBar.classList.contains('progress-bar-incremental')).toBe(false);
+  expect(progressBar).not.toHaveAttribute('aria-valuenow');
+  expect(progressBar).toHaveAttribute('aria-valuemin', '0');
+  expect(progressBar).toHaveAttribute('aria-valuemax', '100');
 });
 
 test('Expect that the progress bar is incremental', async () => {
   render(ProgressBar, { progress: 5 });
 
-  // expect the progress bar to not have the indeterminate class
   const progressBar = screen.getByRole('progressbar');
   expect(progressBar).toHaveClass('progress-bar-incremental');
   expect(progressBar.classList.contains('progress-bar-indeterminate')).toBe(false);
+  expect(progressBar).toHaveAttribute('aria-valuenow', '5');
+  expect(progressBar).toHaveAttribute('aria-valuemin', '0');
+  expect(progressBar).toHaveAttribute('aria-valuemax', '100');
 });
 
 test('Expect class to be propagated', async () => {
