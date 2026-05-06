@@ -1,7 +1,6 @@
 <script context="module" lang="ts">
+import ProgressBar from '@podman-desktop/ui-svelte/ProgressBar';
 import { defineMeta } from '@storybook/addon-svelte-csf';
-
-import ProgressBar from '../../../../packages/renderer/src/lib/task-manager/ProgressBar.svelte';
 
 /**
  * Stories for the `ProgressBar` component from `packages/renderer`.
