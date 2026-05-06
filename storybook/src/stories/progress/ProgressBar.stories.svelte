@@ -140,30 +140,31 @@ const dimensionVariants: DimensionVariant[] = [
   {:else if args.kind === 'accessibility'}
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
-        The inner bar element uses <code>role="progressbar"</code>. Note: <code>aria-label</code> and other
-        ARIA props land on the outer wrapper via <code>restProps</code>, not on the inner element with
-        <code>role="progressbar"</code>.
+        The inner bar element uses <code>role="progressbar"</code> with <code>aria-valuemin</code> and
+        <code>aria-valuemax</code>. Determinate mode also sets <code>aria-valuenow</code>. Note:
+        <code>aria-label</code> and other ARIA props land on the outer wrapper via <code>restProps</code>,
+        not on the inner element with <code>role="progressbar"</code>.
       </div>
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-          <div class="text-xs font-semibold text-(--pd-content-header)">Determinate with role</div>
+          <div class="text-xs font-semibold text-(--pd-content-header)">Determinate</div>
 
           <div class="py-2">
             <ProgressBar progress={50} />
           </div>
 
-          <code class="text-[10px] text-(--pd-content-text) break-all">role="progressbar" on inner bar</code>
+          <code class="text-[10px] text-(--pd-content-text) break-all">aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"</code>
         </div>
 
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-          <div class="text-xs font-semibold text-(--pd-content-header)">Indeterminate with role</div>
+          <div class="text-xs font-semibold text-(--pd-content-header)">Indeterminate</div>
 
           <div class="py-2">
             <ProgressBar />
           </div>
 
-          <code class="text-[10px] text-(--pd-content-text) break-all">role="progressbar" on inner bar</code>
+          <code class="text-[10px] text-(--pd-content-text) break-all">aria-valuemin="0" aria-valuemax="100" (no aria-valuenow)</code>
         </div>
 
         <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
@@ -173,7 +174,7 @@ const dimensionVariants: DimensionVariant[] = [
             <ProgressBar progress={75} aria-label="Downloading image" />
           </div>
 
-          <code class="text-[10px] text-(--pd-content-text) break-all">aria-label="Downloading image"</code>
+          <code class="text-[10px] text-(--pd-content-text) break-all">aria-label on wrapper, not on role="progressbar"</code>
         </div>
       </div>
     </div>
