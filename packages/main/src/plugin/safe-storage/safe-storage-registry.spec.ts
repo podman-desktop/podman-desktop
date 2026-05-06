@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { existsSync } from 'node:fs';
+import { cpSync, existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 
 import type Electron from 'electron';
@@ -124,6 +124,10 @@ test('should init safe storage if error', async () => {
   const notifications = await safeStorageRegistry.init();
   expect(notifications).toBeDefined();
   expect(notifications.length).toBe(1);
+
+  expect(cpSync).toHaveBeenCalledWith(expect.stringContaining('data.json'), expect.stringContaining('.backup-'));
+
+  expect(writeFile).toHaveBeenCalledWith(expect.stringContaining('data.json'), JSON.stringify({}), 'utf-8');
 });
 
 test('should throw error if not initialized', async () => {
