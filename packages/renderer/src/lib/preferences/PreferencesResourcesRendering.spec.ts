@@ -516,7 +516,7 @@ describe.each<{
       name: customProviderInfo.name,
     });
     // redirect to create new page
-    expect(router.goto).toHaveBeenCalledWith(`/preferences/provider/${customProviderInfo.internalId}`);
+    expect(router.goto).toHaveBeenCalledWith(`/preferences/resources/provider/${customProviderInfo.internalId}`);
   });
 
   test('Expect to display the dialog if missing requirements for installation', async () => {
