@@ -130,7 +130,9 @@ const dimensionVariants: DimensionVariant[] = [
               <ProgressBar progress={variant.progress} />
             </div>
 
-            <code class="text-[10px] text-(--pd-content-text)">{variant.note}</code>
+            {#if variant.note}
+              <code class="text-[10px] text-(--pd-content-text)">{variant.note}</code>
+            {/if}
           </div>
         {/each}
       </div>
@@ -138,7 +140,9 @@ const dimensionVariants: DimensionVariant[] = [
   {:else if args.kind === 'accessibility'}
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
-        The inner bar element uses <code>role="progressbar"</code>. Additional ARIA attributes are spread onto the wrapper.
+        The inner bar element uses <code>role="progressbar"</code>. Note: <code>aria-label</code> and other
+        ARIA props land on the outer wrapper via <code>restProps</code>, not on the inner element with
+        <code>role="progressbar"</code>.
       </div>
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
