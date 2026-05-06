@@ -236,7 +236,8 @@
       "smol-toml": "^1.6.1",
       "follow-redirects": "^1.16.0",
       "uuid": "^14.0.0",
-      "postcss": ">=8.5.12"
+      "postcss": ">=8.5.12",
+      "ip-address": ">=10.1.1"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"
