@@ -1307,12 +1307,14 @@ export class ColorRegistry {
       hcLight: black,
     });
 
-    this.registerColor(`${modal}shadow`, {
-      dark: black,
-      light: black,
-      hcDark: black,
-      hcLight: black,
-    });
+    this.registerColorDefinition(
+      this.color(`${modal}shadow`)
+        .withDark(colorPaletteHelper(black).withAlpha(0.3))
+        .withLight(colorPaletteHelper(black).withAlpha(0.3))
+        .withHcDark(colorPaletteHelper(black).withAlpha(0.3))
+        .withHcLight(colorPaletteHelper(black).withAlpha(0.3))
+        .build(),
+    );
   }
 
   // links
