@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+    "rootDir": "src",
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,

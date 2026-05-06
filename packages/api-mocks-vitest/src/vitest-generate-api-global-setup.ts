@@ -107,7 +107,7 @@ export default async function setup(): Promise<void> {
   const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.ts');
   const templatePath = path.join(packageRoot, 'src', 'api.mustache');
   const productJsonPath = path.join(repoRoot, 'product.json');
-  const packageProductJsonPath = path.join(packageRoot, 'product.json');
+  const packageProductJsonPath = path.join(packageRoot, 'src', 'product.json');
 
   // skip if api.ts is already newer (from template or extension-api.d.ts file)
   const extensionApiPathStats = await fs.stat(extensionApiTypePath);

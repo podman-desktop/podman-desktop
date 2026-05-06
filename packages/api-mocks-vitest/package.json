@@ -10,26 +10,27 @@
   "license": "Apache-2.0",
   "type": "module",
   "files": [
-    "dist",
-    "src/api.mustache",
-    "product.json"
+    "dist"
   ],
   "exports": {
     ".": {
-      "default": "./dist/src/@podman-desktop/api.js"
+      "types": "./dist/@podman-desktop/api.d.ts",
+      "default": "./dist/@podman-desktop/api.js"
     },
     "./plugin": {
-      "types": "./dist/src/plugin.d.ts",
-      "default": "./dist/src/plugin.js"
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
     },
     "./@podman-desktop/api": {
-      "default": "./dist/src/@podman-desktop/api.js"
+      "types": "./dist/@podman-desktop/api.d.ts",
+      "default": "./dist/@podman-desktop/api.js"
     }
   },
   "scripts": {
     "prepare": "",
-    "clean": "rimraf dist *.tsbuildinfo",
-    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist src/@podman-desktop src/product.json *.tsbuildinfo",
+    "generate": "tsx -e \"import('./src/vitest-generate-api-global-setup.ts').then(module => module.default())\"",
+    "build": "pnpm generate && tsc -p tsconfig.json",
     "watch": "",
     "publish:next": "pnpm version 0.0.1-\"$(date +%s)\" --no-git-tag-version && pnpm publish --registry=https://registry.npmjs.org/ --tag next --no-git-checks --access public"
   },
@@ -37,6 +38,7 @@
     "@types/mustache": "^4.2.6",
     "mustache": "^4.2.0",
     "rimraf": "^6.0.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.2"
   },
   "peerDependencies": {
