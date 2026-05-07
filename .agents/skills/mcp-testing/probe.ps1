@@ -90,7 +90,8 @@ $portPids  = @{}
 foreach ($port in @(9222, 9223)) {
     $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($conn) {
-        $portNames[$port] = (Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue).ProcessName ?? "unknown"
+        $proc = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
+        $portNames[$port] = if ($proc) { $proc.ProcessName } else { "unknown" }
         $portPids[$port]  = $conn.OwningProcess
     } else {
         $portNames[$port] = "none"

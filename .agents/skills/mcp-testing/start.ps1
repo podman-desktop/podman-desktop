@@ -198,23 +198,26 @@ if (Test-ProductionPDRunning) {
     Write-Host "      Production app stopped"
 }
 
-# Kill any existing pnpm watch
+# Kill any existing pnpm watch (tree kill to catch vite/svelte-package/esbuild children)
 Write-Host "[1/4] Stopping any running dev instance..."
-$killed = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
-          Where-Object { $_.CommandLine -match 'pnpm.*watch' }
-if ($killed) {
-    $killed | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-    Write-Host "      Stopped pnpm watch"
+$watchProcs = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+              Where-Object { $_.CommandLine -match 'pnpm.*watch' }
+foreach ($wp in $watchProcs) {
+    & taskkill /F /T /PID $wp.ProcessId 2>$null
+}
+if ($watchProcs) {
+    Write-Host "      Stopped pnpm watch tree"
     Start-Sleep -Seconds 3
 }
 
 # Also kill the Electron app if it is still listening on the dev CDP port
 $conn = Get-NetTCPConnection -LocalPort $DEV_PORT -State Listen -ErrorAction SilentlyContinue
 if ($conn) {
-    $procName = (Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue).ProcessName ?? "unknown"
+    $proc = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
+    $procName = if ($proc) { $proc.ProcessName } else { "unknown" }
     Write-Host "      Killing process on port $DEV_PORT ($procName)"
-    Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
-    Write-Host "      Stopped process on port $DEV_PORT"
+    & taskkill /F /T /PID $conn.OwningProcess 2>$null
+    Write-Host "      Stopped process tree on port $DEV_PORT"
     Start-Sleep -Seconds 2
 }
 

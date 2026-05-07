@@ -27,15 +27,32 @@ switch ($Mode) {
         # Kill Electron app listening on the dev CDP port
         $conn = Get-NetTCPConnection -LocalPort $DevPort -State Listen -ErrorAction SilentlyContinue
         if ($conn) {
-            Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
-            Write-Host "  Killed Electron on port $DevPort"
+            # Use taskkill /T to kill the entire process tree (Electron + helpers)
+            & taskkill /F /T /PID $conn.OwningProcess 2>$null
+            Write-Host "  Killed Electron tree on port $DevPort"
         }
 
-        # Kill pnpm watch processes (Get-CimInstance needed to access CommandLine)
-        Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+        # Find pnpm watch root processes, then kill their entire trees
+        $watchPids = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
             Where-Object { $_.CommandLine -match 'pnpm.*watch' } |
-            ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-        Write-Host "  Killed pnpm watch processes"
+            Select-Object -ExpandProperty ProcessId
+        foreach ($pid in $watchPids) {
+            & taskkill /F /T /PID $pid 2>$null
+        }
+        if ($watchPids) {
+            Write-Host "  Killed pnpm watch process tree(s)"
+        }
+
+        # Catch any orphaned node.exe children that escaped the tree kill
+        # (e.g., vite, svelte-package, esbuild spawned by pnpm watch)
+        $remaining = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -match 'vite|svelte-package|esbuild|podman-desktop' }
+        foreach ($proc in $remaining) {
+            Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+        if ($remaining) {
+            Write-Host "  Killed $($remaining.Count) orphaned child process(es)"
+        }
 
         Remove-Item "$env:TEMP\pnpm-watch-out.log" -ErrorAction SilentlyContinue
         Remove-Item "$env:TEMP\pnpm-watch-err.log" -ErrorAction SilentlyContinue
