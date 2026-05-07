@@ -127,7 +127,7 @@ async function createWindow(): Promise<BrowserWindow> {
   // On Wayland specifically, calling show() from within ready-to-show also re-triggers the
   // event causing a feedback loop. Use did-finish-load for all Linux sessions to avoid both.
   if (isLinux()) {
-    browserWindow.webContents.on('did-finish-load', handleWindowShow);
+    browserWindow.webContents.once('did-finish-load', handleWindowShow);
   } else {
     browserWindow.on('ready-to-show', handleWindowShow);
   }
