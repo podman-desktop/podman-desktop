@@ -38,6 +38,8 @@ import {
 } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
+import product from '/@product.json' with { type: 'json' };
+
 import { ConfigurationImpl } from './configuration-impl.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
@@ -202,12 +204,18 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     // Get all the locked keys at the start to avoid multiple lookups
     const lockedSet = this.lockedKeys.getAllKeys();
 
+    const productConfigurationsProperties = (product.experimentalFeaturesFeedback ?? {}) as {
+      [key: string]: Partial<IConfigurationNode['properties']>;
+    };
+
     // biome-ignore lint/complexity/noForEach: <explanation>
     configurations.forEach(configuration => {
       for (const key in configuration.properties) {
         properties.push(key);
+        const productConfigProperties = productConfigurationsProperties[key];
         const configProperty: IConfigurationPropertyRecordedSchema = {
           ...configuration.properties[key],
+          ...productConfigProperties,
           title: configuration.title,
           id: key,
           parentId: configuration.id,

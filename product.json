@@ -163,5 +163,17 @@
     "feature": "https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20type%3AFeature",
     "issues": "https://github.com/podman-desktop/podman-desktop/issues"
   },
-  "feedbackLinks": {}
+  "feedbackLinks": {},
+  "experimentalFeaturesFeedback": {
+    "dashboard.enhancedDashboard": {
+      "experimental": {
+        "githubDiscussionLink": "https://github.com/podman-desktop/podman-desktop/discussions/16055"
+      }
+    },
+    "statusbarProviders.showProviders": {
+      "experimental": {
+        "githubDiscussionLink": "https://github.com/podman-desktop/podman-desktop/discussions/10802"
+      }
+    }
+  }
 }
