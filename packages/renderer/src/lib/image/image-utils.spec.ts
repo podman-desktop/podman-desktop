@@ -182,6 +182,17 @@ describe('inUse', () => {
     // image should be used
     expect(isUsed).toBe(expected);
   });
+
+  test('should expect inUse for untagged image when container references it by original tag name', async () => {
+    const containerWithTag = {
+      Id: 'container1',
+      Image: 'quay.io/podman/hello:latest',
+      ImageID: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+    } as unknown as ContainerInfo;
+
+    const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerWithTag]);
+    expect(isUsed).toBeTruthy();
+  });
 });
 
 describe('getImagesFromManifest and construct ImageInfoUI', () => {
