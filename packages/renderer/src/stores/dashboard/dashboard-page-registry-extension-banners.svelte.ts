@@ -23,7 +23,7 @@ import type { DashboardPageRegistryEntry } from './dashboard-page-registry.svelt
 export function createExtensionBanners(): DashboardPageRegistryEntry {
   return {
     id: 'Extension Banners',
-    originalOrder: 2,
+    originalOrder: 1,
     component: ExtensionBanners,
   };
 }

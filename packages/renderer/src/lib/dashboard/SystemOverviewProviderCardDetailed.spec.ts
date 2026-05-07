@@ -31,6 +31,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import SystemOverviewProviderCardDetailed from './SystemOverviewProviderCardDetailed.svelte';
 
+vi.mock(import('/@/lib/dashboard/SystemOverviewResourceUsage.svelte'));
 vi.mock(import('tinro'));
 
 const baseProvider: ProviderInfo = {
@@ -241,10 +242,22 @@ test('should render action button even during transitional state when error is p
   await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Retry Podman' })).toBeInTheDocument());
 });
 
-test('should navigate to container connection on View button click', async () => {
+test('should render resource usage instead of button when container connection is started', async () => {
   const provider = { ...baseProvider, containerConnections: [containerConnection] };
   render(SystemOverviewProviderCardDetailed, {
     connection: containerConnection,
+    provider,
+    childConnections: [],
+  });
+
+  await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument());
+});
+
+test('should navigate to container connection on View button click', async () => {
+  const stoppedConnection = { ...containerConnection, status: 'stopped' as const, lifecycleMethods: [] };
+  const provider = { ...baseProvider, containerConnections: [stoppedConnection] };
+  render(SystemOverviewProviderCardDetailed, {
+    connection: stoppedConnection,
     provider,
     childConnections: [],
   });

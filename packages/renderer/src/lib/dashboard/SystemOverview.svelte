@@ -3,6 +3,7 @@ import { SYSTEM_OVERVIEW_EXPANDED } from '@podman-desktop/core-api';
 import { Expandable, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
+import { getStatusTextClass } from '/@/lib/dashboard/system-overview-utils';
 import SystemOverviewContent from '/@/lib/dashboard/SystemOverviewContent.svelte';
 import { ExpandableState } from '/@/lib/ui/expandable-state.svelte';
 import { systemOverviewInfos } from '/@/stores/dashboard/system-overview.svelte';

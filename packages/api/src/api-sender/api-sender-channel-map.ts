@@ -54,6 +54,7 @@ export interface ApiSenderChannelMap {
   'context-value-updated': { key: string; value: unknown };
   'contribution-register': ContributionInfo[];
   'contribution-unregister': ContributionInfo;
+  'dashboard:system-overview-status': SystemOverviewStatusInfo;
   'dev-tools:open-extension': string;
   'dev-tools:open-webview': string;
   'display-feedback': never;

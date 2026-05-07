@@ -1,6 +1,17 @@
 <script lang="ts">
-import { NavigationPage, type ProviderConnectionInfo, type ProviderInfo } from '@podman-desktop/core-api';
+import {
+  NavigationPage,
+  type ProviderConnectionInfo,
+  type ProviderContainerConnectionInfo,
+  type ProviderInfo,
+} from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
+
+import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
+import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
+import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
+import { handleNavigation } from '/@/navigation';
+import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
 
 import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
 import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
@@ -13,6 +24,14 @@ import {
   startConnection,
   STATUS_TEXT_CLASS,
 } from './system-overview-utils.svelte';
+
+const CONNECTION_STATUS_CONFIG: Record<ProviderConnectionStatus, ConnectionStatusConfig> = {
+  started: { label: 'Running', buttonType: 'secondary' },
+  stopped: { label: 'Stopped', buttonType: 'primary' },
+  unknown: { label: 'Unknown', buttonType: 'danger' },
+  starting: { label: 'Starting', buttonType: 'secondary' },
+  stopping: { label: 'Stopping', buttonType: 'secondary' },
+};
 
 export type ChildConnection = {
   connection: ProviderConnectionInfo;
@@ -31,6 +50,7 @@ let errorMessage = $state<string | undefined>(undefined);
 let connectionStatus = $derived(getSystemOverviewStatus(connection.status, connection.error));
 let statusConfig = $derived(getConnectionStatusConfig(connection.status, provider, connection.error));
 let displayName = $derived(getConnectionDisplayName(connection));
+let providerVersion = $derived(provider.version);
 
 let vmType = $derived.by((): string | undefined => {
   if (connection.connectionType === 'container') {
@@ -111,7 +131,9 @@ async function handleActionButtonClick(): Promise<void> {
   {/snippet}
 
   {#snippet actions()}
-    {#if connection.error ?? (connection.status !== 'starting' && connection.status !== 'stopping')}
+    {#if connection.connectionType === 'container' && connection.status === 'started'}
+      <SystemOverviewResourceUsage {provider} connection={connection as ProviderContainerConnectionInfo} />
+    {:else if connection.error ?? (connection.status !== 'starting' && connection.status !== 'stopping')}
       <Button type={statusConfig.buttonType} onclick={handleActionButtonClick}>
         {statusConfig.buttonText}
       </Button>
