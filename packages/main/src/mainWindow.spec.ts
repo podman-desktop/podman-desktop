@@ -107,7 +107,7 @@ beforeEach(() => {
   BrowserWindow.prototype.destroy = vi.fn();
   BrowserWindow.prototype.hide = vi.fn();
   Object.defineProperty(BrowserWindow.prototype, 'webContents', {
-    value: { send: vi.fn(), on: vi.fn() },
+    value: { send: vi.fn(), on: vi.fn(), once: vi.fn() },
     configurable: true,
   });
 
@@ -293,6 +293,10 @@ describe('createNewWindow', () => {
       vi.mocked(util.isLinux).mockReturnValue(true);
     });
 
+    afterEach(() => {
+      delete process.env['WAYLAND_DISPLAY'];
+    });
+
     test('should show window via did-finish-load on Linux X11', async () => {
       const { createNewWindow } = await import('./mainWindow.js');
 
@@ -301,7 +305,7 @@ describe('createNewWindow', () => {
       const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
       assert(bwInstance);
 
-      const didFinishLoad = getHandler(bwInstance.webContents.on, 'did-finish-load');
+      const didFinishLoad = getHandler(bwInstance.webContents.once, 'did-finish-load');
       didFinishLoad();
 
       expect(bwInstance.show).toHaveBeenCalled();
@@ -317,12 +321,10 @@ describe('createNewWindow', () => {
       const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
       assert(bwInstance);
 
-      const didFinishLoad = getHandler(bwInstance.webContents.on, 'did-finish-load');
+      const didFinishLoad = getHandler(bwInstance.webContents.once, 'did-finish-load');
       didFinishLoad();
 
       expect(bwInstance.show).toHaveBeenCalled();
-
-      delete process.env['WAYLAND_DISPLAY'];
     });
 
     test('should not register ready-to-show on Linux (avoids Wayland show() feedback loop)', async () => {
@@ -347,7 +349,7 @@ describe('createNewWindow', () => {
       const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
       assert(bwInstance);
 
-      expect(bwInstance.webContents.on).not.toHaveBeenCalledWith('did-finish-load', expect.any(Function));
+      expect(bwInstance.webContents.once).not.toHaveBeenCalledWith('did-finish-load', expect.any(Function));
     });
 
     test('should not show window via did-finish-load when --minimize flag is set', async () => {
@@ -360,7 +362,7 @@ describe('createNewWindow', () => {
       const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
       assert(bwInstance);
 
-      const didFinishLoad = getHandler(bwInstance.webContents.on, 'did-finish-load');
+      const didFinishLoad = getHandler(bwInstance.webContents.once, 'did-finish-load');
       didFinishLoad();
 
       expect(bwInstance.show).not.toHaveBeenCalled();
