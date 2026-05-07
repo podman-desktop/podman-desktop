@@ -19,10 +19,16 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import ContainerDetailsSummary from './ContainerDetailsSummary.svelte';
 import { ContainerGroupInfoTypeUI, type ContainerInfoUI } from './ContainerInfoUI';
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(window.openExternal).mockResolvedValue(undefined);
+});
 
 const fakePodContainer: ContainerInfoUI = {
   id: 'fakeId1',
@@ -115,4 +121,39 @@ test('ContainerDetailsSummary renders with standalone ContainerInfoUI object', a
   expect(screen.getByText('standalone')).toBeInTheDocument();
   expect(screen.getByText('running')).toBeInTheDocument();
   expect(screen.getByText('group2')).toBeInTheDocument();
+});
+
+test('clicking a port opens the browser via openExternal', async () => {
+  const containerWithPorts: ContainerInfoUI = {
+    ...fakeStandaloneContainer,
+    ports: [{ IP: '0.0.0.0', PrivatePort: 80, PublicPort: 8080, Type: 'tcp' }],
+    portsAsString: '8080',
+    hasPublicPort: true,
+  };
+
+  render(ContainerDetailsSummary, { container: containerWithPorts });
+
+  const portLink = screen.getByText('8080');
+  expect(portLink).toBeInTheDocument();
+
+  await userEvent.click(portLink);
+
+  expect(window.openExternal).toHaveBeenCalledWith('http://localhost:8080');
+});
+
+test('port link shows tooltip with full URL and external link icon', async () => {
+  const containerWithPorts: ContainerInfoUI = {
+    ...fakeStandaloneContainer,
+    ports: [{ IP: '0.0.0.0', PrivatePort: 80, PublicPort: 3000, Type: 'tcp' }],
+    portsAsString: '3000',
+    hasPublicPort: true,
+  };
+
+  render(ContainerDetailsSummary, { container: containerWithPorts });
+
+  const portLink = screen.getByText('3000');
+  expect(portLink).toBeInTheDocument();
+
+  const tooltipTrigger = portLink.closest('[data-testid="tooltip-trigger"]');
+  expect(tooltipTrigger).toBeInTheDocument();
 });
