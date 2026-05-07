@@ -23,6 +23,8 @@ import * as path from 'node:path';
 
 import * as extensionApi from '@podman-desktop/api';
 
+import type { RegistryConfiguration, RegistryConfigurationEntry } from '/@/configuration/registry-configuration';
+
 export type ContainerAuthConfigEntry = {
   [key: string]: {
     auth: string;
@@ -36,6 +38,11 @@ export type ContainersAuthConfigFile = {
 
 export class RegistrySetup {
   private localRegistries: Map<string, extensionApi.Registry> = new Map();
+  private registryConfiguration: RegistryConfiguration;
+
+  constructor(registryConfiguration: RegistryConfiguration) {
+    this.registryConfiguration = registryConfiguration;
+  }
 
   protected getAuthFileLocation(): string {
     let podmanConfigContainersPath = '';
@@ -139,6 +146,9 @@ export class RegistrySetup {
 
           await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
         }
+
+        // Update registries.conf with the registry configuration
+        await this.updateRegistriesConf(registry);
       }
     });
 
@@ -153,6 +163,9 @@ export class RegistrySetup {
           delete authFile.auths[registry.serverUrl];
         }
         await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
+
+        // Remove from registries.conf
+        await this.removeFromRegistriesConf(registry);
       }
     });
 
@@ -170,6 +183,9 @@ export class RegistrySetup {
         };
 
         await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
+
+        // Update registries.conf with the updated registry configuration
+        await this.updateRegistriesConf(registry);
       }
     });
 
@@ -213,5 +229,68 @@ export class RegistrySetup {
     });
     // writeFile is not updating the mode if the file already exist
     await chmod(path, 0o600);
+  }
+
+  /**
+   * Updates the registries.conf file to add or update a registry entry.
+   * This ensures the registry is configured for insecure access if needed.
+   */
+  protected async updateRegistriesConf(registry: extensionApi.Registry): Promise<void> {
+    try {
+      // Read current registries.conf content
+      const configFileContent = await this.registryConfiguration.readRegistriesConfContent();
+
+      // Extract the location from serverUrl (remove protocol if present)
+      const location = registry.serverUrl.replace(/^https?:\/\//, '');
+
+      // Check if registry already exists in the configuration
+      const existingIndex = configFileContent.registry.findIndex(
+        (entry: RegistryConfigurationEntry) => entry.location === location,
+      );
+
+      const registryEntry: RegistryConfigurationEntry = {
+        location,
+        insecure: registry.insecure ?? false,
+      };
+
+      if (existingIndex >= 0) {
+        // Update existing entry
+        configFileContent.registry[existingIndex] = {
+          ...configFileContent.registry[existingIndex],
+          ...registryEntry,
+        };
+      } else {
+        // Add new entry
+        configFileContent.registry.push(registryEntry);
+      }
+
+      // Save updated configuration
+      await this.registryConfiguration.saveRegistriesConfContent(configFileContent);
+    } catch (error: unknown) {
+      console.error('Error updating registries.conf for registry', registry.serverUrl, error);
+    }
+  }
+
+  /**
+   * Removes a registry entry from the registries.conf file.
+   */
+  protected async removeFromRegistriesConf(registry: extensionApi.Registry): Promise<void> {
+    try {
+      // Read current registries.conf content
+      const configFileContent = await this.registryConfiguration.readRegistriesConfContent();
+
+      // Extract the location from serverUrl
+      const location = registry.serverUrl.replace(/^https?:\/\//, '');
+
+      // Filter out the registry to remove
+      configFileContent.registry = configFileContent.registry.filter(
+        (entry: RegistryConfigurationEntry) => entry.location !== location,
+      );
+
+      // Save updated configuration
+      await this.registryConfiguration.saveRegistriesConfContent(configFileContent);
+    } catch (error: unknown) {
+      console.error('Error removing registry from registries.conf', registry.serverUrl, error);
+    }
   }
 }

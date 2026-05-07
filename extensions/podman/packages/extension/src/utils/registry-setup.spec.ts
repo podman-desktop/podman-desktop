@@ -22,6 +22,8 @@ import { chmod, readFile, writeFile } from 'node:fs/promises';
 import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
+import type { RegistryConfiguration, RegistryConfigurationFile } from '/@/configuration/registry-configuration';
+
 import type { ContainersAuthConfigFile } from './registry-setup';
 import { RegistrySetup } from './registry-setup';
 
@@ -42,6 +44,14 @@ export class TestRegistrySetup extends RegistrySetup {
   publicWriteAuthFile(data: string): Promise<void> {
     return super.writeAuthFile(data);
   }
+
+  publicUpdateRegistriesConf(registry: extensionApi.Registry): Promise<void> {
+    return super.updateRegistriesConf(registry);
+  }
+
+  publicRemoveFromRegistriesConf(registry: extensionApi.Registry): Promise<void> {
+    return super.removeFromRegistriesConf(registry);
+  }
 }
 
 let registrySetup: TestRegistrySetup;
@@ -55,8 +65,15 @@ const originalConsoleWarn = console.warn;
 const consoleErroMock = vi.fn();
 const consoleWarnMock = vi.fn();
 
+const mockRegistryConfiguration: RegistryConfiguration = {
+  init: vi.fn(),
+  getPlaybookScriptPath: vi.fn(),
+  readRegistriesConfContent: vi.fn(),
+  saveRegistriesConfContent: vi.fn(),
+};
+
 beforeAll(() => {
-  registrySetup = new TestRegistrySetup();
+  registrySetup = new TestRegistrySetup(mockRegistryConfiguration);
 });
 
 beforeEach(() => {
@@ -257,4 +274,141 @@ test('writeAuthFile should call writeFile and chmod with 0o600', async () => {
     mode: 0o600,
   });
   expect(chmod).toHaveBeenCalledWith(authJsonLocation, 0o600);
+});
+
+test('updateRegistriesConf should add a new insecure registry', async () => {
+  const emptyConfig: RegistryConfigurationFile = { registry: [] };
+  vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockResolvedValue(emptyConfig);
+
+  const registry: extensionApi.Registry = {
+    source: 'podman',
+    serverUrl: 'https://myregistry.io',
+    username: 'user',
+    secret: 'pass',
+    insecure: true,
+  };
+
+  await registrySetup.publicUpdateRegistriesConf(registry);
+
+  expect(mockRegistryConfiguration.readRegistriesConfContent).toHaveBeenCalled();
+  expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
+    registry: [
+      {
+        location: 'myregistry.io',
+        insecure: true,
+      },
+    ],
+  });
+});
+
+test('updateRegistriesConf should update an existing registry', async () => {
+  const existingConfig: RegistryConfigurationFile = {
+    registry: [
+      {
+        location: 'myregistry.io',
+        insecure: false,
+      },
+    ],
+  };
+  vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockResolvedValue(existingConfig);
+
+  const registry: extensionApi.Registry = {
+    source: 'podman',
+    serverUrl: 'https://myregistry.io',
+    username: 'user',
+    secret: 'pass',
+    insecure: true,
+  };
+
+  await registrySetup.publicUpdateRegistriesConf(registry);
+
+  expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
+    registry: [
+      {
+        location: 'myregistry.io',
+        insecure: true,
+      },
+    ],
+  });
+});
+
+test('updateRegistriesConf should handle serverUrl without protocol', async () => {
+  const emptyConfig: RegistryConfigurationFile = { registry: [] };
+  vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockResolvedValue(emptyConfig);
+
+  const registry: extensionApi.Registry = {
+    source: 'podman',
+    serverUrl: 'myregistry.io',
+    username: 'user',
+    secret: 'pass',
+    insecure: false,
+  };
+
+  await registrySetup.publicUpdateRegistriesConf(registry);
+
+  expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
+    registry: [
+      {
+        location: 'myregistry.io',
+        insecure: false,
+      },
+    ],
+  });
+});
+
+test('removeFromRegistriesConf should remove a registry', async () => {
+  const existingConfig: RegistryConfigurationFile = {
+    registry: [
+      {
+        location: 'myregistry.io',
+        insecure: true,
+      },
+      {
+        location: 'otherregistry.io',
+        insecure: false,
+      },
+    ],
+  };
+  vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockResolvedValue(existingConfig);
+
+  const registry: extensionApi.Registry = {
+    source: 'podman',
+    serverUrl: 'https://myregistry.io',
+    username: 'user',
+    secret: 'pass',
+  };
+
+  await registrySetup.publicRemoveFromRegistriesConf(registry);
+
+  expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
+    registry: [
+      {
+        location: 'otherregistry.io',
+        insecure: false,
+      },
+    ],
+  });
+});
+
+test('updateRegistriesConf should handle errors gracefully', async () => {
+  vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockRejectedValue(
+    new Error('Failed to read registries.conf'),
+  );
+
+  const registry: extensionApi.Registry = {
+    source: 'podman',
+    serverUrl: 'https://myregistry.io',
+    username: 'user',
+    secret: 'pass',
+  };
+
+  // Should not throw, but log error
+  await registrySetup.publicUpdateRegistriesConf(registry);
+
+  expect(consoleErroMock).toHaveBeenCalledWith(
+    'Error updating registries.conf for registry',
+    'https://myregistry.io',
+    expect.any(Error),
+  );
+  expect(mockRegistryConfiguration.saveRegistriesConfContent).not.toHaveBeenCalled();
 });

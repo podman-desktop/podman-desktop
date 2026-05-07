@@ -65,6 +65,8 @@ export interface RegistryConfigurationFile {
 export interface RegistryConfiguration {
   init(): Promise<Disposable[]>;
   getPlaybookScriptPath(): Promise<string>;
+  readRegistriesConfContent(): Promise<RegistryConfigurationFile>;
+  saveRegistriesConfContent(content: RegistryConfigurationFile): Promise<void>;
 }
 
 /**

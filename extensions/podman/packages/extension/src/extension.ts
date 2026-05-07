@@ -1693,7 +1693,7 @@ export async function start(
   extensionContext.subscriptions.push(syncCertsCommand);
 
   // register the registries
-  const registrySetup = new RegistrySetup();
+  const registrySetup = new RegistrySetup(podmanConfiguration.registryConfiguration);
   await registrySetup.setup();
 
   await calcPodmanMachineSetting();
