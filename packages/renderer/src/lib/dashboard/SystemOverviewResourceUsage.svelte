@@ -2,11 +2,11 @@
 import type { ContainerProviderConnection } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo, ProviderInfo } from '@podman-desktop/core-api';
 import type { IConfigurationPropertyRecordedSchema } from '@podman-desktop/core-api/configuration';
+import { ProgressBar } from '@podman-desktop/ui-svelte';
 import { filesize } from 'filesize';
 
 import { extractConnectionResourceMetrics } from '/@/lib/preferences/connection-resource-metrics';
 import type { IProviderConnectionConfigurationPropertyRecorded } from '/@/lib/preferences/Util';
-import ProgressBar from '/@/lib/task-manager/ProgressBar.svelte';
 import { configurationProperties } from '/@/stores/configurationProperties';
 
 interface Props {
