@@ -152,6 +152,9 @@ export class PodmanRemoteSshTunnel {
       this.#error = err.message;
       console.error('SSH connection error:', err);
       this.#status = 'unknown';
+      this.#server?.close();
+      this.#server = undefined;
+      this.#listening = false;
       this.handleReconnect();
     });
 
@@ -159,6 +162,9 @@ export class PodmanRemoteSshTunnel {
       this.#status = 'stopped';
       if (this.#reconnect) {
         this.#error = 'SSH connection ended unexpectedly';
+        this.#server?.close();
+        this.#server = undefined;
+        this.#listening = false;
       }
       this.handleReconnect();
     });
@@ -167,6 +173,9 @@ export class PodmanRemoteSshTunnel {
       this.#status = 'stopped';
       if (this.#reconnect) {
         this.#error = 'SSH connection closed unexpectedly';
+        this.#server?.close();
+        this.#server = undefined;
+        this.#listening = false;
       }
       this.handleReconnect();
     });

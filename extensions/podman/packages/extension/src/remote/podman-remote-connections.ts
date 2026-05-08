@@ -149,7 +149,7 @@ export class PodmanRemoteConnections {
 
       const uri = new URL(connection.URI);
       const host = uri.hostname;
-      const port = Number.parseInt(uri.port, 10);
+      const port = uri.port === '' ? 22 : Number.parseInt(uri.port, 10);
       const username = uri.username;
       const privateKeyFile = connection.Identity;
 

@@ -1452,7 +1452,7 @@ test('ensure running machine exposes container engine info error', async () => {
     registeredConnection = connection;
     return Disposable.from({ dispose: () => {} });
   });
-  (extensionApi.containerEngine.info as Mock).mockRejectedValue(new Error('info failed'));
+  vi.mocked(extensionApi.containerEngine.info).mockRejectedValue(new Error('info failed'));
 
   await extension.updateMachines(provider, podmanConfiguration);
 
