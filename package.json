@@ -175,7 +175,7 @@
     "get-tsconfig": "^4.14.0",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.0.2",
     "minimist": "^1.2.8",
     "msw": "^2.14.5",
     "prettier": "^3.8.3",
