@@ -41,6 +41,7 @@ const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  (window as unknown as Record<string, unknown>).getUrlProtocol = vi.fn().mockResolvedValue('podman-desktop');
 });
 
 test('experimental record should have clickable GitHub link', async () => {
@@ -139,8 +140,6 @@ test('locked record should not show reset to default button', async () => {
 });
 
 test('type markdown record with markdownDescription renders markdown content only once via format component', async () => {
-  (window as unknown as Record<string, unknown>).getUrlProtocol = vi.fn().mockResolvedValue('podman-desktop');
-
   const record: IConfigurationPropertyRecordedSchema = {
     id: 'ext.markdown.info',
     title: 'Info',
