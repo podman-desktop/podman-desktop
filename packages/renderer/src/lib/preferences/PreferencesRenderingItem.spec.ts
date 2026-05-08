@@ -139,7 +139,7 @@ test('locked record should not show reset to default button', async () => {
   expect(resetButton).not.toBeInTheDocument();
 });
 
-test('type markdown record with markdownDescription renders markdown content only once via format component', async () => {
+test('type markdown record with markdownDescription should render markdown content only once', async () => {
   const record: IConfigurationPropertyRecordedSchema = {
     id: 'ext.markdown.info',
     title: 'Info',
