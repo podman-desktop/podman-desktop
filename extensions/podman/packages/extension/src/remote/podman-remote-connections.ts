@@ -102,15 +102,14 @@ export class PodmanRemoteConnections {
       this.#stopMonitoring = true;
       this.cleanupConnections(Array.from(this.#currentConnections.values()));
       return;
-    } else {
-      this.#stopMonitoring = false;
     }
+    this.#stopMonitoring = false;
 
     // call us again
     if (!this.#stopMonitoring) {
       try {
         await this.refreshRemoteConnections();
-      } catch (error) {
+      } catch (_error) {
         // ignore the update of remote connections
       }
       // wait 5s before checking again
@@ -150,7 +149,7 @@ export class PodmanRemoteConnections {
 
       const uri = new URL(connection.URI);
       const host = uri.hostname;
-      const port = parseInt(uri.port);
+      const port = Number.parseInt(uri.port, 10);
       const username = uri.username;
       const privateKeyFile = connection.Identity;
 
@@ -158,7 +157,7 @@ export class PodmanRemoteConnections {
       const privateKey = readFileSync(privateKeyFile, 'utf8');
       const remotePath = uri.pathname;
 
-      let localPath;
+      let localPath: string;
       // on Windows, use npipe
       if (extensionApi.env.isWindows) {
         localPath = `\\\\.\\pipe\\podman-remote-${connection.Name}`;
@@ -179,6 +178,9 @@ export class PodmanRemoteConnections {
       const connectionDisposable = this.#provider.registerContainerProviderConnection({
         name: connection.Name,
         status: () => sshTunnel.status(),
+        get error(): string | undefined {
+          return sshTunnel.error;
+        },
         type: 'podman',
         endpoint: {
           socketPath: localPath,

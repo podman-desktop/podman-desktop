@@ -1426,6 +1426,40 @@ test('ensure started machine reports default configuration', async () => {
   expect(config.update).toHaveBeenNthCalledWith(7, 'machine.rootful', true);
 });
 
+test('ensure running machine exposes container engine info error', async () => {
+  vi.mocked(extensionApi.env).isLinux = true;
+  extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
+  vi.spyOn(extensionApi.process, 'exec').mockImplementation(
+    (_command, args) =>
+      new Promise<extensionApi.RunResult>(resolve => {
+        if (args?.[0] === 'machine' && args?.[1] === 'list') {
+          resolve({ stdout: JSON.stringify([fakeMachineJSON[0]]) } as extensionApi.RunResult);
+        } else if (args?.[0] === 'machine' && args?.[1] === 'inspect') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Rootful: true }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === 'system' && args?.[1] === 'connection' && args?.[2] === 'list') {
+          resolve({
+            stdout: JSON.stringify([{ Name: fakeMachineJSON[0].Name, Default: true }]),
+          } as extensionApi.RunResult);
+        } else if (args?.[0] === '--version') {
+          resolve({ stdout: 'podman version 4.9.0' } as extensionApi.RunResult);
+        }
+      }),
+  );
+  let registeredConnection: ContainerProviderConnection | undefined;
+  vi.mocked(provider.registerContainerProviderConnection).mockImplementation(connection => {
+    registeredConnection = connection;
+    return Disposable.from({ dispose: () => {} });
+  });
+  (extensionApi.containerEngine.info as Mock).mockRejectedValue(new Error('info failed'));
+
+  await extension.updateMachines(provider, podmanConfiguration);
+
+  expect(extension.podmanMachinesErrors.get(fakeMachineJSON[0].Name)).toBe('info failed');
+  expect(registeredConnection?.error).toBe('info failed');
+});
+
 test('ensure stopped machine reports stopped provider', async () => {
   extension.initExtensionContext({ subscriptions: [] } as unknown as extensionApi.ExtensionContext);
   vi.mocked(extensionApi.env).isLinux = false;

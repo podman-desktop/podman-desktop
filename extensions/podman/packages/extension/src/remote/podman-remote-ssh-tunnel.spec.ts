@@ -149,3 +149,30 @@ test('disconnect should clear pending reconnect timeout', () => {
   vi.advanceTimersByTime(30000);
   expect(connectSpy).toHaveBeenCalledTimes(1);
 });
+
+test('should expose ssh connection errors', () => {
+  vi.useFakeTimers();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  const capturedClient: { value?: Client } = {};
+  vi.spyOn(Client.prototype, 'connect').mockImplementation(function (this: Client): Client {
+    capturedClient.value = this;
+    return this;
+  });
+
+  const podmanRemoteSshTunnel = new PodmanRemoteSshTunnel(
+    'localhost',
+    22,
+    'foo',
+    '',
+    '/tmp/remote.sock',
+    '/tmp/local.sock',
+  );
+
+  podmanRemoteSshTunnel.connect();
+  capturedClient.value?.emit('error', new Error('connection refused'));
+
+  expect(podmanRemoteSshTunnel.status()).toBe('unknown');
+  expect(podmanRemoteSshTunnel.error).toBe('connection refused');
+
+  podmanRemoteSshTunnel.disconnect();
+});
