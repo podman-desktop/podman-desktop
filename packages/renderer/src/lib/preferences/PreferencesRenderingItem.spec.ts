@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
-  (window as unknown as Record<string, unknown>).getUrlProtocol = vi.fn().mockResolvedValue('podman-desktop');
+  vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 test('experimental record should have clickable GitHub link', async () => {
