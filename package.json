@@ -238,7 +238,8 @@
       "uuid": "^14.0.0",
       "postcss": ">=8.5.12",
       "ip-address": ">=10.1.1",
-      "fast-uri": ">=3.1.1"
+      "fast-uri": ">=3.1.1",
+      "@babel/plugin-transform-modules-systemjs": ">=7.29.4"
     },
     "patchedDependencies": {
       "docker-modem": "patches/docker-modem.patch"
