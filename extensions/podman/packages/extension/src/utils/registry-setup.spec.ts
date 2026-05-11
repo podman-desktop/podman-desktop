@@ -282,7 +282,7 @@ test('updateRegistriesConf should add a new insecure registry', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'https://myregistry.io',
+    serverUrl: 'myregistry.io',
     username: 'user',
     secret: 'pass',
     insecure: true,
@@ -314,7 +314,7 @@ test('updateRegistriesConf should update an existing registry', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'https://myregistry.io',
+    serverUrl: 'myregistry.io',
     username: 'user',
     secret: 'pass',
     insecure: true,
@@ -373,7 +373,7 @@ test('removeFromRegistriesConf should remove a registry', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'https://myregistry.io',
+    serverUrl: 'myregistry.io',
     username: 'user',
     secret: 'pass',
   };
@@ -397,7 +397,7 @@ test('updateRegistriesConf should handle errors gracefully', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'https://myregistry.io',
+    serverUrl: 'myregistry.io',
     username: 'user',
     secret: 'pass',
   };
@@ -407,7 +407,7 @@ test('updateRegistriesConf should handle errors gracefully', async () => {
 
   expect(consoleErroMock).toHaveBeenCalledWith(
     'Error updating registries.conf for registry',
-    'https://myregistry.io',
+    'myregistry.io',
     expect.any(Error),
   );
   expect(mockRegistryConfiguration.saveRegistriesConfContent).not.toHaveBeenCalled();

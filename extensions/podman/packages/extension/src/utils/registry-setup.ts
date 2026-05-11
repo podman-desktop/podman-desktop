@@ -240,16 +240,13 @@ export class RegistrySetup {
       // Read current registries.conf content
       const configFileContent = await this.registryConfiguration.readRegistriesConfContent();
 
-      // Extract the location from serverUrl (remove protocol if present)
-      const location = registry.serverUrl.replace(/^https?:\/\//, '');
-
       // Check if registry already exists in the configuration
       const existingIndex = configFileContent.registry.findIndex(
-        (entry: RegistryConfigurationEntry) => entry.location === location,
+        (entry: RegistryConfigurationEntry) => entry.location === registry.serverUrl,
       );
 
       const registryEntry: RegistryConfigurationEntry = {
-        location,
+        location: registry.serverUrl,
         insecure: registry.insecure ?? false,
       };
 
@@ -279,12 +276,9 @@ export class RegistrySetup {
       // Read current registries.conf content
       const configFileContent = await this.registryConfiguration.readRegistriesConfContent();
 
-      // Extract the location from serverUrl
-      const location = registry.serverUrl.replace(/^https?:\/\//, '');
-
       // Filter out the registry to remove
       configFileContent.registry = configFileContent.registry.filter(
-        (entry: RegistryConfigurationEntry) => entry.location !== location,
+        (entry: RegistryConfigurationEntry) => entry.location !== registry.serverUrl,
       );
 
       // Save updated configuration
