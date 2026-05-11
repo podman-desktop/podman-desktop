@@ -122,7 +122,7 @@ onMount(async () => {
 
 onDestroy(() => {
   // Cleanup the observer on destroy
-  resizeObserver?.unobserve(logsXtermDiv);
+  resizeObserver?.disconnect();
 });
 
 function updateOptionsMenu(visible: boolean): void {
