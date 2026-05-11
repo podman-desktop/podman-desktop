@@ -328,7 +328,7 @@ var require_memoizerific = __commonJS({
       }
     })(function() {
       var define2, module2, exports2;
-      return (function e2(t2, n3, r3) {
+      return (function e2(t2, n3, r4) {
         function s2(o4, u2) {
           if (!n3[o4]) {
             if (!t2[o4]) {
@@ -342,11 +342,11 @@ var require_memoizerific = __commonJS({
             t2[o4][0].call(l3.exports, function(e3) {
               var n4 = t2[o4][1][e3];
               return s2(n4 || e3);
-            }, l3, l3.exports, e2, t2, n3, r3);
+            }, l3, l3.exports, e2, t2, n3, r4);
           }
           return n3[o4].exports;
         }
-        for (var i2 = typeof __require == "function" && __require, o3 = 0; o3 < r3.length; o3++) s2(r3[o3]);
+        for (var i2 = typeof __require == "function" && __require, o3 = 0; o3 < r4.length; o3++) s2(r4[o3]);
         return s2;
       })({ 1: [function(_dereq_, module3, exports3) {
         module3.exports = function(forceSimilar) {
@@ -420,7 +420,7 @@ var require_memoizerific = __commonJS({
           var lruLen = lru.length, lruPathLen = lruPath.length, isMatch, i2, ii;
           for (i2 = 0; i2 < lruLen; i2++) {
             for (isMatch = !0, ii = 0; ii < lruPathLen; ii++)
-              if (!isEqual(lru[i2][ii].arg, lruPath[ii].arg)) {
+              if (!isEqual2(lru[i2][ii].arg, lruPath[ii].arg)) {
                 isMatch = !1;
                 break;
               }
@@ -434,7 +434,7 @@ var require_memoizerific = __commonJS({
           for (currentLru.cacheItem.delete(currentLru.arg), i2 = removedLruLen - 2; i2 >= 0 && (currentLru = removedLru[i2], tmp = currentLru.cacheItem.get(currentLru.arg), !tmp || !tmp.size); i2--)
             currentLru.cacheItem.delete(currentLru.arg);
         }
-        function isEqual(val1, val2) {
+        function isEqual2(val1, val2) {
           return val1 === val2 || val1 !== val1 && val2 !== val2;
         }
       }, { "map-or-similar": 1 }] }, {}, [3])(3);
@@ -678,8 +678,8 @@ var require_react_is_production_min = __commonJS({
     u2 = Symbol.for("react.module.reference");
     function v2(a2) {
       if (typeof a2 == "object" && a2 !== null) {
-        var r3 = a2.$$typeof;
-        switch (r3) {
+        var r4 = a2.$$typeof;
+        switch (r4) {
           case b2:
             switch (a2 = a2.type, a2) {
               case d2:
@@ -698,11 +698,11 @@ var require_react_is_production_min = __commonJS({
                   case g2:
                     return a2;
                   default:
-                    return r3;
+                    return r4;
                 }
             }
           case c2:
-            return r3;
+            return r4;
         }
       }
     }
@@ -783,33 +783,33 @@ var require_fuse = __commonJS({
     })(exports, function() {
       return (function(e2) {
         var t2 = {};
-        function r3(n3) {
+        function r4(n3) {
           if (t2[n3]) return t2[n3].exports;
           var o3 = t2[n3] = { i: n3, l: !1, exports: {} };
-          return e2[n3].call(o3.exports, o3, o3.exports, r3), o3.l = !0, o3.exports;
+          return e2[n3].call(o3.exports, o3, o3.exports, r4), o3.l = !0, o3.exports;
         }
-        return r3.m = e2, r3.c = t2, r3.d = function(e3, t3, n3) {
-          r3.o(e3, t3) || Object.defineProperty(e3, t3, { enumerable: !0, get: n3 });
-        }, r3.r = function(e3) {
+        return r4.m = e2, r4.c = t2, r4.d = function(e3, t3, n3) {
+          r4.o(e3, t3) || Object.defineProperty(e3, t3, { enumerable: !0, get: n3 });
+        }, r4.r = function(e3) {
           typeof Symbol < "u" && Symbol.toStringTag && Object.defineProperty(e3, Symbol.toStringTag, { value: "Module" }), Object.defineProperty(e3, "__esModule", { value: !0 });
-        }, r3.t = function(e3, t3) {
-          if (1 & t3 && (e3 = r3(e3)), 8 & t3 || 4 & t3 && typeof e3 == "object" && e3 && e3.__esModule) return e3;
+        }, r4.t = function(e3, t3) {
+          if (1 & t3 && (e3 = r4(e3)), 8 & t3 || 4 & t3 && typeof e3 == "object" && e3 && e3.__esModule) return e3;
           var n3 = /* @__PURE__ */ Object.create(null);
-          if (r3.r(n3), Object.defineProperty(n3, "default", { enumerable: !0, value: e3 }), 2 & t3 && typeof e3 != "string") for (var o3 in e3) r3.d(n3, o3, function(t4) {
+          if (r4.r(n3), Object.defineProperty(n3, "default", { enumerable: !0, value: e3 }), 2 & t3 && typeof e3 != "string") for (var o3 in e3) r4.d(n3, o3, function(t4) {
             return e3[t4];
           }.bind(null, o3));
           return n3;
-        }, r3.n = function(e3) {
+        }, r4.n = function(e3) {
           var t3 = e3 && e3.__esModule ? function() {
             return e3.default;
           } : function() {
             return e3;
           };
-          return r3.d(t3, "a", t3), t3;
-        }, r3.o = function(e3, t3) {
+          return r4.d(t3, "a", t3), t3;
+        }, r4.o = function(e3, t3) {
           return Object.prototype.hasOwnProperty.call(e3, t3);
-        }, r3.p = "", r3(r3.s = 0);
-      })([function(e2, t2, r3) {
+        }, r4.p = "", r4(r4.s = 0);
+      })([function(e2, t2, r4) {
         function n3(e3) {
           return (n3 = typeof Symbol == "function" && typeof Symbol.iterator == "symbol" ? function(e4) {
             return typeof e4;
@@ -818,25 +818,25 @@ var require_fuse = __commonJS({
           })(e3);
         }
         function o3(e3, t3) {
-          for (var r4 = 0; r4 < t3.length; r4++) {
-            var n4 = t3[r4];
+          for (var r5 = 0; r5 < t3.length; r5++) {
+            var n4 = t3[r5];
             n4.enumerable = n4.enumerable || !1, n4.configurable = !0, "value" in n4 && (n4.writable = !0), Object.defineProperty(e3, n4.key, n4);
           }
         }
-        var i2 = r3(1), a2 = r3(7), s2 = a2.get, c2 = (a2.deepValue, a2.isArray), h2 = (function() {
-          function e3(t4, r5) {
-            var n4 = r5.location, o4 = n4 === void 0 ? 0 : n4, i3 = r5.distance, a4 = i3 === void 0 ? 100 : i3, c3 = r5.threshold, h3 = c3 === void 0 ? 0.6 : c3, l3 = r5.maxPatternLength, u2 = l3 === void 0 ? 32 : l3, f2 = r5.caseSensitive, v2 = f2 !== void 0 && f2, p2 = r5.tokenSeparator, d2 = p2 === void 0 ? / +/g : p2, g2 = r5.findAllMatches, y2 = g2 !== void 0 && g2, m2 = r5.minMatchCharLength, k2 = m2 === void 0 ? 1 : m2, b2 = r5.id, S2 = b2 === void 0 ? null : b2, x2 = r5.keys, M2 = x2 === void 0 ? [] : x2, _2 = r5.shouldSort, w2 = _2 === void 0 || _2, L3 = r5.getFn, A3 = L3 === void 0 ? s2 : L3, O2 = r5.sortFn, C2 = O2 === void 0 ? function(e4, t5) {
+        var i2 = r4(1), a2 = r4(7), s2 = a2.get, c2 = (a2.deepValue, a2.isArray), h2 = (function() {
+          function e3(t4, r6) {
+            var n4 = r6.location, o4 = n4 === void 0 ? 0 : n4, i3 = r6.distance, a4 = i3 === void 0 ? 100 : i3, c3 = r6.threshold, h3 = c3 === void 0 ? 0.6 : c3, l3 = r6.maxPatternLength, u2 = l3 === void 0 ? 32 : l3, f2 = r6.caseSensitive, v2 = f2 !== void 0 && f2, p2 = r6.tokenSeparator, d2 = p2 === void 0 ? / +/g : p2, g2 = r6.findAllMatches, y2 = g2 !== void 0 && g2, m2 = r6.minMatchCharLength, k2 = m2 === void 0 ? 1 : m2, b2 = r6.id, S2 = b2 === void 0 ? null : b2, x2 = r6.keys, M2 = x2 === void 0 ? [] : x2, _2 = r6.shouldSort, w2 = _2 === void 0 || _2, L3 = r6.getFn, A3 = L3 === void 0 ? s2 : L3, O2 = r6.sortFn, C2 = O2 === void 0 ? function(e4, t5) {
               return e4.score - t5.score;
-            } : O2, j2 = r5.tokenize, P3 = j2 !== void 0 && j2, I2 = r5.matchAllTokens, F2 = I2 !== void 0 && I2, T3 = r5.includeMatches, N2 = T3 !== void 0 && T3, z2 = r5.includeScore, E2 = z2 !== void 0 && z2, W2 = r5.verbose, K2 = W2 !== void 0 && W2;
+            } : O2, j2 = r6.tokenize, P3 = j2 !== void 0 && j2, I2 = r6.matchAllTokens, F2 = I2 !== void 0 && I2, T3 = r6.includeMatches, N2 = T3 !== void 0 && T3, z2 = r6.includeScore, E2 = z2 !== void 0 && z2, W2 = r6.verbose, K2 = W2 !== void 0 && W2;
             (function(e4, t5) {
               if (!(e4 instanceof t5)) throw new TypeError("Cannot call a class as a function");
             })(this, e3), this.options = { location: o4, distance: a4, threshold: h3, maxPatternLength: u2, isCaseSensitive: v2, tokenSeparator: d2, findAllMatches: y2, minMatchCharLength: k2, id: S2, keys: M2, includeMatches: N2, includeScore: E2, shouldSort: w2, getFn: A3, sortFn: C2, verbose: K2, tokenize: P3, matchAllTokens: F2 }, this.setCollection(t4), this._processKeys(M2);
           }
-          var t3, r4, a3;
-          return t3 = e3, (r4 = [{ key: "setCollection", value: function(e4) {
+          var t3, r5, a3;
+          return t3 = e3, (r5 = [{ key: "setCollection", value: function(e4) {
             return this.list = e4, e4;
           } }, { key: "_processKeys", value: function(e4) {
-            if (this._keyWeights = {}, this._keyNames = [], e4.length && typeof e4[0] == "string") for (var t4 = 0, r5 = e4.length; t4 < r5; t4 += 1) {
+            if (this._keyWeights = {}, this._keyNames = [], e4.length && typeof e4[0] == "string") for (var t4 = 0, r6 = e4.length; t4 < r6; t4 += 1) {
               var n4 = e4[t4];
               this._keyWeights[n4] = 1, this._keyNames.push(n4);
             }
@@ -856,54 +856,54 @@ var require_fuse = __commonJS({
             var t4 = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : { limit: !1 };
             this._log(`---------
 Search pattern: "`.concat(e4, '"'));
-            var r5 = this._prepareSearchers(e4), n4 = r5.tokenSearchers, o4 = r5.fullSearcher, i3 = this._search(n4, o4);
+            var r6 = this._prepareSearchers(e4), n4 = r6.tokenSearchers, o4 = r6.fullSearcher, i3 = this._search(n4, o4);
             return this._computeScore(i3), this.options.shouldSort && this._sort(i3), t4.limit && typeof t4.limit == "number" && (i3 = i3.slice(0, t4.limit)), this._format(i3);
           } }, { key: "_prepareSearchers", value: function() {
             var e4 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : "", t4 = [];
-            if (this.options.tokenize) for (var r5 = e4.split(this.options.tokenSeparator), n4 = 0, o4 = r5.length; n4 < o4; n4 += 1) t4.push(new i2(r5[n4], this.options));
+            if (this.options.tokenize) for (var r6 = e4.split(this.options.tokenSeparator), n4 = 0, o4 = r6.length; n4 < o4; n4 += 1) t4.push(new i2(r6[n4], this.options));
             return { tokenSearchers: t4, fullSearcher: new i2(e4, this.options) };
           } }, { key: "_search", value: function() {
-            var e4 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : [], t4 = arguments.length > 1 ? arguments[1] : void 0, r5 = this.list, n4 = {}, o4 = [];
-            if (typeof r5[0] == "string") {
-              for (var i3 = 0, a4 = r5.length; i3 < a4; i3 += 1) this._analyze({ key: "", value: r5[i3], record: i3, index: i3 }, { resultMap: n4, results: o4, tokenSearchers: e4, fullSearcher: t4 });
+            var e4 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : [], t4 = arguments.length > 1 ? arguments[1] : void 0, r6 = this.list, n4 = {}, o4 = [];
+            if (typeof r6[0] == "string") {
+              for (var i3 = 0, a4 = r6.length; i3 < a4; i3 += 1) this._analyze({ key: "", value: r6[i3], record: i3, index: i3 }, { resultMap: n4, results: o4, tokenSearchers: e4, fullSearcher: t4 });
               return o4;
             }
-            for (var s3 = 0, c3 = r5.length; s3 < c3; s3 += 1) for (var h3 = r5[s3], l3 = 0, u2 = this._keyNames.length; l3 < u2; l3 += 1) {
+            for (var s3 = 0, c3 = r6.length; s3 < c3; s3 += 1) for (var h3 = r6[s3], l3 = 0, u2 = this._keyNames.length; l3 < u2; l3 += 1) {
               var f2 = this._keyNames[l3];
               this._analyze({ key: f2, value: this.options.getFn(h3, f2), record: h3, index: s3 }, { resultMap: n4, results: o4, tokenSearchers: e4, fullSearcher: t4 });
             }
             return o4;
           } }, { key: "_analyze", value: function(e4, t4) {
-            var r5 = this, n4 = e4.key, o4 = e4.arrayIndex, i3 = o4 === void 0 ? -1 : o4, a4 = e4.value, s3 = e4.record, h3 = e4.index, l3 = t4.tokenSearchers, u2 = l3 === void 0 ? [] : l3, f2 = t4.fullSearcher, v2 = t4.resultMap, p2 = v2 === void 0 ? {} : v2, d2 = t4.results, g2 = d2 === void 0 ? [] : d2;
+            var r6 = this, n4 = e4.key, o4 = e4.arrayIndex, i3 = o4 === void 0 ? -1 : o4, a4 = e4.value, s3 = e4.record, h3 = e4.index, l3 = t4.tokenSearchers, u2 = l3 === void 0 ? [] : l3, f2 = t4.fullSearcher, v2 = t4.resultMap, p2 = v2 === void 0 ? {} : v2, d2 = t4.results, g2 = d2 === void 0 ? [] : d2;
             (function e5(t5, o5, i4, a5) {
               if (o5 != null) {
                 if (typeof o5 == "string") {
                   var s4 = !1, h4 = -1, l4 = 0;
-                  r5._log(`
+                  r6._log(`
 Key: `.concat(n4 === "" ? "--" : n4));
                   var v3 = f2.search(o5);
-                  if (r5._log('Full text: "'.concat(o5, '", score: ').concat(v3.score)), r5.options.tokenize) {
-                    for (var d3 = o5.split(r5.options.tokenSeparator), y2 = d3.length, m2 = [], k2 = 0, b2 = u2.length; k2 < b2; k2 += 1) {
+                  if (r6._log('Full text: "'.concat(o5, '", score: ').concat(v3.score)), r6.options.tokenize) {
+                    for (var d3 = o5.split(r6.options.tokenSeparator), y2 = d3.length, m2 = [], k2 = 0, b2 = u2.length; k2 < b2; k2 += 1) {
                       var S2 = u2[k2];
-                      r5._log(`
+                      r6._log(`
 Pattern: "`.concat(S2.pattern, '"'));
                       for (var x2 = !1, M2 = 0; M2 < y2; M2 += 1) {
                         var _2 = d3[M2], w2 = S2.search(_2), L3 = {};
-                        w2.isMatch ? (L3[_2] = w2.score, s4 = !0, x2 = !0, m2.push(w2.score)) : (L3[_2] = 1, r5.options.matchAllTokens || m2.push(1)), r5._log('Token: "'.concat(_2, '", score: ').concat(L3[_2]));
+                        w2.isMatch ? (L3[_2] = w2.score, s4 = !0, x2 = !0, m2.push(w2.score)) : (L3[_2] = 1, r6.options.matchAllTokens || m2.push(1)), r6._log('Token: "'.concat(_2, '", score: ').concat(L3[_2]));
                       }
                       x2 && (l4 += 1);
                     }
                     h4 = m2[0];
                     for (var A3 = m2.length, O2 = 1; O2 < A3; O2 += 1) h4 += m2[O2];
-                    h4 /= A3, r5._log("Token score average:", h4);
+                    h4 /= A3, r6._log("Token score average:", h4);
                   }
                   var C2 = v3.score;
-                  h4 > -1 && (C2 = (C2 + h4) / 2), r5._log("Score average:", C2);
-                  var j2 = !r5.options.tokenize || !r5.options.matchAllTokens || l4 >= u2.length;
-                  if (r5._log(`
+                  h4 > -1 && (C2 = (C2 + h4) / 2), r6._log("Score average:", C2);
+                  var j2 = !r6.options.tokenize || !r6.options.matchAllTokens || l4 >= u2.length;
+                  if (r6._log(`
 Check Matches: `.concat(j2)), (s4 || v3.isMatch) && j2) {
                     var P3 = { key: n4, arrayIndex: t5, value: o5, score: C2 };
-                    r5.options.includeMatches && (P3.matchedIndices = v3.matchedIndices);
+                    r6.options.includeMatches && (P3.matchedIndices = v3.matchedIndices);
                     var I2 = p2[a5];
                     I2 ? I2.output.push(P3) : (p2[a5] = { item: i4, output: [P3] }, g2.push(p2[a5]));
                   }
@@ -915,9 +915,9 @@ Check Matches: `.concat(j2)), (s4 || v3.isMatch) && j2) {
 
 Computing score:
 `);
-            for (var t4 = this._keyWeights, r5 = !!Object.keys(t4).length, n4 = 0, o4 = e4.length; n4 < o4; n4 += 1) {
+            for (var t4 = this._keyWeights, r6 = !!Object.keys(t4).length, n4 = 0, o4 = e4.length; n4 < o4; n4 += 1) {
               for (var i3 = e4[n4], a4 = i3.output, s3 = a4.length, c3 = 1, h3 = 0; h3 < s3; h3 += 1) {
-                var l3 = a4[h3], u2 = l3.key, f2 = r5 ? t4[u2] : 1, v2 = l3.score === 0 && t4 && t4[u2] > 0 ? Number.EPSILON : l3.score;
+                var l3 = a4[h3], u2 = l3.key, f2 = r6 ? t4[u2] : 1, v2 = l3.score === 0 && t4 && t4[u2] > 0 ? Number.EPSILON : l3.score;
                 c3 *= Math.pow(v2, f2);
               }
               i3.score = c3, this._log(i3);
@@ -929,25 +929,25 @@ Sorting....`), e4.sort(this.options.sortFn);
           } }, { key: "_format", value: function(e4) {
             var t4 = [];
             if (this.options.verbose) {
-              var r5 = [];
+              var r6 = [];
               this._log(`
 
 Output:
 
 `, JSON.stringify(e4, function(e5, t5) {
                 if (n3(t5) === "object" && t5 !== null) {
-                  if (r5.indexOf(t5) !== -1) return;
-                  r5.push(t5);
+                  if (r6.indexOf(t5) !== -1) return;
+                  r6.push(t5);
                 }
                 return t5;
-              }, 2)), r5 = null;
+              }, 2)), r6 = null;
             }
             var o4 = [];
             this.options.includeMatches && o4.push(function(e5, t5) {
-              var r6 = e5.output;
+              var r7 = e5.output;
               t5.matches = [];
-              for (var n4 = 0, o5 = r6.length; n4 < o5; n4 += 1) {
-                var i4 = r6[n4];
+              for (var n4 = 0, o5 = r7.length; n4 < o5; n4 += 1) {
+                var i4 = r7[n4];
                 if (i4.matchedIndices.length !== 0) {
                   var a5 = { indices: i4.matchedIndices, value: i4.value };
                   i4.key && (a5.key = i4.key), i4.hasOwnProperty("arrayIndex") && i4.arrayIndex > -1 && (a5.arrayIndex = i4.arrayIndex), t5.matches.push(a5);
@@ -967,27 +967,27 @@ Output:
           } }, { key: "_log", value: function() {
             var e4;
             this.options.verbose && (e4 = console).log.apply(e4, arguments);
-          } }]) && o3(t3.prototype, r4), a3 && o3(t3, a3), e3;
+          } }]) && o3(t3.prototype, r5), a3 && o3(t3, a3), e3;
         })();
         e2.exports = h2;
-      }, function(e2, t2, r3) {
+      }, function(e2, t2, r4) {
         function n3(e3, t3) {
-          for (var r4 = 0; r4 < t3.length; r4++) {
-            var n4 = t3[r4];
+          for (var r5 = 0; r5 < t3.length; r5++) {
+            var n4 = t3[r5];
             n4.enumerable = n4.enumerable || !1, n4.configurable = !0, "value" in n4 && (n4.writable = !0), Object.defineProperty(e3, n4.key, n4);
           }
         }
-        var o3 = r3(2), i2 = r3(3), a2 = r3(6), s2 = (function() {
-          function e3(t4, r5) {
-            var n4 = r5.location, o4 = n4 === void 0 ? 0 : n4, i3 = r5.distance, s4 = i3 === void 0 ? 100 : i3, c2 = r5.threshold, h2 = c2 === void 0 ? 0.6 : c2, l3 = r5.maxPatternLength, u2 = l3 === void 0 ? 32 : l3, f2 = r5.isCaseSensitive, v2 = f2 !== void 0 && f2, p2 = r5.tokenSeparator, d2 = p2 === void 0 ? / +/g : p2, g2 = r5.findAllMatches, y2 = g2 !== void 0 && g2, m2 = r5.minMatchCharLength, k2 = m2 === void 0 ? 1 : m2, b2 = r5.includeMatches, S2 = b2 !== void 0 && b2;
+        var o3 = r4(2), i2 = r4(3), a2 = r4(6), s2 = (function() {
+          function e3(t4, r6) {
+            var n4 = r6.location, o4 = n4 === void 0 ? 0 : n4, i3 = r6.distance, s4 = i3 === void 0 ? 100 : i3, c2 = r6.threshold, h2 = c2 === void 0 ? 0.6 : c2, l3 = r6.maxPatternLength, u2 = l3 === void 0 ? 32 : l3, f2 = r6.isCaseSensitive, v2 = f2 !== void 0 && f2, p2 = r6.tokenSeparator, d2 = p2 === void 0 ? / +/g : p2, g2 = r6.findAllMatches, y2 = g2 !== void 0 && g2, m2 = r6.minMatchCharLength, k2 = m2 === void 0 ? 1 : m2, b2 = r6.includeMatches, S2 = b2 !== void 0 && b2;
             (function(e4, t5) {
               if (!(e4 instanceof t5)) throw new TypeError("Cannot call a class as a function");
             })(this, e3), this.options = { location: o4, distance: s4, threshold: h2, maxPatternLength: u2, isCaseSensitive: v2, tokenSeparator: d2, findAllMatches: y2, includeMatches: S2, minMatchCharLength: k2 }, this.pattern = v2 ? t4 : t4.toLowerCase(), this.pattern.length <= u2 && (this.patternAlphabet = a2(this.pattern));
           }
-          var t3, r4, s3;
-          return t3 = e3, (r4 = [{ key: "search", value: function(e4) {
-            var t4 = this.options, r5 = t4.isCaseSensitive, n4 = t4.includeMatches;
-            if (r5 || (e4 = e4.toLowerCase()), this.pattern === e4) {
+          var t3, r5, s3;
+          return t3 = e3, (r5 = [{ key: "search", value: function(e4) {
+            var t4 = this.options, r6 = t4.isCaseSensitive, n4 = t4.includeMatches;
+            if (r6 || (e4 = e4.toLowerCase()), this.pattern === e4) {
               var a3 = { isMatch: !0, score: 0 };
               return n4 && (a3.matchedIndices = [[0, e4.length - 1]]), a3;
             }
@@ -995,22 +995,22 @@ Output:
             if (this.pattern.length > c2) return o3(e4, this.pattern, h2);
             var l3 = this.options, u2 = l3.location, f2 = l3.distance, v2 = l3.threshold, p2 = l3.findAllMatches, d2 = l3.minMatchCharLength;
             return i2(e4, this.pattern, this.patternAlphabet, { location: u2, distance: f2, threshold: v2, findAllMatches: p2, minMatchCharLength: d2, includeMatches: n4 });
-          } }]) && n3(t3.prototype, r4), s3 && n3(t3, s3), e3;
+          } }]) && n3(t3.prototype, r5), s3 && n3(t3, s3), e3;
         })();
         e2.exports = s2;
       }, function(e2, t2) {
-        var r3 = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g;
+        var r4 = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g;
         e2.exports = function(e3, t3) {
-          var n3 = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : / +/g, o3 = new RegExp(t3.replace(r3, "\\$&").replace(n3, "|")), i2 = e3.match(o3), a2 = !!i2, s2 = [];
+          var n3 = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : / +/g, o3 = new RegExp(t3.replace(r4, "\\$&").replace(n3, "|")), i2 = e3.match(o3), a2 = !!i2, s2 = [];
           if (a2) for (var c2 = 0, h2 = i2.length; c2 < h2; c2 += 1) {
             var l3 = i2[c2];
             s2.push([e3.indexOf(l3), l3.length - 1]);
           }
           return { score: a2 ? 0.5 : 1, isMatch: a2, matchedIndices: s2 };
         };
-      }, function(e2, t2, r3) {
-        var n3 = r3(4), o3 = r3(5);
-        e2.exports = function(e3, t3, r4, i2) {
+      }, function(e2, t2, r4) {
+        var n3 = r4(4), o3 = r4(5);
+        e2.exports = function(e3, t3, r5, i2) {
           for (var a2 = i2.location, s2 = a2 === void 0 ? 0 : a2, c2 = i2.distance, h2 = c2 === void 0 ? 100 : c2, l3 = i2.threshold, u2 = l3 === void 0 ? 0.6 : l3, f2 = i2.findAllMatches, v2 = f2 !== void 0 && f2, p2 = i2.minMatchCharLength, d2 = p2 === void 0 ? 1 : p2, g2 = i2.includeMatches, y2 = g2 !== void 0 && g2, m2 = s2, k2 = e3.length, b2 = u2, S2 = e3.indexOf(t3, m2), x2 = t3.length, M2 = [], _2 = 0; _2 < k2; _2 += 1) M2[_2] = 0;
           if (S2 !== -1) {
             var w2 = n3(t3, { errors: 0, currentLocation: S2, expectedLocation: m2, distance: h2 });
@@ -1027,7 +1027,7 @@ Output:
             var T3 = Math.max(1, m2 - F2 + 1), N2 = v2 ? k2 : Math.min(m2 + F2, k2) + x2, z2 = Array(N2 + 2);
             z2[N2 + 1] = (1 << P3) - 1;
             for (var E2 = N2; E2 >= T3; E2 -= 1) {
-              var W2 = E2 - 1, K2 = r4[e3.charAt(W2)];
+              var W2 = E2 - 1, K2 = r5[e3.charAt(W2)];
               if (K2 && (M2[W2] = 1), z2[E2] = (z2[E2 + 1] << 1 | 1) & K2, P3 !== 0 && (z2[E2] |= (A3[E2 + 1] | A3[E2]) << 1 | 1 | A3[E2 + 1]), z2[E2] & j2 && (O2 = n3(t3, { errors: P3, currentLocation: W2, expectedLocation: m2, distance: h2 })) <= b2) {
                 if (b2 = O2, (S2 = W2) <= m2) break;
                 T3 = Math.max(1, 2 * m2 - S2);
@@ -1041,25 +1041,25 @@ Output:
         };
       }, function(e2, t2) {
         e2.exports = function(e3, t3) {
-          var r3 = t3.errors, n3 = r3 === void 0 ? 0 : r3, o3 = t3.currentLocation, i2 = o3 === void 0 ? 0 : o3, a2 = t3.expectedLocation, s2 = a2 === void 0 ? 0 : a2, c2 = t3.distance, h2 = c2 === void 0 ? 100 : c2, l3 = n3 / e3.length, u2 = Math.abs(s2 - i2);
+          var r4 = t3.errors, n3 = r4 === void 0 ? 0 : r4, o3 = t3.currentLocation, i2 = o3 === void 0 ? 0 : o3, a2 = t3.expectedLocation, s2 = a2 === void 0 ? 0 : a2, c2 = t3.distance, h2 = c2 === void 0 ? 100 : c2, l3 = n3 / e3.length, u2 = Math.abs(s2 - i2);
           return h2 ? l3 + u2 / h2 : u2 ? 1 : l3;
         };
       }, function(e2, t2) {
         e2.exports = function() {
-          for (var e3 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : [], t3 = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 1, r3 = [], n3 = -1, o3 = -1, i2 = 0, a2 = e3.length; i2 < a2; i2 += 1) {
+          for (var e3 = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : [], t3 = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 1, r4 = [], n3 = -1, o3 = -1, i2 = 0, a2 = e3.length; i2 < a2; i2 += 1) {
             var s2 = e3[i2];
-            s2 && n3 === -1 ? n3 = i2 : s2 || n3 === -1 || ((o3 = i2 - 1) - n3 + 1 >= t3 && r3.push([n3, o3]), n3 = -1);
+            s2 && n3 === -1 ? n3 = i2 : s2 || n3 === -1 || ((o3 = i2 - 1) - n3 + 1 >= t3 && r4.push([n3, o3]), n3 = -1);
           }
-          return e3[i2 - 1] && i2 - n3 >= t3 && r3.push([n3, i2 - 1]), r3;
+          return e3[i2 - 1] && i2 - n3 >= t3 && r4.push([n3, i2 - 1]), r4;
         };
       }, function(e2, t2) {
         e2.exports = function(e3) {
-          for (var t3 = {}, r3 = e3.length, n3 = 0; n3 < r3; n3 += 1) t3[e3.charAt(n3)] = 0;
-          for (var o3 = 0; o3 < r3; o3 += 1) t3[e3.charAt(o3)] |= 1 << r3 - o3 - 1;
+          for (var t3 = {}, r4 = e3.length, n3 = 0; n3 < r4; n3 += 1) t3[e3.charAt(n3)] = 0;
+          for (var o3 = 0; o3 < r4; o3 += 1) t3[e3.charAt(o3)] |= 1 << r4 - o3 - 1;
           return t3;
         };
       }, function(e2, t2) {
-        var r3 = function(e3) {
+        var r4 = function(e3) {
           return Array.isArray ? Array.isArray(e3) : Object.prototype.toString.call(e3) === "[object Array]";
         }, n3 = function(e3) {
           return e3 == null ? "" : (function(e4) {
@@ -1079,12 +1079,12 @@ Output:
               var c2 = s2.indexOf("."), h2 = s2, l3 = null;
               c2 !== -1 && (h2 = s2.slice(0, c2), l3 = s2.slice(c2 + 1));
               var u2 = t4[h2];
-              if (u2 != null) if (l3 || !o3(u2) && !i2(u2)) if (r3(u2)) for (var f2 = 0, v2 = u2.length; f2 < v2; f2 += 1) e4(u2[f2], l3);
+              if (u2 != null) if (l3 || !o3(u2) && !i2(u2)) if (r4(u2)) for (var f2 = 0, v2 = u2.length; f2 < v2; f2 += 1) e4(u2[f2], l3);
               else l3 && e4(u2, l3);
               else a2.push(n3(u2));
             } else a2.push(t4);
           })(e3, t3), a2;
-        }, isArray: r3, isString: o3, isNum: i2, toString: n3 };
+        }, isArray: r4, isString: o3, isNum: i2, toString: n3 };
       }]);
     });
   }
@@ -1588,7 +1588,7 @@ var icons_default = __STORYBOOK_ICONS__, { AccessibilityAltIcon, AccessibilityIc
 var manager_api_default = __STORYBOOK_API__, { ActiveTabs, Consumer, ManagerContext, Provider, RequestResponseError, Tag, addons, combineParameters, controlOrMetaKey, controlOrMetaSymbol, eventMatchesShortcut, eventToShortcut, experimental_MockUniversalStore, experimental_UniversalStore, experimental_getStatusStore, experimental_getTestProviderStore, experimental_requestResponse, experimental_useStatusStore, experimental_useTestProviderStore, experimental_useUniversalStore, internal_checklistStore, internal_fullStatusStore, internal_fullTestProviderStore, internal_universalChecklistStore, internal_universalStatusStore, internal_universalTestProviderStore, isMacLike, isShortcutTaken, keyToSymbol, merge, mockChannel, optionOrAltSymbol, shortcutMatchesShortcut, shortcutToAriaKeyshortcuts, shortcutToHumanString, types, useAddonState, useArgTypes, useArgs, useChannel, useGlobalTypes, useGlobals, useParameter, useSharedState, useStoryPrepared, useStorybookApi, useStorybookState } = __STORYBOOK_API__;
 
 // global-externals:storybook/theming
-var theming_default = __STORYBOOK_THEMING__, { CacheProvider, ClassNames, Global, ThemeProvider, background, color, convert, create, createCache, createGlobal, createReset, css, darken, ensure, getPreferredColorScheme, ignoreSsrWarning, isPropValid, jsx, keyframes, lighten, styled, themes, tokens, typography, useTheme, withTheme } = __STORYBOOK_THEMING__;
+var theming_default = __STORYBOOK_THEMING__, { CacheProvider, ClassNames, Global, ThemeProvider, background, color, convert, create, createCache, createGlobal, createReset, css, darken, ensure, getPreferredColorScheme, ignoreSsrWarning, isPropValid, jsx, keyframes, lighten, srOnlyStyles, styled, themes, tokens, typography, useTheme, withTheme } = __STORYBOOK_THEMING__;
 
 // src/toolbar/components/ToolbarManager.tsx
 init_react();
@@ -1997,7 +1997,7 @@ var client_default = __REACT_DOM_CLIENT__, { createRoot, hydrateRoot } = __REACT
 var manager_errors_default = __STORYBOOK_CORE_EVENTS_MANAGER_ERRORS__, { Category, ProviderDoesNotExtendBaseProviderError, StatusTypeIdMismatchError, UncaughtManagerError } = __STORYBOOK_CORE_EVENTS_MANAGER_ERRORS__;
 
 // global-externals:storybook/internal/router
-var router_default = __STORYBOOK_ROUTER__, { BaseLocationProvider, DEEPLY_EQUAL, Link: Link2, Location, LocationProvider, Match, Route, buildArgsParam, deepDiff, getMatch, parsePath, queryFromLocation, stringifyQuery, useNavigate } = __STORYBOOK_ROUTER__;
+var router_default = __STORYBOOK_ROUTER__, { BaseLocationProvider, DEEPLY_EQUAL, Link: Link2, Location, LocationProvider, Match, MemoryRouter, Route, buildArgsParam, deepDiff, getMatch, parsePath, queryFromLocation, stringifyQuery, useNavigate } = __STORYBOOK_ROUTER__;
 
 // ../../node_modules/react-helmet-async/lib/index.module.js
 init_react();
@@ -2005,8 +2005,8 @@ var import_prop_types = __toESM(require_prop_types()), import_react_fast_compare
 function a() {
   return a = Object.assign || function(t2) {
     for (var e2 = 1; e2 < arguments.length; e2++) {
-      var r3 = arguments[e2];
-      for (var n3 in r3) Object.prototype.hasOwnProperty.call(r3, n3) && (t2[n3] = r3[n3]);
+      var r4 = arguments[e2];
+      for (var n3 in r4) Object.prototype.hasOwnProperty.call(r4, n3) && (t2[n3] = r4[n3]);
     }
     return t2;
   }, a.apply(this, arguments);
@@ -2021,8 +2021,8 @@ function c(t2, e2) {
 }
 function u(t2, e2) {
   if (t2 == null) return {};
-  var r3, n3, i2 = {}, o3 = Object.keys(t2);
-  for (n3 = 0; n3 < o3.length; n3++) e2.indexOf(r3 = o3[n3]) >= 0 || (i2[r3] = t2[r3]);
+  var r4, n3, i2 = {}, o3 = Object.keys(t2);
+  for (n3 = 0; n3 < o3.length; n3++) e2.indexOf(r4 = o3[n3]) >= 0 || (i2[r4] = t2[r4]);
   return i2;
 }
 var l = { BASE: "base", BODY: "body", HEAD: "head", HTML: "html", LINK: "link", META: "meta", NOSCRIPT: "noscript", SCRIPT: "script", STYLE: "style", TITLE: "title", FRAGMENT: "Symbol(react.fragment)" }, p = { rel: ["amphtml", "canonical", "alternate"] }, f = { type: ["application/ld+json"] }, d = { charset: "", name: ["robots", "description"], property: ["og:type", "og:title", "og:url", "og:image", "og:image:alt", "og:description", "twitter:url", "twitter:title", "twitter:description", "twitter:image", "twitter:image:alt", "twitter:card", "twitter:site"] }, h = Object.keys(l).map(function(t2) {
@@ -2030,14 +2030,14 @@ var l = { BASE: "base", BODY: "body", HEAD: "head", HTML: "html", LINK: "link", 
 }), m = { accesskey: "accessKey", charset: "charSet", class: "className", contenteditable: "contentEditable", contextmenu: "contextMenu", "http-equiv": "httpEquiv", itemprop: "itemProp", tabindex: "tabIndex" }, y = Object.keys(m).reduce(function(t2, e2) {
   return t2[m[e2]] = e2, t2;
 }, {}), T = function(t2, e2) {
-  for (var r3 = t2.length - 1; r3 >= 0; r3 -= 1) {
-    var n3 = t2[r3];
+  for (var r4 = t2.length - 1; r4 >= 0; r4 -= 1) {
+    var n3 = t2[r4];
     if (Object.prototype.hasOwnProperty.call(n3, e2)) return n3[e2];
   }
   return null;
 }, g = function(t2) {
-  var e2 = T(t2, l.TITLE), r3 = T(t2, "titleTemplate");
-  if (Array.isArray(e2) && (e2 = e2.join("")), r3 && e2) return r3.replace(/%s/g, function() {
+  var e2 = T(t2, l.TITLE), r4 = T(t2, "titleTemplate");
+  if (Array.isArray(e2) && (e2 = e2.join("")), r4 && e2) return r4.replace(/%s/g, function() {
     return e2;
   });
   var n3 = T(t2, "defaultTitle");
@@ -2058,29 +2058,29 @@ var l = { BASE: "base", BODY: "body", HEAD: "head", HTML: "html", LINK: "link", 
     return t3[l.BASE] !== void 0;
   }).map(function(t3) {
     return t3[l.BASE];
-  }).reverse().reduce(function(e3, r3) {
-    if (!e3.length) for (var n3 = Object.keys(r3), i2 = 0; i2 < n3.length; i2 += 1) {
+  }).reverse().reduce(function(e3, r4) {
+    if (!e3.length) for (var n3 = Object.keys(r4), i2 = 0; i2 < n3.length; i2 += 1) {
       var o3 = n3[i2].toLowerCase();
-      if (t2.indexOf(o3) !== -1 && r3[o3]) return e3.concat(r3);
+      if (t2.indexOf(o3) !== -1 && r4[o3]) return e3.concat(r4);
     }
     return e3;
   }, []);
-}, C = function(t2, e2, r3) {
+}, C = function(t2, e2, r4) {
   var n3 = {};
-  return r3.filter(function(e3) {
+  return r4.filter(function(e3) {
     return !!Array.isArray(e3[t2]) || (e3[t2] !== void 0 && console && typeof console.warn == "function" && console.warn("Helmet: " + t2 + ' should be of type "Array". Instead found type "' + typeof e3[t2] + '"'), !1);
   }).map(function(e3) {
     return e3[t2];
-  }).reverse().reduce(function(t3, r4) {
+  }).reverse().reduce(function(t3, r5) {
     var i2 = {};
-    r4.filter(function(t4) {
-      for (var r5, o4 = Object.keys(t4), a2 = 0; a2 < o4.length; a2 += 1) {
+    r5.filter(function(t4) {
+      for (var r6, o4 = Object.keys(t4), a2 = 0; a2 < o4.length; a2 += 1) {
         var s3 = o4[a2], c3 = s3.toLowerCase();
-        e2.indexOf(c3) === -1 || r5 === "rel" && t4[r5].toLowerCase() === "canonical" || c3 === "rel" && t4[c3].toLowerCase() === "stylesheet" || (r5 = c3), e2.indexOf(s3) === -1 || s3 !== "innerHTML" && s3 !== "cssText" && s3 !== "itemprop" || (r5 = s3);
+        e2.indexOf(c3) === -1 || r6 === "rel" && t4[r6].toLowerCase() === "canonical" || c3 === "rel" && t4[c3].toLowerCase() === "stylesheet" || (r6 = c3), e2.indexOf(s3) === -1 || s3 !== "innerHTML" && s3 !== "cssText" && s3 !== "itemprop" || (r6 = s3);
       }
-      if (!r5 || !t4[r5]) return !1;
-      var u3 = t4[r5].toLowerCase();
-      return n3[r5] || (n3[r5] = {}), i2[r5] || (i2[r5] = {}), !n3[r5][u3] && (i2[r5][u3] = !0, !0);
+      if (!r6 || !t4[r6]) return !1;
+      var u3 = t4[r6].toLowerCase();
+      return n3[r6] || (n3[r6] = {}), i2[r6] || (i2[r6] = {}), !n3[r6][u3] && (i2[r6][u3] = !0, !0);
     }).reverse().forEach(function(e3) {
       return t3.push(e3);
     });
@@ -2092,84 +2092,84 @@ var l = { BASE: "base", BODY: "body", HEAD: "head", HTML: "html", LINK: "link", 
   }, []).reverse();
 }, O = function(t2, e2) {
   if (Array.isArray(t2) && t2.length) {
-    for (var r3 = 0; r3 < t2.length; r3 += 1) if (t2[r3][e2]) return !0;
+    for (var r4 = 0; r4 < t2.length; r4 += 1) if (t2[r4][e2]) return !0;
   }
   return !1;
 }, S = function(t2) {
   return Array.isArray(t2) ? t2.join("") : t2;
 }, E = function(t2, e2) {
-  return Array.isArray(t2) ? t2.reduce(function(t3, r3) {
+  return Array.isArray(t2) ? t2.reduce(function(t3, r4) {
     return (function(t4, e3) {
-      for (var r4 = Object.keys(t4), n3 = 0; n3 < r4.length; n3 += 1) if (e3[r4[n3]] && e3[r4[n3]].includes(t4[r4[n3]])) return !0;
+      for (var r5 = Object.keys(t4), n3 = 0; n3 < r5.length; n3 += 1) if (e3[r5[n3]] && e3[r5[n3]].includes(t4[r5[n3]])) return !0;
       return !1;
-    })(r3, e2) ? t3.priority.push(r3) : t3.default.push(r3), t3;
+    })(r4, e2) ? t3.priority.push(r4) : t3.default.push(r4), t3;
   }, { priority: [], default: [] }) : { default: t2 };
 }, I = function(t2, e2) {
-  var r3;
-  return a({}, t2, ((r3 = {})[e2] = void 0, r3));
+  var r4;
+  return a({}, t2, ((r4 = {})[e2] = void 0, r4));
 }, P2 = [l.NOSCRIPT, l.SCRIPT, l.STYLE], w = function(t2, e2) {
   return e2 === void 0 && (e2 = !0), e2 === !1 ? String(t2) : String(t2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }, x = function(t2) {
-  return Object.keys(t2).reduce(function(e2, r3) {
-    var n3 = t2[r3] !== void 0 ? r3 + '="' + t2[r3] + '"' : "" + r3;
+  return Object.keys(t2).reduce(function(e2, r4) {
+    var n3 = t2[r4] !== void 0 ? r4 + '="' + t2[r4] + '"' : "" + r4;
     return e2 ? e2 + " " + n3 : n3;
   }, "");
 }, L = function(t2, e2) {
-  return e2 === void 0 && (e2 = {}), Object.keys(t2).reduce(function(e3, r3) {
-    return e3[m[r3] || r3] = t2[r3], e3;
+  return e2 === void 0 && (e2 = {}), Object.keys(t2).reduce(function(e3, r4) {
+    return e3[m[r4] || r4] = t2[r4], e3;
   }, e2);
-}, j = function(e2, r3) {
-  return r3.map(function(r4, n3) {
+}, j = function(e2, r4) {
+  return r4.map(function(r5, n3) {
     var i2, o3 = ((i2 = { key: n3 })["data-rh"] = !0, i2);
-    return Object.keys(r4).forEach(function(t2) {
+    return Object.keys(r5).forEach(function(t2) {
       var e3 = m[t2] || t2;
-      e3 === "innerHTML" || e3 === "cssText" ? o3.dangerouslySetInnerHTML = { __html: r4.innerHTML || r4.cssText } : o3[e3] = r4[t2];
+      e3 === "innerHTML" || e3 === "cssText" ? o3.dangerouslySetInnerHTML = { __html: r5.innerHTML || r5.cssText } : o3[e3] = r5[t2];
     }), react_default.createElement(e2, o3);
   });
-}, M = function(e2, r3, n3) {
+}, M = function(e2, r4, n3) {
   switch (e2) {
     case l.TITLE:
       return { toComponent: function() {
-        return n4 = r3.titleAttributes, (i2 = { key: e3 = r3.title })["data-rh"] = !0, o3 = L(n4, i2), [react_default.createElement(l.TITLE, o3, e3)];
+        return n4 = r4.titleAttributes, (i2 = { key: e3 = r4.title })["data-rh"] = !0, o3 = L(n4, i2), [react_default.createElement(l.TITLE, o3, e3)];
         var e3, n4, i2, o3;
       }, toString: function() {
-        return (function(t2, e3, r4, n4) {
-          var i2 = x(r4), o3 = S(e3);
+        return (function(t2, e3, r5, n4) {
+          var i2 = x(r5), o3 = S(e3);
           return i2 ? "<" + t2 + ' data-rh="true" ' + i2 + ">" + w(o3, n4) + "</" + t2 + ">" : "<" + t2 + ' data-rh="true">' + w(o3, n4) + "</" + t2 + ">";
-        })(e2, r3.title, r3.titleAttributes, n3);
+        })(e2, r4.title, r4.titleAttributes, n3);
       } };
     case "bodyAttributes":
     case "htmlAttributes":
       return { toComponent: function() {
-        return L(r3);
+        return L(r4);
       }, toString: function() {
-        return x(r3);
+        return x(r4);
       } };
     default:
       return { toComponent: function() {
-        return j(e2, r3);
+        return j(e2, r4);
       }, toString: function() {
-        return (function(t2, e3, r4) {
+        return (function(t2, e3, r5) {
           return e3.reduce(function(e4, n4) {
             var i2 = Object.keys(n4).filter(function(t3) {
               return !(t3 === "innerHTML" || t3 === "cssText");
             }).reduce(function(t3, e5) {
-              var i3 = n4[e5] === void 0 ? e5 : e5 + '="' + w(n4[e5], r4) + '"';
+              var i3 = n4[e5] === void 0 ? e5 : e5 + '="' + w(n4[e5], r5) + '"';
               return t3 ? t3 + " " + i3 : i3;
             }, ""), o3 = n4.innerHTML || n4.cssText || "", a2 = P2.indexOf(t2) === -1;
             return e4 + "<" + t2 + ' data-rh="true" ' + i2 + (a2 ? "/>" : ">" + o3 + "</" + t2 + ">");
           }, "");
-        })(e2, r3, n3);
+        })(e2, r4, n3);
       } };
   }
 }, k = function(t2) {
-  var e2 = t2.baseTag, r3 = t2.bodyAttributes, n3 = t2.encode, i2 = t2.htmlAttributes, o3 = t2.noscriptTags, a2 = t2.styleTags, s2 = t2.title, c2 = s2 === void 0 ? "" : s2, u2 = t2.titleAttributes, h2 = t2.linkTags, m2 = t2.metaTags, y2 = t2.scriptTags, T3 = { toComponent: function() {
+  var e2 = t2.baseTag, r4 = t2.bodyAttributes, n3 = t2.encode, i2 = t2.htmlAttributes, o3 = t2.noscriptTags, a2 = t2.styleTags, s2 = t2.title, c2 = s2 === void 0 ? "" : s2, u2 = t2.titleAttributes, h2 = t2.linkTags, m2 = t2.metaTags, y2 = t2.scriptTags, T3 = { toComponent: function() {
   }, toString: function() {
     return "";
   } };
   if (t2.prioritizeSeoTags) {
     var g2 = (function(t3) {
-      var e3 = t3.linkTags, r4 = t3.scriptTags, n4 = t3.encode, i3 = E(t3.metaTags, d), o4 = E(e3, p), a3 = E(r4, f);
+      var e3 = t3.linkTags, r5 = t3.scriptTags, n4 = t3.encode, i3 = E(t3.metaTags, d), o4 = E(e3, p), a3 = E(r5, f);
       return { priorityMethods: { toComponent: function() {
         return [].concat(j(l.META, i3.priority), j(l.LINK, o4.priority), j(l.SCRIPT, a3.priority));
       }, toString: function() {
@@ -2178,79 +2178,79 @@ var l = { BASE: "base", BODY: "body", HEAD: "head", HTML: "html", LINK: "link", 
     })(t2);
     T3 = g2.priorityMethods, h2 = g2.linkTags, m2 = g2.metaTags, y2 = g2.scriptTags;
   }
-  return { priority: T3, base: M(l.BASE, e2, n3), bodyAttributes: M("bodyAttributes", r3, n3), htmlAttributes: M("htmlAttributes", i2, n3), link: M(l.LINK, h2, n3), meta: M(l.META, m2, n3), noscript: M(l.NOSCRIPT, o3, n3), script: M(l.SCRIPT, y2, n3), style: M(l.STYLE, a2, n3), title: M(l.TITLE, { title: c2, titleAttributes: u2 }, n3) };
+  return { priority: T3, base: M(l.BASE, e2, n3), bodyAttributes: M("bodyAttributes", r4, n3), htmlAttributes: M("htmlAttributes", i2, n3), link: M(l.LINK, h2, n3), meta: M(l.META, m2, n3), noscript: M(l.NOSCRIPT, o3, n3), script: M(l.SCRIPT, y2, n3), style: M(l.STYLE, a2, n3), title: M(l.TITLE, { title: c2, titleAttributes: u2 }, n3) };
 }, H = [], N = function(t2, e2) {
-  var r3 = this;
+  var r4 = this;
   e2 === void 0 && (e2 = typeof document < "u"), this.instances = [], this.value = { setHelmet: function(t3) {
-    r3.context.helmet = t3;
+    r4.context.helmet = t3;
   }, helmetInstances: { get: function() {
-    return r3.canUseDOM ? H : r3.instances;
+    return r4.canUseDOM ? H : r4.instances;
   }, add: function(t3) {
-    (r3.canUseDOM ? H : r3.instances).push(t3);
+    (r4.canUseDOM ? H : r4.instances).push(t3);
   }, remove: function(t3) {
-    var e3 = (r3.canUseDOM ? H : r3.instances).indexOf(t3);
-    (r3.canUseDOM ? H : r3.instances).splice(e3, 1);
+    var e3 = (r4.canUseDOM ? H : r4.instances).indexOf(t3);
+    (r4.canUseDOM ? H : r4.instances).splice(e3, 1);
   } } }, this.context = t2, this.canUseDOM = e2, e2 || (t2.helmet = k({ baseTag: [], bodyAttributes: {}, encodeSpecialCharacters: !0, htmlAttributes: {}, linkTags: [], metaTags: [], noscriptTags: [], scriptTags: [], styleTags: [], title: "", titleAttributes: {} }));
 }, R = react_default.createContext({}), D = import_prop_types.default.shape({ setHelmet: import_prop_types.default.func, helmetInstances: import_prop_types.default.shape({ get: import_prop_types.default.func, add: import_prop_types.default.func, remove: import_prop_types.default.func }) }), U = typeof document < "u", q = (function(e2) {
-  function r3(t2) {
+  function r4(t2) {
     var n3;
-    return (n3 = e2.call(this, t2) || this).helmetData = new N(n3.props.context, r3.canUseDOM), n3;
+    return (n3 = e2.call(this, t2) || this).helmetData = new N(n3.props.context, r4.canUseDOM), n3;
   }
-  return s(r3, e2), r3.prototype.render = function() {
+  return s(r4, e2), r4.prototype.render = function() {
     return react_default.createElement(R.Provider, { value: this.helmetData.value }, this.props.children);
-  }, r3;
+  }, r4;
 })(Component);
 q.canUseDOM = U, q.propTypes = { context: import_prop_types.default.shape({ helmet: import_prop_types.default.shape() }), children: import_prop_types.default.node.isRequired }, q.defaultProps = { context: {} }, q.displayName = "HelmetProvider";
 var Y = function(t2, e2) {
-  var r3, n3 = document.head || document.querySelector(l.HEAD), i2 = n3.querySelectorAll(t2 + "[data-rh]"), o3 = [].slice.call(i2), a2 = [];
+  var r4, n3 = document.head || document.querySelector(l.HEAD), i2 = n3.querySelectorAll(t2 + "[data-rh]"), o3 = [].slice.call(i2), a2 = [];
   return e2 && e2.length && e2.forEach(function(e3) {
     var n4 = document.createElement(t2);
     for (var i3 in e3) Object.prototype.hasOwnProperty.call(e3, i3) && (i3 === "innerHTML" ? n4.innerHTML = e3.innerHTML : i3 === "cssText" ? n4.styleSheet ? n4.styleSheet.cssText = e3.cssText : n4.appendChild(document.createTextNode(e3.cssText)) : n4.setAttribute(i3, e3[i3] === void 0 ? "" : e3[i3]));
     n4.setAttribute("data-rh", "true"), o3.some(function(t3, e4) {
-      return r3 = e4, n4.isEqualNode(t3);
-    }) ? o3.splice(r3, 1) : a2.push(n4);
+      return r4 = e4, n4.isEqualNode(t3);
+    }) ? o3.splice(r4, 1) : a2.push(n4);
   }), o3.forEach(function(t3) {
     return t3.parentNode.removeChild(t3);
   }), a2.forEach(function(t3) {
     return n3.appendChild(t3);
   }), { oldTags: o3, newTags: a2 };
 }, B = function(t2, e2) {
-  var r3 = document.getElementsByTagName(t2)[0];
-  if (r3) {
-    for (var n3 = r3.getAttribute("data-rh"), i2 = n3 ? n3.split(",") : [], o3 = [].concat(i2), a2 = Object.keys(e2), s2 = 0; s2 < a2.length; s2 += 1) {
+  var r4 = document.getElementsByTagName(t2)[0];
+  if (r4) {
+    for (var n3 = r4.getAttribute("data-rh"), i2 = n3 ? n3.split(",") : [], o3 = [].concat(i2), a2 = Object.keys(e2), s2 = 0; s2 < a2.length; s2 += 1) {
       var c2 = a2[s2], u2 = e2[c2] || "";
-      r3.getAttribute(c2) !== u2 && r3.setAttribute(c2, u2), i2.indexOf(c2) === -1 && i2.push(c2);
+      r4.getAttribute(c2) !== u2 && r4.setAttribute(c2, u2), i2.indexOf(c2) === -1 && i2.push(c2);
       var l3 = o3.indexOf(c2);
       l3 !== -1 && o3.splice(l3, 1);
     }
-    for (var p2 = o3.length - 1; p2 >= 0; p2 -= 1) r3.removeAttribute(o3[p2]);
-    i2.length === o3.length ? r3.removeAttribute("data-rh") : r3.getAttribute("data-rh") !== a2.join(",") && r3.setAttribute("data-rh", a2.join(","));
+    for (var p2 = o3.length - 1; p2 >= 0; p2 -= 1) r4.removeAttribute(o3[p2]);
+    i2.length === o3.length ? r4.removeAttribute("data-rh") : r4.getAttribute("data-rh") !== a2.join(",") && r4.setAttribute("data-rh", a2.join(","));
   }
 }, K = function(t2, e2) {
-  var r3 = t2.baseTag, n3 = t2.htmlAttributes, i2 = t2.linkTags, o3 = t2.metaTags, a2 = t2.noscriptTags, s2 = t2.onChangeClientState, c2 = t2.scriptTags, u2 = t2.styleTags, p2 = t2.title, f2 = t2.titleAttributes;
+  var r4 = t2.baseTag, n3 = t2.htmlAttributes, i2 = t2.linkTags, o3 = t2.metaTags, a2 = t2.noscriptTags, s2 = t2.onChangeClientState, c2 = t2.scriptTags, u2 = t2.styleTags, p2 = t2.title, f2 = t2.titleAttributes;
   B(l.BODY, t2.bodyAttributes), B(l.HTML, n3), (function(t3, e3) {
     t3 !== void 0 && document.title !== t3 && (document.title = S(t3)), B(l.TITLE, e3);
   })(p2, f2);
-  var d2 = { baseTag: Y(l.BASE, r3), linkTags: Y(l.LINK, i2), metaTags: Y(l.META, o3), noscriptTags: Y(l.NOSCRIPT, a2), scriptTags: Y(l.SCRIPT, c2), styleTags: Y(l.STYLE, u2) }, h2 = {}, m2 = {};
+  var d2 = { baseTag: Y(l.BASE, r4), linkTags: Y(l.LINK, i2), metaTags: Y(l.META, o3), noscriptTags: Y(l.NOSCRIPT, a2), scriptTags: Y(l.SCRIPT, c2), styleTags: Y(l.STYLE, u2) }, h2 = {}, m2 = {};
   Object.keys(d2).forEach(function(t3) {
-    var e3 = d2[t3], r4 = e3.newTags, n4 = e3.oldTags;
-    r4.length && (h2[t3] = r4), n4.length && (m2[t3] = d2[t3].oldTags);
+    var e3 = d2[t3], r5 = e3.newTags, n4 = e3.oldTags;
+    r5.length && (h2[t3] = r5), n4.length && (m2[t3] = d2[t3].oldTags);
   }), e2 && e2(), s2(t2, h2, m2);
 }, _ = null, z = (function(t2) {
   function e2() {
-    for (var e3, r4 = arguments.length, n3 = new Array(r4), i2 = 0; i2 < r4; i2++) n3[i2] = arguments[i2];
+    for (var e3, r5 = arguments.length, n3 = new Array(r5), i2 = 0; i2 < r5; i2++) n3[i2] = arguments[i2];
     return (e3 = t2.call.apply(t2, [this].concat(n3)) || this).rendered = !1, e3;
   }
   s(e2, t2);
-  var r3 = e2.prototype;
-  return r3.shouldComponentUpdate = function(t3) {
+  var r4 = e2.prototype;
+  return r4.shouldComponentUpdate = function(t3) {
     return !(0, import_shallowequal.default)(t3, this.props);
-  }, r3.componentDidUpdate = function() {
+  }, r4.componentDidUpdate = function() {
     this.emitChange();
-  }, r3.componentWillUnmount = function() {
+  }, r4.componentWillUnmount = function() {
     this.props.context.helmetInstances.remove(this), this.emitChange();
-  }, r3.emitChange = function() {
-    var t3, e3, r4 = this.props.context, n3 = r4.setHelmet, i2 = null, o3 = (t3 = r4.helmetInstances.get().map(function(t4) {
+  }, r4.emitChange = function() {
+    var t3, e3, r5 = this.props.context, n3 = r5.setHelmet, i2 = null, o3 = (t3 = r5.helmetInstances.get().map(function(t4) {
       var e4 = a({}, t4.props);
       return delete e4.context, e4;
     }), { baseTag: A2(["href"], t3), bodyAttributes: v("bodyAttributes", t3), defer: T(t3, "defer"), encode: T(t3, "encodeSpecialCharacters"), htmlAttributes: v("htmlAttributes", t3), linkTags: C(l.LINK, ["rel", "href"], t3), metaTags: C(l.META, ["name", "charset", "http-equiv", "property", "itemprop"], t3), noscriptTags: C(l.NOSCRIPT, ["innerHTML"], t3), onChangeClientState: b(t3), scriptTags: C(l.SCRIPT, ["src", "innerHTML"], t3), styleTags: C(l.STYLE, ["cssText"], t3), title: g(t3), titleAttributes: v("titleAttributes", t3), prioritizeSeoTags: O(t3, "prioritizeSeoTags") });
@@ -2259,19 +2259,19 @@ var Y = function(t2, e2) {
         _ = null;
       });
     }) : (K(e3), _ = null)) : k && (i2 = k(o3)), n3(i2);
-  }, r3.init = function() {
+  }, r4.init = function() {
     this.rendered || (this.rendered = !0, this.props.context.helmetInstances.add(this), this.emitChange());
-  }, r3.render = function() {
+  }, r4.render = function() {
     return this.init(), null;
   }, e2;
 })(Component);
 z.propTypes = { context: D.isRequired }, z.displayName = "HelmetDispatcher";
 var F = ["children"], G = ["children"], W = (function(e2) {
-  function r3() {
+  function r4() {
     return e2.apply(this, arguments) || this;
   }
-  s(r3, e2);
-  var o3 = r3.prototype;
+  s(r4, e2);
+  var o3 = r4.prototype;
   return o3.shouldComponentUpdate = function(t2) {
     return !(0, import_react_fast_compare.default)(I(this.props, "helmetData"), I(t2, "helmetData"));
   }, o3.mapNestedChildrenToProps = function(t2, e3) {
@@ -2286,10 +2286,10 @@ var F = ["children"], G = ["children"], W = (function(e2) {
         throw new Error("<" + t2.type + " /> elements are self-closing and can not contain children. Refer to our API for more information.");
     }
   }, o3.flattenArrayTypeChildren = function(t2) {
-    var e3, r4 = t2.child, n3 = t2.arrayTypeChildren;
-    return a({}, n3, ((e3 = {})[r4.type] = [].concat(n3[r4.type] || [], [a({}, t2.newChildProps, this.mapNestedChildrenToProps(r4, t2.nestedChildren))]), e3));
+    var e3, r5 = t2.child, n3 = t2.arrayTypeChildren;
+    return a({}, n3, ((e3 = {})[r5.type] = [].concat(n3[r5.type] || [], [a({}, t2.newChildProps, this.mapNestedChildrenToProps(r5, t2.nestedChildren))]), e3));
   }, o3.mapObjectTypeChildren = function(t2) {
-    var e3, r4, n3 = t2.child, i2 = t2.newProps, o4 = t2.newChildProps, s2 = t2.nestedChildren;
+    var e3, r5, n3 = t2.child, i2 = t2.newProps, o4 = t2.newChildProps, s2 = t2.nestedChildren;
     switch (n3.type) {
       case l.TITLE:
         return a({}, i2, ((e3 = {})[n3.type] = s2, e3.titleAttributes = a({}, o4), e3));
@@ -2298,21 +2298,21 @@ var F = ["children"], G = ["children"], W = (function(e2) {
       case l.HTML:
         return a({}, i2, { htmlAttributes: a({}, o4) });
       default:
-        return a({}, i2, ((r4 = {})[n3.type] = a({}, o4), r4));
+        return a({}, i2, ((r5 = {})[n3.type] = a({}, o4), r5));
     }
   }, o3.mapArrayTypeChildrenToProps = function(t2, e3) {
-    var r4 = a({}, e3);
+    var r5 = a({}, e3);
     return Object.keys(t2).forEach(function(e4) {
       var n3;
-      r4 = a({}, r4, ((n3 = {})[e4] = t2[e4], n3));
-    }), r4;
+      r5 = a({}, r5, ((n3 = {})[e4] = t2[e4], n3));
+    }), r5;
   }, o3.warnOnInvalidChildren = function(t2, e3) {
     return (0, import_invariant.default)(h.some(function(e4) {
       return t2.type === e4;
     }), typeof t2.type == "function" ? "You may be attempting to nest <Helmet> components within each other, which is not allowed. Refer to our API for more information." : "Only elements types " + h.join(", ") + " are allowed. Helmet does not support rendering <" + t2.type + "> elements. Refer to our API for more information."), (0, import_invariant.default)(!e3 || typeof e3 == "string" || Array.isArray(e3) && !e3.some(function(t3) {
       return typeof t3 != "string";
     }), "Helmet expects a string as a child of <" + t2.type + ">. Did you forget to wrap your children in braces? ( <" + t2.type + ">{``}</" + t2.type + "> ) Refer to our API for more information."), !0;
-  }, o3.mapChildrenToProps = function(e3, r4) {
+  }, o3.mapChildrenToProps = function(e3, r5) {
     var n3 = this, i2 = {};
     return react_default.Children.forEach(e3, function(t2) {
       if (t2 && t2.props) {
@@ -2321,7 +2321,7 @@ var F = ["children"], G = ["children"], W = (function(e2) {
         }, {}), c2 = t2.type;
         switch (typeof c2 == "symbol" ? c2 = c2.toString() : n3.warnOnInvalidChildren(t2, o4), c2) {
           case l.FRAGMENT:
-            r4 = n3.mapChildrenToProps(o4, r4);
+            r5 = n3.mapChildrenToProps(o4, r5);
             break;
           case l.LINK:
           case l.META:
@@ -2331,16 +2331,16 @@ var F = ["children"], G = ["children"], W = (function(e2) {
             i2 = n3.flattenArrayTypeChildren({ child: t2, arrayTypeChildren: i2, newChildProps: s2, nestedChildren: o4 });
             break;
           default:
-            r4 = n3.mapObjectTypeChildren({ child: t2, newProps: r4, newChildProps: s2, nestedChildren: o4 });
+            r5 = n3.mapObjectTypeChildren({ child: t2, newProps: r5, newChildProps: s2, nestedChildren: o4 });
         }
       }
-    }), this.mapArrayTypeChildrenToProps(i2, r4);
+    }), this.mapArrayTypeChildrenToProps(i2, r5);
   }, o3.render = function() {
-    var e3 = this.props, r4 = e3.children, n3 = u(e3, G), i2 = a({}, n3), o4 = n3.helmetData;
-    return r4 && (i2 = this.mapChildrenToProps(r4, i2)), !o4 || o4 instanceof N || (o4 = new N(o4.context, o4.instances)), o4 ? react_default.createElement(z, a({}, i2, { context: o4.value, helmetData: void 0 })) : react_default.createElement(R.Consumer, null, function(e4) {
+    var e3 = this.props, r5 = e3.children, n3 = u(e3, G), i2 = a({}, n3), o4 = n3.helmetData;
+    return r5 && (i2 = this.mapChildrenToProps(r5, i2)), !o4 || o4 instanceof N || (o4 = new N(o4.context, o4.instances)), o4 ? react_default.createElement(z, a({}, i2, { context: o4.value, helmetData: void 0 })) : react_default.createElement(R.Consumer, null, function(e4) {
       return react_default.createElement(z, a({}, i2, { context: e4 }));
     });
-  }, r3;
+  }, r4;
 })(Component);
 W.propTypes = { base: import_prop_types.default.object, bodyAttributes: import_prop_types.default.object, children: import_prop_types.default.oneOfType([import_prop_types.default.arrayOf(import_prop_types.default.node), import_prop_types.default.node]), defaultTitle: import_prop_types.default.string, defer: import_prop_types.default.bool, encodeSpecialCharacters: import_prop_types.default.bool, htmlAttributes: import_prop_types.default.object, link: import_prop_types.default.arrayOf(import_prop_types.default.object), meta: import_prop_types.default.arrayOf(import_prop_types.default.object), noscript: import_prop_types.default.arrayOf(import_prop_types.default.object), onChangeClientState: import_prop_types.default.func, script: import_prop_types.default.arrayOf(import_prop_types.default.object), style: import_prop_types.default.arrayOf(import_prop_types.default.object), title: import_prop_types.default.string, titleAttributes: import_prop_types.default.object, titleTemplate: import_prop_types.default.string, prioritizeSeoTags: import_prop_types.default.bool, helmetData: import_prop_types.default.object }, W.defaultProps = { defer: !0, encodeSpecialCharacters: !0, prioritizeSeoTags: !1 }, W.displayName = "Helmet";
 
@@ -2355,7 +2355,7 @@ function _extends() {
   return _extends = Object.assign ? Object.assign.bind() : function(n3) {
     for (var e2 = 1; e2 < arguments.length; e2++) {
       var t2 = arguments[e2];
-      for (var r3 in t2) ({}).hasOwnProperty.call(t2, r3) && (n3[r3] = t2[r3]);
+      for (var r4 in t2) ({}).hasOwnProperty.call(t2, r4) && (n3[r4] = t2[r4]);
     }
     return n3;
   }, _extends.apply(null, arguments);
@@ -2408,23 +2408,23 @@ function _isNativeReflectConstruct() {
 }
 
 // ../../node_modules/@babel/runtime/helpers/esm/construct.js
-function _construct(t2, e2, r3) {
+function _construct(t2, e2, r4) {
   if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments);
   var o3 = [null];
   o3.push.apply(o3, e2);
   var p2 = new (t2.bind.apply(t2, o3))();
-  return r3 && _setPrototypeOf(p2, r3.prototype), p2;
+  return r4 && _setPrototypeOf(p2, r4.prototype), p2;
 }
 
 // ../../node_modules/@babel/runtime/helpers/esm/wrapNativeSuper.js
 function _wrapNativeSuper(t2) {
-  var r3 = typeof Map == "function" ? /* @__PURE__ */ new Map() : void 0;
+  var r4 = typeof Map == "function" ? /* @__PURE__ */ new Map() : void 0;
   return _wrapNativeSuper = function(t3) {
     if (t3 === null || !_isNativeFunction(t3)) return t3;
     if (typeof t3 != "function") throw new TypeError("Super expression must either be null or a function");
-    if (r3 !== void 0) {
-      if (r3.has(t3)) return r3.get(t3);
-      r3.set(t3, Wrapper8);
+    if (r4 !== void 0) {
+      if (r4.has(t3)) return r4.get(t3);
+      r4.set(t3, Wrapper8);
     }
     function Wrapper8() {
       return _construct(t3, arguments, _getPrototypeOf(this).constructor);
@@ -3056,7 +3056,7 @@ Component Stack:${errorInfo.componentStack}`)
     return { hasError: !0, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("Storybook Manager UI Error:", error), console.error("Component Stack:", errorInfo.componentStack), this.setState({ errorInfo });
+    console.error("Storybook Manager UI Error:", error), console.error("Component Stack:", errorInfo.componentStack), this.setState({ errorInfo }), typeof globalThis.sendTelemetryError == "function" && globalThis.sendTelemetryError(error);
   }
   render() {
     let { hasError, error, errorInfo } = this.state, { children } = this.props;
@@ -3387,9 +3387,9 @@ function $bdb11010cef70236$export$f680877a34711e37(defaultId) {
     ]);
   }
   return $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => {
-    let r3 = res;
+    let r4 = res;
     return () => {
-      $bdb11010cef70236$var$registry && $bdb11010cef70236$var$registry.unregister(cleanupRef), $bdb11010cef70236$export$d41a04c74483c6ef.delete(r3);
+      $bdb11010cef70236$var$registry && $bdb11010cef70236$var$registry.unregister(cleanupRef), $bdb11010cef70236$export$d41a04c74483c6ef.delete(r4);
     };
   }, [
     res
@@ -3399,6 +3399,178 @@ function $bdb11010cef70236$export$f680877a34711e37(defaultId) {
       newId && (nextId.current = null);
     };
   }), res;
+}
+function $bdb11010cef70236$export$cd8c9cb68f842629(idA, idB) {
+  if (idA === idB) return idA;
+  let setIdsA = $bdb11010cef70236$export$d41a04c74483c6ef.get(idA);
+  if (setIdsA)
+    return setIdsA.forEach((ref) => ref.current = idB), idB;
+  let setIdsB = $bdb11010cef70236$export$d41a04c74483c6ef.get(idB);
+  return setIdsB ? (setIdsB.forEach((ref) => ref.current = idA), idA) : idB;
+}
+
+// ../../node_modules/@react-aria/utils/dist/chain.mjs
+function $ff5963eb1fccf552$export$e08e3b67e392101e(...callbacks) {
+  return (...args) => {
+    for (let callback of callbacks) typeof callback == "function" && callback(...args);
+  };
+}
+
+// ../../node_modules/@react-aria/utils/dist/domHelpers.mjs
+var $431fbd86ca7dc216$export$b204af158042fbac = (el) => {
+  var _el_ownerDocument;
+  return (_el_ownerDocument = el?.ownerDocument) !== null && _el_ownerDocument !== void 0 ? _el_ownerDocument : document;
+}, $431fbd86ca7dc216$export$f21a1ffae260145a = (el) => el && "window" in el && el.window === el ? el : $431fbd86ca7dc216$export$b204af158042fbac(el).defaultView || window;
+function $431fbd86ca7dc216$var$isNode(value) {
+  return value !== null && typeof value == "object" && "nodeType" in value && typeof value.nodeType == "number";
+}
+function $431fbd86ca7dc216$export$af51f0f06c0f328a(node) {
+  return $431fbd86ca7dc216$var$isNode(node) && node.nodeType === Node.DOCUMENT_FRAGMENT_NODE && "host" in node;
+}
+
+// ../../node_modules/@react-stately/flags/dist/import.mjs
+var $f4e2df6bd15f8569$var$_shadowDOM = !1;
+function $f4e2df6bd15f8569$export$98658e8c59125e6a() {
+  return $f4e2df6bd15f8569$var$_shadowDOM;
+}
+
+// ../../node_modules/@react-aria/utils/dist/DOMFunctions.mjs
+function $d4ee10de306f2510$export$4282f70798064fe0(node, otherNode) {
+  if (!$f4e2df6bd15f8569$export$98658e8c59125e6a()) return otherNode && node ? node.contains(otherNode) : !1;
+  if (!node || !otherNode) return !1;
+  let currentNode = otherNode;
+  for (; currentNode !== null; ) {
+    if (currentNode === node) return !0;
+    currentNode.tagName === "SLOT" && currentNode.assignedSlot ? currentNode = currentNode.assignedSlot.parentNode : $431fbd86ca7dc216$export$af51f0f06c0f328a(currentNode) ? currentNode = currentNode.host : currentNode = currentNode.parentNode;
+  }
+  return !1;
+}
+var $d4ee10de306f2510$export$cd4e5573fbe2b576 = (doc = document) => {
+  var _activeElement_shadowRoot;
+  if (!$f4e2df6bd15f8569$export$98658e8c59125e6a()) return doc.activeElement;
+  let activeElement = doc.activeElement;
+  for (; activeElement && "shadowRoot" in activeElement && (!((_activeElement_shadowRoot = activeElement.shadowRoot) === null || _activeElement_shadowRoot === void 0) && _activeElement_shadowRoot.activeElement); ) activeElement = activeElement.shadowRoot.activeElement;
+  return activeElement;
+};
+function $d4ee10de306f2510$export$e58f029f0fbfdb29(event) {
+  return $f4e2df6bd15f8569$export$98658e8c59125e6a() && event.target.shadowRoot && event.composedPath ? event.composedPath()[0] : event.target;
+}
+
+// ../../node_modules/clsx/dist/clsx.mjs
+function r2(e2) {
+  var t2, f2, n3 = "";
+  if (typeof e2 == "string" || typeof e2 == "number") n3 += e2;
+  else if (typeof e2 == "object") if (Array.isArray(e2)) {
+    var o3 = e2.length;
+    for (t2 = 0; t2 < o3; t2++) e2[t2] && (f2 = r2(e2[t2])) && (n3 && (n3 += " "), n3 += f2);
+  } else for (f2 in e2) e2[f2] && (n3 && (n3 += " "), n3 += f2);
+  return n3;
+}
+function clsx() {
+  for (var e2, t2, f2 = 0, n3 = "", o3 = arguments.length; f2 < o3; f2++) (e2 = arguments[f2]) && (t2 = r2(e2)) && (n3 && (n3 += " "), n3 += t2);
+  return n3;
+}
+var clsx_default = clsx;
+
+// ../../node_modules/@react-aria/utils/dist/mergeProps.mjs
+function $3ef42575df84b30b$export$9d1611c77c2fe928(...args) {
+  let result = {
+    ...args[0]
+  };
+  for (let i2 = 1; i2 < args.length; i2++) {
+    let props = args[i2];
+    for (let key in props) {
+      let a2 = result[key], b2 = props[key];
+      typeof a2 == "function" && typeof b2 == "function" && // This is a lot faster than a regex.
+      key[0] === "o" && key[1] === "n" && key.charCodeAt(2) >= /* 'A' */
+      65 && key.charCodeAt(2) <= /* 'Z' */
+      90 ? result[key] = $ff5963eb1fccf552$export$e08e3b67e392101e(a2, b2) : (key === "className" || key === "UNSAFE_className") && typeof a2 == "string" && typeof b2 == "string" ? result[key] = clsx_default(a2, b2) : key === "id" && a2 && b2 ? result.id = $bdb11010cef70236$export$cd8c9cb68f842629(a2, b2) : result[key] = b2 !== void 0 ? b2 : a2;
+    }
+  }
+  return result;
+}
+
+// ../../node_modules/@react-aria/utils/dist/mergeRefs.mjs
+function $5dc95899b306f630$export$c9058316764c140e(...refs) {
+  return refs.length === 1 && refs[0] ? refs[0] : (value) => {
+    let hasCleanup = !1, cleanups = refs.map((ref) => {
+      let cleanup = $5dc95899b306f630$var$setRef(ref, value);
+      return hasCleanup || (hasCleanup = typeof cleanup == "function"), cleanup;
+    });
+    if (hasCleanup) return () => {
+      cleanups.forEach((cleanup, i2) => {
+        typeof cleanup == "function" ? cleanup() : $5dc95899b306f630$var$setRef(refs[i2], null);
+      });
+    };
+  };
+}
+function $5dc95899b306f630$var$setRef(ref, value) {
+  if (typeof ref == "function") return ref(value);
+  ref != null && (ref.current = value);
+}
+
+// ../../node_modules/@react-aria/utils/dist/filterDOMProps.mjs
+var $65484d02dcb7eb3e$var$DOMPropNames = /* @__PURE__ */ new Set([
+  "id"
+]), $65484d02dcb7eb3e$var$labelablePropNames = /* @__PURE__ */ new Set([
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "aria-details"
+]), $65484d02dcb7eb3e$var$linkPropNames = /* @__PURE__ */ new Set([
+  "href",
+  "hrefLang",
+  "target",
+  "rel",
+  "download",
+  "ping",
+  "referrerPolicy"
+]), $65484d02dcb7eb3e$var$globalAttrs = /* @__PURE__ */ new Set([
+  "dir",
+  "lang",
+  "hidden",
+  "inert",
+  "translate"
+]), $65484d02dcb7eb3e$var$globalEvents = /* @__PURE__ */ new Set([
+  "onClick",
+  "onAuxClick",
+  "onContextMenu",
+  "onDoubleClick",
+  "onMouseDown",
+  "onMouseEnter",
+  "onMouseLeave",
+  "onMouseMove",
+  "onMouseOut",
+  "onMouseOver",
+  "onMouseUp",
+  "onTouchCancel",
+  "onTouchEnd",
+  "onTouchMove",
+  "onTouchStart",
+  "onPointerDown",
+  "onPointerMove",
+  "onPointerUp",
+  "onPointerCancel",
+  "onPointerEnter",
+  "onPointerLeave",
+  "onPointerOver",
+  "onPointerOut",
+  "onGotPointerCapture",
+  "onLostPointerCapture",
+  "onScroll",
+  "onWheel",
+  "onAnimationStart",
+  "onAnimationEnd",
+  "onAnimationIteration",
+  "onTransitionCancel",
+  "onTransitionEnd",
+  "onTransitionRun",
+  "onTransitionStart"
+]), $65484d02dcb7eb3e$var$propRe = /^(data-.*)$/;
+function $65484d02dcb7eb3e$export$457c3d6518dd4c6f(props, opts = {}) {
+  let { labelable, isLink, global: global2, events: events2 = global2, propNames } = opts, filteredProps = {};
+  for (let prop in props) Object.prototype.hasOwnProperty.call(props, prop) && ($65484d02dcb7eb3e$var$DOMPropNames.has(prop) || labelable && $65484d02dcb7eb3e$var$labelablePropNames.has(prop) || isLink && $65484d02dcb7eb3e$var$linkPropNames.has(prop) || global2 && $65484d02dcb7eb3e$var$globalAttrs.has(prop) || events2 && ($65484d02dcb7eb3e$var$globalEvents.has(prop) || prop.endsWith("Capture") && $65484d02dcb7eb3e$var$globalEvents.has(prop.slice(0, -7))) || propNames?.has(prop) || $65484d02dcb7eb3e$var$propRe.test(prop)) && (filteredProps[prop] = props[prop]);
+  return filteredProps;
 }
 
 // ../../node_modules/@react-aria/utils/dist/focusWithoutScrolling.mjs
@@ -3545,19 +3717,94 @@ function $bbed8b41f857bcc0$var$setupGlobalEvents() {
   document.body.addEventListener("transitionrun", onTransitionStart), document.body.addEventListener("transitionend", onTransitionEnd);
 }
 typeof document < "u" && (document.readyState !== "loading" ? $bbed8b41f857bcc0$var$setupGlobalEvents() : document.addEventListener("DOMContentLoaded", $bbed8b41f857bcc0$var$setupGlobalEvents));
+function $bbed8b41f857bcc0$var$cleanupDetachedElements() {
+  for (let [eventTarget] of $bbed8b41f857bcc0$var$transitionsByElement)
+    "isConnected" in eventTarget && !eventTarget.isConnected && $bbed8b41f857bcc0$var$transitionsByElement.delete(eventTarget);
+}
+function $bbed8b41f857bcc0$export$24490316f764c430(fn) {
+  requestAnimationFrame(() => {
+    $bbed8b41f857bcc0$var$cleanupDetachedElements(), $bbed8b41f857bcc0$var$transitionsByElement.size === 0 ? fn() : $bbed8b41f857bcc0$var$transitionCallbacks.add(fn);
+  });
+}
 
 // ../../node_modules/@react-aria/utils/dist/useDrag1D.mjs
 init_react();
 
 // ../../node_modules/@react-aria/utils/dist/useGlobalListeners.mjs
 init_react();
+function $03deb23ff14920c4$export$4eaf04e54aa8eed6() {
+  let globalListeners = useRef(/* @__PURE__ */ new Map()), addGlobalListener = useCallback((eventTarget, type, listener, options2) => {
+    let fn = options2?.once ? (...args) => {
+      globalListeners.current.delete(listener), listener(...args);
+    } : listener;
+    globalListeners.current.set(listener, {
+      type,
+      eventTarget,
+      fn,
+      options: options2
+    }), eventTarget.addEventListener(type, fn, options2);
+  }, []), removeGlobalListener = useCallback((eventTarget, type, listener, options2) => {
+    var _globalListeners_current_get;
+    let fn = ((_globalListeners_current_get = globalListeners.current.get(listener)) === null || _globalListeners_current_get === void 0 ? void 0 : _globalListeners_current_get.fn) || listener;
+    eventTarget.removeEventListener(type, fn, options2), globalListeners.current.delete(listener);
+  }, []), removeAllGlobalListeners = useCallback(() => {
+    globalListeners.current.forEach((value, key) => {
+      removeGlobalListener(value.eventTarget, value.type, key, value.options);
+    });
+  }, [
+    removeGlobalListener
+  ]);
+  return useEffect(() => removeAllGlobalListeners, [
+    removeAllGlobalListeners
+  ]), {
+    addGlobalListener,
+    removeGlobalListener,
+    removeAllGlobalListeners
+  };
+}
 
 // ../../node_modules/@react-aria/utils/dist/useObjectRef.mjs
 init_react();
+function $df56164dff5785e2$export$4338b53315abf666(ref) {
+  let objRef = useRef(null), cleanupRef = useRef(void 0), refEffect = useCallback((instance) => {
+    if (typeof ref == "function") {
+      let refCallback = ref, refCleanup = refCallback(instance);
+      return () => {
+        typeof refCleanup == "function" ? refCleanup() : refCallback(null);
+      };
+    } else if (ref)
+      return ref.current = instance, () => {
+        ref.current = null;
+      };
+  }, [
+    ref
+  ]);
+  return useMemo(() => ({
+    get current() {
+      return objRef.current;
+    },
+    set current(value) {
+      objRef.current = value, cleanupRef.current && (cleanupRef.current(), cleanupRef.current = void 0), value != null && (cleanupRef.current = refEffect(value));
+    }
+  }), [
+    refEffect
+  ]);
+}
 
 // ../../node_modules/@react-aria/utils/dist/useEffectEvent.mjs
 init_react();
 var $8ae05eaa5c114e9c$var$_React_useInsertionEffect, $8ae05eaa5c114e9c$var$useEarlyEffect = ($8ae05eaa5c114e9c$var$_React_useInsertionEffect = react_default.useInsertionEffect) !== null && $8ae05eaa5c114e9c$var$_React_useInsertionEffect !== void 0 ? $8ae05eaa5c114e9c$var$_React_useInsertionEffect : $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c;
+function $8ae05eaa5c114e9c$export$7f54fc3180508a52(fn) {
+  let ref = useRef(null);
+  return $8ae05eaa5c114e9c$var$useEarlyEffect(() => {
+    ref.current = fn;
+  }, [
+    fn
+  ]), useCallback((...args) => {
+    let f2 = ref.current;
+    return f2?.(...args);
+  }, []);
+}
 
 // ../../node_modules/@react-aria/utils/dist/useUpdateEffect.mjs
 init_react();
@@ -3567,6 +3814,42 @@ init_react();
 
 // ../../node_modules/@react-aria/utils/dist/useResizeObserver.mjs
 init_react();
+function $9daab02d461809db$var$hasResizeObserver() {
+  return typeof window.ResizeObserver < "u";
+}
+function $9daab02d461809db$export$683480f191c0e3ea(options2) {
+  let { ref, box, onResize } = options2, onResizeEvent = $8ae05eaa5c114e9c$export$7f54fc3180508a52(onResize);
+  useEffect(() => {
+    let element = ref?.current;
+    if (element)
+      if ($9daab02d461809db$var$hasResizeObserver()) {
+        let resizeObserverInstance = new window.ResizeObserver((entries) => {
+          entries.length && onResizeEvent();
+        });
+        return resizeObserverInstance.observe(element, {
+          box
+        }), () => {
+          element && resizeObserverInstance.unobserve(element);
+        };
+      } else
+        return window.addEventListener("resize", onResizeEvent, !1), () => {
+          window.removeEventListener("resize", onResizeEvent, !1);
+        };
+  }, [
+    ref,
+    box
+  ]);
+}
+
+// ../../node_modules/@react-aria/utils/dist/useSyncRef.mjs
+function $e7801be82b4b2a53$export$4debdb1a3f0fa79e(context, ref) {
+  $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => {
+    if (context && context.ref && ref)
+      return context.ref.current = ref.current, () => {
+        context.ref && (context.ref.current = null);
+      };
+  });
+}
 
 // ../../node_modules/@react-aria/utils/dist/useViewportSize.mjs
 init_react();
@@ -3577,6 +3860,14 @@ init_react();
 
 // ../../node_modules/@react-aria/utils/dist/useEvent.mjs
 init_react();
+
+// ../../node_modules/@react-aria/utils/dist/isVirtualEvent.mjs
+function $6a7db85432448f7f$export$60278871457622de(event) {
+  return event.pointerType === "" && event.isTrusted ? !0 : $c87311424ea30a05$export$a11b0059900ceec8() && event.pointerType ? event.type === "click" && event.buttons === 1 : event.detail === 0 && !event.pointerType;
+}
+function $6a7db85432448f7f$export$29bf1b5f2c56cf63(event) {
+  return !$c87311424ea30a05$export$a11b0059900ceec8() && event.width === 0 && event.height === 0 || event.width === 1 && event.height === 1 && event.pressure === 0 && event.detail === 0 && event.pointerType === "mouse";
+}
 
 // ../../node_modules/@react-aria/utils/dist/useDeepMemo.mjs
 init_react();
@@ -3598,9 +3889,82 @@ var react_dom_default = __REACT_DOM__, { __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WI
 
 // ../../node_modules/@react-aria/utils/dist/animation.mjs
 init_react();
+function $d3f049242431219c$export$6d3443f2c48bfc20(ref, isReady = !0) {
+  let [isEntering, setEntering] = useState(!0), isAnimationReady = isEntering && isReady;
+  return $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => {
+    if (isAnimationReady && ref.current && "getAnimations" in ref.current)
+      for (let animation of ref.current.getAnimations()) animation instanceof CSSTransition && animation.cancel();
+  }, [
+    ref,
+    isAnimationReady
+  ]), $d3f049242431219c$var$useAnimation(ref, isAnimationReady, useCallback(() => setEntering(!1), [])), isAnimationReady;
+}
+function $d3f049242431219c$export$45fda7c47f93fd48(ref, isOpen) {
+  let [exitState, setExitState] = useState(isOpen ? "open" : "closed");
+  switch (exitState) {
+    case "open":
+      isOpen || setExitState("exiting");
+      break;
+    case "closed":
+    case "exiting":
+      isOpen && setExitState("open");
+      break;
+  }
+  let isExiting = exitState === "exiting";
+  return $d3f049242431219c$var$useAnimation(ref, isExiting, useCallback(() => {
+    setExitState((state) => state === "exiting" ? "closed" : state);
+  }, [])), isExiting;
+}
+function $d3f049242431219c$var$useAnimation(ref, isActive, onEnd) {
+  $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => {
+    if (isActive && ref.current) {
+      if (!("getAnimations" in ref.current)) {
+        onEnd();
+        return;
+      }
+      let animations = ref.current.getAnimations();
+      if (animations.length === 0) {
+        onEnd();
+        return;
+      }
+      let canceled = !1;
+      return Promise.all(animations.map((a2) => a2.finished)).then(() => {
+        canceled || flushSync(() => {
+          onEnd();
+        });
+      }).catch(() => {
+      }), () => {
+        canceled = !0;
+      };
+    }
+  }, [
+    ref,
+    isActive,
+    onEnd
+  ]);
+}
 
 // ../../node_modules/@react-aria/utils/dist/isElementVisible.mjs
 var $7d2416ea0959daaa$var$supportsCheckVisibility = typeof Element < "u" && "checkVisibility" in Element.prototype;
+function $7d2416ea0959daaa$var$isStyleVisible(element) {
+  let windowObject = $431fbd86ca7dc216$export$f21a1ffae260145a(element);
+  if (!(element instanceof windowObject.HTMLElement) && !(element instanceof windowObject.SVGElement)) return !1;
+  let { display, visibility } = element.style, isVisible = display !== "none" && visibility !== "hidden" && visibility !== "collapse";
+  if (isVisible) {
+    let { getComputedStyle: getComputedStyle2 } = element.ownerDocument.defaultView, { display: computedDisplay, visibility: computedVisibility } = getComputedStyle2(element);
+    isVisible = computedDisplay !== "none" && computedVisibility !== "hidden" && computedVisibility !== "collapse";
+  }
+  return isVisible;
+}
+function $7d2416ea0959daaa$var$isAttributeVisible(element, childElement) {
+  return !element.hasAttribute("hidden") && // Ignore HiddenSelect when tree walking.
+  !element.hasAttribute("data-react-aria-prevent-focus") && (element.nodeName === "DETAILS" && childElement && childElement.nodeName !== "SUMMARY" ? element.hasAttribute("open") : !0);
+}
+function $7d2416ea0959daaa$export$e989c0fffaa6b27a(element, childElement) {
+  return $7d2416ea0959daaa$var$supportsCheckVisibility ? element.checkVisibility({
+    visibilityProperty: !0
+  }) && !element.closest("[data-react-aria-prevent-focus]") : element.nodeName !== "#comment" && $7d2416ea0959daaa$var$isStyleVisible(element) && $7d2416ea0959daaa$var$isAttributeVisible(element, childElement) && (!element.parentElement || $7d2416ea0959daaa$export$e989c0fffaa6b27a(element.parentElement, element));
+}
 
 // ../../node_modules/@react-aria/utils/dist/isFocusable.mjs
 var $b4b717babfbb907b$var$focusableElements = [
@@ -3621,11 +3985,50 @@ var $b4b717babfbb907b$var$focusableElements = [
 ], $b4b717babfbb907b$var$FOCUSABLE_ELEMENT_SELECTOR = $b4b717babfbb907b$var$focusableElements.join(":not([hidden]),") + ",[tabindex]:not([disabled]):not([hidden])";
 $b4b717babfbb907b$var$focusableElements.push('[tabindex]:not([tabindex="-1"]):not([disabled])');
 var $b4b717babfbb907b$var$TABBABLE_ELEMENT_SELECTOR = $b4b717babfbb907b$var$focusableElements.join(':not([hidden]):not([tabindex="-1"]),');
+function $b4b717babfbb907b$export$4c063cf1350e6fed(element) {
+  return element.matches($b4b717babfbb907b$var$FOCUSABLE_ELEMENT_SELECTOR) && $7d2416ea0959daaa$export$e989c0fffaa6b27a(element) && !$b4b717babfbb907b$var$isInert(element);
+}
+function $b4b717babfbb907b$var$isInert(element) {
+  let node = element;
+  for (; node != null; ) {
+    if (node instanceof node.ownerDocument.defaultView.HTMLElement && node.inert) return !0;
+    node = node.parentElement;
+  }
+  return !1;
+}
 
 // ../../node_modules/@react-stately/utils/dist/useControlledState.mjs
 init_react();
 var $458b0a5536c1a7cf$var$_React_useInsertionEffect, $458b0a5536c1a7cf$var$useEarlyEffect = typeof document < "u" ? ($458b0a5536c1a7cf$var$_React_useInsertionEffect = react_default.useInsertionEffect) !== null && $458b0a5536c1a7cf$var$_React_useInsertionEffect !== void 0 ? $458b0a5536c1a7cf$var$_React_useInsertionEffect : react_default.useLayoutEffect : () => {
 };
+function $458b0a5536c1a7cf$export$40bfa8c7b0832715(value, defaultValue, onChange) {
+  let [stateValue, setStateValue] = useState(value || defaultValue), valueRef = useRef(stateValue), isControlledRef = useRef(value !== void 0), isControlled = value !== void 0;
+  useEffect(() => {
+    let wasControlled = isControlledRef.current;
+    isControlledRef.current = isControlled;
+  }, [
+    isControlled
+  ]);
+  let currentValue = isControlled ? value : stateValue;
+  $458b0a5536c1a7cf$var$useEarlyEffect(() => {
+    valueRef.current = currentValue;
+  });
+  let [, forceUpdate] = useReducer(() => ({}), {}), setValue = useCallback((value2, ...args) => {
+    let newValue = typeof value2 == "function" ? value2(valueRef.current) : value2;
+    Object.is(valueRef.current, newValue) || (valueRef.current = newValue, setStateValue(newValue), forceUpdate(), onChange?.(newValue, ...args));
+  }, [
+    onChange
+  ]);
+  return [
+    currentValue,
+    setValue
+  ];
+}
+
+// ../../node_modules/@react-stately/utils/dist/number.mjs
+function $9446cca9a3875146$export$7d15b64cf5a3a4c4(value, min = -1 / 0, max = 1 / 0) {
+  return Math.min(Math.max(value, min), max);
+}
 
 // ../../node_modules/@react-aria/landmark/dist/useLandmark.mjs
 init_react();
@@ -4335,43 +4738,5208 @@ var useFullStoryName = () => {
   overflow: "hidden"
 });
 
+// src/manager/components/layout/MainAreaContainer.tsx
+init_react();
+var PagesInnerContainer = styled.main(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  gridRowStart: "sidebar-start",
+  gridRowEnd: "-1",
+  gridColumnStart: "sidebar-end",
+  gridColumnEnd: "-1",
+  backgroundColor: theme.appContentBg,
+  zIndex: 1
+})), PagesContainer = react_default.memo(function(props) {
+  let { children } = props, mainRef = useRef(null), { landmarkProps } = useLandmark(
+    { "aria-labelledby": "main-content-heading", role: "main" },
+    mainRef
+  );
+  return react_default.createElement(PagesInnerContainer, { id: "main-content-wrapper", ref: mainRef, ...landmarkProps }, react_default.createElement("h2", { id: "main-content-heading", className: "sb-sr-only" }, "Main content"), children);
+}), MainInnerContainer = styled.div(({ theme, shown }) => ({
+  flex: 1,
+  position: "relative",
+  backgroundColor: theme.appContentBg,
+  display: shown ? "grid" : "none",
+  // This is needed to make the content container fill the available space
+  overflow: "auto",
+  [MEDIA_DESKTOP_BREAKPOINT]: {
+    flex: "auto",
+    gridArea: "content"
+  }
+})), MainAreaContainer = react_default.memo(function({
+  showPages,
+  slotMain,
+  slotPages
+}) {
+  return react_default.createElement(react_default.Fragment, null, showPages ? react_default.createElement(PagesContainer, null, slotPages) : react_default.createElement(Match, { path: /(^\/story|docs|onboarding\/|^\/$)/, startsWith: !1 }, ({ match }) => react_default.createElement(MainInnerContainer, { shown: !!match }, slotMain)));
+});
+
+// src/manager/components/layout/PanelContainer.tsx
+init_react();
+
+// src/manager/components/layout/Drag.tsx
+init_react();
+
+// src/components/components/tooltip/TooltipNote.tsx
+init_react();
+var Note = styled.div(({ theme }) => ({
+  padding: "2px 6px",
+  lineHeight: "16px",
+  fontSize: 10,
+  fontWeight: theme.typography.weight.bold,
+  color: theme.color.lightest,
+  boxShadow: "0 0 5px 0 rgba(0, 0, 0, 0.3)",
+  borderRadius: 4,
+  whiteSpace: "nowrap",
+  pointerEvents: "none",
+  zIndex: -1,
+  background: theme.base === "light" ? "rgba(60, 60, 60, 0.9)" : "rgba(0, 0, 0, 0.95)"
+})), TooltipNote2 = ({ note, ...props }) => react_default.createElement(Note, { ...props }, note);
+
+// src/components/components/tooltip/TooltipProvider.tsx
+init_react();
+
+// ../../node_modules/@react-aria/interactions/dist/utils.mjs
+init_react();
+function $8a9cb279dc87e130$export$525bc4921d56d4a(nativeEvent) {
+  let event = nativeEvent;
+  return event.nativeEvent = nativeEvent, event.isDefaultPrevented = () => event.defaultPrevented, event.isPropagationStopped = () => event.cancelBubble, event.persist = () => {
+  }, event;
+}
+function $8a9cb279dc87e130$export$c2b7abe5d61ec696(event, target) {
+  Object.defineProperty(event, "target", {
+    value: target
+  }), Object.defineProperty(event, "currentTarget", {
+    value: target
+  });
+}
+function $8a9cb279dc87e130$export$715c682d09d639cc(onBlur) {
+  let stateRef = useRef({
+    isFocused: !1,
+    observer: null
+  });
+  $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => {
+    let state = stateRef.current;
+    return () => {
+      state.observer && (state.observer.disconnect(), state.observer = null);
+    };
+  }, []);
+  let dispatchBlur = $8ae05eaa5c114e9c$export$7f54fc3180508a52((e2) => {
+    onBlur?.(e2);
+  });
+  return useCallback((e2) => {
+    if (e2.target instanceof HTMLButtonElement || e2.target instanceof HTMLInputElement || e2.target instanceof HTMLTextAreaElement || e2.target instanceof HTMLSelectElement) {
+      stateRef.current.isFocused = !0;
+      let target = e2.target, onBlurHandler = (e3) => {
+        if (stateRef.current.isFocused = !1, target.disabled) {
+          let event = $8a9cb279dc87e130$export$525bc4921d56d4a(e3);
+          dispatchBlur(event);
+        }
+        stateRef.current.observer && (stateRef.current.observer.disconnect(), stateRef.current.observer = null);
+      };
+      target.addEventListener("focusout", onBlurHandler, {
+        once: !0
+      }), stateRef.current.observer = new MutationObserver(() => {
+        if (stateRef.current.isFocused && target.disabled) {
+          var _stateRef_current_observer;
+          (_stateRef_current_observer = stateRef.current.observer) === null || _stateRef_current_observer === void 0 || _stateRef_current_observer.disconnect();
+          let relatedTargetEl = target === document.activeElement ? null : document.activeElement;
+          target.dispatchEvent(new FocusEvent("blur", {
+            relatedTarget: relatedTargetEl
+          })), target.dispatchEvent(new FocusEvent("focusout", {
+            bubbles: !0,
+            relatedTarget: relatedTargetEl
+          }));
+        }
+      }), stateRef.current.observer.observe(target, {
+        attributes: !0,
+        attributeFilter: [
+          "disabled"
+        ]
+      });
+    }
+  }, [
+    dispatchBlur
+  ]);
+}
+var $8a9cb279dc87e130$export$fda7da73ab5d4c48 = !1;
+function $8a9cb279dc87e130$export$cabe61c495ee3649(target) {
+  for (; target && !$b4b717babfbb907b$export$4c063cf1350e6fed(target); ) target = target.parentElement;
+  let window2 = $431fbd86ca7dc216$export$f21a1ffae260145a(target), activeElement = window2.document.activeElement;
+  if (!activeElement || activeElement === target) return;
+  $8a9cb279dc87e130$export$fda7da73ab5d4c48 = !0;
+  let isRefocusing = !1, onBlur = (e2) => {
+    (e2.target === activeElement || isRefocusing) && e2.stopImmediatePropagation();
+  }, onFocusOut = (e2) => {
+    (e2.target === activeElement || isRefocusing) && (e2.stopImmediatePropagation(), !target && !isRefocusing && (isRefocusing = !0, $7215afc6de606d6b$export$de79e2c695e052f3(activeElement), cleanup()));
+  }, onFocus = (e2) => {
+    (e2.target === target || isRefocusing) && e2.stopImmediatePropagation();
+  }, onFocusIn = (e2) => {
+    (e2.target === target || isRefocusing) && (e2.stopImmediatePropagation(), isRefocusing || (isRefocusing = !0, $7215afc6de606d6b$export$de79e2c695e052f3(activeElement), cleanup()));
+  };
+  window2.addEventListener("blur", onBlur, !0), window2.addEventListener("focusout", onFocusOut, !0), window2.addEventListener("focusin", onFocusIn, !0), window2.addEventListener("focus", onFocus, !0);
+  let cleanup = () => {
+    cancelAnimationFrame(raf), window2.removeEventListener("blur", onBlur, !0), window2.removeEventListener("focusout", onFocusOut, !0), window2.removeEventListener("focusin", onFocusIn, !0), window2.removeEventListener("focus", onFocus, !0), $8a9cb279dc87e130$export$fda7da73ab5d4c48 = !1, isRefocusing = !1;
+  }, raf = requestAnimationFrame(cleanup);
+  return cleanup;
+}
+
+// ../../node_modules/@react-aria/interactions/dist/textSelection.mjs
+var $14c0b72509d70225$var$state = "default", $14c0b72509d70225$var$savedUserSelect = "", $14c0b72509d70225$var$modifiedElementMap = /* @__PURE__ */ new WeakMap();
+function $14c0b72509d70225$export$16a4697467175487(target) {
+  if ($c87311424ea30a05$export$fedb369cb70207f1()) {
+    if ($14c0b72509d70225$var$state === "default") {
+      let documentObject = $431fbd86ca7dc216$export$b204af158042fbac(target);
+      $14c0b72509d70225$var$savedUserSelect = documentObject.documentElement.style.webkitUserSelect, documentObject.documentElement.style.webkitUserSelect = "none";
+    }
+    $14c0b72509d70225$var$state = "disabled";
+  } else if (target instanceof HTMLElement || target instanceof SVGElement) {
+    let property = "userSelect" in target.style ? "userSelect" : "webkitUserSelect";
+    $14c0b72509d70225$var$modifiedElementMap.set(target, target.style[property]), target.style[property] = "none";
+  }
+}
+function $14c0b72509d70225$export$b0d6fa1ab32e3295(target) {
+  if ($c87311424ea30a05$export$fedb369cb70207f1()) {
+    if ($14c0b72509d70225$var$state !== "disabled") return;
+    $14c0b72509d70225$var$state = "restoring", setTimeout(() => {
+      $bbed8b41f857bcc0$export$24490316f764c430(() => {
+        if ($14c0b72509d70225$var$state === "restoring") {
+          let documentObject = $431fbd86ca7dc216$export$b204af158042fbac(target);
+          documentObject.documentElement.style.webkitUserSelect === "none" && (documentObject.documentElement.style.webkitUserSelect = $14c0b72509d70225$var$savedUserSelect || ""), $14c0b72509d70225$var$savedUserSelect = "", $14c0b72509d70225$var$state = "default";
+        }
+      });
+    }, 300);
+  } else if ((target instanceof HTMLElement || target instanceof SVGElement) && target && $14c0b72509d70225$var$modifiedElementMap.has(target)) {
+    let targetOldUserSelect = $14c0b72509d70225$var$modifiedElementMap.get(target), property = "userSelect" in target.style ? "userSelect" : "webkitUserSelect";
+    target.style[property] === "none" && (target.style[property] = targetOldUserSelect), target.getAttribute("style") === "" && target.removeAttribute("style"), $14c0b72509d70225$var$modifiedElementMap.delete(target);
+  }
+}
+
+// ../../node_modules/@react-aria/interactions/dist/context.mjs
+init_react();
+var $ae1eeba8b9eafd08$export$5165eccb35aaadb5 = react_default.createContext({
+  register: () => {
+  }
+});
+$ae1eeba8b9eafd08$export$5165eccb35aaadb5.displayName = "PressResponderContext";
+
+// ../../node_modules/@swc/helpers/esm/_class_apply_descriptor_get.js
+function _class_apply_descriptor_get(receiver, descriptor) {
+  return descriptor.get ? descriptor.get.call(receiver) : descriptor.value;
+}
+
+// ../../node_modules/@swc/helpers/esm/_class_extract_field_descriptor.js
+function _class_extract_field_descriptor(receiver, privateMap, action) {
+  if (!privateMap.has(receiver)) throw new TypeError("attempted to " + action + " private field on non-instance");
+  return privateMap.get(receiver);
+}
+
+// ../../node_modules/@swc/helpers/esm/_class_private_field_get.js
+function _class_private_field_get(receiver, privateMap) {
+  var descriptor = _class_extract_field_descriptor(receiver, privateMap, "get");
+  return _class_apply_descriptor_get(receiver, descriptor);
+}
+
+// ../../node_modules/@swc/helpers/esm/_check_private_redeclaration.js
+function _check_private_redeclaration(obj, privateCollection) {
+  if (privateCollection.has(obj))
+    throw new TypeError("Cannot initialize the same private elements twice on an object");
+}
+
+// ../../node_modules/@swc/helpers/esm/_class_private_field_init.js
+function _class_private_field_init(obj, privateMap, value) {
+  _check_private_redeclaration(obj, privateMap), privateMap.set(obj, value);
+}
+
+// ../../node_modules/@swc/helpers/esm/_class_apply_descriptor_set.js
+function _class_apply_descriptor_set(receiver, descriptor, value) {
+  if (descriptor.set) descriptor.set.call(receiver, value);
+  else {
+    if (!descriptor.writable)
+      throw new TypeError("attempted to set read only private field");
+    descriptor.value = value;
+  }
+}
+
+// ../../node_modules/@swc/helpers/esm/_class_private_field_set.js
+function _class_private_field_set(receiver, privateMap, value) {
+  var descriptor = _class_extract_field_descriptor(receiver, privateMap, "set");
+  return _class_apply_descriptor_set(receiver, descriptor, value), value;
+}
+
+// ../../node_modules/@react-aria/interactions/dist/usePress.mjs
+init_react();
+function $f6c31cce2adf654f$var$usePressResponderContext(props) {
+  let context = useContext($ae1eeba8b9eafd08$export$5165eccb35aaadb5);
+  if (context) {
+    let { register, ...contextProps } = context;
+    props = $3ef42575df84b30b$export$9d1611c77c2fe928(contextProps, props), register();
+  }
+  return $e7801be82b4b2a53$export$4debdb1a3f0fa79e(context, props.ref), props;
+}
+var $f6c31cce2adf654f$var$_shouldStopPropagation = /* @__PURE__ */ new WeakMap(), $f6c31cce2adf654f$var$PressEvent = class {
+  continuePropagation() {
+    _class_private_field_set(this, $f6c31cce2adf654f$var$_shouldStopPropagation, !1);
+  }
+  get shouldStopPropagation() {
+    return _class_private_field_get(this, $f6c31cce2adf654f$var$_shouldStopPropagation);
+  }
+  constructor(type, pointerType, originalEvent, state) {
+    _class_private_field_init(this, $f6c31cce2adf654f$var$_shouldStopPropagation, {
+      writable: !0,
+      value: void 0
+    }), _class_private_field_set(this, $f6c31cce2adf654f$var$_shouldStopPropagation, !0);
+    var _state_target;
+    let currentTarget = (_state_target = state?.target) !== null && _state_target !== void 0 ? _state_target : originalEvent.currentTarget, rect = currentTarget?.getBoundingClientRect(), x2, y2 = 0, clientX, clientY = null;
+    originalEvent.clientX != null && originalEvent.clientY != null && (clientX = originalEvent.clientX, clientY = originalEvent.clientY), rect && (clientX != null && clientY != null ? (x2 = clientX - rect.left, y2 = clientY - rect.top) : (x2 = rect.width / 2, y2 = rect.height / 2)), this.type = type, this.pointerType = pointerType, this.target = originalEvent.currentTarget, this.shiftKey = originalEvent.shiftKey, this.metaKey = originalEvent.metaKey, this.ctrlKey = originalEvent.ctrlKey, this.altKey = originalEvent.altKey, this.x = x2, this.y = y2;
+  }
+}, $f6c31cce2adf654f$var$LINK_CLICKED = Symbol("linkClicked"), $f6c31cce2adf654f$var$STYLE_ID = "react-aria-pressable-style", $f6c31cce2adf654f$var$PRESSABLE_ATTRIBUTE = "data-react-aria-pressable";
+function $f6c31cce2adf654f$export$45712eceda6fad21(props) {
+  let { onPress, onPressChange, onPressStart, onPressEnd, onPressUp, onClick, isDisabled, isPressed: isPressedProp, preventFocusOnPress, shouldCancelOnPointerExit, allowTextSelectionOnPress, ref: domRef, ...domProps } = $f6c31cce2adf654f$var$usePressResponderContext(props), [isPressed, setPressed] = useState(!1), ref = useRef({
+    isPressed: !1,
+    ignoreEmulatedMouseEvents: !1,
+    didFirePressStart: !1,
+    isTriggeringEvent: !1,
+    activePointerId: null,
+    target: null,
+    isOverTarget: !1,
+    pointerType: null,
+    disposables: []
+  }), { addGlobalListener, removeAllGlobalListeners } = $03deb23ff14920c4$export$4eaf04e54aa8eed6(), triggerPressStart = $8ae05eaa5c114e9c$export$7f54fc3180508a52((originalEvent, pointerType) => {
+    let state = ref.current;
+    if (isDisabled || state.didFirePressStart) return !1;
+    let shouldStopPropagation = !0;
+    if (state.isTriggeringEvent = !0, onPressStart) {
+      let event = new $f6c31cce2adf654f$var$PressEvent("pressstart", pointerType, originalEvent);
+      onPressStart(event), shouldStopPropagation = event.shouldStopPropagation;
+    }
+    return onPressChange && onPressChange(!0), state.isTriggeringEvent = !1, state.didFirePressStart = !0, setPressed(!0), shouldStopPropagation;
+  }), triggerPressEnd = $8ae05eaa5c114e9c$export$7f54fc3180508a52((originalEvent, pointerType, wasPressed = !0) => {
+    let state = ref.current;
+    if (!state.didFirePressStart) return !1;
+    state.didFirePressStart = !1, state.isTriggeringEvent = !0;
+    let shouldStopPropagation = !0;
+    if (onPressEnd) {
+      let event = new $f6c31cce2adf654f$var$PressEvent("pressend", pointerType, originalEvent);
+      onPressEnd(event), shouldStopPropagation = event.shouldStopPropagation;
+    }
+    if (onPressChange && onPressChange(!1), setPressed(!1), onPress && wasPressed && !isDisabled) {
+      let event = new $f6c31cce2adf654f$var$PressEvent("press", pointerType, originalEvent);
+      onPress(event), shouldStopPropagation && (shouldStopPropagation = event.shouldStopPropagation);
+    }
+    return state.isTriggeringEvent = !1, shouldStopPropagation;
+  }), triggerPressUp = $8ae05eaa5c114e9c$export$7f54fc3180508a52((originalEvent, pointerType) => {
+    let state = ref.current;
+    if (isDisabled) return !1;
+    if (onPressUp) {
+      state.isTriggeringEvent = !0;
+      let event = new $f6c31cce2adf654f$var$PressEvent("pressup", pointerType, originalEvent);
+      return onPressUp(event), state.isTriggeringEvent = !1, event.shouldStopPropagation;
+    }
+    return !0;
+  }), cancel = $8ae05eaa5c114e9c$export$7f54fc3180508a52((e2) => {
+    let state = ref.current;
+    if (state.isPressed && state.target) {
+      state.didFirePressStart && state.pointerType != null && triggerPressEnd($f6c31cce2adf654f$var$createEvent(state.target, e2), state.pointerType, !1), state.isPressed = !1, state.isOverTarget = !1, state.activePointerId = null, state.pointerType = null, removeAllGlobalListeners(), allowTextSelectionOnPress || $14c0b72509d70225$export$b0d6fa1ab32e3295(state.target);
+      for (let dispose of state.disposables) dispose();
+      state.disposables = [];
+    }
+  }), cancelOnPointerExit = $8ae05eaa5c114e9c$export$7f54fc3180508a52((e2) => {
+    shouldCancelOnPointerExit && cancel(e2);
+  }), triggerClick = $8ae05eaa5c114e9c$export$7f54fc3180508a52((e2) => {
+    isDisabled || onClick?.(e2);
+  }), triggerSyntheticClick = $8ae05eaa5c114e9c$export$7f54fc3180508a52((e2, target) => {
+    if (!isDisabled && onClick) {
+      let event = new MouseEvent("click", e2);
+      $8a9cb279dc87e130$export$c2b7abe5d61ec696(event, target), onClick($8a9cb279dc87e130$export$525bc4921d56d4a(event));
+    }
+  }), pressProps = useMemo(() => {
+    let state = ref.current, pressProps2 = {
+      onKeyDown(e2) {
+        if ($f6c31cce2adf654f$var$isValidKeyboardEvent(e2.nativeEvent, e2.currentTarget) && $d4ee10de306f2510$export$4282f70798064fe0(e2.currentTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent))) {
+          var _state_metaKeyEvents;
+          $f6c31cce2adf654f$var$shouldPreventDefaultKeyboard($d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent), e2.key) && e2.preventDefault();
+          let shouldStopPropagation = !0;
+          if (!state.isPressed && !e2.repeat) {
+            state.target = e2.currentTarget, state.isPressed = !0, state.pointerType = "keyboard", shouldStopPropagation = triggerPressStart(e2, "keyboard");
+            let originalTarget = e2.currentTarget, pressUp = (e3) => {
+              $f6c31cce2adf654f$var$isValidKeyboardEvent(e3, originalTarget) && !e3.repeat && $d4ee10de306f2510$export$4282f70798064fe0(originalTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e3)) && state.target && triggerPressUp($f6c31cce2adf654f$var$createEvent(state.target, e3), "keyboard");
+            };
+            addGlobalListener($431fbd86ca7dc216$export$b204af158042fbac(e2.currentTarget), "keyup", $ff5963eb1fccf552$export$e08e3b67e392101e(pressUp, onKeyUp), !0);
+          }
+          shouldStopPropagation && e2.stopPropagation(), e2.metaKey && $c87311424ea30a05$export$9ac100e40613ea10() && ((_state_metaKeyEvents = state.metaKeyEvents) === null || _state_metaKeyEvents === void 0 || _state_metaKeyEvents.set(e2.key, e2.nativeEvent));
+        } else e2.key === "Meta" && (state.metaKeyEvents = /* @__PURE__ */ new Map());
+      },
+      onClick(e2) {
+        if (!(e2 && !$d4ee10de306f2510$export$4282f70798064fe0(e2.currentTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent))) && e2 && e2.button === 0 && !state.isTriggeringEvent && !$ea8dcbcb9ea1b556$export$95185d699e05d4d7.isOpening) {
+          let shouldStopPropagation = !0;
+          if (isDisabled && e2.preventDefault(), !state.ignoreEmulatedMouseEvents && !state.isPressed && (state.pointerType === "virtual" || $6a7db85432448f7f$export$60278871457622de(e2.nativeEvent))) {
+            let stopPressStart = triggerPressStart(e2, "virtual"), stopPressUp = triggerPressUp(e2, "virtual"), stopPressEnd = triggerPressEnd(e2, "virtual");
+            triggerClick(e2), shouldStopPropagation = stopPressStart && stopPressUp && stopPressEnd;
+          } else if (state.isPressed && state.pointerType !== "keyboard") {
+            let pointerType = state.pointerType || e2.nativeEvent.pointerType || "virtual", stopPressUp = triggerPressUp($f6c31cce2adf654f$var$createEvent(e2.currentTarget, e2), pointerType), stopPressEnd = triggerPressEnd($f6c31cce2adf654f$var$createEvent(e2.currentTarget, e2), pointerType, !0);
+            shouldStopPropagation = stopPressUp && stopPressEnd, state.isOverTarget = !1, triggerClick(e2), cancel(e2);
+          }
+          state.ignoreEmulatedMouseEvents = !1, shouldStopPropagation && e2.stopPropagation();
+        }
+      }
+    }, onKeyUp = (e2) => {
+      var _state_metaKeyEvents;
+      if (state.isPressed && state.target && $f6c31cce2adf654f$var$isValidKeyboardEvent(e2, state.target)) {
+        var _state_metaKeyEvents1;
+        $f6c31cce2adf654f$var$shouldPreventDefaultKeyboard($d4ee10de306f2510$export$e58f029f0fbfdb29(e2), e2.key) && e2.preventDefault();
+        let target = $d4ee10de306f2510$export$e58f029f0fbfdb29(e2), wasPressed = $d4ee10de306f2510$export$4282f70798064fe0(state.target, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2));
+        triggerPressEnd($f6c31cce2adf654f$var$createEvent(state.target, e2), "keyboard", wasPressed), wasPressed && triggerSyntheticClick(e2, state.target), removeAllGlobalListeners(), e2.key !== "Enter" && $f6c31cce2adf654f$var$isHTMLAnchorLink(state.target) && $d4ee10de306f2510$export$4282f70798064fe0(state.target, target) && !e2[$f6c31cce2adf654f$var$LINK_CLICKED] && (e2[$f6c31cce2adf654f$var$LINK_CLICKED] = !0, $ea8dcbcb9ea1b556$export$95185d699e05d4d7(state.target, e2, !1)), state.isPressed = !1, (_state_metaKeyEvents1 = state.metaKeyEvents) === null || _state_metaKeyEvents1 === void 0 || _state_metaKeyEvents1.delete(e2.key);
+      } else if (e2.key === "Meta" && (!((_state_metaKeyEvents = state.metaKeyEvents) === null || _state_metaKeyEvents === void 0) && _state_metaKeyEvents.size)) {
+        var _state_target;
+        let events2 = state.metaKeyEvents;
+        state.metaKeyEvents = void 0;
+        for (let event of events2.values()) (_state_target = state.target) === null || _state_target === void 0 || _state_target.dispatchEvent(new KeyboardEvent("keyup", event));
+      }
+    };
+    if (typeof PointerEvent < "u") {
+      pressProps2.onPointerDown = (e2) => {
+        if (e2.button !== 0 || !$d4ee10de306f2510$export$4282f70798064fe0(e2.currentTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent))) return;
+        if ($6a7db85432448f7f$export$29bf1b5f2c56cf63(e2.nativeEvent)) {
+          state.pointerType = "virtual";
+          return;
+        }
+        state.pointerType = e2.pointerType;
+        let shouldStopPropagation = !0;
+        if (!state.isPressed) {
+          state.isPressed = !0, state.isOverTarget = !0, state.activePointerId = e2.pointerId, state.target = e2.currentTarget, allowTextSelectionOnPress || $14c0b72509d70225$export$16a4697467175487(state.target), shouldStopPropagation = triggerPressStart(e2, state.pointerType);
+          let target = $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent);
+          "releasePointerCapture" in target && target.releasePointerCapture(e2.pointerId), addGlobalListener($431fbd86ca7dc216$export$b204af158042fbac(e2.currentTarget), "pointerup", onPointerUp, !1), addGlobalListener($431fbd86ca7dc216$export$b204af158042fbac(e2.currentTarget), "pointercancel", onPointerCancel, !1);
+        }
+        shouldStopPropagation && e2.stopPropagation();
+      }, pressProps2.onMouseDown = (e2) => {
+        if ($d4ee10de306f2510$export$4282f70798064fe0(e2.currentTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent)) && e2.button === 0) {
+          if (preventFocusOnPress) {
+            let dispose = $8a9cb279dc87e130$export$cabe61c495ee3649(e2.target);
+            dispose && state.disposables.push(dispose);
+          }
+          e2.stopPropagation();
+        }
+      }, pressProps2.onPointerUp = (e2) => {
+        !$d4ee10de306f2510$export$4282f70798064fe0(e2.currentTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent)) || state.pointerType === "virtual" || e2.button === 0 && !state.isPressed && triggerPressUp(e2, state.pointerType || e2.pointerType);
+      }, pressProps2.onPointerEnter = (e2) => {
+        e2.pointerId === state.activePointerId && state.target && !state.isOverTarget && state.pointerType != null && (state.isOverTarget = !0, triggerPressStart($f6c31cce2adf654f$var$createEvent(state.target, e2), state.pointerType));
+      }, pressProps2.onPointerLeave = (e2) => {
+        e2.pointerId === state.activePointerId && state.target && state.isOverTarget && state.pointerType != null && (state.isOverTarget = !1, triggerPressEnd($f6c31cce2adf654f$var$createEvent(state.target, e2), state.pointerType, !1), cancelOnPointerExit(e2));
+      };
+      let onPointerUp = (e2) => {
+        if (e2.pointerId === state.activePointerId && state.isPressed && e2.button === 0 && state.target) {
+          if ($d4ee10de306f2510$export$4282f70798064fe0(state.target, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2)) && state.pointerType != null) {
+            let clicked = !1, timeout = setTimeout(() => {
+              state.isPressed && state.target instanceof HTMLElement && (clicked ? cancel(e2) : ($7215afc6de606d6b$export$de79e2c695e052f3(state.target), state.target.click()));
+            }, 80);
+            addGlobalListener(e2.currentTarget, "click", () => clicked = !0, !0), state.disposables.push(() => clearTimeout(timeout));
+          } else cancel(e2);
+          state.isOverTarget = !1;
+        }
+      }, onPointerCancel = (e2) => {
+        cancel(e2);
+      };
+      pressProps2.onDragStart = (e2) => {
+        $d4ee10de306f2510$export$4282f70798064fe0(e2.currentTarget, $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent)) && cancel(e2);
+      };
+    }
+    return pressProps2;
+  }, [
+    addGlobalListener,
+    isDisabled,
+    preventFocusOnPress,
+    removeAllGlobalListeners,
+    allowTextSelectionOnPress,
+    cancel,
+    cancelOnPointerExit,
+    triggerPressEnd,
+    triggerPressStart,
+    triggerPressUp,
+    triggerClick,
+    triggerSyntheticClick
+  ]);
+  return useEffect(() => {
+    if (!domRef) return;
+    let ownerDocument = $431fbd86ca7dc216$export$b204af158042fbac(domRef.current);
+    if (!ownerDocument || !ownerDocument.head || ownerDocument.getElementById($f6c31cce2adf654f$var$STYLE_ID)) return;
+    let style = ownerDocument.createElement("style");
+    style.id = $f6c31cce2adf654f$var$STYLE_ID, style.textContent = `
+@layer {
+  [${$f6c31cce2adf654f$var$PRESSABLE_ATTRIBUTE}] {
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+}
+    `.trim(), ownerDocument.head.prepend(style);
+  }, [
+    domRef
+  ]), useEffect(() => {
+    let state = ref.current;
+    return () => {
+      var _state_target;
+      allowTextSelectionOnPress || $14c0b72509d70225$export$b0d6fa1ab32e3295((_state_target = state.target) !== null && _state_target !== void 0 ? _state_target : void 0);
+      for (let dispose of state.disposables) dispose();
+      state.disposables = [];
+    };
+  }, [
+    allowTextSelectionOnPress
+  ]), {
+    isPressed: isPressedProp || isPressed,
+    pressProps: $3ef42575df84b30b$export$9d1611c77c2fe928(domProps, pressProps, {
+      [$f6c31cce2adf654f$var$PRESSABLE_ATTRIBUTE]: !0
+    })
+  };
+}
+function $f6c31cce2adf654f$var$isHTMLAnchorLink(target) {
+  return target.tagName === "A" && target.hasAttribute("href");
+}
+function $f6c31cce2adf654f$var$isValidKeyboardEvent(event, currentTarget) {
+  let { key, code } = event, element = currentTarget, role = element.getAttribute("role");
+  return (key === "Enter" || key === " " || key === "Spacebar" || code === "Space") && !(element instanceof $431fbd86ca7dc216$export$f21a1ffae260145a(element).HTMLInputElement && !$f6c31cce2adf654f$var$isValidInputKey(element, key) || element instanceof $431fbd86ca7dc216$export$f21a1ffae260145a(element).HTMLTextAreaElement || element.isContentEditable) && // Links should only trigger with Enter key
+  !((role === "link" || !role && $f6c31cce2adf654f$var$isHTMLAnchorLink(element)) && key !== "Enter");
+}
+function $f6c31cce2adf654f$var$createEvent(target, e2) {
+  let clientX = e2.clientX, clientY = e2.clientY;
+  return {
+    currentTarget: target,
+    shiftKey: e2.shiftKey,
+    ctrlKey: e2.ctrlKey,
+    metaKey: e2.metaKey,
+    altKey: e2.altKey,
+    clientX,
+    clientY
+  };
+}
+function $f6c31cce2adf654f$var$shouldPreventDefaultUp(target) {
+  return target instanceof HTMLInputElement ? !1 : target instanceof HTMLButtonElement ? target.type !== "submit" && target.type !== "reset" : !$f6c31cce2adf654f$var$isHTMLAnchorLink(target);
+}
+function $f6c31cce2adf654f$var$shouldPreventDefaultKeyboard(target, key) {
+  return target instanceof HTMLInputElement ? !$f6c31cce2adf654f$var$isValidInputKey(target, key) : $f6c31cce2adf654f$var$shouldPreventDefaultUp(target);
+}
+var $f6c31cce2adf654f$var$nonTextInputTypes = /* @__PURE__ */ new Set([
+  "checkbox",
+  "radio",
+  "range",
+  "color",
+  "file",
+  "image",
+  "button",
+  "submit",
+  "reset"
+]);
+function $f6c31cce2adf654f$var$isValidInputKey(target, key) {
+  return target.type === "checkbox" || target.type === "radio" ? key === " " : $f6c31cce2adf654f$var$nonTextInputTypes.has(target.type);
+}
+
+// ../../node_modules/@react-aria/interactions/dist/useFocusVisible.mjs
+init_react();
+var $507fabe10e71c6fb$var$currentModality = null, $507fabe10e71c6fb$var$changeHandlers = /* @__PURE__ */ new Set(), $507fabe10e71c6fb$export$d90243b58daecda7 = /* @__PURE__ */ new Map(), $507fabe10e71c6fb$var$hasEventBeforeFocus = !1, $507fabe10e71c6fb$var$hasBlurredWindowRecently = !1;
+function $507fabe10e71c6fb$var$triggerChangeHandlers(modality, e2) {
+  for (let handler of $507fabe10e71c6fb$var$changeHandlers) handler(modality, e2);
+}
+function $507fabe10e71c6fb$var$isValidKey(e2) {
+  return !(e2.metaKey || !$c87311424ea30a05$export$9ac100e40613ea10() && e2.altKey || e2.ctrlKey || e2.key === "Control" || e2.key === "Shift" || e2.key === "Meta");
+}
+function $507fabe10e71c6fb$var$handleKeyboardEvent(e2) {
+  $507fabe10e71c6fb$var$hasEventBeforeFocus = !0, $507fabe10e71c6fb$var$isValidKey(e2) && ($507fabe10e71c6fb$var$currentModality = "keyboard", $507fabe10e71c6fb$var$triggerChangeHandlers("keyboard", e2));
+}
+function $507fabe10e71c6fb$var$handlePointerEvent(e2) {
+  $507fabe10e71c6fb$var$currentModality = "pointer", (e2.type === "mousedown" || e2.type === "pointerdown") && ($507fabe10e71c6fb$var$hasEventBeforeFocus = !0, $507fabe10e71c6fb$var$triggerChangeHandlers("pointer", e2));
+}
+function $507fabe10e71c6fb$var$handleClickEvent(e2) {
+  $6a7db85432448f7f$export$60278871457622de(e2) && ($507fabe10e71c6fb$var$hasEventBeforeFocus = !0, $507fabe10e71c6fb$var$currentModality = "virtual");
+}
+function $507fabe10e71c6fb$var$handleFocusEvent(e2) {
+  e2.target === window || e2.target === document || $8a9cb279dc87e130$export$fda7da73ab5d4c48 || !e2.isTrusted || (!$507fabe10e71c6fb$var$hasEventBeforeFocus && !$507fabe10e71c6fb$var$hasBlurredWindowRecently && ($507fabe10e71c6fb$var$currentModality = "virtual", $507fabe10e71c6fb$var$triggerChangeHandlers("virtual", e2)), $507fabe10e71c6fb$var$hasEventBeforeFocus = !1, $507fabe10e71c6fb$var$hasBlurredWindowRecently = !1);
+}
+function $507fabe10e71c6fb$var$handleWindowBlur() {
+  $8a9cb279dc87e130$export$fda7da73ab5d4c48 || ($507fabe10e71c6fb$var$hasEventBeforeFocus = !1, $507fabe10e71c6fb$var$hasBlurredWindowRecently = !0);
+}
+function $507fabe10e71c6fb$var$setupGlobalFocusEvents(element) {
+  if (typeof window > "u" || typeof document > "u" || $507fabe10e71c6fb$export$d90243b58daecda7.get($431fbd86ca7dc216$export$f21a1ffae260145a(element))) return;
+  let windowObject = $431fbd86ca7dc216$export$f21a1ffae260145a(element), documentObject = $431fbd86ca7dc216$export$b204af158042fbac(element), focus = windowObject.HTMLElement.prototype.focus;
+  windowObject.HTMLElement.prototype.focus = function() {
+    $507fabe10e71c6fb$var$hasEventBeforeFocus = !0, focus.apply(this, arguments);
+  }, documentObject.addEventListener("keydown", $507fabe10e71c6fb$var$handleKeyboardEvent, !0), documentObject.addEventListener("keyup", $507fabe10e71c6fb$var$handleKeyboardEvent, !0), documentObject.addEventListener("click", $507fabe10e71c6fb$var$handleClickEvent, !0), windowObject.addEventListener("focus", $507fabe10e71c6fb$var$handleFocusEvent, !0), windowObject.addEventListener("blur", $507fabe10e71c6fb$var$handleWindowBlur, !1), typeof PointerEvent < "u" && (documentObject.addEventListener("pointerdown", $507fabe10e71c6fb$var$handlePointerEvent, !0), documentObject.addEventListener("pointermove", $507fabe10e71c6fb$var$handlePointerEvent, !0), documentObject.addEventListener("pointerup", $507fabe10e71c6fb$var$handlePointerEvent, !0)), windowObject.addEventListener("beforeunload", () => {
+    $507fabe10e71c6fb$var$tearDownWindowFocusTracking(element);
+  }, {
+    once: !0
+  }), $507fabe10e71c6fb$export$d90243b58daecda7.set(windowObject, {
+    focus
+  });
+}
+var $507fabe10e71c6fb$var$tearDownWindowFocusTracking = (element, loadListener) => {
+  let windowObject = $431fbd86ca7dc216$export$f21a1ffae260145a(element), documentObject = $431fbd86ca7dc216$export$b204af158042fbac(element);
+  loadListener && documentObject.removeEventListener("DOMContentLoaded", loadListener), $507fabe10e71c6fb$export$d90243b58daecda7.has(windowObject) && (windowObject.HTMLElement.prototype.focus = $507fabe10e71c6fb$export$d90243b58daecda7.get(windowObject).focus, documentObject.removeEventListener("keydown", $507fabe10e71c6fb$var$handleKeyboardEvent, !0), documentObject.removeEventListener("keyup", $507fabe10e71c6fb$var$handleKeyboardEvent, !0), documentObject.removeEventListener("click", $507fabe10e71c6fb$var$handleClickEvent, !0), windowObject.removeEventListener("focus", $507fabe10e71c6fb$var$handleFocusEvent, !0), windowObject.removeEventListener("blur", $507fabe10e71c6fb$var$handleWindowBlur, !1), typeof PointerEvent < "u" && (documentObject.removeEventListener("pointerdown", $507fabe10e71c6fb$var$handlePointerEvent, !0), documentObject.removeEventListener("pointermove", $507fabe10e71c6fb$var$handlePointerEvent, !0), documentObject.removeEventListener("pointerup", $507fabe10e71c6fb$var$handlePointerEvent, !0)), $507fabe10e71c6fb$export$d90243b58daecda7.delete(windowObject));
+};
+function $507fabe10e71c6fb$export$2f1888112f558a7d(element) {
+  let documentObject = $431fbd86ca7dc216$export$b204af158042fbac(element), loadListener;
+  return documentObject.readyState !== "loading" ? $507fabe10e71c6fb$var$setupGlobalFocusEvents(element) : (loadListener = () => {
+    $507fabe10e71c6fb$var$setupGlobalFocusEvents(element);
+  }, documentObject.addEventListener("DOMContentLoaded", loadListener)), () => $507fabe10e71c6fb$var$tearDownWindowFocusTracking(element, loadListener);
+}
+typeof document < "u" && $507fabe10e71c6fb$export$2f1888112f558a7d();
+function $507fabe10e71c6fb$export$b9b3dfddab17db27() {
+  return $507fabe10e71c6fb$var$currentModality !== "pointer";
+}
+function $507fabe10e71c6fb$export$630ff653c5ada6a9() {
+  return $507fabe10e71c6fb$var$currentModality;
+}
+
+// ../../node_modules/@react-aria/interactions/dist/focusSafely.mjs
+function $3ad3f6e1647bc98d$export$80f3e147d781571c(element) {
+  let ownerDocument = $431fbd86ca7dc216$export$b204af158042fbac(element), activeElement = $d4ee10de306f2510$export$cd4e5573fbe2b576(ownerDocument);
+  if ($507fabe10e71c6fb$export$630ff653c5ada6a9() === "virtual") {
+    let lastFocusedElement = activeElement;
+    $bbed8b41f857bcc0$export$24490316f764c430(() => {
+      $d4ee10de306f2510$export$cd4e5573fbe2b576(ownerDocument) === lastFocusedElement && element.isConnected && $7215afc6de606d6b$export$de79e2c695e052f3(element);
+    });
+  } else $7215afc6de606d6b$export$de79e2c695e052f3(element);
+}
+
+// ../../node_modules/@react-aria/interactions/dist/useFocus.mjs
+init_react();
+function $a1ea59d68270f0dd$export$f8168d8dd8fd66e6(props) {
+  let { isDisabled, onFocus: onFocusProp, onBlur: onBlurProp, onFocusChange } = props, onBlur = useCallback((e2) => {
+    if (e2.target === e2.currentTarget)
+      return onBlurProp && onBlurProp(e2), onFocusChange && onFocusChange(!1), !0;
+  }, [
+    onBlurProp,
+    onFocusChange
+  ]), onSyntheticFocus = $8a9cb279dc87e130$export$715c682d09d639cc(onBlur), onFocus = useCallback((e2) => {
+    let ownerDocument = $431fbd86ca7dc216$export$b204af158042fbac(e2.target), activeElement = ownerDocument ? $d4ee10de306f2510$export$cd4e5573fbe2b576(ownerDocument) : $d4ee10de306f2510$export$cd4e5573fbe2b576();
+    e2.target === e2.currentTarget && activeElement === $d4ee10de306f2510$export$e58f029f0fbfdb29(e2.nativeEvent) && (onFocusProp && onFocusProp(e2), onFocusChange && onFocusChange(!0), onSyntheticFocus(e2));
+  }, [
+    onFocusChange,
+    onFocusProp,
+    onSyntheticFocus
+  ]);
+  return {
+    focusProps: {
+      onFocus: !isDisabled && (onFocusProp || onFocusChange || onBlurProp) ? onFocus : void 0,
+      onBlur: !isDisabled && (onBlurProp || onFocusChange) ? onBlur : void 0
+    }
+  };
+}
+
+// ../../node_modules/@react-aria/interactions/dist/createEventHandler.mjs
+function $93925083ecbb358c$export$48d1ea6320830260(handler) {
+  if (!handler) return;
+  let shouldStopPropagation = !0;
+  return (e2) => {
+    let event = {
+      ...e2,
+      preventDefault() {
+        e2.preventDefault();
+      },
+      isDefaultPrevented() {
+        return e2.isDefaultPrevented();
+      },
+      stopPropagation() {
+        shouldStopPropagation = !0;
+      },
+      continuePropagation() {
+        shouldStopPropagation = !1;
+      },
+      isPropagationStopped() {
+        return shouldStopPropagation;
+      }
+    };
+    handler(event), shouldStopPropagation && e2.stopPropagation();
+  };
+}
+
+// ../../node_modules/@react-aria/interactions/dist/useKeyboard.mjs
+function $46d819fcbaf35654$export$8f71654801c2f7cd(props) {
+  return {
+    keyboardProps: props.isDisabled ? {} : {
+      onKeyDown: $93925083ecbb358c$export$48d1ea6320830260(props.onKeyDown),
+      onKeyUp: $93925083ecbb358c$export$48d1ea6320830260(props.onKeyUp)
+    }
+  };
+}
+
+// ../../node_modules/@react-aria/interactions/dist/useFocusable.mjs
+init_react();
+var $f645667febf57a63$export$f9762fab77588ecb = react_default.createContext(null);
+function $f645667febf57a63$var$useFocusableContext(ref) {
+  let context = useContext($f645667febf57a63$export$f9762fab77588ecb) || {};
+  $e7801be82b4b2a53$export$4debdb1a3f0fa79e(context, ref);
+  let { ref: _2, ...otherProps } = context;
+  return otherProps;
+}
+var $f645667febf57a63$export$13f3202a3e5ddd5 = react_default.forwardRef(function(props, ref) {
+  let { children, ...otherProps } = props, objRef = $df56164dff5785e2$export$4338b53315abf666(ref), context = {
+    ...otherProps,
+    ref: objRef
+  };
+  return react_default.createElement($f645667febf57a63$export$f9762fab77588ecb.Provider, {
+    value: context
+  }, children);
+});
+function $f645667febf57a63$export$4c014de7c8940b4c(props, domRef) {
+  let { focusProps } = $a1ea59d68270f0dd$export$f8168d8dd8fd66e6(props), { keyboardProps } = $46d819fcbaf35654$export$8f71654801c2f7cd(props), interactions = $3ef42575df84b30b$export$9d1611c77c2fe928(focusProps, keyboardProps), domProps = $f645667febf57a63$var$useFocusableContext(domRef), interactionProps = props.isDisabled ? {} : domProps, autoFocusRef = useRef(props.autoFocus);
+  useEffect(() => {
+    autoFocusRef.current && domRef.current && $3ad3f6e1647bc98d$export$80f3e147d781571c(domRef.current), autoFocusRef.current = !1;
+  }, [
+    domRef
+  ]);
+  let tabIndex = props.excludeFromTabOrder ? -1 : 0;
+  return props.isDisabled && (tabIndex = void 0), {
+    focusableProps: $3ef42575df84b30b$export$9d1611c77c2fe928({
+      ...interactions,
+      tabIndex
+    }, interactionProps)
+  };
+}
+var $f645667febf57a63$export$35a3bebf7ef2d934 = forwardRef(({ children, ...props }, ref) => {
+  ref = $df56164dff5785e2$export$4338b53315abf666(ref);
+  let { focusableProps } = $f645667febf57a63$export$4c014de7c8940b4c(props, ref), child = react_default.Children.only(children);
+  useEffect(() => {
+  }, [
+    ref,
+    props.isDisabled
+  ]);
+  let childRef = parseInt(react_default.version, 10) < 19 ? child.ref : child.props.ref;
+  return react_default.cloneElement(child, {
+    ...$3ef42575df84b30b$export$9d1611c77c2fe928(focusableProps, child.props),
+    // @ts-ignore
+    ref: $5dc95899b306f630$export$c9058316764c140e(childRef, ref)
+  });
+});
+
+// ../../node_modules/@react-aria/interactions/dist/Pressable.mjs
+init_react();
+var $3b117e43dc0ca95d$export$27c701ed9e449e99 = react_default.forwardRef(({ children, ...props }, ref) => {
+  ref = $df56164dff5785e2$export$4338b53315abf666(ref);
+  let { pressProps } = $f6c31cce2adf654f$export$45712eceda6fad21({
+    ...props,
+    ref
+  }), { focusableProps } = $f645667febf57a63$export$4c014de7c8940b4c(props, ref), child = react_default.Children.only(children);
+  useEffect(() => {
+  }, [
+    ref,
+    props.isDisabled
+  ]);
+  let childRef = parseInt(react_default.version, 10) < 19 ? child.ref : child.props.ref;
+  return react_default.cloneElement(child, {
+    ...$3ef42575df84b30b$export$9d1611c77c2fe928(pressProps, focusableProps, child.props),
+    // @ts-ignore
+    ref: $5dc95899b306f630$export$c9058316764c140e(childRef, ref)
+  });
+});
+
+// ../../node_modules/@react-aria/interactions/dist/PressResponder.mjs
+init_react();
+var $f1ab8c75478c6f73$export$3351871ee4b288b8 = react_default.forwardRef(({ children, ...props }, ref) => {
+  let isRegistered = useRef(!1), prevContext = useContext($ae1eeba8b9eafd08$export$5165eccb35aaadb5);
+  ref = $df56164dff5785e2$export$4338b53315abf666(ref || prevContext?.ref);
+  let context = $3ef42575df84b30b$export$9d1611c77c2fe928(prevContext || {}, {
+    ...props,
+    ref,
+    register() {
+      isRegistered.current = !0, prevContext && prevContext.register();
+    }
+  });
+  return $e7801be82b4b2a53$export$4debdb1a3f0fa79e(prevContext, ref), useEffect(() => {
+    isRegistered.current || (isRegistered.current = !0);
+  }, []), react_default.createElement($ae1eeba8b9eafd08$export$5165eccb35aaadb5.Provider, {
+    value: context
+  }, children);
+});
+
+// ../../node_modules/@react-aria/interactions/dist/useFocusWithin.mjs
+init_react();
+
+// ../../node_modules/@react-aria/interactions/dist/useHover.mjs
+init_react();
+var $6179b936705e76d3$var$globalIgnoreEmulatedMouseEvents = !1, $6179b936705e76d3$var$hoverCount = 0;
+function $6179b936705e76d3$var$setGlobalIgnoreEmulatedMouseEvents() {
+  $6179b936705e76d3$var$globalIgnoreEmulatedMouseEvents = !0, setTimeout(() => {
+    $6179b936705e76d3$var$globalIgnoreEmulatedMouseEvents = !1;
+  }, 50);
+}
+function $6179b936705e76d3$var$handleGlobalPointerEvent(e2) {
+  e2.pointerType === "touch" && $6179b936705e76d3$var$setGlobalIgnoreEmulatedMouseEvents();
+}
+function $6179b936705e76d3$var$setupGlobalTouchEvents() {
+  if (!(typeof document > "u"))
+    return $6179b936705e76d3$var$hoverCount === 0 && typeof PointerEvent < "u" && document.addEventListener("pointerup", $6179b936705e76d3$var$handleGlobalPointerEvent), $6179b936705e76d3$var$hoverCount++, () => {
+      $6179b936705e76d3$var$hoverCount--, !($6179b936705e76d3$var$hoverCount > 0) && typeof PointerEvent < "u" && document.removeEventListener("pointerup", $6179b936705e76d3$var$handleGlobalPointerEvent);
+    };
+}
+function $6179b936705e76d3$export$ae780daf29e6d456(props) {
+  let { onHoverStart, onHoverChange, onHoverEnd, isDisabled } = props, [isHovered, setHovered] = useState(!1), state = useRef({
+    isHovered: !1,
+    ignoreEmulatedMouseEvents: !1,
+    pointerType: "",
+    target: null
+  }).current;
+  useEffect($6179b936705e76d3$var$setupGlobalTouchEvents, []);
+  let { addGlobalListener, removeAllGlobalListeners } = $03deb23ff14920c4$export$4eaf04e54aa8eed6(), { hoverProps, triggerHoverEnd } = useMemo(() => {
+    let triggerHoverStart = (event, pointerType) => {
+      if (state.pointerType = pointerType, isDisabled || pointerType === "touch" || state.isHovered || !event.currentTarget.contains(event.target)) return;
+      state.isHovered = !0;
+      let target = event.currentTarget;
+      state.target = target, addGlobalListener($431fbd86ca7dc216$export$b204af158042fbac(event.target), "pointerover", (e2) => {
+        state.isHovered && state.target && !$d4ee10de306f2510$export$4282f70798064fe0(state.target, e2.target) && triggerHoverEnd2(e2, e2.pointerType);
+      }, {
+        capture: !0
+      }), onHoverStart && onHoverStart({
+        type: "hoverstart",
+        target,
+        pointerType
+      }), onHoverChange && onHoverChange(!0), setHovered(!0);
+    }, triggerHoverEnd2 = (event, pointerType) => {
+      let target = state.target;
+      state.pointerType = "", state.target = null, !(pointerType === "touch" || !state.isHovered || !target) && (state.isHovered = !1, removeAllGlobalListeners(), onHoverEnd && onHoverEnd({
+        type: "hoverend",
+        target,
+        pointerType
+      }), onHoverChange && onHoverChange(!1), setHovered(!1));
+    }, hoverProps2 = {};
+    return typeof PointerEvent < "u" && (hoverProps2.onPointerEnter = (e2) => {
+      $6179b936705e76d3$var$globalIgnoreEmulatedMouseEvents && e2.pointerType === "mouse" || triggerHoverStart(e2, e2.pointerType);
+    }, hoverProps2.onPointerLeave = (e2) => {
+      !isDisabled && e2.currentTarget.contains(e2.target) && triggerHoverEnd2(e2, e2.pointerType);
+    }), {
+      hoverProps: hoverProps2,
+      triggerHoverEnd: triggerHoverEnd2
+    };
+  }, [
+    onHoverStart,
+    onHoverChange,
+    onHoverEnd,
+    isDisabled,
+    state,
+    addGlobalListener,
+    removeAllGlobalListeners
+  ]);
+  return useEffect(() => {
+    isDisabled && triggerHoverEnd({
+      currentTarget: state.target
+    }, state.pointerType);
+  }, [
+    isDisabled
+  ]), {
+    hoverProps,
+    isHovered
+  };
+}
+
+// ../../node_modules/@react-aria/interactions/dist/useInteractOutside.mjs
+init_react();
+
+// ../../node_modules/@react-aria/interactions/dist/useMove.mjs
+init_react();
+
+// ../../node_modules/@react-aria/interactions/dist/useScrollWheel.mjs
+init_react();
+
+// ../../node_modules/@react-aria/interactions/dist/useLongPress.mjs
+init_react();
+
+// ../../node_modules/react-aria-components/dist/utils.mjs
+init_react();
+var $64fa3d84918910a7$export$c62b8e45d58ddad9 = Symbol("default");
+function $64fa3d84918910a7$export$2881499e37b75b9a({ values, children }) {
+  for (let [Context2, value] of values)
+    children = react_default.createElement(Context2.Provider, {
+      value
+    }, children);
+  return children;
+}
+function $64fa3d84918910a7$export$4d86445c2cf5e3(props) {
+  let { className, style, children, defaultClassName, defaultChildren, defaultStyle, values } = props;
+  return useMemo(() => {
+    let computedClassName, computedStyle, computedChildren;
+    return typeof className == "function" ? computedClassName = className({
+      ...values,
+      defaultClassName
+    }) : computedClassName = className, typeof style == "function" ? computedStyle = style({
+      ...values,
+      defaultStyle: defaultStyle || {}
+    }) : computedStyle = style, typeof children == "function" ? computedChildren = children({
+      ...values,
+      defaultChildren
+    }) : children == null ? computedChildren = defaultChildren : computedChildren = children, {
+      className: computedClassName ?? defaultClassName,
+      style: computedStyle || defaultStyle ? {
+        ...defaultStyle,
+        ...computedStyle
+      } : void 0,
+      children: computedChildren ?? defaultChildren,
+      "data-rac": ""
+    };
+  }, [
+    className,
+    style,
+    children,
+    defaultClassName,
+    defaultChildren,
+    defaultStyle,
+    values
+  ]);
+}
+function $64fa3d84918910a7$export$fabf2dc03a41866e(context, slot) {
+  let ctx = useContext(context);
+  if (slot === null)
+    return null;
+  if (ctx && typeof ctx == "object" && "slots" in ctx && ctx.slots) {
+    let slotKey = slot || $64fa3d84918910a7$export$c62b8e45d58ddad9;
+    if (!ctx.slots[slotKey]) {
+      let availableSlots = new Intl.ListFormat().format(Object.keys(ctx.slots).map((p2) => `"${p2}"`)), errorMessage = slot ? `Invalid slot "${slot}".` : "A slot prop is required.";
+      throw new Error(`${errorMessage} Valid slot names are ${availableSlots}.`);
+    }
+    return ctx.slots[slotKey];
+  }
+  return ctx;
+}
+function $64fa3d84918910a7$export$29f1550f4b0d4415(props, ref, context) {
+  let ctx = $64fa3d84918910a7$export$fabf2dc03a41866e(context, props.slot) || {}, { ref: contextRef, ...contextProps } = ctx, mergedRef = $df56164dff5785e2$export$4338b53315abf666(useMemo(() => $5dc95899b306f630$export$c9058316764c140e(ref, contextRef), [
+    ref,
+    contextRef
+  ])), mergedProps = $3ef42575df84b30b$export$9d1611c77c2fe928(contextProps, props);
+  return "style" in contextProps && contextProps.style && "style" in props && props.style && (typeof contextProps.style == "function" || typeof props.style == "function" ? mergedProps.style = (renderProps) => {
+    let contextStyle = typeof contextProps.style == "function" ? contextProps.style(renderProps) : contextProps.style, defaultStyle = {
+      ...renderProps.defaultStyle,
+      ...contextStyle
+    }, style = typeof props.style == "function" ? props.style({
+      ...renderProps,
+      defaultStyle
+    }) : props.style;
+    return {
+      ...defaultStyle,
+      ...style
+    };
+  } : mergedProps.style = {
+    ...contextProps.style,
+    ...props.style
+  }), [
+    mergedProps,
+    mergedRef
+  ];
+}
+
+// ../../node_modules/react-aria-components/dist/OverlayArrow.mjs
+init_react();
+var $44f671af83e7d9e0$export$2de4954e8ae13b9f = createContext({
+  placement: "bottom"
+}), $44f671af83e7d9e0$export$746d02f47f4d381 = forwardRef(function(props, ref) {
+  [props, ref] = $64fa3d84918910a7$export$29f1550f4b0d4415(props, ref, $44f671af83e7d9e0$export$2de4954e8ae13b9f);
+  let placement = props.placement, style = {
+    position: "absolute",
+    transform: placement === "top" || placement === "bottom" ? "translateX(-50%)" : "translateY(-50%)"
+  };
+  placement != null && (style[placement] = "100%");
+  let renderProps = $64fa3d84918910a7$export$4d86445c2cf5e3({
+    ...props,
+    defaultClassName: "react-aria-OverlayArrow",
+    values: {
+      placement
+    }
+  });
+  renderProps.style && Object.keys(renderProps.style).forEach((key) => renderProps.style[key] === void 0 && delete renderProps.style[key]);
+  let DOMProps = $65484d02dcb7eb3e$export$457c3d6518dd4c6f(props);
+  return react_default.createElement("div", {
+    ...DOMProps,
+    ...renderProps,
+    style: {
+      ...style,
+      ...renderProps.style
+    },
+    ref,
+    "data-placement": placement
+  });
+});
+
+// ../../node_modules/@react-aria/tooltip/dist/useTooltip.mjs
+function $326e436e94273fe1$export$1c4b08e0eca38426(props, state) {
+  let domProps = $65484d02dcb7eb3e$export$457c3d6518dd4c6f(props, {
+    labelable: !0
+  }), { hoverProps } = $6179b936705e76d3$export$ae780daf29e6d456({
+    onHoverStart: () => state?.open(!0),
+    onHoverEnd: () => state?.close()
+  });
+  return {
+    tooltipProps: $3ef42575df84b30b$export$9d1611c77c2fe928(domProps, hoverProps, {
+      role: "tooltip"
+    })
+  };
+}
+
+// ../../node_modules/@react-aria/tooltip/dist/useTooltipTrigger.mjs
+init_react();
+function $4e1b34546679e357$export$a6da6c504e4bba8b(props, state, ref) {
+  let { isDisabled, trigger } = props, tooltipId = $bdb11010cef70236$export$f680877a34711e37(), isHovered = useRef(!1), isFocused = useRef(!1), handleShow = () => {
+    (isHovered.current || isFocused.current) && state.open(isFocused.current);
+  }, handleHide = (immediate) => {
+    !isHovered.current && !isFocused.current && state.close(immediate);
+  };
+  useEffect(() => {
+    let onKeyDown = (e2) => {
+      ref && ref.current && e2.key === "Escape" && (e2.stopPropagation(), state.close(!0));
+    };
+    if (state.isOpen)
+      return document.addEventListener("keydown", onKeyDown, !0), () => {
+        document.removeEventListener("keydown", onKeyDown, !0);
+      };
+  }, [
+    ref,
+    state
+  ]);
+  let onHoverStart = () => {
+    trigger !== "focus" && ($507fabe10e71c6fb$export$630ff653c5ada6a9() === "pointer" ? isHovered.current = !0 : isHovered.current = !1, handleShow());
+  }, onHoverEnd = () => {
+    trigger !== "focus" && (isFocused.current = !1, isHovered.current = !1, handleHide());
+  }, onPressStart = () => {
+    isFocused.current = !1, isHovered.current = !1, handleHide(!0);
+  }, onFocus = () => {
+    $507fabe10e71c6fb$export$b9b3dfddab17db27() && (isFocused.current = !0, handleShow());
+  }, onBlur = () => {
+    isFocused.current = !1, isHovered.current = !1, handleHide(!0);
+  }, { hoverProps } = $6179b936705e76d3$export$ae780daf29e6d456({
+    isDisabled,
+    onHoverStart,
+    onHoverEnd
+  }), { focusableProps } = $f645667febf57a63$export$4c014de7c8940b4c({
+    isDisabled,
+    onFocus,
+    onBlur
+  }, ref);
+  return {
+    triggerProps: {
+      "aria-describedby": state.isOpen ? tooltipId : void 0,
+      ...$3ef42575df84b30b$export$9d1611c77c2fe928(focusableProps, hoverProps, {
+        onPointerDown: onPressStart,
+        onKeyDown: onPressStart
+      }),
+      tabIndex: void 0
+    },
+    tooltipProps: {
+      id: tooltipId
+    }
+  };
+}
+
+// ../../node_modules/@react-aria/overlays/dist/calculatePosition.mjs
+var $edcf132a9284368a$var$AXIS = {
+  top: "top",
+  bottom: "top",
+  left: "left",
+  right: "left"
+}, $edcf132a9284368a$var$FLIPPED_DIRECTION = {
+  top: "bottom",
+  bottom: "top",
+  left: "right",
+  right: "left"
+}, $edcf132a9284368a$var$CROSS_AXIS = {
+  top: "left",
+  left: "top"
+}, $edcf132a9284368a$var$AXIS_SIZE = {
+  top: "height",
+  left: "width"
+}, $edcf132a9284368a$var$TOTAL_SIZE = {
+  width: "totalWidth",
+  height: "totalHeight"
+}, $edcf132a9284368a$var$PARSED_PLACEMENT_CACHE = {}, $edcf132a9284368a$var$visualViewport = typeof document < "u" ? window.visualViewport : null;
+function $edcf132a9284368a$var$getContainerDimensions(containerNode) {
+  let width = 0, height = 0, totalWidth = 0, totalHeight = 0, top = 0, left = 0, scroll2 = {};
+  var _visualViewport_scale;
+  let isPinchZoomedIn = ((_visualViewport_scale = $edcf132a9284368a$var$visualViewport?.scale) !== null && _visualViewport_scale !== void 0 ? _visualViewport_scale : 1) > 1;
+  if (containerNode.tagName === "BODY") {
+    let documentElement = document.documentElement;
+    totalWidth = documentElement.clientWidth, totalHeight = documentElement.clientHeight;
+    var _visualViewport_width;
+    width = (_visualViewport_width = $edcf132a9284368a$var$visualViewport?.width) !== null && _visualViewport_width !== void 0 ? _visualViewport_width : totalWidth;
+    var _visualViewport_height;
+    height = (_visualViewport_height = $edcf132a9284368a$var$visualViewport?.height) !== null && _visualViewport_height !== void 0 ? _visualViewport_height : totalHeight, scroll2.top = documentElement.scrollTop || containerNode.scrollTop, scroll2.left = documentElement.scrollLeft || containerNode.scrollLeft, $edcf132a9284368a$var$visualViewport && (top = $edcf132a9284368a$var$visualViewport.offsetTop, left = $edcf132a9284368a$var$visualViewport.offsetLeft);
+  } else
+    ({ width, height, top, left } = $edcf132a9284368a$var$getOffset(containerNode, !1)), scroll2.top = containerNode.scrollTop, scroll2.left = containerNode.scrollLeft, totalWidth = width, totalHeight = height;
+  if ($c87311424ea30a05$export$78551043582a6a98() && (containerNode.tagName === "BODY" || containerNode.tagName === "HTML") && isPinchZoomedIn) {
+    scroll2.top = 0, scroll2.left = 0;
+    var _visualViewport_pageTop;
+    top = (_visualViewport_pageTop = $edcf132a9284368a$var$visualViewport?.pageTop) !== null && _visualViewport_pageTop !== void 0 ? _visualViewport_pageTop : 0;
+    var _visualViewport_pageLeft;
+    left = (_visualViewport_pageLeft = $edcf132a9284368a$var$visualViewport?.pageLeft) !== null && _visualViewport_pageLeft !== void 0 ? _visualViewport_pageLeft : 0;
+  }
+  return {
+    width,
+    height,
+    totalWidth,
+    totalHeight,
+    scroll: scroll2,
+    top,
+    left
+  };
+}
+function $edcf132a9284368a$var$getScroll(node) {
+  return {
+    top: node.scrollTop,
+    left: node.scrollLeft,
+    width: node.scrollWidth,
+    height: node.scrollHeight
+  };
+}
+function $edcf132a9284368a$var$getDelta(axis, offset2, size, boundaryDimensions, containerDimensions, padding, containerOffsetWithBoundary) {
+  var _containerDimensions_scroll_axis;
+  let containerScroll = (_containerDimensions_scroll_axis = containerDimensions.scroll[axis]) !== null && _containerDimensions_scroll_axis !== void 0 ? _containerDimensions_scroll_axis : 0, boundarySize = boundaryDimensions[$edcf132a9284368a$var$AXIS_SIZE[axis]], boundaryStartEdge = boundaryDimensions.scroll[$edcf132a9284368a$var$AXIS[axis]] + padding, boundaryEndEdge = boundarySize + boundaryDimensions.scroll[$edcf132a9284368a$var$AXIS[axis]] - padding, startEdgeOffset = offset2 - containerScroll + containerOffsetWithBoundary[axis] - boundaryDimensions[$edcf132a9284368a$var$AXIS[axis]], endEdgeOffset = offset2 - containerScroll + size + containerOffsetWithBoundary[axis] - boundaryDimensions[$edcf132a9284368a$var$AXIS[axis]];
+  return startEdgeOffset < boundaryStartEdge ? boundaryStartEdge - startEdgeOffset : endEdgeOffset > boundaryEndEdge ? Math.max(boundaryEndEdge - endEdgeOffset, boundaryStartEdge - startEdgeOffset) : 0;
+}
+function $edcf132a9284368a$var$getMargins(node) {
+  let style = window.getComputedStyle(node);
+  return {
+    top: parseInt(style.marginTop, 10) || 0,
+    bottom: parseInt(style.marginBottom, 10) || 0,
+    left: parseInt(style.marginLeft, 10) || 0,
+    right: parseInt(style.marginRight, 10) || 0
+  };
+}
+function $edcf132a9284368a$var$parsePlacement(input) {
+  if ($edcf132a9284368a$var$PARSED_PLACEMENT_CACHE[input]) return $edcf132a9284368a$var$PARSED_PLACEMENT_CACHE[input];
+  let [placement, crossPlacement] = input.split(" "), axis = $edcf132a9284368a$var$AXIS[placement] || "right", crossAxis = $edcf132a9284368a$var$CROSS_AXIS[axis];
+  $edcf132a9284368a$var$AXIS[crossPlacement] || (crossPlacement = "center");
+  let size = $edcf132a9284368a$var$AXIS_SIZE[axis], crossSize = $edcf132a9284368a$var$AXIS_SIZE[crossAxis];
+  return $edcf132a9284368a$var$PARSED_PLACEMENT_CACHE[input] = {
+    placement,
+    crossPlacement,
+    axis,
+    crossAxis,
+    size,
+    crossSize
+  }, $edcf132a9284368a$var$PARSED_PLACEMENT_CACHE[input];
+}
+function $edcf132a9284368a$var$computePosition(childOffset, boundaryDimensions, overlaySize, placementInfo, offset2, crossOffset, containerOffsetWithBoundary, isContainerPositioned, arrowSize, arrowBoundaryOffset) {
+  let { placement, crossPlacement, axis, crossAxis, size, crossSize } = placementInfo, position = {};
+  var _childOffset_crossAxis;
+  position[crossAxis] = (_childOffset_crossAxis = childOffset[crossAxis]) !== null && _childOffset_crossAxis !== void 0 ? _childOffset_crossAxis : 0;
+  var _childOffset_crossSize, _overlaySize_crossSize, _childOffset_crossSize1, _overlaySize_crossSize1;
+  crossPlacement === "center" ? position[crossAxis] += (((_childOffset_crossSize = childOffset[crossSize]) !== null && _childOffset_crossSize !== void 0 ? _childOffset_crossSize : 0) - ((_overlaySize_crossSize = overlaySize[crossSize]) !== null && _overlaySize_crossSize !== void 0 ? _overlaySize_crossSize : 0)) / 2 : crossPlacement !== crossAxis && (position[crossAxis] += ((_childOffset_crossSize1 = childOffset[crossSize]) !== null && _childOffset_crossSize1 !== void 0 ? _childOffset_crossSize1 : 0) - ((_overlaySize_crossSize1 = overlaySize[crossSize]) !== null && _overlaySize_crossSize1 !== void 0 ? _overlaySize_crossSize1 : 0)), position[crossAxis] += crossOffset;
+  let minPosition = childOffset[crossAxis] - overlaySize[crossSize] + arrowSize + arrowBoundaryOffset, maxPosition = childOffset[crossAxis] + childOffset[crossSize] - arrowSize - arrowBoundaryOffset;
+  if (position[crossAxis] = $9446cca9a3875146$export$7d15b64cf5a3a4c4(position[crossAxis], minPosition, maxPosition), placement === axis) {
+    let containerHeight = isContainerPositioned ? containerOffsetWithBoundary[size] : boundaryDimensions[$edcf132a9284368a$var$TOTAL_SIZE[size]];
+    position[$edcf132a9284368a$var$FLIPPED_DIRECTION[axis]] = Math.floor(containerHeight - childOffset[axis] + offset2);
+  } else position[axis] = Math.floor(childOffset[axis] + childOffset[size] + offset2);
+  return position;
+}
+function $edcf132a9284368a$var$getMaxHeight(position, boundaryDimensions, containerOffsetWithBoundary, isContainerPositioned, margins, padding, overlayHeight, heightGrowthDirection) {
+  let containerHeight = isContainerPositioned ? containerOffsetWithBoundary.height : boundaryDimensions[$edcf132a9284368a$var$TOTAL_SIZE.height];
+  var _position_bottom;
+  let overlayTop = position.top != null ? containerOffsetWithBoundary.top + position.top : containerOffsetWithBoundary.top + (containerHeight - ((_position_bottom = position.bottom) !== null && _position_bottom !== void 0 ? _position_bottom : 0) - overlayHeight);
+  var _boundaryDimensions_scroll_top, _margins_top, _margins_bottom, _boundaryDimensions_scroll_top1, _margins_top1, _margins_bottom1;
+  let maxHeight = heightGrowthDirection !== "top" ? (
+    // We want the distance between the top of the overlay to the bottom of the boundary
+    Math.max(0, boundaryDimensions.height + boundaryDimensions.top + ((_boundaryDimensions_scroll_top = boundaryDimensions.scroll.top) !== null && _boundaryDimensions_scroll_top !== void 0 ? _boundaryDimensions_scroll_top : 0) - overlayTop - (((_margins_top = margins.top) !== null && _margins_top !== void 0 ? _margins_top : 0) + ((_margins_bottom = margins.bottom) !== null && _margins_bottom !== void 0 ? _margins_bottom : 0) + padding))
+  ) : Math.max(0, overlayTop + overlayHeight - (boundaryDimensions.top + ((_boundaryDimensions_scroll_top1 = boundaryDimensions.scroll.top) !== null && _boundaryDimensions_scroll_top1 !== void 0 ? _boundaryDimensions_scroll_top1 : 0)) - (((_margins_top1 = margins.top) !== null && _margins_top1 !== void 0 ? _margins_top1 : 0) + ((_margins_bottom1 = margins.bottom) !== null && _margins_bottom1 !== void 0 ? _margins_bottom1 : 0) + padding));
+  return Math.min(boundaryDimensions.height - padding * 2, maxHeight);
+}
+function $edcf132a9284368a$var$getAvailableSpace(boundaryDimensions, containerOffsetWithBoundary, childOffset, margins, padding, placementInfo) {
+  let { placement, axis, size } = placementInfo;
+  var _boundaryDimensions_scroll_axis, _margins_axis;
+  if (placement === axis) return Math.max(0, childOffset[axis] - boundaryDimensions[axis] - ((_boundaryDimensions_scroll_axis = boundaryDimensions.scroll[axis]) !== null && _boundaryDimensions_scroll_axis !== void 0 ? _boundaryDimensions_scroll_axis : 0) + containerOffsetWithBoundary[axis] - ((_margins_axis = margins[axis]) !== null && _margins_axis !== void 0 ? _margins_axis : 0) - margins[$edcf132a9284368a$var$FLIPPED_DIRECTION[axis]] - padding);
+  var _margins_axis1;
+  return Math.max(0, boundaryDimensions[size] + boundaryDimensions[axis] + boundaryDimensions.scroll[axis] - containerOffsetWithBoundary[axis] - childOffset[axis] - childOffset[size] - ((_margins_axis1 = margins[axis]) !== null && _margins_axis1 !== void 0 ? _margins_axis1 : 0) - margins[$edcf132a9284368a$var$FLIPPED_DIRECTION[axis]] - padding);
+}
+function $edcf132a9284368a$export$6839422d1f33cee9(placementInput, childOffset, overlaySize, scrollSize, margins, padding, flip2, boundaryDimensions, containerDimensions, containerOffsetWithBoundary, offset2, crossOffset, isContainerPositioned, userSetMaxHeight, arrowSize, arrowBoundaryOffset) {
+  let placementInfo = $edcf132a9284368a$var$parsePlacement(placementInput), { size, crossAxis, crossSize, placement, crossPlacement } = placementInfo, position = $edcf132a9284368a$var$computePosition(childOffset, boundaryDimensions, overlaySize, placementInfo, offset2, crossOffset, containerOffsetWithBoundary, isContainerPositioned, arrowSize, arrowBoundaryOffset), normalizedOffset = offset2, space = $edcf132a9284368a$var$getAvailableSpace(boundaryDimensions, containerOffsetWithBoundary, childOffset, margins, padding + offset2, placementInfo);
+  if (flip2 && scrollSize[size] > space) {
+    let flippedPlacementInfo = $edcf132a9284368a$var$parsePlacement(`${$edcf132a9284368a$var$FLIPPED_DIRECTION[placement]} ${crossPlacement}`), flippedPosition = $edcf132a9284368a$var$computePosition(childOffset, boundaryDimensions, overlaySize, flippedPlacementInfo, offset2, crossOffset, containerOffsetWithBoundary, isContainerPositioned, arrowSize, arrowBoundaryOffset);
+    $edcf132a9284368a$var$getAvailableSpace(boundaryDimensions, containerOffsetWithBoundary, childOffset, margins, padding + offset2, flippedPlacementInfo) > space && (placementInfo = flippedPlacementInfo, position = flippedPosition, normalizedOffset = offset2);
+  }
+  let heightGrowthDirection = "bottom";
+  placementInfo.axis === "top" ? placementInfo.placement === "top" ? heightGrowthDirection = "top" : placementInfo.placement === "bottom" && (heightGrowthDirection = "bottom") : placementInfo.crossAxis === "top" && (placementInfo.crossPlacement === "top" ? heightGrowthDirection = "bottom" : placementInfo.crossPlacement === "bottom" && (heightGrowthDirection = "top"));
+  let delta = $edcf132a9284368a$var$getDelta(crossAxis, position[crossAxis], overlaySize[crossSize], boundaryDimensions, containerDimensions, padding, containerOffsetWithBoundary);
+  position[crossAxis] += delta;
+  let maxHeight = $edcf132a9284368a$var$getMaxHeight(position, boundaryDimensions, containerOffsetWithBoundary, isContainerPositioned, margins, padding, overlaySize.height, heightGrowthDirection);
+  userSetMaxHeight && userSetMaxHeight < maxHeight && (maxHeight = userSetMaxHeight), overlaySize.height = Math.min(overlaySize.height, maxHeight), position = $edcf132a9284368a$var$computePosition(childOffset, boundaryDimensions, overlaySize, placementInfo, normalizedOffset, crossOffset, containerOffsetWithBoundary, isContainerPositioned, arrowSize, arrowBoundaryOffset), delta = $edcf132a9284368a$var$getDelta(crossAxis, position[crossAxis], overlaySize[crossSize], boundaryDimensions, containerDimensions, padding, containerOffsetWithBoundary), position[crossAxis] += delta;
+  let arrowPosition = {}, origin = childOffset[crossAxis] - position[crossAxis] - margins[$edcf132a9284368a$var$AXIS[crossAxis]], preferredArrowPosition = origin + 0.5 * childOffset[crossSize], arrowMinPosition = arrowSize / 2 + arrowBoundaryOffset;
+  var _margins_left, _margins_right, _margins_top, _margins_bottom;
+  let overlayMargin = $edcf132a9284368a$var$AXIS[crossAxis] === "left" ? ((_margins_left = margins.left) !== null && _margins_left !== void 0 ? _margins_left : 0) + ((_margins_right = margins.right) !== null && _margins_right !== void 0 ? _margins_right : 0) : ((_margins_top = margins.top) !== null && _margins_top !== void 0 ? _margins_top : 0) + ((_margins_bottom = margins.bottom) !== null && _margins_bottom !== void 0 ? _margins_bottom : 0), arrowMaxPosition = overlaySize[crossSize] - overlayMargin - arrowSize / 2 - arrowBoundaryOffset, arrowOverlappingChildMinEdge = childOffset[crossAxis] + arrowSize / 2 - (position[crossAxis] + margins[$edcf132a9284368a$var$AXIS[crossAxis]]), arrowOverlappingChildMaxEdge = childOffset[crossAxis] + childOffset[crossSize] - arrowSize / 2 - (position[crossAxis] + margins[$edcf132a9284368a$var$AXIS[crossAxis]]), arrowPositionOverlappingChild = $9446cca9a3875146$export$7d15b64cf5a3a4c4(preferredArrowPosition, arrowOverlappingChildMinEdge, arrowOverlappingChildMaxEdge);
+  arrowPosition[crossAxis] = $9446cca9a3875146$export$7d15b64cf5a3a4c4(arrowPositionOverlappingChild, arrowMinPosition, arrowMaxPosition), { placement, crossPlacement } = placementInfo, arrowSize ? origin = arrowPosition[crossAxis] : crossPlacement === "right" ? origin += childOffset[crossSize] : crossPlacement === "center" && (origin += childOffset[crossSize] / 2);
+  let crossOrigin = placement === "left" || placement === "top" ? overlaySize[size] : 0, triggerAnchorPoint = {
+    x: placement === "top" || placement === "bottom" ? origin : crossOrigin,
+    y: placement === "left" || placement === "right" ? origin : crossOrigin
+  };
+  return {
+    position,
+    maxHeight,
+    arrowOffsetLeft: arrowPosition.left,
+    arrowOffsetTop: arrowPosition.top,
+    placement,
+    triggerAnchorPoint
+  };
+}
+function $edcf132a9284368a$export$b3ceb0cbf1056d98(opts) {
+  let { placement, targetNode, overlayNode, scrollNode, padding, shouldFlip, boundaryElement, offset: offset2, crossOffset, maxHeight, arrowSize = 0, arrowBoundaryOffset = 0 } = opts, container = overlayNode instanceof HTMLElement ? $edcf132a9284368a$var$getContainingBlock(overlayNode) : document.documentElement, isViewportContainer = container === document.documentElement, containerPositionStyle = window.getComputedStyle(container).position, isContainerPositioned = !!containerPositionStyle && containerPositionStyle !== "static", childOffset = isViewportContainer ? $edcf132a9284368a$var$getOffset(targetNode, !1) : $edcf132a9284368a$var$getPosition(targetNode, container, !1);
+  if (!isViewportContainer) {
+    let { marginTop, marginLeft } = window.getComputedStyle(targetNode);
+    childOffset.top += parseInt(marginTop, 10) || 0, childOffset.left += parseInt(marginLeft, 10) || 0;
+  }
+  let overlaySize = $edcf132a9284368a$var$getOffset(overlayNode, !0), margins = $edcf132a9284368a$var$getMargins(overlayNode);
+  var _margins_left, _margins_right;
+  overlaySize.width += ((_margins_left = margins.left) !== null && _margins_left !== void 0 ? _margins_left : 0) + ((_margins_right = margins.right) !== null && _margins_right !== void 0 ? _margins_right : 0);
+  var _margins_top, _margins_bottom;
+  overlaySize.height += ((_margins_top = margins.top) !== null && _margins_top !== void 0 ? _margins_top : 0) + ((_margins_bottom = margins.bottom) !== null && _margins_bottom !== void 0 ? _margins_bottom : 0);
+  let scrollSize = $edcf132a9284368a$var$getScroll(scrollNode), boundaryDimensions = $edcf132a9284368a$var$getContainerDimensions(boundaryElement), containerDimensions = $edcf132a9284368a$var$getContainerDimensions(container), containerOffsetWithBoundary = boundaryElement.tagName === "BODY" ? $edcf132a9284368a$var$getOffset(container, !1) : $edcf132a9284368a$var$getPosition(container, boundaryElement, !1);
+  return container.tagName === "HTML" && boundaryElement.tagName === "BODY" && (containerDimensions.scroll.top = 0, containerDimensions.scroll.left = 0), $edcf132a9284368a$export$6839422d1f33cee9(placement, childOffset, overlaySize, scrollSize, margins, padding, shouldFlip, boundaryDimensions, containerDimensions, containerOffsetWithBoundary, offset2, crossOffset, isContainerPositioned, maxHeight, arrowSize, arrowBoundaryOffset);
+}
+function $edcf132a9284368a$export$4b834cebd9e5cebe(node, ignoreScale) {
+  let { top, left, width, height } = node.getBoundingClientRect();
+  return ignoreScale && node instanceof node.ownerDocument.defaultView.HTMLElement && (width = node.offsetWidth, height = node.offsetHeight), {
+    top,
+    left,
+    width,
+    height
+  };
+}
+function $edcf132a9284368a$var$getOffset(node, ignoreScale) {
+  let { top, left, width, height } = $edcf132a9284368a$export$4b834cebd9e5cebe(node, ignoreScale), { scrollTop, scrollLeft, clientTop, clientLeft } = document.documentElement;
+  return {
+    top: top + scrollTop - clientTop,
+    left: left + scrollLeft - clientLeft,
+    width,
+    height
+  };
+}
+function $edcf132a9284368a$var$getPosition(node, parent, ignoreScale) {
+  let style = window.getComputedStyle(node), offset2;
+  if (style.position === "fixed") offset2 = $edcf132a9284368a$export$4b834cebd9e5cebe(node, ignoreScale);
+  else {
+    offset2 = $edcf132a9284368a$var$getOffset(node, ignoreScale);
+    let parentOffset = $edcf132a9284368a$var$getOffset(parent, ignoreScale), parentStyle = window.getComputedStyle(parent);
+    parentOffset.top += (parseInt(parentStyle.borderTopWidth, 10) || 0) - parent.scrollTop, parentOffset.left += (parseInt(parentStyle.borderLeftWidth, 10) || 0) - parent.scrollLeft, offset2.top -= parentOffset.top, offset2.left -= parentOffset.left;
+  }
+  return offset2.top -= parseInt(style.marginTop, 10) || 0, offset2.left -= parseInt(style.marginLeft, 10) || 0, offset2;
+}
+function $edcf132a9284368a$var$getContainingBlock(node) {
+  let offsetParent = node.offsetParent;
+  if (offsetParent && offsetParent === document.body && window.getComputedStyle(offsetParent).position === "static" && !$edcf132a9284368a$var$isContainingBlock(offsetParent) && (offsetParent = document.documentElement), offsetParent == null)
+    for (offsetParent = node.parentElement; offsetParent && !$edcf132a9284368a$var$isContainingBlock(offsetParent); ) offsetParent = offsetParent.parentElement;
+  return offsetParent || document.documentElement;
+}
+function $edcf132a9284368a$var$isContainingBlock(node) {
+  let style = window.getComputedStyle(node);
+  return style.transform !== "none" || /transform|perspective/.test(style.willChange) || style.filter !== "none" || style.contain === "paint" || "backdropFilter" in style && style.backdropFilter !== "none" || "WebkitBackdropFilter" in style && style.WebkitBackdropFilter !== "none";
+}
+
+// ../../node_modules/@react-aria/overlays/dist/useCloseOnScroll.mjs
+init_react();
+var $dd149f63282afbbf$export$f6211563215e3b37 = /* @__PURE__ */ new WeakMap();
+function $dd149f63282afbbf$export$18fc8428861184da(opts) {
+  let { triggerRef, isOpen, onClose } = opts;
+  useEffect(() => {
+    if (!isOpen || onClose === null) return;
+    let onScroll = (e2) => {
+      let target = e2.target;
+      if (!triggerRef.current || target instanceof Node && !target.contains(triggerRef.current) || e2.target instanceof HTMLInputElement || e2.target instanceof HTMLTextAreaElement) return;
+      let onCloseHandler = onClose || $dd149f63282afbbf$export$f6211563215e3b37.get(triggerRef.current);
+      onCloseHandler && onCloseHandler();
+    };
+    return window.addEventListener("scroll", onScroll, !0), () => {
+      window.removeEventListener("scroll", onScroll, !0);
+    };
+  }, [
+    isOpen,
+    onClose,
+    triggerRef
+  ]);
+}
+
+// ../../node_modules/@react-aria/overlays/dist/useOverlayPosition.mjs
+init_react();
+
+// ../../node_modules/@react-aria/i18n/dist/utils.mjs
+var $148a7a147e38ea7f$var$RTL_SCRIPTS = /* @__PURE__ */ new Set([
+  "Arab",
+  "Syrc",
+  "Samr",
+  "Mand",
+  "Thaa",
+  "Mend",
+  "Nkoo",
+  "Adlm",
+  "Rohg",
+  "Hebr"
+]), $148a7a147e38ea7f$var$RTL_LANGS = /* @__PURE__ */ new Set([
+  "ae",
+  "ar",
+  "arc",
+  "bcc",
+  "bqi",
+  "ckb",
+  "dv",
+  "fa",
+  "glk",
+  "he",
+  "ku",
+  "mzn",
+  "nqo",
+  "pnb",
+  "ps",
+  "sd",
+  "ug",
+  "ur",
+  "yi"
+]);
+function $148a7a147e38ea7f$export$702d680b21cbd764(localeString) {
+  if (Intl.Locale) {
+    let locale = new Intl.Locale(localeString).maximize(), textInfo = typeof locale.getTextInfo == "function" ? locale.getTextInfo() : locale.textInfo;
+    if (textInfo) return textInfo.direction === "rtl";
+    if (locale.script) return $148a7a147e38ea7f$var$RTL_SCRIPTS.has(locale.script);
+  }
+  let lang = localeString.split("-")[0];
+  return $148a7a147e38ea7f$var$RTL_LANGS.has(lang);
+}
+
+// ../../node_modules/@react-aria/i18n/dist/useDefaultLocale.mjs
+init_react();
+var $1e5a04cdaf7d1af8$var$localeSymbol = Symbol.for("react-aria.i18n.locale");
+function $1e5a04cdaf7d1af8$export$f09106e7c6677ec5() {
+  let locale = typeof window < "u" && window[$1e5a04cdaf7d1af8$var$localeSymbol] || typeof navigator < "u" && (navigator.language || navigator.userLanguage) || "en-US";
+  try {
+    Intl.DateTimeFormat.supportedLocalesOf([
+      locale
+    ]);
+  } catch {
+    locale = "en-US";
+  }
+  return {
+    locale,
+    direction: $148a7a147e38ea7f$export$702d680b21cbd764(locale) ? "rtl" : "ltr"
+  };
+}
+var $1e5a04cdaf7d1af8$var$currentLocale = $1e5a04cdaf7d1af8$export$f09106e7c6677ec5(), $1e5a04cdaf7d1af8$var$listeners = /* @__PURE__ */ new Set();
+function $1e5a04cdaf7d1af8$var$updateLocale() {
+  $1e5a04cdaf7d1af8$var$currentLocale = $1e5a04cdaf7d1af8$export$f09106e7c6677ec5();
+  for (let listener of $1e5a04cdaf7d1af8$var$listeners) listener($1e5a04cdaf7d1af8$var$currentLocale);
+}
+function $1e5a04cdaf7d1af8$export$188ec29ebc2bdc3a() {
+  let isSSR = $b5e257d569688ac6$export$535bd6ca7f90a273(), [defaultLocale2, setDefaultLocale] = useState($1e5a04cdaf7d1af8$var$currentLocale);
+  return useEffect(() => ($1e5a04cdaf7d1af8$var$listeners.size === 0 && window.addEventListener("languagechange", $1e5a04cdaf7d1af8$var$updateLocale), $1e5a04cdaf7d1af8$var$listeners.add(setDefaultLocale), () => {
+    $1e5a04cdaf7d1af8$var$listeners.delete(setDefaultLocale), $1e5a04cdaf7d1af8$var$listeners.size === 0 && window.removeEventListener("languagechange", $1e5a04cdaf7d1af8$var$updateLocale);
+  }), []), isSSR ? {
+    locale: "en-US",
+    direction: "ltr"
+  } : defaultLocale2;
+}
+
+// ../../node_modules/@react-aria/i18n/dist/context.mjs
+init_react();
+var $18f2051aff69b9bf$var$I18nContext = react_default.createContext(null);
+function $18f2051aff69b9bf$export$43bb16f9c6d9e3f7() {
+  let defaultLocale2 = $1e5a04cdaf7d1af8$export$188ec29ebc2bdc3a();
+  return useContext($18f2051aff69b9bf$var$I18nContext) || defaultLocale2;
+}
+
+// ../../node_modules/tslib/tslib.es6.mjs
+var extendStatics = function(d2, b2) {
+  return extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d3, b3) {
+    d3.__proto__ = b3;
+  } || function(d3, b3) {
+    for (var p2 in b3) Object.prototype.hasOwnProperty.call(b3, p2) && (d3[p2] = b3[p2]);
+  }, extendStatics(d2, b2);
+};
+function __extends(d2, b2) {
+  if (typeof b2 != "function" && b2 !== null)
+    throw new TypeError("Class extends value " + String(b2) + " is not a constructor or null");
+  extendStatics(d2, b2);
+  function __() {
+    this.constructor = d2;
+  }
+  d2.prototype = b2 === null ? Object.create(b2) : (__.prototype = b2.prototype, new __());
+}
+var __assign = function() {
+  return __assign = Object.assign || function(t2) {
+    for (var s2, i2 = 1, n3 = arguments.length; i2 < n3; i2++) {
+      s2 = arguments[i2];
+      for (var p2 in s2) Object.prototype.hasOwnProperty.call(s2, p2) && (t2[p2] = s2[p2]);
+    }
+    return t2;
+  }, __assign.apply(this, arguments);
+};
+function __rest(s2, e2) {
+  var t2 = {};
+  for (var p2 in s2) Object.prototype.hasOwnProperty.call(s2, p2) && e2.indexOf(p2) < 0 && (t2[p2] = s2[p2]);
+  if (s2 != null && typeof Object.getOwnPropertySymbols == "function")
+    for (var i2 = 0, p2 = Object.getOwnPropertySymbols(s2); i2 < p2.length; i2++)
+      e2.indexOf(p2[i2]) < 0 && Object.prototype.propertyIsEnumerable.call(s2, p2[i2]) && (t2[p2[i2]] = s2[p2[i2]]);
+  return t2;
+}
+function __spreadArray(to, from, pack) {
+  if (pack || arguments.length === 2) for (var i2 = 0, l3 = from.length, ar; i2 < l3; i2++)
+    (ar || !(i2 in from)) && (ar || (ar = Array.prototype.slice.call(from, 0, i2)), ar[i2] = from[i2]);
+  return to.concat(ar || Array.prototype.slice.call(from));
+}
+
+// ../../node_modules/@formatjs/fast-memoize/lib/index.js
+function memoize(fn, options2) {
+  var cache = options2 && options2.cache ? options2.cache : cacheDefault, serializer = options2 && options2.serializer ? options2.serializer : serializerDefault, strategy = options2 && options2.strategy ? options2.strategy : strategyDefault;
+  return strategy(fn, {
+    cache,
+    serializer
+  });
+}
+function isPrimitive(value) {
+  return value == null || typeof value == "number" || typeof value == "boolean";
+}
+function monadic(fn, cache, serializer, arg) {
+  var cacheKey = isPrimitive(arg) ? arg : serializer(arg), computedValue = cache.get(cacheKey);
+  return typeof computedValue > "u" && (computedValue = fn.call(this, arg), cache.set(cacheKey, computedValue)), computedValue;
+}
+function variadic(fn, cache, serializer) {
+  var args = Array.prototype.slice.call(arguments, 3), cacheKey = serializer(args), computedValue = cache.get(cacheKey);
+  return typeof computedValue > "u" && (computedValue = fn.apply(this, args), cache.set(cacheKey, computedValue)), computedValue;
+}
+function assemble(fn, context, strategy, cache, serialize) {
+  return strategy.bind(context, fn, cache, serialize);
+}
+function strategyDefault(fn, options2) {
+  var strategy = fn.length === 1 ? monadic : variadic;
+  return assemble(fn, this, strategy, options2.cache.create(), options2.serializer);
+}
+function strategyVariadic(fn, options2) {
+  return assemble(fn, this, variadic, options2.cache.create(), options2.serializer);
+}
+function strategyMonadic(fn, options2) {
+  return assemble(fn, this, monadic, options2.cache.create(), options2.serializer);
+}
+var serializerDefault = function() {
+  return JSON.stringify(arguments);
+}, ObjectWithoutPrototypeCache = (
+  /** @class */
+  (function() {
+    function ObjectWithoutPrototypeCache2() {
+      this.cache = /* @__PURE__ */ Object.create(null);
+    }
+    return ObjectWithoutPrototypeCache2.prototype.get = function(key) {
+      return this.cache[key];
+    }, ObjectWithoutPrototypeCache2.prototype.set = function(key, value) {
+      this.cache[key] = value;
+    }, ObjectWithoutPrototypeCache2;
+  })()
+), cacheDefault = {
+  create: function() {
+    return new ObjectWithoutPrototypeCache();
+  }
+}, strategies = {
+  variadic: strategyVariadic,
+  monadic: strategyMonadic
+};
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/error.js
+var ErrorKind;
+(function(ErrorKind2) {
+  ErrorKind2[ErrorKind2.EXPECT_ARGUMENT_CLOSING_BRACE = 1] = "EXPECT_ARGUMENT_CLOSING_BRACE", ErrorKind2[ErrorKind2.EMPTY_ARGUMENT = 2] = "EMPTY_ARGUMENT", ErrorKind2[ErrorKind2.MALFORMED_ARGUMENT = 3] = "MALFORMED_ARGUMENT", ErrorKind2[ErrorKind2.EXPECT_ARGUMENT_TYPE = 4] = "EXPECT_ARGUMENT_TYPE", ErrorKind2[ErrorKind2.INVALID_ARGUMENT_TYPE = 5] = "INVALID_ARGUMENT_TYPE", ErrorKind2[ErrorKind2.EXPECT_ARGUMENT_STYLE = 6] = "EXPECT_ARGUMENT_STYLE", ErrorKind2[ErrorKind2.INVALID_NUMBER_SKELETON = 7] = "INVALID_NUMBER_SKELETON", ErrorKind2[ErrorKind2.INVALID_DATE_TIME_SKELETON = 8] = "INVALID_DATE_TIME_SKELETON", ErrorKind2[ErrorKind2.EXPECT_NUMBER_SKELETON = 9] = "EXPECT_NUMBER_SKELETON", ErrorKind2[ErrorKind2.EXPECT_DATE_TIME_SKELETON = 10] = "EXPECT_DATE_TIME_SKELETON", ErrorKind2[ErrorKind2.UNCLOSED_QUOTE_IN_ARGUMENT_STYLE = 11] = "UNCLOSED_QUOTE_IN_ARGUMENT_STYLE", ErrorKind2[ErrorKind2.EXPECT_SELECT_ARGUMENT_OPTIONS = 12] = "EXPECT_SELECT_ARGUMENT_OPTIONS", ErrorKind2[ErrorKind2.EXPECT_PLURAL_ARGUMENT_OFFSET_VALUE = 13] = "EXPECT_PLURAL_ARGUMENT_OFFSET_VALUE", ErrorKind2[ErrorKind2.INVALID_PLURAL_ARGUMENT_OFFSET_VALUE = 14] = "INVALID_PLURAL_ARGUMENT_OFFSET_VALUE", ErrorKind2[ErrorKind2.EXPECT_SELECT_ARGUMENT_SELECTOR = 15] = "EXPECT_SELECT_ARGUMENT_SELECTOR", ErrorKind2[ErrorKind2.EXPECT_PLURAL_ARGUMENT_SELECTOR = 16] = "EXPECT_PLURAL_ARGUMENT_SELECTOR", ErrorKind2[ErrorKind2.EXPECT_SELECT_ARGUMENT_SELECTOR_FRAGMENT = 17] = "EXPECT_SELECT_ARGUMENT_SELECTOR_FRAGMENT", ErrorKind2[ErrorKind2.EXPECT_PLURAL_ARGUMENT_SELECTOR_FRAGMENT = 18] = "EXPECT_PLURAL_ARGUMENT_SELECTOR_FRAGMENT", ErrorKind2[ErrorKind2.INVALID_PLURAL_ARGUMENT_SELECTOR = 19] = "INVALID_PLURAL_ARGUMENT_SELECTOR", ErrorKind2[ErrorKind2.DUPLICATE_PLURAL_ARGUMENT_SELECTOR = 20] = "DUPLICATE_PLURAL_ARGUMENT_SELECTOR", ErrorKind2[ErrorKind2.DUPLICATE_SELECT_ARGUMENT_SELECTOR = 21] = "DUPLICATE_SELECT_ARGUMENT_SELECTOR", ErrorKind2[ErrorKind2.MISSING_OTHER_CLAUSE = 22] = "MISSING_OTHER_CLAUSE", ErrorKind2[ErrorKind2.INVALID_TAG = 23] = "INVALID_TAG", ErrorKind2[ErrorKind2.INVALID_TAG_NAME = 25] = "INVALID_TAG_NAME", ErrorKind2[ErrorKind2.UNMATCHED_CLOSING_TAG = 26] = "UNMATCHED_CLOSING_TAG", ErrorKind2[ErrorKind2.UNCLOSED_TAG = 27] = "UNCLOSED_TAG";
+})(ErrorKind || (ErrorKind = {}));
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/types.js
+var TYPE;
+(function(TYPE2) {
+  TYPE2[TYPE2.literal = 0] = "literal", TYPE2[TYPE2.argument = 1] = "argument", TYPE2[TYPE2.number = 2] = "number", TYPE2[TYPE2.date = 3] = "date", TYPE2[TYPE2.time = 4] = "time", TYPE2[TYPE2.select = 5] = "select", TYPE2[TYPE2.plural = 6] = "plural", TYPE2[TYPE2.pound = 7] = "pound", TYPE2[TYPE2.tag = 8] = "tag";
+})(TYPE || (TYPE = {}));
+var SKELETON_TYPE;
+(function(SKELETON_TYPE2) {
+  SKELETON_TYPE2[SKELETON_TYPE2.number = 0] = "number", SKELETON_TYPE2[SKELETON_TYPE2.dateTime = 1] = "dateTime";
+})(SKELETON_TYPE || (SKELETON_TYPE = {}));
+function isLiteralElement(el) {
+  return el.type === TYPE.literal;
+}
+function isArgumentElement(el) {
+  return el.type === TYPE.argument;
+}
+function isNumberElement(el) {
+  return el.type === TYPE.number;
+}
+function isDateElement(el) {
+  return el.type === TYPE.date;
+}
+function isTimeElement(el) {
+  return el.type === TYPE.time;
+}
+function isSelectElement(el) {
+  return el.type === TYPE.select;
+}
+function isPluralElement(el) {
+  return el.type === TYPE.plural;
+}
+function isPoundElement(el) {
+  return el.type === TYPE.pound;
+}
+function isTagElement(el) {
+  return el.type === TYPE.tag;
+}
+function isNumberSkeleton(el) {
+  return !!(el && typeof el == "object" && el.type === SKELETON_TYPE.number);
+}
+function isDateTimeSkeleton(el) {
+  return !!(el && typeof el == "object" && el.type === SKELETON_TYPE.dateTime);
+}
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/regex.generated.js
+var SPACE_SEPARATOR_REGEX = /[ \xA0\u1680\u2000-\u200A\u202F\u205F\u3000]/;
+
+// ../../node_modules/@formatjs/icu-skeleton-parser/lib/date-time.js
+var DATE_TIME_REGEX = /(?:[Eec]{1,6}|G{1,5}|[Qq]{1,5}|(?:[yYur]+|U{1,5})|[ML]{1,5}|d{1,2}|D{1,3}|F{1}|[abB]{1,5}|[hkHK]{1,2}|w{1,2}|W{1}|m{1,2}|s{1,2}|[zZOvVxX]{1,4})(?=([^']*'[^']*')*[^']*$)/g;
+function parseDateTimeSkeleton(skeleton) {
+  var result = {};
+  return skeleton.replace(DATE_TIME_REGEX, function(match) {
+    var len = match.length;
+    switch (match[0]) {
+      // Era
+      case "G":
+        result.era = len === 4 ? "long" : len === 5 ? "narrow" : "short";
+        break;
+      // Year
+      case "y":
+        result.year = len === 2 ? "2-digit" : "numeric";
+        break;
+      case "Y":
+      case "u":
+      case "U":
+      case "r":
+        throw new RangeError("`Y/u/U/r` (year) patterns are not supported, use `y` instead");
+      // Quarter
+      case "q":
+      case "Q":
+        throw new RangeError("`q/Q` (quarter) patterns are not supported");
+      // Month
+      case "M":
+      case "L":
+        result.month = ["numeric", "2-digit", "short", "long", "narrow"][len - 1];
+        break;
+      // Week
+      case "w":
+      case "W":
+        throw new RangeError("`w/W` (week) patterns are not supported");
+      case "d":
+        result.day = ["numeric", "2-digit"][len - 1];
+        break;
+      case "D":
+      case "F":
+      case "g":
+        throw new RangeError("`D/F/g` (day) patterns are not supported, use `d` instead");
+      // Weekday
+      case "E":
+        result.weekday = len === 4 ? "long" : len === 5 ? "narrow" : "short";
+        break;
+      case "e":
+        if (len < 4)
+          throw new RangeError("`e..eee` (weekday) patterns are not supported");
+        result.weekday = ["short", "long", "narrow", "short"][len - 4];
+        break;
+      case "c":
+        if (len < 4)
+          throw new RangeError("`c..ccc` (weekday) patterns are not supported");
+        result.weekday = ["short", "long", "narrow", "short"][len - 4];
+        break;
+      // Period
+      case "a":
+        result.hour12 = !0;
+        break;
+      case "b":
+      // am, pm, noon, midnight
+      case "B":
+        throw new RangeError("`b/B` (period) patterns are not supported, use `a` instead");
+      // Hour
+      case "h":
+        result.hourCycle = "h12", result.hour = ["numeric", "2-digit"][len - 1];
+        break;
+      case "H":
+        result.hourCycle = "h23", result.hour = ["numeric", "2-digit"][len - 1];
+        break;
+      case "K":
+        result.hourCycle = "h11", result.hour = ["numeric", "2-digit"][len - 1];
+        break;
+      case "k":
+        result.hourCycle = "h24", result.hour = ["numeric", "2-digit"][len - 1];
+        break;
+      case "j":
+      case "J":
+      case "C":
+        throw new RangeError("`j/J/C` (hour) patterns are not supported, use `h/H/K/k` instead");
+      // Minute
+      case "m":
+        result.minute = ["numeric", "2-digit"][len - 1];
+        break;
+      // Second
+      case "s":
+        result.second = ["numeric", "2-digit"][len - 1];
+        break;
+      case "S":
+      case "A":
+        throw new RangeError("`S/A` (second) patterns are not supported, use `s` instead");
+      // Zone
+      case "z":
+        result.timeZoneName = len < 4 ? "short" : "long";
+        break;
+      case "Z":
+      // 1..3, 4, 5: The ISO8601 varios formats
+      case "O":
+      // 1, 4: milliseconds in day short, long
+      case "v":
+      // 1, 4: generic non-location format
+      case "V":
+      // 1, 2, 3, 4: time zone ID or city
+      case "X":
+      // 1, 2, 3, 4: The ISO8601 varios formats
+      case "x":
+        throw new RangeError("`Z/O/v/V/X/x` (timeZone) patterns are not supported, use `z` instead");
+    }
+    return "";
+  }), result;
+}
+
+// ../../node_modules/@formatjs/icu-skeleton-parser/lib/regex.generated.js
+var WHITE_SPACE_REGEX = /[\t-\r \x85\u200E\u200F\u2028\u2029]/i;
+
+// ../../node_modules/@formatjs/icu-skeleton-parser/lib/number.js
+function parseNumberSkeletonFromString(skeleton) {
+  if (skeleton.length === 0)
+    throw new Error("Number skeleton cannot be empty");
+  for (var stringTokens = skeleton.split(WHITE_SPACE_REGEX).filter(function(x2) {
+    return x2.length > 0;
+  }), tokens2 = [], _i = 0, stringTokens_1 = stringTokens; _i < stringTokens_1.length; _i++) {
+    var stringToken = stringTokens_1[_i], stemAndOptions = stringToken.split("/");
+    if (stemAndOptions.length === 0)
+      throw new Error("Invalid number skeleton");
+    for (var stem = stemAndOptions[0], options2 = stemAndOptions.slice(1), _a2 = 0, options_1 = options2; _a2 < options_1.length; _a2++) {
+      var option = options_1[_a2];
+      if (option.length === 0)
+        throw new Error("Invalid number skeleton");
+    }
+    tokens2.push({ stem, options: options2 });
+  }
+  return tokens2;
+}
+function icuUnitToEcma(unit) {
+  return unit.replace(/^(.*?)-/, "");
+}
+var FRACTION_PRECISION_REGEX = /^\.(?:(0+)(\*)?|(#+)|(0+)(#+))$/g, SIGNIFICANT_PRECISION_REGEX = /^(@+)?(\+|#+)?[rs]?$/g, INTEGER_WIDTH_REGEX = /(\*)(0+)|(#+)(0+)|(0+)/g, CONCISE_INTEGER_WIDTH_REGEX = /^(0+)$/;
+function parseSignificantPrecision(str) {
+  var result = {};
+  return str[str.length - 1] === "r" ? result.roundingPriority = "morePrecision" : str[str.length - 1] === "s" && (result.roundingPriority = "lessPrecision"), str.replace(SIGNIFICANT_PRECISION_REGEX, function(_2, g1, g2) {
+    return typeof g2 != "string" ? (result.minimumSignificantDigits = g1.length, result.maximumSignificantDigits = g1.length) : g2 === "+" ? result.minimumSignificantDigits = g1.length : g1[0] === "#" ? result.maximumSignificantDigits = g1.length : (result.minimumSignificantDigits = g1.length, result.maximumSignificantDigits = g1.length + (typeof g2 == "string" ? g2.length : 0)), "";
+  }), result;
+}
+function parseSign(str) {
+  switch (str) {
+    case "sign-auto":
+      return {
+        signDisplay: "auto"
+      };
+    case "sign-accounting":
+    case "()":
+      return {
+        currencySign: "accounting"
+      };
+    case "sign-always":
+    case "+!":
+      return {
+        signDisplay: "always"
+      };
+    case "sign-accounting-always":
+    case "()!":
+      return {
+        signDisplay: "always",
+        currencySign: "accounting"
+      };
+    case "sign-except-zero":
+    case "+?":
+      return {
+        signDisplay: "exceptZero"
+      };
+    case "sign-accounting-except-zero":
+    case "()?":
+      return {
+        signDisplay: "exceptZero",
+        currencySign: "accounting"
+      };
+    case "sign-never":
+    case "+_":
+      return {
+        signDisplay: "never"
+      };
+  }
+}
+function parseConciseScientificAndEngineeringStem(stem) {
+  var result;
+  if (stem[0] === "E" && stem[1] === "E" ? (result = {
+    notation: "engineering"
+  }, stem = stem.slice(2)) : stem[0] === "E" && (result = {
+    notation: "scientific"
+  }, stem = stem.slice(1)), result) {
+    var signDisplay = stem.slice(0, 2);
+    if (signDisplay === "+!" ? (result.signDisplay = "always", stem = stem.slice(2)) : signDisplay === "+?" && (result.signDisplay = "exceptZero", stem = stem.slice(2)), !CONCISE_INTEGER_WIDTH_REGEX.test(stem))
+      throw new Error("Malformed concise eng/scientific notation");
+    result.minimumIntegerDigits = stem.length;
+  }
+  return result;
+}
+function parseNotationOptions(opt) {
+  var result = {}, signOpts = parseSign(opt);
+  return signOpts || result;
+}
+function parseNumberSkeleton(tokens2) {
+  for (var result = {}, _i = 0, tokens_1 = tokens2; _i < tokens_1.length; _i++) {
+    var token = tokens_1[_i];
+    switch (token.stem) {
+      case "percent":
+      case "%":
+        result.style = "percent";
+        continue;
+      case "%x100":
+        result.style = "percent", result.scale = 100;
+        continue;
+      case "currency":
+        result.style = "currency", result.currency = token.options[0];
+        continue;
+      case "group-off":
+      case ",_":
+        result.useGrouping = !1;
+        continue;
+      case "precision-integer":
+      case ".":
+        result.maximumFractionDigits = 0;
+        continue;
+      case "measure-unit":
+      case "unit":
+        result.style = "unit", result.unit = icuUnitToEcma(token.options[0]);
+        continue;
+      case "compact-short":
+      case "K":
+        result.notation = "compact", result.compactDisplay = "short";
+        continue;
+      case "compact-long":
+      case "KK":
+        result.notation = "compact", result.compactDisplay = "long";
+        continue;
+      case "scientific":
+        result = __assign(__assign(__assign({}, result), { notation: "scientific" }), token.options.reduce(function(all, opt2) {
+          return __assign(__assign({}, all), parseNotationOptions(opt2));
+        }, {}));
+        continue;
+      case "engineering":
+        result = __assign(__assign(__assign({}, result), { notation: "engineering" }), token.options.reduce(function(all, opt2) {
+          return __assign(__assign({}, all), parseNotationOptions(opt2));
+        }, {}));
+        continue;
+      case "notation-simple":
+        result.notation = "standard";
+        continue;
+      // https://github.com/unicode-org/icu/blob/master/icu4c/source/i18n/unicode/unumberformatter.h
+      case "unit-width-narrow":
+        result.currencyDisplay = "narrowSymbol", result.unitDisplay = "narrow";
+        continue;
+      case "unit-width-short":
+        result.currencyDisplay = "code", result.unitDisplay = "short";
+        continue;
+      case "unit-width-full-name":
+        result.currencyDisplay = "name", result.unitDisplay = "long";
+        continue;
+      case "unit-width-iso-code":
+        result.currencyDisplay = "symbol";
+        continue;
+      case "scale":
+        result.scale = parseFloat(token.options[0]);
+        continue;
+      case "rounding-mode-floor":
+        result.roundingMode = "floor";
+        continue;
+      case "rounding-mode-ceiling":
+        result.roundingMode = "ceil";
+        continue;
+      case "rounding-mode-down":
+        result.roundingMode = "trunc";
+        continue;
+      case "rounding-mode-up":
+        result.roundingMode = "expand";
+        continue;
+      case "rounding-mode-half-even":
+        result.roundingMode = "halfEven";
+        continue;
+      case "rounding-mode-half-down":
+        result.roundingMode = "halfTrunc";
+        continue;
+      case "rounding-mode-half-up":
+        result.roundingMode = "halfExpand";
+        continue;
+      // https://unicode-org.github.io/icu/userguide/format_parse/numbers/skeletons.html#integer-width
+      case "integer-width":
+        if (token.options.length > 1)
+          throw new RangeError("integer-width stems only accept a single optional option");
+        token.options[0].replace(INTEGER_WIDTH_REGEX, function(_2, g1, g2, g3, g4, g5) {
+          if (g1)
+            result.minimumIntegerDigits = g2.length;
+          else {
+            if (g3 && g4)
+              throw new Error("We currently do not support maximum integer digits");
+            if (g5)
+              throw new Error("We currently do not support exact integer digits");
+          }
+          return "";
+        });
+        continue;
+    }
+    if (CONCISE_INTEGER_WIDTH_REGEX.test(token.stem)) {
+      result.minimumIntegerDigits = token.stem.length;
+      continue;
+    }
+    if (FRACTION_PRECISION_REGEX.test(token.stem)) {
+      if (token.options.length > 1)
+        throw new RangeError("Fraction-precision stems only accept a single optional option");
+      token.stem.replace(FRACTION_PRECISION_REGEX, function(_2, g1, g2, g3, g4, g5) {
+        return g2 === "*" ? result.minimumFractionDigits = g1.length : g3 && g3[0] === "#" ? result.maximumFractionDigits = g3.length : g4 && g5 ? (result.minimumFractionDigits = g4.length, result.maximumFractionDigits = g4.length + g5.length) : (result.minimumFractionDigits = g1.length, result.maximumFractionDigits = g1.length), "";
+      });
+      var opt = token.options[0];
+      opt === "w" ? result = __assign(__assign({}, result), { trailingZeroDisplay: "stripIfInteger" }) : opt && (result = __assign(__assign({}, result), parseSignificantPrecision(opt)));
+      continue;
+    }
+    if (SIGNIFICANT_PRECISION_REGEX.test(token.stem)) {
+      result = __assign(__assign({}, result), parseSignificantPrecision(token.stem));
+      continue;
+    }
+    var signOpts = parseSign(token.stem);
+    signOpts && (result = __assign(__assign({}, result), signOpts));
+    var conciseScientificAndEngineeringOpts = parseConciseScientificAndEngineeringStem(token.stem);
+    conciseScientificAndEngineeringOpts && (result = __assign(__assign({}, result), conciseScientificAndEngineeringOpts));
+  }
+  return result;
+}
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/time-data.generated.js
+var timeData = {
+  "001": [
+    "H",
+    "h"
+  ],
+  419: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  AC: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  AD: [
+    "H",
+    "hB"
+  ],
+  AE: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  AF: [
+    "H",
+    "hb",
+    "hB",
+    "h"
+  ],
+  AG: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  AI: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  AL: [
+    "h",
+    "H",
+    "hB"
+  ],
+  AM: [
+    "H",
+    "hB"
+  ],
+  AO: [
+    "H",
+    "hB"
+  ],
+  AR: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  AS: [
+    "h",
+    "H"
+  ],
+  AT: [
+    "H",
+    "hB"
+  ],
+  AU: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  AW: [
+    "H",
+    "hB"
+  ],
+  AX: [
+    "H"
+  ],
+  AZ: [
+    "H",
+    "hB",
+    "h"
+  ],
+  BA: [
+    "H",
+    "hB",
+    "h"
+  ],
+  BB: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  BD: [
+    "h",
+    "hB",
+    "H"
+  ],
+  BE: [
+    "H",
+    "hB"
+  ],
+  BF: [
+    "H",
+    "hB"
+  ],
+  BG: [
+    "H",
+    "hB",
+    "h"
+  ],
+  BH: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  BI: [
+    "H",
+    "h"
+  ],
+  BJ: [
+    "H",
+    "hB"
+  ],
+  BL: [
+    "H",
+    "hB"
+  ],
+  BM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  BN: [
+    "hb",
+    "hB",
+    "h",
+    "H"
+  ],
+  BO: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  BQ: [
+    "H"
+  ],
+  BR: [
+    "H",
+    "hB"
+  ],
+  BS: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  BT: [
+    "h",
+    "H"
+  ],
+  BW: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  BY: [
+    "H",
+    "h"
+  ],
+  BZ: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  CA: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  CC: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  CD: [
+    "hB",
+    "H"
+  ],
+  CF: [
+    "H",
+    "h",
+    "hB"
+  ],
+  CG: [
+    "H",
+    "hB"
+  ],
+  CH: [
+    "H",
+    "hB",
+    "h"
+  ],
+  CI: [
+    "H",
+    "hB"
+  ],
+  CK: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  CL: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  CM: [
+    "H",
+    "h",
+    "hB"
+  ],
+  CN: [
+    "H",
+    "hB",
+    "hb",
+    "h"
+  ],
+  CO: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  CP: [
+    "H"
+  ],
+  CR: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  CU: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  CV: [
+    "H",
+    "hB"
+  ],
+  CW: [
+    "H",
+    "hB"
+  ],
+  CX: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  CY: [
+    "h",
+    "H",
+    "hb",
+    "hB"
+  ],
+  CZ: [
+    "H"
+  ],
+  DE: [
+    "H",
+    "hB"
+  ],
+  DG: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  DJ: [
+    "h",
+    "H"
+  ],
+  DK: [
+    "H"
+  ],
+  DM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  DO: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  DZ: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  EA: [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  EC: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  EE: [
+    "H",
+    "hB"
+  ],
+  EG: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  EH: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  ER: [
+    "h",
+    "H"
+  ],
+  ES: [
+    "H",
+    "hB",
+    "h",
+    "hb"
+  ],
+  ET: [
+    "hB",
+    "hb",
+    "h",
+    "H"
+  ],
+  FI: [
+    "H"
+  ],
+  FJ: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  FK: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  FM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  FO: [
+    "H",
+    "h"
+  ],
+  FR: [
+    "H",
+    "hB"
+  ],
+  GA: [
+    "H",
+    "hB"
+  ],
+  GB: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  GD: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  GE: [
+    "H",
+    "hB",
+    "h"
+  ],
+  GF: [
+    "H",
+    "hB"
+  ],
+  GG: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  GH: [
+    "h",
+    "H"
+  ],
+  GI: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  GL: [
+    "H",
+    "h"
+  ],
+  GM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  GN: [
+    "H",
+    "hB"
+  ],
+  GP: [
+    "H",
+    "hB"
+  ],
+  GQ: [
+    "H",
+    "hB",
+    "h",
+    "hb"
+  ],
+  GR: [
+    "h",
+    "H",
+    "hb",
+    "hB"
+  ],
+  GT: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  GU: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  GW: [
+    "H",
+    "hB"
+  ],
+  GY: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  HK: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  HN: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  HR: [
+    "H",
+    "hB"
+  ],
+  HU: [
+    "H",
+    "h"
+  ],
+  IC: [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  ID: [
+    "H"
+  ],
+  IE: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  IL: [
+    "H",
+    "hB"
+  ],
+  IM: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  IN: [
+    "h",
+    "H"
+  ],
+  IO: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  IQ: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  IR: [
+    "hB",
+    "H"
+  ],
+  IS: [
+    "H"
+  ],
+  IT: [
+    "H",
+    "hB"
+  ],
+  JE: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  JM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  JO: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  JP: [
+    "H",
+    "K",
+    "h"
+  ],
+  KE: [
+    "hB",
+    "hb",
+    "H",
+    "h"
+  ],
+  KG: [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  KH: [
+    "hB",
+    "h",
+    "H",
+    "hb"
+  ],
+  KI: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  KM: [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  KN: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  KP: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  KR: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  KW: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  KY: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  KZ: [
+    "H",
+    "hB"
+  ],
+  LA: [
+    "H",
+    "hb",
+    "hB",
+    "h"
+  ],
+  LB: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  LC: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  LI: [
+    "H",
+    "hB",
+    "h"
+  ],
+  LK: [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  LR: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  LS: [
+    "h",
+    "H"
+  ],
+  LT: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  LU: [
+    "H",
+    "h",
+    "hB"
+  ],
+  LV: [
+    "H",
+    "hB",
+    "hb",
+    "h"
+  ],
+  LY: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  MA: [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  MC: [
+    "H",
+    "hB"
+  ],
+  MD: [
+    "H",
+    "hB"
+  ],
+  ME: [
+    "H",
+    "hB",
+    "h"
+  ],
+  MF: [
+    "H",
+    "hB"
+  ],
+  MG: [
+    "H",
+    "h"
+  ],
+  MH: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  MK: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  ML: [
+    "H"
+  ],
+  MM: [
+    "hB",
+    "hb",
+    "H",
+    "h"
+  ],
+  MN: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  MO: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  MP: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  MQ: [
+    "H",
+    "hB"
+  ],
+  MR: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  MS: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  MT: [
+    "H",
+    "h"
+  ],
+  MU: [
+    "H",
+    "h"
+  ],
+  MV: [
+    "H",
+    "h"
+  ],
+  MW: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  MX: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  MY: [
+    "hb",
+    "hB",
+    "h",
+    "H"
+  ],
+  MZ: [
+    "H",
+    "hB"
+  ],
+  NA: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  NC: [
+    "H",
+    "hB"
+  ],
+  NE: [
+    "H"
+  ],
+  NF: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  NG: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  NI: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  NL: [
+    "H",
+    "hB"
+  ],
+  NO: [
+    "H",
+    "h"
+  ],
+  NP: [
+    "H",
+    "h",
+    "hB"
+  ],
+  NR: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  NU: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  NZ: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  OM: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  PA: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  PE: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  PF: [
+    "H",
+    "h",
+    "hB"
+  ],
+  PG: [
+    "h",
+    "H"
+  ],
+  PH: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  PK: [
+    "h",
+    "hB",
+    "H"
+  ],
+  PL: [
+    "H",
+    "h"
+  ],
+  PM: [
+    "H",
+    "hB"
+  ],
+  PN: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  PR: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  PS: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  PT: [
+    "H",
+    "hB"
+  ],
+  PW: [
+    "h",
+    "H"
+  ],
+  PY: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  QA: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  RE: [
+    "H",
+    "hB"
+  ],
+  RO: [
+    "H",
+    "hB"
+  ],
+  RS: [
+    "H",
+    "hB",
+    "h"
+  ],
+  RU: [
+    "H"
+  ],
+  RW: [
+    "H",
+    "h"
+  ],
+  SA: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  SB: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  SC: [
+    "H",
+    "h",
+    "hB"
+  ],
+  SD: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  SE: [
+    "H"
+  ],
+  SG: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  SH: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  SI: [
+    "H",
+    "hB"
+  ],
+  SJ: [
+    "H"
+  ],
+  SK: [
+    "H"
+  ],
+  SL: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  SM: [
+    "H",
+    "h",
+    "hB"
+  ],
+  SN: [
+    "H",
+    "h",
+    "hB"
+  ],
+  SO: [
+    "h",
+    "H"
+  ],
+  SR: [
+    "H",
+    "hB"
+  ],
+  SS: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  ST: [
+    "H",
+    "hB"
+  ],
+  SV: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  SX: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  SY: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  SZ: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  TA: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  TC: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  TD: [
+    "h",
+    "H",
+    "hB"
+  ],
+  TF: [
+    "H",
+    "h",
+    "hB"
+  ],
+  TG: [
+    "H",
+    "hB"
+  ],
+  TH: [
+    "H",
+    "h"
+  ],
+  TJ: [
+    "H",
+    "h"
+  ],
+  TL: [
+    "H",
+    "hB",
+    "hb",
+    "h"
+  ],
+  TM: [
+    "H",
+    "h"
+  ],
+  TN: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  TO: [
+    "h",
+    "H"
+  ],
+  TR: [
+    "H",
+    "hB"
+  ],
+  TT: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  TW: [
+    "hB",
+    "hb",
+    "h",
+    "H"
+  ],
+  TZ: [
+    "hB",
+    "hb",
+    "H",
+    "h"
+  ],
+  UA: [
+    "H",
+    "hB",
+    "h"
+  ],
+  UG: [
+    "hB",
+    "hb",
+    "H",
+    "h"
+  ],
+  UM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  US: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  UY: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  UZ: [
+    "H",
+    "hB",
+    "h"
+  ],
+  VA: [
+    "H",
+    "h",
+    "hB"
+  ],
+  VC: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  VE: [
+    "h",
+    "H",
+    "hB",
+    "hb"
+  ],
+  VG: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  VI: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  VN: [
+    "H",
+    "h"
+  ],
+  VU: [
+    "h",
+    "H"
+  ],
+  WF: [
+    "H",
+    "hB"
+  ],
+  WS: [
+    "h",
+    "H"
+  ],
+  XK: [
+    "H",
+    "hB",
+    "h"
+  ],
+  YE: [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  YT: [
+    "H",
+    "hB"
+  ],
+  ZA: [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  ZM: [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  ZW: [
+    "H",
+    "h"
+  ],
+  "af-ZA": [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  "ar-001": [
+    "h",
+    "hB",
+    "hb",
+    "H"
+  ],
+  "ca-ES": [
+    "H",
+    "h",
+    "hB"
+  ],
+  "en-001": [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  "en-HK": [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  "en-IL": [
+    "H",
+    "h",
+    "hb",
+    "hB"
+  ],
+  "en-MY": [
+    "h",
+    "hb",
+    "H",
+    "hB"
+  ],
+  "es-BR": [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  "es-ES": [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  "es-GQ": [
+    "H",
+    "h",
+    "hB",
+    "hb"
+  ],
+  "fr-CA": [
+    "H",
+    "h",
+    "hB"
+  ],
+  "gl-ES": [
+    "H",
+    "h",
+    "hB"
+  ],
+  "gu-IN": [
+    "hB",
+    "hb",
+    "h",
+    "H"
+  ],
+  "hi-IN": [
+    "hB",
+    "h",
+    "H"
+  ],
+  "it-CH": [
+    "H",
+    "h",
+    "hB"
+  ],
+  "it-IT": [
+    "H",
+    "h",
+    "hB"
+  ],
+  "kn-IN": [
+    "hB",
+    "h",
+    "H"
+  ],
+  "ml-IN": [
+    "hB",
+    "h",
+    "H"
+  ],
+  "mr-IN": [
+    "hB",
+    "hb",
+    "h",
+    "H"
+  ],
+  "pa-IN": [
+    "hB",
+    "hb",
+    "h",
+    "H"
+  ],
+  "ta-IN": [
+    "hB",
+    "h",
+    "hb",
+    "H"
+  ],
+  "te-IN": [
+    "hB",
+    "h",
+    "H"
+  ],
+  "zu-ZA": [
+    "H",
+    "hB",
+    "hb",
+    "h"
+  ]
+};
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/date-time-pattern-generator.js
+function getBestPattern(skeleton, locale) {
+  for (var skeletonCopy = "", patternPos = 0; patternPos < skeleton.length; patternPos++) {
+    var patternChar = skeleton.charAt(patternPos);
+    if (patternChar === "j") {
+      for (var extraLength = 0; patternPos + 1 < skeleton.length && skeleton.charAt(patternPos + 1) === patternChar; )
+        extraLength++, patternPos++;
+      var hourLen = 1 + (extraLength & 1), dayPeriodLen = extraLength < 2 ? 1 : 3 + (extraLength >> 1), dayPeriodChar = "a", hourChar = getDefaultHourSymbolFromLocale(locale);
+      for ((hourChar == "H" || hourChar == "k") && (dayPeriodLen = 0); dayPeriodLen-- > 0; )
+        skeletonCopy += dayPeriodChar;
+      for (; hourLen-- > 0; )
+        skeletonCopy = hourChar + skeletonCopy;
+    } else patternChar === "J" ? skeletonCopy += "H" : skeletonCopy += patternChar;
+  }
+  return skeletonCopy;
+}
+function getDefaultHourSymbolFromLocale(locale) {
+  var hourCycle = locale.hourCycle;
+  if (hourCycle === void 0 && // @ts-ignore hourCycle(s) is not identified yet
+  locale.hourCycles && // @ts-ignore
+  locale.hourCycles.length && (hourCycle = locale.hourCycles[0]), hourCycle)
+    switch (hourCycle) {
+      case "h24":
+        return "k";
+      case "h23":
+        return "H";
+      case "h12":
+        return "h";
+      case "h11":
+        return "K";
+      default:
+        throw new Error("Invalid hourCycle");
+    }
+  var languageTag = locale.language, regionTag;
+  languageTag !== "root" && (regionTag = locale.maximize().region);
+  var hourCycles = timeData[regionTag || ""] || timeData[languageTag || ""] || timeData["".concat(languageTag, "-001")] || timeData["001"];
+  return hourCycles[0];
+}
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/parser.js
+var _a, SPACE_SEPARATOR_START_REGEX = new RegExp("^".concat(SPACE_SEPARATOR_REGEX.source, "*")), SPACE_SEPARATOR_END_REGEX = new RegExp("".concat(SPACE_SEPARATOR_REGEX.source, "*$"));
+function createLocation(start, end) {
+  return { start, end };
+}
+var hasNativeStartsWith = !!String.prototype.startsWith && "_a".startsWith("a", 1), hasNativeFromCodePoint = !!String.fromCodePoint, hasNativeFromEntries = !!Object.fromEntries, hasNativeCodePointAt = !!String.prototype.codePointAt, hasTrimStart = !!String.prototype.trimStart, hasTrimEnd = !!String.prototype.trimEnd, hasNativeIsSafeInteger = !!Number.isSafeInteger, isSafeInteger = hasNativeIsSafeInteger ? Number.isSafeInteger : function(n3) {
+  return typeof n3 == "number" && isFinite(n3) && Math.floor(n3) === n3 && Math.abs(n3) <= 9007199254740991;
+}, REGEX_SUPPORTS_U_AND_Y = !0;
+try {
+  re = RE("([^\\p{White_Space}\\p{Pattern_Syntax}]*)", "yu"), REGEX_SUPPORTS_U_AND_Y = ((_a = re.exec("a")) === null || _a === void 0 ? void 0 : _a[0]) === "a";
+} catch {
+  REGEX_SUPPORTS_U_AND_Y = !1;
+}
+var re, startsWith = hasNativeStartsWith ? (
+  // Native
+  function(s2, search, position) {
+    return s2.startsWith(search, position);
+  }
+) : (
+  // For IE11
+  function(s2, search, position) {
+    return s2.slice(position, position + search.length) === search;
+  }
+), fromCodePoint = hasNativeFromCodePoint ? String.fromCodePoint : (
+  // IE11
+  function() {
+    for (var codePoints = [], _i = 0; _i < arguments.length; _i++)
+      codePoints[_i] = arguments[_i];
+    for (var elements = "", length = codePoints.length, i2 = 0, code; length > i2; ) {
+      if (code = codePoints[i2++], code > 1114111)
+        throw RangeError(code + " is not a valid code point");
+      elements += code < 65536 ? String.fromCharCode(code) : String.fromCharCode(((code -= 65536) >> 10) + 55296, code % 1024 + 56320);
+    }
+    return elements;
+  }
+), fromEntries = (
+  // native
+  hasNativeFromEntries ? Object.fromEntries : (
+    // Ponyfill
+    function(entries) {
+      for (var obj = {}, _i = 0, entries_1 = entries; _i < entries_1.length; _i++) {
+        var _a2 = entries_1[_i], k2 = _a2[0], v2 = _a2[1];
+        obj[k2] = v2;
+      }
+      return obj;
+    }
+  )
+), codePointAt = hasNativeCodePointAt ? (
+  // Native
+  function(s2, index) {
+    return s2.codePointAt(index);
+  }
+) : (
+  // IE 11
+  function(s2, index) {
+    var size = s2.length;
+    if (!(index < 0 || index >= size)) {
+      var first = s2.charCodeAt(index), second;
+      return first < 55296 || first > 56319 || index + 1 === size || (second = s2.charCodeAt(index + 1)) < 56320 || second > 57343 ? first : (first - 55296 << 10) + (second - 56320) + 65536;
+    }
+  }
+), trimStart = hasTrimStart ? (
+  // Native
+  function(s2) {
+    return s2.trimStart();
+  }
+) : (
+  // Ponyfill
+  function(s2) {
+    return s2.replace(SPACE_SEPARATOR_START_REGEX, "");
+  }
+), trimEnd = hasTrimEnd ? (
+  // Native
+  function(s2) {
+    return s2.trimEnd();
+  }
+) : (
+  // Ponyfill
+  function(s2) {
+    return s2.replace(SPACE_SEPARATOR_END_REGEX, "");
+  }
+);
+function RE(s2, flag) {
+  return new RegExp(s2, flag);
+}
+var matchIdentifierAtIndex;
+REGEX_SUPPORTS_U_AND_Y ? (IDENTIFIER_PREFIX_RE_1 = RE("([^\\p{White_Space}\\p{Pattern_Syntax}]*)", "yu"), matchIdentifierAtIndex = function(s2, index) {
+  var _a2;
+  IDENTIFIER_PREFIX_RE_1.lastIndex = index;
+  var match = IDENTIFIER_PREFIX_RE_1.exec(s2);
+  return (_a2 = match[1]) !== null && _a2 !== void 0 ? _a2 : "";
+}) : matchIdentifierAtIndex = function(s2, index) {
+  for (var match = []; ; ) {
+    var c2 = codePointAt(s2, index);
+    if (c2 === void 0 || _isWhiteSpace(c2) || _isPatternSyntax(c2))
+      break;
+    match.push(c2), index += c2 >= 65536 ? 2 : 1;
+  }
+  return fromCodePoint.apply(void 0, match);
+};
+var IDENTIFIER_PREFIX_RE_1, Parser = (
+  /** @class */
+  (function() {
+    function Parser2(message, options2) {
+      options2 === void 0 && (options2 = {}), this.message = message, this.position = { offset: 0, line: 1, column: 1 }, this.ignoreTag = !!options2.ignoreTag, this.locale = options2.locale, this.requiresOtherClause = !!options2.requiresOtherClause, this.shouldParseSkeletons = !!options2.shouldParseSkeletons;
+    }
+    return Parser2.prototype.parse = function() {
+      if (this.offset() !== 0)
+        throw Error("parser can only be used once");
+      return this.parseMessage(0, "", !1);
+    }, Parser2.prototype.parseMessage = function(nestingLevel, parentArgType, expectingCloseTag) {
+      for (var elements = []; !this.isEOF(); ) {
+        var char = this.char();
+        if (char === 123) {
+          var result = this.parseArgument(nestingLevel, expectingCloseTag);
+          if (result.err)
+            return result;
+          elements.push(result.val);
+        } else {
+          if (char === 125 && nestingLevel > 0)
+            break;
+          if (char === 35 && (parentArgType === "plural" || parentArgType === "selectordinal")) {
+            var position = this.clonePosition();
+            this.bump(), elements.push({
+              type: TYPE.pound,
+              location: createLocation(position, this.clonePosition())
+            });
+          } else if (char === 60 && !this.ignoreTag && this.peek() === 47) {
+            if (expectingCloseTag)
+              break;
+            return this.error(ErrorKind.UNMATCHED_CLOSING_TAG, createLocation(this.clonePosition(), this.clonePosition()));
+          } else if (char === 60 && !this.ignoreTag && _isAlpha(this.peek() || 0)) {
+            var result = this.parseTag(nestingLevel, parentArgType);
+            if (result.err)
+              return result;
+            elements.push(result.val);
+          } else {
+            var result = this.parseLiteral(nestingLevel, parentArgType);
+            if (result.err)
+              return result;
+            elements.push(result.val);
+          }
+        }
+      }
+      return { val: elements, err: null };
+    }, Parser2.prototype.parseTag = function(nestingLevel, parentArgType) {
+      var startPosition = this.clonePosition();
+      this.bump();
+      var tagName = this.parseTagName();
+      if (this.bumpSpace(), this.bumpIf("/>"))
+        return {
+          val: {
+            type: TYPE.literal,
+            value: "<".concat(tagName, "/>"),
+            location: createLocation(startPosition, this.clonePosition())
+          },
+          err: null
+        };
+      if (this.bumpIf(">")) {
+        var childrenResult = this.parseMessage(nestingLevel + 1, parentArgType, !0);
+        if (childrenResult.err)
+          return childrenResult;
+        var children = childrenResult.val, endTagStartPosition = this.clonePosition();
+        if (this.bumpIf("</")) {
+          if (this.isEOF() || !_isAlpha(this.char()))
+            return this.error(ErrorKind.INVALID_TAG, createLocation(endTagStartPosition, this.clonePosition()));
+          var closingTagNameStartPosition = this.clonePosition(), closingTagName = this.parseTagName();
+          return tagName !== closingTagName ? this.error(ErrorKind.UNMATCHED_CLOSING_TAG, createLocation(closingTagNameStartPosition, this.clonePosition())) : (this.bumpSpace(), this.bumpIf(">") ? {
+            val: {
+              type: TYPE.tag,
+              value: tagName,
+              children,
+              location: createLocation(startPosition, this.clonePosition())
+            },
+            err: null
+          } : this.error(ErrorKind.INVALID_TAG, createLocation(endTagStartPosition, this.clonePosition())));
+        } else
+          return this.error(ErrorKind.UNCLOSED_TAG, createLocation(startPosition, this.clonePosition()));
+      } else
+        return this.error(ErrorKind.INVALID_TAG, createLocation(startPosition, this.clonePosition()));
+    }, Parser2.prototype.parseTagName = function() {
+      var startOffset = this.offset();
+      for (this.bump(); !this.isEOF() && _isPotentialElementNameChar(this.char()); )
+        this.bump();
+      return this.message.slice(startOffset, this.offset());
+    }, Parser2.prototype.parseLiteral = function(nestingLevel, parentArgType) {
+      for (var start = this.clonePosition(), value = ""; ; ) {
+        var parseQuoteResult = this.tryParseQuote(parentArgType);
+        if (parseQuoteResult) {
+          value += parseQuoteResult;
+          continue;
+        }
+        var parseUnquotedResult = this.tryParseUnquoted(nestingLevel, parentArgType);
+        if (parseUnquotedResult) {
+          value += parseUnquotedResult;
+          continue;
+        }
+        var parseLeftAngleResult = this.tryParseLeftAngleBracket();
+        if (parseLeftAngleResult) {
+          value += parseLeftAngleResult;
+          continue;
+        }
+        break;
+      }
+      var location2 = createLocation(start, this.clonePosition());
+      return {
+        val: { type: TYPE.literal, value, location: location2 },
+        err: null
+      };
+    }, Parser2.prototype.tryParseLeftAngleBracket = function() {
+      return !this.isEOF() && this.char() === 60 && (this.ignoreTag || // If at the opening tag or closing tag position, bail.
+      !_isAlphaOrSlash(this.peek() || 0)) ? (this.bump(), "<") : null;
+    }, Parser2.prototype.tryParseQuote = function(parentArgType) {
+      if (this.isEOF() || this.char() !== 39)
+        return null;
+      switch (this.peek()) {
+        case 39:
+          return this.bump(), this.bump(), "'";
+        // '{', '<', '>', '}'
+        case 123:
+        case 60:
+        case 62:
+        case 125:
+          break;
+        case 35:
+          if (parentArgType === "plural" || parentArgType === "selectordinal")
+            break;
+          return null;
+        default:
+          return null;
+      }
+      this.bump();
+      var codePoints = [this.char()];
+      for (this.bump(); !this.isEOF(); ) {
+        var ch = this.char();
+        if (ch === 39)
+          if (this.peek() === 39)
+            codePoints.push(39), this.bump();
+          else {
+            this.bump();
+            break;
+          }
+        else
+          codePoints.push(ch);
+        this.bump();
+      }
+      return fromCodePoint.apply(void 0, codePoints);
+    }, Parser2.prototype.tryParseUnquoted = function(nestingLevel, parentArgType) {
+      if (this.isEOF())
+        return null;
+      var ch = this.char();
+      return ch === 60 || ch === 123 || ch === 35 && (parentArgType === "plural" || parentArgType === "selectordinal") || ch === 125 && nestingLevel > 0 ? null : (this.bump(), fromCodePoint(ch));
+    }, Parser2.prototype.parseArgument = function(nestingLevel, expectingCloseTag) {
+      var openingBracePosition = this.clonePosition();
+      if (this.bump(), this.bumpSpace(), this.isEOF())
+        return this.error(ErrorKind.EXPECT_ARGUMENT_CLOSING_BRACE, createLocation(openingBracePosition, this.clonePosition()));
+      if (this.char() === 125)
+        return this.bump(), this.error(ErrorKind.EMPTY_ARGUMENT, createLocation(openingBracePosition, this.clonePosition()));
+      var value = this.parseIdentifierIfPossible().value;
+      if (!value)
+        return this.error(ErrorKind.MALFORMED_ARGUMENT, createLocation(openingBracePosition, this.clonePosition()));
+      if (this.bumpSpace(), this.isEOF())
+        return this.error(ErrorKind.EXPECT_ARGUMENT_CLOSING_BRACE, createLocation(openingBracePosition, this.clonePosition()));
+      switch (this.char()) {
+        // Simple argument: `{name}`
+        case 125:
+          return this.bump(), {
+            val: {
+              type: TYPE.argument,
+              // value does not include the opening and closing braces.
+              value,
+              location: createLocation(openingBracePosition, this.clonePosition())
+            },
+            err: null
+          };
+        // Argument with options: `{name, format, ...}`
+        case 44:
+          return this.bump(), this.bumpSpace(), this.isEOF() ? this.error(ErrorKind.EXPECT_ARGUMENT_CLOSING_BRACE, createLocation(openingBracePosition, this.clonePosition())) : this.parseArgumentOptions(nestingLevel, expectingCloseTag, value, openingBracePosition);
+        default:
+          return this.error(ErrorKind.MALFORMED_ARGUMENT, createLocation(openingBracePosition, this.clonePosition()));
+      }
+    }, Parser2.prototype.parseIdentifierIfPossible = function() {
+      var startingPosition = this.clonePosition(), startOffset = this.offset(), value = matchIdentifierAtIndex(this.message, startOffset), endOffset = startOffset + value.length;
+      this.bumpTo(endOffset);
+      var endPosition = this.clonePosition(), location2 = createLocation(startingPosition, endPosition);
+      return { value, location: location2 };
+    }, Parser2.prototype.parseArgumentOptions = function(nestingLevel, expectingCloseTag, value, openingBracePosition) {
+      var _a2, typeStartPosition = this.clonePosition(), argType = this.parseIdentifierIfPossible().value, typeEndPosition = this.clonePosition();
+      switch (argType) {
+        case "":
+          return this.error(ErrorKind.EXPECT_ARGUMENT_TYPE, createLocation(typeStartPosition, typeEndPosition));
+        case "number":
+        case "date":
+        case "time": {
+          this.bumpSpace();
+          var styleAndLocation = null;
+          if (this.bumpIf(",")) {
+            this.bumpSpace();
+            var styleStartPosition = this.clonePosition(), result = this.parseSimpleArgStyleIfPossible();
+            if (result.err)
+              return result;
+            var style = trimEnd(result.val);
+            if (style.length === 0)
+              return this.error(ErrorKind.EXPECT_ARGUMENT_STYLE, createLocation(this.clonePosition(), this.clonePosition()));
+            var styleLocation = createLocation(styleStartPosition, this.clonePosition());
+            styleAndLocation = { style, styleLocation };
+          }
+          var argCloseResult = this.tryParseArgumentClose(openingBracePosition);
+          if (argCloseResult.err)
+            return argCloseResult;
+          var location_1 = createLocation(openingBracePosition, this.clonePosition());
+          if (styleAndLocation && startsWith(styleAndLocation?.style, "::", 0)) {
+            var skeleton = trimStart(styleAndLocation.style.slice(2));
+            if (argType === "number") {
+              var result = this.parseNumberSkeletonFromString(skeleton, styleAndLocation.styleLocation);
+              return result.err ? result : {
+                val: { type: TYPE.number, value, location: location_1, style: result.val },
+                err: null
+              };
+            } else {
+              if (skeleton.length === 0)
+                return this.error(ErrorKind.EXPECT_DATE_TIME_SKELETON, location_1);
+              var dateTimePattern = skeleton;
+              this.locale && (dateTimePattern = getBestPattern(skeleton, this.locale));
+              var style = {
+                type: SKELETON_TYPE.dateTime,
+                pattern: dateTimePattern,
+                location: styleAndLocation.styleLocation,
+                parsedOptions: this.shouldParseSkeletons ? parseDateTimeSkeleton(dateTimePattern) : {}
+              }, type = argType === "date" ? TYPE.date : TYPE.time;
+              return {
+                val: { type, value, location: location_1, style },
+                err: null
+              };
+            }
+          }
+          return {
+            val: {
+              type: argType === "number" ? TYPE.number : argType === "date" ? TYPE.date : TYPE.time,
+              value,
+              location: location_1,
+              style: (_a2 = styleAndLocation?.style) !== null && _a2 !== void 0 ? _a2 : null
+            },
+            err: null
+          };
+        }
+        case "plural":
+        case "selectordinal":
+        case "select": {
+          var typeEndPosition_1 = this.clonePosition();
+          if (this.bumpSpace(), !this.bumpIf(","))
+            return this.error(ErrorKind.EXPECT_SELECT_ARGUMENT_OPTIONS, createLocation(typeEndPosition_1, __assign({}, typeEndPosition_1)));
+          this.bumpSpace();
+          var identifierAndLocation = this.parseIdentifierIfPossible(), pluralOffset = 0;
+          if (argType !== "select" && identifierAndLocation.value === "offset") {
+            if (!this.bumpIf(":"))
+              return this.error(ErrorKind.EXPECT_PLURAL_ARGUMENT_OFFSET_VALUE, createLocation(this.clonePosition(), this.clonePosition()));
+            this.bumpSpace();
+            var result = this.tryParseDecimalInteger(ErrorKind.EXPECT_PLURAL_ARGUMENT_OFFSET_VALUE, ErrorKind.INVALID_PLURAL_ARGUMENT_OFFSET_VALUE);
+            if (result.err)
+              return result;
+            this.bumpSpace(), identifierAndLocation = this.parseIdentifierIfPossible(), pluralOffset = result.val;
+          }
+          var optionsResult = this.tryParsePluralOrSelectOptions(nestingLevel, argType, expectingCloseTag, identifierAndLocation);
+          if (optionsResult.err)
+            return optionsResult;
+          var argCloseResult = this.tryParseArgumentClose(openingBracePosition);
+          if (argCloseResult.err)
+            return argCloseResult;
+          var location_2 = createLocation(openingBracePosition, this.clonePosition());
+          return argType === "select" ? {
+            val: {
+              type: TYPE.select,
+              value,
+              options: fromEntries(optionsResult.val),
+              location: location_2
+            },
+            err: null
+          } : {
+            val: {
+              type: TYPE.plural,
+              value,
+              options: fromEntries(optionsResult.val),
+              offset: pluralOffset,
+              pluralType: argType === "plural" ? "cardinal" : "ordinal",
+              location: location_2
+            },
+            err: null
+          };
+        }
+        default:
+          return this.error(ErrorKind.INVALID_ARGUMENT_TYPE, createLocation(typeStartPosition, typeEndPosition));
+      }
+    }, Parser2.prototype.tryParseArgumentClose = function(openingBracePosition) {
+      return this.isEOF() || this.char() !== 125 ? this.error(ErrorKind.EXPECT_ARGUMENT_CLOSING_BRACE, createLocation(openingBracePosition, this.clonePosition())) : (this.bump(), { val: !0, err: null });
+    }, Parser2.prototype.parseSimpleArgStyleIfPossible = function() {
+      for (var nestedBraces = 0, startPosition = this.clonePosition(); !this.isEOF(); ) {
+        var ch = this.char();
+        switch (ch) {
+          case 39: {
+            this.bump();
+            var apostrophePosition = this.clonePosition();
+            if (!this.bumpUntil("'"))
+              return this.error(ErrorKind.UNCLOSED_QUOTE_IN_ARGUMENT_STYLE, createLocation(apostrophePosition, this.clonePosition()));
+            this.bump();
+            break;
+          }
+          case 123: {
+            nestedBraces += 1, this.bump();
+            break;
+          }
+          case 125: {
+            if (nestedBraces > 0)
+              nestedBraces -= 1;
+            else
+              return {
+                val: this.message.slice(startPosition.offset, this.offset()),
+                err: null
+              };
+            break;
+          }
+          default:
+            this.bump();
+            break;
+        }
+      }
+      return {
+        val: this.message.slice(startPosition.offset, this.offset()),
+        err: null
+      };
+    }, Parser2.prototype.parseNumberSkeletonFromString = function(skeleton, location2) {
+      var tokens2 = [];
+      try {
+        tokens2 = parseNumberSkeletonFromString(skeleton);
+      } catch {
+        return this.error(ErrorKind.INVALID_NUMBER_SKELETON, location2);
+      }
+      return {
+        val: {
+          type: SKELETON_TYPE.number,
+          tokens: tokens2,
+          location: location2,
+          parsedOptions: this.shouldParseSkeletons ? parseNumberSkeleton(tokens2) : {}
+        },
+        err: null
+      };
+    }, Parser2.prototype.tryParsePluralOrSelectOptions = function(nestingLevel, parentArgType, expectCloseTag, parsedFirstIdentifier) {
+      for (var _a2, hasOtherClause = !1, options2 = [], parsedSelectors = /* @__PURE__ */ new Set(), selector = parsedFirstIdentifier.value, selectorLocation = parsedFirstIdentifier.location; ; ) {
+        if (selector.length === 0) {
+          var startPosition = this.clonePosition();
+          if (parentArgType !== "select" && this.bumpIf("=")) {
+            var result = this.tryParseDecimalInteger(ErrorKind.EXPECT_PLURAL_ARGUMENT_SELECTOR, ErrorKind.INVALID_PLURAL_ARGUMENT_SELECTOR);
+            if (result.err)
+              return result;
+            selectorLocation = createLocation(startPosition, this.clonePosition()), selector = this.message.slice(startPosition.offset, this.offset());
+          } else
+            break;
+        }
+        if (parsedSelectors.has(selector))
+          return this.error(parentArgType === "select" ? ErrorKind.DUPLICATE_SELECT_ARGUMENT_SELECTOR : ErrorKind.DUPLICATE_PLURAL_ARGUMENT_SELECTOR, selectorLocation);
+        selector === "other" && (hasOtherClause = !0), this.bumpSpace();
+        var openingBracePosition = this.clonePosition();
+        if (!this.bumpIf("{"))
+          return this.error(parentArgType === "select" ? ErrorKind.EXPECT_SELECT_ARGUMENT_SELECTOR_FRAGMENT : ErrorKind.EXPECT_PLURAL_ARGUMENT_SELECTOR_FRAGMENT, createLocation(this.clonePosition(), this.clonePosition()));
+        var fragmentResult = this.parseMessage(nestingLevel + 1, parentArgType, expectCloseTag);
+        if (fragmentResult.err)
+          return fragmentResult;
+        var argCloseResult = this.tryParseArgumentClose(openingBracePosition);
+        if (argCloseResult.err)
+          return argCloseResult;
+        options2.push([
+          selector,
+          {
+            value: fragmentResult.val,
+            location: createLocation(openingBracePosition, this.clonePosition())
+          }
+        ]), parsedSelectors.add(selector), this.bumpSpace(), _a2 = this.parseIdentifierIfPossible(), selector = _a2.value, selectorLocation = _a2.location;
+      }
+      return options2.length === 0 ? this.error(parentArgType === "select" ? ErrorKind.EXPECT_SELECT_ARGUMENT_SELECTOR : ErrorKind.EXPECT_PLURAL_ARGUMENT_SELECTOR, createLocation(this.clonePosition(), this.clonePosition())) : this.requiresOtherClause && !hasOtherClause ? this.error(ErrorKind.MISSING_OTHER_CLAUSE, createLocation(this.clonePosition(), this.clonePosition())) : { val: options2, err: null };
+    }, Parser2.prototype.tryParseDecimalInteger = function(expectNumberError, invalidNumberError) {
+      var sign = 1, startingPosition = this.clonePosition();
+      this.bumpIf("+") || this.bumpIf("-") && (sign = -1);
+      for (var hasDigits = !1, decimal = 0; !this.isEOF(); ) {
+        var ch = this.char();
+        if (ch >= 48 && ch <= 57)
+          hasDigits = !0, decimal = decimal * 10 + (ch - 48), this.bump();
+        else
+          break;
+      }
+      var location2 = createLocation(startingPosition, this.clonePosition());
+      return hasDigits ? (decimal *= sign, isSafeInteger(decimal) ? { val: decimal, err: null } : this.error(invalidNumberError, location2)) : this.error(expectNumberError, location2);
+    }, Parser2.prototype.offset = function() {
+      return this.position.offset;
+    }, Parser2.prototype.isEOF = function() {
+      return this.offset() === this.message.length;
+    }, Parser2.prototype.clonePosition = function() {
+      return {
+        offset: this.position.offset,
+        line: this.position.line,
+        column: this.position.column
+      };
+    }, Parser2.prototype.char = function() {
+      var offset2 = this.position.offset;
+      if (offset2 >= this.message.length)
+        throw Error("out of bound");
+      var code = codePointAt(this.message, offset2);
+      if (code === void 0)
+        throw Error("Offset ".concat(offset2, " is at invalid UTF-16 code unit boundary"));
+      return code;
+    }, Parser2.prototype.error = function(kind, location2) {
+      return {
+        val: null,
+        err: {
+          kind,
+          message: this.message,
+          location: location2
+        }
+      };
+    }, Parser2.prototype.bump = function() {
+      if (!this.isEOF()) {
+        var code = this.char();
+        code === 10 ? (this.position.line += 1, this.position.column = 1, this.position.offset += 1) : (this.position.column += 1, this.position.offset += code < 65536 ? 1 : 2);
+      }
+    }, Parser2.prototype.bumpIf = function(prefix) {
+      if (startsWith(this.message, prefix, this.offset())) {
+        for (var i2 = 0; i2 < prefix.length; i2++)
+          this.bump();
+        return !0;
+      }
+      return !1;
+    }, Parser2.prototype.bumpUntil = function(pattern) {
+      var currentOffset = this.offset(), index = this.message.indexOf(pattern, currentOffset);
+      return index >= 0 ? (this.bumpTo(index), !0) : (this.bumpTo(this.message.length), !1);
+    }, Parser2.prototype.bumpTo = function(targetOffset) {
+      if (this.offset() > targetOffset)
+        throw Error("targetOffset ".concat(targetOffset, " must be greater than or equal to the current offset ").concat(this.offset()));
+      for (targetOffset = Math.min(targetOffset, this.message.length); ; ) {
+        var offset2 = this.offset();
+        if (offset2 === targetOffset)
+          break;
+        if (offset2 > targetOffset)
+          throw Error("targetOffset ".concat(targetOffset, " is at invalid UTF-16 code unit boundary"));
+        if (this.bump(), this.isEOF())
+          break;
+      }
+    }, Parser2.prototype.bumpSpace = function() {
+      for (; !this.isEOF() && _isWhiteSpace(this.char()); )
+        this.bump();
+    }, Parser2.prototype.peek = function() {
+      if (this.isEOF())
+        return null;
+      var code = this.char(), offset2 = this.offset(), nextCode = this.message.charCodeAt(offset2 + (code >= 65536 ? 2 : 1));
+      return nextCode ?? null;
+    }, Parser2;
+  })()
+);
+function _isAlpha(codepoint) {
+  return codepoint >= 97 && codepoint <= 122 || codepoint >= 65 && codepoint <= 90;
+}
+function _isAlphaOrSlash(codepoint) {
+  return _isAlpha(codepoint) || codepoint === 47;
+}
+function _isPotentialElementNameChar(c2) {
+  return c2 === 45 || c2 === 46 || c2 >= 48 && c2 <= 57 || c2 === 95 || c2 >= 97 && c2 <= 122 || c2 >= 65 && c2 <= 90 || c2 == 183 || c2 >= 192 && c2 <= 214 || c2 >= 216 && c2 <= 246 || c2 >= 248 && c2 <= 893 || c2 >= 895 && c2 <= 8191 || c2 >= 8204 && c2 <= 8205 || c2 >= 8255 && c2 <= 8256 || c2 >= 8304 && c2 <= 8591 || c2 >= 11264 && c2 <= 12271 || c2 >= 12289 && c2 <= 55295 || c2 >= 63744 && c2 <= 64975 || c2 >= 65008 && c2 <= 65533 || c2 >= 65536 && c2 <= 983039;
+}
+function _isWhiteSpace(c2) {
+  return c2 >= 9 && c2 <= 13 || c2 === 32 || c2 === 133 || c2 >= 8206 && c2 <= 8207 || c2 === 8232 || c2 === 8233;
+}
+function _isPatternSyntax(c2) {
+  return c2 >= 33 && c2 <= 35 || c2 === 36 || c2 >= 37 && c2 <= 39 || c2 === 40 || c2 === 41 || c2 === 42 || c2 === 43 || c2 === 44 || c2 === 45 || c2 >= 46 && c2 <= 47 || c2 >= 58 && c2 <= 59 || c2 >= 60 && c2 <= 62 || c2 >= 63 && c2 <= 64 || c2 === 91 || c2 === 92 || c2 === 93 || c2 === 94 || c2 === 96 || c2 === 123 || c2 === 124 || c2 === 125 || c2 === 126 || c2 === 161 || c2 >= 162 && c2 <= 165 || c2 === 166 || c2 === 167 || c2 === 169 || c2 === 171 || c2 === 172 || c2 === 174 || c2 === 176 || c2 === 177 || c2 === 182 || c2 === 187 || c2 === 191 || c2 === 215 || c2 === 247 || c2 >= 8208 && c2 <= 8213 || c2 >= 8214 && c2 <= 8215 || c2 === 8216 || c2 === 8217 || c2 === 8218 || c2 >= 8219 && c2 <= 8220 || c2 === 8221 || c2 === 8222 || c2 === 8223 || c2 >= 8224 && c2 <= 8231 || c2 >= 8240 && c2 <= 8248 || c2 === 8249 || c2 === 8250 || c2 >= 8251 && c2 <= 8254 || c2 >= 8257 && c2 <= 8259 || c2 === 8260 || c2 === 8261 || c2 === 8262 || c2 >= 8263 && c2 <= 8273 || c2 === 8274 || c2 === 8275 || c2 >= 8277 && c2 <= 8286 || c2 >= 8592 && c2 <= 8596 || c2 >= 8597 && c2 <= 8601 || c2 >= 8602 && c2 <= 8603 || c2 >= 8604 && c2 <= 8607 || c2 === 8608 || c2 >= 8609 && c2 <= 8610 || c2 === 8611 || c2 >= 8612 && c2 <= 8613 || c2 === 8614 || c2 >= 8615 && c2 <= 8621 || c2 === 8622 || c2 >= 8623 && c2 <= 8653 || c2 >= 8654 && c2 <= 8655 || c2 >= 8656 && c2 <= 8657 || c2 === 8658 || c2 === 8659 || c2 === 8660 || c2 >= 8661 && c2 <= 8691 || c2 >= 8692 && c2 <= 8959 || c2 >= 8960 && c2 <= 8967 || c2 === 8968 || c2 === 8969 || c2 === 8970 || c2 === 8971 || c2 >= 8972 && c2 <= 8991 || c2 >= 8992 && c2 <= 8993 || c2 >= 8994 && c2 <= 9e3 || c2 === 9001 || c2 === 9002 || c2 >= 9003 && c2 <= 9083 || c2 === 9084 || c2 >= 9085 && c2 <= 9114 || c2 >= 9115 && c2 <= 9139 || c2 >= 9140 && c2 <= 9179 || c2 >= 9180 && c2 <= 9185 || c2 >= 9186 && c2 <= 9254 || c2 >= 9255 && c2 <= 9279 || c2 >= 9280 && c2 <= 9290 || c2 >= 9291 && c2 <= 9311 || c2 >= 9472 && c2 <= 9654 || c2 === 9655 || c2 >= 9656 && c2 <= 9664 || c2 === 9665 || c2 >= 9666 && c2 <= 9719 || c2 >= 9720 && c2 <= 9727 || c2 >= 9728 && c2 <= 9838 || c2 === 9839 || c2 >= 9840 && c2 <= 10087 || c2 === 10088 || c2 === 10089 || c2 === 10090 || c2 === 10091 || c2 === 10092 || c2 === 10093 || c2 === 10094 || c2 === 10095 || c2 === 10096 || c2 === 10097 || c2 === 10098 || c2 === 10099 || c2 === 10100 || c2 === 10101 || c2 >= 10132 && c2 <= 10175 || c2 >= 10176 && c2 <= 10180 || c2 === 10181 || c2 === 10182 || c2 >= 10183 && c2 <= 10213 || c2 === 10214 || c2 === 10215 || c2 === 10216 || c2 === 10217 || c2 === 10218 || c2 === 10219 || c2 === 10220 || c2 === 10221 || c2 === 10222 || c2 === 10223 || c2 >= 10224 && c2 <= 10239 || c2 >= 10240 && c2 <= 10495 || c2 >= 10496 && c2 <= 10626 || c2 === 10627 || c2 === 10628 || c2 === 10629 || c2 === 10630 || c2 === 10631 || c2 === 10632 || c2 === 10633 || c2 === 10634 || c2 === 10635 || c2 === 10636 || c2 === 10637 || c2 === 10638 || c2 === 10639 || c2 === 10640 || c2 === 10641 || c2 === 10642 || c2 === 10643 || c2 === 10644 || c2 === 10645 || c2 === 10646 || c2 === 10647 || c2 === 10648 || c2 >= 10649 && c2 <= 10711 || c2 === 10712 || c2 === 10713 || c2 === 10714 || c2 === 10715 || c2 >= 10716 && c2 <= 10747 || c2 === 10748 || c2 === 10749 || c2 >= 10750 && c2 <= 11007 || c2 >= 11008 && c2 <= 11055 || c2 >= 11056 && c2 <= 11076 || c2 >= 11077 && c2 <= 11078 || c2 >= 11079 && c2 <= 11084 || c2 >= 11085 && c2 <= 11123 || c2 >= 11124 && c2 <= 11125 || c2 >= 11126 && c2 <= 11157 || c2 === 11158 || c2 >= 11159 && c2 <= 11263 || c2 >= 11776 && c2 <= 11777 || c2 === 11778 || c2 === 11779 || c2 === 11780 || c2 === 11781 || c2 >= 11782 && c2 <= 11784 || c2 === 11785 || c2 === 11786 || c2 === 11787 || c2 === 11788 || c2 === 11789 || c2 >= 11790 && c2 <= 11798 || c2 === 11799 || c2 >= 11800 && c2 <= 11801 || c2 === 11802 || c2 === 11803 || c2 === 11804 || c2 === 11805 || c2 >= 11806 && c2 <= 11807 || c2 === 11808 || c2 === 11809 || c2 === 11810 || c2 === 11811 || c2 === 11812 || c2 === 11813 || c2 === 11814 || c2 === 11815 || c2 === 11816 || c2 === 11817 || c2 >= 11818 && c2 <= 11822 || c2 === 11823 || c2 >= 11824 && c2 <= 11833 || c2 >= 11834 && c2 <= 11835 || c2 >= 11836 && c2 <= 11839 || c2 === 11840 || c2 === 11841 || c2 === 11842 || c2 >= 11843 && c2 <= 11855 || c2 >= 11856 && c2 <= 11857 || c2 === 11858 || c2 >= 11859 && c2 <= 11903 || c2 >= 12289 && c2 <= 12291 || c2 === 12296 || c2 === 12297 || c2 === 12298 || c2 === 12299 || c2 === 12300 || c2 === 12301 || c2 === 12302 || c2 === 12303 || c2 === 12304 || c2 === 12305 || c2 >= 12306 && c2 <= 12307 || c2 === 12308 || c2 === 12309 || c2 === 12310 || c2 === 12311 || c2 === 12312 || c2 === 12313 || c2 === 12314 || c2 === 12315 || c2 === 12316 || c2 === 12317 || c2 >= 12318 && c2 <= 12319 || c2 === 12320 || c2 === 12336 || c2 === 64830 || c2 === 64831 || c2 >= 65093 && c2 <= 65094;
+}
+
+// ../../node_modules/@formatjs/icu-messageformat-parser/lib/index.js
+function pruneLocation(els) {
+  els.forEach(function(el) {
+    if (delete el.location, isSelectElement(el) || isPluralElement(el))
+      for (var k2 in el.options)
+        delete el.options[k2].location, pruneLocation(el.options[k2].value);
+    else isNumberElement(el) && isNumberSkeleton(el.style) || (isDateElement(el) || isTimeElement(el)) && isDateTimeSkeleton(el.style) ? delete el.style.location : isTagElement(el) && pruneLocation(el.children);
+  });
+}
+function parse(message, opts) {
+  opts === void 0 && (opts = {}), opts = __assign({ shouldParseSkeletons: !0, requiresOtherClause: !0 }, opts);
+  var result = new Parser(message, opts).parse();
+  if (result.err) {
+    var error = SyntaxError(ErrorKind[result.err.kind]);
+    throw error.location = result.err.location, error.originalMessage = result.err.message, error;
+  }
+  return opts?.captureLocation || pruneLocation(result.val), result.val;
+}
+
+// ../../node_modules/intl-messageformat/lib/src/error.js
+var ErrorCode;
+(function(ErrorCode2) {
+  ErrorCode2.MISSING_VALUE = "MISSING_VALUE", ErrorCode2.INVALID_VALUE = "INVALID_VALUE", ErrorCode2.MISSING_INTL_API = "MISSING_INTL_API";
+})(ErrorCode || (ErrorCode = {}));
+var FormatError = (
+  /** @class */
+  (function(_super) {
+    __extends(FormatError2, _super);
+    function FormatError2(msg, code, originalMessage) {
+      var _this = _super.call(this, msg) || this;
+      return _this.code = code, _this.originalMessage = originalMessage, _this;
+    }
+    return FormatError2.prototype.toString = function() {
+      return "[formatjs Error: ".concat(this.code, "] ").concat(this.message);
+    }, FormatError2;
+  })(Error)
+);
+var InvalidValueError = (
+  /** @class */
+  (function(_super) {
+    __extends(InvalidValueError2, _super);
+    function InvalidValueError2(variableId, value, options2, originalMessage) {
+      return _super.call(this, 'Invalid values for "'.concat(variableId, '": "').concat(value, '". Options are "').concat(Object.keys(options2).join('", "'), '"'), ErrorCode.INVALID_VALUE, originalMessage) || this;
+    }
+    return InvalidValueError2;
+  })(FormatError)
+);
+var InvalidValueTypeError = (
+  /** @class */
+  (function(_super) {
+    __extends(InvalidValueTypeError2, _super);
+    function InvalidValueTypeError2(value, type, originalMessage) {
+      return _super.call(this, 'Value for "'.concat(value, '" must be of type ').concat(type), ErrorCode.INVALID_VALUE, originalMessage) || this;
+    }
+    return InvalidValueTypeError2;
+  })(FormatError)
+);
+var MissingValueError = (
+  /** @class */
+  (function(_super) {
+    __extends(MissingValueError2, _super);
+    function MissingValueError2(variableId, originalMessage) {
+      return _super.call(this, 'The intl string context variable "'.concat(variableId, '" was not provided to the string "').concat(originalMessage, '"'), ErrorCode.MISSING_VALUE, originalMessage) || this;
+    }
+    return MissingValueError2;
+  })(FormatError)
+);
+
+// ../../node_modules/intl-messageformat/lib/src/formatters.js
+var PART_TYPE;
+(function(PART_TYPE2) {
+  PART_TYPE2[PART_TYPE2.literal = 0] = "literal", PART_TYPE2[PART_TYPE2.object = 1] = "object";
+})(PART_TYPE || (PART_TYPE = {}));
+function mergeLiteral(parts) {
+  return parts.length < 2 ? parts : parts.reduce(function(all, part) {
+    var lastPart = all[all.length - 1];
+    return !lastPart || lastPart.type !== PART_TYPE.literal || part.type !== PART_TYPE.literal ? all.push(part) : lastPart.value += part.value, all;
+  }, []);
+}
+function isFormatXMLElementFn(el) {
+  return typeof el == "function";
+}
+function formatToParts(els, locales, formatters, formats, values, currentPluralValue, originalMessage) {
+  if (els.length === 1 && isLiteralElement(els[0]))
+    return [
+      {
+        type: PART_TYPE.literal,
+        value: els[0].value
+      }
+    ];
+  for (var result = [], _i = 0, els_1 = els; _i < els_1.length; _i++) {
+    var el = els_1[_i];
+    if (isLiteralElement(el)) {
+      result.push({
+        type: PART_TYPE.literal,
+        value: el.value
+      });
+      continue;
+    }
+    if (isPoundElement(el)) {
+      typeof currentPluralValue == "number" && result.push({
+        type: PART_TYPE.literal,
+        value: formatters.getNumberFormat(locales).format(currentPluralValue)
+      });
+      continue;
+    }
+    var varName = el.value;
+    if (!(values && varName in values))
+      throw new MissingValueError(varName, originalMessage);
+    var value = values[varName];
+    if (isArgumentElement(el)) {
+      (!value || typeof value == "string" || typeof value == "number") && (value = typeof value == "string" || typeof value == "number" ? String(value) : ""), result.push({
+        type: typeof value == "string" ? PART_TYPE.literal : PART_TYPE.object,
+        value
+      });
+      continue;
+    }
+    if (isDateElement(el)) {
+      var style = typeof el.style == "string" ? formats.date[el.style] : isDateTimeSkeleton(el.style) ? el.style.parsedOptions : void 0;
+      result.push({
+        type: PART_TYPE.literal,
+        value: formatters.getDateTimeFormat(locales, style).format(value)
+      });
+      continue;
+    }
+    if (isTimeElement(el)) {
+      var style = typeof el.style == "string" ? formats.time[el.style] : isDateTimeSkeleton(el.style) ? el.style.parsedOptions : formats.time.medium;
+      result.push({
+        type: PART_TYPE.literal,
+        value: formatters.getDateTimeFormat(locales, style).format(value)
+      });
+      continue;
+    }
+    if (isNumberElement(el)) {
+      var style = typeof el.style == "string" ? formats.number[el.style] : isNumberSkeleton(el.style) ? el.style.parsedOptions : void 0;
+      style && style.scale && (value = value * (style.scale || 1)), result.push({
+        type: PART_TYPE.literal,
+        value: formatters.getNumberFormat(locales, style).format(value)
+      });
+      continue;
+    }
+    if (isTagElement(el)) {
+      var children = el.children, value_1 = el.value, formatFn = values[value_1];
+      if (!isFormatXMLElementFn(formatFn))
+        throw new InvalidValueTypeError(value_1, "function", originalMessage);
+      var parts = formatToParts(children, locales, formatters, formats, values, currentPluralValue), chunks = formatFn(parts.map(function(p2) {
+        return p2.value;
+      }));
+      Array.isArray(chunks) || (chunks = [chunks]), result.push.apply(result, chunks.map(function(c2) {
+        return {
+          type: typeof c2 == "string" ? PART_TYPE.literal : PART_TYPE.object,
+          value: c2
+        };
+      }));
+    }
+    if (isSelectElement(el)) {
+      var opt = el.options[value] || el.options.other;
+      if (!opt)
+        throw new InvalidValueError(el.value, value, Object.keys(el.options), originalMessage);
+      result.push.apply(result, formatToParts(opt.value, locales, formatters, formats, values));
+      continue;
+    }
+    if (isPluralElement(el)) {
+      var opt = el.options["=".concat(value)];
+      if (!opt) {
+        if (!Intl.PluralRules)
+          throw new FormatError(`Intl.PluralRules is not available in this environment.
+Try polyfilling it using "@formatjs/intl-pluralrules"
+`, ErrorCode.MISSING_INTL_API, originalMessage);
+        var rule = formatters.getPluralRules(locales, { type: el.pluralType }).select(value - (el.offset || 0));
+        opt = el.options[rule] || el.options.other;
+      }
+      if (!opt)
+        throw new InvalidValueError(el.value, value, Object.keys(el.options), originalMessage);
+      result.push.apply(result, formatToParts(opt.value, locales, formatters, formats, values, value - (el.offset || 0)));
+      continue;
+    }
+  }
+  return mergeLiteral(result);
+}
+
+// ../../node_modules/intl-messageformat/lib/src/core.js
+function mergeConfig(c1, c2) {
+  return c2 ? __assign(__assign(__assign({}, c1 || {}), c2 || {}), Object.keys(c1).reduce(function(all, k2) {
+    return all[k2] = __assign(__assign({}, c1[k2]), c2[k2] || {}), all;
+  }, {})) : c1;
+}
+function mergeConfigs(defaultConfig, configs) {
+  return configs ? Object.keys(defaultConfig).reduce(function(all, k2) {
+    return all[k2] = mergeConfig(defaultConfig[k2], configs[k2]), all;
+  }, __assign({}, defaultConfig)) : defaultConfig;
+}
+function createFastMemoizeCache(store2) {
+  return {
+    create: function() {
+      return {
+        get: function(key) {
+          return store2[key];
+        },
+        set: function(key, value) {
+          store2[key] = value;
+        }
+      };
+    }
+  };
+}
+function createDefaultFormatters(cache) {
+  return cache === void 0 && (cache = {
+    number: {},
+    dateTime: {},
+    pluralRules: {}
+  }), {
+    getNumberFormat: memoize(function() {
+      for (var _a2, args = [], _i = 0; _i < arguments.length; _i++)
+        args[_i] = arguments[_i];
+      return new ((_a2 = Intl.NumberFormat).bind.apply(_a2, __spreadArray([void 0], args, !1)))();
+    }, {
+      cache: createFastMemoizeCache(cache.number),
+      strategy: strategies.variadic
+    }),
+    getDateTimeFormat: memoize(function() {
+      for (var _a2, args = [], _i = 0; _i < arguments.length; _i++)
+        args[_i] = arguments[_i];
+      return new ((_a2 = Intl.DateTimeFormat).bind.apply(_a2, __spreadArray([void 0], args, !1)))();
+    }, {
+      cache: createFastMemoizeCache(cache.dateTime),
+      strategy: strategies.variadic
+    }),
+    getPluralRules: memoize(function() {
+      for (var _a2, args = [], _i = 0; _i < arguments.length; _i++)
+        args[_i] = arguments[_i];
+      return new ((_a2 = Intl.PluralRules).bind.apply(_a2, __spreadArray([void 0], args, !1)))();
+    }, {
+      cache: createFastMemoizeCache(cache.pluralRules),
+      strategy: strategies.variadic
+    })
+  };
+}
+var IntlMessageFormat = (
+  /** @class */
+  (function() {
+    function IntlMessageFormat2(message, locales, overrideFormats, opts) {
+      locales === void 0 && (locales = IntlMessageFormat2.defaultLocale);
+      var _this = this;
+      if (this.formatterCache = {
+        number: {},
+        dateTime: {},
+        pluralRules: {}
+      }, this.format = function(values) {
+        var parts = _this.formatToParts(values);
+        if (parts.length === 1)
+          return parts[0].value;
+        var result = parts.reduce(function(all, part) {
+          return !all.length || part.type !== PART_TYPE.literal || typeof all[all.length - 1] != "string" ? all.push(part.value) : all[all.length - 1] += part.value, all;
+        }, []);
+        return result.length <= 1 ? result[0] || "" : result;
+      }, this.formatToParts = function(values) {
+        return formatToParts(_this.ast, _this.locales, _this.formatters, _this.formats, values, void 0, _this.message);
+      }, this.resolvedOptions = function() {
+        var _a3;
+        return {
+          locale: ((_a3 = _this.resolvedLocale) === null || _a3 === void 0 ? void 0 : _a3.toString()) || Intl.NumberFormat.supportedLocalesOf(_this.locales)[0]
+        };
+      }, this.getAst = function() {
+        return _this.ast;
+      }, this.locales = locales, this.resolvedLocale = IntlMessageFormat2.resolveLocale(locales), typeof message == "string") {
+        if (this.message = message, !IntlMessageFormat2.__parse)
+          throw new TypeError("IntlMessageFormat.__parse must be set to process `message` of type `string`");
+        var _a2 = opts || {}, formatters = _a2.formatters, parseOpts = __rest(_a2, ["formatters"]);
+        this.ast = IntlMessageFormat2.__parse(message, __assign(__assign({}, parseOpts), { locale: this.resolvedLocale }));
+      } else
+        this.ast = message;
+      if (!Array.isArray(this.ast))
+        throw new TypeError("A message must be provided as a String or AST.");
+      this.formats = mergeConfigs(IntlMessageFormat2.formats, overrideFormats), this.formatters = opts && opts.formatters || createDefaultFormatters(this.formatterCache);
+    }
+    return Object.defineProperty(IntlMessageFormat2, "defaultLocale", {
+      get: function() {
+        return IntlMessageFormat2.memoizedDefaultLocale || (IntlMessageFormat2.memoizedDefaultLocale = new Intl.NumberFormat().resolvedOptions().locale), IntlMessageFormat2.memoizedDefaultLocale;
+      },
+      enumerable: !1,
+      configurable: !0
+    }), IntlMessageFormat2.memoizedDefaultLocale = null, IntlMessageFormat2.resolveLocale = function(locales) {
+      if (!(typeof Intl.Locale > "u")) {
+        var supportedLocales = Intl.NumberFormat.supportedLocalesOf(locales);
+        return supportedLocales.length > 0 ? new Intl.Locale(supportedLocales[0]) : new Intl.Locale(typeof locales == "string" ? locales : locales[0]);
+      }
+    }, IntlMessageFormat2.__parse = parse, IntlMessageFormat2.formats = {
+      number: {
+        integer: {
+          maximumFractionDigits: 0
+        },
+        currency: {
+          style: "currency"
+        },
+        percent: {
+          style: "percent"
+        }
+      },
+      date: {
+        short: {
+          month: "numeric",
+          day: "numeric",
+          year: "2-digit"
+        },
+        medium: {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        },
+        long: {
+          month: "long",
+          day: "numeric",
+          year: "numeric"
+        },
+        full: {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric"
+        }
+      },
+      time: {
+        short: {
+          hour: "numeric",
+          minute: "numeric"
+        },
+        medium: {
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric"
+        },
+        long: {
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          timeZoneName: "short"
+        },
+        full: {
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          timeZoneName: "short"
+        }
+      }
+    }, IntlMessageFormat2;
+  })()
+);
+
+// ../../node_modules/@react-aria/i18n/dist/useMessageFormatter.mjs
+init_react();
+
+// ../../node_modules/@internationalized/string/dist/LocalizedStringDictionary.mjs
+var $5b160d28a433310d$var$localeSymbol = Symbol.for("react-aria.i18n.locale"), $5b160d28a433310d$var$stringsSymbol = Symbol.for("react-aria.i18n.strings");
+
+// ../../node_modules/@react-aria/i18n/dist/useLocalizedStringFormatter.mjs
+init_react();
+
+// ../../node_modules/@react-aria/i18n/dist/useListFormatter.mjs
+init_react();
+
+// ../../node_modules/@internationalized/date/dist/string.mjs
+var $fae977aafc393c5c$var$requiredDurationTimeGroups = [
+  "hours",
+  "minutes",
+  "seconds"
+], $fae977aafc393c5c$var$requiredDurationGroups = [
+  "years",
+  "months",
+  "weeks",
+  "days",
+  ...$fae977aafc393c5c$var$requiredDurationTimeGroups
+];
+
+// ../../node_modules/@internationalized/date/dist/HebrewCalendar.mjs
+var $7c5f6fbf42389787$var$HOUR_PARTS = 1080, $7c5f6fbf42389787$var$DAY_PARTS = 24 * $7c5f6fbf42389787$var$HOUR_PARTS, $7c5f6fbf42389787$var$MONTH_DAYS = 29, $7c5f6fbf42389787$var$MONTH_FRACT = 12 * $7c5f6fbf42389787$var$HOUR_PARTS + 793, $7c5f6fbf42389787$var$MONTH_PARTS = $7c5f6fbf42389787$var$MONTH_DAYS * $7c5f6fbf42389787$var$DAY_PARTS + $7c5f6fbf42389787$var$MONTH_FRACT;
+
+// ../../node_modules/@react-aria/i18n/dist/useDateFormatter.mjs
+init_react();
+
+// ../../node_modules/@internationalized/number/dist/NumberFormatter.mjs
+var $488c6ddbf4ef74c2$var$supportsSignDisplay = !1;
+try {
+  $488c6ddbf4ef74c2$var$supportsSignDisplay = new Intl.NumberFormat("de-DE", {
+    signDisplay: "exceptZero"
+  }).resolvedOptions().signDisplay === "exceptZero";
+} catch {
+}
+var $488c6ddbf4ef74c2$var$supportsUnit = !1;
+try {
+  $488c6ddbf4ef74c2$var$supportsUnit = new Intl.NumberFormat("de-DE", {
+    style: "unit",
+    unit: "degree"
+  }).resolvedOptions().style === "unit";
+} catch {
+}
+
+// ../../node_modules/@internationalized/number/dist/NumberParser.mjs
+var $6c7bd7858deea686$var$CURRENCY_SIGN_REGEX = new RegExp("^.*\\(.*\\).*$");
+
+// ../../node_modules/@react-aria/i18n/dist/useNumberFormatter.mjs
+init_react();
+
+// ../../node_modules/@react-aria/i18n/dist/useFilter.mjs
+init_react();
+
+// ../../node_modules/@react-aria/overlays/dist/useOverlayPosition.mjs
+var $2a41e45df1593e64$var$visualViewport = typeof document < "u" ? window.visualViewport : null;
+function $2a41e45df1593e64$export$d39e1813b3bdd0e1(props) {
+  let { direction } = $18f2051aff69b9bf$export$43bb16f9c6d9e3f7(), { arrowSize, targetRef, overlayRef, arrowRef, scrollRef = overlayRef, placement = "bottom", containerPadding = 12, shouldFlip = !0, boundaryElement = typeof document < "u" ? document.body : null, offset: offset2 = 0, crossOffset = 0, shouldUpdatePosition = !0, isOpen = !0, onClose, maxHeight, arrowBoundaryOffset = 0 } = props, [position, setPosition] = useState(null), deps = [
+    shouldUpdatePosition,
+    placement,
+    overlayRef.current,
+    targetRef.current,
+    arrowRef?.current,
+    scrollRef.current,
+    containerPadding,
+    shouldFlip,
+    boundaryElement,
+    offset2,
+    crossOffset,
+    isOpen,
+    direction,
+    maxHeight,
+    arrowBoundaryOffset,
+    arrowSize
+  ], lastScale = useRef($2a41e45df1593e64$var$visualViewport?.scale);
+  useEffect(() => {
+    isOpen && (lastScale.current = $2a41e45df1593e64$var$visualViewport?.scale);
+  }, [
+    isOpen
+  ]);
+  let updatePosition = useCallback(() => {
+    if (shouldUpdatePosition === !1 || !isOpen || !overlayRef.current || !targetRef.current || !boundaryElement || $2a41e45df1593e64$var$visualViewport?.scale !== lastScale.current) return;
+    let anchor = null;
+    if (scrollRef.current && scrollRef.current.contains(document.activeElement)) {
+      var _document_activeElement;
+      let anchorRect = (_document_activeElement = document.activeElement) === null || _document_activeElement === void 0 ? void 0 : _document_activeElement.getBoundingClientRect(), scrollRect = scrollRef.current.getBoundingClientRect();
+      var _anchorRect_top;
+      if (anchor = {
+        type: "top",
+        offset: ((_anchorRect_top = anchorRect?.top) !== null && _anchorRect_top !== void 0 ? _anchorRect_top : 0) - scrollRect.top
+      }, anchor.offset > scrollRect.height / 2) {
+        anchor.type = "bottom";
+        var _anchorRect_bottom;
+        anchor.offset = ((_anchorRect_bottom = anchorRect?.bottom) !== null && _anchorRect_bottom !== void 0 ? _anchorRect_bottom : 0) - scrollRect.bottom;
+      }
+    }
+    let overlay = overlayRef.current;
+    if (!maxHeight && overlayRef.current) {
+      var _window_visualViewport;
+      overlay.style.top = "0px", overlay.style.bottom = "";
+      var _window_visualViewport_height;
+      overlay.style.maxHeight = ((_window_visualViewport_height = (_window_visualViewport = window.visualViewport) === null || _window_visualViewport === void 0 ? void 0 : _window_visualViewport.height) !== null && _window_visualViewport_height !== void 0 ? _window_visualViewport_height : window.innerHeight) + "px";
+    }
+    let position2 = $edcf132a9284368a$export$b3ceb0cbf1056d98({
+      placement: $2a41e45df1593e64$var$translateRTL(placement, direction),
+      overlayNode: overlayRef.current,
+      targetNode: targetRef.current,
+      scrollNode: scrollRef.current || overlayRef.current,
+      padding: containerPadding,
+      shouldFlip,
+      boundaryElement,
+      offset: offset2,
+      crossOffset,
+      maxHeight,
+      arrowSize: arrowSize ?? (arrowRef?.current ? $edcf132a9284368a$export$4b834cebd9e5cebe(arrowRef.current, !0).width : 0),
+      arrowBoundaryOffset
+    });
+    if (position2.position) {
+      if (overlay.style.top = "", overlay.style.bottom = "", overlay.style.left = "", overlay.style.right = "", Object.keys(position2.position).forEach((key) => overlay.style[key] = position2.position[key] + "px"), overlay.style.maxHeight = position2.maxHeight != null ? position2.maxHeight + "px" : "", anchor && document.activeElement && scrollRef.current) {
+        let anchorRect = document.activeElement.getBoundingClientRect(), scrollRect = scrollRef.current.getBoundingClientRect(), newOffset = anchorRect[anchor.type] - scrollRect[anchor.type];
+        scrollRef.current.scrollTop += newOffset - anchor.offset;
+      }
+      setPosition(position2);
+    }
+  }, deps);
+  $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(updatePosition, deps), $2a41e45df1593e64$var$useResize(updatePosition), $9daab02d461809db$export$683480f191c0e3ea({
+    ref: overlayRef,
+    onResize: updatePosition
+  }), $9daab02d461809db$export$683480f191c0e3ea({
+    ref: targetRef,
+    onResize: updatePosition
+  });
+  let isResizing = useRef(!1);
+  $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => {
+    let timeout, onResize = () => {
+      isResizing.current = !0, clearTimeout(timeout), timeout = setTimeout(() => {
+        isResizing.current = !1;
+      }, 500), updatePosition();
+    }, onScroll = () => {
+      isResizing.current && onResize();
+    };
+    return $2a41e45df1593e64$var$visualViewport?.addEventListener("resize", onResize), $2a41e45df1593e64$var$visualViewport?.addEventListener("scroll", onScroll), () => {
+      $2a41e45df1593e64$var$visualViewport?.removeEventListener("resize", onResize), $2a41e45df1593e64$var$visualViewport?.removeEventListener("scroll", onScroll);
+    };
+  }, [
+    updatePosition
+  ]);
+  let close = useCallback(() => {
+    isResizing.current || onClose?.();
+  }, [
+    onClose,
+    isResizing
+  ]);
+  $dd149f63282afbbf$export$18fc8428861184da({
+    triggerRef: targetRef,
+    isOpen,
+    onClose: onClose && close
+  });
+  var _position_maxHeight, _position_placement, _position_triggerAnchorPoint;
+  return {
+    overlayProps: {
+      style: {
+        position: position ? "absolute" : "fixed",
+        top: position ? void 0 : 0,
+        left: position ? void 0 : 0,
+        zIndex: 1e5,
+        ...position?.position,
+        maxHeight: (_position_maxHeight = position?.maxHeight) !== null && _position_maxHeight !== void 0 ? _position_maxHeight : "100vh"
+      }
+    },
+    placement: (_position_placement = position?.placement) !== null && _position_placement !== void 0 ? _position_placement : null,
+    triggerAnchorPoint: (_position_triggerAnchorPoint = position?.triggerAnchorPoint) !== null && _position_triggerAnchorPoint !== void 0 ? _position_triggerAnchorPoint : null,
+    arrowProps: {
+      "aria-hidden": "true",
+      role: "presentation",
+      style: {
+        left: position?.arrowOffsetLeft,
+        top: position?.arrowOffsetTop
+      }
+    },
+    updatePosition
+  };
+}
+function $2a41e45df1593e64$var$useResize(onResize) {
+  $f0a04ccd8dbdd83b$export$e5c5a5f917a5871c(() => (window.addEventListener("resize", onResize, !1), () => {
+    window.removeEventListener("resize", onResize, !1);
+  }), [
+    onResize
+  ]);
+}
+function $2a41e45df1593e64$var$translateRTL(position, direction) {
+  return direction === "rtl" ? position.replace("start", "right").replace("end", "left") : position.replace("start", "left").replace("end", "right");
+}
+
+// ../../node_modules/@react-aria/focus/dist/FocusScope.mjs
+init_react();
+var $9bf71ea28793e738$var$FocusContext = react_default.createContext(null);
+function $9bf71ea28793e738$var$isElementInScope(element, scope2) {
+  return !element || !scope2 ? !1 : scope2.some((node) => node.contains(element));
+}
+var $9bf71ea28793e738$var$Tree = class _$9bf71ea28793e738$var$Tree {
+  get size() {
+    return this.fastMap.size;
+  }
+  getTreeNode(data) {
+    return this.fastMap.get(data);
+  }
+  addTreeNode(scopeRef, parent, nodeToRestore) {
+    let parentNode = this.fastMap.get(parent ?? null);
+    if (!parentNode) return;
+    let node = new $9bf71ea28793e738$var$TreeNode({
+      scopeRef
+    });
+    parentNode.addChild(node), node.parent = parentNode, this.fastMap.set(scopeRef, node), nodeToRestore && (node.nodeToRestore = nodeToRestore);
+  }
+  addNode(node) {
+    this.fastMap.set(node.scopeRef, node);
+  }
+  removeTreeNode(scopeRef) {
+    if (scopeRef === null) return;
+    let node = this.fastMap.get(scopeRef);
+    if (!node) return;
+    let parentNode = node.parent;
+    for (let current of this.traverse()) current !== node && node.nodeToRestore && current.nodeToRestore && node.scopeRef && node.scopeRef.current && $9bf71ea28793e738$var$isElementInScope(current.nodeToRestore, node.scopeRef.current) && (current.nodeToRestore = node.nodeToRestore);
+    let children = node.children;
+    parentNode && (parentNode.removeChild(node), children.size > 0 && children.forEach((child) => parentNode && parentNode.addChild(child))), this.fastMap.delete(node.scopeRef);
+  }
+  // Pre Order Depth First
+  *traverse(node = this.root) {
+    if (node.scopeRef != null && (yield node), node.children.size > 0) for (let child of node.children) yield* this.traverse(child);
+  }
+  clone() {
+    var _node_parent;
+    let newTree = new _$9bf71ea28793e738$var$Tree();
+    var _node_parent_scopeRef;
+    for (let node of this.traverse()) newTree.addTreeNode(node.scopeRef, (_node_parent_scopeRef = (_node_parent = node.parent) === null || _node_parent === void 0 ? void 0 : _node_parent.scopeRef) !== null && _node_parent_scopeRef !== void 0 ? _node_parent_scopeRef : null, node.nodeToRestore);
+    return newTree;
+  }
+  constructor() {
+    this.fastMap = /* @__PURE__ */ new Map(), this.root = new $9bf71ea28793e738$var$TreeNode({
+      scopeRef: null
+    }), this.fastMap.set(null, this.root);
+  }
+}, $9bf71ea28793e738$var$TreeNode = class {
+  addChild(node) {
+    this.children.add(node), node.parent = this;
+  }
+  removeChild(node) {
+    this.children.delete(node), node.parent = void 0;
+  }
+  constructor(props) {
+    this.children = /* @__PURE__ */ new Set(), this.contain = !1, this.scopeRef = props.scopeRef;
+  }
+}, $9bf71ea28793e738$export$d06fae2ee68b101e = new $9bf71ea28793e738$var$Tree();
+
+// ../../node_modules/@react-aria/focus/dist/useFocusRing.mjs
+init_react();
+
+// ../../node_modules/@react-aria/focus/dist/FocusRing.mjs
+init_react();
+
+// ../../node_modules/@react-aria/focus/dist/useHasTabbableChild.mjs
+init_react();
+
+// ../../node_modules/@react-aria/overlays/dist/useOverlay.mjs
+init_react();
+
+// ../../node_modules/@react-aria/overlays/dist/useOverlayTrigger.mjs
+init_react();
+
+// ../../node_modules/@react-aria/overlays/dist/usePreventScroll.mjs
+var $49c51c25361d4cd2$var$visualViewport = typeof document < "u" && window.visualViewport;
+
+// ../../node_modules/@react-aria/overlays/dist/PortalProvider.mjs
+init_react();
+var $96b38030c423d352$export$60d741e20e0aa309 = createContext({});
+function $96b38030c423d352$export$9fc1347d4195ccb3() {
+  var _useContext;
+  return (_useContext = useContext($96b38030c423d352$export$60d741e20e0aa309)) !== null && _useContext !== void 0 ? _useContext : {};
+}
+
+// ../../node_modules/@react-aria/overlays/dist/useModal.mjs
+init_react();
+var $f57aed4a881a3485$var$Context = react_default.createContext(null);
+function $f57aed4a881a3485$export$178405afcd8c5eb(props) {
+  let { children } = props, parent = useContext($f57aed4a881a3485$var$Context), [modalCount, setModalCount] = useState(0), context = useMemo(() => ({
+    parent,
+    modalCount,
+    addModal() {
+      setModalCount((count) => count + 1), parent && parent.addModal();
+    },
+    removeModal() {
+      setModalCount((count) => count - 1), parent && parent.removeModal();
+    }
+  }), [
+    parent,
+    modalCount
+  ]);
+  return react_default.createElement($f57aed4a881a3485$var$Context.Provider, {
+    value: context
+  }, children);
+}
+function $f57aed4a881a3485$export$d9aaed4c3ece1bc0() {
+  let context = useContext($f57aed4a881a3485$var$Context);
+  return {
+    modalProviderProps: {
+      "aria-hidden": context && context.modalCount > 0 ? !0 : void 0
+    }
+  };
+}
+function $f57aed4a881a3485$var$OverlayContainerDOM(props) {
+  let { modalProviderProps } = $f57aed4a881a3485$export$d9aaed4c3ece1bc0();
+  return react_default.createElement("div", {
+    "data-overlay-container": !0,
+    ...props,
+    ...modalProviderProps
+  });
+}
+function $f57aed4a881a3485$export$bf688221f59024e5(props) {
+  return react_default.createElement($f57aed4a881a3485$export$178405afcd8c5eb, null, react_default.createElement($f57aed4a881a3485$var$OverlayContainerDOM, props));
+}
+function $f57aed4a881a3485$export$b47c3594eab58386(props) {
+  let isSSR = $b5e257d569688ac6$export$535bd6ca7f90a273(), { portalContainer = isSSR ? null : document.body, ...rest2 } = props, { getContainer } = $96b38030c423d352$export$9fc1347d4195ccb3();
+  if (!props.portalContainer && getContainer && (portalContainer = getContainer()), react_default.useEffect(() => {
+    if (portalContainer?.closest("[data-overlay-container]")) throw new Error("An OverlayContainer must not be inside another container. Please change the portalContainer prop.");
+  }, [
+    portalContainer
+  ]), !portalContainer) return null;
+  let contents = react_default.createElement($f57aed4a881a3485$export$bf688221f59024e5, rest2);
+  return react_dom_default.createPortal(contents, portalContainer);
+}
+
+// ../../node_modules/@react-aria/overlays/dist/ar-AE.mjs
+var $773d5888b972f1cf$exports = {};
+$773d5888b972f1cf$exports = {
+  dismiss: "\u062A\u062C\u0627\u0647\u0644"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/bg-BG.mjs
+var $d11f19852b941573$exports = {};
+$d11f19852b941573$exports = {
+  dismiss: "\u041E\u0442\u0445\u0432\u044A\u0440\u043B\u044F\u043D\u0435"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/cs-CZ.mjs
+var $b983974c2ee1efb3$exports = {};
+$b983974c2ee1efb3$exports = {
+  dismiss: "Odstranit"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/da-DK.mjs
+var $5809cc9d4e92de73$exports = {};
+$5809cc9d4e92de73$exports = {
+  dismiss: "Luk"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/de-DE.mjs
+var $c68c2e4fc74398d1$exports = {};
+$c68c2e4fc74398d1$exports = {
+  dismiss: "Schlie\xDFen"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/el-GR.mjs
+var $0898b4c153db2b77$exports = {};
+$0898b4c153db2b77$exports = {
+  dismiss: "\u0391\u03C0\u03CC\u03C1\u03C1\u03B9\u03C8\u03B7"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/en-US.mjs
+var $6d74810286a15183$exports = {};
+$6d74810286a15183$exports = {
+  dismiss: "Dismiss"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/es-ES.mjs
+var $309d73dc65f78055$exports = {};
+$309d73dc65f78055$exports = {
+  dismiss: "Descartar"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/et-EE.mjs
+var $44ad94f7205cf593$exports = {};
+$44ad94f7205cf593$exports = {
+  dismiss: "L\xF5peta"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/fi-FI.mjs
+var $7c28f5687f0779a9$exports = {};
+$7c28f5687f0779a9$exports = {
+  dismiss: "Hylk\xE4\xE4"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/fr-FR.mjs
+var $e6d75df4b68bd73a$exports = {};
+$e6d75df4b68bd73a$exports = {
+  dismiss: "Rejeter"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/he-IL.mjs
+var $87505c9dab186d0f$exports = {};
+$87505c9dab186d0f$exports = {
+  dismiss: "\u05D4\u05EA\u05E2\u05DC\u05DD"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/hr-HR.mjs
+var $553439c3ffb3e492$exports = {};
+$553439c3ffb3e492$exports = {
+  dismiss: "Odbaci"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/hu-HU.mjs
+var $74cf411061b983a2$exports = {};
+$74cf411061b983a2$exports = {
+  dismiss: "Elutas\xEDt\xE1s"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/it-IT.mjs
+var $e933f298574dc435$exports = {};
+$e933f298574dc435$exports = {
+  dismiss: "Ignora"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/ja-JP.mjs
+var $ac91fc9fe02f71f6$exports = {};
+$ac91fc9fe02f71f6$exports = {
+  dismiss: "\u9589\u3058\u308B"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/ko-KR.mjs
+var $52b96f86422025af$exports = {};
+$52b96f86422025af$exports = {
+  dismiss: "\uBB34\uC2DC"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/lt-LT.mjs
+var $c0d724c3e51dafa6$exports = {};
+$c0d724c3e51dafa6$exports = {
+  dismiss: "Atmesti"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/lv-LV.mjs
+var $c92899672a3fe72e$exports = {};
+$c92899672a3fe72e$exports = {
+  dismiss: "Ner\u0101d\u012Bt"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/nb-NO.mjs
+var $9f576b39d8e7a9d6$exports = {};
+$9f576b39d8e7a9d6$exports = {
+  dismiss: "Lukk"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/nl-NL.mjs
+var $9d025808aeec81a7$exports = {};
+$9d025808aeec81a7$exports = {
+  dismiss: "Negeren"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/pl-PL.mjs
+var $fce709921e2c0fa6$exports = {};
+$fce709921e2c0fa6$exports = {
+  dismiss: "Zignoruj"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/pt-BR.mjs
+var $2599cf0c4ab37f59$exports = {};
+$2599cf0c4ab37f59$exports = {
+  dismiss: "Descartar"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/pt-PT.mjs
+var $3c220ae7ef8a35fd$exports = {};
+$3c220ae7ef8a35fd$exports = {
+  dismiss: "Dispensar"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/ro-RO.mjs
+var $93562b5094072f54$exports = {};
+$93562b5094072f54$exports = {
+  dismiss: "Revocare"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/ru-RU.mjs
+var $cd9e2abd0d06c7b4$exports = {};
+$cd9e2abd0d06c7b4$exports = {
+  dismiss: "\u041F\u0440\u043E\u043F\u0443\u0441\u0442\u0438\u0442\u044C"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/sk-SK.mjs
+var $45375701f409adf1$exports = {};
+$45375701f409adf1$exports = {
+  dismiss: "Zru\u0161i\u0165"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/sl-SI.mjs
+var $27fab53a576de9dd$exports = {};
+$27fab53a576de9dd$exports = {
+  dismiss: "Opusti"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/sr-SP.mjs
+var $4438748d9952e7c7$exports = {};
+$4438748d9952e7c7$exports = {
+  dismiss: "Odbaci"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/sv-SE.mjs
+var $0936d7347ef4da4c$exports = {};
+$0936d7347ef4da4c$exports = {
+  dismiss: "Avvisa"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/tr-TR.mjs
+var $29700c92185d38f8$exports = {};
+$29700c92185d38f8$exports = {
+  dismiss: "Kapat"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/uk-UA.mjs
+var $662ccaf2be4c25b3$exports = {};
+$662ccaf2be4c25b3$exports = {
+  dismiss: "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/zh-CN.mjs
+var $d80a27deda7cdb3c$exports = {};
+$d80a27deda7cdb3c$exports = {
+  dismiss: "\u53D6\u6D88"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/zh-TW.mjs
+var $2b2734393847c884$exports = {};
+$2b2734393847c884$exports = {
+  dismiss: "\u95DC\u9589"
+};
+
+// ../../node_modules/@react-aria/overlays/dist/intlStrings.mjs
+var $a2f21f5f14f60553$exports = {};
+$a2f21f5f14f60553$exports = {
+  "ar-AE": $773d5888b972f1cf$exports,
+  "bg-BG": $d11f19852b941573$exports,
+  "cs-CZ": $b983974c2ee1efb3$exports,
+  "da-DK": $5809cc9d4e92de73$exports,
+  "de-DE": $c68c2e4fc74398d1$exports,
+  "el-GR": $0898b4c153db2b77$exports,
+  "en-US": $6d74810286a15183$exports,
+  "es-ES": $309d73dc65f78055$exports,
+  "et-EE": $44ad94f7205cf593$exports,
+  "fi-FI": $7c28f5687f0779a9$exports,
+  "fr-FR": $e6d75df4b68bd73a$exports,
+  "he-IL": $87505c9dab186d0f$exports,
+  "hr-HR": $553439c3ffb3e492$exports,
+  "hu-HU": $74cf411061b983a2$exports,
+  "it-IT": $e933f298574dc435$exports,
+  "ja-JP": $ac91fc9fe02f71f6$exports,
+  "ko-KR": $52b96f86422025af$exports,
+  "lt-LT": $c0d724c3e51dafa6$exports,
+  "lv-LV": $c92899672a3fe72e$exports,
+  "nb-NO": $9f576b39d8e7a9d6$exports,
+  "nl-NL": $9d025808aeec81a7$exports,
+  "pl-PL": $fce709921e2c0fa6$exports,
+  "pt-BR": $2599cf0c4ab37f59$exports,
+  "pt-PT": $3c220ae7ef8a35fd$exports,
+  "ro-RO": $93562b5094072f54$exports,
+  "ru-RU": $cd9e2abd0d06c7b4$exports,
+  "sk-SK": $45375701f409adf1$exports,
+  "sl-SI": $27fab53a576de9dd$exports,
+  "sr-SP": $4438748d9952e7c7$exports,
+  "sv-SE": $0936d7347ef4da4c$exports,
+  "tr-TR": $29700c92185d38f8$exports,
+  "uk-UA": $662ccaf2be4c25b3$exports,
+  "zh-CN": $d80a27deda7cdb3c$exports,
+  "zh-TW": $2b2734393847c884$exports
+};
+
+// ../../node_modules/@react-aria/overlays/dist/DismissButton.mjs
+init_react();
+
+// ../../node_modules/@react-aria/visually-hidden/dist/VisuallyHidden.mjs
+init_react();
+
+// ../../node_modules/@react-aria/overlays/dist/ariaHideOutside.mjs
+var $5e3802645cc19319$var$supportsInert = typeof HTMLElement < "u" && "inert" in HTMLElement.prototype;
+
+// ../../node_modules/@react-aria/overlays/dist/usePopover.mjs
+init_react();
+
+// ../../node_modules/@react-aria/overlays/dist/Overlay.mjs
+init_react();
+var $337b884510726a0d$export$a2200b96afd16271 = react_default.createContext(null);
+
+// ../../node_modules/@react-aria/overlays/dist/useModalOverlay.mjs
+init_react();
+
+// ../../node_modules/@react-stately/tooltip/dist/useTooltipTriggerState.mjs
+init_react();
+
+// ../../node_modules/@react-stately/overlays/dist/useOverlayTriggerState.mjs
+init_react();
+function $fc909762b330b746$export$61c6a8c84e605fb6(props) {
+  let [isOpen, setOpen] = $458b0a5536c1a7cf$export$40bfa8c7b0832715(props.isOpen, props.defaultOpen || !1, props.onOpenChange), open = useCallback(() => {
+    setOpen(!0);
+  }, [
+    setOpen
+  ]), close = useCallback(() => {
+    setOpen(!1);
+  }, [
+    setOpen
+  ]), toggle = useCallback(() => {
+    setOpen(!isOpen);
+  }, [
+    setOpen,
+    isOpen
+  ]);
+  return {
+    isOpen,
+    setOpen,
+    open,
+    close,
+    toggle
+  };
+}
+
+// ../../node_modules/@react-stately/tooltip/dist/useTooltipTriggerState.mjs
+var $8796f90736e175cb$var$TOOLTIP_DELAY = 1500, $8796f90736e175cb$var$TOOLTIP_COOLDOWN = 500, $8796f90736e175cb$var$tooltips = {}, $8796f90736e175cb$var$tooltipId = 0, $8796f90736e175cb$var$globalWarmedUp = !1, $8796f90736e175cb$var$globalWarmUpTimeout = null, $8796f90736e175cb$var$globalCooldownTimeout = null;
+function $8796f90736e175cb$export$4d40659c25ecb50b(props = {}) {
+  let { delay: delay2 = $8796f90736e175cb$var$TOOLTIP_DELAY, closeDelay = $8796f90736e175cb$var$TOOLTIP_COOLDOWN } = props, { isOpen, open, close } = $fc909762b330b746$export$61c6a8c84e605fb6(props), id = useMemo(() => `${++$8796f90736e175cb$var$tooltipId}`, []), closeTimeout = useRef(null), closeCallback = useRef(close), ensureTooltipEntry = () => {
+    $8796f90736e175cb$var$tooltips[id] = hideTooltip;
+  }, closeOpenTooltips = () => {
+    for (let hideTooltipId in $8796f90736e175cb$var$tooltips) hideTooltipId !== id && ($8796f90736e175cb$var$tooltips[hideTooltipId](!0), delete $8796f90736e175cb$var$tooltips[hideTooltipId]);
+  }, showTooltip = () => {
+    closeTimeout.current && clearTimeout(closeTimeout.current), closeTimeout.current = null, closeOpenTooltips(), ensureTooltipEntry(), $8796f90736e175cb$var$globalWarmedUp = !0, open(), $8796f90736e175cb$var$globalWarmUpTimeout && (clearTimeout($8796f90736e175cb$var$globalWarmUpTimeout), $8796f90736e175cb$var$globalWarmUpTimeout = null), $8796f90736e175cb$var$globalCooldownTimeout && (clearTimeout($8796f90736e175cb$var$globalCooldownTimeout), $8796f90736e175cb$var$globalCooldownTimeout = null);
+  }, hideTooltip = (immediate) => {
+    immediate || closeDelay <= 0 ? (closeTimeout.current && clearTimeout(closeTimeout.current), closeTimeout.current = null, closeCallback.current()) : closeTimeout.current || (closeTimeout.current = setTimeout(() => {
+      closeTimeout.current = null, closeCallback.current();
+    }, closeDelay)), $8796f90736e175cb$var$globalWarmUpTimeout && (clearTimeout($8796f90736e175cb$var$globalWarmUpTimeout), $8796f90736e175cb$var$globalWarmUpTimeout = null), $8796f90736e175cb$var$globalWarmedUp && ($8796f90736e175cb$var$globalCooldownTimeout && clearTimeout($8796f90736e175cb$var$globalCooldownTimeout), $8796f90736e175cb$var$globalCooldownTimeout = setTimeout(() => {
+      delete $8796f90736e175cb$var$tooltips[id], $8796f90736e175cb$var$globalCooldownTimeout = null, $8796f90736e175cb$var$globalWarmedUp = !1;
+    }, Math.max($8796f90736e175cb$var$TOOLTIP_COOLDOWN, closeDelay)));
+  }, warmupTooltip = () => {
+    closeOpenTooltips(), ensureTooltipEntry(), !isOpen && !$8796f90736e175cb$var$globalWarmUpTimeout && !$8796f90736e175cb$var$globalWarmedUp ? $8796f90736e175cb$var$globalWarmUpTimeout = setTimeout(() => {
+      $8796f90736e175cb$var$globalWarmUpTimeout = null, $8796f90736e175cb$var$globalWarmedUp = !0, showTooltip();
+    }, delay2) : isOpen || showTooltip();
+  };
+  return useEffect(() => {
+    closeCallback.current = close;
+  }, [
+    close
+  ]), useEffect(() => () => {
+    closeTimeout.current && clearTimeout(closeTimeout.current), $8796f90736e175cb$var$tooltips[id] && delete $8796f90736e175cb$var$tooltips[id];
+  }, [
+    id
+  ]), {
+    isOpen,
+    open: (immediate) => {
+      !immediate && delay2 > 0 && !closeTimeout.current ? warmupTooltip() : showTooltip();
+    },
+    close: hideTooltip
+  };
+}
+
+// ../../node_modules/react-aria-components/dist/Tooltip.mjs
+init_react();
+var $4e3b923658d69c60$export$7a7623236eec67fa = createContext(null), $4e3b923658d69c60$export$39ae08fa83328b12 = createContext(null);
+function $4e3b923658d69c60$export$8c610744efcf8a1d(props) {
+  let state = $8796f90736e175cb$export$4d40659c25ecb50b(props), ref = useRef(null), { triggerProps, tooltipProps } = $4e1b34546679e357$export$a6da6c504e4bba8b(props, state, ref);
+  return react_default.createElement($64fa3d84918910a7$export$2881499e37b75b9a, {
+    values: [
+      [
+        $4e3b923658d69c60$export$7a7623236eec67fa,
+        state
+      ],
+      [
+        $4e3b923658d69c60$export$39ae08fa83328b12,
+        {
+          ...tooltipProps,
+          triggerRef: ref
+        }
+      ]
+    ]
+  }, react_default.createElement($f645667febf57a63$export$13f3202a3e5ddd5, {
+    ...triggerProps,
+    ref
+  }, props.children));
+}
+var $4e3b923658d69c60$export$28c660c63b792dea = forwardRef(function({ UNSTABLE_portalContainer, ...props }, ref) {
+  [props, ref] = $64fa3d84918910a7$export$29f1550f4b0d4415(props, ref, $4e3b923658d69c60$export$39ae08fa83328b12);
+  let contextState = useContext($4e3b923658d69c60$export$7a7623236eec67fa), localState = $8796f90736e175cb$export$4d40659c25ecb50b(props), state = props.isOpen != null || props.defaultOpen != null || !contextState ? localState : contextState, isExiting = $d3f049242431219c$export$45fda7c47f93fd48(ref, state.isOpen) || props.isExiting || !1;
+  return !state.isOpen && !isExiting ? null : react_default.createElement($f57aed4a881a3485$export$b47c3594eab58386, {
+    portalContainer: UNSTABLE_portalContainer
+  }, react_default.createElement($4e3b923658d69c60$var$TooltipInner, {
+    ...props,
+    tooltipRef: ref,
+    isExiting
+  }));
+});
+function $4e3b923658d69c60$var$TooltipInner(props) {
+  let state = useContext($4e3b923658d69c60$export$7a7623236eec67fa), arrowRef = useRef(null), { overlayProps, arrowProps, placement, triggerAnchorPoint } = $2a41e45df1593e64$export$d39e1813b3bdd0e1({
+    placement: props.placement || "top",
+    targetRef: props.triggerRef,
+    overlayRef: props.tooltipRef,
+    arrowRef,
+    offset: props.offset,
+    crossOffset: props.crossOffset,
+    isOpen: state.isOpen,
+    arrowBoundaryOffset: props.arrowBoundaryOffset,
+    shouldFlip: props.shouldFlip,
+    containerPadding: props.containerPadding,
+    onClose: () => state.close(!0)
+  }), isEntering = $d3f049242431219c$export$6d3443f2c48bfc20(props.tooltipRef, !!placement) || props.isEntering || !1, renderProps = $64fa3d84918910a7$export$4d86445c2cf5e3({
+    ...props,
+    defaultClassName: "react-aria-Tooltip",
+    values: {
+      placement,
+      isEntering,
+      isExiting: props.isExiting,
+      state
+    }
+  });
+  props = $3ef42575df84b30b$export$9d1611c77c2fe928(props, overlayProps);
+  let { tooltipProps } = $326e436e94273fe1$export$1c4b08e0eca38426(props, state), DOMProps = $65484d02dcb7eb3e$export$457c3d6518dd4c6f(props, {
+    global: !0
+  });
+  return react_default.createElement("div", {
+    ...$3ef42575df84b30b$export$9d1611c77c2fe928(DOMProps, renderProps, tooltipProps),
+    ref: props.tooltipRef,
+    style: {
+      ...overlayProps.style,
+      "--trigger-anchor-point": triggerAnchorPoint ? `${triggerAnchorPoint.x}px ${triggerAnchorPoint.y}px` : void 0,
+      ...renderProps.style
+    },
+    "data-placement": placement ?? void 0,
+    "data-entering": isEntering || void 0,
+    "data-exiting": props.isExiting || void 0
+  }, react_default.createElement($44f671af83e7d9e0$export$2de4954e8ae13b9f.Provider, {
+    value: {
+      ...arrowProps,
+      placement,
+      ref: arrowRef
+    }
+  }, renderProps.children));
+}
+
+// src/components/components/shared/overlayHelpers.tsx
+init_react();
+var import_memoizerific = __toESM(require_memoizerific(), 1);
+var convertToReactAriaPlacement2 = (0, import_memoizerific.default)(1e3)((p2) => p2 === "left-end" ? "left bottom" : p2 === "right-end" ? "right bottom" : p2 === "left-start" ? "left top" : p2 === "right-start" ? "right top" : p2.replace("-", " ")), Container5 = styled.div({
+  width: 500,
+  height: 500,
+  paddingTop: 100,
+  overflowY: "scroll",
+  background: "#eee",
+  position: "relative"
+}), Trigger = forwardRef((props, ref) => react_default.createElement(
+  "button",
+  {
+    ...props,
+    ref,
+    style: {
+      width: 120,
+      height: 50,
+      margin: 10
+    }
+  }
+));
+Trigger.displayName = "Trigger";
+
+// src/components/components/tooltip/TooltipProvider.tsx
+var TooltipProvider2 = ({
+  triggerOnFocusOnly = !1,
+  placement: placementProp = "top",
+  offset: offset2 = 8,
+  tooltip,
+  children,
+  defaultVisible,
+  startOpen,
+  delayShow = 400,
+  delayHide = 200,
+  visible,
+  onVisibleChange,
+  ...props
+}) => {
+  let placement = convertToReactAriaPlacement2(placementProp), child = react_default.Children.only(children);
+  startOpen !== void 0 && deprecate("The `startOpen` prop is deprecated. Please use `defaultVisible` instead.");
+  let [isOpen, setIsOpen] = useState(defaultVisible ?? startOpen ?? !1), onOpenChange = useCallback(
+    (isOpen2) => {
+      setIsOpen(isOpen2), onVisibleChange?.(isOpen2);
+    },
+    [onVisibleChange]
+  );
+  return react_default.createElement(
+    $4e3b923658d69c60$export$8c610744efcf8a1d,
+    {
+      delay: delayShow,
+      closeDelay: delayHide,
+      isOpen: visible ?? isOpen,
+      onOpenChange,
+      trigger: triggerOnFocusOnly ? "focus" : void 0,
+      ...props
+    },
+    react_default.createElement($f645667febf57a63$export$35a3bebf7ef2d934, null, react_default.cloneElement(child, { "aria-describedby": null })),
+    react_default.createElement(
+      $4e3b923658d69c60$export$28c660c63b792dea,
+      {
+        "data-testid": "tooltip",
+        placement,
+        offset: offset2,
+        onOpenChange,
+        style: { outline: "none" },
+        ...props
+      },
+      tooltip
+    )
+  );
+};
+
+// src/manager/components/layout/Drag.tsx
+var oppositePosition = {
+  left: "right",
+  right: "left",
+  top: "bottom",
+  bottom: "top"
+}, Drag = forwardRef(function(props, ref) {
+  let {
+    overlapping,
+    position,
+    "aria-label": ariaLabel,
+    "aria-valuenow": ariaValueNow,
+    "aria-valuemax": ariaValueMax,
+    ...rest2
+  } = props, orientation = position === "left" || position === "right" ? "vertical" : "horizontal", tooltipNote = orientation === "vertical" ? "\u2190 \u2192 to resize" : "\u2191 \u2193 to resize";
+  return react_default.createElement(
+    TooltipProvider2,
+    {
+      triggerOnFocusOnly: !0,
+      placement: oppositePosition[position],
+      tooltip: react_default.createElement(TooltipNote2, { note: tooltipNote })
+    },
+    react_default.createElement(
+      DragHandle,
+      {
+        ref,
+        $orientation: orientation,
+        $overlapping: overlapping,
+        $position: position,
+        role: "separator",
+        tabIndex: 0,
+        "aria-orientation": orientation,
+        "aria-label": ariaLabel,
+        "aria-valuenow": ariaValueNow,
+        "aria-valuemin": 0,
+        "aria-valuemax": ariaValueMax,
+        ...rest2
+      }
+    )
+  );
+}), DragHandle = styled.div(
+  ({ theme }) => ({
+    position: "absolute",
+    opacity: 0,
+    transition: "opacity 0.2s ease-in-out",
+    zIndex: 100,
+    "&:after": {
+      content: '""',
+      display: "block",
+      backgroundColor: theme.color.secondary
+    },
+    "&:hover": {
+      opacity: 1
+    }
+  }),
+  ({ theme, $orientation = "vertical" }) => ({
+    "&:focus-visible": {
+      opacity: 1,
+      outline: "2px solid transparent",
+      ...$orientation === "horizontal" ? { height: 7 } : { width: 7 },
+      boxShadow: `inset 0 0 0 4px ${theme.color.secondary}`,
+      "@media (forced-colors: active)": {
+        outline: "2px solid Highlight"
+      }
+    }
+  }),
+  ({ $orientation = "vertical", $overlapping = !0, $position = "left" }) => $orientation === "vertical" ? {
+    // This is an old code smell, where 10px matches the sidebar and 13px matches the addon panel.
+    // It should be tidied up at some point.
+    width: $overlapping ? $position === "left" ? 10 : 13 : 7,
+    height: "100%",
+    top: 0,
+    right: $position === "left" ? -7 : void 0,
+    left: $position === "right" ? -7 : void 0,
+    "&:after": {
+      width: 1,
+      height: "100%",
+      marginLeft: $position === "left" ? 3 : 6
+    },
+    "&:hover": {
+      cursor: "col-resize"
+    }
+  } : {
+    width: "100%",
+    height: $overlapping ? 13 : 7,
+    top: $position === "bottom" ? -7 : void 0,
+    bottom: $position === "top" ? -7 : void 0,
+    left: 0,
+    "&:after": {
+      width: "100%",
+      height: 1,
+      marginTop: 6
+    },
+    "&:hover": {
+      cursor: "row-resize"
+    }
+  }
+);
+
+// src/manager/components/layout/PanelContainer.tsx
+var Container6 = styled.div(({ theme, position }) => ({
+  gridArea: "panel",
+  position: "relative",
+  backgroundColor: theme.appContentBg,
+  borderTop: position === "bottom" ? `1px solid ${theme.appBorderColor}` : void 0,
+  borderLeft: position === "right" ? `1px solid ${theme.appBorderColor}` : void 0
+})), PanelSlot = styled.div({
+  height: "100%"
+}), PanelContainer = react_default.memo(function(props) {
+  let { children, bottomPanelHeight, rightPanelWidth, panelMaxSize, panelResizerRef, position } = props, shouldHidePanelContent = position === "bottom" ? bottomPanelHeight === 0 : rightPanelWidth === 0;
+  return react_default.createElement(Container6, { position }, react_default.createElement(
+    Drag,
+    {
+      ref: panelResizerRef,
+      position,
+      overlapping: position === "bottom" ? !!bottomPanelHeight : !!rightPanelWidth,
+      "aria-label": "Addon panel resize handle",
+      "aria-valuenow": position === "bottom" ? bottomPanelHeight : rightPanelWidth,
+      "aria-valuemax": panelMaxSize
+    }
+  ), react_default.createElement(
+    PanelSlot,
+    {
+      hidden: shouldHidePanelContent ? !0 : void 0,
+      "aria-hidden": shouldHidePanelContent ? !0 : void 0
+    },
+    children
+  ));
+});
+
+// src/manager/components/layout/SidebarContainer.tsx
+init_react();
+var Container7 = styled.div(({ theme }) => ({
+  backgroundColor: theme.appBg,
+  gridArea: "sidebar",
+  position: "relative",
+  borderRight: `1px solid ${theme.appBorderColor}`
+})), SidebarSlot = styled.div({
+  height: "100%"
+}), SidebarContainer = react_default.memo(function(props) {
+  let { children, navSize, sidebarMaxWidth, sidebarResizerRef } = props, shouldHideSidebarContent = navSize === 0;
+  return react_default.createElement(Container7, null, react_default.createElement(
+    SidebarSlot,
+    {
+      hidden: shouldHideSidebarContent ? !0 : void 0,
+      "aria-hidden": shouldHideSidebarContent ? !0 : void 0
+    },
+    children
+  ), react_default.createElement(
+    Drag,
+    {
+      ref: sidebarResizerRef,
+      position: "left",
+      "aria-label": "Sidebar resize handle",
+      "aria-valuenow": navSize,
+      "aria-valuemax": sidebarMaxWidth
+    }
+  ));
+});
+
 // src/manager/components/layout/useDragging.ts
 init_react();
-var SNAP_THRESHOLD_PX = 30, SIDEBAR_MIN_WIDTH_PX = 240, RIGHT_PANEL_MIN_WIDTH_PX = 270, MIN_WIDTH_STIFFNESS = 0.9;
+var SNAP_THRESHOLD_PX = 30, STIFFNESS = 0.9, KEYBOARD_STEP_PX = 10, KEYBOARD_SHIFT_MULTIPLIER = 5, RESIZE_KEYS = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 function interpolate(relativeValue, min, max) {
   return min + (max - min) * relativeValue;
 }
+function computeSidebarMaxWidth(panelPosition, rightPanelWidth, showPanel) {
+  if (typeof window > "u")
+    return 0;
+  let panelWidth = showPanel ? panelPosition === "right" ? rightPanelWidth : 360 : 0;
+  return Math.max(window.innerWidth - 100 - panelWidth, 0);
+}
+function computePanelMaxSize(panelPosition, navSize) {
+  return typeof window > "u" ? 0 : Math.max(panelPosition === "bottom" ? window.innerHeight - 40 : window.innerWidth - 100 - navSize, 0);
+}
+function applyResizeKeyboard(state, sizeKey, key, step, minSize, maxSize, increaseKey, decreaseKey) {
+  let currentSize = state[sizeKey];
+  switch (key) {
+    case increaseKey:
+      return { ...state, [sizeKey]: clamp(currentSize + step, minSize, maxSize) };
+    case decreaseKey:
+      let effectivelyComputed = clamp(currentSize - step, 0, maxSize);
+      return { ...state, [sizeKey]: effectivelyComputed < minSize ? 0 : effectivelyComputed };
+    case "Home":
+      return { ...state, [sizeKey]: 0 };
+    case "End":
+      return { ...state, [sizeKey]: maxSize };
+    default:
+      return state;
+  }
+}
 function useDragging({
   setState,
-  isPanelShown,
-  isDesktop
+  showPanel,
+  isDesktop,
+  navSize,
+  rightPanelWidth,
+  panelPosition
 }) {
-  let panelResizerRef = useRef(null), sidebarResizerRef = useRef(null);
+  let panelResizerRef = useRef(null), sidebarResizerRef = useRef(null), sidebarMaxWidth = computeSidebarMaxWidth(panelPosition, rightPanelWidth, showPanel), panelMaxSize = computePanelMaxSize(panelPosition, navSize);
   return useEffect(() => {
     let panelResizer = panelResizerRef.current, sidebarResizer = sidebarResizerRef.current, previewIframe = document.querySelector("#storybook-preview-iframe"), draggedElement = null, onDragStart = (e2) => {
       e2.preventDefault(), setState((state) => ({
         ...state,
         isDragging: !0
       })), e2.currentTarget === panelResizer ? draggedElement = panelResizer : e2.currentTarget === sidebarResizer && (draggedElement = sidebarResizer), window.addEventListener("mousemove", onDrag), window.addEventListener("mouseup", onDragEnd), previewIframe && (previewIframe.style.pointerEvents = "none");
-    }, onDragEnd = (e2) => {
-      setState((state) => draggedElement === sidebarResizer && state.navSize < SIDEBAR_MIN_WIDTH_PX && state.navSize > 0 ? {
-        ...state,
-        isDragging: !1,
-        navSize: SIDEBAR_MIN_WIDTH_PX
-      } : draggedElement === panelResizer && state.panelPosition === "right" && state.rightPanelWidth < RIGHT_PANEL_MIN_WIDTH_PX && state.rightPanelWidth > 0 ? {
-        ...state,
-        isDragging: !1,
-        rightPanelWidth: RIGHT_PANEL_MIN_WIDTH_PX
-      } : {
-        ...state,
-        isDragging: !1
+    }, onDragEnd = () => {
+      setState((state) => {
+        if (draggedElement === sidebarResizer && state.navSize < 240 && state.navSize > 0)
+          return {
+            ...state,
+            isDragging: !1,
+            navSize: 240
+          };
+        if (draggedElement === panelResizer) {
+          if (state.panelPosition === "right" && state.rightPanelWidth < 270 && state.rightPanelWidth > 0)
+            return {
+              ...state,
+              isDragging: !1,
+              rightPanelWidth: 270
+            };
+          if (state.panelPosition === "bottom" && state.bottomPanelHeight < 40 && state.bottomPanelHeight > 0)
+            return {
+              ...state,
+              isDragging: !1,
+              bottomPanelHeight: 40
+            };
+        }
+        return {
+          ...state,
+          isDragging: !1
+        };
       }), window.removeEventListener("mousemove", onDrag), window.removeEventListener("mouseup", onDragEnd), previewIframe?.removeAttribute("style"), draggedElement = null;
     }, onDrag = (e2) => {
       if (e2.buttons === 0) {
-        onDragEnd(e2);
+        onDragEnd();
         return;
       }
       setState((state) => {
@@ -4380,13 +9948,16 @@ function useDragging({
           return sidebarDragX === state.navSize ? state : sidebarDragX <= SNAP_THRESHOLD_PX ? {
             ...state,
             navSize: 0
-          } : sidebarDragX <= SIDEBAR_MIN_WIDTH_PX ? {
+          } : sidebarDragX <= 240 ? {
             ...state,
-            navSize: interpolate(MIN_WIDTH_STIFFNESS, sidebarDragX, SIDEBAR_MIN_WIDTH_PX)
+            navSize: interpolate(STIFFNESS, sidebarDragX, 240)
           } : {
             ...state,
-            // @ts-expect-error (non strict)
-            navSize: clamp(sidebarDragX, 0, e2.view.innerWidth)
+            navSize: clamp(
+              sidebarDragX,
+              0,
+              computeSidebarMaxWidth(state.panelPosition, state.rightPanelWidth, showPanel)
+            )
           };
         }
         if (draggedElement === panelResizer) {
@@ -4396,44 +9967,68 @@ function useDragging({
           ) : (
             // @ts-expect-error (non strict)
             e2.view.innerWidth - e2.clientX
-          );
-          if (panelDragSize === state[sizeAxisState])
-            return state;
-          if (panelDragSize <= SNAP_THRESHOLD_PX)
-            return {
-              ...state,
-              [sizeAxisState]: 0
-            };
-          if (state.panelPosition === "right" && panelDragSize <= RIGHT_PANEL_MIN_WIDTH_PX)
-            return {
-              ...state,
-              [sizeAxisState]: interpolate(
-                MIN_WIDTH_STIFFNESS,
-                panelDragSize,
-                RIGHT_PANEL_MIN_WIDTH_PX
-              )
-            };
-          let sizeAxisMax = (
-            // @ts-expect-error (non strict)
-            state.panelPosition === "bottom" ? e2.view.innerHeight : e2.view.innerWidth
-          );
-          return {
+          ), minimumSize = state.panelPosition === "bottom" ? 40 : 270;
+          return panelDragSize === state[sizeAxisState] ? state : panelDragSize <= SNAP_THRESHOLD_PX ? {
             ...state,
-            [sizeAxisState]: clamp(panelDragSize, 0, sizeAxisMax)
+            [sizeAxisState]: 0
+          } : panelDragSize <= minimumSize ? {
+            ...state,
+            [sizeAxisState]: interpolate(STIFFNESS, panelDragSize, minimumSize)
+          } : {
+            ...state,
+            [sizeAxisState]: clamp(
+              panelDragSize,
+              0,
+              computePanelMaxSize(state.panelPosition, state.navSize)
+            )
           };
         }
         return state;
       });
+    }, onSidebarKeyDown = (e2) => {
+      if (!RESIZE_KEYS.includes(e2.key))
+        return;
+      e2.preventDefault();
+      let step = e2.shiftKey ? KEYBOARD_STEP_PX * KEYBOARD_SHIFT_MULTIPLIER : KEYBOARD_STEP_PX;
+      setState(
+        (state) => applyResizeKeyboard(
+          state,
+          "navSize",
+          e2.key,
+          step,
+          240,
+          computeSidebarMaxWidth(state.panelPosition, state.rightPanelWidth, showPanel),
+          "ArrowRight",
+          "ArrowLeft"
+        )
+      );
+    }, onPanelKeyDown = (e2) => {
+      if (!RESIZE_KEYS.includes(e2.key))
+        return;
+      e2.preventDefault();
+      let step = e2.shiftKey ? KEYBOARD_STEP_PX * KEYBOARD_SHIFT_MULTIPLIER : KEYBOARD_STEP_PX;
+      setState(
+        (state) => applyResizeKeyboard(
+          state,
+          state.panelPosition === "bottom" ? "bottomPanelHeight" : "rightPanelWidth",
+          e2.key,
+          step,
+          state.panelPosition === "bottom" ? 40 : 270,
+          computePanelMaxSize(state.panelPosition, state.navSize),
+          state.panelPosition === "bottom" ? "ArrowUp" : "ArrowLeft",
+          state.panelPosition === "bottom" ? "ArrowDown" : "ArrowRight"
+        )
+      );
     };
-    return panelResizer?.addEventListener("mousedown", onDragStart), sidebarResizer?.addEventListener("mousedown", onDragStart), () => {
-      panelResizer?.removeEventListener("mousedown", onDragStart), sidebarResizer?.removeEventListener("mousedown", onDragStart), previewIframe?.removeAttribute("style");
+    return panelResizer?.addEventListener("mousedown", onDragStart), sidebarResizer?.addEventListener("mousedown", onDragStart), panelResizer?.addEventListener("keydown", onPanelKeyDown), sidebarResizer?.addEventListener("keydown", onSidebarKeyDown), () => {
+      panelResizer?.removeEventListener("mousedown", onDragStart), sidebarResizer?.removeEventListener("mousedown", onDragStart), panelResizer?.removeEventListener("keydown", onPanelKeyDown), sidebarResizer?.removeEventListener("keydown", onSidebarKeyDown), previewIframe?.removeAttribute("style");
     };
   }, [
     // we need to rerun this effect when the panel is shown/hidden or when changing between mobile/desktop to re-attach the event listeners
-    isPanelShown,
+    showPanel,
     isDesktop,
     setState
-  ]), { panelResizerRef, sidebarResizerRef };
+  ]), { panelResizerRef, sidebarResizerRef, sidebarMaxWidth, panelMaxSize };
 }
 
 // src/manager/components/layout/useLandmarkIndicator.ts
@@ -4449,17 +10044,11 @@ function findActiveLandmarkElement() {
   }
   return landmarkElement;
 }
-function useLandmarkIndicator() {
-  let theme = useTheme(), currentAnimationRef = useRef(null);
-  useEffect(() => {
-    let handleKeyDown = (e2) => {
-      if (e2.key !== "F6")
-        return;
-      let landmarkElement = findActiveLandmarkElement();
-      if (!landmarkElement)
-        return;
-      currentAnimationRef.current && (currentAnimationRef.current.cancel(), currentAnimationRef.current = null);
-      let animation = landmarkElement.animate(
+function useRegionFocusAnimation() {
+  let theme = useTheme(), reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)"), currentAnimationRef = useRef(null);
+  return (elementToAnimate) => {
+    if (elementToAnimate && (currentAnimationRef.current && (currentAnimationRef.current.cancel(), currentAnimationRef.current = null), !reducedMotion)) {
+      let animation = elementToAnimate.animate(
         [{ border: `2px solid ${theme.color.primary}` }, { border: "2px solid transparent" }],
         {
           duration: 1500,
@@ -4469,15 +10058,26 @@ function useLandmarkIndicator() {
       currentAnimationRef.current = animation, animation.onfinish = () => {
         currentAnimationRef.current = null;
       };
+    }
+  };
+}
+function useLandmarkIndicator() {
+  let animateLandmark = useRegionFocusAnimation();
+  useEffect(() => {
+    let handleKeyDown = (e2) => {
+      if (e2.key !== "F6")
+        return;
+      let landmarkElement = findActiveLandmarkElement();
+      landmarkElement && animateLandmark(landmarkElement);
     };
     return document.addEventListener("keydown", handleKeyDown, { capture: !0 }), () => {
       document.removeEventListener("keydown", handleKeyDown, { capture: !0 });
     };
-  }, [theme.color.primary]);
+  }, [animateLandmark]);
 }
 
 // src/manager/components/layout/Layout.tsx
-var MINIMUM_CONTENT_WIDTH_PX = 100, layoutStateIsEqual = (state, other) => state.navSize === other.navSize && state.bottomPanelHeight === other.bottomPanelHeight && state.rightPanelWidth === other.rightPanelWidth && state.panelPosition === other.panelPosition, useLayoutSyncingState = ({
+var layoutStateIsEqual = (state, other) => state.navSize === other.navSize && state.bottomPanelHeight === other.bottomPanelHeight && state.rightPanelWidth === other.rightPanelWidth && state.panelPosition === other.panelPosition, useLayoutSyncingState = ({
   api,
   managerLayoutState,
   setManagerLayoutState,
@@ -4505,11 +10105,14 @@ var MINIMUM_CONTENT_WIDTH_PX = 100, layoutStateIsEqual = (state, other) => state
       ...nextState
     }, setManagerLayoutState(nextState);
   }, [internalDraggingSizeState, setManagerLayoutState]);
-  let isPagesShown = managerLayoutState.viewMode !== "story" && managerLayoutState.viewMode !== "docs", isPanelShown = managerLayoutState.viewMode === "story" && !hasTab, { panelResizerRef, sidebarResizerRef } = useDragging({
+  let isPagesShown = managerLayoutState.viewMode !== void 0 && managerLayoutState.viewMode !== "story" && managerLayoutState.viewMode !== "docs", isPanelShown = managerLayoutState.viewMode === "story" && !hasTab, { navSize, rightPanelWidth, bottomPanelHeight } = internalDraggingSizeState.isDragging ? internalDraggingSizeState : managerLayoutState, customisedNavSize = api.getNavSizeWithCustomisations?.(navSize) ?? navSize, customisedShowPanel = api.getShowPanelWithCustomisations?.(isPanelShown) ?? isPanelShown, { panelResizerRef, sidebarResizerRef, sidebarMaxWidth, panelMaxSize } = useDragging({
     setState: setInternalDraggingSizeState,
-    isPanelShown,
-    isDesktop
-  }), { navSize, rightPanelWidth, bottomPanelHeight } = internalDraggingSizeState.isDragging ? internalDraggingSizeState : managerLayoutState, customisedNavSize = api.getNavSizeWithCustomisations?.(navSize) ?? navSize, customisedShowPanel = api.getShowPanelWithCustomisations?.(isPanelShown) ?? isPanelShown;
+    isDesktop,
+    navSize: customisedNavSize,
+    showPanel: customisedShowPanel,
+    rightPanelWidth,
+    panelPosition: managerLayoutState.panelPosition
+  });
   return {
     navSize: customisedNavSize,
     rightPanelWidth,
@@ -4517,11 +10120,13 @@ var MINIMUM_CONTENT_WIDTH_PX = 100, layoutStateIsEqual = (state, other) => state
     panelPosition: managerLayoutState.panelPosition,
     panelResizerRef,
     sidebarResizerRef,
+    sidebarMaxWidth,
+    panelMaxSize,
     showPages: isPagesShown,
     showPanel: customisedShowPanel,
     isDragging: internalDraggingSizeState.isDragging
   };
-}, MainContentMatcher = ({ children }) => react_default.createElement(Match, { path: /(^\/story|docs|onboarding\/|^\/$)/, startsWith: !1 }, ({ match }) => react_default.createElement(ContentContainer, { shown: !!match }, children)), OrderedMobileNavigation = styled(MobileNavigation)({
+}, OrderedMobileNavigation = styled(MobileNavigation)({
   order: 1
 }), Layout = ({ managerLayoutState, setManagerLayoutState, hasTab, ...slots }) => {
   let { isDesktop, isMobile: isMobile2 } = useLayout(), api = useStorybookApi(), {
@@ -4531,9 +10136,10 @@ var MINIMUM_CONTENT_WIDTH_PX = 100, layoutStateIsEqual = (state, other) => state
     panelPosition,
     panelResizerRef,
     sidebarResizerRef,
+    sidebarMaxWidth,
+    panelMaxSize,
     showPages,
-    showPanel,
-    isDragging
+    showPanel
   } = useLayoutSyncingState({ api, managerLayoutState, setManagerLayoutState, isDesktop, hasTab });
   return useLandmarkIndicator(), react_default.createElement(
     LayoutContainer,
@@ -4546,23 +10152,39 @@ var MINIMUM_CONTENT_WIDTH_PX = 100, layoutStateIsEqual = (state, other) => state
         "--bottom-panel-height": `${bottomPanelHeight}px`
       }
     },
-    showPages && react_default.createElement(PagesContainer, null, slots.slotPages),
-    react_default.createElement(react_default.Fragment, null, isDesktop && react_default.createElement(SidebarContainer, null, react_default.createElement(Drag, { ref: sidebarResizerRef }), slots.slotSidebar), isMobile2 && react_default.createElement(
+    react_default.createElement(react_default.Fragment, null, isDesktop && react_default.createElement(
+      SidebarContainer,
+      {
+        navSize,
+        sidebarMaxWidth,
+        sidebarResizerRef
+      },
+      slots.slotSidebar
+    ), isMobile2 && react_default.createElement(
       OrderedMobileNavigation,
       {
         menu: slots.slotSidebar,
         panel: slots.slotPanel,
         showPanel
       }
-    ), react_default.createElement(MainContentMatcher, null, slots.slotMain), isDesktop && showPanel && react_default.createElement(PanelContainer, { position: panelPosition }, react_default.createElement(
-      Drag,
+    ), react_default.createElement(
+      MainAreaContainer,
       {
-        orientation: panelPosition === "bottom" ? "horizontal" : "vertical",
-        overlapping: panelPosition === "bottom" ? !!bottomPanelHeight : !!rightPanelWidth,
-        position: panelPosition === "bottom" ? "left" : "right",
-        ref: panelResizerRef
+        showPages,
+        slotMain: slots.slotMain,
+        slotPages: slots.slotPages
       }
-    ), slots.slotPanel), isMobile2 && react_default.createElement(Notifications, null))
+    ), isDesktop && showPanel && react_default.createElement(
+      PanelContainer,
+      {
+        bottomPanelHeight,
+        rightPanelWidth,
+        panelMaxSize,
+        panelResizerRef,
+        position: panelPosition
+      },
+      slots.slotPanel
+    ), isMobile2 && react_default.createElement(Notifications, null))
   );
 }, LayoutContainer = styled.div(({ panelPosition, showPanel }) => ({
   width: "100%",
@@ -4575,93 +10197,14 @@ var MINIMUM_CONTENT_WIDTH_PX = 100, layoutStateIsEqual = (state, other) => state
     display: "grid",
     gap: 0,
     // This uses CSS variables to prevent Emotion from generating a new CSS className for every possible value
-    gridTemplateColumns: `minmax(0, var(--nav-width)) minmax(${MINIMUM_CONTENT_WIDTH_PX}px, 1fr) minmax(0, var(--right-panel-width))`,
+    gridTemplateColumns: `minmax(0, var(--nav-width)) minmax(${100}px, 1fr) minmax(0, var(--right-panel-width))`,
     gridTemplateRows: "1fr minmax(0, var(--bottom-panel-height))",
     gridTemplateAreas: showPanel ? panelPosition === "right" ? `"sidebar content panel"
                   "sidebar content panel"` : `"sidebar content content"
                 "sidebar panel   panel"` : `"sidebar content content"
                   "sidebar content content"`
   }
-})), SidebarContainer = styled.div(({ theme }) => ({
-  backgroundColor: theme.appBg,
-  gridArea: "sidebar",
-  position: "relative",
-  borderRight: `1px solid ${theme.appBorderColor}`
-})), ContentContainer = styled.div(({ theme, shown }) => ({
-  flex: 1,
-  position: "relative",
-  backgroundColor: theme.appContentBg,
-  display: shown ? "grid" : "none",
-  // This is needed to make the content container fill the available space
-  overflow: "auto",
-  [MEDIA_DESKTOP_BREAKPOINT]: {
-    flex: "auto",
-    gridArea: "content"
-  }
-})), PagesContainer = styled.div(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  gridRowStart: "sidebar-start",
-  gridRowEnd: "-1",
-  gridColumnStart: "sidebar-end",
-  gridColumnEnd: "-1",
-  backgroundColor: theme.appContentBg,
-  zIndex: 1
-})), PanelContainer = styled.div(
-  ({ theme, position }) => ({
-    gridArea: "panel",
-    position: "relative",
-    backgroundColor: theme.appContentBg,
-    borderTop: position === "bottom" ? `1px solid ${theme.appBorderColor}` : void 0,
-    borderLeft: position === "right" ? `1px solid ${theme.appBorderColor}` : void 0,
-    "& > aside": {
-      overflow: "hidden"
-    }
-  })
-), Drag = styled.div(
-  ({ theme }) => ({
-    position: "absolute",
-    opacity: 0,
-    transition: "opacity 0.2s ease-in-out",
-    zIndex: 100,
-    "&:after": {
-      content: '""',
-      display: "block",
-      backgroundColor: theme.color.secondary
-    },
-    "&:hover": {
-      opacity: 1
-    }
-  }),
-  ({ orientation = "vertical", overlapping = !0, position = "left" }) => orientation === "vertical" ? {
-    width: overlapping ? position === "left" ? 10 : 13 : 7,
-    height: "100%",
-    top: 0,
-    right: position === "left" ? -7 : void 0,
-    left: position === "right" ? -7 : void 0,
-    "&:after": {
-      width: 1,
-      height: "100%",
-      marginLeft: position === "left" ? 3 : 6
-    },
-    "&:hover": {
-      cursor: "col-resize"
-    }
-  } : {
-    width: "100%",
-    height: overlapping ? 13 : 7,
-    top: -7,
-    left: 0,
-    "&:after": {
-      width: "100%",
-      height: 1,
-      marginTop: 6
-    },
-    "&:hover": {
-      cursor: "row-resize"
-    }
-  }
-);
+}));
 
 // src/manager/container/Panel.tsx
 init_react();
@@ -4739,6 +10282,24 @@ var {
   SHARE_ISOLATE_MODE: SHARE_ISOLATE_MODE2,
   SHARE_POPOVER_OPENED: SHARE_POPOVER_OPENED2
 } = events;
+
+// ../../node_modules/es-toolkit/dist/string/words.mjs
+var CASE_SPLIT_PATTERN = new RegExp("\\p{Lu}?\\p{Ll}+|[0-9]+|\\p{Lu}+(?!\\p{Ll})|\\p{Emoji_Presentation}|\\p{Extended_Pictographic}|\\p{L}+", "gu");
+
+// global-externals:storybook/theming/create
+var create_default = __STORYBOOK_THEMING_CREATE__, { create: create3, themes: themes2 } = __STORYBOOK_THEMING_CREATE__;
+
+// src/manager-api/modules/layout.ts
+var { document: document2 } = scope;
+var focusableUIElements = {
+  addonPanel: "storybook-panel-region",
+  storySearchField: "storybook-explorer-searchfield",
+  storyListMenu: "storybook-explorer-menu",
+  storyPanelRoot: "storybook-panel-root",
+  showAddonPanel: "storybook-show-addon-panel",
+  sidebarRegion: "storybook-sidebar-region",
+  showSidebar: "storybook-show-sidebar"
+};
 
 // src/manager/components/panel/Panel.tsx
 init_react();
@@ -4820,7 +10381,7 @@ var PreRenderAddons = ({ panels }) => Object.entries(panels).map(([k2, v2]) => r
     { "aria-labelledby": "storybook-panel-heading", role: "region" },
     asideRef
   );
-  return react_default.createElement(Aside, { ref: asideRef, ...landmarkProps }, react_default.createElement("h2", { id: "storybook-panel-heading", className: "sb-sr-only" }, "Addon panel"), react_default.createElement(
+  return react_default.createElement(Aside, { ref: asideRef, id: focusableUIElements.addonPanel, ...landmarkProps }, react_default.createElement("h2", { id: "storybook-panel-heading", className: "sb-sr-only" }, "Addon panel"), react_default.createElement(
     StatelessTabsView,
     {
       id: "storybook-panel-root",
@@ -4855,7 +10416,10 @@ var Panel = (props) => {
   let { parameters, type } = story ?? {}, panelActions = useMemo(
     () => ({
       onSelect: (panel) => api.setSelectedPanel(panel),
-      toggleVisibility: () => api.togglePanel(),
+      toggleVisibility: async () => {
+        let wasPanelShown = api.getIsPanelShown();
+        api.togglePanel(), wasPanelShown && await api.focusOnUIElement(focusableUIElements.showAddonPanel) === !1 && document.body.focus();
+      },
       togglePosition: () => api.togglePanelPosition()
     }),
     [api]
@@ -4884,7 +10448,7 @@ var Panel = (props) => {
 
 // src/manager/container/Preview.tsx
 init_react();
-var import_memoizerific = __toESM(require_memoizerific(), 1);
+var import_memoizerific2 = __toESM(require_memoizerific(), 1);
 
 // src/manager/components/preview/Preview.tsx
 init_react();
@@ -4955,7 +10519,7 @@ var URL_VALUE_PATTERN = /^([0-9]{1,4})([a-z]{0,4})-([0-9]{1,4})([a-z]{0,4})$/, V
       isLocked: !0,
       isRotated: !1
     };
-  let global2 = normalizeGlobal(globals?.[PARAM_KEY]), userGlobal = normalizeGlobal(userGlobals?.[PARAM_KEY]), storyGlobal = normalizeGlobal(storyGlobals?.[PARAM_KEY]), value = userGlobal?.value ?? storyGlobal?.value ?? global2?.value, isRotated = userGlobal?.isRotated ?? storyGlobal?.isRotated ?? global2?.isRotated ?? !1, keys = Object.keys(options2), isLocked = disable || PARAM_KEY in storyGlobals || !keys.length, [match, vx, ux, vy, uy] = value?.match(URL_VALUE_PATTERN) || [];
+  let global2 = normalizeGlobal(globals?.[PARAM_KEY]), userGlobal = normalizeGlobal(userGlobals?.[PARAM_KEY]), storyGlobal = normalizeGlobal(storyGlobals?.[PARAM_KEY]), storyHasViewport = PARAM_KEY in storyGlobals, primaryGlobal = storyHasViewport ? storyGlobal : userGlobal, secondaryGlobal = storyHasViewport ? userGlobal : storyGlobal, value = primaryGlobal?.value ?? secondaryGlobal?.value ?? global2?.value, isRotated = primaryGlobal?.isRotated ?? secondaryGlobal?.isRotated ?? global2?.isRotated ?? !1, keys = Object.keys(options2), isLocked = disable || PARAM_KEY in storyGlobals || !keys.length, [match, vx, ux, vy, uy] = value?.match(URL_VALUE_PATTERN) || [];
   if (match) {
     let x2 = ux && ux !== "px" ? vx : Math.max(Number(vx), VIEWPORT_MIN_WIDTH), y2 = uy && uy !== "px" ? vy : Math.max(Number(vy), VIEWPORT_MIN_HEIGHT), width = `${x2}${ux === "pct" ? "%" : ux || "px"}`, height = `${y2}${uy === "pct" ? "%" : uy || "px"}`, selection = lastSelectedOption ? options2[lastSelectedOption] : void 0;
     return {
@@ -5012,16 +10576,14 @@ var URL_VALUE_PATTERN = /^([0-9]{1,4})([a-z]{0,4})-([0-9]{1,4})([a-z]{0,4})$/, V
     [updateGlobals]
   ), resize = useCallback(
     (width2, height2) => {
-      let w2 = width2.replace(/px$/, "").replace(/%$/, "pct"), h2 = height2.replace(/px$/, "").replace(/%$/, "pct"), value2 = isRotated ? `${h2}-${w2}` : `${w2}-${h2}`, [match, vx, ux, vy, uy] = value2.match(URL_VALUE_PATTERN) || [];
-      match && (ux || Number(vx) >= 40) && (uy || Number(vy) >= 40) && update2({ value: match, isRotated });
+      let w2 = width2.replace(/px$/, "").replace(/%$/, "pct"), h2 = height2.replace(/px$/, "").replace(/%$/, "pct"), value2 = isRotated ? `${h2}-${w2}` : `${w2}-${h2}`;
+      update2({ value: value2, isRotated });
     },
     [update2, isRotated]
   );
   return useEffect(() => {
-    PARAM_KEY in storyGlobals && (update2(normalizeGlobal(storyGlobals?.[PARAM_KEY], !1)), lastSelectedOption.current = void 0);
-  }, [storyGlobals, update2]), useEffect(() => {
-    option && (Object.hasOwn(options2, option) ? lastSelectedOption.current = option : (lastSelectedOption.current = void 0, update2(normalizeGlobal(storyGlobals?.[PARAM_KEY], !1))));
-  }, [storyGlobals, options2, option, update2]), useEffect(() => {
+    parameter && option && (Object.hasOwn(options2, option) ? lastSelectedOption.current = option : (lastSelectedOption.current = void 0, PARAM_KEY in storyGlobals || update2({ value: void 0, isRotated: !1 })));
+  }, [parameter, storyGlobals, options2, option, update2]), useEffect(() => {
     api.setAddonShortcut(ADDON_ID, {
       label: "Next viewport",
       defaultShortcut: ["alt", "V"],
@@ -5140,6 +10702,9 @@ var Wrapper = styled.div(
         outline: "none"
       }
     },
+    "input:disabled": {
+      background: "transparent"
+    },
     "input + div": {
       paddingInline: 0,
       fontSize: "inherit"
@@ -5147,6 +10712,10 @@ var Wrapper = styled.div(
     "&:has(input:focus-visible)": {
       outline: `2px solid ${theme.color.secondary}`,
       outlineOffset: -2
+    },
+    "&:has(input:disabled)": {
+      background: theme.base === "light" ? theme.color.lighter : theme.input.background,
+      cursor: "not-allowed"
     },
     ...after2 && { paddingRight: 2 },
     ...before2 && { paddingLeft: 2 }
@@ -5159,6 +10728,7 @@ var Wrapper = styled.div(
   setValue,
   minValue = -1 / 0,
   maxValue = 1 / 0,
+  step = 1,
   unit: fixedUnit,
   baseUnit = fixedUnit,
   className,
@@ -5201,11 +10771,14 @@ var Wrapper = styled.div(
         return;
       e2.preventDefault();
       let { number, unit } = parseValue(inputValue);
-      Number.isNaN(number) || (updateValue(`${e2.key === "ArrowUp" ? number + 1 : number - 1}${unit}`), setInputSelection());
+      if (!Number.isNaN(number)) {
+        let delta = e2.shiftKey ? step * 10 : step;
+        updateValue(`${e2.key === "ArrowUp" ? number + delta : number - delta}${unit}`), setInputSelection();
+      }
     }, input = inputRef.current;
     if (input)
       return input.addEventListener("keydown", handleKeyDown), () => input.removeEventListener("keydown", handleKeyDown);
-  }, [inputValue, parseValue, updateValue, setInputSelection]), react_default.createElement(Wrapper, { after: after2, before: before2, className, style }, before2 && react_default.createElement("div", null, before2), label && react_default.createElement("label", { htmlFor: id, className: "sb-sr-only" }, label), react_default.createElement(
+  }, [inputValue, parseValue, setInputSelection, step, updateValue]), react_default.createElement(Wrapper, { after: after2, before: before2, className, style }, before2 && react_default.createElement("div", null, before2), label && react_default.createElement("label", { htmlFor: id, className: "sb-sr-only" }, label), react_default.createElement(
     Form.Input,
     {
       ...props,
@@ -5305,7 +10878,7 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
   iframe: {
     pointerEvents: dragging === "none" ? "auto" : "none"
   }
-})), DragHandle = styled.div(
+})), DragHandle2 = styled.div(
   { display: "none" },
   ({ theme, isDefault }) => !isDefault && {
     display: "block",
@@ -5378,10 +10951,7 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
   width: 85,
   height: 28,
   minHeight: 28
-}), parseNumber = (value) => {
-  let [match, number, unit] = value.match(/^(\d+(?:\.\d+)?)(\%|[a-z]{0,4})?$/) || [];
-  return match ? { number: Number(number), unit } : void 0;
-}, Viewport = ({
+}), Viewport = ({
   active,
   id,
   src,
@@ -5417,15 +10987,19 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
     return handles.forEach((el) => el?.addEventListener("mousedown", onStart)), () => handles.forEach((el) => el?.removeEventListener("mousedown", onStart));
   }, [resize, scale]);
   let dimensions = useMemo(() => {
-    let { number: nx, unit: ux = "px" } = parseNumber(width) ?? { number: 0, unit: "px" }, { number: ny, unit: uy = "px" } = parseNumber(height) ?? { number: 0, unit: "px" }, frameWidth = Math.max(VIEWPORT_MIN_WIDTH, nx * scale), frameHeight = Math.max(VIEWPORT_MIN_HEIGHT, ny * scale);
+    let [, nx = "", ux = "px"] = width.match(/^(\d+(?:\.\d+)?)(\%|[a-z]{1,4})?$/) || [], [, ny = "", uy = "px"] = height.match(/^(\d+(?:\.\d+)?)(\%|[a-z]{1,4})?$/) || [];
     return {
       frame: {
-        width: `${frameWidth}${ux}`,
-        height: `${frameHeight}${uy}`
+        width: `calc(${width} * ${scale})`,
+        height: `calc(${height} * ${scale})`
       },
       display: {
-        width: `${nx}${ux === "px" ? "" : ux}`,
-        height: `${ny}${uy === "px" ? "" : uy}`
+        width: `${nx || width}${ux === "px" ? "" : ux}`,
+        height: `${ny || height}${uy === "px" ? "" : uy}`
+      },
+      locked: {
+        width: !nx || !ny,
+        height: !nx || !ny
       }
     };
   }, [width, height, scale]);
@@ -5438,7 +11012,8 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
       before: react_default.createElement(ActionList.Action, { size: "small", readOnly: !0, "aria-hidden": !0 }, "W"),
       value: width,
       minValue: 0,
-      setValue: (value) => resize(value, height)
+      setValue: (value) => resize(value, height),
+      disabled: dimensions.locked.width
     }
   ), react_default.createElement(
     ActionList.Button,
@@ -5459,7 +11034,8 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
       before: react_default.createElement(ActionList.Action, { size: "small", readOnly: !0, "aria-hidden": !0 }, "H"),
       value: height,
       minValue: 0,
-      setValue: (value) => resize(width, value)
+      setValue: (value) => resize(width, value),
+      disabled: dimensions.locked.height
     }
   ), isCustom && lastSelectedOption && react_default.createElement(
     ActionList.Button,
@@ -5493,8 +11069,8 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
       react_default.createElement(IFrame, { allowFullScreen: !0, active, key: id, id, title: id, src, scale: 1 }),
       !isDefault && react_default.createElement(react_default.Fragment, null, react_default.createElement(ScrollEdge, { "data-edge": "right" }), react_default.createElement(ScrollEdge, { "data-edge": "bottom" }), react_default.createElement(ScrollEdge, { "data-edge": "both" }))
     ),
-    react_default.createElement(
-      DragHandle,
+    !dimensions.locked.width && react_default.createElement(
+      DragHandle2,
       {
         ref: dragRefX,
         isDefault,
@@ -5502,8 +11078,8 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
         "data-value": dimensions.display.width
       }
     ),
-    react_default.createElement(
-      DragHandle,
+    !dimensions.locked.height && react_default.createElement(
+      DragHandle2,
       {
         ref: dragRefY,
         isDefault,
@@ -5511,7 +11087,7 @@ var ViewportWrapper = styled.div(({ active, isDefault, theme }) => ({
         "data-value": dimensions.display.height
       }
     ),
-    react_default.createElement(DragHandle, { ref: dragRefXY, isDefault, "data-side": "both" })
+    !dimensions.locked.width && !dimensions.locked.height && react_default.createElement(DragHandle2, { ref: dragRefXY, isDefault, "data-side": "both" })
   ));
 };
 
@@ -5558,7 +11134,7 @@ var getActive = (refId, refs) => refId && refs[refId] ? `storybook-ref-${refId}`
     viewMode
   }).previewHref), refsToLoad.forEach((ref) => {
     let id = `storybook-ref-${ref.id}`;
-    frames[id]?.startsWith(ref.url) || (frames[id] = api.getStoryHrefs(storyId, {
+    frames[id]?.startsWith(`${ref.url.replace(/\/?$/, "/")}iframe.html`) || (frames[id] = api.getStoryHrefs(storyId, {
       queryParams: { ...queryParams, ...version3 && { version: version3 } },
       refId: ref.id,
       viewMode
@@ -5782,7 +11358,11 @@ var Wrapper2 = styled.span(({ theme }) => ({
 // src/manager/components/preview/tools/zoom.tsx
 var ZOOM_LEVELS = [0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2, 3, 4, 8], INITIAL_ZOOM_LEVEL = 1, ZoomButton = styled(ToggleButton)({
   minWidth: 48
-}), Context = createContext({ value: INITIAL_ZOOM_LEVEL, set: (v2) => {
+}), ZoomResetButton = styled(ActionList.Button)(
+  ({ $isInitialValue }) => ({
+    visibility: $isInitialValue ? "hidden" : void 0
+  })
+), Context = createContext({ value: INITIAL_ZOOM_LEVEL, set: (v2) => {
 } }), ZoomInput = styled(NumericInput)({
   input: {
     width: 100
@@ -5799,7 +11379,7 @@ var ZOOM_LEVELS = [0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2, 3, 4, 8], INITIAL
     let { children, shouldScale } = this.props, { set } = this, { value } = this.state;
     return react_default.createElement(Context.Provider, { value: { value: shouldScale ? value : INITIAL_ZOOM_LEVEL, set } }, children);
   }
-}, Zoom2 = memo(function({ value, zoomIn, zoomOut, zoomTo }) {
+}, Zoom2 = memo(function({ value, zoomIn, zoomOut, zoomTo, zoomBy }) {
   let inputRef = useRef(null);
   return react_default.createElement(
     PopoverProvider,
@@ -5816,13 +11396,14 @@ var ZOOM_LEVELS = [0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2, 3, 4, 8], INITIAL
           unit: "%",
           before: react_default.createElement(ActionList.Button, { size: "small", padding: "small", readOnly: !0, "aria-hidden": !0 }, react_default.createElement(ZoomIcon, null)),
           after: react_default.createElement(
-            ActionList.Button,
+            ZoomResetButton,
             {
               size: "small",
               padding: "small",
-              disabled: value === INITIAL_ZOOM_LEVEL,
+              $isInitialValue: value === INITIAL_ZOOM_LEVEL,
               onClick: () => zoomTo(INITIAL_ZOOM_LEVEL),
-              ariaLabel: "Reset zoom"
+              ariaLabel: "Reset zoom",
+              "aria-hidden": value === INITIAL_ZOOM_LEVEL
             },
             react_default.createElement(UndoIcon, null)
           ),
@@ -5860,7 +11441,13 @@ var ZOOM_LEVELS = [0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2, 3, 4, 8], INITIAL
         padding: "small",
         variant: "ghost",
         ariaLabel: "Change zoom level",
-        pressed: value !== INITIAL_ZOOM_LEVEL
+        pressed: value !== INITIAL_ZOOM_LEVEL,
+        onKeyDown: (e2) => {
+          e2.key === "ArrowDown" ? (zoomBy(e2.getModifierState("Shift") ? -0.1 : -0.01), e2.preventDefault()) : e2.key === "ArrowUp" ? (zoomBy(e2.getModifierState("Shift") ? 0.1 : 0.01), e2.preventDefault()) : e2.key === "PageDown" ? (zoomOut(), e2.preventDefault()) : e2.key === "PageUp" ? (zoomIn(), e2.preventDefault()) : e2.key === "Home" ? (zoomTo(ZOOM_LEVELS[ZOOM_LEVELS.length - 1]), e2.preventDefault()) : e2.key === "End" && (zoomTo(ZOOM_LEVELS[0]), e2.preventDefault());
+        },
+        onWheel: (e2) => {
+          e2.deltaY < 0 ? zoomIn() : e2.deltaY > 0 && zoomOut(), e2.preventDefault();
+        }
       },
       Math.round(value * 100),
       "%"
@@ -5873,7 +11460,13 @@ var ZOOM_LEVELS = [0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2, 3, 4, 8], INITIAL
   }, [set, value]), zoomOut = useCallback(() => {
     let lowerZoomLevel = ZOOM_LEVELS.findLast((level) => level < value);
     lowerZoomLevel && set(lowerZoomLevel);
-  }, [set, value]), zoomTo = useCallback(
+  }, [set, value]), zoomBy = useCallback(
+    (delta) => {
+      let min = ZOOM_LEVELS[0], max = ZOOM_LEVELS[ZOOM_LEVELS.length - 1];
+      set(Math.max(min, Math.min(max, value + delta)));
+    },
+    [set, value]
+  ), zoomTo = useCallback(
     (value2) => {
       set(value2);
     },
@@ -5901,7 +11494,7 @@ var ZOOM_LEVELS = [0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2, 3, 4, 8], INITIAL
       actionName: "zoomOut",
       action: zoomOut
     });
-  }, [api, zoomIn, zoomOut, zoomTo]), react_default.createElement(Zoom2, { key: "zoom", value, zoomIn, zoomOut, zoomTo });
+  }, [api, zoomIn, zoomOut, zoomTo]), react_default.createElement(Zoom2, { key: "zoom", value, zoomIn, zoomOut, zoomTo, zoomBy });
 }), zoomTool = {
   title: "zoom",
   id: "zoom",
@@ -6054,27 +11647,39 @@ function filterTabs(panels, parameters) {
 
 // src/manager/components/preview/tools/addons.tsx
 init_react();
-var menuMapper = ({ api, state }) => ({
+var SHOW_ADDON_PANEL_BUTTON_ID = "storybook-show-addon-panel", menuMapper = ({ api, state }) => ({
   isVisible: api.getIsPanelShown(),
   singleStory: state.singleStory,
   panelPosition: state.layout.panelPosition,
-  toggle: () => api.togglePanel()
+  showPanel: async (animateLandmark) => {
+    api.togglePanel(!0), await api.focusOnUIElement(focusableUIElements.addonPanel, {
+      forceFocus: !0,
+      poll: !0
+    }) && animateLandmark?.(document.getElementById(focusableUIElements.addonPanel));
+  }
 }), addonsTool = {
   title: "addons",
   id: "addons",
   type: types.TOOL,
   match: ({ viewMode, tabId }) => viewMode === "story" && !tabId,
-  render: () => react_default.createElement(Consumer, { filter: menuMapper }, ({ isVisible, toggle, singleStory, panelPosition }) => !singleStory && !isVisible && react_default.createElement(react_default.Fragment, null, react_default.createElement(
-    Button,
-    {
-      padding: "small",
-      variant: "ghost",
-      ariaLabel: "Show addon panel",
-      key: "addons",
-      onClick: toggle
-    },
-    panelPosition === "bottom" ? react_default.createElement(BottomBarIcon, null) : react_default.createElement(SidebarAltIcon, null)
-  )))
+  render: () => {
+    let animateLandmark = useRegionFocusAnimation();
+    return react_default.createElement(Consumer, { filter: menuMapper }, ({ isVisible, showPanel, singleStory, panelPosition }) => !singleStory && !isVisible && react_default.createElement(react_default.Fragment, null, react_default.createElement(
+      Button,
+      {
+        padding: "small",
+        variant: "ghost",
+        ariaLabel: "Show addon panel",
+        id: SHOW_ADDON_PANEL_BUTTON_ID,
+        key: "addons",
+        onClick: () => showPanel(),
+        onKeyDown: (e2) => {
+          (e2.key === "Enter" || e2.key === " ") && (e2.preventDefault(), showPanel(animateLandmark));
+        }
+      },
+      panelPosition === "bottom" ? react_default.createElement(BottomBarIcon, null) : react_default.createElement(SidebarAltIcon, null)
+    )));
+  }
 };
 
 // src/manager/components/preview/tools/menu.tsx
@@ -6082,24 +11687,37 @@ init_react();
 var menuMapper2 = ({ api, state }) => ({
   isVisible: api.getIsNavShown(),
   singleStory: state.singleStory,
-  toggle: () => api.toggleNav()
+  viewMode: state.viewMode,
+  showSidebar: async (animateLandmark) => {
+    api.toggleNav(!0), await api.focusOnUIElement(focusableUIElements.sidebarRegion, {
+      forceFocus: !0,
+      poll: !0
+    }) && animateLandmark?.(document.getElementById(focusableUIElements.sidebarRegion));
+  }
 }), menuTool = {
   title: "menu",
   id: "menu",
   type: types.TOOL,
   // @ts-expect-error (non strict)
   match: ({ viewMode }) => ["story", "docs"].includes(viewMode),
-  render: () => react_default.createElement(Consumer, { filter: menuMapper2 }, ({ isVisible, toggle, singleStory }) => !singleStory && !isVisible && react_default.createElement(react_default.Fragment, null, react_default.createElement(
-    Button,
-    {
-      padding: "small",
-      variant: "ghost",
-      ariaLabel: "Show sidebar",
-      key: "menu",
-      onClick: toggle
-    },
-    react_default.createElement(MenuIcon, null)
-  ), react_default.createElement(Separator, null)))
+  render: () => {
+    let animateLandmark = useRegionFocusAnimation();
+    return react_default.createElement(Consumer, { filter: menuMapper2 }, ({ isVisible, showSidebar, singleStory }) => !singleStory && !isVisible && react_default.createElement(react_default.Fragment, null, react_default.createElement(
+      Button,
+      {
+        padding: "small",
+        variant: "ghost",
+        ariaLabel: "Show sidebar",
+        id: focusableUIElements.showSidebar,
+        key: "menu",
+        onClick: () => showSidebar(),
+        onKeyDown: (e2) => {
+          (e2.key === "Enter" || e2.key === " ") && (e2.preventDefault(), showSidebar(animateLandmark));
+        }
+      },
+      react_default.createElement(MenuIcon, null)
+    ), react_default.createElement(Separator, null)));
+  }
 };
 
 // src/manager/components/preview/tools/open-in-editor.tsx
@@ -6414,36 +12032,36 @@ var qrcodegen;
         throw new RangeError("Mask value out of range");
       for (let y2 = 0; y2 < this.size; y2++)
         for (let x2 = 0; x2 < this.size; x2++) {
-          let invert;
+          let invert2;
           switch (mask) {
             case 0:
-              invert = (x2 + y2) % 2 == 0;
+              invert2 = (x2 + y2) % 2 == 0;
               break;
             case 1:
-              invert = y2 % 2 == 0;
+              invert2 = y2 % 2 == 0;
               break;
             case 2:
-              invert = x2 % 3 == 0;
+              invert2 = x2 % 3 == 0;
               break;
             case 3:
-              invert = (x2 + y2) % 3 == 0;
+              invert2 = (x2 + y2) % 3 == 0;
               break;
             case 4:
-              invert = (Math.floor(x2 / 3) + Math.floor(y2 / 2)) % 2 == 0;
+              invert2 = (Math.floor(x2 / 3) + Math.floor(y2 / 2)) % 2 == 0;
               break;
             case 5:
-              invert = x2 * y2 % 2 + x2 * y2 % 3 == 0;
+              invert2 = x2 * y2 % 2 + x2 * y2 % 3 == 0;
               break;
             case 6:
-              invert = (x2 * y2 % 2 + x2 * y2 % 3) % 2 == 0;
+              invert2 = (x2 * y2 % 2 + x2 * y2 % 3) % 2 == 0;
               break;
             case 7:
-              invert = ((x2 + y2) % 2 + x2 * y2 % 3) % 2 == 0;
+              invert2 = ((x2 + y2) % 2 + x2 * y2 % 3) % 2 == 0;
               break;
             default:
               throw new Error("Unreachable");
           }
-          !this.isFunction[y2][x2] && invert && (this.modules[y2][x2] = !this.modules[y2][x2]);
+          !this.isFunction[y2][x2] && invert2 && (this.modules[y2][x2] = !this.modules[y2][x2]);
         }
     }
     // Calculates and returns the penalty score based on state of this QR Code's current modules.
@@ -6836,7 +12454,7 @@ var SUPPORTS_PATH2D = (function() {
   return !0;
 })(), QRCodeCanvas = react_default.forwardRef(
   function(props, forwardedRef) {
-    let _a = props, {
+    let _a2 = props, {
       value,
       size = DEFAULT_SIZE,
       level = DEFAULT_LEVEL,
@@ -6847,7 +12465,7 @@ var SUPPORTS_PATH2D = (function() {
       boostLevel,
       marginSize,
       imageSettings
-    } = _a, _b = __objRest(_a, [
+    } = _a2, _b = __objRest(_a2, [
       "value",
       "size",
       "level",
@@ -6929,7 +12547,7 @@ var SUPPORTS_PATH2D = (function() {
 QRCodeCanvas.displayName = "QRCodeCanvas";
 var QRCodeSVG = react_default.forwardRef(
   function(props, forwardedRef) {
-    let _a = props, {
+    let _a2 = props, {
       value,
       size = DEFAULT_SIZE,
       level = DEFAULT_LEVEL,
@@ -6941,7 +12559,7 @@ var QRCodeSVG = react_default.forwardRef(
       title: title2,
       marginSize,
       imageSettings
-    } = _a, otherProps = __objRest(_a, [
+    } = _a2, otherProps = __objRest(_a2, [
       "value",
       "size",
       "level",
@@ -7082,6 +12700,7 @@ var mapper3 = ({ api, state }) => {
   render: () => react_default.createElement(Consumer, { filter: mapper3 }, ({ api, storyId, refId }) => storyId ? react_default.createElement(
     PopoverProvider,
     {
+      ariaLabel: "Share this story",
       hasChrome: !0,
       placement: "bottom",
       padding: 0,
@@ -7092,13 +12711,13 @@ var mapper3 = ({ api, state }) => {
 };
 
 // src/manager/container/Preview.tsx
-var defaultTabs = [createCanvasTab()], defaultTools = [menuTool, remountTool], defaultToolsExtra = [zoomTool, addonsTool, fullScreenTool, shareTool, openInEditorTool], emptyTabsList = [], memoizedTabs = (0, import_memoizerific.default)(1)(
+var defaultTabs = [createCanvasTab()], defaultTools = [menuTool, remountTool], defaultToolsExtra = [zoomTool, addonsTool, fullScreenTool, shareTool, openInEditorTool], emptyTabsList = [], memoizedTabs = (0, import_memoizerific2.default)(1)(
   (_2, tabElements, parameters, showTabs) => showTabs ? filterTabs([...defaultTabs, ...Object.values(tabElements)], parameters) : emptyTabsList
-), memoizedTools = (0, import_memoizerific.default)(1)(
+), memoizedTools = (0, import_memoizerific2.default)(1)(
   (_2, toolElements, filterProps) => filterToolsSide([...defaultTools, ...Object.values(toolElements)], ...filterProps)
-), memoizedExtra = (0, import_memoizerific.default)(1)(
+), memoizedExtra = (0, import_memoizerific2.default)(1)(
   (_2, extraElements, filterProps) => filterToolsSide([...defaultToolsExtra, ...Object.values(extraElements)], ...filterProps)
-), memoizedWrapper = (0, import_memoizerific.default)(1)((_2, previewElements) => [
+), memoizedWrapper = (0, import_memoizerific2.default)(1)((_2, previewElements) => [
   ...defaultWrappers,
   ...Object.values(previewElements)
 ]), { PREVIEW_URL } = scope, splitTitleAddExtraSpace = (input) => input.split("/").join(" / ").replace(/\s\s/, " "), getDescription = (item) => {
@@ -7223,7 +12842,7 @@ var Shape = styled.svg(({ color: color2 }) => ({
   to {
     transform: translateY(50px);
   }
-`, Container5 = styled.div({
+`, Container8 = styled.div({
   position: "absolute",
   display: "flex",
   flexDirection: "row",
@@ -7254,7 +12873,7 @@ var Shape = styled.svg(({ color: color2 }) => ({
     let rect = anchorRef.current?.getBoundingClientRect();
     rect && (setLeft(rect.left + rect.width / 2), setTop(rect.top + rect.height / 2));
   }, []), react_default.createElement("div", { ref: anchorRef }, react_default.createElement(Anchor, null), createPortal(
-    react_default.createElement(Container5, { style: { top: top + "px", left: left + "px" } }, shapes.map((Particle, index) => {
+    react_default.createElement(Container8, { style: { top: top + "px", left: left + "px" } }, shapes.map((Particle, index) => {
       let angle = 360 / NUM_OF_PARTICLES * index + random(-JITTER, JITTER), distance = random(50, 80), rotation = random(-360, 360), style = {
         "--angle": angle + "deg",
         "--distance": distance + "px",
@@ -7279,7 +12898,7 @@ var slideIn2 = keyframes({
     transform: "translateY(var(--slide-out-to))",
     opacity: 0
   }
-}), Container6 = styled.div({
+}), Container9 = styled.div({
   display: "inline-grid",
   gridTemplateColumns: "1fr",
   justifyContent: "center",
@@ -7310,7 +12929,7 @@ var slideIn2 = keyframes({
   ...props
 }) => {
   let textRef = useRef(text), [staleValue, setStaleValue] = useState(text), isAnimating = text !== staleValue, reverse = isAnimating && numericCompare(staleValue, text);
-  return textRef.current = text, react_default.createElement(Container6, { ...props }, isAnimating && react_default.createElement(
+  return textRef.current = text, react_default.createElement(Container9, { ...props }, isAnimating && react_default.createElement(
     Text2,
     {
       "aria-hidden": !0,
@@ -7428,7 +13047,7 @@ var storeOptions = {
     watching: !1,
     cancelling: !1,
     fatalError: void 0,
-    indexUrl: void 0,
+    index: { entries: {}, v: 5 },
     previewAnnotations: [],
     currentRun: {
       triggeredBy: void 0,
@@ -7436,6 +13055,9 @@ var storeOptions = {
         coverage: !1,
         a11y: !1
       },
+      componentTestStatuses: [],
+      a11yStatuses: [],
+      a11yReports: {},
       componentTestCount: {
         success: 0,
         error: 0
@@ -7455,6 +13077,7 @@ var storeOptions = {
   }
 };
 var STORE_CHANNEL_EVENT_NAME = `UNIVERSAL_STORE:${storeOptions.id}`;
+var TRIGGER_TEST_RUN_REQUEST = `${ADDON_ID5}/trigger-test-run-request`, TRIGGER_TEST_RUN_RESPONSE = `${ADDON_ID5}/trigger-test-run-response`;
 
 // src/cli/AddonVitestService.constants.ts
 var SUPPORTED_FRAMEWORKS = [
@@ -7484,7 +13107,7 @@ init_react();
 function isOfType(type) {
   return (value) => typeof value === type;
 }
-var isFunction = isOfType("function"), isNull = (value) => value === null, isRegex = (value) => Object.prototype.toString.call(value).slice(8, -1) === "RegExp", isObject = (value) => !isUndefined(value) && !isNull(value) && (isFunction(value) || typeof value == "object"), isUndefined = isOfType("undefined");
+var isFunction2 = isOfType("function"), isNull2 = (value) => value === null, isRegex = (value) => Object.prototype.toString.call(value).slice(8, -1) === "RegExp", isObject = (value) => !isUndefined2(value) && !isNull2(value) && (isFunction2(value) || typeof value == "object"), isUndefined2 = isOfType("undefined");
 function equalArray(left, right) {
   let { length } = left;
   if (length !== right.length)
@@ -7824,9 +13447,9 @@ init_react();
 var import_prop_types2 = __toESM(require_prop_types());
 
 // ../../node_modules/popper.js/dist/esm/popper.js
-var isBrowser = typeof window < "u" && typeof document < "u" && typeof navigator < "u", timeoutDuration = (function() {
+var isBrowser2 = typeof window < "u" && typeof document < "u" && typeof navigator < "u", timeoutDuration = (function() {
   for (var longerTimeoutBrowsers = ["Edge", "Trident", "Firefox"], i2 = 0; i2 < longerTimeoutBrowsers.length; i2 += 1)
-    if (isBrowser && navigator.userAgent.indexOf(longerTimeoutBrowsers[i2]) >= 0)
+    if (isBrowser2 && navigator.userAgent.indexOf(longerTimeoutBrowsers[i2]) >= 0)
       return 1;
   return 0;
 })();
@@ -7846,8 +13469,8 @@ function taskDebounce(fn) {
     }, timeoutDuration));
   };
 }
-var supportsMicroTasks = isBrowser && window.Promise, debounce2 = supportsMicroTasks ? microtaskDebounce : taskDebounce;
-function isFunction2(functionToCheck) {
+var supportsMicroTasks = isBrowser2 && window.Promise, debounce2 = supportsMicroTasks ? microtaskDebounce : taskDebounce;
+function isFunction3(functionToCheck) {
   var getType = {};
   return functionToCheck && getType.toString.call(functionToCheck) === "[object Function]";
 }
@@ -7876,7 +13499,7 @@ function getScrollParent(element) {
 function getReferenceNode(reference) {
   return reference && reference.referenceNode ? reference.referenceNode : reference;
 }
-var isIE11 = isBrowser && !!(window.MSInputMethodContext && document.documentMode), isIE10 = isBrowser && /MSIE 10/.test(navigator.userAgent);
+var isIE11 = isBrowser2 && !!(window.MSInputMethodContext && document.documentMode), isIE10 = isBrowser2 && /MSIE 10/.test(navigator.userAgent);
 function isIE(version3) {
   return version3 === 11 ? isIE11 : version3 === 10 ? isIE10 : isIE11 || isIE10;
 }
@@ -7925,8 +13548,8 @@ function getBordersSize(styles2, axis) {
 function getSize(axis, body, html, computedStyle) {
   return Math.max(body["offset" + axis], body["scroll" + axis], html["client" + axis], html["offset" + axis], html["scroll" + axis], isIE(10) ? parseInt(html["offset" + axis]) + parseInt(computedStyle["margin" + (axis === "Height" ? "Top" : "Left")]) + parseInt(computedStyle["margin" + (axis === "Height" ? "Bottom" : "Right")]) : 0);
 }
-function getWindowSizes(document10) {
-  var body = document10.body, html = document10.documentElement, computedStyle = isIE(10) && getComputedStyle(html);
+function getWindowSizes(document11) {
+  var body = document11.body, html = document11.documentElement, computedStyle = isIE(10) && getComputedStyle(html);
   return {
     height: getSize("Height", body, html, computedStyle),
     width: getSize("Width", body, html, computedStyle)
@@ -8129,7 +13752,7 @@ function runModifiers(modifiers2, data, ends) {
   return modifiersToRun.forEach(function(modifier) {
     modifier.function && console.warn("`modifier.function` is deprecated, use `modifier.fn`!");
     var fn = modifier.function || modifier.fn;
-    modifier.enabled && isFunction2(fn) && (data.offsets.popper = getClientRect(data.offsets.popper), data.offsets.reference = getClientRect(data.offsets.reference), data = fn(data, modifier));
+    modifier.enabled && isFunction3(fn) && (data.offsets.popper = getClientRect(data.offsets.popper), data.offsets.reference = getClientRect(data.offsets.reference), data = fn(data, modifier));
   }), data;
 }
 function update() {
@@ -8219,7 +13842,7 @@ function getRoundedOffsets(data, shouldRound) {
     right: horizontalToInteger(popper.right)
   };
 }
-var isFirefox = isBrowser && /Firefox/i.test(navigator.userAgent);
+var isFirefox = isBrowser2 && /Firefox/i.test(navigator.userAgent);
 function computeStyle(data, options2) {
   var x2 = options2.x, y2 = options2.y, popper = data.offsets.popper, legacyGpuAccelerationOption = find(data.instance.modifiers, function(modifier) {
     return modifier.name === "applyStyle";
@@ -8783,7 +14406,7 @@ var modifiers = {
     }).sort(function(a2, b2) {
       return a2.order - b2.order;
     }), this.modifiers.forEach(function(modifierOptions) {
-      modifierOptions.enabled && isFunction2(modifierOptions.onLoad) && modifierOptions.onLoad(_this.reference, _this.popper, _this.options, modifierOptions, _this.state);
+      modifierOptions.enabled && isFunction3(modifierOptions.onLoad) && modifierOptions.onLoad(_this.reference, _this.popper, _this.options, modifierOptions, _this.state);
     }), this.update();
     var eventsEnabled = this.options.eventsEnabled;
     eventsEnabled && this.enableEventListeners(), this.state.eventsEnabled = eventsEnabled;
@@ -9014,13 +14637,13 @@ function isOfType4(type) {
     return typeof value === type;
   };
 }
-var isFunction3 = isOfType4("function"), isNull2 = function(value) {
+var isFunction4 = isOfType4("function"), isNull3 = function(value) {
   return value === null;
 }, isRegex2 = function(value) {
   return Object.prototype.toString.call(value).slice(8, -1) === "RegExp";
 }, isObject2 = function(value) {
-  return !isUndefined2(value) && !isNull2(value) && (isFunction3(value) || typeof value == "object");
-}, isUndefined2 = isOfType4("undefined");
+  return !isUndefined3(value) && !isNull3(value) && (isFunction4(value) || typeof value == "object");
+}, isUndefined3 = isOfType4("undefined");
 
 // ../../node_modules/tree-changes/node_modules/@gilbarbara/deep-equal/esm/index.js
 var __values = function(o3) {
@@ -9051,7 +14674,7 @@ function equalArrayBuffer2(left, right) {
   return !0;
 }
 function equalMap2(left, right) {
-  var e_1, _a, e_2, _b;
+  var e_1, _a2, e_2, _b;
   if (left.size !== right.size)
     return !1;
   try {
@@ -9064,7 +14687,7 @@ function equalMap2(left, right) {
     e_1 = { error: e_1_1 };
   } finally {
     try {
-      _d && !_d.done && (_a = _c.return) && _a.call(_c);
+      _d && !_d.done && (_a2 = _c.return) && _a2.call(_c);
     } finally {
       if (e_1) throw e_1.error;
     }
@@ -9087,7 +14710,7 @@ function equalMap2(left, right) {
   return !0;
 }
 function equalSet2(left, right) {
-  var e_3, _a;
+  var e_3, _a2;
   if (left.size !== right.size)
     return !1;
   try {
@@ -9100,7 +14723,7 @@ function equalSet2(left, right) {
     e_3 = { error: e_3_1 };
   } finally {
     try {
-      _c && !_c.done && (_a = _b.return) && _a.call(_b);
+      _c && !_c.done && (_a2 = _b.return) && _a2.call(_b);
     } finally {
       if (e_3) throw e_3.error;
     }
@@ -9341,8 +14964,8 @@ function compareValues2(previousData, data, options2) {
     return esm_default2.primitive(d2) && esm_default2.defined(d2);
   }) && (type === "added" ? !esm_default2.defined(left) && esm_default2.defined(right) : esm_default2.defined(left) && !esm_default2.defined(right));
 }
-function getIterables2(previousData, data, _a) {
-  var _b = _a === void 0 ? {} : _a, key = _b.key, left = nested2(previousData, key), right = nested2(data, key);
+function getIterables2(previousData, data, _a2) {
+  var _b = _a2 === void 0 ? {} : _a2, key = _b.key, left = nested2(previousData, key), right = nested2(data, key);
   if (!isSameType2(left, right))
     throw new TypeError("Inputs have different types");
   if (!canHaveLength2(left, right))
@@ -9350,8 +14973,8 @@ function getIterables2(previousData, data, _a) {
   return [left, right].every(esm_default2.plainObject) && (left = Object.keys(left), right = Object.keys(right)), [left, right];
 }
 function hasEntry2(input) {
-  return function(_a) {
-    var key = _a[0], value = _a[1];
+  return function(_a2) {
+    var key = _a2[0], value = _a2[1];
     return esm_default2.array(input) ? equal2(input, value) || input.some(function(d2) {
       return equal2(d2, value) || esm_default2.array(value) && isEqualPredicate2(value)(d2);
     }) : esm_default2.plainObject(input) && input[key] ? !!input[key] && equal2(input[key], value) : equal2(input, value);
@@ -9445,14 +15068,14 @@ function treeChanges2(previousData, data) {
     }
   }, emptied = function(key) {
     try {
-      var _a = getIterables2(previousData, data, { key }), left = _a[0], right = _a[1];
+      var _a2 = getIterables2(previousData, data, { key }), left = _a2[0], right = _a2[1];
       return !!left.length && !right.length;
     } catch {
       return !1;
     }
   }, filled = function(key) {
     try {
-      var _a = getIterables2(previousData, data, { key }), left = _a[0], right = _a[1];
+      var _a2 = getIterables2(previousData, data, { key }), left = _a2[0], right = _a2[1];
       return !left.length && !!right.length;
     } catch {
       return !1;
@@ -9476,23 +15099,23 @@ function treeChanges2(previousData, data) {
 }
 
 // ../../node_modules/react-floater/es/index.js
-function ownKeys(e2, r3) {
+function ownKeys(e2, r4) {
   var t2 = Object.keys(e2);
   if (Object.getOwnPropertySymbols) {
     var o3 = Object.getOwnPropertySymbols(e2);
-    r3 && (o3 = o3.filter(function(r4) {
-      return Object.getOwnPropertyDescriptor(e2, r4).enumerable;
+    r4 && (o3 = o3.filter(function(r5) {
+      return Object.getOwnPropertyDescriptor(e2, r5).enumerable;
     })), t2.push.apply(t2, o3);
   }
   return t2;
 }
 function _objectSpread2(e2) {
-  for (var r3 = 1; r3 < arguments.length; r3++) {
-    var t2 = arguments[r3] != null ? arguments[r3] : {};
-    r3 % 2 ? ownKeys(Object(t2), !0).forEach(function(r4) {
-      _defineProperty(e2, r4, t2[r4]);
-    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e2, Object.getOwnPropertyDescriptors(t2)) : ownKeys(Object(t2)).forEach(function(r4) {
-      Object.defineProperty(e2, r4, Object.getOwnPropertyDescriptor(t2, r4));
+  for (var r4 = 1; r4 < arguments.length; r4++) {
+    var t2 = arguments[r4] != null ? arguments[r4] : {};
+    r4 % 2 ? ownKeys(Object(t2), !0).forEach(function(r5) {
+      _defineProperty(e2, r5, t2[r5]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e2, Object.getOwnPropertyDescriptors(t2)) : ownKeys(Object(t2)).forEach(function(r5) {
+      Object.defineProperty(e2, r5, Object.getOwnPropertyDescriptor(t2, r5));
     });
   }
   return e2;
@@ -9941,8 +15564,8 @@ var STATUS3 = {
   ERROR: "error"
 };
 function canUseDOM2() {
-  var _a;
-  return !!(typeof window < "u" && ((_a = window.document) != null && _a.createElement));
+  var _a2;
+  return !!(typeof window < "u" && ((_a2 = window.document) != null && _a2.createElement));
 }
 function getClientRect2(element) {
   return element ? element.getBoundingClientRect() : null;
@@ -10009,7 +15632,7 @@ function hasPosition(el, type = "fixed") {
   return nodeName === "BODY" || nodeName === "HTML" ? !1 : styles2 && styles2.position === type ? !0 : el.parentNode ? hasPosition(el.parentNode, type) : !1;
 }
 function isElementVisible(element) {
-  var _a;
+  var _a2;
   if (!element)
     return !1;
   let parentElement = element;
@@ -10019,13 +15642,13 @@ function isElementVisible(element) {
       if (display === "none" || visibility === "hidden")
         return !1;
     }
-    parentElement = (_a = parentElement.parentElement) != null ? _a : null;
+    parentElement = (_a2 = parentElement.parentElement) != null ? _a2 : null;
   }
   return !0;
 }
 function getElementPosition(element, offset2, skipFix) {
-  var _a, _b, _c;
-  let elementRect = getClientRect2(element), parent = getScrollParent2(element, skipFix), hasScrollParent = hasCustomScrollParent(element, skipFix), isFixedTarget = hasPosition(element), parentTop = 0, top = (_a = elementRect?.top) != null ? _a : 0;
+  var _a2, _b, _c;
+  let elementRect = getClientRect2(element), parent = getScrollParent2(element, skipFix), hasScrollParent = hasCustomScrollParent(element, skipFix), isFixedTarget = hasPosition(element), parentTop = 0, top = (_a2 = elementRect?.top) != null ? _a2 : 0;
   if (hasScrollParent && isFixedTarget) {
     let offsetTop = (_b = element?.offsetTop) != null ? _b : 0, parentScrollTop = (_c = parent?.scrollTop) != null ? _c : 0;
     top = offsetTop - parentScrollTop;
@@ -10033,17 +15656,17 @@ function getElementPosition(element, offset2, skipFix) {
   return Math.floor(top - offset2);
 }
 function getScrollTo(element, offset2, skipFix) {
-  var _a;
+  var _a2;
   if (!element)
     return 0;
-  let { offsetTop = 0, scrollTop = 0 } = (_a = (0, import_scrollparent.default)(element)) != null ? _a : {}, top = element.getBoundingClientRect().top + scrollTop;
+  let { offsetTop = 0, scrollTop = 0 } = (_a2 = (0, import_scrollparent.default)(element)) != null ? _a2 : {}, top = element.getBoundingClientRect().top + scrollTop;
   offsetTop && (hasCustomScrollParent(element, skipFix) || hasCustomOffsetParent(element)) && (top -= offsetTop);
   let output = Math.floor(top - offset2);
   return output < 0 ? 0 : output;
 }
 function scrollDocument() {
-  var _a;
-  return (_a = document.scrollingElement) != null ? _a : document.documentElement;
+  var _a2;
+  return (_a2 = document.scrollingElement) != null ? _a2 : document.documentElement;
 }
 function scrollTo(value, options2) {
   let { duration, element } = options2;
@@ -10075,7 +15698,7 @@ function hasValidKeys(object, keys) {
   return !src_default.plainObject(object) || !src_default.array(keys) ? !1 : Object.keys(object).every((d2) => keys.includes(d2));
 }
 function hexToRGB(hex) {
-  let shorthandRegex = /^#?([\da-f])([\da-f])([\da-f])$/i, properHex = hex.replace(shorthandRegex, (_m, r3, g2, b2) => r3 + r3 + g2 + g2 + b2 + b2), result = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(properHex);
+  let shorthandRegex = /^#?([\da-f])([\da-f])([\da-f])$/i, properHex = hex.replace(shorthandRegex, (_m, r4, g2, b2) => r4 + r4 + g2 + g2 + b2 + b2), result = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(properHex);
   return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : [];
 }
 function hideBeacon(step) {
@@ -10096,7 +15719,7 @@ function log2({ data, debug = !1, title: title2, warn = !1 }) {
 function objectKeys(input) {
   return Object.keys(input);
 }
-function omit(input, ...filter) {
+function omit2(input, ...filter) {
   if (!src_default.plainObject(input))
     throw new TypeError("Expected an object");
   let output = {};
@@ -10104,7 +15727,7 @@ function omit(input, ...filter) {
     ({}).hasOwnProperty.call(input, key) && (filter.includes(key) || (output[key] = input[key]));
   return output;
 }
-function pick(input, ...filter) {
+function pick2(input, ...filter) {
   if (!src_default.plainObject(input))
     throw new TypeError("Expected an object");
   if (!filter.length)
@@ -10221,8 +15844,8 @@ var defaultFloaterProps = {
   position: "absolute"
 };
 function getStyles2(props, step) {
-  var _a, _b, _c, _d, _e;
-  let { floaterProps, styles: styles2 } = props, mergedFloaterProps = (0, import_deepmerge3.default)((_a = step.floaterProps) != null ? _a : {}, floaterProps ?? {}), mergedStyles = (0, import_deepmerge3.default)(styles2 ?? {}, (_b = step.styles) != null ? _b : {}), options2 = (0, import_deepmerge3.default)(defaultOptions2, mergedStyles.options || {}), hideBeacon2 = step.placement === "center" || step.disableBeacon, { width } = options2;
+  var _a2, _b, _c, _d, _e;
+  let { floaterProps, styles: styles2 } = props, mergedFloaterProps = (0, import_deepmerge3.default)((_a2 = step.floaterProps) != null ? _a2 : {}, floaterProps ?? {}), mergedStyles = (0, import_deepmerge3.default)(styles2 ?? {}, (_b = step.styles) != null ? _b : {}), options2 = (0, import_deepmerge3.default)(defaultOptions2, mergedStyles.options || {}), hideBeacon2 = step.placement === "center" || step.disableBeacon, { width } = options2;
   window.innerWidth > 480 && (width = 380), "width" in options2 && (width = typeof options2.width == "number" && window.innerWidth < options2.width ? window.innerWidth - 30 : options2.width);
   let overlay = {
     bottom: 0,
@@ -10360,7 +15983,7 @@ function getStyles2(props, step) {
   return (0, import_deepmerge3.default)(defaultStyles, mergedStyles);
 }
 function getTourProps(props) {
-  return pick(
+  return pick2(
     props,
     "beaconComponent",
     "disableCloseOnEsc",
@@ -10381,7 +16004,7 @@ function getTourProps(props) {
   );
 }
 function getMergedStep(props, currentStep) {
-  var _a, _b, _c, _d, _e, _f;
+  var _a2, _b, _c, _d, _e, _f;
   let step = currentStep ?? {}, mergedStep = import_deepmerge2.default.all([defaultStep, getTourProps(props), step], {
     isMergeableObject: src_default.plainObject
   }), mergedStyles = getStyles2(props, mergedStep), scrollParent2 = hasCustomScrollParent(
@@ -10389,14 +16012,14 @@ function getMergedStep(props, currentStep) {
     mergedStep.disableScrollParentFix
   ), floaterProps = import_deepmerge2.default.all([
     defaultFloaterProps,
-    (_a = props.floaterProps) != null ? _a : {},
+    (_a2 = props.floaterProps) != null ? _a2 : {},
     (_b = mergedStep.floaterProps) != null ? _b : {}
   ]);
   return floaterProps.offset = mergedStep.offset, floaterProps.styles = (0, import_deepmerge2.default)((_c = floaterProps.styles) != null ? _c : {}, mergedStyles.floaterStyles), floaterProps.offset += (_e = (_d = props.spotlightPadding) != null ? _d : mergedStep.spotlightPadding) != null ? _e : 0, mergedStep.placementBeacon && floaterProps.wrapperOptions && (floaterProps.wrapperOptions.placement = mergedStep.placementBeacon), scrollParent2 && floaterProps.options.preventOverflow && (floaterProps.options.preventOverflow.boundariesElement = "window"), {
     ...mergedStep,
     locale: import_deepmerge2.default.all([defaultLocale, (_f = props.locale) != null ? _f : {}, mergedStep.locale || {}]),
     floaterProps,
-    styles: omit(mergedStyles, "floaterStyles")
+    styles: omit2(mergedStyles, "floaterStyles")
   };
 }
 function validateStep(step, debug = !1) {
@@ -10428,7 +16051,7 @@ var defaultState = {
   origin: null,
   size: 0,
   status: STATUS3.IDLE
-}, validKeys = objectKeys(omit(defaultState, "controlled", "size")), Store = class {
+}, validKeys = objectKeys(omit2(defaultState, "controlled", "size")), Store = class {
   constructor(options2) {
     __publicField(this, "beaconPopper"), __publicField(this, "tooltipPopper"), __publicField(this, "data", /* @__PURE__ */ new Map()), __publicField(this, "listener"), __publicField(this, "store", /* @__PURE__ */ new Map()), __publicField(this, "addListener", (listener) => {
       this.listener = listener;
@@ -10501,7 +16124,7 @@ var defaultState = {
         status: STATUS3.PAUSED
       });
     }), __publicField(this, "update", (state) => {
-      var _a, _b;
+      var _a2, _b;
       if (!hasValidKeys(state, validKeys))
         throw new Error(`State is not valid. Valid keys: ${validKeys.join(", ")}`);
       this.setState({
@@ -10509,7 +16132,7 @@ var defaultState = {
           {
             ...this.getState(),
             ...state,
-            action: (_a = state.action) != null ? _a : ACTIONS.UPDATE,
+            action: (_a2 = state.action) != null ? _a2 : ACTIONS.UPDATE,
             origin: (_b = state.origin) != null ? _b : null
           },
           !0
@@ -10542,10 +16165,10 @@ var defaultState = {
     } : { ...defaultState };
   }
   getNextState(state, force = !1) {
-    var _a, _b, _c, _d, _e;
+    var _a2, _b, _c, _d, _e;
     let { action, controlled, index, size, status } = this.getState(), newIndex = src_default.number(state.index) ? state.index : index, nextIndex = controlled && !force ? index : Math.min(Math.max(newIndex, 0), size);
     return {
-      action: (_a = state.action) != null ? _a : action,
+      action: (_a2 = state.action) != null ? _a2 : action,
       controlled,
       index: nextIndex,
       lifecycle: (_b = state.lifecycle) != null ? _b : LIFECYCLE.INIT,
@@ -10639,20 +16262,20 @@ var Spotlight_default = JoyrideSpotlight, JoyrideOverlay = class extends Compone
     this.scrollParent = getScrollParent2(element ?? document.body, disableScrollParentFix, !0), this.isActive = !0, window.addEventListener("resize", this.handleResize);
   }
   componentDidUpdate(previousProps) {
-    var _a;
+    var _a2;
     let { disableScrollParentFix, lifecycle, spotlightClicks, target } = this.props, { changed } = treeChanges(previousProps, this.props);
     if (changed("target") || changed("disableScrollParentFix")) {
       let element = getElement(target);
       this.scrollParent = getScrollParent2(element ?? document.body, disableScrollParentFix, !0);
     }
-    changed("lifecycle", LIFECYCLE.TOOLTIP) && ((_a = this.scrollParent) == null || _a.addEventListener("scroll", this.handleScroll, { passive: !0 }), setTimeout(() => {
+    changed("lifecycle", LIFECYCLE.TOOLTIP) && ((_a2 = this.scrollParent) == null || _a2.addEventListener("scroll", this.handleScroll, { passive: !0 }), setTimeout(() => {
       let { isScrolling } = this.state;
       isScrolling || this.updateState({ showSpotlight: !0 });
     }, 100)), (changed("spotlightClicks") || changed("disableOverlay") || changed("lifecycle")) && (spotlightClicks && lifecycle === LIFECYCLE.TOOLTIP ? window.addEventListener("mousemove", this.handleMouseMove, !1) : lifecycle !== LIFECYCLE.TOOLTIP && window.removeEventListener("mousemove", this.handleMouseMove));
   }
   componentWillUnmount() {
-    var _a;
-    this.isActive = !1, window.removeEventListener("mousemove", this.handleMouseMove), window.removeEventListener("resize", this.handleResize), clearTimeout(this.resizeTimeout), clearTimeout(this.scrollTimeout), (_a = this.scrollParent) == null || _a.removeEventListener("scroll", this.handleScroll);
+    var _a2;
+    this.isActive = !1, window.removeEventListener("mousemove", this.handleMouseMove), window.removeEventListener("resize", this.handleResize), clearTimeout(this.resizeTimeout), clearTimeout(this.scrollTimeout), (_a2 = this.scrollParent) == null || _a2.removeEventListener("scroll", this.handleScroll);
   }
   get overlayStyles() {
     let { mouseOverSpotlight } = this.state, { disableOverlayClose, placement, styles: styles2 } = this.props, baseStyles = styles2.overlay;
@@ -10664,7 +16287,7 @@ var Spotlight_default = JoyrideSpotlight, JoyrideOverlay = class extends Compone
     };
   }
   get spotlightStyles() {
-    var _a, _b, _c;
+    var _a2, _b, _c;
     let { showSpotlight } = this.state, {
       disableScrollParentFix = !1,
       spotlightClicks,
@@ -10674,7 +16297,7 @@ var Spotlight_default = JoyrideSpotlight, JoyrideOverlay = class extends Compone
     } = this.props, element = getElement(target), elementRect = getClientRect2(element), isFixedTarget = hasPosition(element), top = getElementPosition(element, spotlightPadding, disableScrollParentFix);
     return {
       ...isLegacy() ? styles2.spotlightLegacy : styles2.spotlight,
-      height: Math.round(((_a = elementRect?.height) != null ? _a : 0) + spotlightPadding * 2),
+      height: Math.round(((_a2 = elementRect?.height) != null ? _a2 : 0) + spotlightPadding * 2),
       left: Math.round(((_b = elementRect?.left) != null ? _b : 0) - spotlightPadding),
       opacity: showSpotlight ? 1 : 0,
       pointerEvents: spotlightClicks ? "none" : "auto",
@@ -11036,12 +16659,12 @@ var Container_default = JoyrideTooltipContainer, JoyrideTooltip = class extends 
     }), __publicField(this, "setTooltipRef", (element) => {
       this.tooltip = element;
     }), __publicField(this, "setPopper", (popper, type) => {
-      var _a;
+      var _a2;
       let { action, lifecycle, step, store: store2 } = this.props;
       type === "wrapper" ? store2.setPopper("beacon", popper) : store2.setPopper("tooltip", popper), store2.getPopper("beacon") && (store2.getPopper("tooltip") || step.placement === "center") && lifecycle === LIFECYCLE.INIT && store2.update({
         action,
         lifecycle: LIFECYCLE.READY
-      }), (_a = step.floaterProps) != null && _a.getPopper && step.floaterProps.getPopper(popper, type);
+      }), (_a2 = step.floaterProps) != null && _a2.getPopper && step.floaterProps.getPopper(popper, type);
     }), __publicField(this, "renderTooltip", (renderProps) => {
       let { continuous, helpers, index, size, step } = this.props;
       return createElement(
@@ -11068,7 +16691,7 @@ var Container_default = JoyrideTooltipContainer, JoyrideTooltip = class extends 
     });
   }
   componentDidUpdate(previousProps) {
-    var _a;
+    var _a2;
     let {
       action,
       callback,
@@ -11120,11 +16743,11 @@ var Container_default = JoyrideTooltipContainer, JoyrideTooltip = class extends 
       ...state,
       step,
       type: EVENTS.TOOLTIP
-    }), shouldScroll2 && this.tooltip && (this.scope = new Scope(this.tooltip, { selector: "[data-action=primary]" }), this.scope.setFocus())), changedFrom("lifecycle", [LIFECYCLE.TOOLTIP, LIFECYCLE.INIT], LIFECYCLE.INIT) && ((_a = this.scope) == null || _a.removeScope(), store2.cleanupPoppers());
+    }), shouldScroll2 && this.tooltip && (this.scope = new Scope(this.tooltip, { selector: "[data-action=primary]" }), this.scope.setFocus())), changedFrom("lifecycle", [LIFECYCLE.TOOLTIP, LIFECYCLE.INIT], LIFECYCLE.INIT) && ((_a2 = this.scope) == null || _a2.removeScope(), store2.cleanupPoppers());
   }
   componentWillUnmount() {
-    var _a;
-    (_a = this.scope) == null || _a.removeScope();
+    var _a2;
+    (_a2 = this.scope) == null || _a2.removeScope();
   }
   get open() {
     let { lifecycle, step } = this.props;
@@ -11300,8 +16923,8 @@ var Container_default = JoyrideTooltipContainer, JoyrideTooltip = class extends 
       scrollY = scrollY >= 0 ? scrollY : 0, status === STATUS3.RUNNING && scrollTo(scrollY, { element: scrollParent2, duration: scrollDuration }).then(
         () => {
           setTimeout(() => {
-            var _a;
-            (_a = this.store.getPopper("tooltip")) == null || _a.instance.update();
+            var _a2;
+            (_a2 = this.store.getPopper("tooltip")) == null || _a2.instance.update();
           }, 10);
         }
       );
@@ -12059,7 +17682,7 @@ export const Disabled: Story = {
     await userEvent.click(button);
     
     // \u{1F447} Make assertions
-    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute('aria-disabled', 'true');
     await expect(args.onClick).not.toHaveBeenCalled();
   }
 };`), react_default.createElement("p", null, "You can interact with and debug each step defined in a play function within the Interactions panel."), react_default.createElement(
@@ -12641,7 +18264,7 @@ var fadeScaleIn = keyframes`
         {
           ...toggleProps,
           id: "checklist-module-collapse-toggle",
-          ariaLabel: `${isCollapsed ? "Expand" : "Collapse"} onboarding checklist`
+          ariaLabel: `${isCollapsed ? "Expand" : "Collapse"} onboarding guide`
         },
         react_default.createElement(
           ChevronSmallUpIcon,
@@ -12656,6 +18279,7 @@ var fadeScaleIn = keyframes`
       ), loaded && react_default.createElement(
         PopoverProvider,
         {
+          ariaLabel: "Onboarding guide menu",
           padding: 0,
           popover: ({ onHide }) => react_default.createElement(ActionList, null, react_default.createElement(ActionList.Item, null, react_default.createElement(OpenGuideButton, { afterClick: onHide }, react_default.createElement(ActionList.Text, null, "Open full guide"))), react_default.createElement(ActionList.Item, null, react_default.createElement(
             ActionList.Action,
@@ -12765,9 +18389,9 @@ init_react();
 function memo2(getDeps, fn, opts) {
   let deps = opts.initialDeps ?? [], result;
   function memoizedFunction() {
-    var _a, _b, _c, _d;
+    var _a2, _b, _c, _d;
     let depTime;
-    opts.key && ((_a = opts.debug) != null && _a.call(opts)) && (depTime = Date.now());
+    opts.key && ((_a2 = opts.debug) != null && _a2.call(opts)) && (depTime = Date.now());
     let newDeps = getDeps();
     if (!(newDeps.length !== deps.length || newDeps.some((dep, index) => deps[index] !== dep)))
       return result;
@@ -12890,9 +18514,9 @@ var elementScroll = (offset2, {
   adjustments = 0,
   behavior
 }, instance) => {
-  var _a, _b;
+  var _a2, _b;
   let toOffset = offset2 + adjustments;
-  (_b = (_a = instance.scrollElement) == null ? void 0 : _a.scrollTo) == null || _b.call(_a, {
+  (_b = (_a2 = instance.scrollElement) == null ? void 0 : _a2.scrollTo) == null || _b.call(_a2, {
     [instance.options.horizontal ? "left" : "top"]: toOffset,
     behavior
   });
@@ -12909,16 +18533,16 @@ var elementScroll = (offset2, {
       }));
       return {
         disconnect: () => {
-          var _a;
-          (_a = get2()) == null || _a.disconnect(), _ro = null;
+          var _a2;
+          (_a2 = get2()) == null || _a2.disconnect(), _ro = null;
         },
         observe: (target) => {
-          var _a;
-          return (_a = get2()) == null ? void 0 : _a.observe(target, { box: "border-box" });
+          var _a2;
+          return (_a2 = get2()) == null ? void 0 : _a2.observe(target, { box: "border-box" });
         },
         unobserve: (target) => {
-          var _a;
-          return (_a = get2()) == null ? void 0 : _a.unobserve(target);
+          var _a2;
+          return (_a2 = get2()) == null ? void 0 : _a2.unobserve(target);
         }
       };
     })(), this.range = null, this.setOptions = (opts2) => {
@@ -12952,8 +18576,8 @@ var elementScroll = (offset2, {
         ...opts2
       };
     }, this.notify = (sync) => {
-      var _a, _b;
-      (_b = (_a = this.options).onChange) == null || _b.call(_a, this, sync);
+      var _a2, _b;
+      (_b = (_a2 = this.options).onChange) == null || _b.call(_a2, this, sync);
     }, this.maybeNotify = memo2(
       () => (this.calculateRange(), [
         this.isScrolling,
@@ -12977,14 +18601,14 @@ var elementScroll = (offset2, {
     }, this._didMount = () => () => {
       this.cleanup();
     }, this._willUpdate = () => {
-      var _a;
+      var _a2;
       let scrollElement = this.options.enabled ? this.options.getScrollElement() : null;
       if (this.scrollElement !== scrollElement) {
         if (this.cleanup(), !scrollElement) {
           this.maybeNotify();
           return;
         }
-        this.scrollElement = scrollElement, this.scrollElement && "ownerDocument" in this.scrollElement ? this.targetWindow = this.scrollElement.ownerDocument.defaultView : this.targetWindow = ((_a = this.scrollElement) == null ? void 0 : _a.window) ?? null, this.elementsCache.forEach((cached) => {
+        this.scrollElement = scrollElement, this.scrollElement && "ownerDocument" in this.scrollElement ? this.targetWindow = this.scrollElement.ownerDocument.defaultView : this.targetWindow = ((_a2 = this.scrollElement) == null ? void 0 : _a2.window) ?? null, this.elementsCache.forEach((cached) => {
           this.observer.observe(cached);
         }), this._scrollToOffset(this.getScrollOffset(), {
           adjustments: void 0,
@@ -13213,12 +18837,12 @@ var elementScroll = (offset2, {
         behavior
       });
     }, this.getTotalSize = () => {
-      var _a;
+      var _a2;
       let measurements = this.getMeasurements(), end;
       if (measurements.length === 0)
         end = this.options.paddingStart;
       else if (this.options.lanes === 1)
-        end = ((_a = measurements[measurements.length - 1]) == null ? void 0 : _a.end) ?? 0;
+        end = ((_a2 = measurements[measurements.length - 1]) == null ? void 0 : _a2.end) ?? 0;
       else {
         let endByLane = Array(this.options.lanes).fill(null), endIndex = measurements.length - 1;
         for (; endIndex >= 0 && endByLane.some((val) => val === null); ) {
@@ -13295,8 +18919,8 @@ function useVirtualizerBase(options2) {
   let rerender = useReducer(() => ({}), {})[1], resolvedOptions = {
     ...options2,
     onChange: (instance2, sync) => {
-      var _a;
-      sync ? flushSync(rerender) : rerender(), (_a = options2.onChange) == null || _a.call(options2, instance2, sync);
+      var _a2;
+      sync ? flushSync(rerender) : rerender(), (_a2 = options2.onChange) == null || _a2.call(options2, instance2, sync);
     }
   }, [instance] = useState(
     () => new Virtualizer(resolvedOptions)
@@ -14022,17 +19646,17 @@ var HighlightStyles = ({ refId, itemId }) => react_default.createElement(
 init_react();
 
 // src/manager/utils/tree.ts
-var import_memoizerific2 = __toESM(require_memoizerific(), 1);
-var { document: document2, window: globalWindow } = scope, createId = (itemId, refId) => !refId || refId === DEFAULT_REF_ID ? itemId : `${refId}_${itemId}`, getLink = (item, refId) => `${document2.location.pathname}?path=/${item.type}/${createId(item.id, refId)}`;
-var get = (0, import_memoizerific2.default)(1e3)((id, dataset) => dataset[id]), getParent = (0, import_memoizerific2.default)(1e3)((id, dataset) => {
+var import_memoizerific3 = __toESM(require_memoizerific(), 1);
+var { document: document3, window: globalWindow } = scope, createId = (itemId, refId) => !refId || refId === DEFAULT_REF_ID ? itemId : `${refId}_${itemId}`, getLink = (item, refId) => `${document3.location.pathname}?path=/${item.type}/${createId(item.id, refId)}`;
+var get = (0, import_memoizerific3.default)(1e3)((id, dataset) => dataset[id]), getParent = (0, import_memoizerific3.default)(1e3)((id, dataset) => {
   let item = get(id, dataset);
   return item && item.type !== "root" ? get(item.parent, dataset) : void 0;
-}), getParents = (0, import_memoizerific2.default)(1e3)((id, dataset) => {
+}), getParents = (0, import_memoizerific3.default)(1e3)((id, dataset) => {
   let parent = getParent(id, dataset);
   return parent ? [parent, ...getParents(parent.id, dataset)] : [];
-}), getAncestorIds2 = (0, import_memoizerific2.default)(1e3)(
+}), getAncestorIds2 = (0, import_memoizerific3.default)(1e3)(
   (data, id) => getParents(id, data).map((item) => item.id)
-), getDescendantIds = (0, import_memoizerific2.default)(1e3)((data, id, skipLeafs) => {
+), getDescendantIds = (0, import_memoizerific3.default)(1e3)((data, id, skipLeafs) => {
   let entry = data[id];
   return !entry || !("children" in entry) || !entry.children ? [] : entry.children.reduce((acc, childId) => {
     let child = data[childId];
@@ -14054,13 +19678,13 @@ var scrollIntoView = (element, center = !1) => {
   let { top, bottom } = element.getBoundingClientRect();
   if (!top || !bottom)
     return;
-  let bottomOffset = document2?.querySelector("#sidebar-bottom-wrapper")?.getBoundingClientRect().top || globalWindow.innerHeight || document2.documentElement.clientHeight;
+  let bottomOffset = document3?.querySelector("#sidebar-bottom-wrapper")?.getBoundingClientRect().top || globalWindow.innerHeight || document3.documentElement.clientHeight;
   bottom > bottomOffset && element.scrollIntoView({ block: center ? "center" : "nearest" });
-}, getStateType = (isLoading, isAuthRequired, isError, isEmpty) => {
+}, getStateType = (isLoading, isAuthRequired, isError2, isEmpty) => {
   switch (!0) {
     case isAuthRequired:
       return "auth";
-    case isError:
+    case isError2:
       return "error";
     case isLoading:
       return "loading";
@@ -14169,12 +19793,13 @@ var { window: globalWindow2 } = scope, TextStyle = styled.div(({ theme }) => ({
   return react_default.createElement(Contained, null, react_default.createElement(Spaced, null, react_default.createElement(TextStyle, null, "Oh no! Something went wrong loading this Storybook.", react_default.createElement("br", null), react_default.createElement(
     PopoverProvider,
     {
+      ariaLabel: "Error details",
       hasCloseButton: !0,
       offset: isMobile2 ? 0 : 8,
       placement: isMobile2 ? "bottom-end" : "bottom-start",
       popover: react_default.createElement(ErrorDisplay, { isMobile: isMobile2 }, react_default.createElement(ErrorFormatter, { error }))
     },
-    react_default.createElement(Link, { isButton: !0 }, "View error ", react_default.createElement(ChevronDownIcon, null))
+    react_default.createElement(Link, null, "View error ", react_default.createElement(ChevronDownIcon, null))
   ), " ", react_default.createElement(Link, { href: "https://storybook.js.org/docs?ref=ui", cancel: !1, target: "_blank" }, "View docs"))));
 }, FlexSpaced = styled(Spaced)({
   display: "flex"
@@ -14200,7 +19825,7 @@ var { window: globalWindow2 } = scope, TextStyle = styled.div(({ theme }) => ({
 
 // src/manager/components/sidebar/RefIndicator.tsx
 init_react();
-var { document: document3, window: globalWindow3 } = scope, IndicatorPlacement = styled.div(({ theme }) => ({
+var { document: document4, window: globalWindow3 } = scope, IndicatorPlacement = styled.div(({ theme }) => ({
   height: 16,
   display: "flex",
   alignItems: "center",
@@ -14283,6 +19908,7 @@ var { document: document3, window: globalWindow3 } = scope, IndicatorPlacement =
       return react_default.createElement(IndicatorPlacement, { ref: forwardedRef }, react_default.createElement(
         PopoverProvider,
         {
+          ariaLabel: "Composed Storybook status",
           placement: isMobile2 ? "bottom" : "bottom-start",
           padding: 0,
           popover: () => react_default.createElement(MessageWrapper, { isMobile: isMobile2 }, react_default.createElement(Spaced, { row: 0 }, state === "loading" && react_default.createElement(LoadingMessage, { url: ref.url }), (state === "error" || state === "empty") && react_default.createElement(ErrorOccurredMessage, { url: ref.url }), state === "ready" && react_default.createElement(react_default.Fragment, null, react_default.createElement(ReadyMessage, { url: ref.url, componentCount, leafCount }), ref.sourceUrl && react_default.createElement(SourceCodeMessage, { url: ref.sourceUrl })), state === "auth" && react_default.createElement(LoginRequiredMessage, { ...ref }), ref.type === "auto-inject" && state !== "error" && react_default.createElement(PerformanceDegradedMessage, null), state !== "loading" && react_default.createElement(ReadDocsMessage, null)))
@@ -14335,7 +19961,7 @@ var { document: document3, window: globalWindow3 } = scope, IndicatorPlacement =
         `storybook_auth_${id}`,
         "resizable,scrollbars"
       ), timer = setInterval(() => {
-        childWindow ? childWindow.closed && (clearInterval(timer), document3.location.reload()) : clearInterval(timer);
+        childWindow ? childWindow.closed && (clearInterval(timer), document4.location.reload()) : clearInterval(timer);
       }, 1e3);
     },
     [id, loginUrl]
@@ -14360,7 +19986,7 @@ init_react();
 
 // src/manager/utils/status.tsx
 init_react();
-var import_memoizerific3 = __toESM(require_memoizerific(), 1);
+var import_memoizerific4 = __toESM(require_memoizerific(), 1);
 
 // src/manager/components/sidebar/IconSymbols.tsx
 init_react();
@@ -14459,7 +20085,7 @@ var SmallIcons = styled(CircleIcon)({
   "status-value:success",
   "status-value:warning",
   "status-value:error"
-], getStatus = (0, import_memoizerific3.default)(5)((theme, status) => ({
+], getStatus = (0, import_memoizerific4.default)(5)((theme, status) => ({
   "status-value:unknown": [null, null],
   "status-value:pending": [react_default.createElement(LoadingIcons, { key: "icon" }), "currentColor"],
   "status-value:success": [
@@ -14624,6 +20250,7 @@ var empty = {
     node: shouldRender ? react_default.createElement(
       PopoverProvider,
       {
+        ariaLabel: "Context menu",
         placement: "bottom-end",
         defaultVisible: !1,
         visible: isOpen,
@@ -14806,7 +20433,7 @@ var codeToKeyMap = {
 }, matchesKeyCode = (code, event) => event.code ? event.code === code : event.key === codeToKeyMap[code];
 
 // src/manager/components/sidebar/useExpanded.ts
-var { document: document4 } = scope, initializeExpanded = ({
+var { document: document5 } = scope, initializeExpanded = ({
   refId,
   data,
   initialExpanded,
@@ -14869,7 +20496,7 @@ var { document: document4 } = scope, initializeExpanded = ({
   return useEffect(() => api ? (api.on(STORIES_COLLAPSE_ALL, collapseAll), api.on(STORIES_EXPAND_ALL, expandAll), () => {
     api.off(STORIES_COLLAPSE_ALL, collapseAll), api.off(STORIES_EXPAND_ALL, expandAll);
   }) : noop3, [api, collapseAll, expandAll]), useEffect(() => {
-    let menuElement = document4.getElementById("storybook-explorer-menu"), navigateTree = throttle((event) => {
+    let menuElement = document5.getElementById("storybook-explorer-menu"), navigateTree = throttle((event) => {
       let highlightedItemId = highlightedRef.current?.refId === refId && highlightedRef.current?.itemId;
       if (!isBrowsing || !containerRef.current || !highlightedItemId || event.repeat || !matchesModifiers(!1, event))
         return;
@@ -14905,7 +20532,7 @@ var { document: document4 } = scope, initializeExpanded = ({
       }
       isArrowRight && (isExpanded === "false" ? updateExpanded({ ids: [highlightedItemId], value: !0 }) : isExpanded === "true" && updateExpanded({ ids: getDescendantIds(data, highlightedItemId, !0), value: !0 }));
     }, 60);
-    return document4.addEventListener("keydown", navigateTree), () => document4.removeEventListener("keydown", navigateTree);
+    return document5.addEventListener("keydown", navigateTree), () => document5.removeEventListener("keydown", navigateTree);
   }, [
     containerRef,
     isBrowsing,
@@ -15471,8 +21098,8 @@ var Wrapper6 = styled.div(({ isMain }) => ({
 
 // src/manager/components/sidebar/useHighlighted.ts
 init_react();
-var { document: document5, window: globalWindow4 } = scope, fromSelection = (selection) => selection ? { itemId: selection.storyId, refId: selection.refId } : null, scrollToSelector = (selector, options2 = {}, _attempt = 1) => {
-  let { containerRef, center = !1, attempts = 3, delay: delay2 = 500 } = options2, element = (containerRef ? containerRef.current : document5)?.querySelector(selector);
+var { document: document6, window: globalWindow4 } = scope, fromSelection = (selection) => selection ? { itemId: selection.storyId, refId: selection.refId } : null, scrollToSelector = (selector, options2 = {}, _attempt = 1) => {
+  let { containerRef, center = !1, attempts = 3, delay: delay2 = 500 } = options2, element = (containerRef ? containerRef.current : document6)?.querySelector(selector);
   element ? scrollIntoView(element, center) : _attempt <= attempts && setTimeout(scrollToSelector, delay2, selector, options2, _attempt + 1);
 }, useHighlighted = ({
   containerRef,
@@ -15499,7 +21126,7 @@ var { document: document5, window: globalWindow4 } = scope, fromSelection = (sel
       center: !0
     });
   }, [containerRef, selected, updateHighlighted]), useEffect(() => {
-    let menuElement = document5.getElementById("storybook-explorer-menu"), lastRequestId, navigateTree = (event) => {
+    let menuElement = document6.getElementById("storybook-explorer-menu"), lastRequestId, navigateTree = (event) => {
       if (isLoading || !isBrowsing || !containerRef.current || !matchesModifiers(!1, event))
         return;
       let isArrowUp = matchesKeyCode("ArrowUp", event), isArrowDown = matchesKeyCode("ArrowDown", event);
@@ -15525,7 +21152,7 @@ var { document: document5, window: globalWindow4 } = scope, fromSelection = (sel
         }
       });
     };
-    return document5.addEventListener("keydown", navigateTree), () => document5.removeEventListener("keydown", navigateTree);
+    return document6.addEventListener("keydown", navigateTree), () => document6.removeEventListener("keydown", navigateTree);
   }, [api, containerRef, isLoading, isBrowsing, highlightedRef, highlightElement]), [highlighted, updateHighlighted, highlightedRef];
 };
 
@@ -15655,12 +21282,12 @@ var buttonStyleAdditions = ({
       box-shadow: 0 0 0 2px ${curriedTransparentize$1(0.88, theme.color.secondary)};
     }
   `}
-`, Container7 = styled.div({
+`, Container10 = styled.div({
   minWidth: 250
 }), SidebarButton = styled(Button)(buttonStyleAdditions), SidebarToggleButton = styled(ToggleButton)(buttonStyleAdditions), MenuButtonGroup = styled.div({
   display: "flex",
   gap: 6
-}), SidebarMenuList = ({ menu, onHide }) => react_default.createElement(Container7, null, menu.filter((links) => links.length).flatMap((links) => react_default.createElement(ActionList, { key: links.map((link) => link.id).join("_") }, links.map((link) => {
+}), SidebarMenuList = ({ menu, onHide }) => react_default.createElement(Container10, null, menu.filter((links) => links.length).flatMap((links) => react_default.createElement(ActionList, { key: links.map((link) => link.id).join("_") }, links.map((link) => {
   let linkContent = react_default.createElement(react_default.Fragment, null, (link.icon || link.input) && react_default.createElement(ActionList.Icon, null, link.icon || link.input), (link.title || link.center) && react_default.createElement(ActionList.Text, null, link.title || link.center), link.right);
   return react_default.createElement(ActionList.Item, { key: link.id, active: link.active }, react_default.createElement(
     ActionList.Action,
@@ -15723,6 +21350,7 @@ var buttonStyleAdditions = ({
   )) : react_default.createElement(
     PopoverProvider,
     {
+      ariaLabel: "Storybook menu",
       placement: "bottom-start",
       padding: 0,
       popover: ({ onHide }) => react_default.createElement(SidebarMenuList, { onHide, menu }),
@@ -15811,12 +21439,12 @@ var BrandArea = styled.div(({ theme }) => ({
 init_react();
 
 // ../../node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js
-function _objectWithoutPropertiesLoose2(r3, e2) {
-  if (r3 == null) return {};
+function _objectWithoutPropertiesLoose2(r4, e2) {
+  if (r4 == null) return {};
   var t2 = {};
-  for (var n3 in r3) if ({}.hasOwnProperty.call(r3, n3)) {
+  for (var n3 in r4) if ({}.hasOwnProperty.call(r4, n3)) {
     if (e2.indexOf(n3) !== -1) continue;
-    t2[n3] = r3[n3];
+    t2[n3] = r4[n3];
   }
   return t2;
 }
@@ -15843,13 +21471,13 @@ var t = (t2) => typeof t2 == "object" && t2 != null && t2.nodeType === 1, e = (t
     })(t2);
   }
   return !1;
-}, o2 = (t2, e2, n3, o3, l3, r3, i2, s2) => r3 < t2 && i2 > e2 || r3 > t2 && i2 < e2 ? 0 : r3 <= t2 && s2 <= n3 || i2 >= e2 && s2 >= n3 ? r3 - t2 - o3 : i2 > e2 && s2 < n3 || r3 < t2 && s2 > n3 ? i2 - e2 + l3 : 0, l2 = (t2) => {
+}, o2 = (t2, e2, n3, o3, l3, r4, i2, s2) => r4 < t2 && i2 > e2 || r4 > t2 && i2 < e2 ? 0 : r4 <= t2 && s2 <= n3 || i2 >= e2 && s2 >= n3 ? r4 - t2 - o3 : i2 > e2 && s2 < n3 || r4 < t2 && s2 > n3 ? i2 - e2 + l3 : 0, l2 = (t2) => {
   let e2 = t2.parentElement;
   return e2 ?? (t2.getRootNode().host || null);
-}, r2 = (e2, r3) => {
+}, r3 = (e2, r4) => {
   var i2, s2, d2, h2;
   if (typeof document > "u") return [];
-  let { scrollMode: c2, block: f2, inline: u2, boundary: a2, skipOverflowHiddenElements: g2 } = r3, p2 = typeof a2 == "function" ? a2 : (t2) => t2 !== a2;
+  let { scrollMode: c2, block: f2, inline: u2, boundary: a2, skipOverflowHiddenElements: g2 } = r4, p2 = typeof a2 == "function" ? a2 : (t2) => t2 !== a2;
   if (!t(e2)) throw new TypeError("Invalid target");
   let m2 = document.scrollingElement || document.documentElement, w2 = [], W2 = e2;
   for (; t(W2) && p2(W2); ) {
@@ -15864,29 +21492,18 @@ var t = (t2) => typeof t2 == "object" && t2 != null && t2.nodeType === 1, e = (t
     return { top: parseFloat(e3.scrollMarginTop) || 0, right: parseFloat(e3.scrollMarginRight) || 0, bottom: parseFloat(e3.scrollMarginBottom) || 0, left: parseFloat(e3.scrollMarginLeft) || 0 };
   })(e2), k2 = f2 === "start" || f2 === "nearest" ? x2 - T3 : f2 === "end" ? I2 + F2 : x2 + v2 / 2 - T3 + F2, D2 = u2 === "center" ? R2 + E2 / 2 - V + B2 : u2 === "end" ? C2 + B2 : R2 - V, L3 = [];
   for (let t2 = 0; t2 < w2.length; t2++) {
-    let e3 = w2[t2], { height: l3, width: r4, top: i3, right: s3, bottom: d3, left: h3 } = e3.getBoundingClientRect();
+    let e3 = w2[t2], { height: l3, width: r5, top: i3, right: s3, bottom: d3, left: h3 } = e3.getBoundingClientRect();
     if (c2 === "if-needed" && x2 >= 0 && R2 >= 0 && I2 <= H7 && C2 <= b2 && (e3 === m2 && !n2(e3) || x2 >= i3 && I2 <= d3 && R2 >= h3 && C2 <= s3)) return L3;
-    let a3 = getComputedStyle(e3), g3 = parseInt(a3.borderLeftWidth, 10), p3 = parseInt(a3.borderTopWidth, 10), W3 = parseInt(a3.borderRightWidth, 10), T4 = parseInt(a3.borderBottomWidth, 10), B3 = 0, F3 = 0, V2 = "offsetWidth" in e3 ? e3.offsetWidth - e3.clientWidth - g3 - W3 : 0, S2 = "offsetHeight" in e3 ? e3.offsetHeight - e3.clientHeight - p3 - T4 : 0, X = "offsetWidth" in e3 ? e3.offsetWidth === 0 ? 0 : r4 / e3.offsetWidth : 0, Y2 = "offsetHeight" in e3 ? e3.offsetHeight === 0 ? 0 : l3 / e3.offsetHeight : 0;
+    let a3 = getComputedStyle(e3), g3 = parseInt(a3.borderLeftWidth, 10), p3 = parseInt(a3.borderTopWidth, 10), W3 = parseInt(a3.borderRightWidth, 10), T4 = parseInt(a3.borderBottomWidth, 10), B3 = 0, F3 = 0, V2 = "offsetWidth" in e3 ? e3.offsetWidth - e3.clientWidth - g3 - W3 : 0, S2 = "offsetHeight" in e3 ? e3.offsetHeight - e3.clientHeight - p3 - T4 : 0, X = "offsetWidth" in e3 ? e3.offsetWidth === 0 ? 0 : r5 / e3.offsetWidth : 0, Y2 = "offsetHeight" in e3 ? e3.offsetHeight === 0 ? 0 : l3 / e3.offsetHeight : 0;
     if (m2 === e3) B3 = f2 === "start" ? k2 : f2 === "end" ? k2 - H7 : f2 === "nearest" ? o2(M2, M2 + H7, H7, p3, T4, M2 + k2, M2 + k2 + v2, v2) : k2 - H7 / 2, F3 = u2 === "start" ? D2 : u2 === "center" ? D2 - b2 / 2 : u2 === "end" ? D2 - b2 : o2(y2, y2 + b2, b2, g3, W3, y2 + D2, y2 + D2 + E2, E2), B3 = Math.max(0, B3 + M2), F3 = Math.max(0, F3 + y2);
     else {
-      B3 = f2 === "start" ? k2 - i3 - p3 : f2 === "end" ? k2 - d3 + T4 + S2 : f2 === "nearest" ? o2(i3, d3, l3, p3, T4 + S2, k2, k2 + v2, v2) : k2 - (i3 + l3 / 2) + S2 / 2, F3 = u2 === "start" ? D2 - h3 - g3 : u2 === "center" ? D2 - (h3 + r4 / 2) + V2 / 2 : u2 === "end" ? D2 - s3 + W3 + V2 : o2(h3, s3, r4, g3, W3 + V2, D2, D2 + E2, E2);
+      B3 = f2 === "start" ? k2 - i3 - p3 : f2 === "end" ? k2 - d3 + T4 + S2 : f2 === "nearest" ? o2(i3, d3, l3, p3, T4 + S2, k2, k2 + v2, v2) : k2 - (i3 + l3 / 2) + S2 / 2, F3 = u2 === "start" ? D2 - h3 - g3 : u2 === "center" ? D2 - (h3 + r5 / 2) + V2 / 2 : u2 === "end" ? D2 - s3 + W3 + V2 : o2(h3, s3, r5, g3, W3 + V2, D2, D2 + E2, E2);
       let { scrollLeft: t3, scrollTop: n3 } = e3;
-      B3 = Y2 === 0 ? 0 : Math.max(0, Math.min(n3 + B3 / Y2, e3.scrollHeight - l3 / Y2 + S2)), F3 = X === 0 ? 0 : Math.max(0, Math.min(t3 + F3 / X, e3.scrollWidth - r4 / X + V2)), k2 += n3 - B3, D2 += t3 - F3;
+      B3 = Y2 === 0 ? 0 : Math.max(0, Math.min(n3 + B3 / Y2, e3.scrollHeight - l3 / Y2 + S2)), F3 = X === 0 ? 0 : Math.max(0, Math.min(t3 + F3 / X, e3.scrollWidth - r5 / X + V2)), k2 += n3 - B3, D2 += t3 - F3;
     }
     L3.push({ el: e3, top: B3, left: F3 });
   }
   return L3;
-};
-
-// ../../node_modules/tslib/tslib.es6.mjs
-var __assign = function() {
-  return __assign = Object.assign || function(t2) {
-    for (var s2, i2 = 1, n3 = arguments.length; i2 < n3; i2++) {
-      s2 = arguments[i2];
-      for (var p2 in s2) Object.prototype.hasOwnProperty.call(s2, p2) && (t2[p2] = s2[p2]);
-    }
-    return t2;
-  }, __assign.apply(this, arguments);
 };
 
 // ../../node_modules/downshift/dist/downshift.esm.js
@@ -15898,7 +21515,7 @@ function noop4() {
 }
 function scrollIntoView2(node, menuNode) {
   if (node) {
-    var actions = r2(node, {
+    var actions = r3(node, {
       boundary: menuNode,
       block: "nearest",
       scrollMode: "if-needed"
@@ -16575,8 +22192,8 @@ function invokeOnChangeHandler(key, action, state, newState) {
 function stateReducer(s2, a2) {
   return a2.changes;
 }
-var updateA11yStatus = debounce4(function(status, document10) {
-  setStatus(status, document10);
+var updateA11yStatus = debounce4(function(status, document11) {
+  setStatus(status, document11);
 }, 200), useIsomorphicLayoutEffect2 = typeof window < "u" && typeof window.document < "u" && typeof window.document.createElement < "u" ? useLayoutEffect : useEffect, useElementIds = "useId" in react_default ? function(_ref) {
   var id = _ref.id, labelId = _ref.labelId, menuId = _ref.menuId, getItemId = _ref.getItemId, toggleButtonId = _ref.toggleButtonId, inputId = _ref.inputId, reactId = "downshift-" + react_default.useId();
   id || (id = reactId);
@@ -16724,17 +22341,17 @@ var useGetterPropsCalledChecker = function() {
 };
 function useA11yMessageStatus(getA11yStatusMessage2, options2, dependencyArray, environment) {
   environment === void 0 && (environment = {});
-  var document10 = environment.document, isInitialMount = useIsInitialMount();
+  var document11 = environment.document, isInitialMount = useIsInitialMount();
   useEffect(function() {
-    if (!(!getA11yStatusMessage2 || isInitialMount || !document10)) {
+    if (!(!getA11yStatusMessage2 || isInitialMount || !document11)) {
       var status = getA11yStatusMessage2(options2);
-      updateA11yStatus(status, document10);
+      updateA11yStatus(status, document11);
     }
   }, dependencyArray), useEffect(function() {
     return function() {
-      updateA11yStatus.cancel(), cleanupStatusDiv(document10);
+      updateA11yStatus.cancel(), cleanupStatusDiv(document11);
     };
-  }, [document10]);
+  }, [document11]);
 }
 function useScrollIntoView(_ref3) {
   var highlightedIndex = _ref3.highlightedIndex, isOpen = _ref3.isOpen, itemRefs = _ref3.itemRefs, getItemNodeFromIndex = _ref3.getItemNodeFromIndex, menuElement = _ref3.menuElement, scrollIntoViewProp = _ref3.scrollIntoView, shouldScrollRef = useRef(!0);
@@ -16868,8 +22485,8 @@ function downshiftCommonReducer(state, action, stateChangeTypes2) {
   }
   return _extends({}, state, changes);
 }
-function getItemIndexByCharacterKey(_a) {
-  for (var keysSoFar = _a.keysSoFar, highlightedIndex = _a.highlightedIndex, items = _a.items, itemToString2 = _a.itemToString, isItemDisabled2 = _a.isItemDisabled, lowerCasedKeysSoFar = keysSoFar.toLowerCase(), index = 0; index < items.length; index++) {
+function getItemIndexByCharacterKey(_a2) {
+  for (var keysSoFar = _a2.keysSoFar, highlightedIndex = _a2.highlightedIndex, items = _a2.items, itemToString2 = _a2.itemToString, isItemDisabled2 = _a2.isItemDisabled, lowerCasedKeysSoFar = keysSoFar.toLowerCase(), index = 0; index < items.length; index++) {
     var offsetIndex = (index + highlightedIndex + (keysSoFar.length < 2 ? 1 : 0)) % items.length, item = items[offsetIndex];
     if (item !== void 0 && itemToString2(item).toLowerCase().startsWith(lowerCasedKeysSoFar) && !isItemDisabled2(item, offsetIndex))
       return offsetIndex;
@@ -17890,7 +23507,7 @@ function isSearchResult(x2) {
 }
 
 // src/manager/components/sidebar/Search.tsx
-var { document: document6 } = scope, DEFAULT_MAX_SEARCH_RESULTS = 50, options = {
+var { document: document7 } = scope, DEFAULT_MAX_SEARCH_RESULTS = 50, options = {
   shouldSort: !0,
   tokenize: !0,
   findAllMatches: !0,
@@ -18140,7 +23757,7 @@ var { document: document6 } = scope, DEFAULT_MAX_SEARCH_RESULTS = 50, options = 
         ), searchBarContent), react_default.createElement(FocusContainer, { tabIndex: 0, id: "storybook-explorer-menu" }, children({
           query: input,
           results,
-          isNavVisible: !isOpen && document6.activeElement !== inputRef.current,
+          isNavVisible: !isOpen && document7.activeElement !== inputRef.current,
           isNavReachable: !isOpen || input.length === 0,
           isSearchResultRendered: isOpen,
           closeMenu,
@@ -18155,7 +23772,7 @@ var { document: document6 } = scope, DEFAULT_MAX_SEARCH_RESULTS = 50, options = 
 
 // src/manager/components/sidebar/SearchResults.tsx
 init_react();
-var { document: document7 } = scope, ResultsList = styled.ol({
+var { document: document8 } = scope, ResultsList = styled.ol({
   listStyle: "none",
   margin: 0,
   padding: 0
@@ -18286,7 +23903,7 @@ var { document: document7 } = scope, ResultsList = styled.ol({
         event.preventDefault(), closeMenu();
       }
     };
-    return document7.addEventListener("keydown", handleEscape), () => document7.removeEventListener("keydown", handleEscape);
+    return document8.addEventListener("keydown", handleEscape), () => document8.removeEventListener("keydown", handleEscape);
   }, [closeMenu, enableShortcuts, isLoading]);
   let mouseOverHandler = useCallback((event) => {
     if (!api)
@@ -18701,6 +24318,32 @@ init_react();
 
 // src/manager/components/sidebar/TagsFilterPanel.tsx
 init_react();
+
+// src/shared/constants/tags.ts
+var Tag2 = {
+  /** Indicates that autodocs should be generated for this component */
+  AUTODOCS: "autodocs",
+  /** MDX documentation attached to a component's stories file */
+  ATTACHED_MDX: "attached-mdx",
+  /** Standalone MDX documentation not attached to stories */
+  UNATTACHED_MDX: "unattached-mdx",
+  /** Story has a play function */
+  PLAY_FN: "play-fn",
+  /** Story has a test function */
+  TEST_FN: "test-fn",
+  /** Development environment tag */
+  DEV: "dev",
+  /** Test environment tag */
+  TEST: "test",
+  /** Manifest generation tag */
+  MANIFEST: "manifest"
+}, BUILT_IN_FILTERS = {
+  _docs: (entry, excluded) => excluded ? entry.type !== "docs" : entry.type === "docs",
+  _play: (entry, excluded) => excluded ? entry.type !== "story" || !entry.tags?.includes(Tag2.PLAY_FN) : entry.type === "story" && !!entry.tags?.includes(Tag2.PLAY_FN),
+  _test: (entry, excluded) => excluded ? entry.type !== "story" || entry.subtype !== "test" : entry.type === "story" && entry.subtype === "test"
+}, USER_TAG_FILTER = (tag) => (entry, excluded) => excluded ? !entry.tags?.includes(tag) : !!entry.tags?.includes(tag);
+
+// src/manager/components/sidebar/TagsFilterPanel.tsx
 var groupByType = (filters) => filters.filter(Boolean).reduce(
   (acc, filter) => (acc[filter.type] ??= [], acc[filter.type].push(filter), acc),
   {}
@@ -18714,25 +24357,74 @@ var groupByType = (filters) => filters.filter(Boolean).reduce(
   scrollbarWidth: "thin"
 }), MutedText = styled.span(({ theme }) => ({
   color: theme.textMutedColor
-})), TagsFilterPanel = ({
+})), BUILT_IN_TAGS = /* @__PURE__ */ new Set([
+  "dev",
+  "test",
+  "autodocs",
+  "attached-mdx",
+  "unattached-mdx",
+  "play-fn",
+  "test-fn",
+  "manifest"
+]), equal3 = (left, right) => left.length === right.length && (/* @__PURE__ */ new Set([...left, ...right])).size === left.length, getFilterFunction = (tag) => Object.hasOwn(BUILT_IN_FILTERS, tag) ? BUILT_IN_FILTERS[tag] : USER_TAG_FILTER(tag), TagsFilterPanel = ({
   api,
-  filtersById,
+  indexJson,
+  defaultIncludedFilters,
+  defaultExcludedFilters,
   includedFilters,
-  excludedFilters,
-  toggleFilter,
-  setAllFilters,
-  resetFilters,
-  isDefaultSelection,
-  hasDefaultSelection
+  excludedFilters
 }) => {
-  let ref = useRef(null), renderLink = ({
-    id,
-    type,
-    title: title2,
-    icon,
-    count
-  }) => {
-    let onToggle = (selected, excluded) => toggleFilter(id, selected, excluded), isIncluded = includedFilters.has(id), isExcluded = excludedFilters.has(id), isChecked = isIncluded || isExcluded, toggleLabel = `${type} filter: ${isExcluded ? `exclude ${title2}` : title2}`, toggleTooltip = `${isChecked ? "Remove" : "Add"} ${type} filter: ${title2}`, invertButtonLabel = `${isExcluded ? "Include" : "Exclude"} ${type}: ${title2}`;
+  let ref = useRef(null), filtersById = useMemo(() => {
+    let userTagsCounts = Object.values(indexJson.entries).reduce(
+      (acc, entry) => (entry.tags?.forEach((tag) => {
+        BUILT_IN_TAGS.has(tag) || (acc[tag] = (acc[tag] || 0) + 1);
+      }), acc),
+      {}
+    ), userFilters = Object.fromEntries(
+      Object.entries(userTagsCounts).map(([tag, count]) => [tag, { id: tag, type: "tag", title: tag, count }])
+    ), getBuiltInCount = (filterFn) => Object.values(indexJson.entries).filter((entry) => filterFn?.(entry)).length, builtInFilters = {
+      _docs: {
+        id: "_docs",
+        type: "built-in",
+        title: "Documentation",
+        icon: react_default.createElement(DocumentIcon, { color: color.gold }),
+        count: getBuiltInCount(getFilterFunction("_docs"))
+      },
+      _play: {
+        id: "_play",
+        type: "built-in",
+        title: "Play",
+        icon: react_default.createElement(PlayHollowIcon, { color: color.seafoam }),
+        count: getBuiltInCount(getFilterFunction("_play"))
+      },
+      _test: {
+        id: "_test",
+        type: "built-in",
+        title: "Testing",
+        icon: react_default.createElement(BeakerIcon, { color: color.green }),
+        count: getBuiltInCount(getFilterFunction("_test"))
+      }
+    };
+    return { ...userFilters, ...builtInFilters };
+  }, [indexJson.entries]), toggleFilter = useCallback(
+    (id, selected, excluded) => {
+      excluded !== void 0 ? api.addTagFilters([id], excluded) : selected ? api.addTagFilters([id], !1) : api.removeTagFilters([id]);
+    },
+    [api]
+  ), setAllFilters = useCallback(
+    (selected) => {
+      api.setAllTagFilters(selected ? Object.keys(filtersById) : [], []);
+    },
+    [api, filtersById]
+  ), isDefaultSelection = useMemo(() => equal3(includedFilters, defaultIncludedFilters) && equal3(excludedFilters, defaultExcludedFilters), [includedFilters, excludedFilters, defaultIncludedFilters, defaultExcludedFilters]), hasDefaultSelection = useMemo(() => defaultIncludedFilters.length > 0 || defaultExcludedFilters.length > 0, [defaultIncludedFilters, defaultExcludedFilters]), builtInFilterIcons = useMemo(
+    () => ({
+      _docs: react_default.createElement(DocumentIcon, { color: color.gold }),
+      _play: react_default.createElement(PlayHollowIcon, { color: color.seafoam }),
+      _test: react_default.createElement(BeakerIcon, { color: color.green })
+    }),
+    []
+  ), renderLink = ({ id, type, title: title2, count }) => {
+    let onToggle = (selected, excluded) => toggleFilter(id, selected, excluded), isIncluded = includedFilters.includes(id), isExcluded = excludedFilters.includes(id), isChecked = isIncluded || isExcluded, toggleLabel = `${type} filter: ${isExcluded ? `exclude ${title2}` : title2}`, toggleTooltip = `${isChecked ? "Remove" : "Add"} ${type} filter: ${title2}`, invertButtonLabel = `${isExcluded ? "Include" : "Exclude"} ${type}: ${title2}`, icon = type === "built-in" ? builtInFilterIcons[id] : null;
     if (!(count === 0 && type === "built-in"))
       return {
         id: `filter-${type}-${id}`,
@@ -18756,7 +24448,7 @@ var groupByType = (filters) => filters.filter(Boolean).reduce(
       };
   }, groups = groupByType(Object.values(filtersById)), links = Object.values(groups).map(
     (group) => group.sort((a2, b2) => a2.id.localeCompare(b2.id)).map((filter) => renderLink(filter)).filter((value) => !!value)
-  ).filter((value) => value.length > 0), hasItems = links.length > 0, hasUserTags = Object.values(filtersById).some(({ type }) => type === "tag"), isNothingSelectedYet = includedFilters.size === 0 && excludedFilters.size === 0;
+  ).filter((value) => value.length > 0), hasItems = links.length > 0, hasUserTags = Object.values(filtersById).some(({ type }) => type === "tag"), isNothingSelectedYet = includedFilters.length === 0 && excludedFilters.length === 0;
   return react_default.createElement(Wrapper7, { ref }, hasItems && react_default.createElement(ActionList, { as: "div" }, react_default.createElement(ActionList.Item, { as: "div" }, isNothingSelectedYet ? react_default.createElement(
     ActionList.Button,
     {
@@ -18782,7 +24474,7 @@ var groupByType = (filters) => filters.filter(Boolean).reduce(
     {
       id: "reset-filters",
       key: "reset-filters",
-      onClick: resetFilters,
+      onClick: () => api.resetTagFilters(),
       ariaLabel: "Reset filters",
       tooltip: "Reset to default selection",
       disabled: isDefaultSelection
@@ -18802,21 +24494,15 @@ var groupByType = (filters) => filters.filter(Boolean).reduce(
 };
 
 // src/manager/components/sidebar/TagsFilter.tsx
-var TAGS_FILTER = "tags-filter", BUILT_IN_TAGS = new Set(Object.values(Tag)), StyledButton2 = styled(Button)(({ isHighlighted, theme }) => ({
+var StyledButton2 = styled(Button)(({ $isHighlighted, theme }) => ({
   "&:focus-visible": {
     outlineOffset: 4
   },
-  ...isHighlighted && {
+  ...$isHighlighted && {
     background: theme.background.hoverable,
     color: theme.color.secondary
   }
-})), add = (set, id) => {
-  let copy3 = new Set(set);
-  return copy3.add(id), copy3;
-}, remove = (set, id) => {
-  let copy3 = new Set(set);
-  return copy3.delete(id), copy3;
-}, equal3 = (left, right) => left.size === right.size && (/* @__PURE__ */ new Set([...left, ...right])).size === left.size, TagSelected = styled(Badge)(({ theme }) => ({
+})), TagSelected = styled(Badge)(({ theme }) => ({
   position: "absolute",
   top: 7,
   right: 7,
@@ -18832,83 +24518,33 @@ var TAGS_FILTER = "tags-filter", BUILT_IN_TAGS = new Set(Object.values(Tag)), St
   fontSize: theme.typography.size.s1 - 1,
   background: theme.barSelectedColor,
   color: theme.color.inverseText
-})), TagsFilter = ({ api, indexJson, tagPresets }) => {
-  let filtersById = useMemo(() => {
-    let userTagsCounts = Object.values(indexJson.entries).reduce(
-      (acc, entry) => (entry.tags?.forEach((tag) => {
-        BUILT_IN_TAGS.has(tag) || (acc[tag] = (acc[tag] || 0) + 1);
-      }), acc),
-      {}
-    ), userFilters = Object.fromEntries(
-      Object.entries(userTagsCounts).map(([tag, count]) => [tag, { id: tag, type: "tag", title: tag, count, filterFn: (entry, excluded) => excluded ? !entry.tags?.includes(tag) : !!entry.tags?.includes(tag) }])
-    ), withCount = (filterFn) => ({
-      count: Object.values(indexJson.entries).filter((entry) => filterFn(entry)).length,
-      filterFn
-    }), builtInFilters = {
-      _docs: {
-        id: "_docs",
-        type: "built-in",
-        title: "Documentation",
-        icon: react_default.createElement(DocumentIcon, { color: color.gold }),
-        ...withCount(
-          (entry, excluded) => excluded ? entry.type !== "docs" : entry.type === "docs"
-        )
-      },
-      _play: {
-        id: "_play",
-        type: "built-in",
-        title: "Play",
-        icon: react_default.createElement(PlayHollowIcon, { color: color.seafoam }),
-        ...withCount(
-          (entry, excluded) => excluded ? entry.type !== "story" || !entry.tags?.includes(Tag.PLAY_FN) : entry.type === "story" && !!entry.tags?.includes(Tag.PLAY_FN)
-        )
-      },
-      _test: {
-        id: "_test",
-        type: "built-in",
-        title: "Testing",
-        icon: react_default.createElement(BeakerIcon, { color: color.green }),
-        ...withCount(
-          (entry, excluded) => excluded ? entry.type !== "story" || entry.subtype !== "test" : entry.type === "story" && entry.subtype === "test"
-        )
-      }
-    };
-    return { ...userFilters, ...builtInFilters };
-  }, [indexJson.entries]), { defaultIncluded, defaultExcluded } = useMemo(() => Object.entries(tagPresets).reduce(
-    (acc, [tag, { defaultFilterSelection }]) => (defaultFilterSelection === "include" ? acc.defaultIncluded.add(tag) : defaultFilterSelection === "exclude" && acc.defaultExcluded.add(tag), acc),
-    { defaultIncluded: /* @__PURE__ */ new Set(), defaultExcluded: /* @__PURE__ */ new Set() }
-  ), [tagPresets]), [includedFilters, setIncludedFilters] = useState(new Set(defaultIncluded)), [excludedFilters, setExcludedFilters] = useState(new Set(defaultExcluded)), [expanded, setExpanded] = useState(!1), tagsActive = includedFilters.size > 0 || excludedFilters.size > 0, resetFilters = useCallback(() => {
-    setIncludedFilters(new Set(defaultIncluded)), setExcludedFilters(new Set(defaultExcluded));
-  }, [defaultIncluded, defaultExcluded]);
-  useEffect(resetFilters, [resetFilters]), useEffect(() => {
-    api.experimental_setFilter(TAGS_FILTER, (item) => {
-      let included = Object.values(
-        groupByType(Array.from(includedFilters).map((id) => filtersById[id]))
-      ), excluded = Object.values(
-        groupByType(Array.from(excludedFilters).map((id) => filtersById[id]))
-      );
-      return (!included.length || included.every((group) => group.some(({ filterFn }) => filterFn(item, !1)))) && (!excluded.length || excluded.every((group) => group.every(({ filterFn }) => filterFn(item, !0))));
-    });
-  }, [api, includedFilters, excludedFilters, filtersById]);
-  let toggleFilter = useCallback(
-    (id, selected, excluded) => {
-      excluded === !0 ? (setExcludedFilters(add(excludedFilters, id)), setIncludedFilters(remove(includedFilters, id))) : excluded === !1 || selected ? (setIncludedFilters(add(includedFilters, id)), setExcludedFilters(remove(excludedFilters, id))) : (setIncludedFilters(remove(includedFilters, id)), setExcludedFilters(remove(excludedFilters, id)));
-    },
-    [includedFilters, excludedFilters]
-  ), setAllFilters = useCallback(
-    (selected) => {
-      setIncludedFilters(selected ? new Set(Object.keys(filtersById)) : /* @__PURE__ */ new Set()), setExcludedFilters(/* @__PURE__ */ new Set());
-    },
-    [filtersById]
-  ), handleToggleExpand = useCallback(
+})), tagsFilterMapper = ({ api, state }) => ({
+  api,
+  indexJson: state.internal_index,
+  activeFilterCount: (state.includedTagFilters?.length ?? 0) + (state.excludedTagFilters?.length ?? 0),
+  defaultIncludedFilters: state.defaultIncludedTagFilters,
+  defaultExcludedFilters: state.defaultExcludedTagFilters,
+  includedFilters: state.includedTagFilters,
+  excludedFilters: state.excludedTagFilters
+}), TagsFilterInner = ({
+  api,
+  indexJson,
+  activeFilterCount,
+  defaultIncludedFilters,
+  defaultExcludedFilters,
+  includedFilters,
+  excludedFilters
+}) => {
+  let [expanded, setExpanded] = useState(!1), handleToggleExpand = useCallback(
     (event) => {
       event.preventDefault(), setExpanded(!expanded);
     },
-    [expanded, setExpanded]
+    [expanded]
   );
   return react_default.createElement(
     PopoverProvider,
     {
+      ariaLabel: "Tag filters",
       placement: "bottom",
       onVisibleChange: setExpanded,
       offset: 8,
@@ -18917,14 +24553,11 @@ var TAGS_FILTER = "tags-filter", BUILT_IN_TAGS = new Set(Object.values(Tag)), St
         TagsFilterPanel,
         {
           api,
-          filtersById,
+          indexJson,
+          defaultIncludedFilters,
+          defaultExcludedFilters,
           includedFilters,
-          excludedFilters,
-          toggleFilter,
-          setAllFilters,
-          resetFilters,
-          isDefaultSelection: equal3(includedFilters, defaultIncluded) && equal3(excludedFilters, defaultExcluded),
-          hasDefaultSelection: defaultIncluded.size > 0 || defaultExcluded.size > 0
+          excludedFilters
         }
       )
     },
@@ -18932,19 +24565,37 @@ var TAGS_FILTER = "tags-filter", BUILT_IN_TAGS = new Set(Object.values(Tag)), St
       StyledButton2,
       {
         key: "tags",
-        ariaLabel: "Tag filters",
+        ariaLabel: activeFilterCount ? `${activeFilterCount} active tag ${activeFilterCount !== 1 ? "filters" : "filter"}` : "Tag filters",
         ariaDescription: "Filter the items shown in a sidebar based on the tags applied to them.",
-        "aria-haspopup": "dialog",
         variant: "ghost",
         padding: "small",
-        isHighlighted: tagsActive,
+        $isHighlighted: activeFilterCount > 0,
         onClick: handleToggleExpand
       },
       react_default.createElement(FilterIcon, null),
-      includedFilters.size + excludedFilters.size > 0 && react_default.createElement(TagSelected, null)
+      activeFilterCount > 0 && react_default.createElement(TagSelected, null)
     )
   );
-};
+}, TagsFilter = () => react_default.createElement(Consumer, { filter: tagsFilterMapper }, ({
+  api,
+  indexJson,
+  activeFilterCount,
+  defaultIncludedFilters,
+  defaultExcludedFilters,
+  includedFilters,
+  excludedFilters
+}) => indexJson ? react_default.createElement(
+  TagsFilterInner,
+  {
+    api,
+    indexJson,
+    activeFilterCount,
+    defaultIncludedFilters,
+    defaultExcludedFilters,
+    includedFilters,
+    excludedFilters
+  }
+) : null);
 
 // src/manager/components/sidebar/useLastViewed.ts
 init_react();
@@ -18972,7 +24623,7 @@ var import_store2 = __toESM(require_store2(), 1), save = debounce((value) => imp
 };
 
 // src/manager/components/sidebar/Sidebar.tsx
-var DEFAULT_REF_ID = "storybook_internal", Container8 = styled.header(({ theme }) => ({
+var DEFAULT_REF_ID = "storybook_internal", Container11 = styled.header(({ theme }) => ({
   position: "absolute",
   zIndex: 1,
   left: 0,
@@ -19032,88 +24683,93 @@ var DEFAULT_REF_ID = "storybook_internal", Container8 = styled.header(({ theme }
   onMenuClick,
   showCreateStoryButton = isDevelopment && isRendererReact2
 }) {
-  let [isFileSearchModalOpen, setIsFileSearchModalOpen] = useState(!1), selected = useMemo(() => storyId && { storyId, refId }, [storyId, refId]), dataset = useCombination(index, indexError, previewInitialized, allStatuses, refs), isLoading = !index && !indexError, hasEntries = Object.keys(indexJson?.entries ?? {}).length > 0, lastViewedProps = useLastViewed(selected), { isMobile: isMobile2 } = useLayout(), api = useStorybookApi(), tagPresets = useMemo(
-    () => Object.entries(scope.TAGS_OPTIONS ?? {}).reduce((acc, entry) => {
-      let [tag, option] = entry;
-      return acc[tag] = option, acc;
-    }, {}),
-    []
-  ), headerRef = useRef(null), { landmarkProps } = useLandmark(
+  let [isFileSearchModalOpen, setIsFileSearchModalOpen] = useState(!1), selected = useMemo(() => storyId && { storyId, refId }, [storyId, refId]), dataset = useCombination(index, indexError, previewInitialized, allStatuses, refs), isLoading = !index && !indexError, hasEntries = Object.keys(indexJson?.entries ?? {}).length > 0, lastViewedProps = useLastViewed(selected), { isMobile: isMobile2 } = useLayout(), api = useStorybookApi(), { viewMode } = api.getUrlState(), headerRef = useRef(null), { landmarkProps } = useLandmark(
     { "aria-labelledby": "global-site-h1", role: "banner" },
     headerRef
-  );
-  return react_default.createElement(Container8, { className: "container sidebar-container", ref: headerRef, ...landmarkProps }, react_default.createElement("h1", { id: "global-site-h1", className: "sb-sr-only" }, "Storybook"), react_default.createElement(IconSymbols, null), react_default.createElement(ScrollArea, { vertical: !0, offset: 3, scrollbarSize: 6, scrollPadding: "4rem" }, react_default.createElement(Stack, null, react_default.createElement("div", null, react_default.createElement(
-    Heading2,
+  ), skipLinkHref = viewMode !== void 0 && viewMode !== "story" && viewMode !== "docs" ? "#main-content-wrapper" : "#storybook-preview-wrapper";
+  return react_default.createElement(
+    Container11,
     {
-      className: "sidebar-header",
-      menuHighlighted,
-      menu,
-      skipLinkHref: "#storybook-preview-wrapper",
-      isLoading,
-      onMenuClick
-    }
-  ), !isLoading && scope.CONFIG_TYPE === "DEVELOPMENT" && scope.FEATURES?.sidebarOnboardingChecklist !== !1 && react_default.createElement(ChecklistWidget, null)), react_default.createElement(
-    Search,
-    {
-      dataset,
-      enableShortcuts,
-      searchBarContent: showCreateStoryButton && react_default.createElement(react_default.Fragment, null, react_default.createElement(
-        CreateNewStoryButton,
-        {
-          isMobile: isMobile2,
-          onClick: () => {
-            setIsFileSearchModalOpen(!0);
-          },
-          ariaLabel: "Create a new story",
-          variant: "outline",
-          padding: "small"
-        },
-        react_default.createElement(PlusIcon, null)
-      ), react_default.createElement(
-        CreateNewStoryFileModal,
-        {
-          open: isFileSearchModalOpen,
-          onOpenChange: setIsFileSearchModalOpen
-        }
-      )),
-      searchFieldContent: indexJson && react_default.createElement(TagsFilter, { api, indexJson, tagPresets }),
-      ...lastViewedProps
+      className: "container sidebar-container",
+      id: focusableUIElements.sidebarRegion,
+      ref: headerRef,
+      ...landmarkProps
     },
-    ({
-      query,
-      results,
-      isNavVisible,
-      isNavReachable,
-      isSearchResultRendered,
-      closeMenu,
-      getMenuProps,
-      getItemProps,
-      highlightedIndex
-    }) => react_default.createElement(react_default.Fragment, null, react_default.createElement(
-      Explorer,
+    react_default.createElement("h1", { id: "global-site-h1", className: "sb-sr-only" }, "Storybook"),
+    react_default.createElement(IconSymbols, null),
+    react_default.createElement(ScrollArea, { vertical: !0, offset: 3, scrollbarSize: 6, scrollPadding: "4rem" }, react_default.createElement(Stack, null, react_default.createElement("div", null, react_default.createElement(
+      Heading2,
+      {
+        className: "sidebar-header",
+        menuHighlighted,
+        menu,
+        skipLinkHref,
+        isLoading,
+        onMenuClick
+      }
+    ), !isLoading && scope.CONFIG_TYPE === "DEVELOPMENT" && scope.FEATURES?.sidebarOnboardingChecklist !== !1 && react_default.createElement(ChecklistWidget, null)), react_default.createElement(
+      Search,
       {
         dataset,
-        selected,
-        isLoading,
-        isBrowsing: isNavVisible,
-        isHidden: !isNavReachable,
-        hasEntries
-      }
-    ), isSearchResultRendered && react_default.createElement(
-      SearchResults,
-      {
+        enableShortcuts,
+        searchBarContent: showCreateStoryButton && react_default.createElement(react_default.Fragment, null, react_default.createElement(
+          CreateNewStoryButton,
+          {
+            isMobile: isMobile2,
+            onClick: () => {
+              setIsFileSearchModalOpen(!0);
+            },
+            ariaLabel: "Create a new story",
+            variant: "outline",
+            padding: "small"
+          },
+          react_default.createElement(PlusIcon, null)
+        ), react_default.createElement(
+          CreateNewStoryFileModal,
+          {
+            open: isFileSearchModalOpen,
+            onOpenChange: setIsFileSearchModalOpen
+          }
+        )),
+        searchFieldContent: react_default.createElement(TagsFilter, null),
+        ...lastViewedProps
+      },
+      ({
         query,
         results,
+        isNavVisible,
+        isNavReachable,
+        isSearchResultRendered,
         closeMenu,
         getMenuProps,
         getItemProps,
-        highlightedIndex,
-        enableShortcuts,
-        isLoading,
-        clearLastViewed: lastViewedProps.clearLastViewed
-      }
-    ))
-  )), isMobile2 || isLoading ? null : react_default.createElement(SidebarBottom, { isDevelopment })));
+        highlightedIndex
+      }) => react_default.createElement(react_default.Fragment, null, react_default.createElement(
+        Explorer,
+        {
+          dataset,
+          selected,
+          isLoading,
+          isBrowsing: isNavVisible,
+          isHidden: !isNavReachable,
+          hasEntries
+        }
+      ), isSearchResultRendered && react_default.createElement(
+        SearchResults,
+        {
+          query,
+          results,
+          closeMenu,
+          getMenuProps,
+          getItemProps,
+          highlightedIndex,
+          enableShortcuts,
+          isLoading,
+          clearLastViewed: lastViewedProps.clearLastViewed
+        }
+      ))
+    )), isMobile2 || isLoading ? null : react_default.createElement(SidebarBottom, { isDevelopment }))
+  );
 });
 
 // src/manager/container/Menu.tsx
@@ -19386,7 +25042,7 @@ init_react();
 
 // src/manager/settings/About.tsx
 init_react();
-var Container9 = styled.div({
+var Container12 = styled.div({
   display: "flex",
   alignItems: "center",
   flexDirection: "column",
@@ -19423,7 +25079,7 @@ var Container9 = styled.div({
   "&:hover": {
     color: theme.base === "light" ? theme.color.darkest : theme.color.lightest
   }
-})), AboutScreen = ({ onNavigateToWhatsNew }) => react_default.createElement(Container9, null, react_default.createElement(Header, null, react_default.createElement(StorybookLogo, { alt: "Storybook" })), react_default.createElement(UpgradeBlock, { onNavigateToWhatsNew }), react_default.createElement(Footer, null, react_default.createElement(Actions2, null, react_default.createElement(Button, { ariaLabel: !1, asChild: !0 }, react_default.createElement("a", { href: "https://github.com/storybookjs/storybook" }, react_default.createElement(GithubIcon, null), "GitHub")), react_default.createElement(Button, { ariaLabel: !1, asChild: !0 }, react_default.createElement("a", { href: "https://storybook.js.org/docs?ref=ui" }, react_default.createElement(DocumentIcon, { style: { display: "inline", marginRight: 5 } }), "Documentation"))), react_default.createElement("div", null, "Open source software maintained by", " ", react_default.createElement(StyledLink, { href: "https://www.chromatic.com/" }, "Chromatic"), " and the", " ", react_default.createElement(StyledLink, { href: "https://github.com/storybookjs/storybook/graphs/contributors" }, "Storybook Community"))));
+})), AboutScreen = ({ onNavigateToWhatsNew }) => react_default.createElement(Container12, null, react_default.createElement(Header, null, react_default.createElement(StorybookLogo, { alt: "Storybook" })), react_default.createElement(UpgradeBlock, { onNavigateToWhatsNew }), react_default.createElement(Footer, null, react_default.createElement(Actions2, null, react_default.createElement(Button, { ariaLabel: !1, asChild: !0 }, react_default.createElement("a", { href: "https://github.com/storybookjs/storybook" }, react_default.createElement(GithubIcon, null), "GitHub")), react_default.createElement(Button, { ariaLabel: !1, asChild: !0 }, react_default.createElement("a", { href: "https://storybook.js.org/docs?ref=ui" }, react_default.createElement(DocumentIcon, { style: { display: "inline", marginRight: 5 } }), "Documentation"))), react_default.createElement("div", null, "Open source software maintained by", " ", react_default.createElement(StyledLink, { href: "https://www.chromatic.com/" }, "Chromatic"), " and the", " ", react_default.createElement(StyledLink, { href: "https://github.com/storybookjs/storybook/graphs/contributors" }, "Storybook Community"))));
 
 // src/manager/settings/AboutPage.tsx
 var NotificationClearer = class extends Component {
@@ -19839,7 +25495,7 @@ var Sections = styled.ol(({ theme }) => ({
 };
 
 // src/manager/settings/GuidePage.tsx
-var Container10 = styled.div(({ theme }) => ({
+var Container13 = styled.div(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   maxWidth: 600,
@@ -19862,7 +25518,7 @@ var Container10 = styled.div(({ theme }) => ({
   }
 })), GuidePage = () => {
   let checklist = useChecklist();
-  return react_default.createElement(Container10, null, react_default.createElement(Intro, null, react_default.createElement("h1", null, "Guide"), react_default.createElement("p", null, "Whether you're just getting started or looking for ways to level up, this checklist will help you make the most of your Storybook.")), react_default.createElement(Checklist, { ...checklist }), scope.FEATURES?.sidebarOnboardingChecklist !== !1 && react_default.createElement(react_default.Fragment, null, checklist.openItems.length === 0 ? react_default.createElement("center", null, "Your work here is done!") : checklist.widget.disable || checklist.openItems.every((item) => item.isMuted) ? react_default.createElement("center", null, "Want to see this in the sidebar?", " ", react_default.createElement(Link, { onClick: () => checklist.disable(!1) }, "Show in sidebar")) : react_default.createElement("center", null, "Don't want to see this in the sidebar?", " ", react_default.createElement(Link, { onClick: () => checklist.mute(checklist.allItems.map(({ id }) => id)) }, "Remove from sidebar"))));
+  return react_default.createElement(Container13, null, react_default.createElement(Intro, null, react_default.createElement("h1", null, "Guide"), react_default.createElement("p", null, "Whether you're just getting started or looking for ways to level up, this checklist will help you make the most of your Storybook.")), react_default.createElement(Checklist, { ...checklist }), scope.FEATURES?.sidebarOnboardingChecklist !== !1 && react_default.createElement(react_default.Fragment, null, checklist.openItems.length === 0 ? react_default.createElement("center", null, "Your work here is done!") : checklist.widget.disable || checklist.openItems.every((item) => item.isMuted) ? react_default.createElement("center", null, "Want to see this in the sidebar?", " ", react_default.createElement(Link, { onClick: () => checklist.disable(!1) }, "Show in sidebar")) : react_default.createElement("center", null, "Don't want to see this in the sidebar?", " ", react_default.createElement(Link, { onClick: () => checklist.mute(checklist.allItems.map(({ id }) => id)) }, "Remove from sidebar"))));
 };
 
 // src/manager/settings/ShortcutsPage.tsx
@@ -19954,7 +25610,7 @@ var Header2 = styled.header(({ theme }) => ({
     height: 14,
     width: 14
   }
-), Container11 = styled.div(({ theme }) => ({
+), Container14 = styled.div(({ theme }) => ({
   fontSize: theme.typography.size.s2,
   padding: "3rem 20px",
   maxWidth: 600,
@@ -20109,7 +25765,7 @@ var ShortcutsScreen = class extends Component {
   }
   render() {
     let layout = this.renderKeyForm();
-    return react_default.createElement(Container11, null, react_default.createElement(Header2, null, "Keyboard shortcuts"), layout, react_default.createElement(
+    return react_default.createElement(Container14, null, react_default.createElement(Header2, null, "Keyboard shortcuts"), layout, react_default.createElement(
       Button,
       {
         ariaLabel: !1,
@@ -20164,7 +25820,7 @@ var Centered = styled.div({
   margin: "0 auto",
   fontSize: `${theme.typography.size.s1}px`,
   lineHeight: "16px"
-})), Container12 = styled.div(({ theme }) => ({
+})), Container15 = styled.div(({ theme }) => ({
   position: "absolute",
   width: "100%",
   height: 40,
@@ -20184,7 +25840,7 @@ var Centered = styled.div({
   let theme = useTheme(), [copyText, setCopyText] = useState("Copy Link"), copyLink = () => {
     onCopyLink(), setCopyText("Copied!"), setTimeout(() => setCopyText("Copy Link"), 4e3);
   };
-  return react_default.createElement(Container12, null, react_default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, react_default.createElement(HeartIcon, { color: theme.color.mediumdark }), react_default.createElement("div", null, "Share this with your team."), react_default.createElement(Button, { ariaLabel: !1, onClick: copyLink, size: "small", variant: "ghost" }, copyText)), isNotificationsEnabled ? react_default.createElement(Button, { ariaLabel: !1, size: "small", variant: "ghost", onClick: onToggleNotifications }, react_default.createElement(EyeCloseIcon, null), "Hide notifications") : react_default.createElement(Button, { ariaLabel: !1, size: "small", variant: "ghost", onClick: onToggleNotifications }, react_default.createElement(EyeIcon, null), "Show notifications"));
+  return react_default.createElement(Container15, null, react_default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, react_default.createElement(HeartIcon, { color: theme.color.mediumdark }), react_default.createElement("div", null, "Share this with your team."), react_default.createElement(Button, { ariaLabel: !1, onClick: copyLink, size: "small", variant: "ghost" }, copyText)), isNotificationsEnabled ? react_default.createElement(Button, { ariaLabel: !1, size: "small", variant: "ghost", onClick: onToggleNotifications }, react_default.createElement(EyeCloseIcon, null), "Hide notifications") : react_default.createElement(Button, { ariaLabel: !1, size: "small", variant: "ghost", onClick: onToggleNotifications }, react_default.createElement(EyeIcon, null), "Show notifications"));
 }, Iframe = styled.iframe(
   {
     position: "absolute",
@@ -20252,7 +25908,7 @@ var Centered = styled.div({
 var WhatsNewPage = () => react_default.createElement(WhatsNewScreen, null);
 
 // src/manager/settings/index.tsx
-var { document: document8 } = scope, Content5 = styled(ScrollArea)(({ theme }) => ({
+var { document: document9 } = scope, Content5 = styled(ScrollArea)(({ theme }) => ({
   background: theme.background.content
 })), SidebarToggle = styled.div({
   // Extra specificity is necessary here
@@ -20269,7 +25925,7 @@ var { document: document8 } = scope, Content5 = styled(ScrollArea)(({ theme }) =
     let handleEscape = (event) => {
       !enableShortcuts || event.repeat || matchesModifiers(!1, event) && matchesKeyCode("Escape", event) && (event.preventDefault(), onClose());
     };
-    return document8.addEventListener("keydown", handleEscape), () => document8.removeEventListener("keydown", handleEscape);
+    return document9.addEventListener("keydown", handleEscape), () => document9.removeEventListener("keydown", handleEscape);
   }, [enableShortcuts, onClose]);
   let tabs = useMemo(() => {
     let tabsToInclude = [
@@ -20416,7 +26072,7 @@ var ReactProvider = class extends Provider2 {
       });
     });
   }
-}, { document: document9 } = scope, rootEl = document9.getElementById("root");
+}, { document: document10 } = scope, rootEl = document10.getElementById("root");
 setTimeout(() => {
   renderStorybookUI(rootEl, new ReactProvider());
 }, 0);
