@@ -105,7 +105,7 @@ test.describe
           const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
           imagesPage = await buildImagePage.buildImage(
-            imageNameSimple,
+            manifestLabelSimple,
             dockerfilePath,
             contextDirectory,
             architectures,
