@@ -30,8 +30,8 @@ import { SettingsBar } from '/@/model/pages/settings-bar';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
-import { isWindows } from '/@/utility/platform';
+import { deleteImage, deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
+import { archType, isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
@@ -175,6 +175,11 @@ test.describe
           await playExpect
             .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 15_000), { timeout: 0 })
             .toBeTruthy();
+
+          const expectedArch = archType === 'arm64' ? ArchitectureType.ARM64 : ArchitectureType.AMD64;
+          const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
+          await playExpect(imageDetailsPage.tabContent).toContainText(expectedArch);
+          await imageDetailsPage.backLink.click();
         });
 
         test('Remove registry after manifest push', async ({ page, navigationBar }) => {
@@ -193,7 +198,13 @@ test.describe
 
         test('Delete Manifest', async ({ page }) => {
           test.setTimeout(120_000);
-          await deleteImageManifest(page, manifestLabelSimple);
+          if (canTestRegistry()) {
+            // Verify test pulled the manifest back as a single-platform image,
+            // so it's a regular image now — not a manifest.
+            await deleteImage(page, manifestLabelSimple);
+          } else {
+            await deleteImageManifest(page, manifestLabelSimple);
+          }
         });
       });
     test.describe
