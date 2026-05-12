@@ -164,5 +164,15 @@
     "issues": "https://github.com/podman-desktop/podman-desktop/issues"
   },
   "feedbackLinks": {},
-  "ConfigurationOverride": {}
+  "configuration": {
+    "override": {
+      "statusbarProviders.showProviders": {
+        "description": "Some new description ",
+        "experimental": {
+          "githubDiscussionLink": "",
+          "image": ""
+        }
+      }
+    }
+  }
 }

@@ -205,7 +205,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     // Get all the locked keys at the start to avoid multiple lookups
     const lockedSet = this.lockedKeys.getAllKeys();
 
-    const productConfigurationsProperties = (product.ConfigurationOverride ?? {}) as {
+    const productConfigurationsProperties = (product.configuration.override ?? {}) as {
       [key: string]: Partial<IConfigurationPropertySchema>;
     };
 

@@ -850,16 +850,16 @@ describe('Managed Locked', () => {
   });
 });
 
-// Tests for ConfigurationOverride overrides from product.json
-describe('ConfigurationOverride from product.json', () => {
+// Tests for configuration.override overrides from product.json
+describe('configuration.override from product.json', () => {
   beforeEach(() => {
     // Reset product mock before each test
-    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
   });
 
-  test('should override configuration properties from ConfigurationOverride', async () => {
-    // Mock product.json with ConfigurationOverride
-    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+  test('should override configuration properties from configuration.override', async () => {
+    // Mock product.json with configuration.override
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
       'test.setting': {
         description: 'Overridden description from product.json',
         experimental: {
@@ -903,8 +903,8 @@ describe('ConfigurationOverride from product.json', () => {
     expect(property?.default).toBe('myDefault');
   });
 
-  test('should override default value from ConfigurationOverride', async () => {
-    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+  test('should override default value from configuration.override', async () => {
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
       'feature.enabled': {
         default: true, // Override default from false to true
       },
@@ -936,8 +936,8 @@ describe('ConfigurationOverride from product.json', () => {
     expect(property?.description).toBe('Enable feature');
   });
 
-  test('should handle multiple properties in ConfigurationOverride', async () => {
-    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+  test('should handle multiple properties in configuration.override', async () => {
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
       'setting.one': {
         experimental: {
           githubDiscussionLink: 'https://github.com/example/1',
@@ -1000,9 +1000,9 @@ describe('ConfigurationOverride from product.json', () => {
     expect(properties['setting.three']?.description).toBe('Setting 3');
   });
 
-  test('should work when ConfigurationOverride is empty', async () => {
-    // Empty ConfigurationOverride
-    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
+  test('should work when configuration.override is empty', async () => {
+    // Empty configuration.override
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
 
     const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
     await testRegistry.init();
@@ -1032,10 +1032,11 @@ describe('ConfigurationOverride from product.json', () => {
     expect(property?.experimental).toBeUndefined();
   });
 
-  test('should work when ConfigurationOverride is undefined', async () => {
-    // Undefined ConfigurationOverride (product.json doesn't have it)
-    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> } | undefined) =
-      undefined;
+  test('should work when configuration.override is undefined', async () => {
+    // Undefined configuration.override (product.json doesn't have it)
+    (vi.mocked(product).configuration.override as
+      | { [key: string]: Partial<IConfigurationPropertySchema> }
+      | undefined) = undefined;
 
     const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
     await testRegistry.init();
