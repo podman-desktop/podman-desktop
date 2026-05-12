@@ -251,4 +251,40 @@ describe('createNewWindow', () => {
     // Window should be shown immediately (no deferral on non-macOS)
     expect(bwInstance.show).toHaveBeenCalled();
   });
+
+  test('should force quit on close when tray is disabled', async () => {
+    vi.mocked(util.isLinux).mockReturnValue(true);
+
+    const { createNewWindow } = await import('./mainWindow.js');
+
+    await createNewWindow();
+
+    const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+    assert(bwInstance);
+
+    // Simulate configuration-registry IPC with ExitOnClose=false but ShowTrayIcon=false
+    const configHandler = getHandler(vi.mocked(ipcMain.on), 'configuration-registry');
+
+    const mockConfigRegistry = {
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn((key: string) => {
+          if (key === 'ExitOnClose') return false;
+          if (key === 'ShowTrayIcon') return false;
+          return undefined;
+        }),
+      } as unknown as Configuration),
+    } as unknown as ConfigurationRegistry;
+
+    configHandler({}, mockConfigRegistry);
+
+    // Now trigger the close event
+    const closeHandler = getHandler(bwInstance.on, 'close');
+    const mockEvent = { preventDefault: vi.fn() };
+
+    closeHandler(mockEvent);
+
+    // Should quit (destroy + app.quit) even though ExitOnClose is false, because tray is hidden
+    expect(bwInstance.destroy).toHaveBeenCalled();
+    expect(app.quit).toHaveBeenCalled();
+  });
 });

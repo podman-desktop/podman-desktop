@@ -243,6 +243,7 @@ import { TempFileService } from './temp-file-service.js';
 import { TerminalInit } from './terminal-init.js';
 import { TrayIconColor } from './tray-icon-color.js';
 import { TrayMenuRegistry } from './tray-menu-registry.js';
+import { TrayVisibility } from './tray-visibility.js';
 import { Troubleshooting } from './troubleshooting.js';
 import { DirectoryStrategy } from './util/directory-strategy.js';
 import { Exec } from './util/exec.js';
@@ -596,6 +597,10 @@ export class PluginSystem {
     container.bind<CloseBehavior>(CloseBehavior).toSelf().inSingletonScope();
     const closeBehaviorConfiguration = container.get<CloseBehavior>(CloseBehavior);
     await closeBehaviorConfiguration.init();
+
+    container.bind<TrayVisibility>(TrayVisibility).toSelf().inSingletonScope();
+    const trayVisibilityConfiguration = container.get<TrayVisibility>(TrayVisibility);
+    await trayVisibilityConfiguration.init();
 
     container.bind<DockerCompatibility>(DockerCompatibility).toSelf().inSingletonScope();
     const dockerCompatibility = container.get<DockerCompatibility>(DockerCompatibility);

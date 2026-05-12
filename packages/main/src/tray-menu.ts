@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2023 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,8 @@ export class TrayMenu {
   private menuContainerProviderConnectionItems = new Map<string, ProviderContainerConnectionInfoMenuItem>();
 
   constructor(
-    private readonly tray: Tray,
-    private readonly animatedTray: AnimatedTray,
+    private readonly tray: Tray | undefined,
+    private readonly animatedTray: AnimatedTray | undefined,
   ) {
     ipcMain.on(
       'tray:add-provider-menu-item',
@@ -140,7 +140,7 @@ export class TrayMenu {
     });
 
     if (isWindows()) {
-      tray.on('click', this.showMainWindow.bind(this));
+      tray?.on('click', this.showMainWindow.bind(this));
     }
 
     // create menu first time
@@ -244,6 +244,8 @@ export class TrayMenu {
   }
 
   private updateMenu(): void {
+    if (!this.tray || this.tray.isDestroyed()) return;
+
     const generatedMenuTemplate: MenuItemConstructorOptions[] = [];
     for (const [, item] of this.menuProviderItems) {
       generatedMenuTemplate.push(this.createProviderMenuItem(item));
@@ -309,7 +311,7 @@ export class TrayMenu {
     } else {
       this.globalStatus = 'initialized';
     }
-    this.animatedTray.setStatus(this.globalStatus);
+    this.animatedTray?.setStatus(this.globalStatus);
   }
 
   private createProviderMenuItem(item: ProviderMenuItem): MenuItemConstructorOptions {
