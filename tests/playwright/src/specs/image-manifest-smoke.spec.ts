@@ -152,7 +152,7 @@ test.describe
           imagesPage = await navigationBar.openImages();
           await playExpect(imagesPage.heading).toBeVisible();
           try {
-            await imagesPage.pushManifest(manifestLabelSimple);
+            await imagesPage.pushManifest(manifestLabelSimple, 60_000);
           } catch (error: unknown) {
             // On CI, the push dialog interaction can fail for small images.
             // Push still completes; next test verifies by pulling from registry.
