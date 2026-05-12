@@ -29,6 +29,7 @@ import type {
   IConfigurationChangeEvent,
   IConfigurationNode,
   IConfigurationPropertyRecordedSchema,
+  IConfigurationPropertySchema,
   IConfigurationRegistry,
 } from '@podman-desktop/core-api/configuration';
 import {
@@ -205,7 +206,7 @@ export class ConfigurationRegistry implements IConfigurationRegistry {
     const lockedSet = this.lockedKeys.getAllKeys();
 
     const productConfigurationsProperties = (product.experimentalFeaturesFeedback ?? {}) as {
-      [key: string]: Partial<IConfigurationNode['properties']>;
+      [key: string]: Partial<IConfigurationPropertySchema>;
     };
 
     // biome-ignore lint/complexity/noForEach: <explanation>
