@@ -165,14 +165,6 @@
   },
   "feedbackLinks": {},
   "configuration": {
-    "override": {
-      "statusbarProviders.showProviders": {
-        "description": "Some new description ",
-        "experimental": {
-          "githubDiscussionLink": "",
-          "image": ""
-        }
-      }
-    }
+    "override": {}
   }
 }
