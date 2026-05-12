@@ -850,16 +850,16 @@ describe('Managed Locked', () => {
   });
 });
 
-// Tests for experimentalFeaturesFeedback overrides from product.json
-describe('experimentalFeaturesFeedback from product.json', () => {
+// Tests for ConfigurationOverride overrides from product.json
+describe('ConfigurationOverride from product.json', () => {
   beforeEach(() => {
     // Reset product mock before each test
-    (vi.mocked(product).experimentalFeaturesFeedback as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
+    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
   });
 
-  test('should override configuration properties from experimentalFeaturesFeedback', async () => {
-    // Mock product.json with experimentalFeaturesFeedback
-    (vi.mocked(product).experimentalFeaturesFeedback as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+  test('should override configuration properties from ConfigurationOverride', async () => {
+    // Mock product.json with ConfigurationOverride
+    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
       'test.setting': {
         description: 'Overridden description from product.json',
         experimental: {
@@ -903,8 +903,8 @@ describe('experimentalFeaturesFeedback from product.json', () => {
     expect(property?.default).toBe('myDefault');
   });
 
-  test('should override default value from experimentalFeaturesFeedback', async () => {
-    (vi.mocked(product).experimentalFeaturesFeedback as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+  test('should override default value from ConfigurationOverride', async () => {
+    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
       'feature.enabled': {
         default: true, // Override default from false to true
       },
@@ -936,8 +936,8 @@ describe('experimentalFeaturesFeedback from product.json', () => {
     expect(property?.description).toBe('Enable feature');
   });
 
-  test('should handle multiple properties in experimentalFeaturesFeedback', async () => {
-    (vi.mocked(product).experimentalFeaturesFeedback as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+  test('should handle multiple properties in ConfigurationOverride', async () => {
+    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
       'setting.one': {
         experimental: {
           githubDiscussionLink: 'https://github.com/example/1',
@@ -1000,9 +1000,9 @@ describe('experimentalFeaturesFeedback from product.json', () => {
     expect(properties['setting.three']?.description).toBe('Setting 3');
   });
 
-  test('should work when experimentalFeaturesFeedback is empty', async () => {
-    // Empty experimentalFeaturesFeedback
-    (vi.mocked(product).experimentalFeaturesFeedback as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
+  test('should work when ConfigurationOverride is empty', async () => {
+    // Empty ConfigurationOverride
+    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
 
     const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
     await testRegistry.init();
@@ -1032,11 +1032,10 @@ describe('experimentalFeaturesFeedback from product.json', () => {
     expect(property?.experimental).toBeUndefined();
   });
 
-  test('should work when experimentalFeaturesFeedback is undefined', async () => {
-    // Undefined experimentalFeaturesFeedback (product.json doesn't have it)
-    (vi.mocked(product).experimentalFeaturesFeedback as
-      | { [key: string]: Partial<IConfigurationPropertySchema> }
-      | undefined) = undefined;
+  test('should work when ConfigurationOverride is undefined', async () => {
+    // Undefined ConfigurationOverride (product.json doesn't have it)
+    (vi.mocked(product).ConfigurationOverride as { [key: string]: Partial<IConfigurationPropertySchema> } | undefined) =
+      undefined;
 
     const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
     await testRegistry.init();

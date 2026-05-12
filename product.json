@@ -164,16 +164,5 @@
     "issues": "https://github.com/podman-desktop/podman-desktop/issues"
   },
   "feedbackLinks": {},
-  "experimentalFeaturesFeedback": {
-    "dashboard.enhancedDashboard": {
-      "experimental": {
-        "githubDiscussionLink": "https://github.com/podman-desktop/podman-desktop/discussions/16055"
-      }
-    },
-    "statusbarProviders.showProviders": {
-      "experimental": {
-        "githubDiscussionLink": "https://github.com/podman-desktop/podman-desktop/discussions/10802"
-      }
-    }
-  }
+  "ConfigurationOverride": {}
 }
