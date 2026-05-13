@@ -72,8 +72,8 @@ test('should propagate class to outer container', () => {
   expect(container.children[0]).toHaveClass('custom-class');
 });
 
-test('should propagate aria-label to outer container', () => {
-  const { getByLabelText } = render(LinearProgress, { 'aria-label': 'Loading page' });
-  const container = getByLabelText('Loading page');
-  expect(container).toBeDefined();
+test('should propagate aria-label to progressbar element', () => {
+  render(LinearProgress, { 'aria-label': 'Loading page' });
+  const progressBar = screen.getByRole('progressbar');
+  expect(progressBar).toHaveAttribute('aria-label', 'Loading page');
 });

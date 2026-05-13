@@ -34,12 +34,13 @@ import type { HTMLAttributes } from 'svelte/elements';
 let { class: className, ...restProps }: HTMLAttributes<HTMLElement> = $props();
 </script>
 
-<div class="w-full overflow-x-hidden overflow-y-auto relative bg-(--pd-progressBar-bg) {className}" {...restProps}>
+<div class="w-full overflow-x-hidden overflow-y-auto relative bg-(--pd-progressBar-bg) {className}">
   <div
     class="linear-progress-indeterminate w-full h-0.5 relative bg-(--pd-progressBar-in-progress-bg) outline-1 outline-(--pd-progressBar-in-progress-border) z-1"
     role="progressbar"
     aria-valuemin={0}
-    aria-valuemax={100}>
+    aria-valuemax={100}
+    {...restProps}>
   </div>
 
   <div class="w-full absolute top-1/2 -translate-y-1/2 h-px bg-(--pd-progressBar-hc-line-bg) z-0"></div>
