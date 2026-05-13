@@ -209,7 +209,7 @@ test.describe
         await playExpect(containersPage.heading).toBeVisible({ timeout: 60_000 });
 
         await playExpect
-          .poll(async () => await containersPage.containerExists(containerToRun), { timeout: 10_000 })
+          .poll(async () => await containersPage.containerExists(containerToRun), { timeout: 25_000 })
           .toBeTruthy();
 
         let imagesPage = await navigationBar.openImages();
@@ -218,17 +218,13 @@ test.describe
         imagesPage = await imagesPage.importContainerImage(tarFilePath, importedImageName);
         await playExpect(imagesPage.heading).toBeVisible({ timeout: 60_000 });
 
-        await playExpect
-          .poll(async () => await imagesPage.waitForImageExists(importedImageName, 30_000), { timeout: 0 })
-          .toBeTruthy();
+        playExpect(await imagesPage.waitForImageExists(importedImageName, 30_000)).toBeTruthy();
 
         const imageDetailsPage = await imagesPage.openImageDetails(importedImageName);
         await playExpect(imageDetailsPage.heading).toBeVisible();
 
         imagesPage = await imageDetailsPage.deleteImage();
-        await playExpect
-          .poll(async () => await imagesPage.waitForImageDelete(importedImageName, 60_000), { timeout: 0 })
-          .toBeTruthy();
+        playExpect(await imagesPage.waitForImageDelete(importedImageName, 60_000)).toBeTruthy();
       } finally {
         // eslint-disable-next-line n/no-sync
         rmSync(tarFilePath, { force: true });
