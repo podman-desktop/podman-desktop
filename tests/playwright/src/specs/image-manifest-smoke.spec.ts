@@ -176,10 +176,9 @@ test.describe
             .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 15_000), { timeout: 0 })
             .toBeTruthy();
 
+          // Pull resolves the manifest to the host platform — verify via the ARCH column
           const expectedArch = archType === 'arm64' ? ArchitectureType.ARM64 : ArchitectureType.AMD64;
-          const imageDetailsPage = await imagesPage.openImageDetails(manifestLabelSimple);
-          await playExpect(imageDetailsPage.tabContent).toContainText(expectedArch);
-          await imageDetailsPage.backLink.click();
+          await playExpect.poll(async () => await imagesPage.getImageArch(manifestLabelSimple)).toBe(expectedArch);
         });
 
         test('Remove registry after manifest push', async ({ page, navigationBar }) => {
