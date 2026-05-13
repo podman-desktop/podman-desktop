@@ -20,6 +20,7 @@ import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { ContainerState } from '/@/model/core/states';
+import { withMockedSaveFileDialog } from '/@/utility/dialog';
 import { handleConfirmationDialog } from '/@/utility/operations';
 
 import { ContainersPage } from './containers-page';
@@ -32,11 +33,15 @@ export class ContainerDetailsPage extends DetailsPage {
   readonly imageLink: Locator;
   readonly deployButton: Locator;
   readonly startButton: Locator;
+  readonly exportButton: Locator;
   readonly terminalInput: Locator;
   readonly terminalContent: Locator;
   readonly findInLogsInput: Locator;
   readonly searchResults: Locator;
   readonly clearLogsButton: Locator;
+  readonly exportPathInput: Locator;
+  readonly exportBrowseButton: Locator;
+  readonly confirmExportButton: Locator;
 
   static readonly SUMMARY_TAB = 'Summary';
   static readonly LOGS_TAB = 'Logs';
@@ -57,12 +62,20 @@ export class ContainerDetailsPage extends DetailsPage {
       name: 'Start Container',
       exact: true,
     });
+    this.exportButton = this.controlActions.getByRole('button', {
+      name: 'Export Container',
+      exact: true,
+    });
 
     this.terminalInput = this.tabContent.getByLabel('Terminal input');
     this.terminalContent = this.tabContent.locator('.xterm-rows');
     this.findInLogsInput = this.tabContent.getByLabel('Find');
     this.searchResults = this.tabContent.locator('div.xterm-selection > div');
     this.clearLogsButton = this.tabContent.getByTitle('Clear logs');
+
+    this.exportPathInput = page.locator('#input-export-container-name');
+    this.exportBrowseButton = page.getByLabel('Select output file');
+    this.confirmExportButton = page.getByRole('button', { name: 'Export container', exact: true });
   }
 
   async getState(): Promise<string> {
@@ -159,5 +172,23 @@ export class ContainerDetailsPage extends DetailsPage {
 
   async searchInInspectEditor(text: string): Promise<boolean> {
     return this.searchInEditor(ContainerDetailsPage.INSPECT_TAB, text);
+  }
+
+  async exportContainer(outputPath: string): Promise<ContainersPage> {
+    return test.step(`Export container to ${outputPath}`, async () => {
+      await playExpect(this.exportButton).toBeEnabled();
+      await this.exportButton.click();
+      await playExpect(this.exportPathInput).toBeVisible();
+      await playExpect(this.exportBrowseButton).toBeVisible();
+
+      await withMockedSaveFileDialog(outputPath, async () => {
+        await this.exportBrowseButton.click();
+      });
+      await playExpect(this.exportPathInput).toHaveValue(outputPath);
+      await playExpect(this.confirmExportButton).toBeEnabled();
+      await this.confirmExportButton.click();
+
+      return new ContainersPage(this.page);
+    });
   }
 }

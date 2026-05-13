@@ -16,6 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
 import { ContainerState, ImageState } from '/@/model/core/states';
 import type { ContainerInteractiveParams } from '/@/model/core/types';
 import { ContainersPage } from '/@/model/pages/containers-page';
@@ -184,6 +188,51 @@ test.describe
         .poll(async () => await containersDetails.getState(), { timeout: 30_000 })
         .toContain(ContainerState.Exited);
       await playExpect(containersDetails.startButton).toBeVisible();
+    });
+
+    test('Export container as tar, delete, import from tar', async ({ navigationBar }) => {
+      test.skip(
+        process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+        'Test is not running with CDP runner',
+      );
+      test.setTimeout(180_000);
+
+      const tarFilePath = path.join(tmpdir(), `podman-desktop-e2e-${containerToRun}.tar`);
+      const importedImageName = `localhost/${containerToRun}-imported`;
+
+      try {
+        const containers = await navigationBar.openContainers();
+        const containerDetails = await containers.openContainersDetails(containerToRun);
+        await playExpect(containerDetails.heading).toBeVisible();
+
+        const containersPage = await containerDetails.exportContainer(tarFilePath);
+        await playExpect(containersPage.heading).toBeVisible({ timeout: 60_000 });
+
+        await playExpect
+          .poll(async () => await containersPage.containerExists(containerToRun), { timeout: 10_000 })
+          .toBeTruthy();
+
+        let imagesPage = await navigationBar.openImages();
+        await playExpect(imagesPage.heading).toBeVisible();
+
+        imagesPage = await imagesPage.importContainerImage(tarFilePath, importedImageName);
+        await playExpect(imagesPage.heading).toBeVisible({ timeout: 60_000 });
+
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageExists(importedImageName, 30_000), { timeout: 0 })
+          .toBeTruthy();
+
+        const imageDetailsPage = await imagesPage.openImageDetails(importedImageName);
+        await playExpect(imageDetailsPage.heading).toBeVisible();
+
+        imagesPage = await imageDetailsPage.deleteImage();
+        await playExpect
+          .poll(async () => await imagesPage.waitForImageDelete(importedImageName, 60_000), { timeout: 0 })
+          .toBeTruthy();
+      } finally {
+        // eslint-disable-next-line n/no-sync
+        rmSync(tarFilePath, { force: true });
+      }
     });
 
     test('Start a container from the Containers page', async ({ navigationBar }) => {
