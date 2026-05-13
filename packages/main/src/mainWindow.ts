@@ -185,6 +185,9 @@ async function createWindow(): Promise<BrowserWindow> {
     let exitonclose = isLinux(); // default value, which we will use unless the user preference is available.
     if (closeBehaviorConfiguration) {
       exitonclose = closeBehaviorConfiguration.get<boolean>('ExitOnClose') === true;
+      if (closeBehaviorConfiguration.get<boolean>('ShowTrayIcon') === false) {
+        exitonclose = true;
+      }
     }
 
     e.preventDefault();

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import { type AdditionalData, Main } from './main.js';
 import type { ConfigurationRegistry } from './plugin/configuration-registry.js';
 import { Emitter } from './plugin/events/emitter.js';
 import { PluginSystem } from './plugin/index.js';
+import { readShowTrayIconSetting } from './plugin/util/read-tray-setting.js';
 import { ZoomLevelHandler } from './plugin/zoom-level-handler.js';
 import { StartupInstall } from './system/startup-install.js';
 import { WindowHandler } from './system/window/window-handler.js';
@@ -80,7 +81,7 @@ app.once('before-quit', event => {
     });
 });
 
-let tray: Tray;
+let tray: Tray | undefined;
 
 // Handle the open-url event (macOS/Linux). For Windows, it needs to be handle in the second-instance event
 app.on('will-finish-launching', () => {
@@ -93,10 +94,13 @@ app.on('will-finish-launching', () => {
 
 app.whenReady().then(
   async () => {
-    // Setup the default tray icon + menu items
-    animatedTray = new AnimatedTray();
-    tray = new Tray(animatedTray.getDefaultImage());
-    animatedTray.setTray(tray);
+    // Setup the default tray icon + menu items (skip if user disabled tray)
+    const showTrayIcon = readShowTrayIconSetting();
+    if (showTrayIcon) {
+      animatedTray = new AnimatedTray();
+      tray = new Tray(animatedTray.getDefaultImage());
+      animatedTray.setTray(tray);
+    }
     const trayMenu = new TrayMenu(tray, animatedTray);
 
     const _onDidCreatedConfigurationRegistry = new Emitter<ConfigurationRegistry>();

@@ -49,6 +49,7 @@ beforeAll(() => {
   tray = {
     setContextMenu: vi.fn(),
     on: vi.fn(),
+    isDestroyed: vi.fn().mockReturnValue(false),
   } as unknown as Tray;
   animatedTray = {
     setStatus: vi.fn(),
