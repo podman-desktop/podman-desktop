@@ -9,7 +9,7 @@
   <summary>Manage Podman and other container engines from a single UI</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <url type="homepage">https://podman-desktop.io/</url>
-  <url type="bugtracker">https://github.com/containers/podman-desktop/issues</url>
+  <url type="bugtracker">https://github.com/podman-desktop/podman-desktop/issues</url>
   <url type="help">https://podman-desktop.io/docs/intro</url>
   <description>
     <p>Podman Desktop is an open source graphical tool enabling you to seamlessly work with containers and Kubernetes from your local environment.</p>
