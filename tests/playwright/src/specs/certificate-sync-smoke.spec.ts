@@ -39,7 +39,7 @@ test.afterAll(async ({ runner }) => {
 
 test.describe
   .serial('Certificate synchronization to Podman VMs', { tag: ['@smoke'] }, () => {
-    test.skip(isLinux, 'Certificate sync targets Podman machine VMs — not applicable on native Linux');
+    test.skip(isLinux, 'Certificate sync targets Podman virtual machines — not applicable on native Linux');
 
     test('Synchronize certificates completes successfully', async ({ page, statusBar }) => {
       test.setTimeout(SYNC_TIMEOUT + 60_000);
