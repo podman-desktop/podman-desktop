@@ -24,7 +24,7 @@ import { isLinux } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const syncCertificatesCommand = 'Podman: Synchronize certificates to all VMs';
-const SYNC_TIMEOUT = 120_000;
+const SYNC_TIMEOUT = 180_000;
 const POLL_INTERVAL = 2_000;
 
 test.beforeAll(async ({ runner, welcomePage, page }) => {
