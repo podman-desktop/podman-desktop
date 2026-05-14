@@ -108,6 +108,44 @@ describe('Tooltip', () => {
     });
   });
 
+  test('tooltip shows on focusin and hides on focusout', async () => {
+    render(TooltipTestComponent, { tip: 'focus text' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+
+    expect(screen.queryByText('focus text')).not.toBeInTheDocument();
+
+    await fireEvent.focusIn(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('focus text')).toBeInTheDocument();
+    });
+
+    await fireEvent.focusOut(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('focus text')).not.toBeInTheDocument();
+    });
+  });
+
+  test('tooltip shows on keyboard focus and hides on mouse leave', async () => {
+    render(TooltipTestComponent, { tip: 'cross text' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+
+    await fireEvent.focusIn(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('cross text')).toBeInTheDocument();
+    });
+
+    await fireEvent.mouseLeave(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('cross text')).not.toBeInTheDocument();
+    });
+  });
+
   test('tooltip respects top placement prop', async () => {
     render(TooltipTestComponent, { tip: 'top tooltip', top: true });
 

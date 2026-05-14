@@ -154,7 +154,9 @@ $effect((): (() => void) => {
     class="group tooltip-slot {className}"
     bind:this={referenceElement}
     onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}>
+    onmouseleave={handleMouseLeave}
+    onfocusin={handleMouseEnter}
+    onfocusout={handleMouseLeave}>
     {@render children?.()}
   </span>
   {#if isVisible && !$tooltipHidden && (tip ?? tipSnippet)}
