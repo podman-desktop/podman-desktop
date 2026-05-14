@@ -20,7 +20,7 @@ import { TaskState } from '/@/model/core/states';
 import { CommandPalette } from '/@/model/pages/command-palette';
 import { TasksPage } from '/@/model/pages/tasks-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isLinux } from '/@/utility/platform';
+import { isCI, isLinux, isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const syncCertificatesCommand = 'Podman: Synchronize certificates to all VMs';
@@ -40,6 +40,7 @@ test.afterAll(async ({ runner }) => {
 test.describe
   .serial('Certificate synchronization to Podman VMs', { tag: ['@smoke'] }, () => {
     test.skip(isLinux, 'Certificate sync targets Podman virtual machines — not applicable on native Linux');
+    test.skip(isWindows && isCI, 'Certificate sync via podman machine ssh hangs on Windows CI runners');
 
     test('Synchronize certificates completes successfully', async ({ page, statusBar }) => {
       test.setTimeout(SYNC_TIMEOUT + 60_000);
