@@ -127,6 +127,11 @@ function handleMouseLeave(): void {
   }
 }
 
+function handleFocusOut(event: FocusEvent): void {
+  if (referenceElement?.contains(event.relatedTarget as Node)) return;
+  handleMouseLeave();
+}
+
 $effect((): (() => void) => {
   if (isVisible && referenceElement && tooltipElement) {
     // Initial positioning
@@ -156,7 +161,7 @@ $effect((): (() => void) => {
     onmouseenter={handleMouseEnter}
     onmouseleave={handleMouseLeave}
     onfocusin={handleMouseEnter}
-    onfocusout={handleMouseLeave}>
+    onfocusout={handleFocusOut}>
     {@render children?.()}
   </span>
   {#if isVisible && !$tooltipHidden && (tip ?? tipSnippet)}

@@ -128,6 +128,25 @@ describe('Tooltip', () => {
     });
   });
 
+  test('tooltip stays visible when focus moves between descendants inside trigger', async () => {
+    render(TooltipTestComponent, { tip: 'stay text' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+    const child = screen.getByText('Hover me');
+
+    await fireEvent.focusIn(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('stay text')).toBeInTheDocument();
+    });
+
+    await fireEvent.focusOut(slot, { relatedTarget: child });
+
+    await waitFor(() => {
+      expect(screen.queryByText('stay text')).toBeInTheDocument();
+    });
+  });
+
   test('tooltip shows on keyboard focus and hides on mouse leave', async () => {
     render(TooltipTestComponent, { tip: 'cross text' });
 
