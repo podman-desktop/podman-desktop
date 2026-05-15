@@ -46,7 +46,7 @@ const { Story } = defineMeta({
 
 <!-- #region Snippets -->
 
-{#snippet messageToast(type: string, label: string, message: string)}
+{#snippet messageToast(type: 'success' | 'error' | 'warning' | 'info', label: string, message: string)}
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">{label}</span>
     <div
