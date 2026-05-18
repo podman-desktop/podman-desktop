@@ -90,7 +90,9 @@ export class DashboardPage extends BasePage {
     this.viewButton = this.systemOverview.getByRole('button', { name: 'View' });
     this.errorDetailsButton = this.systemOverview.getByRole('button', { name: 'See Details in Resources' });
     this.statusButton = this.systemOverview.getByRole('button', { name: 'System Overview - Overall status' }); //'Some systems are stopped', 'All systems operational', 'Starting up...', 'Error detected'
-    this.noContainerEngineLabel = this.systemOverview.getByLabel('No container engine (machine) created yet.');
+    this.noContainerEngineLabel = this.systemOverview.getByText(
+      'No container engine (machine) created yet. Create one to run containers and pods.',
+    );
   }
 
   public getPodmanStatusLocator(): Locator {

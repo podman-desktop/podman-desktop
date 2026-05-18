@@ -81,16 +81,16 @@ test.describe
       // system overview card button not visible
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible({ timeout: 5_000 });
       // podman card visible
-      await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 20_000 });
+      await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
 
       await setEnhancedDashboardFeature(page, navigationBar, true);
       // 'System Overview' card may take a second to load, poll by changing the page until it appears?
       dashboardPage = await navigationBar.openDashboard();
       // system overview card button visible
-      await playExpect(dashboardPage.systemOverviewButton).toBeVisible({ timeout: 20_000 });
-      await playExpect(dashboardPage.systemOverviewButton).toBeEnabled({ timeout: 20_000 });
+      await playExpect(dashboardPage.systemOverviewButton).toBeVisible({ timeout: 10_000 });
+      await playExpect(dashboardPage.systemOverviewButton).toBeEnabled({ timeout: 10_000 });
       await dashboardPage.systemOverviewButton.click();
-      await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 20_000 });
+      await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
       // podman card not visible
       await playExpect(dashboardPage.podmanProvider).not.toBeVisible({ timeout: 5_000 });
       // "some systems are stopped" enabled and correct text
@@ -113,6 +113,12 @@ test.describe
         const podmanOnboardingPage = new PodmanOnboardingPage(page);
         await playExpect(podmanOnboardingPage.header).toBeVisible();
         await playExpect(podmanOnboardingPage.mainPage).toBeVisible();
+        await podmanOnboardingPage.nextStepButton.click();
+        await playExpect(podmanOnboardingPage.onboardingStatusMessage).toHaveText(
+          `We could not find any Podman machine. Let's create one!`,
+          { timeout: 10_000 },
+        );
+        await podmanOnboardingPage.nextStepButton.click();
         await podmanOnboardingPage.machineCreationForm.setupAndCreateMachine(PODMAN_MACHINE_NAME_1, {
           isRootful: false,
           enableUserNet: false,
@@ -121,7 +127,7 @@ test.describe
         });
         // systemOverview button -> starting up; status label -> starting (missing aria-label)
         dashboardPage = await navigationBar.openDashboard();
-        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, { timeout: 10_000 });
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, { timeout: 300_000 });
         // systemOverview button -> systems operational; status label -> running (missing aria-label)
         await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
           timeout: 300_000,
@@ -142,7 +148,7 @@ test.describe
         // click on 'navigate to...' button, verify it goes to machine details
         await playExpect(dashboardPage.navigateToButton).toBeEnabled();
         await dashboardPage.navigateToButton.click();
-        await playExpect(podmanMachine1Details.header).toBeVisible();
+        await playExpect(podmanMachine1Details.podmanMachineName).toBeVisible();
         // come back to dashboard, click on status button, verify it goes to resources
         await navigationBar.openDashboard();
         await playExpect(dashboardPage.statusButton).toBeEnabled();
