@@ -78,17 +78,21 @@ test.describe
     test('Enable/disable enhanced dashboard experimental feature', async ({ navigationBar, page }) => {
       await setEnhancedDashboardFeature(page, navigationBar, false);
       let dashboardPage = await navigationBar.openDashboard();
-      // system overview card not visible
-      await playExpect(dashboardPage.systemOverview).not.toBeVisible({ timeout: 20_000 });
+      // system overview card button not visible
+      await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible({ timeout: 5_000 });
       // podman card visible
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 20_000 });
 
       await setEnhancedDashboardFeature(page, navigationBar, true);
+      // 'System Overview' card may take a second to load, poll by changing the page until it appears?
       dashboardPage = await navigationBar.openDashboard();
-      // system overview card visible
+      // system overview card button visible
+      await playExpect(dashboardPage.systemOverviewButton).toBeVisible({ timeout: 20_000 });
+      await playExpect(dashboardPage.systemOverviewButton).toBeEnabled({ timeout: 20_000 });
+      await dashboardPage.systemOverviewButton.click();
       await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 20_000 });
       // podman card not visible
-      await playExpect(dashboardPage.podmanProvider).not.toBeVisible({ timeout: 20_000 });
+      await playExpect(dashboardPage.podmanProvider).not.toBeVisible({ timeout: 5_000 });
       // "some systems are stopped" enabled and correct text
       await playExpect(dashboardPage.statusButton).toBeEnabled({ timeout: 5_000 });
       await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, { timeout: 5_000 });

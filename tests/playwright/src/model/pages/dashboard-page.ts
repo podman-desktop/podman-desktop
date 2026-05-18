@@ -43,6 +43,7 @@ export class DashboardPage extends BasePage {
   readonly podmanInitilizeAndStartButton: Locator;
 
   // enhanced dashboard - health monitoring
+  readonly systemOverviewButton: Locator;
   readonly systemOverview: Locator;
   readonly navigateToButton: Locator;
   readonly statusButton: Locator;
@@ -82,7 +83,8 @@ export class DashboardPage extends BasePage {
     this.podmanStatusLabel = this.podmanProvider.getByLabel(this.CONNECTION_STATUS_LABEL);
 
     // Enhanced Dashboard - Health Monitoring
-    this.systemOverview = page.getByRole('region', { name: 'System Overview' });
+    this.systemOverviewButton = page.getByRole('button', { name: 'System Overview' });
+    this.systemOverview = this.systemOverviewButton.locator('..').getByRole('region');
     this.navigateToButton = this.systemOverview.getByRole('button', { name: 'Navigate to' });
     this.setUpPodmanButton = this.systemOverview.getByRole('button', { name: 'Set up Podman' });
     this.viewButton = this.systemOverview.getByRole('button', { name: 'View' });
