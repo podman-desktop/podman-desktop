@@ -44,9 +44,12 @@ export class DashboardPage extends BasePage {
 
   // enhanced dashboard - health monitoring
   readonly systemOverview: Locator;
+  readonly navigateToButton: Locator;
   readonly statusButton: Locator;
   readonly setUpPodmanButton: Locator;
+  readonly viewButton: Locator;
   readonly errorDetailsButton: Locator;
+  readonly noContainerEngineLabel: Locator;
 
   // contants
   readonly ACTUAL_STATE = 'Actual State';
@@ -80,9 +83,12 @@ export class DashboardPage extends BasePage {
 
     // Enhanced Dashboard - Health Monitoring
     this.systemOverview = page.getByRole('region', { name: 'System Overview' });
+    this.navigateToButton = this.systemOverview.getByRole('button', { name: 'Navigate to' });
     this.setUpPodmanButton = this.systemOverview.getByRole('button', { name: 'Set up Podman' });
+    this.viewButton = this.systemOverview.getByRole('button', { name: 'View' });
     this.errorDetailsButton = this.systemOverview.getByRole('button', { name: 'See Details in Resources' });
-    this.statusButton = this.systemOverview.getByRole('button', { name: 'System Overview - Navigate to resources' }); //'Some systems are stopped', 'All systems operational', 'Starting up...', 'Error detected'
+    this.statusButton = this.systemOverview.getByRole('button', { name: 'System Overview - Overall status' }); //'Some systems are stopped', 'All systems operational', 'Starting up...', 'Error detected'
+    this.noContainerEngineLabel = this.systemOverview.getByLabel('No container engine (machine) created yet.');
   }
 
   public getPodmanStatusLocator(): Locator {
