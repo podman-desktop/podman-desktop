@@ -12,6 +12,7 @@ import { ensureRestrictedSecurityContext } from '/@/lib/pod/pod-utils';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import WarningMessage from '/@/lib/ui/WarningMessage.svelte';
 import { lastPage } from '/@/stores/breadcrumb';
+import { registeredFeatures } from '/@/stores/registered-features';
 
 export let resourceId: string;
 export let engineId: string;
@@ -41,6 +42,8 @@ let ingressPort: number;
 let containerPortArray: string[] = [];
 
 let createdRoutes: V1Route[] = [];
+
+$: kubernetesDashboardActive = $registeredFeatures.includes('kubernetes-dashboard');
 
 onMount(async () => {
   // If type = compose
@@ -641,10 +644,12 @@ function updateKubeResult(): void {
     {#if deployFinished}
       <div class="pt-4 flex flex-row space-x-2 justify-end">
         <Button on:click={goBackToHistory} aria-label="Done">Done</Button>
-        <Button
-          on:click={openPodDetails}
-          disabled={!createdPod?.metadata?.name || !createdPod?.metadata?.namespace}
-          aria-label="Open Pod">Open Pod</Button>
+        {#if !kubernetesDashboardActive}
+          <Button
+            on:click={openPodDetails}
+            disabled={!createdPod?.metadata?.name || !createdPod?.metadata?.namespace}
+            aria-label="Open Pod">Open Pod</Button>
+        {/if}
       </div>
     {/if}
   </div>
