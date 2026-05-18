@@ -27,6 +27,7 @@ import type {
 } from '@podman-desktop/api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import type { AuthenticationProviderInfo, SessionRequestInfo } from '@podman-desktop/core-api/authentication';
+import { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
 import { Emitter } from './events/emitter.js';
@@ -130,13 +131,54 @@ export class AuthenticationImpl {
   // In-memory store for extension allowances
   // Key format: `${providerId}:${accountId}` -> AllowedExtension[]
   private _extensionAllowances: Map<string, AllowedExtension[]> = new Map();
+  private _allowancesLoaded = false;
 
   constructor(
     @inject(ApiSenderType)
     private apiSender: ApiSenderType,
     @inject(MessageBox)
     private messageBox: MessageBox,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
   ) {}
+
+  private ensureAllowancesLoaded(): void {
+    if (this._allowancesLoaded) {
+      return;
+    }
+    this._allowancesLoaded = true;
+    this.configurationRegistry.registerConfigurations([
+      {
+        id: 'authentication',
+        title: 'Authentication',
+        type: 'object',
+        properties: {
+          'authentication.trustedExtensions': {
+            type: 'object',
+            default: {},
+            hidden: true,
+            description: 'Trusted extensions for authentication providers',
+          },
+        },
+      },
+    ]);
+    this.loadAllowancesFromConfig();
+  }
+
+  private loadAllowancesFromConfig(): void {
+    const config = this.configurationRegistry.getConfiguration('authentication');
+    const data = config.get<Record<string, AllowedExtension[]>>('trustedExtensions') ?? {};
+    this._extensionAllowances.clear();
+    for (const [key, value] of Object.entries(data)) {
+      this._extensionAllowances.set(key, value);
+    }
+  }
+
+  private async saveAllowances(): Promise<void> {
+    const config = this.configurationRegistry.getConfiguration('authentication');
+    const data: Record<string, AllowedExtension[]> = Object.fromEntries(this._extensionAllowances);
+    await config.update('trustedExtensions', data);
+  }
 
   public async getAuthenticationProvidersInfo(): Promise<AuthenticationProviderInfo[]> {
     const values = Array.from(this._authenticationProviders.values());
@@ -243,11 +285,6 @@ export class AuthenticationImpl {
     return `${providerId}:${accountId}`;
   }
 
-  readAllowedExtensions(providerId: string, accountId: string): AllowedExtension[] {
-    const key = this.getAllowanceKey(providerId, accountId);
-    return this._extensionAllowances.get(key) ?? [];
-  }
-
   updateAllowedExtension(
     providerId: string,
     accountId: string,
@@ -255,6 +292,7 @@ export class AuthenticationImpl {
     extensionName: string,
     isAllowed: boolean,
   ): void {
+    this.ensureAllowancesLoaded();
     const key = this.getAllowanceKey(providerId, accountId);
     const allowances = this._extensionAllowances.get(key) ?? [];
 
@@ -268,6 +306,9 @@ export class AuthenticationImpl {
     }
 
     this._extensionAllowances.set(key, allowances);
+    this.saveAllowances().catch((err: unknown) => {
+      console.error('Failed to persist trusted extensions to settings', err);
+    });
     this.apiSender.send('authentication-provider-update', { id: providerId });
   }
 
@@ -280,6 +321,7 @@ export class AuthenticationImpl {
    * if they haven't made a choice yet
    */
   isAccessAllowed(providerId: string, accountId: string, extensionId: string): boolean | undefined {
+    this.ensureAllowancesLoaded();
     const key = this.getAllowanceKey(providerId, accountId);
     const allowances = this._extensionAllowances.get(key);
 
@@ -319,6 +361,8 @@ export class AuthenticationImpl {
     if (options.createIfNone && options.silent) {
       throw new Error('Invalid combination of options. Please remove one of the following: createIfNone, silent');
     }
+
+    this.ensureAllowancesLoaded();
 
     const providerData = this._authenticationProviders.get(providerId);
     const sortedScopes = [...scopes].sort((a, b) => a.localeCompare(b));
