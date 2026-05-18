@@ -140,7 +140,7 @@ test.describe
 
           await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
-          const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+          const registryBox = await registryPage.getRegistryRowByName('GitHub');
           const username = registryBox.getByText(registryUsername);
           await playExpect(username).toBeVisible();
         });
@@ -190,7 +190,7 @@ test.describe
           await playExpect(registryPage.heading).toBeVisible();
 
           await registryPage.removeRegistry('GitHub');
-          const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+          const registryBox = await registryPage.getRegistryRowByName('GitHub');
           const username = registryBox.getByText(registryUsername);
           await playExpect(username).toBeHidden();
         });
