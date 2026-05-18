@@ -29,6 +29,7 @@ export interface NetworkInfoUI {
   status: string;
   containers: NetworkContainer[];
   ipv6_enabled: boolean;
+  actionError?: string;
 }
 
 export interface NetworkContainer {
