@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["mcp__podman-desktop-mcp__*"]
+    "allow": ["mcp__podman-desktop-mcp__*", "Bash(gh issue view:*)", "Bash(gh pr view:*)"]
   }
 }
