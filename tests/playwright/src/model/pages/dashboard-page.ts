@@ -48,9 +48,9 @@ export class DashboardPage extends BasePage {
   readonly navigateToButton: Locator;
   readonly statusButton: Locator;
   readonly setUpPodmanButton: Locator;
-  readonly viewButton: Locator;
   readonly errorDetailsButton: Locator;
   readonly noContainerEngineLabel: Locator;
+  readonly k8sVmConnectionLabel: Locator;
 
   // contants
   readonly ACTUAL_STATE = 'Actual State';
@@ -87,12 +87,12 @@ export class DashboardPage extends BasePage {
     this.systemOverview = this.systemOverviewButton.locator('..').getByRole('region');
     this.navigateToButton = this.systemOverview.getByRole('button', { name: 'Navigate to' });
     this.setUpPodmanButton = this.systemOverview.getByRole('button', { name: 'Set up Podman' });
-    this.viewButton = this.systemOverview.getByRole('button', { name: 'View' });
     this.errorDetailsButton = this.systemOverview.getByRole('button', { name: 'See Details in Resources' });
     this.statusButton = this.systemOverview.getByRole('button', { name: 'System Overview - Overall status' }); //'Some systems are stopped', 'All systems operational', 'Starting up...', 'Error detected'
     this.noContainerEngineLabel = this.systemOverview.getByText(
       'No container engine (machine) created yet. Create one to run containers and pods.',
     );
+    this.k8sVmConnectionLabel = this.systemOverview.getByText('Kubernetes/VM connections:');
   }
 
   public getPodmanStatusLocator(): Locator {

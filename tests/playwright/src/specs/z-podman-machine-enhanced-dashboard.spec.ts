@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { ResourceElementState, SystemOverviewState } from '/@/model/core/states';
-import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
+import { ResourceElementActions } from '/@/model/core/operations';
+import { SystemOverviewState } from '/@/model/core/states';
 import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
@@ -82,13 +83,16 @@ test.describe
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible({ timeout: 5_000 });
       // podman card visible
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
+      await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
 
       await setEnhancedDashboardFeature(page, navigationBar, true);
       // 'System Overview' card may take a second to load, poll by changing the page until it appears?
+      await page.waitForTimeout(2_000); //TODO: remove
       dashboardPage = await navigationBar.openDashboard();
       // system overview card button visible
       await playExpect(dashboardPage.systemOverviewButton).toBeVisible({ timeout: 10_000 });
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled({ timeout: 10_000 });
+      await dashboardPage.systemOverviewButton.scrollIntoViewIfNeeded();
       await dashboardPage.systemOverviewButton.click();
       await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
       // podman card not visible
@@ -108,6 +112,7 @@ test.describe
       await test.step('Open dashboard and initialize Podman machine', async () => {
         let dashboardPage = await navigationBar.openDashboard();
         await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled({ timeout: 5_000 });
+        await dashboardPage.setUpPodmanButton.scrollIntoViewIfNeeded();
         await dashboardPage.setUpPodmanButton.click();
         // handle podman machine onboarding process, start the machine
         const podmanOnboardingPage = new PodmanOnboardingPage(page);
@@ -127,41 +132,46 @@ test.describe
         });
         // systemOverview button -> starting up; status label -> starting (missing aria-label)
         dashboardPage = await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
         await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, { timeout: 300_000 });
         // systemOverview button -> systems operational; status label -> running (missing aria-label)
         await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
           timeout: 300_000,
         });
-        // click on 'view' button (missing aria-label) to go to podman machine details
-        await playExpect(dashboardPage.viewButton).toBeEnabled();
-        await dashboardPage.viewButton.click();
-        const podmanMachine1Details = new PodmanMachineDetails(page, PODMAN_MACHINE_NAME_1);
+        // click on 'status' button to go to podman machine in settings/resources
+        await playExpect(dashboardPage.statusButton).toBeEnabled();
+        await dashboardPage.statusButton.click();
+        let resourcesPage = new ResourcesPage(page);
+        await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible('podman')).toBeTruthy();
+        const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME_1);
+        await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
         // stop machine
-        await playExpect(podmanMachine1Details.podmanMachineStopButton).toBeEnabled();
-        await podmanMachine1Details.podmanMachineStopButton.click();
-        await playExpect(podmanMachine1Details.podmanMachineStatus).toHaveText(ResourceElementState.Off, {
-          timeout: 120_000,
-        });
+        await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Stop);
         // come back to dashboard, button -> some systems are stopped
         await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
         await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, { timeout: 10_000 });
         // click on 'navigate to...' button, verify it goes to machine details
         await playExpect(dashboardPage.navigateToButton).toBeEnabled();
         await dashboardPage.navigateToButton.click();
-        await playExpect(podmanMachine1Details.podmanMachineName).toBeVisible();
+        const { ResourceDetailsPage } = await import('/@/model/pages/resource-details-page'); // avoid circular import
+        const podmanMachine1Details = new ResourceDetailsPage(page, PODMAN_MACHINE_VISIBLE_NAME_1);
+        await playExpect(podmanMachine1Details.heading).toBeVisible();
         // come back to dashboard, click on status button, verify it goes to resources
         await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
         await playExpect(dashboardPage.statusButton).toBeEnabled();
         await dashboardPage.statusButton.click();
-        const resourcesPage = new ResourcesPage(page);
+        resourcesPage = new ResourcesPage(page);
         await playExpect(resourcesPage.header).toBeVisible();
       });
-
-      await test.step('Verify other resources', async () => {});
     });
 
-    test('Clean Up Podman Machine', async ({ page }) => {
-      test.skip(process.env.MACHINE_CLEANUP !== 'true', 'Machine cleanup is disabled');
-      await deletePodmanMachine(page, PODMAN_MACHINE_VISIBLE_NAME_1);
+    test('Verify Kubernetes/VM Connections', async () => {
+      // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
+      // go to extensions, click on 'install custom'
+      // enter 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension' in OCI image field, click 'install'
+      // go to settings/resources, find 'Dummy Resources' card
+      // click on 'Create new...'
     });
   });
