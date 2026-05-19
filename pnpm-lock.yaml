@@ -530,8 +530,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5
       vite-plugin-dts:
-        specifier: ^5.0.0
-        version: 5.0.0(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12))
+        specifier: ^5.0.1
+        version: 5.0.1(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12))
       vitest:
         specifier: ^4.1.6
         version: 4.1.6(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(jsdom@29.1.1)(msw@2.14.6(@types/node@25.8.0)(typescript@5.9.3))(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))
@@ -10218,6 +10218,10 @@ packages:
     resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.15:
+    resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
+    engines: {node: ^10 || ^12 || >=14}
+
   postject@1.0.0-alpha.6:
     resolution: {integrity: sha512-b9Eb8h2eVqNE8edvKdwqkrY6O7kAwmI8kcnBv1NScolYJbo59XUF0noFq+lxbC1yN20bmC0WBEbDC5H/7ASb0A==}
     engines: {node: '>=14.0.0'}
@@ -11809,6 +11813,36 @@ packages:
       webpack:
         optional: true
 
+  unplugin-dts@1.0.1:
+    resolution: {integrity: sha512-EdJZxdWP4Tm/xhe58/zAge3Tu0OKDYygm8rucRrcCZ4XzgA31jexUKhaJuEMddOPBDs9ONnq6vwigbjeBqkfuw==}
+    peerDependencies:
+      '@microsoft/api-extractor': '>=7'
+      '@rspack/core': ^1
+      '@vue/language-core': ~3.1.5
+      esbuild: '*'
+      rolldown: '*'
+      rollup: ^4.59.0
+      typescript: '>=4'
+      vite: '>=3'
+      webpack: ^4 || ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      '@rspack/core':
+        optional: true
+      '@vue/language-core':
+        optional: true
+      esbuild:
+        optional: true
+      rolldown:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+
   unplugin@2.3.11:
     resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
     engines: {node: '>=18.12.0'}
@@ -11910,8 +11944,8 @@ packages:
   vimeo-video-element@1.6.1:
     resolution: {integrity: sha512-UwDLzhgg98pct1xb6799I1vRDXIzaAX6rs1TG/QOf6y+VrXpTFrI7mYz2gnj9QCtBcGK68f4z64A+MRYRsLJaQ==}
 
-  vite-plugin-dts@5.0.0:
-    resolution: {integrity: sha512-VLNAUttBq7pLxxL/m/ztjd5zj5yiviiC7ijfPFVLK5c45FLcibvieBsdjSka3a4ag1qdrAF9K3OysH4/lW+rPQ==}
+  vite-plugin-dts@5.0.1:
+    resolution: {integrity: sha512-1L+x8bVPDhlI4kLzRIIGqO+b1VnvtY6CoHrU+riaipHJUAxayM0i1HObqeBv33Svil9hW64Z2KNiOn6UrKWCbA==}
     peerDependencies:
       '@microsoft/api-extractor': '>=7'
       rollup: ^4.59.0
@@ -23624,6 +23658,12 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  postcss@8.5.15:
+    dependencies:
+      nanoid: 3.3.12
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
   postject@1.0.0-alpha.6:
     dependencies:
       commander: 9.5.0
@@ -25563,7 +25603,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  unplugin-dts@1.0.0(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
+  unplugin-dts@1.0.1(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.60.4)
       '@volar/typescript': 2.4.28
@@ -25725,9 +25765,9 @@ snapshots:
     dependencies:
       '@vimeo/player': 2.29.0
 
-  vite-plugin-dts@5.0.0(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
+  vite-plugin-dts@5.0.1(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
     dependencies:
-      unplugin-dts: 1.0.0(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12))
+      unplugin-dts: 1.0.1(@microsoft/api-extractor@7.55.2(@types/node@25.8.0))(esbuild@0.25.12)(rollup@4.60.4)(typescript@5.9.3)(vite@7.3.3(@types/node@25.8.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.1)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12))
     optionalDependencies:
       '@microsoft/api-extractor': 7.55.2(@types/node@25.8.0)
       rollup: 4.60.4
@@ -25763,7 +25803,7 @@ snapshots:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.14
+      postcss: 8.5.15
       rollup: 4.60.4
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -25780,7 +25820,7 @@ snapshots:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.14
+      postcss: 8.5.15
       rollup: 4.60.4
       tinyglobby: 0.2.16
     optionalDependencies:
@@ -25797,7 +25837,7 @@ snapshots:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.14
+      postcss: 8.5.15
       rollup: 4.60.4
       tinyglobby: 0.2.16
     optionalDependencies:
