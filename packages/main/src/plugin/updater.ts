@@ -324,7 +324,7 @@ export class Updater {
         type: 'object',
         properties: {
           ['preferences.update.reminder']: {
-            description: 'Configure whether you receive update reminders when starting Podman Desktop',
+            description: `Configure whether you receive update reminders when starting ${product.name}`,
             type: 'string',
             default: 'startup',
             enum: ['startup', 'never'],
