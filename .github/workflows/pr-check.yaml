@@ -530,6 +530,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       pnpm_lock_changed: ${{ steps.pnpm_changed.outputs.PNPM_LOCK_CHANGED }}
+      code_changed: ${{ steps.code_changed.outputs.CODE_CHANGED }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -549,14 +550,53 @@ jobs:
             echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Detect code changes (matching include patterns)
+        id: code_changed
+        run: |
+          BASE_REF="${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || 'main' }}"
+          BASE_REF="${BASE_REF#refs/heads/}"  # Strip 'refs/heads/' if present
+          git fetch origin ${BASE_REF}
+          git diff --name-only origin/${BASE_REF} HEAD > all_changes.txt
+
+          # Define patterns to include for code change detection
+          INCLUDE_PATTERNS=(
+            '^extensions/'
+            '^packages/'
+            '^schemas/'
+            '^scripts/'
+            '^types/'
+            '^\.electron-builder\.config\.cjs$'
+            '^package\.json$'
+            '^featured\.json$'
+            '^product\.json$'
+            '^svelte\.config\.js$'
+            '^tailwind\.config\.cjs$'
+            '^vitest\.config\.js$'
+            '^playwright\.config\.ts$'
+            '^eslint\.config\.mjs$'
+          )
+
+          # Build grep command with inclusion patterns
+          GREP_ARGS=""
+          for pattern in "${INCLUDE_PATTERNS[@]}"; do
+            GREP_ARGS="$GREP_ARGS -e $pattern"
+          done
+
+          # Check if there are any code changes matching the include patterns
+          if grep $GREP_ARGS all_changes.txt | grep -q .; then
+            echo "CODE_CHANGED=true" >> $GITHUB_OUTPUT
+          else
+            echo "CODE_CHANGED=false" >> $GITHUB_OUTPUT
+          fi
+
   win-update-e2e-test:
     name: ${{ matrix.os }} update e2e tests
     needs: detect_pnpm_changes
-    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true' || needs.detect_pnpm_changes.outputs.code_changed == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2025, windows-11-arm]
+        os: ${{ needs.detect_pnpm_changes.outputs.code_changed == 'true' && fromJSON('["windows-2025"]') || fromJSON('["windows-2025", "windows-11-arm"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
@@ -628,11 +668,11 @@ jobs:
   mac-update-e2e-test:
     name: ${{ matrix.os }} update e2e tests
     needs: detect_pnpm_changes
-    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true' || needs.detect_pnpm_changes.outputs.code_changed == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-26, macos-15-intel]
+        os: ${{ needs.detect_pnpm_changes.outputs.code_changed == 'true' && fromJSON('["macos-26"]') || fromJSON('["macos-26", "macos-15-intel"]') }}
     runs-on: ${{ matrix.os }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
