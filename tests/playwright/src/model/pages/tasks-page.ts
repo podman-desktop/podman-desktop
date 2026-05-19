@@ -87,7 +87,12 @@ export class TasksPage extends BasePage {
   }
 
   async getStatusForLatestTask(): Promise<string> {
-    return (await this.taskList.getByRole('status').first().textContent()) ?? '';
+    const statusLocator = this.taskList.getByRole('status').first();
+    const count = await this.taskList.getByRole('status').count();
+    if (count === 0) {
+      return '';
+    }
+    return (await statusLocator.textContent({ timeout: 2_000 })) ?? '';
   }
 
   async clearAllTasks(): Promise<void> {

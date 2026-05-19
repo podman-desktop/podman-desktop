@@ -163,5 +163,8 @@
     "feature": "https://github.com/podman-desktop/podman-desktop/issues?q=is%3Aissue%20state%3Aopen%20type%3AFeature",
     "issues": "https://github.com/podman-desktop/podman-desktop/issues"
   },
-  "feedbackLinks": {}
+  "feedbackLinks": {},
+  "configuration": {
+    "override": {}
+  }
 }

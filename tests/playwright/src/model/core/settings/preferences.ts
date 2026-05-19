@@ -27,7 +27,7 @@ enum PreferenceLabels {
 
 export class Preferences {
   static readonly Labels = PreferenceLabels;
-  static readonly FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL = 'Show feedback dialog for experimental features';
+  static readonly FEEDBACK_DIALOG_TOGGLE_BUTTON_LABEL = 'Show periodic feedback reminder for experimental features';
   static readonly TOAST_NOTIFICATION_TOGGLE_BUTTON_LABEL = 'Display a notification toast when task is created';
   static readonly EXIT_ON_CLOSE_TOGGLE_BUTTON_LABEL =
     'Quit the app when the close button is clicked instead of minimizing to the tray.';

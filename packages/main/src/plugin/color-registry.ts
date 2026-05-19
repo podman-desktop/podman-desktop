@@ -2224,18 +2224,39 @@ export class ColorRegistry {
     const pb = 'progressBar-';
 
     this.registerColor(`${pb}bg`, {
-      dark: gray[700],
-      light: gray[700],
+      dark: stone[600],
+      light: stone[300],
+      hcDark: black,
+      hcLight: white,
     });
 
     this.registerColor(`${pb}in-progress-bg`, {
-      dark: accent1[400],
-      light: accent1[500],
+      dark: stone[100],
+      light: stone[700],
+      hcDark: white,
+      hcLight: black,
+    });
+
+    this.registerColor(`${pb}in-progress-border`, {
+      dark: stone[800],
+      light: white,
+      hcDark: black,
+      hcLight: white,
+    });
+
+    this.registerColor(`${pb}hc-line-bg`, {
+      // the line is visible only in hc modes
+      dark: transparent,
+      light: transparent,
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${pb}text`, {
       dark: accent1[400],
       light: accent1[500],
+      hcDark: white,
+      hcLight: black,
     });
   }
 

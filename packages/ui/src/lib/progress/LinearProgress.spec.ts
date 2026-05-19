@@ -23,25 +23,57 @@ import { expect, test } from 'vitest';
 
 import LinearProgress from './LinearProgress.svelte';
 
-test('should render a progress element', () => {
+test('should render with role="progressbar"', () => {
   render(LinearProgress);
-  const progress = screen.getByRole('progressbar');
-  expect(progress).toBeInTheDocument();
+  const progressBar = screen.getByRole('progressbar');
+  expect(progressBar).toBeInTheDocument();
 });
 
-test('should use color-registry text color instead of hardcoded Tailwind color', () => {
+test('should have correct ARIA attributes for indeterminate mode', () => {
   render(LinearProgress);
-  const progress = screen.getByRole('progressbar');
-  expect(progress).toHaveClass('text-(--pd-progressBar-text)');
-  expect(progress).not.toHaveClass('text-purple-500');
+  const progressBar = screen.getByRole('progressbar');
+  expect(progressBar).toHaveAttribute('aria-valuemin', '0');
+  expect(progressBar).toHaveAttribute('aria-valuemax', '100');
+  expect(progressBar).not.toHaveAttribute('aria-valuenow');
 });
 
-test('should have full width and correct base classes', () => {
+test('should use color-registry background token on outer container', () => {
+  const { container } = render(LinearProgress);
+  expect(container.children[0]).toHaveClass('bg-(--pd-progressBar-bg)');
+});
+
+test('should use color-registry tokens on animated bar', () => {
   render(LinearProgress);
-  const progress = screen.getByRole('progressbar');
-  expect(progress).toHaveClass('w-full');
-  expect(progress).toHaveClass('appearance-none');
-  expect(progress).toHaveClass('border-none');
-  expect(progress).toHaveClass('h-0.5');
-  expect(progress).toHaveClass('pure-material-progress-linear');
+  const progressBar = screen.getByRole('progressbar');
+  expect(progressBar).toHaveClass('bg-(--pd-progressBar-in-progress-bg)');
+  expect(progressBar).toHaveClass('outline-(--pd-progressBar-in-progress-border)');
+});
+
+test('should have full width on outer container', () => {
+  const { container } = render(LinearProgress);
+  expect(container.children[0]).toHaveClass('w-full');
+});
+
+test('should have indeterminate animation class', () => {
+  render(LinearProgress);
+  const progressBar = screen.getByRole('progressbar');
+  expect(progressBar).toHaveClass('linear-progress-indeterminate');
+});
+
+test('should have high-contrast guide line element', () => {
+  const { container } = render(LinearProgress);
+  const outerDiv = container.children[0];
+  const hcLine = outerDiv.querySelector('.bg-\\(--pd-progressBar-hc-line-bg\\)');
+  expect(hcLine).toBeInTheDocument();
+});
+
+test('should propagate class to outer container', () => {
+  const { container } = render(LinearProgress, { class: 'custom-class' });
+  expect(container.children[0]).toHaveClass('custom-class');
+});
+
+test('should propagate aria-label to progressbar element', () => {
+  render(LinearProgress, { 'aria-label': 'Loading page' });
+  const progressBar = screen.getByRole('progressbar');
+  expect(progressBar).toHaveAttribute('aria-label', 'Loading page');
 });

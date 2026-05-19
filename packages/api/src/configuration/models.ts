@@ -85,6 +85,8 @@ const IConfigurationPropertySchemaSchema = z.object({
   experimental: IExperimentalConfigurationSchema.optional(),
 });
 
+export type IConfigurationPropertySchema = z.output<typeof IConfigurationPropertySchemaSchema>;
+
 const IConfigurationExtensionInfoSchema = z.object({
   id: z.string(),
 });

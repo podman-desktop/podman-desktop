@@ -1,56 +1,47 @@
 <style>
-.pure-material-progress-linear::-webkit-progress-bar {
-  background-color: transparent;
+.linear-progress-indeterminate {
+  animation: linearProgressAnimation 2s infinite linear;
+  transform-origin: 0% 50%;
 }
 
-/* Determinate */
-.pure-material-progress-linear::-webkit-progress-value {
-  background-color: currentColor;
-  transition: all 0.2s;
-}
-
-.pure-material-progress-linear::-ms-fill {
-  border: none;
-  background-color: currentColor;
-  transition: all 0.2s;
-}
-
-/* Indeterminate */
-.pure-material-progress-linear:indeterminate {
-  background-size: 200% 100%;
-  background-image: linear-gradient(
-    to right,
-    transparent 50%,
-    currentColor 50%,
-    currentColor 60%,
-    transparent 60%,
-    transparent 71.5%,
-    currentColor 71.5%,
-    currentColor 84%,
-    transparent 84%
-  );
-  animation: pure-material-progress-linear 2s infinite linear;
-}
-
-.pure-material-progress-linear:indeterminate::-ms-fill {
-  animation-name: none;
-}
-
-@keyframes pure-material-progress-linear {
+@keyframes linearProgressAnimation {
   0% {
-    background-size: 200% 100%;
-    background-position: left -31.25% top 0%;
+    transform: translateX(0) scaleX(0);
   }
-  50% {
-    background-size: 800% 100%;
-    background-position: left -49% top 0%;
+  20% {
+    transform: translateX(0) scaleX(0.25);
   }
   100% {
-    background-size: 400% 100%;
-    background-position: left -102% top 0%;
+    transform: translateX(100%) scaleX(0.5);
+  }
+}
+
+:global(.hc-light) .linear-progress-indeterminate,
+:global(.hc-dark) .linear-progress-indeterminate {
+  height: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linear-progress-indeterminate {
+    animation: none;
   }
 }
 </style>
 
-<progress class="w-full appearance-none border-none h-0.5 text-(--pd-progressBar-text) text-base pure-material-progress-linear"
-></progress>
+<script lang="ts">
+import type { HTMLAttributes } from 'svelte/elements';
+
+let { class: className, ...restProps }: HTMLAttributes<HTMLElement> = $props();
+</script>
+
+<div class="w-full overflow-x-hidden overflow-y-auto relative bg-(--pd-progressBar-bg) {className}">
+  <div
+    class="linear-progress-indeterminate w-full h-0.5 relative bg-(--pd-progressBar-in-progress-bg) outline-1 outline-(--pd-progressBar-in-progress-border) z-1"
+    role="progressbar"
+    aria-valuemin={0}
+    aria-valuemax={100}
+    {...restProps}>
+  </div>
+
+  <div class="w-full absolute top-1/2 -translate-y-1/2 h-px bg-(--pd-progressBar-hc-line-bg) z-0"></div>
+</div>

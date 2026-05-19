@@ -811,41 +811,44 @@ export class ExtensionLoader implements IAsyncDisposable {
         },
       ]);
     }
+    const isDisabled = this.getDisabledExtensionIds().includes(extension.id);
 
-    const extensionCommands = extension.manifest?.contributes?.commands;
-    if (extensionCommands) {
-      const disposable = this.commandRegistry.registerCommandsFromExtension(extension.id, extensionCommands);
-      extension.subscriptions.push(disposable);
+    if (!isDisabled) {
+      const extensionCommands = extension.manifest?.contributes?.commands;
+      if (extensionCommands) {
+        const disposable = this.commandRegistry.registerCommandsFromExtension(extension.id, extensionCommands);
+        extension.subscriptions.push(disposable);
+      }
+
+      // register menus after the contributed commands so we can see if contributed commands have icons
+      const menus = extension.manifest?.contributes?.menus;
+      if (menus) {
+        extension.subscriptions.push(this.menuRegistry.registerMenus(menus));
+      }
+
+      const icons = extension.manifest?.contributes?.icons;
+      if (icons) {
+        this.iconRegistry.registerIconContribution(extension, icons);
+      }
+
+      const themes = extension.manifest?.contributes?.themes;
+      if (themes) {
+        const disposable = this.colorRegistry.registerExtensionThemes(extension, themes);
+        extension.subscriptions.push(disposable);
+      }
+
+      const views = extension.manifest?.contributes?.views;
+      if (views) {
+        extension.subscriptions.push(this.viewRegistry.registerViews(extension.id, views));
+      }
+
+      const onboarding = extension.manifest?.contributes?.onboarding;
+      if (onboarding) {
+        extension.subscriptions.push(this.onboardingRegistry.registerOnboarding(extension, onboarding));
+      }
+
+      extension.subscriptions.push(this.notificationRegistry.registerExtension(extension.id));
     }
-
-    // register menus after the contributed commands so we can see if contributed commands have icons
-    const menus = extension.manifest?.contributes?.menus;
-    if (menus) {
-      extension.subscriptions.push(this.menuRegistry.registerMenus(menus));
-    }
-
-    const icons = extension.manifest?.contributes?.icons;
-    if (icons) {
-      this.iconRegistry.registerIconContribution(extension, icons);
-    }
-
-    const themes = extension.manifest?.contributes?.themes;
-    if (themes) {
-      const disposable = this.colorRegistry.registerExtensionThemes(extension, themes);
-      extension.subscriptions.push(disposable);
-    }
-
-    const views = extension.manifest?.contributes?.views;
-    if (views) {
-      extension.subscriptions.push(this.viewRegistry.registerViews(extension.id, views));
-    }
-
-    const onboarding = extension.manifest?.contributes?.onboarding;
-    if (onboarding) {
-      extension.subscriptions.push(this.onboardingRegistry.registerOnboarding(extension, onboarding));
-    }
-
-    extension.subscriptions.push(this.notificationRegistry.registerExtension(extension.id));
 
     extension.api ??= this.createApi(extension);
     const extensionWithApi = extension as AnalyzedExtensionWithApi;
@@ -877,7 +880,7 @@ export class ExtensionLoader implements IAsyncDisposable {
         await this.extensionWatcher.monitor(extension);
       }
 
-      if (!this.getDisabledExtensionIds().includes(extension.id)) {
+      if (!isDisabled) {
         const beforeLoadingRuntime = performance.now();
         const runtime = this.loadRuntime(extension);
         const afterLoadingRuntime = performance.now();

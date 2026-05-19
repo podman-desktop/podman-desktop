@@ -40,6 +40,9 @@ export class ImagesPage extends MainPage {
   readonly confirmLoadImagesButton: Locator;
   readonly deleteAllUnusedImagesCheckbox: Locator;
   readonly deleteAllSelectedButton: Locator;
+  readonly importImageButton: Locator;
+  readonly addImagesToImportButton: Locator;
+  readonly confirmImportContainersButton: Locator;
 
   constructor(page: Page) {
     super(page, 'images');
@@ -52,6 +55,9 @@ export class ImagesPage extends MainPage {
     this.confirmLoadImagesButton = this.page.getByRole('button', { name: 'Load images', exact: true });
     this.deleteAllUnusedImagesCheckbox = this.page.getByRole('checkbox', { name: 'Toggle all', exact: true });
     this.deleteAllSelectedButton = this.bottomAdditionalActions.getByRole('button', { name: 'Delete' });
+    this.importImageButton = this.additionalActions.getByLabel('Import Image', { exact: true });
+    this.addImagesToImportButton = this.page.getByRole('button', { name: 'Add images to import' });
+    this.confirmImportContainersButton = this.page.getByRole('button', { name: 'Import containers', exact: true });
   }
 
   async openPullImage(): Promise<PullImagePage> {
@@ -189,6 +195,28 @@ export class ImagesPage extends MainPage {
     });
   }
 
+  async importContainerImage(archivePath: string, imageName: string, timeout = 60_000): Promise<ImagesPage> {
+    return test.step(`Import container image from ${archivePath}`, async () => {
+      await playExpect(this.importImageButton).toBeEnabled();
+      await this.importImageButton.click();
+      await playExpect(this.addImagesToImportButton).toBeVisible();
+
+      await withMockedOpenFileDialog([archivePath], async () => {
+        await this.addImagesToImportButton.click();
+      });
+
+      const nameInput = this.page.getByLabel('container importing name');
+      await playExpect(nameInput).toBeVisible();
+      await nameInput.clear();
+      await nameInput.fill(imageName);
+
+      await playExpect(this.confirmImportContainersButton).toBeEnabled();
+      await this.confirmImportContainersButton.click();
+      await playExpect(this.heading).toBeVisible({ timeout });
+      return this;
+    });
+  }
+
   async markAllUnusedImages(): Promise<boolean> {
     return test.step('Mark all unused images', async () => {
       if (!(await this.deleteAllUnusedImagesCheckbox.isVisible())) {
@@ -259,7 +287,7 @@ export class ImagesPage extends MainPage {
     await handleConfirmationDialog(this.page, 'Delete Manifest?', true, 'Delete');
   }
 
-  async pushManifest(manifestName: string): Promise<void> {
+  async pushManifest(manifestName: string, timeout = 120_000): Promise<void> {
     return test.step(`Push manifest: ${manifestName}`, async () => {
       const manifest = await this.getImageRowByName(manifestName);
       if (!manifest) {
@@ -275,7 +303,17 @@ export class ImagesPage extends MainPage {
       await playExpect(pushManifestButton).toBeVisible();
       await pushManifestButton.click();
 
-      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', 120_000, true);
+      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', timeout, true);
+    });
+  }
+
+  async getImageArch(name: string): Promise<string> {
+    return test.step(`Get architecture for image: ${name}`, async () => {
+      const imageRow = await this.getImageRowByName(name);
+      if (imageRow === undefined) {
+        throw Error(`Image: '${name}' does not exist`);
+      }
+      return (await imageRow.getByRole('cell').nth(7).innerText()).trim().toLowerCase();
     });
   }
 

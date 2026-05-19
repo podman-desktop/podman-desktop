@@ -88,7 +88,7 @@ jobs:
 
       - name: Publish test report to PR
         if: always()
-        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d
         with:
           fail_on_failure: true
           include_passed: true

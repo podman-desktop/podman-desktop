@@ -1,9 +1,15 @@
 <script lang="ts">
-import { NavigationPage, type ProviderConnectionInfo, type ProviderInfo } from '@podman-desktop/core-api';
+import {
+  NavigationPage,
+  type ProviderConnectionInfo,
+  type ProviderContainerConnectionInfo,
+  type ProviderInfo,
+} from '@podman-desktop/core-api';
 import { Button } from '@podman-desktop/ui-svelte';
 
 import SystemOverviewProviderCardBase from '/@/lib/dashboard/SystemOverviewProviderCardBase.svelte';
 import SystemOverviewProviderCardCompact from '/@/lib/dashboard/SystemOverviewProviderCardCompact.svelte';
+import SystemOverviewResourceUsage from '/@/lib/dashboard/SystemOverviewResourceUsage.svelte';
 import { handleNavigation } from '/@/navigation';
 import { getConnectionDisplayName, getSystemOverviewStatus } from '/@/stores/dashboard/system-overview.svelte';
 
@@ -111,7 +117,9 @@ async function handleActionButtonClick(): Promise<void> {
   {/snippet}
 
   {#snippet actions()}
-    {#if connection.error ?? (connection.status !== 'starting' && connection.status !== 'stopping')}
+    {#if connection.connectionType === 'container' && connection.status === 'started'}
+      <SystemOverviewResourceUsage {provider} connection={connection as ProviderContainerConnectionInfo} />
+    {:else if connection.error ?? (connection.status !== 'starting' && connection.status !== 'stopping')}
       <Button type={statusConfig.buttonType} onclick={handleActionButtonClick}>
         {statusConfig.buttonText}
       </Button>

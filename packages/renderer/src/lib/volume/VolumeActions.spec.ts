@@ -48,6 +48,7 @@ beforeAll(() => {
 });
 
 test('Expect prompt dialog and deletion', async () => {
+  vi.mocked(window.getContributedMenus).mockResolvedValue([]);
   // Mock the showMessageBox to return 0 (yes)
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
 

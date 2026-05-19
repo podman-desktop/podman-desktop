@@ -22,12 +22,14 @@ import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 
 import type { IDisposable } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
-import type { IConfigurationNode } from '@podman-desktop/core-api/configuration';
+import type { IConfigurationNode, IConfigurationPropertySchema } from '@podman-desktop/core-api/configuration';
 import {
   CONFIGURATION_SYSTEM_MANAGED_DEFAULTS_SCOPE,
   CONFIGURATION_SYSTEM_MANAGED_LOCKED_SCOPE,
 } from '@podman-desktop/core-api/configuration';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import product from '/@product.json' with { type: 'json' };
 
 import { ConfigurationRegistry } from './configuration-registry.js';
 import type { DefaultConfiguration } from './default-configuration.js';
@@ -59,6 +61,8 @@ vi.mock(import('./default-configuration.js'), () => ({
 vi.mock(import('./locked-configuration.js'), () => ({
   LockedConfiguration: vi.fn(),
 }));
+
+vi.mock(import('/@product.json'));
 
 let configurationRegistry: ConfigurationRegistry;
 
@@ -843,5 +847,222 @@ describe('Managed Locked', () => {
     // other.setting should NOT be marked as locked
     expect(properties['other.setting']).toBeDefined();
     expect(properties['other.setting']?.locked).toBe(false);
+  });
+});
+
+// Tests for configuration.override overrides from product.json
+describe('configuration.override from product.json', () => {
+  beforeEach(() => {
+    // Reset product mock before each test
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
+  });
+
+  test('should override configuration properties from configuration.override', async () => {
+    // Mock product.json with configuration.override
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+      'test.setting': {
+        description: 'Overridden description from product.json',
+        experimental: {
+          githubDiscussionLink: 'https://github.com/example/discussions/123',
+        },
+      },
+      test2: {
+        default: '1',
+      },
+    };
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const node: IConfigurationNode = {
+      id: 'test',
+      title: 'Test Settings',
+      type: 'object',
+      properties: {
+        'test.setting': {
+          description: 'Original description',
+          type: 'string',
+          default: 'myDefault',
+        },
+      },
+    };
+
+    testRegistry.registerConfigurations([node]);
+
+    const properties = testRegistry.getConfigurationProperties();
+    const property = properties['test.setting'];
+
+    // Description should be overridden
+    expect(property?.description).toBe('Overridden description from product.json');
+    // Experimental property should be added from product.json
+    expect(property?.experimental).toEqual({
+      githubDiscussionLink: 'https://github.com/example/discussions/123',
+    });
+    // Other properties should remain from original configuration
+    expect(property?.type).toBe('string');
+    expect(property?.default).toBe('myDefault');
+  });
+
+  test('should override default value from configuration.override', async () => {
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+      'feature.enabled': {
+        default: true, // Override default from false to true
+      },
+    };
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const node: IConfigurationNode = {
+      id: 'feature',
+      title: 'Feature Settings',
+      type: 'object',
+      properties: {
+        'feature.enabled': {
+          description: 'Enable feature',
+          type: 'boolean',
+          default: false,
+        },
+      },
+    };
+
+    testRegistry.registerConfigurations([node]);
+
+    const properties = testRegistry.getConfigurationProperties();
+    const property = properties['feature.enabled'];
+
+    // Default should be overridden
+    expect(property?.default).toBe(true);
+    expect(property?.description).toBe('Enable feature');
+  });
+
+  test('should handle multiple properties in configuration.override', async () => {
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {
+      'setting.one': {
+        experimental: {
+          githubDiscussionLink: 'https://github.com/example/1',
+        },
+      },
+      'setting.two': {
+        experimental: {
+          githubDiscussionLink: 'https://github.com/example/2',
+        },
+        description: 'Overridden for setting two',
+      },
+    };
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const nodes: IConfigurationNode[] = [
+      {
+        id: 'settings',
+        title: 'Settings',
+        type: 'object',
+        properties: {
+          'setting.one': {
+            description: 'Setting 1',
+            type: 'string',
+            default: 'default1',
+          },
+          'setting.two': {
+            description: 'Setting 2',
+            type: 'string',
+            default: 'default2',
+          },
+          'setting.three': {
+            description: 'Setting 3',
+            type: 'string',
+            default: 'default3',
+          },
+        },
+      },
+    ];
+
+    testRegistry.registerConfigurations(nodes);
+
+    const properties = testRegistry.getConfigurationProperties();
+
+    // setting.one should have experimental property added
+    expect(properties['setting.one']?.experimental).toEqual({
+      githubDiscussionLink: 'https://github.com/example/1',
+    });
+    expect(properties['setting.one']?.description).toBe('Setting 1');
+
+    // setting.two should have both experimental and description overridden
+    expect(properties['setting.two']?.experimental).toEqual({
+      githubDiscussionLink: 'https://github.com/example/2',
+    });
+    expect(properties['setting.two']?.description).toBe('Overridden for setting two');
+
+    // setting.three should remain unchanged
+    expect(properties['setting.three']?.experimental).toBeUndefined();
+    expect(properties['setting.three']?.description).toBe('Setting 3');
+  });
+
+  test('should work when configuration.override is empty', async () => {
+    // Empty configuration.override
+    (vi.mocked(product).configuration.override as { [key: string]: Partial<IConfigurationPropertySchema> }) = {};
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const node: IConfigurationNode = {
+      id: 'test',
+      title: 'Test Settings',
+      type: 'object',
+      properties: {
+        'test.setting': {
+          description: 'Original description',
+          type: 'string',
+          default: 'myDefault',
+        },
+      },
+    };
+
+    testRegistry.registerConfigurations([node]);
+
+    const properties = testRegistry.getConfigurationProperties();
+    const property = properties['test.setting'];
+
+    // Everything should remain as original
+    expect(property?.description).toBe('Original description');
+    expect(property?.type).toBe('string');
+    expect(property?.default).toBe('myDefault');
+    expect(property?.experimental).toBeUndefined();
+  });
+
+  test('should work when configuration.override is undefined', async () => {
+    // Undefined configuration.override (product.json doesn't have it)
+    (vi.mocked(product).configuration.override as
+      | { [key: string]: Partial<IConfigurationPropertySchema> }
+      | undefined) = undefined;
+
+    const testRegistry = new ConfigurationRegistry(apiSender, directories, defaultConfiguration, lockedConfiguration);
+    await testRegistry.init();
+
+    const node: IConfigurationNode = {
+      id: 'test',
+      title: 'Test Settings',
+      type: 'object',
+      properties: {
+        'test.setting': {
+          description: 'Original description',
+          type: 'string',
+          default: 'myDefault',
+        },
+      },
+    };
+
+    testRegistry.registerConfigurations([node]);
+
+    const properties = testRegistry.getConfigurationProperties();
+    const property = properties['test.setting'];
+
+    // Everything should remain as original
+    expect(property?.description).toBe('Original description');
+    expect(property?.type).toBe('string');
+    expect(property?.default).toBe('myDefault');
+    expect(property?.experimental).toBeUndefined();
   });
 });

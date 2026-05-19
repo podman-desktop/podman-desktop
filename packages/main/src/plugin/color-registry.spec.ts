@@ -110,6 +110,10 @@ class TestColorRegistry extends ColorRegistry {
   override initToast(): void {
     super.initToast();
   }
+
+  override initProgressBar(): void {
+    super.initProgressBar();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -1679,6 +1683,62 @@ describe('initToast', () => {
       light: tailwindColorPalette.accent1[800],
       hcDark: tailwindColorPalette.accent1[800],
       hcLight: tailwindColorPalette.accent1[950],
+    });
+  });
+});
+
+describe('initProgressBar', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initProgressBar();
+  });
+
+  test('registers progressBar-bg', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('progressBar-bg', {
+      dark: tailwindColorPalette.stone[600],
+      light: tailwindColorPalette.stone[300],
+      hcDark: tailwindColorPalette.black,
+      hcLight: tailwindColorPalette.white,
+    });
+  });
+
+  test('registers progressBar-in-progress-bg', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('progressBar-in-progress-bg', {
+      dark: tailwindColorPalette.stone[100],
+      light: tailwindColorPalette.stone[700],
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
+    });
+  });
+
+  test('registers progressBar-in-progress-border', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('progressBar-in-progress-border', {
+      dark: tailwindColorPalette.stone[800],
+      light: tailwindColorPalette.white,
+      hcDark: tailwindColorPalette.black,
+      hcLight: tailwindColorPalette.white,
+    });
+  });
+
+  test('registers progressBar-hc-line-bg', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('progressBar-hc-line-bg', {
+      dark: tailwindColorPalette.transparent,
+      light: tailwindColorPalette.transparent,
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
+    });
+  });
+
+  test('registers progressBar-text', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('progressBar-text', {
+      dark: tailwindColorPalette.accent1[400],
+      light: tailwindColorPalette.accent1[500],
+      hcDark: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 });

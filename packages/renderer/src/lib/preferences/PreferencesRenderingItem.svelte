@@ -113,7 +113,7 @@ async function openGitHubDiscussion(): Promise<void> {
           </div>
         {/if}
       </div>
-      {#if recordUI.markdownDescription}
+      {#if recordUI.markdownDescription && recordUI.original.type !== 'markdown'}
         <div class="pt-1 text-[color:var(--pd-invert-content-card-text)] text-sm pr-2">
           <Markdown markdown={recordUI.markdownDescription} />
         </div>

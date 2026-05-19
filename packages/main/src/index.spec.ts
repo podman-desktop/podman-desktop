@@ -154,6 +154,7 @@ vi.mock(import('electron'), async () => {
         setImage = vi.fn();
         setToolTip = vi.fn();
         setContextMenu = vi.fn();
+        isDestroyed = vi.fn().mockReturnValue(false);
       },
     ),
   } as unknown as typeof Electron;

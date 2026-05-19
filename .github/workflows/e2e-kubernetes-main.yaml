@@ -55,8 +55,6 @@ jobs:
     runs-on: ubuntu-24.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
-    permissions:
-      checks: write # required for mikepenz/action-junit-report
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -75,14 +73,14 @@ jobs:
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
-        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+        uses: redhat-actions/podman-install@92eb12467c2fc271e7781d006c413e17770230ed
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
 
-      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
         with:
           run_install: false
@@ -111,7 +109,7 @@ jobs:
           pnpm test:e2e:k8s
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
         if: always() # always run even if the previous step fails
         with:
           fail_on_failure: true

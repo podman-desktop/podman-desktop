@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2025 Red Hat, Inc.
+ * Copyright (C) 2025 - 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ const EXPERIMENTAL_RECORD: IConfigurationPropertyRecordedSchema = {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.openExternal).mockResolvedValue(undefined);
+  vi.mocked(window.getUrlProtocol).mockResolvedValue('podman-desktop');
 });
 
 test('experimental record should have clickable GitHub link', async () => {
@@ -136,6 +137,26 @@ test('locked record should not show reset to default button', async () => {
   // Verify reset button is not present
   const resetButton = queryByRole('button', { name: 'Reset to default value' });
   expect(resetButton).not.toBeInTheDocument();
+});
+
+test('type markdown record with markdownDescription should render markdown content only once', async () => {
+  const record: IConfigurationPropertyRecordedSchema = {
+    id: 'ext.markdown.info',
+    title: 'Info',
+    parentId: 'ext',
+    description: 'plain description text',
+    markdownDescription: 'Some **markdown** content',
+    type: 'markdown',
+  };
+
+  const { getAllByLabelText, getByText } = render(PreferencesRenderingItem, { record });
+
+  await vi.waitFor(() => {
+    const markdownSections = getAllByLabelText('markdown-content');
+    expect(markdownSections).toHaveLength(1);
+  });
+
+  expect(getByText('plain description text')).toBeInTheDocument();
 });
 
 test('Expect reset enum value to update dropdown value', async () => {

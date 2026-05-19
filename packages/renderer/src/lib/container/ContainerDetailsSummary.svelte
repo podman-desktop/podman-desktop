@@ -1,5 +1,7 @@
 <script lang="ts">
-import { ChevronExpander, Link } from '@podman-desktop/ui-svelte';
+import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
+import { ChevronExpander, Link, Tooltip } from '@podman-desktop/ui-svelte';
+import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import DetailsCell from '/@/lib/details/DetailsCell.svelte';
@@ -14,6 +16,14 @@ let startedTime: Date = new Date(container.startedAt);
 let createdTime: Date | undefined;
 if (container.groupInfo.created) {
   createdTime = new Date(container.groupInfo.created);
+}
+
+function portUrl(port: number): string {
+  return `http://localhost:${port}`;
+}
+
+function openPort(port: number): void {
+  window.openExternal(portUrl(port)).catch((err: unknown) => console.error(`Error opening port ${port}`, err));
 }
 </script>
 
@@ -52,7 +62,16 @@ if (container.groupInfo.created) {
   <tr>
     <DetailsCell>Ports</DetailsCell>
     {#if container.hasPublicPort}
-      <DetailsCell>{container.portsAsString}</DetailsCell>
+      <DetailsCell>
+        {#each container.ports as port, i (port.PublicPort)}
+          {#if i > 0},&nbsp;{/if}
+          <Tooltip tip={portUrl(port.PublicPort)} bottom>
+            <Link on:click={(): void => openPort(port.PublicPort)}>
+              <span class="inline-flex items-center">{port.PublicPort}<Fa icon={faExternalLink} class="ml-1" size="0.7x" /></span>
+            </Link>
+          </Tooltip>
+        {/each}
+      </DetailsCell>
     {:else}
       <DetailsCell>N/A</DetailsCell>
     {/if}

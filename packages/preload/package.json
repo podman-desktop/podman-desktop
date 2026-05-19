@@ -16,10 +16,10 @@
     "test:watch": "vitest watch --coverage --passWithNoTests"
   },
   "devDependencies": {
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.6"
   },
   "dependencies": {
     "@podman-desktop/core-api": "workspace:*",
-    "electron": "42.0.0"
+    "electron": "42.1.0"
   }
 }

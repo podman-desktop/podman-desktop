@@ -138,6 +138,30 @@ describe('installFromImage task lifecycle', () => {
     expect(task.status).toBe('success');
   });
 
+  test('should update task.progress during image download', async () => {
+    getImageConfigLabelsMock.mockResolvedValueOnce({
+      'org.opencontainers.image.title': 'title',
+      'org.opencontainers.image.description': 'desc',
+      'org.opencontainers.image.vendor': 'vendor',
+      'io.podman-desktop.api.version': '1.0.0',
+    });
+    listExtensionsMock.mockResolvedValueOnce([]);
+    vi.spyOn(extensionInstaller, 'extractExtensionFiles').mockResolvedValueOnce();
+    analyzeExtensionMock.mockResolvedValueOnce({ manifest: {} } as AnalyzedExtension);
+
+    downloadAndExtractImageMock.mockImplementation(
+      async (_image: string, _dest: string, logger: (event: { message: string; progress: number }) => void) => {
+        logger({ message: 'Downloading layer 1/2', progress: 50 });
+        logger({ message: 'Downloading layer 2/2', progress: 100 });
+      },
+    );
+
+    await extensionInstaller.installFromImage(vi.fn(), vi.fn(), vi.fn(), imageToPull);
+
+    const task = createTaskMock.mock.results[0]?.value;
+    expect(task.progress).toBe(100);
+  });
+
   test('should mark task as failed when installation errors', async () => {
     getImageConfigLabelsMock.mockRejectedValueOnce(new Error('network failure'));
 
