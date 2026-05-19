@@ -18,8 +18,8 @@
 
 import type { Guide } from '@podman-desktop/core-api/learning-center';
 
-import guidesJson from './guides.json' with { type: 'json' };
+import product from '/@product.json' with { type: 'json' };
 
 export function downloadGuideList(): Guide[] {
-  return guidesJson.guides;
+  return product.learningCenter.guides;
 }
