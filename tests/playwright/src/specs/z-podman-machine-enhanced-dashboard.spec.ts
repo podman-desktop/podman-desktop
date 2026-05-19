@@ -22,18 +22,14 @@ import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import {
-  createPodmanMachineFromCLI,
-  deletePodmanMachine,
-  resetPodmanMachinesFromCLI,
-  setEnhancedDashboardFeature,
-} from '/@/utility/operations';
+import { deletePodmanMachine, deletePodmanMachineFromCLI, setEnhancedDashboardFeature } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
 import { getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const PODMAN_MACHINE_NAME_1: string = 'podman-machine-default-1';
 const PODMAN_MACHINE_VISIBLE_NAME_1: string = 'Podman Machine default-1';
+const CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION: string = 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension';
 
 test.skip(
   isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
@@ -54,21 +50,13 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   }
 });
 
-test.afterAll(async ({ runner, page }) => {
+test.afterAll(async ({ runner }) => {
   test.setTimeout(120_000);
 
   try {
-    if (test.info().status === 'failed') {
-      await resetPodmanMachinesFromCLI();
-      await createPodmanMachineFromCLI();
-      await waitForPodmanMachineStartup(page);
-    }
+    await deletePodmanMachineFromCLI(PODMAN_MACHINE_NAME_1);
   } catch (error) {
     console.log('Error during cleanup:', error);
-  }
-
-  if (process.env.MACHINE_CLEANUP !== 'true') {
-    await waitForPodmanMachineStartup(page);
   }
 
   await runner.close();
@@ -167,11 +155,37 @@ test.describe
       });
     });
 
-    test('Verify Kubernetes/VM Connections', async () => {
+    test('Verify Kubernetes/VM Connections', async ({ page, navigationBar }) => {
+      test.setTimeout(90_000);
       // go to dashboard, verify the 'Kubernetes/VM connections:' label is not visible
+      const dashboardPage = await navigationBar.openDashboard();
+      await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.k8sVmConnectionLabel).not.toBeVisible();
       // go to extensions, click on 'install custom'
       // enter 'quay.io/rh-ee-davillan/pd-dummy-k8s-extension' in OCI image field, click 'install'
+      const extensionsPage = await navigationBar.openExtensions();
+      await extensionsPage.installExtensionFromOCIImage(CUSTOM_K8S_DUMMY_RESOURCE_EXTENSION);
       // go to settings/resources, find 'Dummy Resources' card
+      const settingsBar = await navigationBar.openSettings();
+      await settingsBar.openTabPage(ResourcesPage);
+      const dummyK8sResourceCard = new ResourceConnectionCardPage(page, 'pd-dummy-k8s');
       // click on 'Create new...'
+      await playExpect(dummyK8sResourceCard.createButton).toBeVisible();
+      await playExpect(dummyK8sResourceCard.createButton).toBeEnabled();
+      await dummyK8sResourceCard.createButton.scrollIntoViewIfNeeded();
+      await dummyK8sResourceCard.createButton.click();
+      // Create Kubernetes cluster (second form)
+      const createK8sClusterButton = page
+        .locator('form')
+        .filter({ hasText: 'Cluster name' })
+        .getByRole('button', { name: 'Create' });
+      await createK8sClusterButton.click();
+      // verify the 'Kubernetes/VM connections:' label is visible
+      await navigationBar.openDashboard();
+      await dashboardPage.k8sVmConnectionLabel.scrollIntoViewIfNeeded();
+      await playExpect(dashboardPage.k8sVmConnectionLabel).toBeVisible();
+      // verify the new k8s connection button appears on the enhanced dashboard card
+      await playExpect(dashboardPage.dummyK8sClusterButton).toBeVisible();
+      await playExpect(dashboardPage.dummyK8sClusterButton).toBeEnabled();
     });
   });
