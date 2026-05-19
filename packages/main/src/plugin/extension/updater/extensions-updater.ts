@@ -51,7 +51,7 @@ export class ExtensionsUpdater {
   async init(): Promise<void> {
     const autoCheckUpdatesKey = `${ExtensionsUpdaterSettings.SectionName}.${ExtensionsUpdaterSettings.AutoCheckUpdates}`;
     const autoUpdateKey = `${ExtensionsUpdaterSettings.SectionName}.${ExtensionsUpdaterSettings.AutoUpdate}`;
-    const extensionCatalog = product.catalog.website;
+    const updateFetchedText = product.catalog.website ? ` The updates are fetched from ${product.catalog.website}` : '';
 
     const extensionLoaderConfiguration: IConfigurationNode = {
       id: 'preferences.extensions',
@@ -59,7 +59,7 @@ export class ExtensionsUpdater {
       type: 'object',
       properties: {
         [autoCheckUpdatesKey]: {
-          description: `When enabled, automatically checks extensions for updates. The updates are fetched from ${extensionCatalog}`,
+          description: `When enabled, automatically checks extensions for updates.${updateFetchedText}`,
           type: 'boolean',
           default: true,
         },
