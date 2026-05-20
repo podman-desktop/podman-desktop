@@ -106,8 +106,7 @@ List all produced files with their file sizes.
 ## Important notes
 
 - Use CDP `Emulation.setDeviceMetricsOverride` with `deviceScaleFactor: 2` for HiDPI output
-- The output PNG dimensions will be at CSS pixel size (e.g., 800x200) but rendered at 2x quality internally
-- For true 2x pixel dimensions in the file, use `page.screenshot({ scale: 'device' })` - however this may not work reliably with CDP emulation
+- The output PNG has true 2x pixel dimensions: an 800x200 CSS viewport produces a 1600x400 PNG
 - Wait at least 500ms after navigation for the story to fully render
 - For animated components, the screenshot captures a single frame - use the `storybook-record-video` skill instead if animation matters
 - The `hc-light` and `hc-dark` theme names use a hyphen, not camelCase

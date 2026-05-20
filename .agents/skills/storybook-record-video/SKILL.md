@@ -75,7 +75,7 @@ async page => {
   await page.setViewportSize({ width: { WIDTH }, height: { HEIGHT } });
   await page.waitForTimeout(500);
 
-  const dir = '/tmp/sb-video-{THEME}';
+  const dir = `${process.env['TMPDIR'] ?? '/tmp'}/sb-video-{THEME}`;
   const totalMs = { DURATION } * 1000;
   const interval = 16; // ~60fps
   const count = Math.floor(totalMs / interval);
@@ -100,7 +100,7 @@ For each theme, encode the frames into a GitHub-compatible MP4:
 
 ```bash
 ffmpeg -y -framerate 60 \
-  -i /tmp/sb-video-{THEME}/frame-%05d.png \
+  -i "${TMPDIR:-/tmp}/sb-video-{THEME}/frame-%05d.png" \
   -c:v libx264 -pix_fmt yuv420p \
   -movflags +faststart \
   {OUTPUT_DIR}/{PREFIX}-{THEME}.mp4
@@ -116,7 +116,7 @@ ffprobe -v quiet -show_entries stream=width,height,r_frame_rate,duration {OUTPUT
 ls -lh {OUTPUT_DIR}/{PREFIX}-*.mp4
 
 # Clean up temp frames
-rm -rf /tmp/sb-video-light /tmp/sb-video-dark /tmp/sb-video-hc-light /tmp/sb-video-hc-dark
+rm -rf "${TMPDIR:-/tmp}/sb-video-light" "${TMPDIR:-/tmp}/sb-video-dark" "${TMPDIR:-/tmp}/sb-video-hc-light" "${TMPDIR:-/tmp}/sb-video-hc-dark"
 ```
 
 ### 5. Report results
@@ -125,7 +125,8 @@ List all produced files with their dimensions, framerate, duration, and file siz
 
 ## Important notes
 
-- Create temp frame directories before recording: `mkdir -p /tmp/sb-video-{THEME}`
+- Create temp frame directories before recording: `mkdir -p "${TMPDIR:-/tmp}/sb-video-{THEME}"`
+- This procedure uses Unix/macOS temp directory conventions; Windows is not supported
 - Clean up temp directories after encoding
 - Each `browser_run_code_unsafe` call is independent - global state does not persist between calls
 - The Playwright MCP sandbox does not support `require()` or dynamic `import()` - use `page.screenshot({ path })` to write files
