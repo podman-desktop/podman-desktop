@@ -83,6 +83,7 @@ export default [
       'tests/playwright/scripts/**',
       'website/storybook.ts',
       'website/src/pages/storybook/sidebar.cjs',
+      '.agents/**',
     ],
   },
   js.configs.recommended,
