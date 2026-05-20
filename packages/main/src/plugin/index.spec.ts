@@ -41,6 +41,7 @@ import { ContainerProviderRegistry } from './container-registry.js';
 import { DefaultConfiguration } from './default-configuration.js';
 import { Directories } from './directories.js';
 import { Emitter } from './events/emitter.js';
+import { ExperimentalFeatureFeedbackHandler } from './experimental-feature-feedback-handler.js';
 import { ImageRegistry } from './image-registry.js';
 import type { LoggerWithEnd } from './index.js';
 import { PluginSystem } from './index.js';
@@ -1158,4 +1159,17 @@ describe('container-provider-registry:playKube', () => {
     expect(createdTask.status).toBe('failure');
     expect(createdTask.error).toBe('Error: Dummy Foo');
   });
+});
+
+test('feedback:triggerStartupDialogs calls showFeedbackDialog', async () => {
+  const handle = handlers.get('feedback:triggerStartupDialogs');
+  expect(handle).toBeDefined();
+
+  const showFeedbackDialogSpy = vi
+    .spyOn(ExperimentalFeatureFeedbackHandler.prototype, 'showFeedbackDialog')
+    .mockResolvedValue();
+
+  await handle(undefined);
+
+  expect(showFeedbackDialogSpy).toHaveBeenCalledOnce();
 });

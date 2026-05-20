@@ -259,6 +259,10 @@ export function initExposure(): void {
     return ipcInvoke('extension-system:isExtensionsStarted');
   });
 
+  contextBridge.exposeInMainWorld('triggerStartupFeedbackDialogs', async (): Promise<void> => {
+    return ipcInvoke('feedback:triggerStartupDialogs');
+  });
+
   contextBridge.exposeInMainWorld('getDashboardSystemOverviewStatus', async (): Promise<SystemOverviewStatusInfo> => {
     return ipcInvoke('dashboard:getSystemOverviewStatus');
   });

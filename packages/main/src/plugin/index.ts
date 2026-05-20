@@ -858,6 +858,10 @@ export class PluginSystem {
     );
     await experimentalFeatureFeedbackHandler.init();
 
+    this.ipcHandle('feedback:triggerStartupDialogs', async (): Promise<void> => {
+      await experimentalFeatureFeedbackHandler.showFeedbackDialog();
+    });
+
     await this.setupSecurityRestrictionsOnLinks(messageBox);
 
     this.ipcHandle('tasks:clear-all', async (): Promise<void> => {

@@ -4,6 +4,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import type { KubernetesNavigationRequest, NavigationRequest } from '@podman-desktop/core-api';
 import { tablePersistence } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 import { router } from 'tinro';
 
 import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
@@ -154,6 +155,10 @@ window.events?.receive('kubernetes-navigation', (args: unknown) => {
 
 // Initialize table persistence callbacks immediately
 tablePersistence.storage = new PodmanDesktopStoragePersist();
+
+onMount(async () => {
+  await window.triggerStartupFeedbackDialogs();
+});
 </script>
 
 <Route path="/*" breadcrumb="Home" let:meta>
