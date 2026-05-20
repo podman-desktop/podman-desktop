@@ -39,6 +39,7 @@ Check whether these files already exist. If they do, skip to Step 2.
    - Add import: `import PrototypeSelector from './PrototypeSelector.svelte';`
      (place it alphabetically among the relative imports, after any `/@/` imports)
    - In the `<!-- right -->` section, add `items-center` to the div's classes
+     (skip if the class is already present)
    - Add `<PrototypeSelector />` as the first child of that div, before `WindowControlButtons`
 
    The right section should look like:
@@ -161,3 +162,15 @@ When a prototype has shipped as a real feature and the switcher is no longer nee
    ```
 
    All three should return zero results.
+
+---
+
+## Branch hygiene
+
+The infrastructure files (`prototype.ts`, `PrototypeSelector.svelte`) and TitleBar patch
+live in real production paths. They should only be committed to a prototype feature branch,
+never to `main`. When the prototype work is done:
+
+- If the files were committed: use tear-down above, then commit the removals.
+- If the files were never committed: `git checkout -- <path>` or delete from the working tree
+  before opening a PR.

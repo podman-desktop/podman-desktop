@@ -3,21 +3,9 @@ import { Dropdown } from '@podman-desktop/ui-svelte';
 
 import { activePrototype, currentScreen, type PrototypeScreen } from '/@/stores/prototype';
 
-let prototype = $state<{ name: string; screens: PrototypeScreen[] } | undefined>();
-let selectedScreen = $state('');
-
-$effect(() => {
-  const unsubPrototype = activePrototype.subscribe(p => {
-    prototype = p;
-  });
-  const unsubScreen = currentScreen.subscribe(s => {
-    selectedScreen = s;
-  });
-  return (): void => {
-    unsubPrototype();
-    unsubScreen();
-  };
-});
+// Dropdown.onChange is (val: string) => void per packages/ui Dropdown Props.
+let prototype = $derived($activePrototype);
+let selectedScreen = $derived($currentScreen);
 
 function handleChange(value: string): void {
   currentScreen.set(value);
@@ -43,7 +31,7 @@ function handleChange(value: string): void {
 {/if}
 
 <style>
-  .prototype-dropdown :global(> div) {
+  .prototype-dropdown :global(button) {
     border: 1px solid rgb(239 68 68);
     border-radius: 4px;
   }
