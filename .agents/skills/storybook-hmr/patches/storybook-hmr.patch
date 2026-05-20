@@ -2,7 +2,7 @@ diff --git a/storybook/vite.config.js b/storybook/vite.config.js
 index ba7f9e4c8a5..ec13344e4cc 100644
 --- a/storybook/vite.config.js
 +++ b/storybook/vite.config.js
-@@ -31,66 +31,58 @@ import { fileURLToPath } from 'node:url';
+@@ -31,66 +31,62 @@ import { fileURLToPath } from 'node:url';
  
  const execAsync = promisify(exec);
  
@@ -80,19 +80,24 @@ index ba7f9e4c8a5..ec13344e4cc 100644
 -        console.log(`\n[color-registry-watcher] ${path.basename(changedFile)} changed, regenerating themes.css...`);
 -        await regenerate(server);
 +        console.log(`\n[${name}] ${path.basename(changedFile)} changed, rebuilding...`);
-+        await run(server);
++        try {
++          await run(server);
  
 -        while (queuedRegeneration) {
 -          queuedRegeneration = false;
 -          console.log('[color-registry-watcher] Processing queued change...');
 -          await regenerate(server);
-+        while (queued) {
-+          queued = false;
-+          await run(server);
++          while (queued) {
++            queued = false;
++            await run(server);
++          }
++        } catch (err) {
++          console.error(`[${name}] Rebuild failed:`, err);
++        } finally {
++          isBusy = false;
          }
- 
+-
 -        isRegenerating = false;
-+        isBusy = false;
        });
  
 -      server.httpServer?.on('close', () => {
@@ -104,7 +109,7 @@ index ba7f9e4c8a5..ec13344e4cc 100644
  }
 @@ -108,7 +100,21 @@ export default defineConfig({
      tailwindcss(),
-     svelte({ configFile: '../svelte.config.js' }),
+     svelte({ configFile: '../svelte.config.js', hot: true }),
      svelteTesting(),
 -    colorRegistryWatcher(),
 +    createFileWatcher({

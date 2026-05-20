@@ -9,7 +9,7 @@ description: >-
 
 # Storybook HMR Patch
 
-Apply a local patch to `storybook/vite.config.js` that adds a file watcher for `packages/ui/src/lib/`. When any UI component source file changes, the watcher automatically runs `svelte-package` to rebuild `packages/ui/dist/`, invalidates Vite's module cache, and triggers a full reload. Without this patch, editing UI component source files has no effect in Storybook because the imports resolve through the package exports map to `dist/`.
+Apply a local patch to `storybook/vite.config.js` that adds a file watcher for `packages/ui/src/lib/`. When any UI component source file changes, the watcher automatically runs `pnpm --filter @podman-desktop/ui-svelte build` to rebuild `packages/ui/dist/`, invalidates Vite's module cache, and triggers a full reload. Without this patch, editing UI component source files has no effect in Storybook because the imports resolve through the package exports map to `dist/`.
 
 This patch is intentionally kept local and must never be committed or pushed. The upstream project has declined to merge it.
 

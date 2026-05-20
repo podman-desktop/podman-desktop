@@ -108,7 +108,7 @@ Follow this order:
 ## Step 5: Before committing
 
 1. **Revert the HMR patch**: `git checkout -- storybook/vite.config.js`
-2. **Run all checks**: `pnpm test:ui`, `pnpm typecheck`, `pnpm lint:check`
+2. **Run all checks**: `pnpm lint-staged`, `pnpm test:ui`, `pnpm typecheck`, `pnpm lint:check`
 3. The user handles committing, pushing, and filing PRs
 
 ## Reference: ProgressBar modernization
