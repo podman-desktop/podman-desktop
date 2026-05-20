@@ -103,6 +103,9 @@ export const currentOverride: Readable<unknown | undefined> = derived(
  * screen and phase. Call {@link unregisterPrototype} to tear down.
  */
 export function registerPrototype<T>(config: PrototypeConfig<T>): Readable<T | undefined> {
+  if (!config.screens?.length) {
+    throw new Error('registerPrototype: screens must be a non-empty array');
+  }
   currentOverrides = config.overrides as Record<string, unknown>;
   currentTimelines = config.timelines ?? {};
   activePrototype.set({ name: config.name, screens: config.screens });
