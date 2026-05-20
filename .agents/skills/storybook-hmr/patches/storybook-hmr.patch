@@ -1,0 +1,135 @@
+diff --git a/storybook/vite.config.js b/storybook/vite.config.js
+index ba7f9e4c8a5..ec13344e4cc 100644
+--- a/storybook/vite.config.js
++++ b/storybook/vite.config.js
+@@ -31,66 +31,58 @@ import { fileURLToPath } from 'node:url';
+ 
+ const execAsync = promisify(exec);
+ 
+-let filename = fileURLToPath(import.meta.url);
+-const PACKAGE_ROOT = path.dirname(filename);
++const PACKAGE_ROOT = path.dirname(fileURLToPath(import.meta.url));
+ const ROOT_DIR = path.join(PACKAGE_ROOT, '..');
+ 
+-// Vite plugin to watch color-registry and regenerate themes.css
+-function colorRegistryWatcher() {
+-  let isRegenerating = false;
+-  let queuedRegeneration = false;
+-
+-  async function regenerate(server) {
+-    try {
+-      await execAsync('pnpm run storybook:css', { cwd: ROOT_DIR });
+-      console.log('[color-registry-watcher] themes.css regenerated successfully\n');
+-
+-      server.ws.send({
+-        type: 'full-reload',
+-        path: '*',
+-      });
+-    } catch (error) {
+-      console.error('[color-registry-watcher] Failed to regenerate themes.css:', error.message);
++/**
++ * Vite plugin that watches files and runs a rebuild command on change.
++ * Coalesces rapid changes so the command runs at most once at a time.
++ */
++function createFileWatcher({ name, paths, ignored, command, invalidatePattern }) {
++  let isBusy = false;
++  let queued = false;
++
++  async function run(server) {
++    await execAsync(command, { cwd: ROOT_DIR });
++    console.log(`[${name}] Rebuilt successfully`);
++
++    if (invalidatePattern) {
++      for (const [, mod] of server.moduleGraph.idToModuleMap) {
++        if (mod.file?.includes(invalidatePattern)) {
++          server.moduleGraph.invalidateModule(mod);
++        }
++      }
+     }
++
++    server.ws.send({ type: 'full-reload', path: '*' });
+   }
+ 
+   return {
+-    name: 'color-registry-watcher',
++    name,
+     configureServer(server) {
+       if (process.env.VITEST) return;
+ 
+-      const filesToWatch = [
+-        path.join(ROOT_DIR, 'packages/main/src/plugin/color-registry.ts'),
+-        path.join(ROOT_DIR, 'tailwind-color-palette.json'),
+-      ];
+-
+-      const watcher = chokidar.watch(filesToWatch, {
+-        persistent: true,
+-        ignoreInitial: true,
+-      });
++      const watcher = chokidar.watch(paths, { persistent: true, ignoreInitial: true, ignored });
+ 
+       watcher.on('change', async changedFile => {
+-        if (isRegenerating) {
+-          queuedRegeneration = true;
++        if (isBusy) {
++          queued = true;
+           return;
+         }
+-        isRegenerating = true;
++        isBusy = true;
+ 
+-        console.log(`\n[color-registry-watcher] ${path.basename(changedFile)} changed, regenerating themes.css...`);
+-        await regenerate(server);
++        console.log(`\n[${name}] ${path.basename(changedFile)} changed, rebuilding...`);
++        await run(server);
+ 
+-        while (queuedRegeneration) {
+-          queuedRegeneration = false;
+-          console.log('[color-registry-watcher] Processing queued change...');
+-          await regenerate(server);
++        while (queued) {
++          queued = false;
++          await run(server);
+         }
+ 
+-        isRegenerating = false;
++        isBusy = false;
+       });
+ 
+-      server.httpServer?.on('close', () => {
+-        watcher.close();
+-      });
++      server.httpServer?.on('close', () => watcher.close());
+     },
+   };
+ }
+@@ -108,7 +100,21 @@ export default defineConfig({
+     tailwindcss(),
+     svelte({ configFile: '../svelte.config.js' }),
+     svelteTesting(),
+-    colorRegistryWatcher(),
++    createFileWatcher({
++      name: 'color-registry-watcher',
++      paths: [
++        path.join(ROOT_DIR, 'packages/main/src/plugin/color-registry.ts'),
++        path.join(ROOT_DIR, 'tailwind-color-palette.json'),
++      ],
++      command: 'pnpm run storybook:css',
++    }),
++    createFileWatcher({
++      name: 'ui-package-watcher',
++      paths: path.join(ROOT_DIR, 'packages/ui/src/lib'),
++      ignored: ['**/*.spec.ts', '**/*.test.ts'],
++      command: 'pnpm --filter @podman-desktop/ui-svelte build',
++      invalidatePattern: 'packages/ui/dist',
++    }),
+   ],
+   test: {
+     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+@@ -125,7 +131,6 @@ export default defineConfig({
+       strict: true,
+     },
+     watch: {
+-      // Watch the UI package dist folder for changes
+       ignored: ['!**/node_modules/@podman-desktop/ui-svelte/**'],
+     },
+   },
