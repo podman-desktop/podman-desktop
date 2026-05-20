@@ -20,6 +20,7 @@ import { ResourceElementActions } from '/@/model/core/operations';
 import { SystemOverviewState } from '/@/model/core/states';
 import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourceDetailsPage } from '/@/model/pages/resource-details-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deletePodmanMachine, deletePodmanMachineFromCLI, setEnhancedDashboardFeature } from '/@/utility/operations';
@@ -154,7 +155,6 @@ test.describe
         // click on 'navigate to...' button, verify it goes to machine details
         await playExpect(dashboardPage.navigateToButton).toBeEnabled();
         await dashboardPage.navigateToButton.click();
-        const { ResourceDetailsPage } = await import('/@/model/pages/resource-details-page'); // avoid circular import
         const podmanMachine1Details = new ResourceDetailsPage(page, PODMAN_MACHINE_VISIBLE_NAME_1);
         await playExpect(podmanMachine1Details.heading).toBeVisible();
         // come back to dashboard, click on status button, verify it goes to resources
