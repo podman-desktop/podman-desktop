@@ -67,9 +67,10 @@ index ba7f9e4c8a5..ec13344e4cc 100644
 -      });
 +      const watcher = chokidar.watch(paths, { persistent: true, ignoreInitial: true, ignored });
  
-       watcher.on('change', async changedFile => {
+-      watcher.on('change', async changedFile => {
 -        if (isRegenerating) {
 -          queuedRegeneration = true;
++      watcher.on('all', async (_event, changedFile) => {
 +        if (isBusy) {
 +          queued = true;
            return;
