@@ -51,7 +51,15 @@ which ffmpeg                     # ffmpeg available?
 
 ### 2. Record frames for each theme
 
-For each theme in `[light, dark, hc-light, hc-dark]`, use a single `browser_run_code_unsafe` call that:
+For each theme in `[light, dark, hc-light, hc-dark]`:
+
+First, create the temp frame directory:
+
+```bash
+mkdir -p "${TMPDIR:-/tmp}/sb-video-{THEME}"
+```
+
+Then use a single `browser_run_code_unsafe` call that:
 
 1. Navigates to the story iframe URL
 2. Sets the viewport to the requested dimensions
