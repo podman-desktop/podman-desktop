@@ -1016,6 +1016,11 @@ export async function registerUpdatesIfAny(
   installedPodman: InstalledPodman | undefined,
   podmanInstall: PodmanInstall,
 ): Promise<extensionApi.Disposable | undefined> {
+  const allowUpdate = extensionApi.configuration.getConfiguration('podman').get<boolean>('engine.allowUpdate') ?? true;
+  if (!allowUpdate) {
+    return undefined;
+  }
+
   const updateInfo = await podmanInstall.checkForUpdate(installedPodman);
   const warnings = await getMultiplePodmanInstallationsWarnings(installedPodman);
   if (updateInfo.hasUpdate && updateInfo.bundledVersion && warnings.length === 0) {

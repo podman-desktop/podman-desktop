@@ -133,6 +133,12 @@
           "when": "podman.podmanMachineEditRootfulSupported",
           "hidden": true
         },
+        "podman.engine.allowUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow checking for and registering Podman engine updates",
+          "hidden": true
+        },
         "podman.factory.machine.name": {
           "type": "string",
           "default": "podman-machine-default",
