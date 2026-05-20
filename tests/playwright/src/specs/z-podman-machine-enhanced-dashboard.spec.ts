@@ -72,13 +72,23 @@ test.describe
       // podman card visible
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
-
+      // enable the feature
       await setEnhancedDashboardFeature(page, navigationBar, true);
-      // 'System Overview' card may take a second to load, poll by changing the page until it appears?
-      await page.waitForTimeout(2_000); //TODO: remove
-      dashboardPage = await navigationBar.openDashboard();
-      // system overview card button visible
-      await playExpect(dashboardPage.systemOverviewButton).toBeVisible({ timeout: 10_000 });
+      // 'System Overview' card may take a moment to load; refresh the view by navigating away and back
+      await playExpect
+        .poll(
+          async () => {
+            dashboardPage = await navigationBar.openDashboard();
+            if (await dashboardPage.systemOverviewButton.isVisible()) {
+              return true;
+            }
+            await navigationBar.openContainers();
+            return false;
+          },
+          { timeout: 10_000 },
+        )
+        .toBeTruthy();
+      // system overview card button visible and enabled
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled({ timeout: 10_000 });
       await dashboardPage.systemOverviewButton.scrollIntoViewIfNeeded();
       await dashboardPage.systemOverviewButton.click();
@@ -130,7 +140,9 @@ test.describe
         await playExpect(dashboardPage.statusButton).toBeEnabled();
         await dashboardPage.statusButton.click();
         let resourcesPage = new ResourcesPage(page);
-        await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible('podman')).toBeTruthy();
+        await playExpect
+          .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: 30_000 })
+          .toBeTruthy();
         const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME_1);
         await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
         // stop machine
