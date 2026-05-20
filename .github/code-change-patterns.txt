@@ -1,0 +1,25 @@
+# Patterns to trigger update E2E tests on code changes
+# These are grep patterns that match file paths
+# Lines starting with # are ignored
+
+# Core directories
+^extensions/
+^packages/
+^schemas/
+^scripts/
+^types/
+
+# Build and configuration files
+^\.electron-builder\.config\.cjs$
+^package\.json$
+^pnpm-lock\.yaml$
+^featured\.json$
+^product\.json$
+^svelte\.config\.js$
+^tailwind\.config\.cjs$
+^vitest\.config\.js$
+^playwright\.config\.ts$
+^eslint\.config\.mjs$
+
+# CI/CD workflow files
+^\.github/workflows/pr-check\.yaml$
