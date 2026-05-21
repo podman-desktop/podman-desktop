@@ -21,7 +21,7 @@ const dispatch = createEventDispatcher<{ click: undefined }>();
 
 <button
   type="button"
-  class="hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px] p-1 no-underline cursor-pointer outline-transparent focus:outline-[var(--pd-button-primary-hover-bg)] {className}"
+  class="hover:bg-[var(--pd-button-close-hover-bg)] hover:bg-opacity-10 transition-all rounded-[4px] p-1 no-underline cursor-pointer outline-transparent focus:outline-[var(--pd-button-focus-ring)] {className}"
   onclick={onclick}
   title="Close"
   aria-label="Close">
