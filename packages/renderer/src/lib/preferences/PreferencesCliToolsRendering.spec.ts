@@ -141,12 +141,12 @@ suite('CLI Tool Prefernces page shows', () => {
   });
 
   test('tool`s logo is not shown if images.icon property is not present or images property is empty', () => {
-    expect(within(cliToolRows[0]).queryAllByLabelText('cli-logo').length).equals(0);
-    expect(within(cliToolRows[1]).queryAllByLabelText('cli-logo').length).equals(0);
+    expect(within(cliToolRows[0]).queryAllByAltText(/logo/).length).equals(0);
+    expect(within(cliToolRows[1]).queryAllByAltText(/logo/).length).equals(0);
   });
 
   test('tool`s logo is shown when images.icon property is present', () => {
-    expect(within(cliToolRows[2]).getAllByLabelText('cli-logo').length).equals(1);
+    expect(within(cliToolRows[2]).getAllByAltText(/logo/).length).equals(1);
   });
 
   test('test tools version is shown', () => {
