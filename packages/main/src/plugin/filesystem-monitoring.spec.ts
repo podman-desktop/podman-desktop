@@ -21,11 +21,11 @@ import os from 'node:os';
 import path, { join } from 'node:path';
 
 import { watch } from 'chokidar';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { isWindows } from '/@/util.js';
 
-import { FileSystemWatcherImpl } from './filesystem-monitoring.js';
+import { FilesystemMonitoring, FileSystemWatcherImpl } from './filesystem-monitoring.js';
 import { Uri } from './types/uri.js';
 
 let rootdir: string;
@@ -202,4 +202,49 @@ test.runIf(os.platform() === 'darwin')('Watch a directory with a lot of files', 
   });
 
   await vi.waitFor(() => expect(counter).toBeGreaterThan(3));
+});
+
+describe('FilesystemMonitoring', () => {
+  let monitoring: FilesystemMonitoring;
+
+  beforeEach(() => {
+    monitoring = new FilesystemMonitoring();
+  });
+
+  test('createFileSystemWatcher should return a FileSystemWatcher', () => {
+    const fsWatcher = monitoring.createFileSystemWatcher(path.join(rootdir, 'somefile'));
+    expect(fsWatcher).toBeDefined();
+    expect(fsWatcher.dispose).toBeDefined();
+    expect(fsWatcher.onDidCreate).toBeDefined();
+    expect(fsWatcher.onDidChange).toBeDefined();
+    expect(fsWatcher.onDidDelete).toBeDefined();
+    fsWatcher.dispose();
+  });
+
+  test('asyncDispose should dispose all tracked watchers', async () => {
+    const watcher1 = monitoring.createFileSystemWatcher(path.join(rootdir, 'file1'));
+    const watcher2 = monitoring.createFileSystemWatcher(path.join(rootdir, 'file2'));
+    const disposeSpy1 = vi.spyOn(watcher1, 'dispose');
+    const disposeSpy2 = vi.spyOn(watcher2, 'dispose');
+
+    await monitoring.asyncDispose();
+
+    expect(disposeSpy1).toHaveBeenCalledOnce();
+    expect(disposeSpy2).toHaveBeenCalledOnce();
+  });
+
+  test('asyncDispose should clear the watchers so subsequent calls are no-ops', async () => {
+    const fsWatcher = monitoring.createFileSystemWatcher(path.join(rootdir, 'file'));
+    const disposeSpy = vi.spyOn(fsWatcher, 'dispose');
+
+    await monitoring.asyncDispose();
+    expect(disposeSpy).toHaveBeenCalledOnce();
+
+    await monitoring.asyncDispose();
+    expect(disposeSpy).toHaveBeenCalledOnce();
+  });
+
+  test('asyncDispose on empty instance should resolve without error', async () => {
+    await expect(monitoring.asyncDispose()).resolves.toBeUndefined();
+  });
 });
