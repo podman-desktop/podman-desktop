@@ -80,3 +80,10 @@ export enum TaskState {
   Canceled = 'canceled',
   Success = 'success',
 }
+
+export enum SystemOverviewState {
+  Stopped = 'Some systems are stopped',
+  Operational = 'All systems operational',
+  Starting = 'Starting up...',
+  Error = 'Error detected',
+}
