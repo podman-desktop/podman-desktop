@@ -1615,13 +1615,17 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${ab}primary-text`, {
-      dark: accent1[400],
+      dark: gray[275],
       light: accent1[500],
+      hcDark: accent1[500],
+      hcLight: accent1[700],
     });
 
     this.registerColor(`${ab}primary-hover-text`, {
-      dark: accent1[400],
+      dark: gray[275],
       light: accent1[500],
+      hcDark: accent1[500],
+      hcLight: accent1[700],
     });
 
     this.registerColor(`${ab}disabled-text`, {
