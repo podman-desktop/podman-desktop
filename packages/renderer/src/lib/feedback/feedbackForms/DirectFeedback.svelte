@@ -19,6 +19,7 @@ interface Props {
   onCloseForm: (confirmation: boolean) => void;
   contentChange: (e: boolean) => void;
   category: DirectFeedbackCategory;
+  githubLink?: string;
 }
 
 // feedback of the user
@@ -30,7 +31,7 @@ let hasFeedback = $derived(
     (contactInformation && contactInformation.trim().length > 4),
 );
 
-let { onCloseForm, contentChange, category }: Props = $props();
+let { onCloseForm, contentChange, category, githubLink }: Props = $props();
 
 $effect(() => contentChange(Boolean(smileyRating || tellUsWhyFeedback || contactInformation)));
 
@@ -70,8 +71,10 @@ async function sendFeedback(): Promise<void> {
 }
 
 async function openGitHub(): Promise<void> {
-  await window.telemetryTrack('feedback.openGitHub');
-  await window.openExternal('https://github.com/containers/podman-desktop');
+  if (githubLink) {
+    await window.telemetryTrack('feedback.openGitHub');
+    await window.openExternal(githubLink);
+  }
 }
 </script>
 
@@ -145,7 +148,7 @@ async function openGitHub(): Promise<void> {
       <ErrorMessage class="text-xs" error="Please share contact info or details on how we can improve" />
     {:else if smileyRating === 2 && !hasFeedback}
       <WarningMessage class="text-xs" error="We would really appreciate knowing how we can improve" />
-    {:else if smileyRating > 2}
+    {:else if smileyRating > 2 && githubLink}
       <div class="text-[var(--pd-modal-text)] p-1 flex flex-row items-center text-xs">
         <Icon size="1.125x" class="cursor-pointer" icon={faQuestionCircle} />
         <span aria-label="{feedbackMessages?.gitHubStarsMessage}" class="flex items-center">

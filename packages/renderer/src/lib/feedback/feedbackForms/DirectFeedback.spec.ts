@@ -46,14 +46,24 @@ beforeEach(() => {
 });
 
 test('Expect that the button is disabled when loading the page', async () => {
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
+  });
   const button = await screen.findByRole('button', { name: 'Send feedback' });
   expect(button).toBeInTheDocument();
   expect(button).toBeDisabled();
 });
 
 test('Expect that the button is enabled after clicking on a smiley', async () => {
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
+  });
   const button = await screen.findByRole('button', { name: 'Send feedback' });
 
   // expect to have indication why the button is disabled
@@ -71,7 +81,12 @@ test('Expect that the button is enabled after clicking on a smiley', async () =>
 });
 
 test('Expect very sad smiley errors without feedback', async () => {
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
+  });
   const button = await screen.findByRole('button', { name: 'Send feedback' });
   expect(button).toBeDisabled();
 
@@ -99,7 +114,12 @@ test('Expect very sad smiley errors without feedback', async () => {
 });
 
 test('Expect sad smiley warns without feedback', async () => {
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
+  });
   const button = await screen.findByRole('button', { name: 'Send feedback' });
   expect(button).toBeDisabled();
 
@@ -130,6 +150,7 @@ test('Expect message for very-happy-smiley to use love', async () => {
     category: 'developers',
     contentChange: vi.fn(),
     onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
   });
 
   // click on a smiley
@@ -146,6 +167,7 @@ test('Expect message for happy-smiley to use like', async () => {
     category: 'developers',
     contentChange: vi.fn(),
     onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
   });
 
   // click on a smiley
@@ -159,7 +181,12 @@ test('Expect message for happy-smiley to use like', async () => {
 
 test('Expect GitHub dialog visible when very-happy-smiley selected', async () => {
   const onCloseFormMock = vi.fn();
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: onCloseFormMock });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: onCloseFormMock,
+    githubLink: 'https://github.com/test/repo',
+  });
 
   // click on a smiley
   const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
@@ -173,7 +200,7 @@ test('Expect GitHub dialog visible when very-happy-smiley selected', async () =>
 
   await vi.waitFor(() => {
     expect(window.telemetryTrack).toHaveBeenCalledWith('feedback.openGitHub');
-    expect(window.openExternal).toHaveBeenCalledWith('https://github.com/containers/podman-desktop');
+    expect(window.openExternal).toHaveBeenCalledWith('https://github.com/test/repo');
   });
 
   expect(onCloseFormMock).not.toHaveBeenCalled();
@@ -181,7 +208,12 @@ test('Expect GitHub dialog visible when very-happy-smiley selected', async () =>
 
 test('Expect category to be sent', async () => {
   const closeMock = vi.fn();
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: closeMock });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: closeMock,
+    githubLink: 'https://github.com/test/repo',
+  });
 
   // click on a smiley
   const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
@@ -214,7 +246,12 @@ test('Expect category to be sent', async () => {
 
 test('Expect design category to be sent when design category is used', async () => {
   const closeMock = vi.fn();
-  render(DirectFeedback, { category: 'design', contentChange: vi.fn(), onCloseForm: closeMock });
+  render(DirectFeedback, {
+    category: 'design',
+    contentChange: vi.fn(),
+    onCloseForm: closeMock,
+    githubLink: 'https://github.com/test/repo',
+  });
 
   // click on a smiley
   const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
@@ -246,7 +283,12 @@ test('Expect design category to be sent when design category is used', async () 
 });
 
 test('Expect email field has correct text', async () => {
-  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: vi.fn(),
+    githubLink: 'https://github.com/test/repo',
+  });
 
   const emaillabel = await screen.findByLabelText(
     'Share your email address if we can follow up with you regarding your feedback. We will only use your email address for this purpose:',
@@ -257,4 +299,20 @@ test('Expect email field has correct text', async () => {
     'Enter email address, or leave blank for anonymous feedback',
   );
   expect(emailPlaceholder).toBeInTheDocument();
+});
+
+test('Expect GitHub link section hidden when githubLink is not provided', async () => {
+  render(DirectFeedback, {
+    category: 'developers',
+    contentChange: vi.fn(),
+    onCloseForm: vi.fn(),
+  });
+
+  // click on a very-happy smiley
+  const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
+  await fireEvent.click(smiley);
+
+  // expect GitHub star text to NOT be visible
+  expect(screen.queryByLabelText('Like Podman Desktop? Give us a star on GitHub')).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'GitHub' })).not.toBeInTheDocument();
 });

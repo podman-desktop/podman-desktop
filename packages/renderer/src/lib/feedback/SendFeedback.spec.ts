@@ -43,6 +43,7 @@ beforeEach(() => {
   vi.mocked(window.getGitHubFeedbackLinks).mockResolvedValue({
     bug: '/bug/link',
     feature: '/feature/link',
+    baseRepository: 'https://github.com/test/repo',
   });
 });
 
@@ -51,11 +52,14 @@ test('Expect developers feedback form to be rendered by default', async () => {
 
   await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
 
-  expect(DirectFeedback).toHaveBeenCalledOnce();
-  expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
-    onCloseForm: expect.any(Function),
-    category: 'developers',
-    contentChange: expect.any(Function),
+  // Wait for onMount to complete and state to update
+  await vi.waitFor(() => {
+    expect(DirectFeedback).toHaveBeenLastCalledWith(expect.anything(), {
+      onCloseForm: expect.any(Function),
+      category: 'developers',
+      contentChange: expect.any(Function),
+      githubLink: 'https://github.com/test/repo',
+    });
   });
   expect(GitHubIssueFeedback).not.toHaveBeenCalled();
 });
@@ -65,13 +69,19 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
 
   await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
 
-  expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
-    onCloseForm: expect.any(Function),
-    category: 'developers',
-    contentChange: expect.any(Function),
+  // Wait for onMount to complete and state to update
+  await vi.waitFor(() => {
+    expect(DirectFeedback).toHaveBeenLastCalledWith(expect.anything(), {
+      onCloseForm: expect.any(Function),
+      category: 'developers',
+      contentChange: expect.any(Function),
+      githubLink: 'https://github.com/test/repo',
+    });
   });
 
-  const { onCloseForm, contentChange } = vi.mocked(DirectFeedback).mock.calls[0][1];
+  // Get the last call (after onMount completed)
+  const lastCallIndex = vi.mocked(DirectFeedback).mock.calls.length - 1;
+  const { onCloseForm, contentChange } = vi.mocked(DirectFeedback).mock.calls[lastCallIndex][1];
 
   // 1. simulate content change
   contentChange(true);
@@ -93,13 +103,19 @@ test('Expect no confirmation dialog to be displayed if content has not changed',
 
   await vi.waitFor(() => expect(window.getGitHubFeedbackLinks).toHaveBeenCalled());
 
-  expect(DirectFeedback).toHaveBeenCalledWith(expect.anything(), {
-    onCloseForm: expect.any(Function),
-    category: 'developers',
-    contentChange: expect.any(Function),
+  // Wait for onMount to complete and state to update
+  await vi.waitFor(() => {
+    expect(DirectFeedback).toHaveBeenLastCalledWith(expect.anything(), {
+      onCloseForm: expect.any(Function),
+      category: 'developers',
+      contentChange: expect.any(Function),
+      githubLink: 'https://github.com/test/repo',
+    });
   });
 
-  const { onCloseForm } = vi.mocked(DirectFeedback).mock.calls[0][1];
+  // Get the last call (after onMount completed)
+  const lastCallIndex = vi.mocked(DirectFeedback).mock.calls.length - 1;
+  const { onCloseForm } = vi.mocked(DirectFeedback).mock.calls[lastCallIndex][1];
 
   // 2. close
   onCloseForm(true);
@@ -127,6 +143,7 @@ test('Expect DirectFeedback form to be rendered when design category is selected
     onCloseForm: expect.any(Function),
     category: 'design',
     contentChange: expect.any(Function),
+    githubLink: 'https://github.com/test/repo',
   });
   expect(GitHubIssueFeedback).not.toHaveBeenCalled();
 });
@@ -151,6 +168,7 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
     categoryLinks: {
       bug: '/bug/link',
       feature: '/feature/link',
+      baseRepository: 'https://github.com/test/repo',
     },
     category: 'bug',
     contentChange: expect.any(Function),
@@ -167,6 +185,7 @@ test('Expect GitHubIssue feedback form to be rendered if category is not develop
     categoryLinks: {
       bug: '/bug/link',
       feature: '/feature/link',
+      baseRepository: 'https://github.com/test/repo',
     },
     category: 'feature',
     contentChange: expect.any(Function),

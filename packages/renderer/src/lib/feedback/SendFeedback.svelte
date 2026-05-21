@@ -13,8 +13,9 @@ let displayModal = $state(false);
 const DEFAULT_CATEGORY: FeedbackCategory = 'developers';
 let category: FeedbackCategory = $state(DEFAULT_CATEGORY);
 let hasContent: boolean = false;
-let categoryGitHubLinks: { [category: string]: string } | undefined = $state({});
+let githubFeedbackLinks: { [category: string]: string } | undefined = $state({});
 let feedbackLinks: { [category: string]: string } = $state({});
+let githubRepository = $state('');
 
 const feedbackCategories = new SvelteMap<FeedbackCategory, string>([
   ['developers', '💬 Direct your words to the developers'],
@@ -58,12 +59,12 @@ function handleUpdate(e: boolean): void {
 }
 
 onMount(async () => {
-  categoryGitHubLinks = await window.getGitHubFeedbackLinks();
-  if (categoryGitHubLinks && (categoryGitHubLinks.feature || categoryGitHubLinks.bug)) {
-    if (categoryGitHubLinks.feature) {
+  githubFeedbackLinks = await window.getGitHubFeedbackLinks();
+  if (githubFeedbackLinks && (githubFeedbackLinks.feature || githubFeedbackLinks.bug)) {
+    if (githubFeedbackLinks.feature) {
       feedbackCategories.set('feature', '🚀 Feature request');
     }
-    if (categoryGitHubLinks.bug) {
+    if (githubFeedbackLinks.bug) {
       feedbackCategories.set('bug', '🪲 Bug');
     }
   } else {
@@ -72,6 +73,8 @@ onMount(async () => {
       feedbackCategories.set('other', '❓ Other');
     }
   }
+
+  githubRepository = githubFeedbackLinks?.baseRepository ?? '';
 });
 </script>
 
@@ -91,9 +94,9 @@ onMount(async () => {
     </div>
 
     {#if category === 'developers' || category === 'design'}
-      <DirectFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate}/>
+      <DirectFeedback onCloseForm={hideModal} category={category} contentChange={handleUpdate} githubLink={githubRepository}/>
     {:else if category === 'bug' || category === 'feature'}
-      <GitHubIssueFeedback onCloseForm={hideModal} category={category} categoryLinks={categoryGitHubLinks} contentChange={handleUpdate}/>
+      <GitHubIssueFeedback onCloseForm={hideModal} category={category} categoryLinks={githubFeedbackLinks} contentChange={handleUpdate}/>
     {:else if category === 'other'}
       <FeedbackForm>
         <svelte:fragment slot="content">
