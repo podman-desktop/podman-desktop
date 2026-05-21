@@ -84,7 +84,7 @@ async function openGitHub(): Promise<void> {
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 1
-            ? 'text-[var(--pd-action-button-primary-text)]'
+            ? 'text-(--pd-action-button-primary-text)'
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faFrown} />
       </button>
@@ -92,7 +92,7 @@ async function openGitHub(): Promise<void> {
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 2
-            ? 'text-[var(--pd-action-button-primary-text)]'
+            ? 'text-(--pd-action-button-primary-text)'
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faMeh} />
       </button>
@@ -100,7 +100,7 @@ async function openGitHub(): Promise<void> {
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 3
-            ? 'text-[var(--pd-action-button-primary-text)]'
+            ? 'text-(--pd-action-button-primary-text)'
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faSmile} />
       </button>
@@ -108,7 +108,7 @@ async function openGitHub(): Promise<void> {
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 4
-            ? 'text-[var(--pd-action-button-primary-text)]'
+            ? 'text-(--pd-action-button-primary-text)'
             : 'text-[var(--pd-button-disabled-text)]'}"
           icon={faGrinStars} />
       </button>
