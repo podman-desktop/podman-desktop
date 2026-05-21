@@ -97,10 +97,22 @@ test.describe
       await playExpect(dashboardPage.noContainerEngineLabel).toBeVisible();
       await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled();
       // disable the feature and assert everything went back to the expected state
-      await setEnhancedDashboardFeature(page, navigationBar, true);
+      await setEnhancedDashboardFeature(page, navigationBar, false);
       dashboardPage = await navigationBar.openDashboard();
+      await playExpect
+        .poll(
+          async () => {
+            dashboardPage = await navigationBar.openDashboard();
+            if (await dashboardPage.podmanProvider.isVisible()) {
+              return true;
+            }
+            await navigationBar.openContainers();
+            return false;
+          },
+          { timeout: 10_000 },
+        )
+        .toBeTruthy();
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
-      await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
     });
   });

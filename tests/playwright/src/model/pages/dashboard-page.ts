@@ -84,7 +84,7 @@ export class DashboardPage extends BasePage {
     this.podmanStatusLabel = this.podmanProvider.getByLabel(this.CONNECTION_STATUS_LABEL);
 
     // Enhanced Dashboard - Health Monitoring
-    this.systemOverviewButton = page.getByRole('button', { name: 'System Overview' });
+    this.systemOverviewButton = page.getByRole('button', { name: 'System Overview', exact: true });
     this.systemOverview = this.systemOverviewButton.locator('..').getByRole('region');
     this.navigateToButton = this.systemOverview.getByRole('button', { name: 'Navigate to Podman Machine' });
     this.setUpPodmanButton = this.systemOverview.getByRole('button', { name: 'Set up Podman' });
