@@ -79,7 +79,7 @@ let screenUnsubscribe: (() => void) | undefined;
 
 // Typed as unknown at the module level; callers get proper typing via registerPrototype<T>().
 export const currentOverride: Readable<unknown | undefined> = derived(
-  [currentScreen, currentPhase],
+  [currentScreen, currentPhase, activePrototype],
   ([$screen, $phase]) => {
     const key = $phase > 0 ? `${$screen}:${$phase}` : $screen;
     return currentOverrides[key];
