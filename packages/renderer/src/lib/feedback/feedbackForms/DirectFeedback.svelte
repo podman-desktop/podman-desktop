@@ -85,7 +85,7 @@ async function openGitHub(): Promise<void> {
           size="1.5x"
           class="cursor-pointer {smileyRating === 1
             ? 'text-(--pd-action-button-primary-text)'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faFrown} />
       </button>
       <button aria-label="sad-smiley" onclick={(): void => selectSmiley(2)}>
@@ -93,7 +93,7 @@ async function openGitHub(): Promise<void> {
           size="1.5x"
           class="cursor-pointer {smileyRating === 2
             ? 'text-(--pd-action-button-primary-text)'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faMeh} />
       </button>
       <button aria-label="happy-smiley" onclick={(): void => selectSmiley(3)}>
@@ -101,7 +101,7 @@ async function openGitHub(): Promise<void> {
           size="1.5x"
           class="cursor-pointer {smileyRating === 3
             ? 'text-(--pd-action-button-primary-text)'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faSmile} />
       </button>
       <button aria-label="very-happy-smiley" onclick={(): void => selectSmiley(4)}>
@@ -109,7 +109,7 @@ async function openGitHub(): Promise<void> {
           size="1.5x"
           class="cursor-pointer {smileyRating === 4
             ? 'text-(--pd-action-button-primary-text)'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faGrinStars} />
       </button>
     </div>
