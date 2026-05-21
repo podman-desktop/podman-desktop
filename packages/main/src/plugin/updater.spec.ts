@@ -224,6 +224,26 @@ test('expect init to register configuration', () => {
   expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
 });
 
+test('expect configuration description to use product name', () => {
+  vi.mocked(product).name = 'Custom Product Name';
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
+  const configurationNode = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]?.[0]?.[0];
+  expect(configurationNode?.id).toBe('preferences.update');
+  expect(configurationNode?.properties?.['preferences.update.reminder']?.description).toBe(
+    'Configure whether you receive update reminders when starting Custom Product Name',
+  );
+});
+
 describe('differential download', () => {
   type TestCase = {
     platform: 'windows' | 'macos';
