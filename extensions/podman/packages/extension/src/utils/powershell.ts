@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,16 @@ export interface PowerShellClient {
 }
 
 const PowerShell5Exe = 'powershell.exe';
+
+// Always prepend these flags so PowerShell never loads a user profile
+// (-NoProfile) and never blocks waiting for interactive input (-NonInteractive).
+// A slow or interactive profile is a known hang source during extension startup.
+const PS_FLAGS = ['-NoProfile', '-NonInteractive', '-Command'];
+
+function psArgs(script: string): string[] {
+  return [...PS_FLAGS, script];
+}
+
 class PowerShell5Client implements PowerShellClient {
   constructor(private telemetryLogger: extensionApi.TelemetryLogger) {}
 
@@ -39,9 +49,9 @@ class PowerShell5Client implements PowerShellClient {
       // set CurrentUICulture to force output in english
       const res = await extensionApi.process.exec(
         PowerShell5Exe,
-        [
+        psArgs(
           '[System.Console]::OutputEncoding = [System.Text.Encoding]::Unicode; (Get-WmiObject -Query "Select * from Win32_OptionalFeature where InstallState = \'1\'").Name | select-string VirtualMachinePlatform',
-        ],
+        ),
         { encoding: 'utf16le' },
       );
       telemetry['command'] = res.command;
@@ -68,9 +78,12 @@ class PowerShell5Client implements PowerShellClient {
 
   async isUserAdmin(): Promise<boolean> {
     try {
-      const { stdout: res } = await extensionApi.process.exec(PowerShell5Exe, [
-        '$null -ne (& "$env:WINDIR\\System32\\whoami.exe" /groups /fo csv | ConvertFrom-Csv | Where-Object {$_.SID -eq "S-1-5-32-544"})',
-      ]);
+      const { stdout: res } = await extensionApi.process.exec(
+        PowerShell5Exe,
+        psArgs(
+          '$null -ne (& "$env:WINDIR\\System32\\whoami.exe" /groups /fo csv | ConvertFrom-Csv | Where-Object {$_.SID -eq "S-1-5-32-544"})',
+        ),
+      );
       return res.trim() === 'True';
     } catch (err: unknown) {
       return false;
@@ -79,7 +92,7 @@ class PowerShell5Client implements PowerShellClient {
 
   async isHyperVInstalled(): Promise<boolean> {
     try {
-      await extensionApi.process.exec(PowerShell5Exe, ['Get-Service vmms']);
+      await extensionApi.process.exec(PowerShell5Exe, psArgs('Get-Service vmms'));
       return true;
     } catch (err: unknown) {
       return false;
@@ -88,7 +101,7 @@ class PowerShell5Client implements PowerShellClient {
 
   async isHyperVRunning(): Promise<boolean> {
     try {
-      const result = await extensionApi.process.exec(PowerShell5Exe, ['@(Get-Service vmms).Status']);
+      const result = await extensionApi.process.exec(PowerShell5Exe, psArgs('@(Get-Service vmms).Status'));
       return result.stdout === 'Running';
     } catch (err: unknown) {
       return false;
@@ -97,9 +110,12 @@ class PowerShell5Client implements PowerShellClient {
 
   async isRunningElevated(): Promise<boolean> {
     try {
-      const { stdout: res } = await extensionApi.process.exec(PowerShell5Exe, [
-        '(New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)',
-      ]);
+      const { stdout: res } = await extensionApi.process.exec(
+        PowerShell5Exe,
+        psArgs(
+          '(New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)',
+        ),
+      );
       return res.trim() === 'True';
     } catch (err: unknown) {
       return false;
