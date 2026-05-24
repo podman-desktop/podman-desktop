@@ -201,3 +201,45 @@ test('should register remote connection with tunnel error', async () => {
   );
   expect(subscriptions).toHaveLength(1);
 });
+
+test('should use default ssh port when remote connection URI has no port', async () => {
+  const testProvider = {
+    registerContainerProviderConnection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  } as unknown as extensionApi.Provider;
+  const podmanRemoteConnections = new TestPodmanRemoteConnections(
+    { subscriptions: [] } as unknown as extensionApi.ExtensionContext,
+    testProvider,
+  );
+  const sshTunnel = {
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    status: vi.fn(() => 'started'),
+  } as unknown as PodmanRemoteSshTunnel;
+
+  vi.mocked(extensionApi.configuration.getConfiguration).mockReturnValue({
+    get: () => undefined,
+  } as unknown as extensionApi.Configuration);
+  vi.spyOn(fs, 'readFileSync').mockReturnValue('file');
+  vi.mocked(extensionApi.process.exec).mockResolvedValue({
+    stdout: JSON.stringify([
+      {
+        IsMachine: false,
+        URI: 'ssh://dummy@127.0.0.1/run/podman/podman.sock',
+        Identity: '/tmp/fakepath',
+        Name: 'RemoteSystemConnection1',
+      },
+    ]),
+  } as unknown as extensionApi.RunResult);
+  const createTunnelSpy = vi.spyOn(podmanRemoteConnections, 'createTunnel').mockReturnValue(sshTunnel);
+
+  await podmanRemoteConnections.refreshRemoteConnections();
+
+  expect(createTunnelSpy).toHaveBeenCalledWith(
+    '127.0.0.1',
+    22,
+    'dummy',
+    'file',
+    '/run/podman/podman.sock',
+    expect.any(String),
+  );
+});
