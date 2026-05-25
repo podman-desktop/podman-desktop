@@ -27,6 +27,7 @@ import { canRunKindTests } from '/@/setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
 import { test } from '/@/utility/fixtures';
 import {
+  applyKubernetesYaml,
   checkDeploymentReplicasInfo,
   checkKubernetesResourceState,
   createKubernetesResource,
@@ -47,6 +48,7 @@ const SECRET_NAME: string = 'test-secret-resource';
 const SECRET_POD_NAME: string = 'test-pod-configmaps-secrets';
 const DEPLOYMENT_NAME: string = 'test-deployment-resource';
 const CRON_JOB_NAME: string = 'test-cronjob-resource';
+const APPLY_YAML_CONFIGMAP_NAME: string = 'test-apply-yaml-configmap';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,6 +93,14 @@ const CRON_JOB_YAML_PATH: string = path.resolve(
   'resources',
   'kubernetes',
   `${CRON_JOB_NAME}.yaml`,
+);
+const APPLY_YAML_CONFIGMAP_PATH: string = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  'resources',
+  'kubernetes',
+  `${APPLY_YAML_CONFIGMAP_NAME}.yaml`,
 );
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
@@ -267,6 +277,33 @@ test.describe
             page,
             KubernetesResources.ConfigMapsSecrets,
             CONFIG_MAP_NAME,
+            30_000,
+            'Delete ConfigMap?',
+          );
+        });
+      });
+
+    test.describe
+      .serial('Apply YAML button test', () => {
+        test('Apply a ConfigMap resource via Apply YAML button', async ({ page }) => {
+          await applyKubernetesYaml(
+            page,
+            KubernetesResources.ConfigMapsSecrets,
+            APPLY_YAML_CONFIGMAP_NAME,
+            APPLY_YAML_CONFIGMAP_PATH,
+          );
+          await checkKubernetesResourceState(
+            page,
+            KubernetesResources.ConfigMapsSecrets,
+            APPLY_YAML_CONFIGMAP_NAME,
+            KubernetesResourceState.Running,
+          );
+        });
+        test('Delete the ConfigMap applied via Apply YAML', async ({ page }) => {
+          await deleteKubernetesResource(
+            page,
+            KubernetesResources.ConfigMapsSecrets,
+            APPLY_YAML_CONFIGMAP_NAME,
             30_000,
             'Delete ConfigMap?',
           );

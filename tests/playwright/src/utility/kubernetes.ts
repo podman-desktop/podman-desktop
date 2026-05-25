@@ -121,6 +121,23 @@ function kubernetesResourceDialogTitle(resourceType: KubernetesResources): strin
   return title;
 }
 
+export async function applyKubernetesYaml(
+  page: Page,
+  resourceType: KubernetesResources,
+  resourceName: string,
+  resourceYamlPath: string,
+  timeout = 30_000,
+): Promise<void> {
+  return test.step(`Apply YAML for ${resourceType} resource: ${resourceName}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
+    await kubernetesResourcePage.applyYaml(resourceYamlPath, timeout);
+    await playExpect(kubernetesResourcePage.heading).toBeVisible();
+    await playExpect.poll(async () => kubernetesResourcePage.getRowByName(resourceName)).toBeTruthy();
+  });
+}
+
 export async function checkDeploymentReplicasInfo(
   page: Page,
   resourceType: KubernetesResources,
