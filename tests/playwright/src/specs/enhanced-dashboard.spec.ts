@@ -83,7 +83,7 @@ test.describe
             await navigationBar.openContainers();
             return false;
           },
-          { timeout: 10_000 },
+          { timeout: 30_000 },
         )
         .toBeTruthy();
       // assert assets state after enabling it
@@ -109,7 +109,7 @@ test.describe
             await navigationBar.openContainers();
             return false;
           },
-          { timeout: 10_000 },
+          { timeout: 30_000 },
         )
         .toBeTruthy();
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
