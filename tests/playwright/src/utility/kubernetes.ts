@@ -134,7 +134,9 @@ export async function applyKubernetesYaml(
     const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
     await kubernetesResourcePage.applyYaml(resourceYamlPath, timeout);
     await playExpect(kubernetesResourcePage.heading).toBeVisible();
-    await playExpect.poll(async () => kubernetesResourcePage.getRowByName(resourceName)).toBeTruthy();
+    await playExpect
+      .poll(async () => kubernetesResourcePage.getRowByName(resourceName), { timeout: timeout })
+      .toBeTruthy();
   });
 }
 
