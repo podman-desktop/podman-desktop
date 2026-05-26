@@ -19,7 +19,7 @@
 import '@testing-library/jest-dom/vitest';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import { beforeAll, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
@@ -48,8 +48,13 @@ beforeAll(() => {
 const fakedManifest: ImageInfoUI = {
   id: 'dummy',
   name: 'dummy',
+  engineId: 'engine1',
   isManifest: true,
 } as unknown as ImageInfoUI;
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 test('Expect Delete Manifest to be there', async () => {
   render(ManifestActions, { manifest: fakedManifest, onPushManifest: vi.fn() });
@@ -88,5 +93,34 @@ test('Expect withConfirmation to be called with delete variant when clicking Del
       title: 'Delete Manifest?',
       variant: 'delete',
     });
+  });
+});
+
+test('Expect error dialog with correct message when manifest deletion fails', async () => {
+  const errorMessage = 'manifest not found';
+  vi.mocked(withConfirmation).mockImplementation(f => f());
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.removeManifest).mockRejectedValueOnce(new Error(errorMessage));
+  getContributedMenusMock.mockResolvedValue([]);
+
+  const manifest: ImageInfoUI = {
+    ...fakedManifest,
+    name: 'my-manifest',
+    status: 'UNUSED',
+  } as unknown as ImageInfoUI;
+
+  render(ManifestActions, { manifest, onPushManifest: vi.fn() });
+
+  const button = screen.getByRole('button', { name: 'Delete Manifest' });
+  await fireEvent.click(button);
+
+  await waitFor(() => {
+    expect(window.showMessageBox).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Delete Manifest Failed',
+        message: `Error while deleting manifest: ${errorMessage}`,
+        type: 'error',
+      }),
+    );
   });
 });

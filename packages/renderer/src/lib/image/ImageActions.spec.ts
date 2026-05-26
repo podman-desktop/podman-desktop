@@ -82,8 +82,13 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('Expect showMessageBox to be called when error occurs', async () => {
+test('Expect error dialog with correct message when image deletion fails', async () => {
+  const { ImageUtils } = await import('./image-utils');
+  vi.mocked(ImageUtils).mockImplementation(function (this: Record<string, unknown>) {
+    this.deleteImage = vi.fn().mockRejectedValue(new Error('Cannot delete image in test'));
+  } as unknown as () => InstanceType<typeof ImageUtils>);
   vi.mocked(withConfirmation).mockImplementation(f => f());
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   getContributedMenusMock.mockResolvedValue([]);
 
   const image: ImageInfoUI = new Image('dummy', 'UNUSED') as unknown as ImageInfoUI;
@@ -100,6 +105,14 @@ test('Expect showMessageBox to be called when error occurs', async () => {
   await waitFor(() => {
     expect(window.showMessageBox).toHaveBeenCalledOnce();
   });
+
+  expect(window.showMessageBox).toHaveBeenCalledWith(
+    expect.objectContaining({
+      title: 'Delete Image Failed',
+      message: 'Error while deleting image: Cannot delete image in test',
+      type: 'error',
+    }),
+  );
 
   expect(image.status).toBe('DELETING');
 });
