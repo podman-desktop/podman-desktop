@@ -27,16 +27,11 @@ import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
 import ImageActions from '/@/lib/image/ImageActions.svelte';
 import type { ImageInfoUI } from '/@/lib/image/ImageInfoUI';
 
+import { ImageUtils } from './image-utils';
+
 const getContributedMenusMock = vi.fn();
 
-vi.mock(import('./image-utils'), () => {
-  return {
-    ImageUtils: vi.fn().mockImplementation(() => ({
-      deleteImage: vi.fn().mockRejectedValue(new Error('Cannot delete image in test')),
-    })),
-  };
-});
-
+vi.mock(import('./image-utils'));
 vi.mock(import('/@/lib/dialogs/messagebox-utils'), () => ({
   withConfirmation: vi.fn(),
 }));
@@ -80,13 +75,11 @@ class Image {
 
 beforeEach(() => {
   vi.resetAllMocks();
+
+  vi.mocked(ImageUtils.prototype.deleteImage).mockRejectedValue(new Error('Cannot delete image in test'));
 });
 
 test('Expect error dialog with correct message when image deletion fails', async () => {
-  const { ImageUtils } = await import('./image-utils');
-  vi.mocked(ImageUtils).mockImplementation(function (this: Record<string, unknown>) {
-    this.deleteImage = vi.fn().mockRejectedValue(new Error('Cannot delete image in test'));
-  } as unknown as () => InstanceType<typeof ImageUtils>);
   vi.mocked(withConfirmation).mockImplementation(f => f());
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
   getContributedMenusMock.mockResolvedValue([]);
