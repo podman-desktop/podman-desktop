@@ -181,7 +181,6 @@ async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<
   registry.source = defaultProviderSourceName;
 
   const newRegistry = registry === newRegistryRequest;
-  console.log(newRegistry);
   if (newRegistry) {
     registry.serverUrl = registry.serverUrl.trim();
     registry.username = registry.username.trim();

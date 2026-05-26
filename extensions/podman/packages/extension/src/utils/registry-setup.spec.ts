@@ -45,8 +45,8 @@ export class TestRegistrySetup extends RegistrySetup {
     return super.writeAuthFile(data);
   }
 
-  publicUpdateRegistriesConf(registry: extensionApi.Registry): Promise<void> {
-    return super.updateRegistriesConf(registry);
+  publicUpdateRegistriesConf(registry: extensionApi.Registry, isNew = false): Promise<void> {
+    return super.updateRegistriesConf(registry, isNew);
   }
 
   publicRemoveFromRegistriesConf(registry: extensionApi.Registry): Promise<void> {
@@ -276,19 +276,19 @@ test('writeAuthFile should call writeFile and chmod with 0o600', async () => {
   expect(chmod).toHaveBeenCalledWith(authJsonLocation, 0o600);
 });
 
-test('updateRegistriesConf should add a new insecure registry', async () => {
+test('updateRegistriesConf should add a new insecure registry when it does not exist', async () => {
   const emptyConfig: RegistryConfigurationFile = { registry: [] };
   vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockResolvedValue(emptyConfig);
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'myregistry.io',
+    serverUrl: 'https://myregistry.io',
     username: 'user',
     secret: 'pass',
     insecure: true,
   };
 
-  await registrySetup.publicUpdateRegistriesConf(registry);
+  await registrySetup.publicUpdateRegistriesConf(registry, true); // isNew=true
 
   expect(mockRegistryConfiguration.readRegistriesConfContent).toHaveBeenCalled();
   expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
@@ -301,7 +301,7 @@ test('updateRegistriesConf should add a new insecure registry', async () => {
   });
 });
 
-test('updateRegistriesConf should update an existing registry', async () => {
+test('updateRegistriesConf should update an existing registry when isNew=false', async () => {
   const existingConfig: RegistryConfigurationFile = {
     registry: [
       {
@@ -314,13 +314,13 @@ test('updateRegistriesConf should update an existing registry', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'myregistry.io',
+    serverUrl: 'https://myregistry.io',
     username: 'user',
     secret: 'pass',
     insecure: true,
   };
 
-  await registrySetup.publicUpdateRegistriesConf(registry);
+  await registrySetup.publicUpdateRegistriesConf(registry, false); // isNew=false
 
   expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
     registry: [
@@ -330,6 +330,37 @@ test('updateRegistriesConf should update an existing registry', async () => {
       },
     ],
   });
+});
+
+test('updateRegistriesConf should warn and skip when new registry already exists in file', async () => {
+  const existingConfig: RegistryConfigurationFile = {
+    registry: [
+      {
+        location: 'myregistry.io',
+        insecure: false,
+        blocked: true,
+      },
+    ],
+  };
+  vi.mocked(mockRegistryConfiguration.readRegistriesConfContent).mockResolvedValue(existingConfig);
+
+  const registry: extensionApi.Registry = {
+    source: 'podman',
+    serverUrl: 'https://myregistry.io',
+    username: 'user',
+    secret: 'pass',
+    insecure: true,
+  };
+
+  await registrySetup.publicUpdateRegistriesConf(registry, true); // isNew=true
+
+  // Should warn
+  expect(consoleWarnMock).toHaveBeenCalledWith(
+    expect.stringContaining('Registry myregistry.io already exists in registries.conf'),
+  );
+
+  // Should NOT save (existing config should remain unchanged)
+  expect(mockRegistryConfiguration.saveRegistriesConfContent).not.toHaveBeenCalled();
 });
 
 test('updateRegistriesConf should handle serverUrl without protocol', async () => {
@@ -344,7 +375,7 @@ test('updateRegistriesConf should handle serverUrl without protocol', async () =
     insecure: false,
   };
 
-  await registrySetup.publicUpdateRegistriesConf(registry);
+  await registrySetup.publicUpdateRegistriesConf(registry, true); // isNew=true
 
   expect(mockRegistryConfiguration.saveRegistriesConfContent).toHaveBeenCalledWith({
     registry: [
@@ -356,7 +387,7 @@ test('updateRegistriesConf should handle serverUrl without protocol', async () =
   });
 });
 
-test('removeFromRegistriesConf should remove a registry', async () => {
+test('removeFromRegistriesConf should remove a registry and strip protocol', async () => {
   const existingConfig: RegistryConfigurationFile = {
     registry: [
       {
@@ -373,7 +404,7 @@ test('removeFromRegistriesConf should remove a registry', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'myregistry.io',
+    serverUrl: 'https://myregistry.io',
     username: 'user',
     secret: 'pass',
   };
@@ -397,17 +428,17 @@ test('updateRegistriesConf should handle errors gracefully', async () => {
 
   const registry: extensionApi.Registry = {
     source: 'podman',
-    serverUrl: 'myregistry.io',
+    serverUrl: 'https://myregistry.io',
     username: 'user',
     secret: 'pass',
   };
 
   // Should not throw, but log error
-  await registrySetup.publicUpdateRegistriesConf(registry);
+  await registrySetup.publicUpdateRegistriesConf(registry, true);
 
   expect(consoleErroMock).toHaveBeenCalledWith(
     'Error updating registries.conf for registry',
-    'myregistry.io',
+    'https://myregistry.io',
     expect.any(Error),
   );
   expect(mockRegistryConfiguration.saveRegistriesConfContent).not.toHaveBeenCalled();

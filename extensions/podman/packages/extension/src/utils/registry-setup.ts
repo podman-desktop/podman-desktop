@@ -148,7 +148,7 @@ export class RegistrySetup {
         }
 
         // Update registries.conf with the registry configuration
-        await this.updateRegistriesConf(registry);
+        await this.updateRegistriesConf(registry, true);
       }
     });
 
@@ -185,7 +185,7 @@ export class RegistrySetup {
         await this.writeAuthFile(JSON.stringify(authFile, undefined, 8));
 
         // Update registries.conf with the updated registry configuration
-        await this.updateRegistriesConf(registry);
+        await this.updateRegistriesConf(registry, false);
       }
     });
 
@@ -233,31 +233,48 @@ export class RegistrySetup {
 
   /**
    * Updates the registries.conf file to add or update a registry entry.
-   * This ensures the registry is configured for insecure access if needed.
+   *
+   * For new registries (isNew=true):
+   *   - If registry already exists in registries.conf, warns about conflict and does NOT modify the file
+   *   - If registry doesn't exist, adds it to registries.conf
+   *
+   * For existing registries (isNew=false):
+   *   - Updates the registry entry in registries.conf
+   *
    */
-  protected async updateRegistriesConf(registry: extensionApi.Registry): Promise<void> {
+  protected async updateRegistriesConf(registry: extensionApi.Registry, isNew = false): Promise<void> {
     try {
       // Read current registries.conf content
       const configFileContent = await this.registryConfiguration.readRegistriesConfContent();
 
+      // Extract the location from serverUrl (remove protocol if present)
+      const location = registry.serverUrl.replace(/^https?:\/\//, '');
+
       // Check if registry already exists in the configuration
       const existingIndex = configFileContent.registry.findIndex(
-        (entry: RegistryConfigurationEntry) => entry.location === registry.serverUrl,
+        (entry: RegistryConfigurationEntry) => entry.location === location,
       );
 
       const registryEntry: RegistryConfigurationEntry = {
-        location: registry.serverUrl,
+        location,
         insecure: registry.insecure ?? false,
       };
 
       if (existingIndex >= 0) {
-        // Update existing entry
+        // If this is a new registry and it already exists in the file, warn and don't modify
+        if (isNew) {
+          console.warn(
+            `Registry ${location} already exists in registries.conf.\nSkipping to avoid conflicts. Please resolve manually by editing registries.conf.`,
+          );
+          return;
+        }
+
         configFileContent.registry[existingIndex] = {
           ...configFileContent.registry[existingIndex],
           ...registryEntry,
         };
       } else {
-        // Add new entry
+        // Registry doesn't exist, add new entry
         configFileContent.registry.push(registryEntry);
       }
 
@@ -276,9 +293,12 @@ export class RegistrySetup {
       // Read current registries.conf content
       const configFileContent = await this.registryConfiguration.readRegistriesConfContent();
 
+      // Extract the location from serverUrl (remove protocol if present)
+      const location = registry.serverUrl.replace(/^https?:\/\//, '');
+
       // Filter out the registry to remove
       configFileContent.registry = configFileContent.registry.filter(
-        (entry: RegistryConfigurationEntry) => entry.location !== registry.serverUrl,
+        (entry: RegistryConfigurationEntry) => entry.location !== location,
       );
 
       // Save updated configuration
