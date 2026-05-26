@@ -114,6 +114,10 @@ class TestColorRegistry extends ColorRegistry {
   override initProgressBar(): void {
     super.initProgressBar();
   }
+
+  override initActionButton(): void {
+    super.initActionButton();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -1739,6 +1743,35 @@ describe('initProgressBar', () => {
       light: tailwindColorPalette.accent1[500],
       hcDark: tailwindColorPalette.white,
       hcLight: tailwindColorPalette.black,
+    });
+  });
+});
+
+describe('initActionButton', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+
+  beforeEach(() => {
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+
+    colorRegistry.initActionButton();
+  });
+
+  test('registers action-button-primary-text with hcDark and hcLight', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('action-button-primary-text', {
+      dark: tailwindColorPalette.gray[275],
+      light: tailwindColorPalette.accent1[500],
+      hcDark: tailwindColorPalette.accent1[500],
+      hcLight: tailwindColorPalette.accent1[700],
+    });
+  });
+
+  test('registers action-button-primary-hover-text with hcDark and hcLight', () => {
+    expect(spyOnRegisterColor).toBeCalledWith('action-button-primary-hover-text', {
+      dark: tailwindColorPalette.gray[275],
+      light: tailwindColorPalette.accent1[500],
+      hcDark: tailwindColorPalette.accent1[500],
+      hcLight: tailwindColorPalette.accent1[700],
     });
   });
 });

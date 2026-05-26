@@ -37,7 +37,7 @@ test('Check button styling', async () => {
   expect(button).toHaveClass('no-underline');
   expect(button).toHaveClass('cursor-pointer');
   expect(button).toHaveClass('outline-transparent');
-  expect(button).toHaveClass('focus:outline-[var(--pd-button-primary-hover-bg)]');
+  expect(button).toHaveClass('focus:outline-[var(--pd-button-focus-ring)]');
 
   const img = within(button).getByRole('img', { hidden: true });
   expect(img).toBeInTheDocument();
