@@ -79,9 +79,7 @@ test('Expect confirmation dialog to be displayed if content changed', async () =
     });
   });
 
-  // Get the last call (after onMount completed)
-  const lastCallIndex = vi.mocked(DirectFeedback).mock.calls.length - 1;
-  const { onCloseForm, contentChange } = vi.mocked(DirectFeedback).mock.calls[lastCallIndex][1];
+  const { onCloseForm, contentChange } = vi.mocked(DirectFeedback).mock.calls[0][1];
 
   // 1. simulate content change
   contentChange(true);
@@ -113,9 +111,7 @@ test('Expect no confirmation dialog to be displayed if content has not changed',
     });
   });
 
-  // Get the last call (after onMount completed)
-  const lastCallIndex = vi.mocked(DirectFeedback).mock.calls.length - 1;
-  const { onCloseForm } = vi.mocked(DirectFeedback).mock.calls[lastCallIndex][1];
+  const { onCloseForm } = vi.mocked(DirectFeedback).mock.calls[0][1];
 
   // 2. close
   onCloseForm(true);
