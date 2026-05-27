@@ -492,8 +492,8 @@ export async function deletePodmanMachineFromCLI(podmanMachineName: string): Pro
 export async function resetPodmanMachinesFromCLI(): Promise<void> {
   return test.step('Reset Podman machine from CLI', () => {
     // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
-    const resetOutput = execSync('podman machine reset -f').toString();
-    console.log(`podman machine reset output: ${resetOutput}`);
+    execSync('podman machine reset -f');
+    console.log('podman machine reset completed successfully');
   });
 }
 
