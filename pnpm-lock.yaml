@@ -22,7 +22,7 @@ overrides:
   compression>on-headers: ^1.1.0
   electron-builder-notarize>js-yaml: ^3.14.2
   '@kubernetes/client-node>js-yaml': ^4.1.1
-  tmp-promise>tmp: ^0.2.5
+  tmp-promise>tmp: ^0.2.6
   tar: ^7.5.3
   cheerio>undici: ^7.18.2
   minimatch>@isaacs/brace-expansion: ^5.0.1
@@ -11505,10 +11505,6 @@ packages:
 
   tmp-promise@3.0.3:
     resolution: {integrity: sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==}
-
-  tmp@0.2.5:
-    resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
-    engines: {node: '>=14.14'}
 
   tmp@0.2.6:
     resolution: {integrity: sha512-5sJPdPjfI5Kx+qbrDesxkglRBxW//g7hCsqspEjwkewGvBMGIKMOTKzLt1hFVJzyadba3lDUN20O9qhvbQUSTA==}
@@ -25375,9 +25371,7 @@ snapshots:
 
   tmp-promise@3.0.3:
     dependencies:
-      tmp: 0.2.5
-
-  tmp@0.2.5: {}
+      tmp: 0.2.6
 
   tmp@0.2.6: {}
 
