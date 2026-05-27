@@ -1202,11 +1202,11 @@ importers:
   website-argos:
     devDependencies:
       '@argos-ci/cli':
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: ^5.0.3
+        version: 5.0.3
       '@argos-ci/playwright':
-        specifier: ^7.0.3
-        version: 7.0.3
+        specifier: ^7.0.4
+        version: 7.0.4
       '@playwright/test':
         specifier: 1.60.0
         version: 1.60.0
@@ -1326,25 +1326,25 @@ packages:
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
-  '@argos-ci/api-client@0.20.1':
-    resolution: {integrity: sha512-nQRalmeY08eiC+OTQE689F3M2H0ywAq14gYyZvVdRJenHjhpqCqaSn2KSd5oTVaCGQlgjhCafNG9cYH2P68dwg==}
+  '@argos-ci/api-client@0.21.0':
+    resolution: {integrity: sha512-ZCGjjjFfPhuZvw5UcMDYebdav8jhItMtidbAuMnjj+5SpKhjeamIREjyFcFRYwlIkmQdUmRBxTxOBbKhmqDyDg==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/browser@6.1.0':
     resolution: {integrity: sha512-9R508bY/qzZ14ZkddAfRL9Oq5K9gPRlLaUfv3SFGoKGSWlufsHnVvTTeHAAO9kLIXxJ3/bTW0MxLQD93Fs9DqQ==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/cli@5.0.2':
-    resolution: {integrity: sha512-HCE/Fj23j/kFr/Y3L/XFlarj0xJnHBbg4kLQ/7NlsIMF5/yfwF3zeg/5RUuCKQOIZwF6BVixI+lrG3Zalws/pg==}
+  '@argos-ci/cli@5.0.3':
+    resolution: {integrity: sha512-Jlksg4BwrX5r7qAfJgCSUGjlQR9tBQBr49DNHuhTVEzKvPHhBhD1ee9Y4pdvRljPUDRUIaLS2AJwKvHHaim0Xg==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@argos-ci/core@6.0.2':
-    resolution: {integrity: sha512-CZydhMUQrgVOalyaY6Z1jy9SF2hhAkOJQqus4q50KY+9pDsOFDzQdcov+kgPHO2ARJTD3A0teV8a4lyoevyU2Q==}
+  '@argos-ci/core@6.0.3':
+    resolution: {integrity: sha512-m7HcqK58iJue/3R/FFB0dK9YkSgHXk6l8JH4UWBp/wepetvdqJJSNyHiLEHmGXIswJs1g6WhMnDMr+F0PcouYg==}
     engines: {node: '>=22.0.0'}
 
-  '@argos-ci/playwright@7.0.3':
-    resolution: {integrity: sha512-/fkODaGSl5Emhy4P6HBrtHsX8TR8V9k0myWtyKR3Qk/TJfJUk2Kd39ARw0WUgOkLvCPNFAVM4W5VmTpRc0y2JQ==}
+  '@argos-ci/playwright@7.0.4':
+    resolution: {integrity: sha512-zYBkeziRqgLubhlhhRMOQkf5p72aPguURJrNi/bAPUr3SPWJbgHSvxXP9Ta0avpDKfc9q2H6v0e7xym8FQNwLQ==}
     engines: {node: '>=22.0.0'}
 
   '@argos-ci/util@4.0.0':
@@ -11510,6 +11510,10 @@ packages:
     resolution: {integrity: sha512-voyz6MApa1rQGUxT3E+BK7/ROe8itEx7vD8/HEvt4xwXucvQ5G5oeEiHkmHZJuBO21RpOf+YYm9MOivj709jow==}
     engines: {node: '>=14.14'}
 
+  tmp@0.2.6:
+    resolution: {integrity: sha512-5sJPdPjfI5Kx+qbrDesxkglRBxW//g7hCsqspEjwkewGvBMGIKMOTKzLt1hFVJzyadba3lDUN20O9qhvbQUSTA==}
+    engines: {node: '>=14.14'}
+
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
@@ -12620,7 +12624,7 @@ snapshots:
       package-manager-detector: 1.3.0
       tinyexec: 1.1.2
 
-  '@argos-ci/api-client@0.20.1':
+  '@argos-ci/api-client@0.21.0':
     dependencies:
       debug: 4.4.3
       openapi-fetch: 0.17.0
@@ -12630,10 +12634,10 @@ snapshots:
 
   '@argos-ci/browser@6.1.0': {}
 
-  '@argos-ci/cli@5.0.2':
+  '@argos-ci/cli@5.0.3':
     dependencies:
-      '@argos-ci/api-client': 0.20.1
-      '@argos-ci/core': 6.0.2
+      '@argos-ci/api-client': 0.21.0
+      '@argos-ci/core': 6.0.3
       commander: 14.0.3
       open: 11.0.0
       ora: 9.4.0
@@ -12641,23 +12645,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/core@6.0.2':
+  '@argos-ci/core@6.0.3':
     dependencies:
-      '@argos-ci/api-client': 0.20.1
+      '@argos-ci/api-client': 0.21.0
       '@argos-ci/util': 4.0.0
       convict: 6.2.5
       debug: 4.4.3
       fast-glob: 3.3.3
       mime-types: 3.0.2
       sharp: 0.34.5
-      tmp: 0.2.5
+      tmp: 0.2.6
     transitivePeerDependencies:
       - supports-color
 
-  '@argos-ci/playwright@7.0.3':
+  '@argos-ci/playwright@7.0.4':
     dependencies:
       '@argos-ci/browser': 6.1.0
-      '@argos-ci/core': 6.0.2
+      '@argos-ci/core': 6.0.3
       '@argos-ci/util': 4.0.0
       chalk: 5.6.2
       debug: 4.4.3
@@ -25374,6 +25378,8 @@ snapshots:
       tmp: 0.2.5
 
   tmp@0.2.5: {}
+
+  tmp@0.2.6: {}
 
   to-regex-range@5.0.1:
     dependencies:
