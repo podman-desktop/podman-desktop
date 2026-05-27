@@ -27,6 +27,7 @@ export async function removeFolderIfExists(path: string): Promise<void> {
 
   if (existsSync(path)) {
     console.log('Folder found, removing...');
+    // eslint-disable-next-line n/no-sync
     rmSync(path, { recursive: true, force: true, maxRetries: 5 });
   }
 }
