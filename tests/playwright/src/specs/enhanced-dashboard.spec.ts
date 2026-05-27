@@ -62,7 +62,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe
-  .serial('Enhanced dashboard experimental feature', () => {
+  .serial('Enhanced dashboard experimental feature', { tag: '@experimental' }, () => {
     test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
       // assert assets state before enabling it (disabled by default for the time being)
       await setEnhancedDashboardFeature(page, navigationBar, false);
