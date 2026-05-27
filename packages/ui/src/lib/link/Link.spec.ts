@@ -68,3 +68,51 @@ test('Check on:click action', async () => {
 
   expect(clickMock).toBeCalledTimes(1);
 });
+
+test('Link should be keyboard focusable', async () => {
+  render(Link, { children: SNIPPET_MOCK });
+
+  const link = screen.getByRole('link');
+  expect(link).toBeInTheDocument();
+  expect(link).toHaveAttribute('tabindex', '0');
+});
+
+test('Link should be activated by Enter key', async () => {
+  const clickMock = vi.fn();
+  render(Link, { onclick: clickMock, children: SNIPPET_MOCK });
+
+  const link = screen.getByRole('link');
+  expect(link).toBeInTheDocument();
+  expect(clickMock).not.toHaveBeenCalled();
+
+  await fireEvent.keyDown(link, { key: 'Enter' });
+
+  expect(clickMock).toBeCalledTimes(1);
+});
+
+test('Link should be activated by Space key', async () => {
+  const clickMock = vi.fn();
+  render(Link, { onclick: clickMock, children: SNIPPET_MOCK });
+
+  const link = screen.getByRole('link');
+  expect(link).toBeInTheDocument();
+  expect(clickMock).not.toHaveBeenCalled();
+
+  await fireEvent.keyDown(link, { key: ' ' });
+
+  expect(clickMock).toBeCalledTimes(1);
+});
+
+test('Link should not be activated by other keys', async () => {
+  const clickMock = vi.fn();
+  render(Link, { onclick: clickMock, children: SNIPPET_MOCK });
+
+  const link = screen.getByRole('link');
+  expect(link).toBeInTheDocument();
+
+  await fireEvent.keyDown(link, { key: 'a' });
+  await fireEvent.keyDown(link, { key: 'Escape' });
+  await fireEvent.keyDown(link, { key: 'Tab' });
+
+  expect(clickMock).not.toHaveBeenCalled();
+});
