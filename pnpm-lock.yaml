@@ -50,6 +50,7 @@ overrides:
   fast-uri: '>=3.1.1'
   '@babel/plugin-transform-modules-systemjs': '>=7.29.4'
   mermaid: '>=11.15.0'
+  ws@^8: '>=8.20.1'
 
 patchedDependencies:
   docker-modem:
@@ -79,7 +80,7 @@ importers:
         specifier: ^3.1.2
         version: 3.1.2
       ws:
-        specifier: 8.21.0
+        specifier: '>=8.20.1'
         version: 8.21.0
     devDependencies:
       '@biomejs/biome':
@@ -8398,7 +8399,7 @@ packages:
   isomorphic-ws@5.0.0:
     resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
     peerDependencies:
-      ws: '*'
+      ws: '>=8.20.1'
 
   istanbul-lib-coverage@3.2.2:
     resolution: {integrity: sha512-O8dpsF+r0WV/8MNRKfnmrtCWhuKjxrq2w+jpzBL5UZKTi2LeVWnWOmWRxFlesJONmc+wLAGvKQZEOanko0LFTg==}
@@ -12317,30 +12318,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.18.3:
-    resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
-  ws@8.19.0:
-    resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
   ws@8.21.0:
     resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
     engines: {node: '>=10.0.0'}
@@ -15476,7 +15453,7 @@ snapshots:
       '@types/stream-buffers': 3.0.7
       form-data: 4.0.4
       hpagent: 1.2.0
-      isomorphic-ws: 5.0.0(ws@8.18.3)
+      isomorphic-ws: 5.0.0(ws@8.21.0)
       js-yaml: 4.1.1
       jsonpath-plus: 10.3.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -15485,7 +15462,7 @@ snapshots:
       socks-proxy-agent: 8.0.5
       stream-buffers: 3.0.3
       tar-fs: 3.1.1
-      ws: 8.18.3
+      ws: 8.21.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -21468,10 +21445,6 @@ snapshots:
 
   isobject@3.0.1: {}
 
-  isomorphic-ws@5.0.0(ws@8.18.3):
-    dependencies:
-      ws: 8.18.3
-
   isomorphic-ws@5.0.0(ws@8.21.0):
     dependencies:
       ws: 8.21.0
@@ -24936,7 +24909,7 @@ snapshots:
       recast: 0.23.11
       semver: 7.8.1
       use-sync-external-store: 1.6.0(react@18.2.0)
-      ws: 8.19.0
+      ws: 8.21.0
     optionalDependencies:
       prettier: 3.8.3
     transitivePeerDependencies:
@@ -26392,10 +26365,6 @@ snapshots:
       typedarray-to-buffer: 3.1.5
 
   ws@7.5.11: {}
-
-  ws@8.18.3: {}
-
-  ws@8.19.0: {}
 
   ws@8.21.0: {}
 
