@@ -464,8 +464,6 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
     } catch (error) {
       if (error instanceof Error && error.message.includes('already running')) {
         console.log('Default podman machine already started, skipping start.');
-      } else {
-        throw error;
       }
     }
   });
@@ -480,8 +478,6 @@ export async function deletePodmanMachineFromCLI(podmanMachineName: string): Pro
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM does not exist')) {
         console.log(`Podman machine [${podmanMachineName}] does not exist, skipping deletion.`);
-      } else {
-        throw error;
       }
     }
   });
