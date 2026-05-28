@@ -585,6 +585,40 @@ describe('exec', () => {
     expect(stdout).toContain('Hello, World!');
     expect(setEncodingMock).toBeCalledWith('utf16le');
   });
+
+  test('should set HOME to homedir on Windows when HOME is not set', async () => {
+    const command = 'echo';
+    const args = ['test'];
+
+    const originalHome = process.env['HOME'];
+    delete process.env['HOME'];
+
+    vi.mocked(isWindows).mockReturnValue(true);
+
+    const on = vi.fn().mockImplementationOnce((event: string, cb: (arg0: string) => string) => {
+      if (event === 'data') {
+        cb('test');
+      }
+    }) as unknown as Readable;
+    const spawnMock = vi.mocked(spawn).mockReturnValue({
+      stdout: { on, setEncoding: setEncodingMock },
+      stderr: { on, setEncoding: setEncodingMock },
+      on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+        if (event === 'close') {
+          cb(0);
+        }
+      }),
+    } as unknown as ChildProcess);
+
+    await exec.exec(command, args);
+
+    const spawnEnv = spawnMock.mock.calls[0]![2]!.env as Record<string, string>;
+    expect(spawnEnv['HOME']).toBe(homedir());
+
+    if (originalHome !== undefined) {
+      process.env['HOME'] = originalHome;
+    }
+  });
 });
 
 describe('getInstallationPath', () => {

@@ -71,6 +71,10 @@ export class Exec {
       env['PATH'] = getInstallationPath(env['PATH']);
     }
 
+    if (isWindows() && !env['HOME']) {
+      env['HOME'] = homedir();
+    }
+
     // do we have an admin task ?
     // if yes, will use sudo-prompt on windows and osascript on mac and pkexec on linux
     if (options?.isAdmin) {
