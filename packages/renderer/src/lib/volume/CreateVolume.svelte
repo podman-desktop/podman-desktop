@@ -12,6 +12,7 @@ import { router } from 'tinro';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
+import { volumeListInfos } from '/@/stores/volumes';
 
 let providers: ProviderInfo[] = [];
 let providerConnections: ProviderContainerConnectionInfo[] = [];
@@ -31,10 +32,38 @@ onMount(async () => {
 
 let createVolumeInProgress = false;
 let createError: string | undefined = undefined;
+let volumeNameError: string | undefined = undefined;
+let invalidName = false;
 onDestroy(() => {});
+
+function checkVolumeName(event: Event & { currentTarget: HTMLInputElement }): void {
+  const nameValue = event.currentTarget.value;
+
+  const provider = selectedProvider;
+  if (!nameValue || !provider) {
+    volumeNameError = '';
+    invalidName = false;
+    return;
+  }
+
+  const volumeAlreadyExists = $volumeListInfos
+    .filter(vli => vli.engineId.endsWith(`.${provider.name}`))
+    .flatMap(vli => vli.Volumes)
+    .some(volume => volume.Name === nameValue);
+
+  if (volumeAlreadyExists) {
+    volumeNameError = `The name ${nameValue} already exists. Please choose a different name.`;
+    invalidName = true;
+  } else {
+    volumeNameError = '';
+    invalidName = false;
+  }
+}
 
 async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
   createError = undefined;
+  volumeNameError = '';
+  invalidName = false;
   createVolumeInProgress = true;
   try {
     await window.createVolume(providerConnectionInfo, { Name: volumeName });
@@ -68,7 +97,7 @@ export let volumeName = '';
     <div>
       <label for="containerBuildContextDirectory" class="block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
         >Volume name:</label>
-      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} required />
+      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} oninput={checkVolumeName} error={volumeNameError} required />
     </div>
     <div class:hidden={providerConnections.length < 2}>
       {#if providerConnections.length > 1}
@@ -95,7 +124,7 @@ export let volumeName = '';
         {@const connection = selectedProvider}
         <Button
           on:click={(): Promise<void> => createVolume(connection)}
-          disabled={createVolumeInProgress}
+          disabled={createVolumeInProgress || invalidName}
           class="w-full"
           inProgress={createVolumeInProgress}
           icon={faPlusCircle}>
