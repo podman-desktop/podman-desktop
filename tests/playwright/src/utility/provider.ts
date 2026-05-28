@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@
 import { PodmanVirtualizationProviders } from '/@/model/core/types';
 import { isMac, isWindows } from '/@/utility/platform';
 
-export const envProvider = process.env.CONTAINERS_MACHINE_PROVIDER;
-
 const PROVIDER_MAP: Record<string, PodmanVirtualizationProviders> = {
   wsl: PodmanVirtualizationProviders.WSL,
   hyperv: PodmanVirtualizationProviders.HyperV,
@@ -30,7 +28,8 @@ const PROVIDER_MAP: Record<string, PodmanVirtualizationProviders> = {
 };
 
 export function getVirtualizationProvider(): PodmanVirtualizationProviders | undefined {
-  return envProvider ? PROVIDER_MAP[envProvider?.toLowerCase()] : undefined;
+  const provider = process.env.CONTAINERS_MACHINE_PROVIDER;
+  return provider ? PROVIDER_MAP[provider.toLowerCase()] : undefined;
 }
 
 export function getDefaultVirtualizationProvider(): PodmanVirtualizationProviders {
