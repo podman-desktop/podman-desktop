@@ -563,9 +563,7 @@ $effect(() => {
                   role="group"
                   aria-label="Provider Configuration">
                   {#each displayMetrics as metric (metric.title)}
-                    <div class="mr-4">
-                      <Donut title={metric.title} value={metric.value} percent={metric.percent} />
-                    </div>
+                    <Donut title={metric.title} value={metric.value} percent={metric.percent} />
                   {/each}
                   {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
                     {connectionSetting.description}: {connectionSetting.value}
