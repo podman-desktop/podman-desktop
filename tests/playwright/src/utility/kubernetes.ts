@@ -61,14 +61,14 @@ export async function createKubernetesResource(
     // workaround for missing option to deploy kube yaml into cluster via UI
     // test kubectl is present
     try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
       const version = execSync('kubectl version').toString();
       console.log(`Kubectl version stdout: ${version}`);
     } catch (error) {
       throw new Error(`Kubectl is not installed: ${error}`);
     }
     try {
-      // eslint-disable-next-line sonarjs/os-command
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
       const kubectlApply = execSync(`kubectl apply -f ${resourceYamlPath}`).toString();
       console.log(`Kube yaml ${resourceYamlPath} applied successfully via cli: ${kubectlApply}`);
     } catch (error) {
