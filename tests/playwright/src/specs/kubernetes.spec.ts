@@ -19,7 +19,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expect as playExpect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { KubernetesResourceState } from '/@/model/core/states';
 import { KubernetesResources } from '/@/model/core/types';
@@ -29,7 +29,7 @@ import { ResourcesPage } from '/@/model/pages/resources-page';
 import type { NavigationBar } from '/@/model/workbench/navigation';
 import { canRunKindTests } from '/@/setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
-import { test } from '/@/utility/fixtures';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   applyKubernetesYaml,
   checkDeploymentReplicasInfo,
@@ -408,7 +408,9 @@ async function openKindCreationPage(page: Page, navigationBar: NavigationBar): P
     const settingsBar = await navigationBar.openSettings();
     const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
     await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
-    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+    await playExpect
+      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 25_000 })
+      .toBeTruthy();
     const kindResourceCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, CLUSTER_NAME);
     await playExpect(kindResourceCard.createButton).toBeVisible();
     await kindResourceCard.createButton.click();

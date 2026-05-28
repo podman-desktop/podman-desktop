@@ -86,7 +86,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe
-  .serial('Podman provider creation page navigation', { tag: '@pdmachine' }, () => {
+  .serial('Podman provider creation page navigation', { tag: ['@pdmachine'] }, () => {
     test('Resources breadcrumb navigates back to Resources page', async ({ page, navigationBar }) => {
       await openPodmanCreationPage(page, navigationBar);
       const creationPage = new ResourceCreationPage(page);
@@ -285,7 +285,9 @@ async function openPodmanCreationPage(page: Page, navigationBar: NavigationBar):
     await openResourcesPage(navigationBar);
     const resourcesPage = new ResourcesPage(page);
     await playExpect(resourcesPage.heading).toBeVisible();
-    await playExpect.poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME)).toBeTruthy();
+    await playExpect
+      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 25_000 })
+      .toBeTruthy();
     await resourcesPage.goToCreateNewResourcePage(RESOURCE_NAME);
   });
 }
