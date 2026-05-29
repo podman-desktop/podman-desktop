@@ -41,6 +41,9 @@ class TestNavigationItemsMenuBuilder extends NavigationItemsMenuBuilder {
   override buildNavigationToggleMenuItems(): MenuItemConstructorOptions[] {
     return super.buildNavigationToggleMenuItems();
   }
+  override getNavWidth(): number {
+    return super.getNavWidth();
+  }
 }
 
 beforeEach(() => {
@@ -151,6 +154,7 @@ describe('buildNavigationToggleMenuItems', async () => {
 
 describe('buildNavigationMenu', async () => {
   test('no items if no linktext', async () => {
+    getConfigurationMock.mockReturnValue({ get: () => 160 });
     const parameters = {} as unknown as ContextMenuParams;
 
     const menu = navigationItemsMenuBuilder.buildNavigationMenu(parameters);
@@ -159,9 +163,10 @@ describe('buildNavigationMenu', async () => {
   });
 
   test('no items if outside of range of navbar', async () => {
+    getConfigurationMock.mockReturnValue({ get: () => 160 });
     const parameters = {
       linkText: 'outside',
-      x: 0,
+      x: 200,
       y: 0,
     } as unknown as ContextMenuParams;
 
@@ -171,6 +176,7 @@ describe('buildNavigationMenu', async () => {
   });
 
   test('should call the build if inside range of navbar', async () => {
+    getConfigurationMock.mockReturnValue({ get: () => 160 });
     const spyMock = vi.spyOn(navigationItemsMenuBuilder, 'buildHideMenuItem');
     spyMock.mockReturnValue({} as MenuItemConstructorOptions);
     const parameters = {

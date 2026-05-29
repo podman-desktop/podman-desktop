@@ -54,11 +54,12 @@ export class AppearanceInit {
           default: 0,
           step: 0.1,
         },
-        [`${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationAppearance}`]: {
-          description: 'Select icon and title or just icon for navigation icons',
-          type: 'string',
-          enum: [AppearanceSettings.IconAndTitle, AppearanceSettings.Icon],
-          default: AppearanceSettings.IconAndTitle,
+        [`${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationBarWidth}`]: {
+          description: 'Width of the navigation bar in pixels. Drag the bar edge to resize.',
+          type: 'number',
+          minimum: 60,
+          maximum: 240,
+          default: 160,
         },
       },
     };

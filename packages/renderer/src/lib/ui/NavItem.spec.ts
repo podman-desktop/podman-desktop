@@ -85,9 +85,8 @@ test('Expect not to have selection styling', async () => {
   expect(element.firstChild).toBeInTheDocument();
   expect(element.firstChild).toHaveClass('border-l-[var(--pd-global-nav-bg)]');
   expect(element.firstChild).toHaveClass('hover:bg-[var(--pd-global-nav-icon-hover-bg)]');
-  expect(element.firstChild).toHaveClass('hover:border-[var(--pd-global-nav-icon-hover-bg)]');
+  expect(element.firstChild).toHaveClass('hover:border-l-[var(--pd-global-nav-icon-hover-bg)]');
   expect(element.firstChild).not.toHaveClass('border-l-[var(--pd-global-nav-icon-selected-highlight)]');
-  expect(element.firstChild).not.toHaveClass('px-2');
 });
 
 test('Expect in-section styling', async () => {
@@ -97,12 +96,11 @@ test('Expect in-section styling', async () => {
   const element = screen.getByLabelText(tooltip);
   expect(element).toBeInTheDocument();
   expect(element.firstChild).toBeInTheDocument();
-  expect(element.firstChild).toHaveClass('px-2');
+  expect(element.firstChild).toHaveClass('px-3.5');
   expect(element.firstChild).toHaveClass('hover:bg-[var(--pd-global-nav-icon-hover-bg)]');
   expect(element.firstChild).not.toHaveClass('border-[var(--pd-global-nav-bg)]');
   expect(element.firstChild).not.toHaveClass('border-l-[var(--pd-global-nav-bg)]');
   expect(element.firstChild).not.toHaveClass('border-l-[var(--pd-global-nav-icon-selected-highlight)]');
-  expect(element.firstChild).not.toHaveClass('hover:border-[var(--pd-global-nav-icon-hover-bg)]');
 });
 
 // class:hover:text-[color:var(--pd-global-nav-icon-hover)]="{!selected || inSection}"
@@ -116,11 +114,10 @@ test('Expect in-section selection styling', async () => {
   expect(element).toBeInTheDocument();
   expect(element.firstChild).toBeInTheDocument();
   expect(element.firstChild).toHaveClass('text-[color:var(--pd-global-nav-icon-selected)]');
-  expect(element.firstChild).toHaveClass('px-2');
+  expect(element.firstChild).toHaveClass('px-3.5');
   expect(element.firstChild).toHaveClass('hover:text-[color:var(--pd-global-nav-icon-hover)]');
   expect(element.firstChild).toHaveClass('hover:bg-[var(--pd-global-nav-icon-hover-bg)]');
   expect(element.firstChild).not.toHaveClass('border-l-[var(--pd-global-nav-bg)]');
-  expect(element.firstChild).not.toHaveClass('hover:border-[var(--pd-global-nav-icon-hover-bg)]');
 });
 
 test('Expect that having an onClick handler overrides href and works', async () => {
