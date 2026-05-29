@@ -38,6 +38,7 @@ import {
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
+import PreferencesManagedInput from './PreferencesManagedInput.svelte';
 import PreferencesProviderInstallationModal from './PreferencesProviderInstallationModal.svelte';
 import PreferencesResourcesRenderingCopyButton from './PreferencesResourcesRenderingCopyButton.svelte';
 import ProviderActionButtons from './ProviderActionButtons.svelte';
@@ -343,6 +344,12 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+// Goes through the provider to see if there are any properties which are "locked" and provide a simple true/false
+// this helps us determine if we should have a UI indicator if there is anything locked or not
+function hasLockedConfiguration(provider: ProviderInfo): boolean {
+  return properties.some(property => property.locked === true && property.extension?.id === provider.extensionId);
+}
+
 function handleUpdatePreflightChecks(checks: CheckStatus[]): CheckStatus[] {
   preflightChecks = checks;
   return checks;
@@ -476,9 +483,9 @@ $effect(() => {
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 flex"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)]">
+        <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)] flex flex-col">
           <!-- left col - provider icon/name + "create new" button -->
-          <div class="min-w-[170px] max-w-[200px] pr-5 py-2">
+          <div class="min-w-[170px] max-w-[200px] pr-5 py-2 flex flex-col flex-1">
             <div class="flex">
               {#if provider.images.icon}
                 {#if typeof provider.images.icon === 'string'}
@@ -503,6 +510,11 @@ $effect(() => {
               onUpdatePreflightChecks={handleUpdatePreflightChecks}
               isOnboardingEnabled={isOnboardingEnabled}
               hasAnyConfiguration={hasAnyConfiguration} />
+            {#if hasLockedConfiguration(provider)}
+              <div class="mt-auto text-(--pd-content-text)">
+                <PreferencesManagedInput />
+              </div>
+            {/if}
           </div>
         </div>
         <!-- providers columns -->
