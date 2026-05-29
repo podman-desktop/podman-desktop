@@ -7,7 +7,11 @@
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
-  "repository": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/lima",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/lima"
+  },
   "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/lima#readme",
   "engines": {
     "podman-desktop": "^0.0.1"

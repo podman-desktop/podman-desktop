@@ -7,7 +7,11 @@
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
-  "repository": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/kubectl-cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/kubectl-cli"
+  },
   "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/kubectl-cli#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
