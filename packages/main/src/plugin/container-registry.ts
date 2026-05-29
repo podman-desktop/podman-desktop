@@ -112,8 +112,8 @@ export interface InternalContainerProvider {
 
 interface JSONEvent {
   type: string;
-  status: string;
-  id: string;
+  status?: string;
+  id?: string;
   Type?: string;
   Action?: string;
   Actor?: { ID: string };
@@ -121,8 +121,8 @@ interface JSONEvent {
 
 @injectable()
 export class ContainerProviderRegistry {
-  private readonly _onEvent = new Emitter<JSONEvent>();
-  readonly onEvent: Event<JSONEvent> = this._onEvent.event;
+  private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
+  readonly onEvent: Event<containerDesktopAPI.ContainerJSONEvent> = this._onEvent.event;
 
   private readonly _onApiAttached = new Emitter<string>();
   readonly onApiAttached: Event<string> = this._onApiAttached.event;
