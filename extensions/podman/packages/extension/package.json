@@ -8,8 +8,8 @@
   "type": "module",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
-  "repository": "https://github.com/podman-desktop/podman-desktop",
-  "homepage": "https://github.com/podman-desktop/podman-desktop#readme",
+  "repository": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/podman/packages/extension",
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/podman/packages/extension#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
