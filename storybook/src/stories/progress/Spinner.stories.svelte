@@ -216,7 +216,7 @@ const accessibilityVariants: { heading: string; label?: string; containerClass?:
             <div class="flex flex-col">
               <div class="flex flex-row items-center h-fit">
                 <Spinner size="12px" label="Connection Status Icon" class="mr-1" />
-                <span class="text-[var(--pd-status-starting)]">Starting</span>
+                <span class="text-(--pd-status-starting)">Starting</span>
                 : Podman Machine
               </div>
             </div>
@@ -232,17 +232,17 @@ const accessibilityVariants: { heading: string; label?: string; containerClass?:
             <div class="flex flex-col">
               <div class="flex flex-row items-center h-fit">
                 <Spinner size="12px" label="Connection Status Icon" class="mr-1" />
-                <span class="text-[var(--pd-status-starting)]">Starting</span>
+                <span class="text-(--pd-status-starting)">Starting</span>
                 : Podman Machine
               </div>
               <div class="flex flex-row items-center h-fit">
-                <div class="fa-regular fa-circle-check max-h-3 mr-1 text-[var(--pd-status-running)]"></div>
-                <span class="text-[var(--pd-status-running)]">Running</span>
+                <div class="fa-regular fa-circle-check max-h-3 mr-1 text-(--pd-status-running)"></div>
+                <span class="text-(--pd-status-running)">Running</span>
                 : Docker Desktop
               </div>
               <div class="flex flex-row items-center h-fit">
                 <Spinner size="12px" label="Connection Status Icon" class="mr-1" />
-                <span class="text-[var(--pd-status-terminated)]">Stopping</span>
+                <span class="text-(--pd-status-terminated)">Stopping</span>
                 : Lima VM
               </div>
             </div>
