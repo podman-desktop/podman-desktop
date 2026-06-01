@@ -26,7 +26,7 @@ onMount(async () => {
     .flat()
     .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
-  const selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
+  selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
   selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
 });
 
@@ -36,12 +36,9 @@ let volumeNameError: string | undefined = undefined;
 let invalidName = false;
 onDestroy(() => {});
 
-function checkVolumeName(event: Event & { currentTarget: HTMLInputElement }): void {
-  const nameValue = event.currentTarget.value;
-
-  const provider = selectedProvider;
+function checkVolumeName(nameValue: string, provider: ProviderContainerConnectionInfo | undefined): void {
   if (!nameValue || !provider) {
-    volumeNameError = '';
+    volumeNameError = undefined;
     invalidName = false;
     return;
   }
@@ -52,17 +49,19 @@ function checkVolumeName(event: Event & { currentTarget: HTMLInputElement }): vo
     .some(volume => volume.Name === nameValue);
 
   if (volumeAlreadyExists) {
-    volumeNameError = `The name ${nameValue} already exists. Please choose a different name.`;
+    volumeNameError = `The name "${nameValue}" already exists. Please choose a different name.`;
     invalidName = true;
   } else {
-    volumeNameError = '';
+    volumeNameError = undefined;
     invalidName = false;
   }
 }
 
+$: checkVolumeName(volumeName, selectedProvider);
+
 async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
   createError = undefined;
-  volumeNameError = '';
+  volumeNameError = undefined;
   invalidName = false;
   createVolumeInProgress = true;
   try {
@@ -97,7 +96,7 @@ export let volumeName = '';
     <div>
       <label for="containerBuildContextDirectory" class="block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
         >Volume name:</label>
-      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} oninput={checkVolumeName} error={volumeNameError} required />
+      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} error={volumeNameError} aria-invalid={invalidName || undefined} required />
     </div>
     <div class:hidden={providerConnections.length < 2}>
       {#if providerConnections.length > 1}

@@ -255,7 +255,7 @@ test('Expect error and disabled button when volume name already exists', async (
   const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
   await userEvent.type(nameInput, 'existing-volume');
 
-  const errorMessage = screen.getByText('The name existing-volume already exists. Please choose a different name.');
+  const errorMessage = screen.getByText('The name "existing-volume" already exists. Please choose a different name.');
   expect(errorMessage).toBeInTheDocument();
 
   const createButton = screen.getByRole('button', { name: createButtonTitle });
@@ -335,6 +335,62 @@ test('Expect no error when volume name is empty', async () => {
 
   const createButton = screen.getByRole('button', { name: createButtonTitle });
   expect(createButton).toBeEnabled();
+});
+
+test('Expect revalidation when provider changes', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'podman-machine-default',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+    {
+      name: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'docker',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'podman.podman-machine-default',
+      engineName: 'podman',
+      Volumes: [{ Name: 'shared-name' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+    {
+      engineId: 'docker.docker',
+      engineName: 'docker',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'shared-name');
+
+  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+
+  const providerSelect = screen.getByRole('combobox', { name: 'Provider Choice' });
+  await userEvent.selectOptions(providerSelect, 'docker');
+
+  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
 });
 
 test('Expect error clears when name is corrected', async () => {
