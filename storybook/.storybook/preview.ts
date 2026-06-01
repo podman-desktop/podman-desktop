@@ -18,6 +18,7 @@
 
 import type { Preview } from '@storybook/svelte-vite';
 import { withThemeByClassName } from '@storybook/addon-themes';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import './main.css';
 import './themes.css';
 
