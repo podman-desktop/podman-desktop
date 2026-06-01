@@ -1229,3 +1229,77 @@ test(`clicking What's new in update command should open release notes`, async ()
 
   expect(shell.openExternal).toHaveBeenCalled();
 });
+
+describe('appUpdate configuration', () => {
+  test('init should skip update setup when appUpdate is disabled', () => {
+    mockConfiguration({ 'update.appUpdate': false, 'update.reminder': 'never' });
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(autoUpdater.on).not.toHaveBeenCalled();
+    expect(autoUpdater.checkForUpdates).not.toHaveBeenCalled();
+    expect(statusBarRegistryMock.setEntry).toHaveBeenCalled();
+
+    const registeredCommands = vi.mocked(commandRegistryMock.registerCommand).mock.calls.map(call => call[0]);
+    expect(registeredCommands).toContain('version');
+    expect(registeredCommands).not.toContain('update');
+  });
+
+  test('init should proceed with update setup when appUpdate is true', () => {
+    mockConfiguration({ 'update.appUpdate': true, 'update.reminder': 'never' });
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(autoUpdater.on).toHaveBeenCalled();
+    expect(autoUpdater.checkForUpdates).toHaveBeenCalled();
+  });
+
+  test('updateAvailable should return false when appUpdate is disabled', () => {
+    mockConfiguration({ 'update.appUpdate': false, 'update.reminder': 'never' });
+
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(updater.updateAvailable()).toBe(false);
+  });
+
+  test('registerConfiguration should include preferences.update.appUpdate', () => {
+    const updater = new Updater(
+      messageBoxMock,
+      configurationRegistryMock,
+      statusBarRegistryMock,
+      commandRegistryMock,
+      taskManagerMock,
+      apiSenderMock,
+    );
+    updater.init();
+
+    expect(configurationRegistryMock.registerConfigurations).toHaveBeenCalled();
+    const configurations = vi.mocked(configurationRegistryMock.registerConfigurations).mock.calls[0]![0]!;
+    const properties = configurations.flatMap(config => Object.keys(config.properties ?? {}));
+    expect(properties).toContain('preferences.update.appUpdate');
+  });
+});
