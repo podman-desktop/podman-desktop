@@ -65,6 +65,7 @@ test('Expect Create button is working', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -93,6 +94,7 @@ test('Expect Create with a custom name', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -140,6 +142,7 @@ test('Expect error message when volume creation fails', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -171,6 +174,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -182,6 +186,7 @@ test('Expect Create with a custom name and multiple providers', async () => {
     } as unknown as ProviderInfo,
     {
       name: 'docker',
+      id: 'docker',
       status: 'started',
       internalId: 'docker-internal-id',
       containerConnections: [
@@ -230,6 +235,7 @@ test('Expect error and disabled button when volume name already exists', async (
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -266,6 +272,7 @@ test('Expect no error when volume name is unique', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -302,6 +309,7 @@ test('Expect no error when volume name is empty', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -341,6 +349,7 @@ test('Expect revalidation when provider changes', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [
@@ -352,6 +361,7 @@ test('Expect revalidation when provider changes', async () => {
     } as unknown as ProviderInfo,
     {
       name: 'docker',
+      id: 'docker',
       status: 'started',
       internalId: 'docker-internal-id',
       containerConnections: [
@@ -393,10 +403,72 @@ test('Expect revalidation when provider changes', async () => {
   expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
 });
 
+test('Expect no false positive when providers share connection name', async () => {
+  providerInfos.set([
+    {
+      name: 'podman',
+      id: 'podman',
+      status: 'started',
+      internalId: 'podman-internal-id',
+      containerConnections: [
+        {
+          name: 'Docker',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+    {
+      name: 'docker',
+      id: 'docker',
+      status: 'started',
+      internalId: 'docker-internal-id',
+      containerConnections: [
+        {
+          name: 'Docker',
+          status: 'started',
+        },
+      ],
+    } as unknown as ProviderInfo,
+  ]);
+
+  volumeListInfos.set([
+    {
+      engineId: 'docker.Docker',
+      engineName: 'docker',
+      Volumes: [{ Name: 'my-vol' }],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+    {
+      engineId: 'podman.Docker',
+      engineName: 'podman',
+      Volumes: [],
+      Warnings: [],
+    } as unknown as VolumeListInfo,
+  ]);
+
+  render(CreateVolume, {});
+
+  const nameInput = screen.getByRole('textbox', { name: 'Volume Name' });
+  await userEvent.type(nameInput, 'my-vol');
+
+  // podman.Docker is selected first — no volume named 'my-vol' there
+  expect(screen.queryByText(/already exists/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeEnabled();
+
+  // switch to docker.Docker — 'my-vol' exists there
+  const providerSelect = screen.getByRole('combobox', { name: 'Provider Choice' });
+  const options = providerSelect.querySelectorAll('option');
+  await userEvent.selectOptions(providerSelect, options[1] as HTMLOptionElement);
+
+  expect(screen.getByText(/already exists/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: createButtonTitle })).toBeDisabled();
+});
+
 test('Expect error clears when name is corrected', async () => {
   providerInfos.set([
     {
       name: 'podman',
+      id: 'podman',
       status: 'started',
       internalId: 'podman-internal-id',
       containerConnections: [

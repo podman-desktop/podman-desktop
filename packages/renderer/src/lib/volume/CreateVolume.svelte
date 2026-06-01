@@ -43,10 +43,15 @@ function checkVolumeName(nameValue: string, provider: ProviderContainerConnectio
     return;
   }
 
-  const volumeAlreadyExists = $volumeListInfos
-    .filter(vli => vli.engineId.endsWith(`.${provider.name}`))
-    .flatMap(vli => vli.Volumes)
-    .some(volume => volume.Name === nameValue);
+  const parentProvider = providers.find(p => p.containerConnections.includes(provider));
+  const engineId = parentProvider ? `${parentProvider.id}.${provider.name}` : undefined;
+
+  const volumeAlreadyExists = engineId
+    ? $volumeListInfos
+        .filter(vli => vli.engineId === engineId)
+        .flatMap(vli => vli.Volumes)
+        .some(volume => volume.Name === nameValue)
+    : false;
 
   if (volumeAlreadyExists) {
     volumeNameError = `The name "${nameValue}" already exists. Please choose a different name.`;
