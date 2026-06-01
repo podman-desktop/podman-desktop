@@ -22,7 +22,7 @@ import { autoUpdate, computePosition } from '@floating-ui/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { tooltipHidden } from './tooltip-store';
+import { resetTooltipHideCount } from './tooltip-store';
 import TooltipTestComponent from './TooltipTestComponent.svelte';
 import TooltipTestWithSnippet from './TooltipTestWithSnippet.svelte';
 
@@ -45,13 +45,11 @@ beforeEach(() => {
 
 describe('Tooltip', () => {
   beforeEach(() => {
-    tooltipHidden.set(false);
+    resetTooltipHideCount();
     vi.clearAllMocks();
   });
 
   test('tooltip is hidden when tooltipHidden is true', async () => {
-    tooltipHidden.set(false);
-
     render(TooltipTestComponent, { tip: 'test 1' });
 
     const slot = screen.getByTestId('tooltip-trigger');
@@ -62,13 +60,15 @@ describe('Tooltip', () => {
       expect(screen.queryByText('test 1')).toBeInTheDocument();
     });
 
-    tooltipHidden.set(true);
+    // Simulate dropdown opening (hides tooltips)
+    window.dispatchEvent(new Event('tooltip-hide'));
 
     await waitFor(() => {
       expect(screen.queryByText('test 1')).not.toBeInTheDocument();
     });
 
-    tooltipHidden.set(false);
+    // Simulate dropdown closing (shows tooltips)
+    window.dispatchEvent(new Event('tooltip-show'));
     await fireEvent.mouseEnter(slot);
 
     await waitFor(() => {
