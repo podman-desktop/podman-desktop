@@ -55,7 +55,7 @@ const { Story } = defineMeta({
       <div class="px-3 py-2.5">{message}</div>
       <div
         style="background: var(--pd-toast-{type}-bar-bg);"
-        class="h-[3px] w-3/5">
+        class="h-[3px] w-3/5 mx-0.5 mb-0.5 rounded">
       </div>
     </div>
   </div>
@@ -65,7 +65,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">In progress</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="in-progress">
           <Spinner size="1.5em" />
@@ -81,7 +81,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">Success</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="success">
           <Icon icon={faCheckCircle} class="text-(--pd-state-success) fa-xl" />
@@ -97,7 +97,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">Failure</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="failure">
           <Icon icon={faCircleExclamation} class="text-(--pd-state-error) fa-xl" />
@@ -116,7 +116,7 @@ const { Story } = defineMeta({
   <div class="flex flex-col gap-1">
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">Canceled</span>
     <div
-      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded-md border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
+      class="flex flex-row gap-2 items-start justify-between max-w-64 max-h-50 rounded border border-(--pd-content-divider) bg-(--pd-modal-bg) p-2 text-base shadow-md">
       <div class="flex flex-row gap-1 items-start">
         <div class="mr-1 text-(--pd-state-info)" role="status" aria-label="canceled">
           <Icon icon={faTriangleExclamation} class="text-(--pd-state-warning) fa-xl" />

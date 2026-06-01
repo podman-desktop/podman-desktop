@@ -12,6 +12,14 @@
   --toastContainerLeft: auto;
   --toastBackground: var(--pd-modal-bg);
   --toastBarHeight: 3px;
+  --toastBarLeft: 2px;
+  --toastBarBottom: 2px;
+  --toastBarWidth: calc(100% - 4px);
+}
+
+:global(._toastBar::-webkit-progress-value),
+:global(._toastBar::-moz-progress-bar) {
+  border-radius: 0.25rem;
 }
 </style>
 
