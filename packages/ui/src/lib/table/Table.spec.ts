@@ -397,7 +397,7 @@ test('Expect table to have proper css style', async () => {
   const rows = await within(table).findAllByRole('row');
   // expect each row of the table has the grid-template-columns style applied
   for (const element of rows) {
-    expect(element).toHaveClass('grid-table');
+    expect(element).toHaveClass('grid-cols-[var(--table-grid-table-columns)]');
   }
 
   expect(table).toHaveStyle({

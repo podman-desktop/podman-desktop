@@ -1,18 +1,25 @@
 <script lang="ts">
-import { createEventDispatcher } from 'svelte';
-
 import DurationColumn from '/@/lib/table/DurationColumn.svelte';
 
 import SimpleColumn from './SimpleColumn.svelte';
 import { Column, Row } from './table';
 import Table from './Table.svelte';
 
-let selectedItemsNumber: number;
+interface Props {
+  people?: Person[];
+  onUpdate?: (text: string) => void;
+}
 
-const dispatch = createEventDispatcher<{ update: string }>();
-export let onUpdate: (text: string) => void = text => {
-  dispatch('update', text);
-};
+let {
+  people = $bindable([
+    { id: 1, name: 'John', age: 57, hobby: 'Skydiving' },
+    { id: 2, name: 'Henry', age: 27, hobby: 'Cooking' },
+    { id: 3, name: 'Charlie', age: 43, hobby: 'Biking', duration: new Date().getTime() - 3600000 },
+  ]),
+  onUpdate = (): void => {},
+}: Props = $props();
+
+let selectedItemsNumber: number = $state(0);
 
 type Person = {
   id: number;
@@ -21,12 +28,6 @@ type Person = {
   hobby: string;
   duration?: number;
 };
-
-export let people: Person[] = [
-  { id: 1, name: 'John', age: 57, hobby: 'Skydiving' },
-  { id: 2, name: 'Henry', age: 27, hobby: 'Cooking' },
-  { id: 3, name: 'Charlie', age: 43, hobby: 'Biking', duration: new Date().getTime() - 3600000 },
-];
 
 const idCol: Column<Person, string> = new Column('Id', {
   align: 'right',
@@ -78,8 +79,7 @@ const row = new Row<Person>({
   data={people}
   columns={columns}
   row={row}
-  defaultSortColumn="Id"
-  on:update>
+  defaultSortColumn="Id">
 </Table>
 
 <!-- Dummy component to check if the table component is not updating this object as it contains grid-table css property -->
