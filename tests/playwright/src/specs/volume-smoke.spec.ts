@@ -43,14 +43,8 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   await waitForPodmanMachineStartup(page);
 });
 
-test.afterAll(async ({ runner, page }) => {
-  try {
-    await deleteContainer(page, containerName);
-
-    await deleteImage(page, noVolumeImageToPull);
-  } finally {
-    await runner.close();
-  }
+test.afterAll(async ({ runner }) => {
+  await runner.close();
 });
 
 test.describe
@@ -126,6 +120,14 @@ test.describe
           timeout: 35_000,
         })
         .toBeTruthy();
+    });
+  });
+
+test.describe
+  .serial('Volume container integration', { tag: ['@smoke'] }, () => {
+    test.afterAll(async ({ page }) => {
+      await deleteContainer(page, containerName);
+      await deleteImage(page, noVolumeImageToPull);
     });
 
     test('Create volumes from bootc-image-builder', async ({ navigationBar }) => {
