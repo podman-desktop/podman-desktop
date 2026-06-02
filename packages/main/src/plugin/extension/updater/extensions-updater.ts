@@ -27,6 +27,7 @@ import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { ExtensionsUpdaterSettings } from '/@/plugin/extension/updater/extensions-updater-settings.js';
 import { ExtensionInstaller } from '/@/plugin/install/extension-installer.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
+import product from '/@product.json' with { type: 'json' };
 
 @injectable()
 export class ExtensionsUpdater {
@@ -50,6 +51,8 @@ export class ExtensionsUpdater {
   async init(): Promise<void> {
     const autoCheckUpdatesKey = `${ExtensionsUpdaterSettings.SectionName}.${ExtensionsUpdaterSettings.AutoCheckUpdates}`;
     const autoUpdateKey = `${ExtensionsUpdaterSettings.SectionName}.${ExtensionsUpdaterSettings.AutoUpdate}`;
+    const catalogTitle = new URL(product.catalog.default).hostname;
+    const updateFetchedText = catalogTitle ? ` The updates are fetched from ${catalogTitle}` : '';
 
     const extensionLoaderConfiguration: IConfigurationNode = {
       id: 'preferences.extensions',
@@ -57,8 +60,7 @@ export class ExtensionsUpdater {
       type: 'object',
       properties: {
         [autoCheckUpdatesKey]: {
-          description:
-            'When enabled, automatically checks extensions for updates. The updates are fetched from registry.podman-desktop.io.',
+          description: `When enabled, automatically checks extensions for updates.${updateFetchedText}`,
           type: 'boolean',
           default: true,
         },
