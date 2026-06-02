@@ -52,7 +52,7 @@ export default defineConfig({
           "default-src 'self'",
           "script-src 'self'",
           "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' data:",
+          "img-src 'self' https: data: blob:",
           "font-src 'self' data:",
           "connect-src 'self'",
           "object-src 'none'",
