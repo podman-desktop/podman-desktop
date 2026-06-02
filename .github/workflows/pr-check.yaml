@@ -328,6 +328,15 @@ jobs:
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
 
+      - name: Remove pre-installed Docker images
+        run: |
+          echo "Removing pre-installed Docker images to prevent E2E test flakiness"
+          docker image ls
+          docker image rm --force $(docker image ls -q) 2>/dev/null || true
+          docker system prune --all --force 2>/dev/null || true
+          echo "Docker images after cleanup:"
+          docker image ls
+
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
         with:
@@ -485,6 +494,15 @@ jobs:
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+
+      - name: Remove pre-installed Docker images
+        run: |
+          echo "Removing pre-installed Docker images to prevent E2E test flakiness"
+          docker image ls
+          docker image rm --force $(docker image ls -q) 2>/dev/null || true
+          docker system prune --all --force 2>/dev/null || true
+          echo "Docker images after cleanup:"
+          docker image ls
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
