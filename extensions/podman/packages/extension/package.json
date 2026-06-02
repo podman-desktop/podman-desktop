@@ -8,6 +8,12 @@
   "type": "module",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/podman/packages/extension"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/podman/packages/extension#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
@@ -468,7 +474,7 @@
     "msw": "^2.14.6",
     "octokit": "^5.0.5",
     "sshpk": "^1.18.0",
-    "tsx": "^4.22.3",
+    "tsx": "^4.22.4",
     "vite": "^7.3.2",
     "vitest": "^4.1.7"
   }

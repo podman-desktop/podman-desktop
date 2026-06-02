@@ -7,6 +7,12 @@
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/docker/packages/extension"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/docker/packages/extension#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },

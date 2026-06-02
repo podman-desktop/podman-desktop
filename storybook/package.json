@@ -17,7 +17,7 @@
     "@fortawesome/free-regular-svg-icons": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@podman-desktop/ui-svelte": "workspace:*",
-    "eslint": "^10.4.0",
+    "eslint": "^10.4.1",
     "svelte-fa": "^4.0.4"
   },
   "devDependencies": {
@@ -31,11 +31,11 @@
     "@sveltejs/vite-plugin-svelte": "6.2.4",
     "@tailwindcss/vite": "^4.3.0",
     "@tsconfig/svelte": "^5.0.8",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
     "autoprefixer": "^10.5.0",
     "cross-env": "10.1.0",
-    "eslint-plugin-storybook": "10.4.0",
-    "eslint-plugin-svelte": "^3.17.1",
+    "eslint-plugin-storybook": "10.4.1",
+    "eslint-plugin-svelte": "^3.18.0",
     "postcss": "^8.5.12",
     "postcss-load-config": "^6.0.1",
     "react": "18.2.0",

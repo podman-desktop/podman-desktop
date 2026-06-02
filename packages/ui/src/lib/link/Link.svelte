@@ -25,13 +25,18 @@ let {
 }: Props = $props();
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_missing_attribute -->
-<!-- svelte-ignore a11y_interactive_supports_focus -->
 <a
   class="text-[var(--pd-link)] hover:bg-[var(--pd-link-hover-bg)] transition-all rounded-[4px] p-0.5 no-underline cursor-pointer {classes}"
   {onclick}
   role="link"
+  tabindex="0"
+  onkeydown={(e): void => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onclick();
+    }
+  }}
   aria-label={ariaLabel ?? ''}>
   {#if icon}
     <span class="flex flex-row space-x-2">

@@ -19,13 +19,17 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expect as playExpect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import { KubernetesResourceState } from '/@/model/core/states';
 import { KubernetesResources } from '/@/model/core/types';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourceCreationPage } from '/@/model/pages/resource-creation-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
+import type { NavigationBar } from '/@/model/workbench/navigation';
 import { canRunKindTests } from '/@/setupFiles/setup-kind';
 import { createKindCluster, deleteCluster } from '/@/utility/cluster-operations';
-import { test } from '/@/utility/fixtures';
+import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   applyKubernetesYaml,
   checkDeploymentReplicasInfo,
@@ -137,6 +141,21 @@ test.afterAll(async ({ runner, page }) => {
     await runner.close();
   }
 });
+
+test.describe
+  .serial('Kind provider creation page navigation', { tag: ['@k8s_e2e', '@k8s_sanity'] }, () => {
+    test('Resources breadcrumb navigates back to Resources page', async ({ page, navigationBar }) => {
+      await openKindCreationPage(page, navigationBar);
+      const creationPage = new ResourceCreationPage(page);
+      await creationPage.navigateToResourcesViaBreadcrumb();
+    });
+
+    test('Close button navigates back to Resources page', async ({ page, navigationBar }) => {
+      await openKindCreationPage(page, navigationBar);
+      const creationPage = new ResourceCreationPage(page);
+      await creationPage.navigateToResourcesViaCloseButton();
+    });
+  });
 
 test.describe
   .serial('Kubernetes resources End-to-End test', { tag: ['@k8s_e2e', '@k8s_sanity'] }, () => {
@@ -381,3 +400,19 @@ test.describe
         });
       });
   });
+
+// Helper functions
+
+async function openKindCreationPage(page: Page, navigationBar: NavigationBar): Promise<void> {
+  await test.step('Open resources page and go to kind creation page', async () => {
+    const settingsBar = await navigationBar.openSettings();
+    const resourcesPage = await settingsBar.openTabPage(ResourcesPage);
+    await playExpect(resourcesPage.heading).toBeVisible({ timeout: 10_000 });
+    await playExpect
+      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 25_000 })
+      .toBeTruthy();
+    const kindResourceCard = new ResourceConnectionCardPage(page, RESOURCE_NAME, CLUSTER_NAME);
+    await playExpect(kindResourceCard.createButton).toBeVisible();
+    await kindResourceCard.createButton.click();
+  });
+}

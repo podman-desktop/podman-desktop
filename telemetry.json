@@ -7,6 +7,10 @@
     {
       "event": "container-events-failure",
       "frequency": "dailyPerInstance"
+    },
+    {
+      "event": "checkIfSocketDisguisedFailed",
+      "frequency": "dailyPerInstance"
     }
   ]
 }

@@ -7,6 +7,12 @@
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/kube-context"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/kube-context#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
@@ -40,7 +46,7 @@
   },
   "dependencies": {
     "@podman-desktop/api": "workspace:*",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.2.0"
   },
   "devDependencies": {
     "adm-zip": "^0.5.17",

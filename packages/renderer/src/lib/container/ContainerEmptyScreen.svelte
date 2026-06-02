@@ -74,7 +74,7 @@ async function runContainer(commandLine: string): Promise<void> {
   } catch (err) {
     await window.showMessageBox({
       title: 'Run Container Failed',
-      message: `Error while executing ${commandLine}: ${String(err)}`,
+      message: `Error while executing ${commandLine}: ${err instanceof Error ? err.message : String(err)}`,
       buttons: ['Dismiss'],
     });
   }

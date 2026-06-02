@@ -12,6 +12,7 @@ import {
   eventCollect,
   registerConnectionCallback,
 } from './preferences-connection-rendering-task';
+import ThemedIcon from './ThemedIcon.svelte';
 import type { ILoadingStatus } from './Util';
 
 export let cliTool: CliToolInfo;
@@ -149,10 +150,9 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
       <div class="min-w-[170px] max-w-[200px] h-full flex flex-col justify-between">
         <div class="flex flex-row">
           {#if cliTool?.images?.icon ?? cliTool?.extensionInfo.icon}
-            {#if typeof cliTool.images?.icon === 'string'}
-              <img
-                src={cliTool.images.icon}
-                aria-label="cli-logo"
+            {#if cliTool?.images?.icon}
+              <ThemedIcon
+                icon={cliTool.images.icon}
                 alt="{cliTool.name} logo"
                 class="max-w-[40px] max-h-[40px] h-full" />
             {:else if typeof cliTool.extensionInfo.icon === 'string'}

@@ -242,7 +242,7 @@ jobs:
           ref: ${{ needs.tag.outputs.githubTag}}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
       - name: create the pnpm store from the dependencies
         run: |
           podman run --platform linux/${{ matrix.arch }} -v $(pwd):/project --rm -it --entrypoint=sh node:24 -c "cd /project && npm install -g corepack@latest && corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile  --store-dir pnpm-store"
