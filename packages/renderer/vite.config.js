@@ -37,7 +37,33 @@ export default defineConfig({
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
-  plugins: [tailwindcss(), svelte({ configFile: '../../svelte.config.js' }), svelteTesting()],
+  plugins: [
+    tailwindcss(),
+    svelte({ configFile: '../../svelte.config.js' }),
+    svelteTesting(),
+    {
+      name: 'inject-meta',
+      transformIndexHtml(html) {
+        if (process.env.MODE !== 'production') {
+          return html;
+        }
+
+        const csp = [
+          "default-src 'self'",
+          "script-src 'self'",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data:",
+          "font-src 'self' data:",
+          "connect-src 'self'",
+          "object-src 'none'",
+        ].join('; ');
+
+        const meta = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
+
+        return html.replace('</head>', `${meta}</head>`);
+      },
+    },
+  ],
   optimizeDeps: {
     exclude: ['tinro', '@podman-desktop/api'],
   },
