@@ -37,7 +37,7 @@ jobs:
       - name: Fetch latest Podman release
         id: fetch_latest_podman_release
         run: |
-          LATEST_PODMAN_RELEASE=$(curl -s https://api.github.com/repos/containers/podman/releases/latest)
+          LATEST_PODMAN_RELEASE=$(curl -sL https://api.github.com/repos/podman-container-tools/podman/releases/latest)
           LATEST_VERSION=$(echo "$LATEST_PODMAN_RELEASE" | jq -r '.tag_name' | sed 's/^v//')
           ASSETS=$(echo "$LATEST_PODMAN_RELEASE" | jq -r '.assets[].name' | tr '\n' ' ')
           echo $LATEST_VERSION

@@ -321,7 +321,7 @@ jobs:
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
-        uses: redhat-actions/podman-install@92eb12467c2fc271e7781d006c413e17770230ed
+        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -380,7 +380,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install latest Podman version using external action
-        uses: redhat-actions/podman-install@92eb12467c2fc271e7781d006c413e17770230ed
+        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -479,7 +479,7 @@ jobs:
           echo "KIND_PROVIDER=${{ env.DEFAULT_KIND_PROVIDER }}" >> $GITHUB_ENV
 
       - name: Install Podman v5 using external action
-        uses: redhat-actions/podman-install@92eb12467c2fc271e7781d006c413e17770230ed
+        uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
