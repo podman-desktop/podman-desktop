@@ -437,7 +437,6 @@ describe('Table#label', () => {
       columns: [SIMPLE_COLUMN],
       row: ROW,
       collapsed: ['foo'],
-      // create special value for the label
       label: (item): string => `label-${item.id}`,
       key: (item): string => item.id,
     });

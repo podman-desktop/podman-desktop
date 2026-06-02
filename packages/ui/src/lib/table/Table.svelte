@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends { selected?: boolean; name?: string }">
-import { onMount } from 'svelte';
+import { createEventDispatcher, onMount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 
 import Checkbox from '../checkbox/Checkbox.svelte';
@@ -11,7 +11,8 @@ import { tablePersistence } from './table-persistence-store.svelte';
 
 interface Props {
   kind: string;
-  columns: Column<T, unknown>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous render types require any
+  columns: Column<T, any>[];
   row: Row<T>;
   data: T[];
   defaultSortColumn?: string;
@@ -26,7 +27,7 @@ let {
   kind,
   columns,
   row,
-  data = $bindable(),
+  data,
   defaultSortColumn = undefined,
   collapsed = $bindable([]),
   key = (item: T): string => item.name ?? String(item),
@@ -34,6 +35,9 @@ let {
   enableLayoutConfiguration = false,
   selectedItemsNumber = $bindable(),
 }: Props = $props();
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- enables on:update event forwarding from column renderers
+const dispatch = createEventDispatcher<{ update: undefined }>();
 
 let columnItems: ListOrganizerItem[] = $state([]);
 let columnOrdering = new SvelteMap<string, number>();
@@ -141,7 +145,8 @@ $effect(() => {
 });
 
 // Computed visible columns based on configuration
-const visibleColumns: Column<T, unknown>[] = $derived.by(() => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches columns prop type
+const visibleColumns: Column<T, any>[] = $derived.by(() => {
   if (columnItems.length === 0) {
     return columns;
   }
@@ -163,8 +168,9 @@ const visibleColumns: Column<T, unknown>[] = $derived.by(() => {
   return result;
 });
 
-// number of selected items in the list
-$effect(() => {
+let selectedAllCheckboxes: boolean | undefined = $state(false);
+
+function recomputeSelection(): void {
   selectedItemsNumber = row.info.selectable
     ? data.filter(object => row.info.selectable?.(object) && object.selected).length +
       data.reduce(
@@ -174,28 +180,25 @@ $effect(() => {
         0,
       )
     : 0;
-});
 
-// do we need to unselect all checkboxes if we don't have all items being selected ?
-const selectedAllCheckboxes: boolean | undefined = $derived.by(() => {
-  return row.info.selectable
+  selectedAllCheckboxes = row.info.selectable
     ? data.filter(object => row.info.selectable?.(object)).every(object => object.selected) &&
-        data
-          .reduce(
-            (accumulator, current) => {
-              const children = row.info.children?.(current);
-              if (children) {
-                accumulator.push(...children);
-              }
-              return accumulator;
-            },
-            [] as Array<T>,
-          )
-          .filter(child => row.info.selectable?.(child))
-          .every(child => child.selected) &&
-        data.filter(object => row.info.selectable?.(object)).length > 0
+      data
+        .reduce(
+          (accumulator, current) => {
+            const children = row.info.children?.(current);
+            if (children) {
+              accumulator.push(...children);
+            }
+            return accumulator;
+          },
+          [] as Array<T>,
+        )
+        .filter(child => row.info.selectable?.(child))
+        .every(child => child.selected) &&
+      data.filter(object => row.info.selectable?.(object)).length > 0
     : false;
-});
+}
 
 function toggleAll(checked: boolean): void {
   if (!row.info.selectable) {
@@ -210,7 +213,7 @@ function toggleAll(checked: boolean): void {
       children.filter(child => row.info.selectable?.(child)).forEach(child => (child.selected = checked));
     }
   });
-  data = [...data];
+  recomputeSelection();
 }
 
 let sortCol: Column<T> = $state(undefined!);
@@ -277,12 +280,12 @@ function objectChecked(object: T, checked: boolean): void {
       children.forEach(child => (child.selected = checked));
     }
   }
-  data = [...data];
+  recomputeSelection();
 }
 
 function childChecked(child: T, checked: boolean): void {
   child.selected = checked;
-  data = [...data];
+  recomputeSelection();
 }
 
 function toggleChildren(name: string | undefined): void {
@@ -350,7 +353,7 @@ async function resetColumns(): Promise<void> {
             title="Toggle all"
             checked={selectedAllCheckboxes}
             disabled={!row.info.selectable || data.filter(object => row.info.selectable?.(object)).length === 0}
-            indeterminate={selectedItemsNumber > 0 && !selectedAllCheckboxes}
+            indeterminate={(selectedItemsNumber ?? 0) > 0 && !selectedAllCheckboxes}
             onclick={toggleAll} />
         </div>
       {/if}
