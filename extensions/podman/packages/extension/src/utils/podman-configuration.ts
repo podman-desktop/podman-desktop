@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2022-2025 Red Hat, Inc.
+ * Copyright (C) 2022-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -318,6 +318,10 @@ export class PodmanConfiguration {
         containersConfContent['engine'].env.push(`no_proxy=${proxySettings.noProxy}`);
       }
 
+      if (containersConfContent['engine'].env.length > 0) {
+        containersConfContent['containers'] = { http_proxy: true };
+      }
+
       // write the file
       const content = toml.stringify(containersConfContent);
       await fs.promises.writeFile(this.getContainersFileLocation(), content);
@@ -401,6 +405,14 @@ export class PodmanConfiguration {
       }
 
       containersConfContent['engine'].env = engineEnv;
+
+      const containersSection = containersConfContent['containers'] as Record<string, unknown>;
+      if (engineEnv.some(item => /^(https?|no)_proxy=/.test(item))) {
+        containersConfContent['containers'] = { ...containersSection, http_proxy: true };
+      } else {
+        delete containersSection['http_proxy'];
+      }
+
       // write the file
       const content = toml.stringify(containersConfContent);
       await fs.promises.writeFile(this.getContainersFileLocation(), content);

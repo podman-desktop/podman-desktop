@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -193,6 +193,106 @@ test('if provider is set default one (on CLI) and the file does NOT exist, do no
   await podmanConfiguration.updateMachineProviderSettings(VMTYPE.APPLEHV);
 
   expect(fs.promises.writeFile).not.toHaveBeenCalled();
+});
+
+describe('doUpdateProxySettings sets [containers].http_proxy', () => {
+  test('should set http_proxy = true in [containers] when creating new file with proxy', async () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+    vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+
+    const proxySettings: ProxySettings = {
+      httpProxy: 'http://proxy:8080',
+      httpsProxy: 'https://proxy:8443',
+      noProxy: '',
+    };
+
+    await podmanConfiguration.doUpdateProxySettings(proxySettings);
+
+    expect(fs.promises.writeFile).toHaveBeenCalledWith(
+      podmanConfiguration.getContainersFileLocation(),
+      expect.stringContaining('http_proxy = true'),
+    );
+  });
+
+  test('should not set http_proxy in [containers] when creating new file without proxy', async () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+    vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+
+    await podmanConfiguration.doUpdateProxySettings(undefined);
+
+    expect(fs.promises.writeFile).toHaveBeenCalledWith(
+      podmanConfiguration.getContainersFileLocation(),
+      expect.not.stringContaining('http_proxy'),
+    );
+  });
+
+  test('should set http_proxy = true in [containers] when updating existing file with proxy', async () => {
+    const configFileContent = `
+[engine]
+env = ["http_proxy=http://old-proxy:8080"]
+`;
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+    vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
+
+    const proxySettings: ProxySettings = {
+      httpProxy: 'http://proxy:8080',
+      httpsProxy: 'https://proxy:8443',
+      noProxy: '',
+    };
+
+    await podmanConfiguration.doUpdateProxySettings(proxySettings);
+
+    expect(fs.promises.writeFile).toHaveBeenCalledWith(
+      podmanConfiguration.getContainersFileLocation(),
+      expect.stringContaining('http_proxy = true'),
+    );
+  });
+
+  test('should remove http_proxy from [containers] when proxy is cleared on existing file', async () => {
+    const configFileContent = `
+[containers]
+http_proxy = true
+
+[engine]
+env = ["http_proxy=http://proxy:8080"]
+`;
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+    vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
+
+    await podmanConfiguration.doUpdateProxySettings(undefined);
+
+    expect(fs.promises.writeFile).toHaveBeenCalledWith(
+      podmanConfiguration.getContainersFileLocation(),
+      expect.not.stringContaining('http_proxy'),
+    );
+  });
+
+  test('should preserve existing [containers] settings when adding http_proxy', async () => {
+    const configFileContent = `
+[containers]
+log_driver = "journald"
+
+[engine]
+env = []
+`;
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+    vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
+
+    const proxySettings: ProxySettings = {
+      httpProxy: 'http://proxy:8080',
+      httpsProxy: 'https://proxy:8443',
+      noProxy: 'noProxy',
+    };
+
+    await podmanConfiguration.doUpdateProxySettings(proxySettings);
+
+    const writtenContent = vi.mocked(fs.promises.writeFile).mock.calls[0][1] as string;
+    expect(writtenContent).toContain('http_proxy = true');
+    expect(writtenContent).toContain('log_driver = "journald"');
+  });
 });
 
 test('doUpdateProxySettings should be called one at the time', async () => {
