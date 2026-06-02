@@ -207,6 +207,48 @@ const accessibilityVariants: { heading: string; label?: string; containerClass?:
           Run command
         </button>
       </div>
+
+      <div class="flex flex-col gap-2">
+        <div class="text-sm font-semibold text-(--pd-content-header)">Statusbar provider tooltip (starting)</div>
+
+        <div class="rounded-[9px] border border-(--pd-tooltip-outer-border) shadow-[0_4px_12px_var(--pd-shadow-color)] text-[12px] leading-[16px] w-fit">
+          <div class="pt-[4px] pb-[5px] px-[8px] rounded-[9px] bg-(--pd-tooltip-bg) text-(--pd-tooltip-text) border border-(--pd-tooltip-inner-border) backdrop-blur-sm">
+            <div class="flex flex-col">
+              <div class="flex flex-row items-center h-fit">
+                <Spinner size="12px" label="Connection Status Icon" class="mr-1" />
+                <span class="text-(--pd-status-starting)">Starting</span>
+                : Podman Machine
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <div class="text-sm font-semibold text-(--pd-content-header)">Statusbar provider tooltip (mixed states)</div>
+
+        <div class="rounded-[9px] border border-(--pd-tooltip-outer-border) shadow-[0_4px_12px_var(--pd-shadow-color)] text-[12px] leading-[16px] w-fit">
+          <div class="pt-[4px] pb-[5px] px-[8px] rounded-[9px] bg-(--pd-tooltip-bg) text-(--pd-tooltip-text) border border-(--pd-tooltip-inner-border) backdrop-blur-sm">
+            <div class="flex flex-col">
+              <div class="flex flex-row items-center h-fit">
+                <Spinner size="12px" label="Connection Status Icon" class="mr-1" />
+                <span class="text-(--pd-status-starting)">Starting</span>
+                : Podman Machine
+              </div>
+              <div class="flex flex-row items-center h-fit">
+                <div class="fa-regular fa-circle-check max-h-3 mr-1 text-(--pd-status-running)"></div>
+                <span class="text-(--pd-status-running)">Running</span>
+                : Docker Desktop
+              </div>
+              <div class="flex flex-row items-center h-fit">
+                <Spinner size="12px" label="Connection Status Icon" class="mr-1" />
+                <span class="text-(--pd-status-terminated)">Stopping</span>
+                : Lima VM
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   {:else}
     <Spinner {...args} />
