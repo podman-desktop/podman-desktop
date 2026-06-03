@@ -294,6 +294,226 @@ describe('Custom warnings', () => {
     const buttonFailedStatus = await screen.findByText('command title failed');
     expect(buttonFailedStatus).toBeDefined();
   });
+
+  test('XSS prevention - comprehensive attack vectors', async () => {
+    // Test multiple XSS attack vectors in different fields
+    const attackVectors = [
+      // Script injections
+      {
+        state: 'successful',
+        description: '<script>alert(1)</script>',
+        command: { id: 'cmd1', title: 'safe' },
+      },
+      {
+        state: 'failed',
+        description: '<script src=//evil.com></script>',
+        command: { id: 'cmd2', title: 'safe' },
+      },
+      // Event handler injections
+      {
+        state: 'successful',
+        description: '<img src=x onerror=alert(1)>',
+        command: { id: 'cmd3', title: 'safe' },
+      },
+      {
+        state: 'failed',
+        description: '<svg onload=alert(1)>',
+        command: { id: 'cmd4', title: 'safe' },
+      },
+      {
+        state: 'successful',
+        description: '<body onload=alert(1)>',
+        command: { id: 'cmd5', title: 'safe' },
+      },
+      {
+        state: 'failed',
+        description: '<input onfocus=alert(1) autofocus>',
+        command: { id: 'cmd6', title: 'safe' },
+      },
+      // JavaScript protocol
+      {
+        state: 'successful',
+        description: 'safe',
+        docLinks: [{ url: 'javascript:alert(1)', title: 'click' }],
+      },
+      {
+        state: 'failed',
+        description: 'safe',
+        docLinks: [{ url: 'JaVaScRiPt:alert(1)', title: 'click' }],
+      },
+      // Data URIs
+      {
+        state: 'successful',
+        description: 'safe',
+        docLinks: [{ url: 'data:text/html,<script>alert(1)</script>', title: 'click' }],
+      },
+      // Iframe injection
+      {
+        state: 'failed',
+        command: { id: 'cmd7', title: '<iframe src=javascript:alert(1)></iframe>' },
+      },
+      // HTML entity encoding bypass attempts
+      {
+        state: 'successful',
+        description: '<img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)>',
+        command: { id: 'cmd8', title: 'safe' },
+      },
+      // Object/embed tags
+      {
+        state: 'failed',
+        description: '<object data=javascript:alert(1)>',
+        command: { id: 'cmd9', title: 'safe' },
+      },
+      {
+        state: 'successful',
+        description: '<embed src=javascript:alert(1)>',
+        command: { id: 'cmd10', title: 'safe' },
+      },
+      // Meta refresh
+      {
+        state: 'failed',
+        description: '<meta http-equiv=refresh content=0;url=javascript:alert(1)>',
+        command: { id: 'cmd11', title: 'safe' },
+      },
+      // Form action
+      {
+        state: 'successful',
+        description: '<form action=javascript:alert(1)><button>click</button></form>',
+        command: { id: 'cmd12', title: 'safe' },
+      },
+      // Link stylesheet
+      {
+        state: 'failed',
+        description: '<link rel=stylesheet href=javascript:alert(1)>',
+        command: { id: 'cmd13', title: 'safe' },
+      },
+      // Style tag
+      {
+        state: 'successful',
+        description: '<style>body{background:url(javascript:alert(1))}</style>',
+        command: { id: 'cmd14', title: 'safe' },
+      },
+      // Base tag
+      {
+        state: 'failed',
+        description: '<base href=javascript:alert(1)//>',
+        command: { id: 'cmd15', title: 'safe' },
+      },
+      // OnError in command title
+      {
+        state: 'successful',
+        command: { id: 'cmd16', title: '<img src=x onerror=alert(1)>' },
+      },
+      // Multiple event handlers
+      {
+        state: 'failed',
+        description: '<div onclick=alert(1) onmouseover=alert(2) onfocus=alert(3)>test</div>',
+        command: { id: 'cmd17', title: 'safe' },
+      },
+      // SVG with various attacks
+      {
+        state: 'successful',
+        docDescription: '<svg><script>alert(1)</script></svg>',
+      },
+      {
+        state: 'failed',
+        docDescription: '<svg><animate onbegin=alert(1)>',
+      },
+      // DocLinks title XSS
+      {
+        state: 'successful',
+        docLinks: [{ url: '#', title: '<script>alert(1)</script>' }],
+      },
+      {
+        state: 'failed',
+        docLinks: [{ url: '#', title: '<img src=x onerror=alert(1)>' }],
+      },
+      // Template tag
+      {
+        state: 'successful',
+        description: '<template><script>alert(1)</script></template>',
+        command: { id: 'cmd18', title: 'safe' },
+      },
+      // HTML comments with script
+      {
+        state: 'failed',
+        description: '<!--<script>alert(1)</script>-->',
+        command: { id: 'cmd19', title: 'safe' },
+      },
+      // CDATA section
+      {
+        state: 'successful',
+        description: '<![CDATA[<script>alert(1)</script>]]>',
+        command: { id: 'cmd20', title: 'safe' },
+      },
+    ];
+
+    await waitRender({ markdown: `:warnings[${JSON.stringify(attackVectors)}]` });
+
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+
+    // Verify no script tags made it through
+    expect(markdownContent.querySelectorAll('script').length).toBe(0);
+
+    // Verify no iframes
+    expect(markdownContent.querySelectorAll('iframe').length).toBe(0);
+
+    // Verify no dangerous elements
+    expect(markdownContent.querySelectorAll('object').length).toBe(0);
+    expect(markdownContent.querySelectorAll('embed').length).toBe(0);
+    expect(markdownContent.querySelectorAll('meta').length).toBe(0);
+    expect(markdownContent.querySelectorAll('base').length).toBe(0);
+    expect(markdownContent.querySelectorAll('link[rel="stylesheet"]').length).toBe(0);
+
+    // Verify no event handlers on any elements
+    const allElements = markdownContent.querySelectorAll('*');
+    const dangerousEvents = [
+      'onload',
+      'onerror',
+      'onclick',
+      'onmouseover',
+      'onfocus',
+      'onbegin',
+      'onmouseout',
+      'onkeydown',
+      'onkeyup',
+      'onchange',
+      'onsubmit',
+      'onanimationstart',
+      'onanimationend',
+      'ontransitionend',
+    ];
+
+    for (const el of allElements) {
+      for (const event of dangerousEvents) {
+        expect(el.hasAttribute(event)).toBe(false);
+      }
+      // Also check that no inline event handlers exist in the element's attributes
+      for (let i = 0; i < el.attributes.length; i++) {
+        const attrName = el.attributes[i].name.toLowerCase();
+        expect(attrName.startsWith('on')).toBe(false);
+      }
+    }
+
+    // Verify no javascript: protocols in links
+    const links = markdownContent.querySelectorAll('a');
+    for (const link of links) {
+      const href = link.getAttribute('href');
+      if (href) {
+        expect(href.toLowerCase()).not.toContain('javascript:');
+        expect(href.toLowerCase()).not.toContain('data:text/html');
+      }
+    }
+
+    // Verify no dangerous protocols in other elements
+    const imgs = markdownContent.querySelectorAll('img');
+    for (const img of imgs) {
+      const src = img.getAttribute('src');
+      if (src) {
+        expect(src.toLowerCase()).not.toContain('javascript:');
+      }
+    }
+  });
 });
 
 describe('jump to TOC section', () => {
