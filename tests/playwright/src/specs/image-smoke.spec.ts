@@ -207,14 +207,9 @@ test.describe
       const containerfilePath = path.resolve(__dirname, '..', '..', 'resources', 'staged_build.yaml');
       const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
-      imagesPage = await buildImagePage.buildImage(
-        'staged-build-stage2-test',
-        containerfilePath,
-        contextDirectory,
-        [ArchitectureType.Default],
-        300_000,
-        'stage2',
-      );
+      imagesPage = await buildImagePage.buildImage('staged-build-stage2-test', containerfilePath, contextDirectory, {
+        target: 'stage2',
+      });
       playExpect(await imagesPage.waitForImageExists('docker.io/library/staged-build-stage2-test')).toBeTruthy();
 
       const imageDetailsPage = await imagesPage.openImageDetails('docker.io/library/staged-build-stage2-test');
