@@ -31,12 +31,13 @@ export default defineConfig({
     target: 'esnext',
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE === 'production' ? 'esbuild' : false,
+    minify: process.env.MODE === 'production',
     lib: {
       entry: 'src/extension.ts',
       formats: ['cjs'],
     },
     rollupOptions: {
+      platform: 'node',
       external: ['@podman-desktop/api', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].js',
