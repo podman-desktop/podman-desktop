@@ -104,7 +104,7 @@ function buildTooltip(customTooltip: string, name: string, status: string): stri
 }
 
 function isOutlined(status: string): boolean {
-  return ['stopped', 'exited', 'created'].includes(status);
+  return getStatusColor(status).includes('outline');
 }
 
 type MockContainer = { name: string; status: string };
@@ -248,7 +248,7 @@ const stressTests = [
       <div class="rounded border border-(--pd-content-divider) p-4">
         <div class="text-xs font-semibold text-(--pd-content-header) mb-2">Individual dots</div>
         <div class="flex items-center flex-wrap">
-          {#each organizeContainers(makeMockContainers(fewContainerStatuses)) as [status, containers] (status)}
+          {#each Object.entries(organizeContainers(makeMockContainers(fewContainerStatuses))) as [status, containers] (status)}
             {#each containers as container, i (i)}
               <Tooltip top tip="{container.name}: {capitalize(status)}">
                 <div
