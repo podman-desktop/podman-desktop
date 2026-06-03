@@ -1,0 +1,136 @@
+/**********************************************************************
+ * Copyright (C) 2026 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ***********************************************************************/
+
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+
+import { isLinux, isMac, isWindows } from '/@/utility/platform';
+
+export type ContainerAuthConfigEntry = {
+  [key: string]: {
+    auth: string;
+    podmanDesktopAlias?: string;
+  };
+};
+
+export type ContainersAuthConfigFile = {
+  auths?: ContainerAuthConfigEntry;
+};
+
+// Replicates the logic from registry-setup.ts in the Podman extension.
+export function getAuthFileLocation(): string {
+  let podmanConfigContainersPath = '';
+
+  if (isMac || isWindows) {
+    podmanConfigContainersPath = path.resolve(os.homedir(), '.config/containers');
+  } else if (isLinux) {
+    const xdgRuntimeDirectory = process.env.XDG_RUNTIME_DIR ?? '';
+    podmanConfigContainersPath = path.resolve(xdgRuntimeDirectory, 'containers');
+  }
+
+  return path.resolve(podmanConfigContainersPath, 'auth.json');
+}
+
+export async function readAuthFile(): Promise<ContainersAuthConfigFile> {
+  const authFilePath = getAuthFileLocation();
+  const data = await fsPromises.readFile(authFilePath, 'utf-8');
+  return JSON.parse(data) as ContainersAuthConfigFile;
+}
+
+export async function writeAuthFile(authConfig: ContainersAuthConfigFile): Promise<void> {
+  const authFilePath = getAuthFileLocation();
+  await fsPromises.mkdir(path.dirname(authFilePath), { recursive: true });
+  await fsPromises.writeFile(authFilePath, JSON.stringify(authConfig, undefined, 2), 'utf8');
+}
+
+/**
+ * Inject invalid registry credentials into auth.json.
+ * The password must contain '~' (e.g. 'sha256~token'). The parts before and
+ * after '~' are base64-encoded separately and rejoined with a literal '~',
+ * producing an auth value with an illegal base64 character that causes Podman
+ * to fail parsing the X-Registry-Config header with HTTP 400.
+ */
+export async function injectInvalidCredentials(registryUrl: string, username: string, password: string): Promise<void> {
+  const authFile = await readAuthFile();
+  authFile.auths ??= {};
+
+  const tildeIndex = password.indexOf('~');
+  if (tildeIndex === -1) {
+    throw new Error(`Password must contain '~' to produce invalid base64. Got: ${password}`);
+  }
+
+  const beforeTilde = `${username}:${password.substring(0, tildeIndex)}`;
+  const afterTilde = password.substring(tildeIndex + 1);
+  const invalidBase64 = `${Buffer.from(beforeTilde).toString('base64')}~${Buffer.from(afterTilde).toString('base64')}`;
+
+  authFile.auths[registryUrl] = {
+    auth: invalidBase64,
+  };
+
+  await writeAuthFile(authFile);
+  console.log(`Injected invalid credentials for ${registryUrl}`);
+}
+
+export async function removeRegistryCredentials(registryUrl: string): Promise<void> {
+  const authFile = await readAuthFile();
+
+  if (authFile.auths?.[registryUrl]) {
+    delete authFile.auths[registryUrl];
+    await writeAuthFile(authFile);
+    console.log(`Removed credentials for ${registryUrl}`);
+  }
+}
+
+export async function backupAuthFile(): Promise<string | undefined> {
+  const authFilePath = getAuthFileLocation();
+
+  if (!fs.existsSync(authFilePath)) {
+    return undefined;
+  }
+
+  const backupPath = `${authFilePath}.backup-${Date.now()}`;
+  await fsPromises.copyFile(authFilePath, backupPath);
+  console.log(`Backed up auth file to ${backupPath}`);
+  return backupPath;
+}
+
+// Sync — must run before Electron starts so registry-setup.ts registers its fs.watchFile watcher.
+export function ensureAuthFileExists(): void {
+  const authFilePath = getAuthFileLocation();
+  if (!fs.existsSync(authFilePath)) {
+    const authFileDir = path.dirname(authFilePath);
+    fs.mkdirSync(authFileDir, { recursive: true });
+    fs.writeFileSync(authFilePath, JSON.stringify({ auths: {} }, null, 2), 'utf8');
+  }
+}
+
+export async function restoreAuthFile(backupPath: string): Promise<void> {
+  const authFilePath = getAuthFileLocation();
+
+  if (!fs.existsSync(backupPath)) {
+    throw new Error(`Backup file not found: ${backupPath}`);
+  }
+
+  await fsPromises.copyFile(backupPath, authFilePath);
+  console.log(`Restored auth file from ${backupPath}`);
+  await fsPromises.unlink(backupPath).catch((err: unknown) => {
+    console.warn(`Failed to remove backup file: ${err}`);
+  });
+}
