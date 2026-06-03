@@ -38,7 +38,7 @@ function escapeHtml(text: string): string {
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replaceAll(`'`, '&#039;');
 }
 
 function buildMessage(type: string, message: string): string {
