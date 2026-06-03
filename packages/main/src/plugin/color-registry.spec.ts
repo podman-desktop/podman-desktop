@@ -1638,28 +1638,28 @@ describe('initToast', () => {
 
   test('registers toast-warning-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-warning-bg', {
-      dark: tailwindColorPalette.amber[700],
-      light: tailwindColorPalette.amber[600],
-      hcDark: tailwindColorPalette.amber[400],
-      hcLight: tailwindColorPalette.amber[800],
+      dark: tailwindColorPalette.yellow[500],
+      light: tailwindColorPalette.yellow[500],
+      hcDark: tailwindColorPalette.yellow[400],
+      hcLight: tailwindColorPalette.yellow[500],
     });
   });
 
   test('registers toast-warning-color', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-warning-color', {
-      dark: tailwindColorPalette.white,
-      light: tailwindColorPalette.white,
+      dark: tailwindColorPalette.black,
+      light: tailwindColorPalette.black,
       hcDark: tailwindColorPalette.black,
-      hcLight: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 
   test('registers toast-warning-bar-bg', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-warning-bar-bg', {
-      dark: tailwindColorPalette.amber[600],
-      light: tailwindColorPalette.amber[500],
+      dark: tailwindColorPalette.yellow[600],
+      light: tailwindColorPalette.yellow[600],
       hcDark: tailwindColorPalette.black,
-      hcLight: tailwindColorPalette.white,
+      hcLight: tailwindColorPalette.black,
     });
   });
 
@@ -1667,7 +1667,7 @@ describe('initToast', () => {
     expect(spyOnRegisterColor).toBeCalledWith('toast-info-bg', {
       dark: tailwindColorPalette.accent1[600],
       light: tailwindColorPalette.accent1[500],
-      hcDark: tailwindColorPalette.accent1[400],
+      hcDark: tailwindColorPalette.accent1[300],
       hcLight: tailwindColorPalette.accent1[800],
     });
   });
