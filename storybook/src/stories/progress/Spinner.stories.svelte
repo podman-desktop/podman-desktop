@@ -236,7 +236,7 @@ const accessibilityVariants: { heading: string; label?: string; containerClass?:
                 : Podman Machine
               </div>
               <div class="flex flex-row items-center h-fit">
-                <div class="fa-regular fa-circle-check mr-1 text-(--pd-status-running)" style="--fa-width: 12px;"></div>
+                <div class="fa-regular fa-circle-check fa-w-[12px] mr-1 text-(--pd-status-running)"></div>
                 <span class="text-(--pd-status-running)">Running</span>
                 : Docker Desktop
               </div>
