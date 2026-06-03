@@ -50,7 +50,8 @@ const CONTAINERFILE_PATH = path.resolve(__dirname, '..', '..', 'resources', 'tes
 const CONTEXT_DIR = path.resolve(__dirname, '..', '..', 'resources');
 
 const BASE_IMAGE = 'ghcr.io/linuxcontainers/alpine';
-const BUILD_IMAGE = 'registry-validation-test';
+const BUILD_IMAGE_TAG = 'registry-validation-test';
+const BUILD_IMAGE = 'docker.io/library/registry-validation-test';
 
 let authBackupPath: string | undefined;
 
@@ -102,7 +103,7 @@ test.describe
 
       await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
 
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE, CONTAINERFILE_PATH, CONTEXT_DIR);
+      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
       await playExpect
         .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
@@ -124,7 +125,7 @@ test.describe
       await buildImagePage.toggleRegistryValidation(false);
       await playExpect(buildImagePage.registryValidationCheckbox).not.toBeChecked();
 
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE, CONTAINERFILE_PATH, CONTEXT_DIR);
+      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
       await playExpect
         .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
@@ -157,7 +158,7 @@ test.describe
 
       await playExpect(buildImagePage.registryValidationCheckbox).toBeChecked();
 
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE, CONTAINERFILE_PATH, CONTEXT_DIR);
+      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
       await playExpect
         .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
@@ -194,7 +195,7 @@ test.describe
       await buildImagePage.toggleRegistryValidation(false);
       await playExpect(buildImagePage.registryValidationCheckbox).not.toBeChecked();
 
-      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE, CONTAINERFILE_PATH, CONTEXT_DIR);
+      const updatedImagesPage = await buildImagePage.buildImage(BUILD_IMAGE_TAG, CONTAINERFILE_PATH, CONTEXT_DIR);
 
       await playExpect
         .poll(async () => updatedImagesPage.waitForImageExists(BUILD_IMAGE, 30_000), {
