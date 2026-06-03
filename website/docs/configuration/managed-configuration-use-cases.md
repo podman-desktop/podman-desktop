@@ -42,6 +42,32 @@ Control telemetry settings for compliance or privacy requirements.
 }
 ```
 
+## Disabling provider engine updates
+
+Prevent users from updating container engine providers through the Resources page. This is useful when your organization manages engine versions centrally and wants to prevent users from upgrading independently.
+
+You can disable updates for specific providers by listing their IDs, or use `"*"` to disable updates for all providers.
+
+```json title="default-settings.json (disable all providers)"
+{
+  "providers.disableUpdate": ["*"]
+}
+```
+
+```json title="default-settings.json (disable specific providers)"
+{
+  "providers.disableUpdate": ["podman", "lima"]
+}
+```
+
+```json title="locked.json"
+{
+  "locked": ["providers.disableUpdate"]
+}
+```
+
+When this setting is enforced, the update button will not appear on the Resources page for the specified providers, regardless of whether a newer version is available.
+
 ## Configuring default registries and mirrors
 
 Configure default container registries with optional mirrors for your organization. This is useful for directing image pulls through internal registry mirrors or blocking access to specific registries.

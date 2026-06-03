@@ -659,6 +659,7 @@ export class PluginSystem {
     containerfileParser.init();
 
     const providerRegistry = container.get<ProviderRegistry>(ProviderRegistry);
+    providerRegistry.init();
     providerRegistry.registerAutostartEngine(autoStartEngine);
 
     providerRegistry.addProviderListener((name: string, providerInfo: ProviderInfo) => {

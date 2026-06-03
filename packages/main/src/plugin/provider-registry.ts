@@ -68,6 +68,7 @@ import type {
   ProviderVmConnectionInfo,
 } from '@podman-desktop/core-api';
 import { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import { type IConfigurationNode, IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { inject, injectable } from 'inversify';
 
 import type { AutostartEngine } from './autostart-engine.js';
@@ -172,6 +173,8 @@ export class ProviderRegistry {
     private containerRegistry: ContainerProviderRegistry,
     @inject(Telemetry)
     private telemetryService: Telemetry,
+    @inject(IConfigurationRegistry)
+    private configurationRegistry: IConfigurationRegistry,
   ) {
     this.providers = new Map();
     this.listeners = [];
@@ -210,6 +213,25 @@ export class ProviderRegistry {
         }
       }
     }, 2000);
+  }
+
+  init(): void {
+    const providerConfiguration: IConfigurationNode = {
+      id: 'preferences.providers',
+      title: 'Providers',
+      type: 'object',
+      properties: {
+        'providers.disableUpdate': {
+          description:
+            'List of provider IDs to prevent from registering and displaying engine updates. Use ["*"] to disable updates for all providers.',
+          type: 'array',
+          default: [],
+          hidden: true,
+        },
+      },
+    };
+
+    this.configurationRegistry.registerConfigurations([providerConfiguration]);
   }
 
   createProvider(extensionId: string, extensionDisplayName: string, providerOptions: ProviderOptions): Provider {
@@ -280,6 +302,11 @@ export class ProviderRegistry {
   }
 
   registerUpdate(providerImpl: ProviderImpl, update: ProviderUpdate): Disposable {
+    const disableUpdate = this.configurationRegistry.getConfiguration('providers').get<string[]>('disableUpdate') ?? [];
+    if (disableUpdate.includes('*') || disableUpdate.includes(providerImpl.id)) {
+      return Disposable.create(() => {});
+    }
+
     this.providerUpdates.set(providerImpl.internalId, update);
 
     // need to refresh the provider

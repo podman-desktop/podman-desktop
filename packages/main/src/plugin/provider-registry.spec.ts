@@ -48,6 +48,7 @@ import type {
   ProviderVmConnectionInfo,
 } from '@podman-desktop/core-api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
+import type { IConfigurationRegistry } from '@podman-desktop/core-api/configuration';
 import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AutostartEngine } from './autostart-engine.js';
@@ -83,6 +84,9 @@ const telemetry: Telemetry = {
   aggregateTrack: vi.fn(),
 } as unknown as Telemetry;
 
+let configurationRegistry: IConfigurationRegistry;
+const getConfigurationMock = vi.fn();
+
 beforeEach(() => {
   vi.useRealTimers();
   vi.resetAllMocks();
@@ -95,7 +99,12 @@ beforeEach(() => {
     isApiAttached: vi.fn(),
     onApiAttached: vi.fn(),
   } as unknown as ContainerProviderRegistry;
-  providerRegistry = new TestProviderRegistry(apiSender, containerRegistry, telemetry);
+  getConfigurationMock.mockReturnValue({ get: () => [] });
+  configurationRegistry = {
+    registerConfigurations: vi.fn(),
+    getConfiguration: getConfigurationMock,
+  } as unknown as IConfigurationRegistry;
+  providerRegistry = new TestProviderRegistry(apiSender, containerRegistry, telemetry, configurationRegistry);
   autostartEngine = {
     registerProvider: vi.fn(),
   } as unknown as AutostartEngine;
@@ -1942,6 +1951,135 @@ test('registerUpdate should notify when an update is registered or unregistered'
 
   // check we have been notified
   expect(apiSenderSendMock).toBeCalledWith('provider-change', {});
+});
+
+test('registerUpdate should not store update when providers.disableUpdate contains wildcard', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['*'] });
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  const disposable = providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(disposable).toBeDefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo).toBeUndefined();
+});
+
+test('registerUpdate should not store update when providers.disableUpdate contains the provider id', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['podman', 'lima'] });
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  const disposable = providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(disposable).toBeDefined();
+  expect(apiSenderSendMock).not.toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo).toBeUndefined();
+});
+
+test('registerUpdate should store update when providers.disableUpdate does not contain the provider id', () => {
+  getConfigurationMock.mockReturnValue({ get: () => ['lima'] });
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('registerUpdate should store update when providers.disableUpdate is empty', () => {
+  getConfigurationMock.mockReturnValue({ get: () => [] });
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('registerUpdate should store update when providers.disableUpdate is undefined', () => {
+  getConfigurationMock.mockReturnValue({ get: () => undefined });
+
+  const provider = providerRegistry.createProvider('id', 'name', {
+    id: 'podman',
+    name: 'Podman',
+    status: 'installed',
+  });
+
+  apiSenderSendMock.mockClear();
+  providerRegistry.registerUpdate(
+    provider as unknown as ProviderImpl,
+    { version: '2.0.0', update: vi.fn() } as unknown as ProviderUpdate,
+  );
+
+  expect(apiSenderSendMock).toHaveBeenCalledWith('provider-change', {});
+
+  const providerInfo = providerRegistry.getProviderInfos();
+  const info = providerInfo.find(p => p.internalId === (provider as unknown as ProviderImpl).internalId);
+  expect(info?.updateInfo?.version).toBe('2.0.0');
+});
+
+test('init should register the providers configuration', () => {
+  providerRegistry.init();
+
+  expect(configurationRegistry.registerConfigurations).toHaveBeenCalledWith([
+    expect.objectContaining({
+      id: 'preferences.providers',
+      properties: expect.objectContaining({
+        'providers.disableUpdate': expect.objectContaining({
+          type: 'array',
+          default: [],
+          hidden: true,
+        }),
+      }),
+    }),
+  ]);
 });
 
 describe('runPreflightChecks', () => {
