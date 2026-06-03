@@ -41,12 +41,13 @@ const config = {
     target: `node${node}`,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE === 'production' ? 'esbuild' : false,
+    minify: process.env.MODE === 'production',
     lib: {
       entry: ['src/index.ts', 'scripts/download-remote-extensions.ts', 'scripts/generate-extension-schema.ts'],
       formats: ['cjs'],
     },
     rollupOptions: {
+      platform: 'node',
       external: [
         'electron',
         'chokidar',
