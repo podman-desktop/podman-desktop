@@ -256,6 +256,8 @@ export interface LibPod {
   podmanPushManifest(manifestOptions: ManifestPushOptions, authInfo?: Dockerode.AuthConfig): Promise<void>;
   podmanRemoveManifest(manifestName: string): Promise<void>;
   updateNetwork(networkId: string, addDNSServer: string[], removeDNSServer: string[]): Promise<void>;
+  exportVolume(volumeName: string): Promise<NodeJS.ReadableStream>;
+  importVolume(volumeName: string, archivePath: string): Promise<void>;
 }
 
 // change the method from private to public as we're overriding it
@@ -749,6 +751,56 @@ export class LibpodDockerode {
             return reject(err);
           }
           resolve(wrapAs<Info>(data));
+        });
+      });
+    };
+
+    prototypeOfDockerode.exportVolume = function (volumeName: string): Promise<NodeJS.ReadableStream> {
+      const encodedVolumeName = encodeURIComponent(volumeName);
+      const optsf = {
+        path: `/v4.2.0/libpod/volumes/${encodedVolumeName}/export?`,
+        method: 'GET',
+        options: {},
+        isStream: true,
+        statusCodes: {
+          200: true,
+          404: 'no such volume',
+          500: 'server error',
+        },
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<NodeJS.ReadableStream>(data));
+        });
+      });
+    };
+
+    prototypeOfDockerode.importVolume = function (volumeName: string, archivePath: string): Promise<void> {
+      const encodedVolumeName = encodeURIComponent(volumeName);
+      const optsf = {
+        path: `/v4.2.0/libpod/volumes/${encodedVolumeName}/import?`,
+        method: 'POST',
+        file: archivePath,
+        statusCodes: {
+          200: true,
+          204: true,
+          404: 'no such volume',
+          500: 'server error',
+        },
+        headers: {
+          'Content-Type': 'application/x-tar',
+        },
+        options: {},
+      };
+      return new Promise((resolve, reject) => {
+        this.modem.dial(optsf, (err: unknown, data: unknown) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(wrapAs<void>(data));
         });
       });
     };

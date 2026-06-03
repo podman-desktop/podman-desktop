@@ -123,6 +123,8 @@ import type {
   V1Route,
   ViewInfoUI,
   VolumeCreateOptions,
+  VolumeExportOptions,
+  VolumeImportOptions,
   VolumeInspectInfo,
   VolumeListInfo,
   WebviewInfo,
@@ -592,8 +594,19 @@ export function initExposure(): void {
     },
   );
 
+  contextBridge.exposeInMainWorld(
+    'exportVolume',
+    async (engine: string, options: VolumeExportOptions): Promise<void> => {
+      return ipcInvoke('container-provider-registry:exportVolume', engine, options);
+    },
+  );
+
   contextBridge.exposeInMainWorld('importContainer', async (options: ContainerImportOptions): Promise<void> => {
     return ipcInvoke('container-provider-registry:importContainer', options);
+  });
+
+  contextBridge.exposeInMainWorld('importVolume', async (options: VolumeImportOptions): Promise<void> => {
+    return ipcInvoke('container-provider-registry:importVolume', options);
   });
 
   contextBridge.exposeInMainWorld('saveImages', async (options: ImagesSaveOptions): Promise<void> => {

@@ -119,6 +119,8 @@ import type {
   ViewInfoUI,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
+  VolumeExportOptions,
+  VolumeImportOptions,
   VolumeInspectInfo,
   VolumeListInfo,
   WebviewInfo,
@@ -1731,6 +1733,52 @@ export class PluginSystem {
           })
           .catch((err: unknown) => {
             task.error = `Something went wrong while trying to load images: ${String(err)}`;
+            throw err;
+          });
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:exportVolume',
+      async (_listener, engine: string, options: VolumeExportOptions): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Exporting volume ${options.volumeName}`,
+          action: {
+            name: 'Open folder',
+            execute: (): void => {
+              dialogRegistry.openDialog({ defaultUri: Uri.file(options.outputTarget) }).catch((error: unknown) => {
+                console.error('Error opening dialog', error);
+              });
+            },
+          },
+        });
+        return containerProviderRegistry
+          .exportVolume(engine, options)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while trying to export volume: ${String(err)}`;
+            throw err;
+          });
+      },
+    );
+
+    this.ipcHandle(
+      'container-provider-registry:importVolume',
+      async (_listener, options: VolumeImportOptions): Promise<void> => {
+        const task = taskManager.createTask({
+          title: `Importing volume ${options.volumeName}`,
+        });
+        return containerProviderRegistry
+          .importVolume(options)
+          .then(result => {
+            task.status = 'success';
+            return result;
+          })
+          .catch((err: unknown) => {
+            task.error = `Something went wrong while trying to import volume: ${String(err)}`;
             throw err;
           });
       },

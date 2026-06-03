@@ -80,7 +80,9 @@ import ToastTaskNotifications from './lib/toast/ToastTaskNotifications.svelte';
 import TroubleshootingPage from './lib/troubleshooting/TroubleshootingPage.svelte';
 import TitleBar from './lib/ui/TitleBar.svelte';
 import CreateVolume from './lib/volume/CreateVolume.svelte';
+import ImportVolumes from './lib/volume/ImportVolumes.svelte';
 import VolumeDetails from './lib/volume/VolumeDetails.svelte';
+import VolumeExport from './lib/volume/VolumeExport.svelte';
 import VolumesList from './lib/volume/VolumesList.svelte';
 import Webview from './lib/webview/Webview.svelte';
 import WelcomePage from './lib/welcome/WelcomePage.svelte';
@@ -312,8 +314,16 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
           <Route path="/create" breadcrumb="Create a Volume">
             <CreateVolume />
           </Route>
-          <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details">
-            <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+          <Route path="/import" breadcrumb="Import Volume">
+            <ImportVolumes />
+          </Route>
+          <Route path="/:name/:engineId/*" breadcrumb="Volume Details" let:meta navigationHint="details" firstmatch>
+            <Route path="/export" breadcrumb="Export Volume">
+              <VolumeExport volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+            </Route>
+            <Route breadcrumb="Volume Details" navigationHint="details" path="/*">
+              <VolumeDetails volumeName={decodeURI(meta.params.name)} engineId={decodeURI(meta.params.engineId)} />
+            </Route>
           </Route>
         </Route>
         {#if $kubernetesNoCurrentContext}
