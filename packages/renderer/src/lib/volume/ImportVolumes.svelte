@@ -104,7 +104,7 @@ async function importVolume(): Promise<void> {
 
 <EngineFormPage title="Import Volume">
   {#snippet icon()}
-    <i class="fas fa-upload fa-2x" aria-hidden="true"></i>
+    <i class="fas fa-arrow-circle-down fa-2x" aria-hidden="true"></i>
   {/snippet}
   {#snippet content()}
   <div class="space-y-4">
