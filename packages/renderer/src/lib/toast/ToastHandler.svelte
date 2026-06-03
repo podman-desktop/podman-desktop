@@ -4,11 +4,11 @@
   --toastPadding: '0';
   --toastMsgPadding: '0';
   --toastMinHeight: 2rem;
-  --toastBorderRadius: 0.3rem;
+  --toastBorderRadius: 0.2rem;
   --toastWidth: 16rem;
   --toastContainerTop: auto;
   --toastContainerRight: 0.8rem;
-  --toastContainerBottom: 1rem;
+  --toastContainerBottom: 1.6rem;
   --toastContainerLeft: auto;
   --toastBackground: var(--pd-modal-bg);
   --toastBarHeight: 3px;
@@ -17,15 +17,30 @@
   --toastBarWidth: calc(100% - 4px);
 }
 
-:global(._toastBar::-webkit-progress-value),
-:global(._toastBar::-moz-progress-bar) {
-  border-radius: 0.25rem;
+:global(._toastBar) {
+  border-radius: 2px;
+  overflow: hidden;
 }
 </style>
 
 <script lang="ts">
 import { SvelteToast, toast } from '@zerodevx/svelte-toast';
 import { onDestroy, onMount } from 'svelte';
+
+const toastIcons: Record<string, string> = {
+  error: 'fa-circle-exclamation',
+  warning: 'fa-triangle-exclamation',
+};
+
+function buildMessage(type: string, message: string): string {
+  const c = 'px-3 pt-2 pb-2.5 select-none';
+  const icon = toastIcons[type];
+
+  if (icon)
+    return `<span class="flex flex-row items-start gap-1.5 -ml-0.5 ${c}"><i class="fas ${icon} shrink-0 text-md leading-none mt-1"></i><span>${message}</span></span>`;
+
+  return `<span class="block ${c}">${message}</span>`;
+}
 
 let callback: (object: { type: string; message: string }) => void;
 
@@ -59,7 +74,8 @@ onMount(() => {
         '--toastBarBackground': 'var(--pd-toast-info-bar-bg)',
       };
     }
-    toast.push(object.message, { pausable: true, theme });
+    const msg = buildMessage(object.type, object.message);
+    toast.push(msg, { pausable: true, theme });
   };
 
   window.events?.receive('toast:handler', (object: unknown) => {

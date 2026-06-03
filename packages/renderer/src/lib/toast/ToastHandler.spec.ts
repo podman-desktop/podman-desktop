@@ -47,14 +47,17 @@ test('success toast uses --pd-toast-success-* variables', () => {
 
   callback({ type: 'success', message: 'Done' });
 
-  expect(toastPushSpy).toHaveBeenCalledWith('Done', {
-    pausable: true,
-    theme: {
-      '--toastBackground': 'var(--pd-toast-success-bg)',
-      '--toastColor': 'var(--pd-toast-success-color)',
-      '--toastBarBackground': 'var(--pd-toast-success-bar-bg)',
-    },
-  });
+  expect(toastPushSpy).toHaveBeenCalledWith(
+    expect.stringContaining('Done'),
+    expect.objectContaining({
+      pausable: true,
+      theme: {
+        '--toastBackground': 'var(--pd-toast-success-bg)',
+        '--toastColor': 'var(--pd-toast-success-color)',
+        '--toastBarBackground': 'var(--pd-toast-success-bar-bg)',
+      },
+    }),
+  );
 });
 
 test('error toast uses --pd-toast-error-* variables', () => {
@@ -63,14 +66,17 @@ test('error toast uses --pd-toast-error-* variables', () => {
 
   callback({ type: 'error', message: 'Failed' });
 
-  expect(toastPushSpy).toHaveBeenCalledWith('Failed', {
-    pausable: true,
-    theme: {
-      '--toastBackground': 'var(--pd-toast-error-bg)',
-      '--toastColor': 'var(--pd-toast-error-color)',
-      '--toastBarBackground': 'var(--pd-toast-error-bar-bg)',
-    },
-  });
+  expect(toastPushSpy).toHaveBeenCalledWith(
+    expect.stringContaining('fa-circle-exclamation'),
+    expect.objectContaining({
+      pausable: true,
+      theme: {
+        '--toastBackground': 'var(--pd-toast-error-bg)',
+        '--toastColor': 'var(--pd-toast-error-color)',
+        '--toastBarBackground': 'var(--pd-toast-error-bar-bg)',
+      },
+    }),
+  );
 });
 
 test('warning toast uses --pd-toast-warning-* variables', () => {
@@ -79,14 +85,17 @@ test('warning toast uses --pd-toast-warning-* variables', () => {
 
   callback({ type: 'warning', message: 'Caution' });
 
-  expect(toastPushSpy).toHaveBeenCalledWith('Caution', {
-    pausable: true,
-    theme: {
-      '--toastBackground': 'var(--pd-toast-warning-bg)',
-      '--toastColor': 'var(--pd-toast-warning-color)',
-      '--toastBarBackground': 'var(--pd-toast-warning-bar-bg)',
-    },
-  });
+  expect(toastPushSpy).toHaveBeenCalledWith(
+    expect.stringContaining('fa-triangle-exclamation'),
+    expect.objectContaining({
+      pausable: true,
+      theme: {
+        '--toastBackground': 'var(--pd-toast-warning-bg)',
+        '--toastColor': 'var(--pd-toast-warning-color)',
+        '--toastBarBackground': 'var(--pd-toast-warning-bar-bg)',
+      },
+    }),
+  );
 });
 
 test('info toast uses --pd-toast-info-* variables', () => {
@@ -95,14 +104,17 @@ test('info toast uses --pd-toast-info-* variables', () => {
 
   callback({ type: 'info', message: 'Note' });
 
-  expect(toastPushSpy).toHaveBeenCalledWith('Note', {
-    pausable: true,
-    theme: {
-      '--toastBackground': 'var(--pd-toast-info-bg)',
-      '--toastColor': 'var(--pd-toast-info-color)',
-      '--toastBarBackground': 'var(--pd-toast-info-bar-bg)',
-    },
-  });
+  expect(toastPushSpy).toHaveBeenCalledWith(
+    expect.stringContaining('Note'),
+    expect.objectContaining({
+      pausable: true,
+      theme: {
+        '--toastBackground': 'var(--pd-toast-info-bg)',
+        '--toastColor': 'var(--pd-toast-info-color)',
+        '--toastBarBackground': 'var(--pd-toast-info-bar-bg)',
+      },
+    }),
+  );
 });
 
 test('unknown toast type uses empty theme', () => {
@@ -111,8 +123,11 @@ test('unknown toast type uses empty theme', () => {
 
   callback({ type: 'unknown', message: 'Something' });
 
-  expect(toastPushSpy).toHaveBeenCalledWith('Something', {
-    pausable: true,
-    theme: {},
-  });
+  expect(toastPushSpy).toHaveBeenCalledWith(
+    expect.stringContaining('Something'),
+    expect.objectContaining({
+      pausable: true,
+      theme: {},
+    }),
+  );
 });
