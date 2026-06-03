@@ -50,6 +50,7 @@ const {
   slate,
   stone,
   white,
+  yellow,
   transparent,
 } = tailwindColorPalette;
 
@@ -2396,30 +2397,30 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${toast}warning-bg`, {
-      dark: amber[700],
-      light: amber[600],
-      hcDark: amber[400],
-      hcLight: amber[800],
+      dark: yellow[500],
+      light: yellow[500],
+      hcDark: yellow[400],
+      hcLight: yellow[500],
     });
 
     this.registerColor(`${toast}warning-color`, {
-      dark: white,
-      light: white,
+      dark: black,
+      light: black,
       hcDark: black,
-      hcLight: white,
+      hcLight: black,
     });
 
     this.registerColor(`${toast}warning-bar-bg`, {
-      dark: amber[600],
-      light: amber[500],
+      dark: yellow[600],
+      light: yellow[600],
       hcDark: black,
-      hcLight: white,
+      hcLight: black,
     });
 
     this.registerColor(`${toast}info-bg`, {
       dark: accent1[600],
       light: accent1[500],
-      hcDark: accent1[400],
+      hcDark: accent1[300],
       hcLight: accent1[800],
     });
 
