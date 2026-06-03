@@ -1,6 +1,6 @@
 <script lang="ts">
 import { ListOrganizer, type ListOrganizerItem, NavPage, tablePersistence } from '@podman-desktop/ui-svelte';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import {
@@ -10,8 +10,38 @@ import {
   defaultSection,
   setupDashboardPageRegistry,
 } from '/@/stores/dashboard/dashboard-page-registry.svelte';
+import { registerPrototype, unregisterPrototype } from '/@/stores/prototype';
 
 import NotificationsBox from './NotificationsBox.svelte';
+
+interface DashboardBgOverride {
+  bgColor: string | undefined;
+}
+
+const prototypeOverride = registerPrototype<DashboardBgOverride>({
+  name: 'Dashboard Background',
+  screens: [
+    { value: 'user-default', label: 'User Default' },
+    { value: 'red', label: 'Red Background' },
+    { value: 'blue', label: 'Blue Background' },
+    { value: 'green', label: 'Green Background' },
+  ],
+  overrides: {
+    'user-default': { bgColor: undefined },
+    red: { bgColor: '#dc2626' },
+    blue: { bgColor: '#2563eb' },
+    green: { bgColor: '#16a34a' },
+  },
+});
+
+let currentBgOverride = $state<DashboardBgOverride | undefined>();
+const unsubscribePrototype = prototypeOverride.subscribe(value => {
+  currentBgOverride = value;
+});
+onDestroy(() => {
+  unsubscribePrototype();
+  unregisterPrototype();
+});
 
 // Dashboard section configuration managed by dashboard page registry
 let dashboardSections = $state<ListOrganizerItem[]>([]);
@@ -180,7 +210,10 @@ function handleDashboardToggle(itemId: string, enabled: boolean): void {
   {/snippet}
   
   {#snippet content()}
-  <div class="flex flex-col min-w-full h-full bg-[var(--pd-content-bg)] py-5">
+  <div
+    class="flex flex-col min-w-full h-full py-5"
+    class:bg-[var(--pd-content-bg)]={!currentBgOverride?.bgColor}
+    style:background-color={currentBgOverride?.bgColor}>
     <div class="min-w-full flex-1">
       <NotificationsBox />
       <div class="px-5 space-y-5 h-full">

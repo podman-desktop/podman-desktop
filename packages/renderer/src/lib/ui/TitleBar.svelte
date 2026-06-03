@@ -6,6 +6,7 @@ import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
 import NavigationButtons from '/@/lib/ui/NavigationButtons.svelte';
 import WindowControlButtons from '/@/lib/window-control-buttons/ControlButtons.svelte';
 
+import PrototypeSelector from './PrototypeSelector.svelte';
 import SearchButton from './SearchButton.svelte';
 
 let platform: string = $state('');
@@ -50,7 +51,8 @@ function closeCommandPalette(): void {
     </div>
 
     <!-- right -->
-    <div class="flex flex-row grow justify-end">
+    <div class="flex flex-row grow justify-end items-center">
+      <PrototypeSelector />
       {#if platform !== 'darwin'}
         <WindowControlButtons platform={platform} />
       {/if}
