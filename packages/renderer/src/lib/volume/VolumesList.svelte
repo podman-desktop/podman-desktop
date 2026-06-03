@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faPieChart, faPlusCircle, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faPieChart, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   FilteredEmptyScreen,
@@ -212,7 +212,7 @@ function label(obj: VolumeInfoUI): string {
         aria-label="Gather volume sizes">Gather volume sizes</Button>
     {/if}
     {#if providerConnections.length > 0}
-      <Button type="secondary" on:click={gotoImportVolume} icon={faUpload} title="Import a volume from archive" aria-label="Import Volume"
+      <Button type="secondary" on:click={gotoImportVolume} icon={faArrowCircleDown} title="Import a volume from archive" aria-label="Import Volume"
         >Import</Button>
       <Button type="primary" on:click={gotoCreateVolume} icon={faPlusCircle} title="Create a volume" aria-label="Create"
         >Create</Button>
