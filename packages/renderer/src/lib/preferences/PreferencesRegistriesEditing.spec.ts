@@ -22,13 +22,17 @@ import type { Registry } from '@podman-desktop/api';
 import { waitFor } from '@testing-library/dom';
 import { render, screen } from '@testing-library/svelte';
 import { default as userEvent } from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { registriesInfos } from '/@/stores/registries';
 
 import PreferencesRegistriesEditing from './PreferencesRegistriesEditing.svelte';
 
 describe('PreferencesRegistriesEditing', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   test('Expect that add registry button is visible and enabled', async () => {
     render(PreferencesRegistriesEditing, {});
 
@@ -102,7 +106,7 @@ describe('PreferencesRegistriesEditing', () => {
     expect(window.createImageRegistry).toHaveBeenCalledOnce();
     expect(window.createImageRegistry).toHaveBeenLastCalledWith(undefined, {
       source: undefined,
-      serverUrl: 'https://registry.host',
+      serverUrl: 'registry.host',
       username: 'username',
       secret: 'password',
       insecure: true,
