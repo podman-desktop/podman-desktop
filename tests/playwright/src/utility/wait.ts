@@ -20,7 +20,11 @@ import type { Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
 import { NavigationBar } from '/@/model/workbench/navigation';
-import { createPodmanMachineFromCLI, resetPodmanMachinesFromCLI } from '/@/utility/operations';
+import {
+  createPodmanMachineFromCLI,
+  resetPodmanMachinesFromCLI,
+  setEnhancedDashboardFeature,
+} from '/@/utility/operations';
 
 export async function wait(
   waitFunction: () => Promise<boolean>,
@@ -117,7 +121,11 @@ export async function waitForPodmanMachineStartup(page: Page, timeout = 30_000):
   return test.step('Wait for Podman machine to be running', async () => {
     await createPodmanMachineFromCLI();
 
-    const dashboardPage = await new NavigationBar(page).openDashboard();
+    // Disable enhanced dashboard so classic dashboard locators work
+    const navigationBar = new NavigationBar(page);
+    await setEnhancedDashboardFeature(page, navigationBar, false);
+
+    const dashboardPage = await navigationBar.openDashboard();
     await playExpect(dashboardPage.heading).toBeVisible();
     await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout });
 

@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import { ResourceElementState } from '/@/model/core/states';
 import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
 import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ExperimentalPage } from '/@/model/pages/experimental-page';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RegistriesPage } from '/@/model/pages/registries-page';
@@ -615,6 +616,37 @@ export async function setStatusBarProvidersFeature(
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
+}
+
+export async function setEnhancedDashboardFeature(
+  page: Page,
+  navigationBar: NavigationBar,
+  enable: boolean,
+): Promise<void> {
+  await navigationBar.openSettings();
+  const settingsBar = new SettingsBar(page);
+  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+  await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
+  await waitForDashboardReady(page, navigationBar, enable);
+}
+
+async function waitForDashboardReady(page: Page, navigationBar: NavigationBar, enhanced: boolean): Promise<void> {
+  const expectedLocator = (dashboard: DashboardPage): Locator =>
+    enhanced ? dashboard.systemOverview : dashboard.podmanProvider;
+
+  await playExpect
+    .poll(
+      async () => {
+        const dashboardPage = await navigationBar.openDashboard();
+        if (await expectedLocator(dashboardPage).isVisible()) {
+          return true;
+        }
+        await navigationBar.openContainers();
+        return false;
+      },
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
