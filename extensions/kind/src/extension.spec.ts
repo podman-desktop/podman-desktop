@@ -731,3 +731,150 @@ describe('provider warnings', () => {
     ]);
   });
 });
+
+describe('connection lifecycle error propagation', () => {
+  const KIND_CONTAINER: extensionApi.ContainerInfo = {
+    Id: 'container-id-1',
+    Labels: { 'io.x-k8s.kind.cluster': 'test-cluster' },
+    State: 'running',
+    Ports: [{ PrivatePort: 6443, PublicPort: 12345, Type: 'tcp' }],
+    engineType: 'podman',
+    engineId: 'engine-1',
+  } as unknown as extensionApi.ContainerInfo;
+
+  let registeredConnection: extensionApi.KubernetesProviderConnection;
+
+  beforeEach(async () => {
+    vi.mocked(util.getKindBinaryInfo).mockResolvedValue({
+      path: 'kind',
+      version: '0.0.1',
+    });
+    vi.mocked(util.getSystemBinaryPath).mockReturnValue('kind');
+
+    vi.mocked(podmanDesktopApi.containerEngine.listContainers).mockResolvedValue([KIND_CONTAINER]);
+
+    vi.mocked(
+      PROVIDER_MOCK as unknown as { registerKubernetesProviderConnection: ReturnType<typeof vi.fn> },
+    ).registerKubernetesProviderConnection = vi
+      .fn()
+      .mockImplementation((connection: extensionApi.KubernetesProviderConnection) => {
+        registeredConnection = connection;
+        return { dispose: vi.fn() };
+      });
+
+    vi.mocked(podmanDesktopApi.kubernetes.getKubeconfig).mockReturnValue({
+      path: '/fake/kubeconfig',
+    } as unknown as extensionApi.Uri);
+
+    await activate();
+  });
+
+  describe('start', () => {
+    test('should clear connection.error on successful start', async () => {
+      registeredConnection.error = 'previous error';
+      vi.mocked(podmanDesktopApi.containerEngine.startContainer).mockResolvedValue(undefined);
+
+      await registeredConnection.lifecycle!.start!({} as extensionApi.LifecycleContext, undefined);
+
+      expect(registeredConnection.error).toBeUndefined();
+      expect(podmanDesktopApi.containerEngine.startContainer).toHaveBeenCalledWith('engine-1', 'container-id-1');
+    });
+
+    test('should not touch connection.error when it was already undefined on success', async () => {
+      registeredConnection.error = undefined;
+      vi.mocked(podmanDesktopApi.containerEngine.startContainer).mockResolvedValue(undefined);
+
+      await registeredConnection.lifecycle!.start!({} as extensionApi.LifecycleContext, undefined);
+
+      expect(registeredConnection.error).toBeUndefined();
+    });
+
+    test('should set connection.error with Error message on start failure', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.startContainer).mockRejectedValue(new Error('start failed'));
+
+      await expect(
+        registeredConnection.lifecycle!.start!({} as extensionApi.LifecycleContext, undefined),
+      ).rejects.toThrow('start failed');
+
+      expect(registeredConnection.error).toBe('start failed');
+    });
+
+    test('should set connection.error with stringified value on non-Error start failure', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.startContainer).mockRejectedValue('string error');
+
+      await expect(registeredConnection.lifecycle!.start!({} as extensionApi.LifecycleContext, undefined)).rejects.toBe(
+        'string error',
+      );
+
+      expect(registeredConnection.error).toBe('string error');
+    });
+  });
+
+  describe('stop', () => {
+    test('should clear connection.error on successful stop', async () => {
+      registeredConnection.error = 'previous error';
+      vi.mocked(podmanDesktopApi.containerEngine.stopContainer).mockResolvedValue(undefined);
+
+      await registeredConnection.lifecycle!.stop!({} as extensionApi.LifecycleContext, undefined);
+
+      expect(registeredConnection.error).toBeUndefined();
+      expect(podmanDesktopApi.containerEngine.stopContainer).toHaveBeenCalledWith('engine-1', 'container-id-1');
+    });
+
+    test('should set connection.error with Error message on stop failure', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.stopContainer).mockRejectedValue(new Error('stop failed'));
+
+      await expect(
+        registeredConnection.lifecycle!.stop!({} as extensionApi.LifecycleContext, undefined),
+      ).rejects.toThrow('stop failed');
+
+      expect(registeredConnection.error).toBe('stop failed');
+    });
+
+    test('should set connection.error with stringified value on non-Error stop failure', async () => {
+      vi.mocked(podmanDesktopApi.containerEngine.stopContainer).mockRejectedValue('stop string error');
+
+      await expect(registeredConnection.lifecycle!.stop!({} as extensionApi.LifecycleContext, undefined)).rejects.toBe(
+        'stop string error',
+      );
+
+      expect(registeredConnection.error).toBe('stop string error');
+    });
+  });
+
+  describe('delete', () => {
+    test('should clear connection.error on successful delete', async () => {
+      registeredConnection.error = 'previous error';
+      vi.mocked(podmanDesktopApi.process.exec).mockResolvedValue({} as extensionApi.RunResult);
+
+      await registeredConnection.lifecycle!.delete!({} as unknown as extensionApi.Logger);
+
+      expect(registeredConnection.error).toBeUndefined();
+      expect(podmanDesktopApi.process.exec).toHaveBeenCalledWith(
+        'kind',
+        ['delete', 'cluster', '--name', 'test-cluster', '--kubeconfig', '/fake/kubeconfig'],
+        expect.objectContaining({ env: expect.objectContaining({ KIND_EXPERIMENTAL_PROVIDER: 'podman' }) }),
+      );
+    });
+
+    test('should set connection.error with Error message on delete failure', async () => {
+      vi.mocked(podmanDesktopApi.process.exec).mockRejectedValue(new Error('delete failed'));
+
+      await expect(registeredConnection.lifecycle!.delete!({} as unknown as extensionApi.Logger)).rejects.toThrow(
+        'delete failed',
+      );
+
+      expect(registeredConnection.error).toBe('delete failed');
+    });
+
+    test('should set connection.error with stringified value on non-Error delete failure', async () => {
+      vi.mocked(podmanDesktopApi.process.exec).mockRejectedValue('delete string error');
+
+      await expect(registeredConnection.lifecycle!.delete!({} as unknown as extensionApi.Logger)).rejects.toBe(
+        'delete string error',
+      );
+
+      expect(registeredConnection.error).toBe('delete string error');
+    });
+  });
+});

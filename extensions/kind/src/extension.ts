@@ -234,35 +234,56 @@ async function updateClusters(
             }
             // start the container
             await extensionApi.containerEngine.startContainer(cluster.engineId, cluster.id);
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
           } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
             console.error(err);
-            // propagate the error
             throw err;
           }
         },
         stop: async (context, logger): Promise<void> => {
-          if (context || logger) {
-            await extensionApi.containerEngine.logsContainer(
-              cluster.engineId,
-              cluster.id,
-              getLoggerCallback(context, logger),
-            );
+          try {
+            if (context || logger) {
+              await extensionApi.containerEngine.logsContainer(
+                cluster.engineId,
+                cluster.id,
+                getLoggerCallback(context, logger),
+              );
+            }
+            await extensionApi.containerEngine.stopContainer(cluster.engineId, cluster.id);
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
+          } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
+            console.error(err);
+            throw err;
           }
-          await extensionApi.containerEngine.stopContainer(cluster.engineId, cluster.id);
         },
         delete: async (logger): Promise<void> => {
-          const env: { [key: string]: string } = {};
-          if (cluster.engineType === 'podman') {
-            env['KIND_EXPERIMENTAL_PROVIDER'] = 'podman';
-          }
-          env.PATH = getKindPath() ?? '';
-          if (kindPath) {
-            const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
-            await extensionApi.process.exec(
-              kindPath,
-              ['delete', 'cluster', '--name', cluster.name, '--kubeconfig', kubeConfigPath],
-              { env, logger },
-            );
+          try {
+            const env: { [key: string]: string } = {};
+            if (cluster.engineType === 'podman') {
+              env['KIND_EXPERIMENTAL_PROVIDER'] = 'podman';
+            }
+            env.PATH = getKindPath() ?? '';
+            if (kindPath) {
+              const kubeConfigPath = extensionApi.kubernetes.getKubeconfig().path;
+              await extensionApi.process.exec(
+                kindPath,
+                ['delete', 'cluster', '--name', cluster.name, '--kubeconfig', kubeConfigPath],
+                { env, logger },
+              );
+            }
+            if (connection.error !== undefined) {
+              connection.error = undefined;
+            }
+          } catch (err) {
+            connection.error = err instanceof Error ? err.message : String(err);
+            console.error(err);
+            throw err;
           }
         },
       };
