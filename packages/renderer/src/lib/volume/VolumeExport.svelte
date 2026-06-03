@@ -36,6 +36,15 @@ onMount(() => {
   });
 });
 
+function handleOutputPathKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    selectOutputPath().catch((error: unknown) => {
+      console.error(error);
+    });
+  }
+}
+
 async function selectOutputPath(): Promise<void> {
   if (!volume) return;
 
@@ -92,14 +101,24 @@ async function exportVolume(): Promise<void> {
             <label for="modalSelectTarget" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
               >Export to:</label>
             <div class="flex w-full">
-              <Input
-                class="grow mr-2"
-                name={volume.name}
-                readonly
-                value={outputTarget}
-                id="input-export-volume-name"
-                placeholder="Select a destination file..."
-                aria-invalid={invalidFolder} />
+              <div
+                class="grow mr-2 cursor-pointer"
+                role="button"
+                tabindex="0"
+                title="Open dialog to select the output file"
+                aria-label="Select output file"
+                on:click={selectOutputPath}
+                on:keydown={handleOutputPathKeydown}>
+                <Input
+                  class="w-full"
+                  inputClass="cursor-pointer"
+                  name={volume.name}
+                  readonly
+                  value={outputTarget}
+                  id="input-export-volume-name"
+                  placeholder="Select a destination file..."
+                  aria-invalid={invalidFolder} />
+              </div>
               <Button
                 on:click={selectOutputPath}
                 title="Open dialog to select the output file"

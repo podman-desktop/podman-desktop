@@ -1,5 +1,6 @@
 <script lang="ts">
 import { faPlusCircle, faUpload } from '@fortawesome/free-solid-svg-icons';
+import type { OpenDialogOptions } from '@podman-desktop/api';
 import type { ProviderContainerConnectionInfo, ProviderInfo, VolumeInfo } from '@podman-desktop/core-api';
 import { Button, ErrorMessage, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
@@ -11,9 +12,24 @@ import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
 import { fetchVolumesWithData, volumeListInfos } from '/@/stores/volumes';
 
+import { isValidVolumeImportArchivePath } from './volume-utils';
+
 type TargetMode = 'existing' | 'new';
 
+const volumeArchiveDialogOptions: OpenDialogOptions = {
+  title: 'Select volume archive to import',
+  filters: [
+    {
+      name: 'Tar archives',
+      extensions: ['tar'],
+    },
+  ],
+};
+
+const invalidArchiveFileError = 'The selected file must be a .tar archive.';
+
 let archivePath: string = $state('');
+let archiveFileError: string = $state('');
 let targetMode: TargetMode = $state('existing');
 let selectedExistingVolume: string = $state('');
 let newVolumeName: string = $state('');
@@ -27,7 +43,7 @@ let inProgress = $state(false);
 let existingVolumes: VolumeInfo[] = $state([]);
 
 let targetVolumeName = $derived(targetMode === 'existing' ? selectedExistingVolume : newVolumeName);
-let importDisabled = $derived(!selectedProvider || !archivePath || !targetVolumeName);
+let importDisabled = $derived(!selectedProvider || !archivePath || !!archiveFileError || !targetVolumeName);
 
 onMount(async () => {
   providers = get(providerInfos);
@@ -49,9 +65,31 @@ onMount(async () => {
   }
 });
 
+function validateArchivePath(path: string): boolean {
+  if (!path) {
+    archiveFileError = '';
+    return false;
+  }
+  if (!isValidVolumeImportArchivePath(path)) {
+    archiveFileError = invalidArchiveFileError;
+    return false;
+  }
+  archiveFileError = '';
+  return true;
+}
+
+function handleArchiveFileKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    selectArchiveFile().catch((error: unknown) => {
+      console.error(error);
+    });
+  }
+}
+
 async function selectArchiveFile(): Promise<void> {
   const files = await window.openDialog({
-    title: 'Select volume archive to import',
+    ...volumeArchiveDialogOptions,
     selectors: ['openFile'],
   });
 
@@ -59,7 +97,11 @@ async function selectArchiveFile(): Promise<void> {
     return;
   }
 
-  archivePath = files[0].replace(/\\/g, '/');
+  const selectedPath = files[0].replace(/\\/g, '/');
+  archivePath = selectedPath;
+  if (!validateArchivePath(selectedPath)) {
+    return;
+  }
 
   if (targetMode === 'new' && !newVolumeName) {
     let lastSlashPos = archivePath.lastIndexOf('/') + 1;
@@ -76,6 +118,10 @@ async function importVolume(): Promise<void> {
 
   if (!selectedProvider) {
     importError = 'Select a container engine to import into';
+    return;
+  }
+
+  if (!validateArchivePath(archivePath)) {
     return;
   }
 
@@ -124,14 +170,25 @@ async function importVolume(): Promise<void> {
       <label for="archiveFile" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
         >Archive file:</label>
       <div class="flex w-full gap-2">
-        <Input
-          class="grow"
-          name="archiveFile"
-          readonly
-          value={archivePath}
-          id="input-import-volume-archive"
-          placeholder="Select a .tar archive file..."
-          aria-invalid={!archivePath} />
+        <div
+          class="grow cursor-pointer"
+          role="button"
+          tabindex="0"
+          title="Open dialog to select an archive file"
+          aria-label="Select archive file"
+          on:click={selectArchiveFile}
+          on:keydown={handleArchiveFileKeydown}>
+          <Input
+            class="w-full"
+            inputClass="cursor-pointer"
+            name="archiveFile"
+            readonly
+            value={archivePath}
+            id="input-import-volume-archive"
+            placeholder="Select a .tar archive file..."
+            error={archiveFileError}
+            aria-invalid={!!archiveFileError || !archivePath} />
+        </div>
         <Button
           on:click={selectArchiveFile}
           icon={faPlusCircle}
