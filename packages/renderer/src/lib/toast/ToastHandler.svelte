@@ -32,14 +32,24 @@ const toastIcons: Record<string, string> = {
   warning: 'fa-triangle-exclamation',
 };
 
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 function buildMessage(type: string, message: string): string {
   const c = 'px-3 pt-2 pb-2.5 select-none';
   const icon = toastIcons[type];
+  const safe = escapeHtml(message);
 
   if (icon)
-    return `<span class="flex flex-row items-start gap-1.5 -ml-0.5 ${c}"><i class="fas ${icon} shrink-0 text-md leading-none mt-1"></i><span>${message}</span></span>`;
+    return `<span class="flex flex-row items-start gap-1.5 -ml-0.5 ${c}"><i class="fas ${icon} shrink-0 text-md leading-none mt-1"></i><span>${safe}</span></span>`;
 
-  return `<span class="block ${c}">${message}</span>`;
+  return `<span class="block ${c}">${safe}</span>`;
 }
 
 let callback: (object: { type: string; message: string }) => void;

@@ -77,6 +77,7 @@ test('error toast uses --pd-toast-error-* variables', () => {
       },
     }),
   );
+  expect(toastPushSpy).toHaveBeenCalledWith(expect.stringContaining('Failed'), expect.anything());
 });
 
 test('warning toast uses --pd-toast-warning-* variables', () => {
@@ -96,6 +97,7 @@ test('warning toast uses --pd-toast-warning-* variables', () => {
       },
     }),
   );
+  expect(toastPushSpy).toHaveBeenCalledWith(expect.stringContaining('Caution'), expect.anything());
 });
 
 test('info toast uses --pd-toast-info-* variables', () => {
@@ -115,6 +117,17 @@ test('info toast uses --pd-toast-info-* variables', () => {
       },
     }),
   );
+});
+
+test('message with HTML is escaped before rendering', () => {
+  const toastPushSpy = vi.spyOn(toast, 'push');
+  const callback = getToastEventCallback();
+
+  callback({ type: 'error', message: '<img src=x onerror=alert(1)>' });
+
+  const messageArg = toastPushSpy.mock.calls[0]?.[0] as string;
+  expect(messageArg).not.toContain('<img');
+  expect(messageArg).toContain('&lt;img');
 });
 
 test('unknown toast type uses empty theme', () => {
