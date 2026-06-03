@@ -51,11 +51,21 @@ const { Story } = defineMeta({
     <span class="text-xs font-medium text-(--pd-content-text) uppercase tracking-wide">{label}</span>
     <div
       style="background: var(--pd-toast-{type}-bg); color: var(--pd-toast-{type}-color);"
-      class="w-64 rounded overflow-hidden text-sm select-none shadow-md">
-      <div class="px-3 py-2.5">{message}</div>
+      class="relative flex flex-row items-center w-64 min-h-[2rem] rounded-[0.2rem] overflow-hidden text-[0.8rem] select-none shadow-md">
+      <div class="flex-1">
+        {#if type === 'error' || type === 'warning'}
+          <div class="flex flex-row items-start gap-1.5 -ml-0.5 px-3 pt-2 pb-2.5">
+            <Icon icon={type === 'error' ? faCircleExclamation : faTriangleExclamation} class="shrink-0 mt-1" />
+            <span>{message}</span>
+          </div>
+        {:else}
+          <div class="px-3 pt-2 pb-2.5">{message}</div>
+        {/if}
+      </div>
+      <div class="w-8 self-stretch flex items-center justify-center cursor-pointer opacity-60 text-[1rem]">✕</div>
       <div
         style="background: var(--pd-toast-{type}-bar-bg);"
-        class="h-[3px] w-3/5 mx-0.5 mb-0.5 rounded">
+        class="absolute bottom-0.5 left-0.5 h-[3px] w-3/5 rounded-[2px]">
       </div>
     </div>
   </div>
