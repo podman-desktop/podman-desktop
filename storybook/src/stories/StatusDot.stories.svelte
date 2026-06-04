@@ -2,18 +2,18 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import { type Args, defineMeta, type StoryContext } from '@storybook/addon-svelte-csf';
 
+import MockStatusDotIcon from './helpers/MockStatusDotIcon.svelte';
+
 /**
  * Stories for the `StatusDot` component from `packages/renderer`.
  *
- * A small colored circle indicating container or pod status. Supports filled
- * (active) and outlined (inactive) rendering modes, optional tooltip, and
- * an optional count badge for grouped display.
+ * A 12x12px SVG icon indicating container or pod status. Each status maps
+ * to a distinct CSS variable color from the color registry. The SVG shapes
+ * are circular placeholders - they will be replaced with Figma-designed
+ * icons that provide shape-based differentiation (not just color).
  *
  * Used inside the Pods list table (both Podman and Kubernetes) via the
  * `Dots.svelte` wrapper.
- *
- * **Planned modernization:** The dot will be replaced with a larger SVG icon
- * so status is not communicated by color alone (a11y).
  */
 const { Story } = defineMeta({
   render: template,
@@ -56,42 +56,21 @@ const { Story } = defineMeta({
 
 type StatusEntry = {
   status: string;
-  mode: 'filled' | 'outlined';
   token: string;
 };
 
 const allStatuses: StatusEntry[] = [
-  { status: 'running', mode: 'filled', token: '--pd-status-running' },
-  { status: 'terminated', mode: 'filled', token: '--pd-status-terminated' },
-  { status: 'waiting', mode: 'filled', token: '--pd-status-waiting' },
-  { status: 'paused', mode: 'filled', token: '--pd-status-paused' },
-  { status: 'degraded', mode: 'filled', token: '--pd-status-degraded' },
-  { status: 'dead', mode: 'filled', token: '--pd-status-dead' },
-  { status: 'unknown', mode: 'filled', token: '--pd-status-unknown' },
-  { status: 'stopped', mode: 'outlined', token: '--pd-status-stopped' },
-  { status: 'exited', mode: 'outlined', token: '--pd-status-exited' },
-  { status: 'created', mode: 'outlined', token: '--pd-status-created' },
+  { status: 'running', token: '--pd-status-running' },
+  { status: 'terminated', token: '--pd-status-terminated' },
+  { status: 'waiting', token: '--pd-status-waiting' },
+  { status: 'paused', token: '--pd-status-paused' },
+  { status: 'degraded', token: '--pd-status-degraded' },
+  { status: 'dead', token: '--pd-status-dead' },
+  { status: 'unknown', token: '--pd-status-unknown' },
+  { status: 'stopped', token: '--pd-status-stopped' },
+  { status: 'exited', token: '--pd-status-exited' },
+  { status: 'created', token: '--pd-status-created' },
 ];
-
-const filledStatuses = allStatuses.filter(s => s.mode === 'filled');
-const outlinedStatuses = allStatuses.filter(s => s.mode === 'outlined');
-
-const statusColors: Record<string, string> = {
-  running: 'bg-(--pd-status-running)',
-  terminated: 'bg-(--pd-status-terminated)',
-  waiting: 'bg-(--pd-status-waiting)',
-  stopped: 'outline-(--pd-status-stopped)',
-  paused: 'bg-(--pd-status-paused)',
-  exited: 'outline-(--pd-status-exited)',
-  dead: 'bg-(--pd-status-dead)',
-  created: 'outline-(--pd-status-created)',
-  degraded: 'bg-(--pd-status-degraded)',
-  unknown: 'bg-(--pd-status-unknown)',
-};
-
-function getStatusColor(status: string): string {
-  return statusColors[status] ?? 'bg-(--pd-status-unknown)';
-}
 
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -101,10 +80,6 @@ function buildTooltip(customTooltip: string, name: string, status: string): stri
   if (customTooltip !== '') return customTooltip;
   if (name && status) return `${name}: ${capitalize(status)}`;
   return capitalize(status);
-}
-
-function isOutlined(status: string): boolean {
-  return getStatusColor(status).includes('outline');
 }
 
 type MockContainer = { name: string; status: string };
@@ -171,48 +146,22 @@ const stressTests = [
   {#if args.kind === 'allStatuses'}
     <div class="flex flex-col gap-6">
       <div class="text-sm text-(--pd-content-text)">
-        StatusDot uses two rendering modes. <strong>Filled</strong> dots use a solid background for active or
-        notable states. <strong>Outlined</strong> dots use an outline border for inactive states.
+        All statuses now render as 12x12px filled SVG circles. The SVG shapes are placeholders
+        that will be replaced with distinct Figma-designed icons per status.
       </div>
 
-      <div class="flex flex-col gap-4">
-        <div class="text-xs font-semibold uppercase tracking-wide text-(--pd-content-header)">Filled (active states)</div>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {#each filledStatuses as entry (entry.status)}
-            <div class="flex items-center gap-3 rounded border border-(--pd-content-divider) p-3">
-              <Tooltip top tip="{capitalize(entry.status)}">
-                <div
-                  class="w-2 h-2 rounded-full {getStatusColor(entry.status)}"
-                  title={capitalize(entry.status)}>
-                </div>
-              </Tooltip>
-              <div class="flex flex-col">
-                <div class="text-xs font-semibold text-(--pd-content-header)">{entry.status}</div>
-                <code class="text-[10px] text-(--pd-content-text)">{entry.token}</code>
-              </div>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {#each allStatuses as entry (entry.status)}
+          <div class="flex items-center gap-3 rounded border border-(--pd-content-divider) p-3">
+            <Tooltip top tip="{capitalize(entry.status)}">
+              <MockStatusDotIcon status={entry.status} />
+            </Tooltip>
+            <div class="flex flex-col">
+              <div class="text-xs font-semibold text-(--pd-content-header)">{entry.status}</div>
+              <code class="text-[10px] text-(--pd-content-text)">{entry.token}</code>
             </div>
-          {/each}
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-4">
-        <div class="text-xs font-semibold uppercase tracking-wide text-(--pd-content-header)">Outlined (inactive states)</div>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {#each outlinedStatuses as entry (entry.status)}
-            <div class="flex items-center gap-3 rounded border border-(--pd-content-divider) p-3">
-              <Tooltip top tip="{capitalize(entry.status)}">
-                <div
-                  class="w-2 h-2 rounded-full outline-2 outline-offset-[-2px] outline {getStatusColor(entry.status)}"
-                  title={capitalize(entry.status)}>
-                </div>
-              </Tooltip>
-              <div class="flex flex-col">
-                <div class="text-xs font-semibold text-(--pd-content-header)">{entry.status}</div>
-                <code class="text-[10px] text-(--pd-content-text)">{entry.token}</code>
-              </div>
-            </div>
-          {/each}
-        </div>
+          </div>
+        {/each}
       </div>
     </div>
 
@@ -220,16 +169,14 @@ const stressTests = [
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
         When a pod has more than 10 containers, dots are grouped by status with a count badge below.
-        The dot shifts down (<code>mt-3</code>) to align with the number text.
       </div>
 
       <div class="flex items-start gap-4 rounded border border-(--pd-content-divider) p-4">
         {#each [{ status: 'running', count: 5 }, { status: 'stopped', count: 3 }, { status: 'exited', count: 2 }, { status: 'paused', count: 1 }] as badge (badge.status)}
           <Tooltip top tip="{capitalize(badge.status)}: {badge.count}">
             <div class="flex flex-col items-center">
-              <div
-                class="w-2 h-2 mr-0.5 rounded-full mt-3 {isOutlined(badge.status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(badge.status)}"
-                title="{capitalize(badge.status)}: {badge.count}">
+              <div class="mr-0.5 mt-3" title="{capitalize(badge.status)}: {badge.count}">
+                <MockStatusDotIcon status={badge.status} />
               </div>
               <div class="text-sm font-bold text-(--pd-content-text) mr-0.5">{badge.count}</div>
             </div>
@@ -247,14 +194,11 @@ const stressTests = [
 
       <div class="rounded border border-(--pd-content-divider) p-4">
         <div class="text-xs font-semibold text-(--pd-content-header) mb-2">Individual dots</div>
-        <div class="flex items-center flex-wrap">
+        <div class="flex items-center flex-wrap gap-0.5">
           {#each Object.entries(organizeContainers(makeMockContainers(fewContainerStatuses))) as [status, containers] (status)}
             {#each containers as container, i (i)}
               <Tooltip top tip="{container.name}: {capitalize(status)}">
-                <div
-                  class="w-2 h-2 mr-0.5 rounded-full {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                  title="{container.name}: {capitalize(status)}">
-                </div>
+                <MockStatusDotIcon {status} />
               </Tooltip>
             {/each}
           {/each}
@@ -266,21 +210,20 @@ const stressTests = [
     <div class="flex flex-col gap-4">
       <div class="text-sm text-(--pd-content-text)">
         Pod with {manyContainerStatuses.length} containers (above 10 threshold).
-        Containers are grouped by status with count badges. This is the <code>Dots.svelte</code> layout for large pods.
+        Containers are grouped by status with count badges.
       </div>
 
       <div class="rounded border border-(--pd-content-divider) p-4">
         <div class="text-xs font-semibold text-(--pd-content-header) mb-2">Grouped with counts</div>
-        <div class="flex items-start">
+        <div class="flex items-start gap-1">
           {#each Object.entries(organizeContainers(makeMockContainers(manyContainerStatuses))) as [status, containers] (status)}
             {#if containers.length > 0}
               <Tooltip top tip="{capitalize(status)}: {containers.length}">
                 <div class="flex flex-col items-center">
-                  <div
-                    class="w-2 h-2 mr-0.5 rounded-full mt-3 {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                    title="{capitalize(status)}: {containers.length}">
+                  <div class="mt-3" title="{capitalize(status)}: {containers.length}">
+                    <MockStatusDotIcon {status} />
                   </div>
-                  <div class="text-sm font-bold text-(--pd-content-text) mr-0.5">{containers.length}</div>
+                  <div class="text-sm font-bold text-(--pd-content-text)">{containers.length}</div>
                 </div>
               </Tooltip>
             {/if}
@@ -292,9 +235,8 @@ const stressTests = [
   {:else if args.kind === 'tableCell'}
     <div class="flex flex-col gap-6">
       <div class="text-sm text-(--pd-content-text)">
-        StatusDots appear inside the Containers column of the Pods list table. This mock reproduces
-        the real table row layout so you can evaluate how a larger dot (with SVG icon) would affect
-        row height and column width.
+        StatusDots appear inside the Containers column of the Pods list table. The dots are now
+        12x12px SVG circles (up from 8x8px divs). Compare row height and column width impact.
       </div>
 
       <div class="flex flex-col gap-4">
@@ -310,15 +252,12 @@ const stressTests = [
           <div class="w-20 px-3 py-2 border-r border-(--pd-content-divider)">
             <span class="text-xs text-(--pd-content-text)">Running</span>
           </div>
-          <div class="w-32 px-3 py-2 border-r border-(--pd-content-divider)">
-            <button class="cursor-pointer flex items-center flex-wrap">
+          <div class="w-40 px-3 py-2 border-r border-(--pd-content-divider)">
+            <button class="cursor-pointer flex items-center flex-wrap gap-0.5">
               {#each Object.entries(organizeContainers(makeMockContainers(fewContainerStatuses))) as [status, containers] (status)}
                 {#each containers as container, i (i)}
                   <Tooltip top tip="{container.name}: {capitalize(status)}">
-                    <div
-                      class="w-2 h-2 mr-0.5 rounded-full {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                      title="{container.name}: {capitalize(status)}">
-                    </div>
+                    <MockStatusDotIcon {status} />
                   </Tooltip>
                 {/each}
               {/each}
@@ -341,17 +280,16 @@ const stressTests = [
           <div class="w-20 px-3 py-2 border-r border-(--pd-content-divider)">
             <span class="text-xs text-(--pd-content-text)">Degraded</span>
           </div>
-          <div class="w-32 px-3 py-2 border-r border-(--pd-content-divider)">
-            <button class="cursor-pointer flex items-start flex-wrap">
+          <div class="w-40 px-3 py-2 border-r border-(--pd-content-divider)">
+            <button class="cursor-pointer flex items-start flex-wrap gap-1">
               {#each Object.entries(organizeContainers(makeMockContainers(manyContainerStatuses))) as [status, containers] (status)}
                 {#if containers.length > 0}
                   <Tooltip top tip="{capitalize(status)}: {containers.length}">
                     <div class="flex flex-col items-center">
-                      <div
-                        class="w-2 h-2 mr-0.5 rounded-full mt-3 {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                        title="{capitalize(status)}: {containers.length}">
+                      <div class="mt-3" title="{capitalize(status)}: {containers.length}">
+                        <MockStatusDotIcon {status} />
                       </div>
-                      <div class="text-sm font-bold text-(--pd-content-text) mr-0.5">{containers.length}</div>
+                      <div class="text-sm font-bold text-(--pd-content-text)">{containers.length}</div>
                     </div>
                   </Tooltip>
                 {/if}
@@ -375,14 +313,11 @@ const stressTests = [
           <div class="w-20 px-3 py-2 border-r border-(--pd-content-divider)">
             <span class="text-xs text-(--pd-content-text)">Running</span>
           </div>
-          <div class="w-32 px-3 py-2 border-r border-(--pd-content-divider)">
-            <div class="flex items-center flex-wrap">
+          <div class="w-40 px-3 py-2 border-r border-(--pd-content-divider)">
+            <div class="flex items-center flex-wrap gap-0.5">
               {#each ['running', 'running', 'waiting'] as status, i (i)}
                 <Tooltip top tip="container-{i + 1}: {capitalize(status)}">
-                  <div
-                    class="w-2 h-2 mr-0.5 rounded-full {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                    title="container-{i + 1}: {capitalize(status)}">
-                  </div>
+                  <MockStatusDotIcon {status} />
                 </Tooltip>
               {/each}
             </div>
@@ -397,8 +332,8 @@ const stressTests = [
   {:else if args.kind === 'stressTest'}
     <div class="flex flex-col gap-6">
       <div class="text-sm text-(--pd-content-text)">
-        Edge cases for density and layout. The 10-container threshold switches from individual dots to grouped counts.
-        Use this to evaluate how a larger StatusDot (with SVG icon) would affect each density level.
+        Edge cases for density and layout. The 10-container threshold switches from individual dots
+        to grouped counts. Dots are now 12x12px SVG circles (up from 8x8px divs).
       </div>
 
       {#each stressTests as test (test.label)}
@@ -414,17 +349,16 @@ const stressTests = [
 
           <div class="flex items-center rounded bg-(--pd-content-card-bg) px-3 py-2">
             <div class="w-40 text-sm text-(--pd-content-header) truncate mr-4">test-pod</div>
-            <div class="flex items-start flex-wrap">
+            <div class="flex items-start flex-wrap gap-0.5">
               {#if grouped}
                 {#each Object.entries(organized) as [status, statusContainers] (status)}
                   {#if statusContainers.length > 0}
                     <Tooltip top tip="{capitalize(status)}: {statusContainers.length}">
                       <div class="flex flex-col items-center">
-                        <div
-                          class="w-2 h-2 mr-0.5 rounded-full mt-3 {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                          title="{capitalize(status)}: {statusContainers.length}">
+                        <div class="mt-3" title="{capitalize(status)}: {statusContainers.length}">
+                          <MockStatusDotIcon {status} />
                         </div>
-                        <div class="text-sm font-bold text-(--pd-content-text) mr-0.5">{statusContainers.length}</div>
+                        <div class="text-sm font-bold text-(--pd-content-text)">{statusContainers.length}</div>
                       </div>
                     </Tooltip>
                   {/if}
@@ -433,10 +367,7 @@ const stressTests = [
                 {#each Object.entries(organized) as [status, statusContainers] (status)}
                   {#each statusContainers as container, i (i)}
                     <Tooltip top tip="{container.name}: {capitalize(status)}">
-                      <div
-                        class="w-2 h-2 mr-0.5 rounded-full {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                        title="{container.name}: {capitalize(status)}">
-                      </div>
+                      <MockStatusDotIcon {status} />
                     </Tooltip>
                   {/each}
                 {/each}
@@ -450,47 +381,41 @@ const stressTests = [
   {:else if args.kind === 'accessibility'}
     <div class="flex flex-col gap-6">
       <div class="text-sm text-(--pd-content-text)">
-        Current accessibility characteristics and known gaps.
+        Accessibility improvements in the modernized StatusDot.
       </div>
 
       <div class="flex flex-col gap-4">
-        <div class="text-xs font-semibold uppercase tracking-wide text-(--pd-content-header)">Current behavior</div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-(--pd-content-header)">Current implementation</div>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-            <div class="text-xs font-semibold text-(--pd-content-header)">Tooltip via title attribute</div>
+            <div class="text-xs font-semibold text-(--pd-content-header)">SVG with role="img" and aria-label</div>
             <div class="flex items-center gap-2 py-2">
               <Tooltip top tip="my-container: Running">
-                <div class="w-2 h-2 rounded-full bg-(--pd-status-running)" title="my-container: Running"></div>
+                <MockStatusDotIcon status="running" />
               </Tooltip>
               <span class="text-xs text-(--pd-content-text)">Hover to see tooltip</span>
             </div>
-            <code class="text-[10px] text-(--pd-content-text)">title="my-container: Running"</code>
+            <code class="text-[10px] text-(--pd-content-text)">role="img" aria-label="Running"</code>
           </div>
 
           <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-            <div class="text-xs font-semibold text-(--pd-content-header)">Fill vs outline distinction</div>
-            <div class="flex items-center gap-3 py-2">
-              <div class="flex items-center gap-1.5">
-                <div class="w-2 h-2 rounded-full bg-(--pd-status-running)"></div>
-                <span class="text-xs text-(--pd-content-text)">Filled</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <div class="w-2 h-2 rounded-full outline-2 outline-offset-[-2px] outline outline-(--pd-status-stopped)"></div>
-                <span class="text-xs text-(--pd-content-text)">Outlined</span>
-              </div>
+            <div class="text-xs font-semibold text-(--pd-content-header)">All statuses filled</div>
+            <div class="flex items-center gap-2 py-2">
+              {#each ['running', 'stopped', 'dead', 'paused'] as status (status)}
+                <Tooltip top tip={capitalize(status)}>
+                  <MockStatusDotIcon {status} />
+                </Tooltip>
+              {/each}
             </div>
-            <code class="text-[10px] text-(--pd-content-text)">Only non-color distinction currently</code>
+            <code class="text-[10px] text-(--pd-content-text)">No more outline mode - all filled circles</code>
           </div>
 
           <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
             <div class="text-xs font-semibold text-(--pd-content-header)">High-contrast themes</div>
             <div class="flex items-center gap-2 py-2">
-              {#each ['running', 'stopped', 'dead', 'paused'] as status (status)}
+              {#each ['running', 'stopped', 'dead', 'created'] as status (status)}
                 <Tooltip top tip={capitalize(status)}>
-                  <div
-                    class="w-2 h-2 rounded-full {isOutlined(status) ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)}"
-                    title={capitalize(status)}>
-                  </div>
+                  <MockStatusDotIcon {status} />
                 </Tooltip>
               {/each}
             </div>
@@ -498,26 +423,28 @@ const stressTests = [
           </div>
 
           <div class="flex flex-col gap-2 rounded border border-(--pd-content-divider) p-3">
-            <div class="text-xs font-semibold text-(--pd-content-header)">No ARIA role</div>
-            <div class="py-2">
-              <div class="text-xs text-(--pd-content-text)">The dot is a plain <code>&lt;div&gt;</code> with no
-                <code>role</code> or <code>aria-label</code>. Screen readers rely solely on the
-                <code>title</code> attribute.
+            <div class="text-xs font-semibold text-(--pd-content-header)">12x12px SVG (up from 8x8px)</div>
+            <div class="flex items-center gap-3 py-2">
+              <div class="flex items-center gap-1.5">
+                <MockStatusDotIcon status="running" size="8" />
+                <span class="text-xs text-(--pd-content-text)">Old (8px)</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <MockStatusDotIcon status="running" />
+                <span class="text-xs text-(--pd-content-text)">New (12px)</span>
               </div>
             </div>
-            <code class="text-[10px] text-(--pd-content-text)">Missing: role="status", aria-label</code>
+            <code class="text-[10px] text-(--pd-content-text)">Larger target, still below 24px WCAG minimum</code>
           </div>
         </div>
       </div>
 
       <div class="flex flex-col gap-4">
-        <div class="text-xs font-semibold uppercase tracking-wide text-(--pd-content-header)">Known gaps (to address in modernization)</div>
+        <div class="text-xs font-semibold uppercase tracking-wide text-(--pd-content-header)">Remaining gaps</div>
         <ul class="list-disc pl-5 text-sm text-(--pd-content-text) space-y-1">
-          <li>Color is the only way to distinguish between most statuses</li>
-          <li>8x8px dot may be too small for touch targets (WCAG recommends 24x24px minimum)</li>
-          <li>No shape or icon variation to differentiate statuses without color</li>
-          <li>No <code>role="status"</code> or <code>aria-label</code> on the dot element</li>
-          <li>Outlined dots may be hard to see on some backgrounds at this size</li>
+          <li>SVG shapes are currently identical circles - Figma icons will add shape differentiation</li>
+          <li>12x12px is still below the 24x24px WCAG touch target minimum</li>
+          <li>Color remains the primary differentiator until distinct icon shapes are added</li>
         </ul>
       </div>
     </div>
@@ -528,12 +455,12 @@ const stressTests = [
     {@const customTooltip = args.tooltip ?? ''}
     {@const number = args.number ?? 0}
     {@const tip = buildTooltip(customTooltip, name, status)}
-    {@const outlined = isOutlined(status)}
 
     <Tooltip top {tip}>
       <div
-        class="w-2 h-2 mr-0.5 rounded-full text-center {outlined ? 'outline-2 outline-offset-[-2px] outline' : ''} {getStatusColor(status)} {number ? 'mt-3' : ''}"
+        class="mr-0.5 {number ? 'mt-3' : ''}"
         title={tip}>
+        <MockStatusDotIcon {status} />
       </div>
       {#if number}
         <div class="text-sm font-bold text-(--pd-content-text) mr-0.5">{number}</div>
