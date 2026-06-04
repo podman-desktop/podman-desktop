@@ -1091,8 +1091,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       unplugin-dts:
-        specifier: 1.0.1
-        version: 1.0.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.2))(esbuild@0.25.12)(rollup@4.61.0)(typescript@5.9.3)(vite@7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12))
+        specifier: 1.0.2
+        version: 1.0.2(@microsoft/api-extractor@7.55.2(@types/node@24.6.2))(esbuild@0.25.12)(rollup@4.61.0)(typescript@5.9.3)(vite@7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12))
       vitest:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.6.2)(@vitest/coverage-v8@4.1.7)(jsdom@29.1.1)(msw@2.14.6(@types/node@24.6.2)(typescript@5.9.3))(vite@7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -3902,6 +3902,15 @@ packages:
 
   '@rollup/pluginutils@5.3.0':
     resolution: {integrity: sha512-5EdhGZtnu3V88ces7s53hhfK5KSASnJZv8Lulpc04cWO3REESroJXg73DFsOmgbU2BhwV0E20bu2IDZb3VKW4Q==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^4.59.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+
+  '@rollup/pluginutils@5.4.0':
+    resolution: {integrity: sha512-MfPp06CjRLfXQ3wY0R8vJDYBy/MvVcc9OulEfR0B8Iv9ko+GCNaRZ+EpJYFl27LhKsZK0o420sYCRHCjfCgeUg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^4.59.0
@@ -9022,8 +9031,8 @@ packages:
     resolution: {integrity: sha512-xXqpXoINfFhgua9xiqD8fPFHgkoq1mmmpE92WlDbm9rNRd/EbRb+Gqf908T2DMfuHjjJlksiK2RbHVOdD/MqSw==}
     engines: {node: '>=8.9.0'}
 
-  local-pkg@1.1.2:
-    resolution: {integrity: sha512-arhlxbFRmoQHl33a0Zkle/YWlmNwoyt6QNZEIJcqNbdrsix5Lvc4HyyI3EnwxTYlZYc32EbYrQ8SzEZ7dqgg9A==}
+  local-pkg@1.2.1:
+    resolution: {integrity: sha512-++gUqRDEvcnN6Zhqrr+y/CkVEHhlrR96vZn3nZZPYzMcBUyBtTKzB9NadClFIsIVSsu+3i9tfk/erqy9kAmt7Q==}
     engines: {node: '>=14'}
 
   localforage@1.10.0:
@@ -12149,6 +12158,36 @@ packages:
 
   unplugin-dts@1.0.1:
     resolution: {integrity: sha512-EdJZxdWP4Tm/xhe58/zAge3Tu0OKDYygm8rucRrcCZ4XzgA31jexUKhaJuEMddOPBDs9ONnq6vwigbjeBqkfuw==}
+    peerDependencies:
+      '@microsoft/api-extractor': '>=7'
+      '@rspack/core': ^1
+      '@vue/language-core': ~3.1.5
+      esbuild: '*'
+      rolldown: '*'
+      rollup: ^4.59.0
+      typescript: '>=4'
+      vite: '>=3'
+      webpack: ^4 || ^5
+    peerDependenciesMeta:
+      '@microsoft/api-extractor':
+        optional: true
+      '@rspack/core':
+        optional: true
+      '@vue/language-core':
+        optional: true
+      esbuild:
+        optional: true
+      rolldown:
+        optional: true
+      rollup:
+        optional: true
+      vite:
+        optional: true
+      webpack:
+        optional: true
+
+  unplugin-dts@1.0.2:
+    resolution: {integrity: sha512-VbNiMD0LMl/t6nJueGtrCp79N7ZO1nquxj/FUybJDnKwZGsnW2wjdwBSzA3QEHujoxmxZIptsG43hL7LzXE96w==}
     peerDependencies:
       '@microsoft/api-extractor': '>=7'
       '@rspack/core': ^1
@@ -16511,6 +16550,14 @@ snapshots:
       rollup: 4.61.0
 
   '@rollup/pluginutils@5.3.0(rollup@4.61.0)':
+    dependencies:
+      '@types/estree': 1.0.9
+      estree-walker: 2.0.2
+      picomatch: 4.0.4
+    optionalDependencies:
+      rollup: 4.61.0
+
+  '@rollup/pluginutils@5.4.0(rollup@4.61.0)':
     dependencies:
       '@types/estree': 1.0.9
       estree-walker: 2.0.2
@@ -22316,7 +22363,7 @@ snapshots:
       emojis-list: 3.0.0
       json5: 2.2.3
 
-  local-pkg@1.1.2:
+  local-pkg@1.2.1:
     dependencies:
       mlly: 1.8.2
       pkg-types: 2.3.1
@@ -26262,34 +26309,14 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  unplugin-dts@1.0.1(@microsoft/api-extractor@7.55.2(@types/node@24.6.2))(esbuild@0.25.12)(rollup@4.61.0)(typescript@5.9.3)(vite@7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
-    dependencies:
-      '@rollup/pluginutils': 5.3.0(rollup@4.61.0)
-      '@volar/typescript': 2.4.28
-      compare-versions: 6.1.1
-      debug: 4.4.3
-      kolorist: 1.8.0
-      local-pkg: 1.1.2
-      magic-string: 0.30.21
-      typescript: 5.9.3
-      unplugin: 2.3.11
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.55.2(@types/node@24.6.2)
-      esbuild: 0.25.12
-      rollup: 4.61.0
-      vite: 7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0)
-      webpack: 5.105.0(esbuild@0.25.12)
-    transitivePeerDependencies:
-      - supports-color
-
   unplugin-dts@1.0.1(@microsoft/api-extractor@7.55.2(@types/node@25.9.1))(esbuild@0.25.12)(rollup@4.61.0)(typescript@5.9.3)(vite@7.3.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
     dependencies:
-      '@rollup/pluginutils': 5.3.0(rollup@4.61.0)
+      '@rollup/pluginutils': 5.4.0(rollup@4.61.0)
       '@volar/typescript': 2.4.28
       compare-versions: 6.1.1
       debug: 4.4.3
       kolorist: 1.8.0
-      local-pkg: 1.1.2
+      local-pkg: 1.2.1
       magic-string: 0.30.21
       typescript: 5.9.3
       unplugin: 2.3.11
@@ -26298,6 +26325,26 @@ snapshots:
       esbuild: 0.25.12
       rollup: 4.61.0
       vite: 7.3.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0)
+      webpack: 5.105.0(esbuild@0.25.12)
+    transitivePeerDependencies:
+      - supports-color
+
+  unplugin-dts@1.0.2(@microsoft/api-extractor@7.55.2(@types/node@24.6.2))(esbuild@0.25.12)(rollup@4.61.0)(typescript@5.9.3)(vite@7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.0(esbuild@0.25.12)):
+    dependencies:
+      '@rollup/pluginutils': 5.4.0(rollup@4.61.0)
+      '@volar/typescript': 2.4.28
+      compare-versions: 6.1.1
+      debug: 4.4.3
+      kolorist: 1.8.0
+      local-pkg: 1.2.1
+      magic-string: 0.30.21
+      typescript: 5.9.3
+      unplugin: 2.3.11
+    optionalDependencies:
+      '@microsoft/api-extractor': 7.55.2(@types/node@24.6.2)
+      esbuild: 0.25.12
+      rollup: 4.61.0
+      vite: 7.3.5(@types/node@24.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.36.0)(tsx@4.22.4)(yaml@2.9.0)
       webpack: 5.105.0(esbuild@0.25.12)
     transitivePeerDependencies:
       - supports-color
