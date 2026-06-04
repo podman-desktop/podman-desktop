@@ -1890,92 +1890,123 @@ export class ColorRegistry {
 
     // Podman & Kubernetes
     this.registerColor(`${status}running`, {
-      dark: green[350],
-      light: green[550],
+      dark: green[400],
+      light: green[500],
+      hcDark: green[400],
+      hcLight: green[500],
     });
 
     // Kubernetes only
     this.registerColor(`${status}terminated`, {
-      dark: red[550],
-      light: red[950],
+      dark: red[500],
+      light: red[600],
+      hcDark: red[500],
+      hcLight: red[700],
     });
 
     this.registerColor(`${status}waiting`, {
-      dark: amber[600],
-      light: amber[600],
+      dark: amber[500],
+      light: amber[700],
+      hcDark: amber[600],
+      hcLight: amber[700],
     });
 
     // Podman only
     this.registerColor(`${status}starting`, {
-      dark: green[350],
-      light: green[550],
+      dark: green[400],
+      light: green[500],
+      hcDark: green[400],
+      hcLight: green[500],
     });
 
     // Stopped & Exited are the same color / same thing in the eyes of statuses
     this.registerColor(`${status}stopped`, {
-      dark: gray[900],
-      light: charcoal[200],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${status}exited`, {
-      dark: gray[900],
-      light: charcoal[200],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${status}not-running`, {
-      dark: gray[700],
-      light: gray[900],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
-    // "Warning"
     this.registerColor(`${status}paused`, {
-      dark: amber[600],
-      light: amber[600],
+      dark: yellow[500],
+      light: yellow[700],
+      hcDark: yellow[600],
+      hcLight: yellow[700],
     });
 
     this.registerColor(`${status}degraded`, {
-      dark: amber[700],
+      dark: amber[500],
       light: amber[700],
+      hcDark: amber[600],
+      hcLight: amber[700],
     });
 
     // Others
     this.registerColor(`${status}created`, {
-      dark: green[250],
-      light: green[250],
+      dark: sky[400],
+      light: sky[500],
+      hcDark: sky[500],
+      hcLight: sky[600],
     });
 
     this.registerColor(`${status}dead`, {
-      dark: red[550],
-      light: red[950],
+      dark: red[500],
+      light: red[600],
+      hcDark: red[500],
+      hcLight: red[700],
     });
 
     // If we don't know the status, use gray
     this.registerColor(`${status}unknown`, {
-      dark: gray[100],
-      light: gray[400],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     // Connections / login
     this.registerColor(`${status}connected`, {
-      dark: green[450],
-      light: green[550],
+      dark: green[400],
+      light: green[500],
+      hcDark: green[400],
+      hcLight: green[500],
     });
 
     this.registerColor(`${status}disconnected`, {
       dark: gray[500],
-      light: gray[800],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     // Scaled / updated, use blue as it's a 'neutral' color
     // to indicate that it's informative but not a problem
     this.registerColor(`${status}updated`, {
-      dark: sky[500],
+      dark: sky[400],
       light: sky[500],
+      hcDark: sky[500],
+      hcLight: sky[600],
     });
 
     this.registerColor(`${status}ready`, {
-      dark: gray[900],
-      light: gray[100],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColorDefinition(
