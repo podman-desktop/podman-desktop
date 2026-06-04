@@ -34,7 +34,6 @@ const config = {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
       '/@tests/': `${join(PACKAGE_ROOT, 'tests')}/`,
       '/@product.json': `${join(PACKAGE_ROOT, '../../product.json')}`,
-      '/@package.json': `${join(PACKAGE_ROOT, '../../package.json')}`,
     },
   },
   build: {

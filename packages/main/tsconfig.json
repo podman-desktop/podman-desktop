@@ -19,8 +19,7 @@
     "paths": {
       "/@/*": ["./src/*"],
       "/@tests/*": ["./tests/*"],
-      "/@product.json": ["../../product.json"],
-      "/@package.json": ["../../package.json"]
+      "/@product.json": ["../../product.json"]
     }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts", "../../types/**/*.d.ts"]

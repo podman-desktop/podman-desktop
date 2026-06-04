@@ -169,9 +169,10 @@ import { Welcome } from '/@/plugin/welcome.js';
 import { securityRestrictionCurrentHandler } from '/@/security-restrictions-handler.js';
 import { TrayMenu } from '/@/tray-menu.js';
 import { createHash, isMac } from '/@/util.js';
-import rootPackage from '/@package.json' with { type: 'json' };
 import product from '/@product.json' with { type: 'json' };
 
+// eslint-disable-next-line no-restricted-imports
+import rootPackage from '../../../../package.json' with { type: 'json' };
 import { MainWindowDeferred } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
