@@ -17,3 +17,19 @@ extensions/podman/assets/
 extensions-extra/
 __mocks__/@podman-desktop/api.ts
 contexts/meta/
+
+# Build artifacts
+*.tsbuildinfo
+build/
+
+# Editor/IDE files
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
