@@ -30,6 +30,11 @@ const config = {
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
+    // Main is a Node.js process: never resolve the `browser` field of dependencies.
+    // Vite 8 builds as a "client environment" and would otherwise pick the browser
+    // entry of packages like node-fetch (which re-exports the global undici fetch),
+    // dropping the https.Agent used for TLS against self-signed Kubernetes API servers.
+    mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
       '/@tests/': `${join(PACKAGE_ROOT, 'tests')}/`,
