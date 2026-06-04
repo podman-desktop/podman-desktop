@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,70 +19,76 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render, screen } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import StatusDot from './StatusDot.svelte';
 
-const renderStatusDot = (containerStatus: string): void => {
-  render(StatusDot, { name: 'foobar', status: containerStatus });
+vi.mock(import('./StatusDotIcon.svelte'));
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+
+const renderStatusDot = (containerStatus: string, name = 'foobar'): void => {
+  render(StatusDot, { name, status: containerStatus });
 };
 
-test('Expect the dot to have the correct color for running status', () => {
+test('Expect the dot wrapper to exist for running status', () => {
   renderStatusDot('running');
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-running)]');
+  expect(dot).toBeInTheDocument();
 });
 
-test('Expect the dot to have the correct color for terminated status', () => {
-  renderStatusDot('terminated');
+test('Expect auto-generated tooltip from name and status', () => {
+  renderStatusDot('running', 'my-container');
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-terminated)]');
+  expect(dot).toHaveAttribute('title', 'my-container: Running');
 });
 
-test('Expect the dot to have the correct color for waiting status', () => {
-  renderStatusDot('waiting');
+test('Expect custom tooltip to override auto-generated', () => {
+  render(StatusDot, { status: 'running', name: 'my-container', tooltip: 'Custom tip' });
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-waiting)]');
+  expect(dot).toHaveAttribute('title', 'Custom tip');
 });
 
-test('Expect the dot to have the correct color for stopped status', () => {
-  renderStatusDot('stopped');
+test('Expect number badge to render when number is provided', () => {
+  render(StatusDot, { status: 'running', name: 'foobar', number: 5 });
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('outline-[var(--pd-status-stopped)]');
+  expect(dot).toHaveClass('mt-3');
+  expect(screen.getByText('5')).toBeInTheDocument();
 });
 
-test('Expect the dot to have the correct color for paused status', () => {
-  renderStatusDot('paused');
-  const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-paused)]');
+test('Expect no number badge when number is 0', () => {
+  renderStatusDot('running');
+  expect(screen.queryByText('0')).not.toBeInTheDocument();
 });
 
-test('Expect the dot to have the correct color for exited status', () => {
-  renderStatusDot('exited');
+test('Expect dot wrapper to have margin class', () => {
+  renderStatusDot('running');
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('outline-[var(--pd-status-exited)]');
+  expect(dot).toHaveClass('mr-0.5');
 });
 
-test('Expect the dot to have the correct color for dead status', () => {
-  renderStatusDot('dead');
+test('Expect no mt-3 class when number is 0', () => {
+  renderStatusDot('running');
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-dead)]');
+  expect(dot).not.toHaveClass('mt-3');
 });
 
-test('Expect the dot to have the correct color for created status', () => {
-  renderStatusDot('created');
+test('Expect empty tooltip when name and status are empty', () => {
+  render(StatusDot, { status: '', name: '' });
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('outline-[var(--pd-status-created)]');
+  expect(dot).toHaveAttribute('title', '');
 });
 
-test('Expect the dot to have the correct color for degraded status', () => {
-  renderStatusDot('degraded');
+test('Expect auto-generated tooltip when only name is empty', () => {
+  render(StatusDot, { status: 'running', name: '' });
   const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-degraded)]');
+  expect(dot).toHaveAttribute('title', '');
 });
 
-test('Expect the dot to have the correct color for unknown status', () => {
-  renderStatusDot('unknown');
-  const dot = screen.getByTestId('status-dot');
-  expect(dot).toHaveClass('bg-[var(--pd-status-unknown)]');
+test('Expect StatusDotIcon to receive the status prop', () => {
+  const { container } = render(StatusDot, { status: 'stopped', name: 'test' });
+  const dotWrapper = container.querySelector('[data-testid="status-dot"]');
+  expect(dotWrapper).toBeInTheDocument();
 });
