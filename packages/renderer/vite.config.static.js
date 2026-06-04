@@ -30,7 +30,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['tinro', '@podman-desktop/api'],
   },
-  base: '/',
+  base: './',
   build: {
     sourcemap: false,
     outDir: 'dist-static',

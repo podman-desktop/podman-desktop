@@ -45,6 +45,38 @@ let existingVolumes: VolumeInfo[] = $state([]);
 let targetVolumeName = $derived(targetMode === 'existing' ? selectedExistingVolume : newVolumeName);
 let importDisabled = $derived(!selectedProvider || !archivePath || !!archiveFileError || !targetVolumeName);
 
+function getEngineIdForConnection(connection: ProviderContainerConnectionInfo | undefined): string | undefined {
+  if (!connection) {
+    return undefined;
+  }
+  for (const provider of providers) {
+    const match = provider.containerConnections.find(
+      c => c.name === connection.name && c.status === 'started',
+    );
+    if (match) {
+      return `${provider.id}.${match.name}`;
+    }
+  }
+  return undefined;
+}
+
+function syncExistingVolumesForProvider(): void {
+  const engineId = getEngineIdForConnection(selectedProvider);
+  const volumeInfos = get(volumeListInfos);
+  const allVolumes = volumeInfos.map(v => v.Volumes).flat();
+  existingVolumes = engineId ? allVolumes.filter(v => v.engineId === engineId) : [];
+
+  if (existingVolumes.length === 0) {
+    targetMode = 'new';
+    selectedExistingVolume = '';
+    return;
+  }
+
+  if (!existingVolumes.some(v => v.Name === selectedExistingVolume)) {
+    selectedExistingVolume = existingVolumes[0].Name;
+  }
+}
+
 onMount(async () => {
   providers = get(providerInfos);
   providerConnections = providers
@@ -55,14 +87,12 @@ onMount(async () => {
   const selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
   selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
 
-  const volumeInfos = get(volumeListInfos);
-  existingVolumes = volumeInfos.map(v => v.Volumes).flat();
+  syncExistingVolumesForProvider();
+});
 
-  if (existingVolumes.length === 0) {
-    targetMode = 'new';
-  } else {
-    selectedExistingVolume = existingVolumes[0].Name;
-  }
+$effect(() => {
+  selectedProvider;
+  syncExistingVolumesForProvider();
 });
 
 function validateArchivePath(path: string): boolean {

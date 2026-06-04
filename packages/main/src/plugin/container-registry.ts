@@ -57,8 +57,6 @@ import type {
   SimpleContainerInfo,
   VolumeCreateOptions,
   VolumeCreateResponseInfo,
-  VolumeExportOptions,
-  VolumeImportOptions,
   VolumeInfo,
   VolumeInspectInfo,
   VolumeListInfo,
@@ -102,8 +100,6 @@ import { withTimeout } from './util/timeout.js';
 const tar: { pack: (dir: string, opts?: PackOptions) => NodeJS.ReadableStream } = require('tar-fs');
 
 const DEFAULT_PROVIDER_TIMEOUT = 30;
-const VOLUME_TRANSFER_IMAGE = 'docker.io/library/alpine:latest';
-const VOLUME_TRANSFER_MOUNT_PATH = '/mnt/volume';
 
 export interface InternalContainerProvider {
   name: string;
@@ -2353,9 +2349,7 @@ export class ContainerProviderRegistry {
         // Get the first running connection (preference for podman)
         matchingContainerProviderApi = this.getFirstRunningConnection()[1];
       }
-      const result = await matchingContainerProviderApi.createVolume(options);
-      this.apiSender.send('volume-event');
-      return result;
+      return matchingContainerProviderApi.createVolume(options);
     } catch (error) {
       telemetryOptions = { error: error };
       throw error;
@@ -2991,130 +2985,6 @@ export class ContainerProviderRegistry {
     if (errors !== '') {
       return Promise.reject(errors);
     }
-  }
-
-  protected async supportsLibpodVolumeTransferApi(provider: InternalContainerProvider): Promise<boolean> {
-    if (!provider.api || !provider.libpodApi) {
-      return false;
-    }
-    try {
-      const version = await provider.api.version();
-      const coerced = coerce(version.Version);
-      if (!coerced) {
-        return false;
-      }
-      return gtr(coerced.version, '5.5.99');
-    } catch {
-      return false;
-    }
-  }
-
-  protected async withVolumeArchiveContainer(
-    provider: InternalContainerProvider,
-    volumeName: string,
-    operation: (container: Dockerode.Container) => Promise<void>,
-  ): Promise<void> {
-    if (!provider.api) {
-      throw new Error('no running provider for the matching volume');
-    }
-
-    const container = await provider.api.createContainer({
-      name: `podman-desktop-volume-transfer-${crypto.randomUUID()}`,
-      Image: VOLUME_TRANSFER_IMAGE,
-      Cmd: ['sleep', '3600'],
-      HostConfig: {
-        Binds: [`${volumeName}:${VOLUME_TRANSFER_MOUNT_PATH}:rw`],
-      },
-    });
-
-    try {
-      await container.start();
-      await operation(container);
-    } finally {
-      try {
-        await container.remove({ force: true });
-      } catch {
-        // ignore cleanup errors
-      }
-    }
-  }
-
-  protected async exportVolumeViaContainerArchive(
-    provider: InternalContainerProvider,
-    volumeName: string,
-    outputTarget: string,
-  ): Promise<void> {
-    await this.withVolumeArchiveContainer(provider, volumeName, async container => {
-      const archiveStream = await new Promise<NodeJS.ReadableStream>((resolve, reject) => {
-        container.getArchive(
-          { path: VOLUME_TRANSFER_MOUNT_PATH },
-          (err: Error | null, stream?: NodeJS.ReadableStream) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            if (!stream) {
-              reject(new Error('Unable to export volume archive'));
-              return;
-            }
-            resolve(stream);
-          },
-        );
-      });
-      await pipeline(archiveStream, fs.createWriteStream(outputTarget));
-    });
-  }
-
-  protected async importVolumeViaContainerArchive(
-    provider: InternalContainerProvider,
-    volumeName: string,
-    archivePath: string,
-  ): Promise<void> {
-    await this.withVolumeArchiveContainer(provider, volumeName, async container => {
-      await new Promise<void>((resolve, reject) => {
-        const tarStream = fs.createReadStream(archivePath);
-        container.putArchive(tarStream, { path: VOLUME_TRANSFER_MOUNT_PATH }, (err: Error | null) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve();
-        });
-      });
-    });
-  }
-
-  async exportVolume(engineId: string, options: VolumeExportOptions): Promise<void> {
-    const engine = this.internalProviders.get(engineId);
-    if (!engine?.api) {
-      throw new Error('no engine matching this volume');
-    }
-
-    if (engine.libpodApi && (await this.supportsLibpodVolumeTransferApi(engine))) {
-      const exportStream = await engine.libpodApi.exportVolume(options.volumeName);
-      await pipeline(exportStream, fs.createWriteStream(options.outputTarget));
-      return;
-    }
-
-    await this.exportVolumeViaContainerArchive(engine, options.volumeName, options.outputTarget);
-  }
-
-  async importVolume(options: VolumeImportOptions): Promise<void> {
-    const matchingContainerProvider = this.getMatchingContainerProvider(options.provider);
-    if (!matchingContainerProvider?.api) {
-      throw new Error('no running engine for the matching provider');
-    }
-
-    if (
-      matchingContainerProvider.libpodApi &&
-      (await this.supportsLibpodVolumeTransferApi(matchingContainerProvider))
-    ) {
-      await matchingContainerProvider.libpodApi.importVolume(options.volumeName, options.archivePath);
-    } else {
-      await this.importVolumeViaContainerArchive(matchingContainerProvider, options.volumeName, options.archivePath);
-    }
-
-    this.apiSender.send('volume-event');
   }
 
   async resolveShortnameImage(

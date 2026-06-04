@@ -6,7 +6,7 @@ import { router } from 'tinro';
 
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { Uri } from '/@/lib/uri/Uri';
-import { filtered } from '/@/stores/volumes';
+import { volumeListInfos } from '/@/stores/volumes';
 
 import { VolumeUtils } from './volume-utils';
 import type { VolumeInfoUI } from './VolumeInfoUI';
@@ -25,12 +25,19 @@ let inProgress = false;
 const volumeUtils = new VolumeUtils();
 
 onMount(() => {
-  return filtered.subscribe(value => {
+  let volumesLoaded = false;
+
+  return volumeListInfos.subscribe(value => {
+    if (value.length === 0 && !volumesLoaded) {
+      return;
+    }
+    volumesLoaded = true;
+
     const allVolumes = value.map(v => v.Volumes).flat();
     const matchingVolume = allVolumes.find(v => v.Name === volumeName && v.engineId === engineId);
     if (matchingVolume) {
       volume = volumeUtils.toVolumeInfoUI(matchingVolume);
-    } else {
+    } else if (volumesLoaded) {
       router.goto('/volumes');
     }
   });

@@ -18,8 +18,6 @@
 
 import type * as Dockerode from 'dockerode';
 
-import type { ProviderContainerConnectionInfo } from './provider-info.js';
-
 export interface VolumeInfo extends Dockerode.VolumeInspectInfo {
   engineId: string;
   engineName: string;
@@ -37,15 +35,4 @@ export interface VolumeListInfo {
   Warnings: string[];
   engineId: string;
   engineName: string;
-}
-
-export interface VolumeExportOptions {
-  volumeName: string;
-  outputTarget: string;
-}
-
-export interface VolumeImportOptions {
-  provider: ProviderContainerConnectionInfo;
-  volumeName: string;
-  archivePath: string;
 }
