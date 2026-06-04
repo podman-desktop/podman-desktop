@@ -1901,7 +1901,7 @@ export class ColorRegistry {
 
     this.registerColor(`${status}waiting`, {
       dark: yellow[600],
-      light: yellow[600],
+      light: yellow[700],
     });
 
     // Podman only
@@ -1929,7 +1929,7 @@ export class ColorRegistry {
     // "Warning"
     this.registerColor(`${status}paused`, {
       dark: yellow[600],
-      light: yellow[600],
+      light: yellow[700],
     });
 
     this.registerColor(`${status}degraded`, {
@@ -2073,7 +2073,7 @@ export class ColorRegistry {
 
     this.registerColor(`${state}warning`, {
       dark: yellow[500],
-      light: yellow[600],
+      light: yellow[700],
     });
 
     this.registerColor(`${state}error`, {
