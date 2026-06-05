@@ -489,9 +489,10 @@ test('Expect Running tab to show running pods only', async () => {
 
   const runningTab = screen
     .getAllByRole('button', { name: /Running/ })
-    .find(el => el.textContent?.trim() === 'Running')!;
+    .find(el => el.textContent?.trim() === 'Running');
+  expect(runningTab).toBeDefined();
 
-  await userEvent.click(runningTab);
+  await userEvent.click(runningTab!);
 
   await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
 
@@ -508,11 +509,12 @@ test('Expect Stopped tab to show stopped (not running) pods only', async () => {
 
   await vi.waitUntil(() => get(providerInfos).length === 1 && get(filtered).length === 2, { timeout: 5000 });
 
-  const runningTab = screen
+  const stoppedTab = screen
     .getAllByRole('button', { name: /Stopped/ })
-    .find(el => el.textContent?.trim() === 'Stopped')!;
+    .find(el => el.textContent?.trim() === 'Stopped');
+  expect(stoppedTab).toBeDefined();
 
-  await userEvent.click(runningTab);
+  await userEvent.click(stoppedTab!);
 
   await vi.waitUntil(() => get(filtered).length === 1, { timeout: 5000 });
 
@@ -529,10 +531,12 @@ test('Expect tab filtering to not duplicate filter condition in the search bar',
 
   const runningTab = screen
     .getAllByRole('button', { name: /Running/ })
-    .find(el => el.textContent?.trim() === 'Running')!;
-  await userEvent.click(runningTab);
-  await userEvent.click(runningTab);
-  await userEvent.click(runningTab);
+    .find(el => el.textContent?.trim() === 'Running');
+  expect(runningTab).toBeDefined();
+
+  await userEvent.click(runningTab!);
+  await userEvent.click(runningTab!);
+  await userEvent.click(runningTab!);
 
   const searchInput = screen.getByPlaceholderText('Search...') as HTMLInputElement;
   expect(searchInput.value).toBe('is:running');
