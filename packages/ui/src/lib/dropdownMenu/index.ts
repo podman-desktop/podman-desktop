@@ -19,7 +19,14 @@ import DropdownMenu from './DropdownMenu.svelte';
 import DropDownMenuItem from './DropDownMenuItem.svelte';
 import DropDownMenuItems from './DropDownMenuItems.svelte';
 
-export default Object.assign(DropdownMenu, {
+type DropdownMenuCompound = typeof DropdownMenu & {
+  Item: typeof DropDownMenuItem;
+  Items: typeof DropDownMenuItems;
+};
+
+const dropdownMenu = Object.assign(DropdownMenu, {
   Item: DropDownMenuItem,
   Items: DropDownMenuItems,
-});
+}) as DropdownMenuCompound;
+
+export default dropdownMenu;

@@ -186,7 +186,7 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
       {/each}
 
       <div
-        class="flex flex-col w-full h-full overflow-hidden"
+        class="flex flex-col w-full min-w-0 h-full overflow-hidden"
         class:bg-[var(--pd-content-bg)]={!meta.url.startsWith('/preferences')}
         class:bg-[var(--pd-invert-content-bg)]={meta.url.startsWith('/preferences')}>
         <TaskManager />

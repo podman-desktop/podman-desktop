@@ -12,8 +12,8 @@ interface Props {
 let { title, subtitle, actions, header, children }: Props = $props();
 </script>
 
-<div class="flex flex-col min-w-full h-full" role="region" aria-label={title}>
-  <div class="min-w-full px-5 py-4" role="region" aria-label="Header">
+<div class="flex flex-col w-full h-full" role="region" aria-label={title}>
+  <div class="w-full px-5 py-4" role="region" aria-label="Header">
     <div class="flex flex-row">
       <div class="grow">
         <div
@@ -36,7 +36,7 @@ let { title, subtitle, actions, header, children }: Props = $props();
 
     {@render header?.()}
   </div>
-  <div class="flex flex-row min-w-full h-full px-5 py-4 overflow-y-auto" role="region" aria-label="Content">
+  <div class="flex flex-row w-full h-full px-5 py-4 overflow-y-auto" role="region" aria-label="Content">
     <div class="flex flex-col grow max-w-[905px] mx-auto">
       {@render children?.()}
     </div>
