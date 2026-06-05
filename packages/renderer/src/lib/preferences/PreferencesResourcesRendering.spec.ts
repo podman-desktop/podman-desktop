@@ -591,7 +591,7 @@ describe.each<{
     };
     onboardingList.set([onboarding]);
     render(PreferencesResourcesRendering, {});
-    const button = screen.getByRole('button', { name: 'Setup foo-provider' });
+    const button = screen.getByRole('button', { name: 'Set up foo-provider' });
     expect(button).toBeInTheDocument();
     await userEvent.click(button);
     // redirect to create new page
@@ -620,7 +620,7 @@ describe.each<{
     render(PreferencesResourcesRendering, {});
 
     // Expect the setup button to appear
-    const button = screen.getByRole('button', { name: 'Setup foobar' });
+    const button = screen.getByRole('button', { name: 'Set up foobar' });
     expect(button).toBeInTheDocument();
   });
 
@@ -663,7 +663,7 @@ describe.each<{
     };
     onboardingList.set([onboarding]);
     render(PreferencesResourcesRendering, {});
-    const button = screen.getByRole('button', { name: 'Setup foo-provider' });
+    const button = screen.getByRole('button', { name: 'Set up foo-provider' });
     expect(button).toBeInTheDocument();
     await userEvent.click(button);
     // redirect to create new page
@@ -693,7 +693,7 @@ describe.each<{
     };
     onboardingList.set([onboarding]);
     render(PreferencesResourcesRendering, {});
-    const button = screen.queryByRole('button', { name: 'Setup foo-provider' });
+    const button = screen.queryByRole('button', { name: 'Set up foo-provider' });
     expect(button).not.toBeInTheDocument();
   });
 
@@ -710,7 +710,7 @@ describe.each<{
 
     onboardingList.set([]);
     render(PreferencesResourcesRendering, {});
-    const button = screen.queryByRole('button', { name: 'Setup foo-provider' });
+    const button = screen.queryByRole('button', { name: 'Set up foo-provider' });
     expect(button).not.toBeInTheDocument();
   });
 
@@ -736,7 +736,7 @@ describe.each<{
     };
     onboardingList.set([onboarding]);
     render(PreferencesResourcesRendering, {});
-    const button = screen.getByRole('button', { name: 'Setup foo-provider' });
+    const button = screen.getByRole('button', { name: 'Set up foo-provider' });
     expect(button).toBeInTheDocument();
     await userEvent.click(button);
     // redirect to create new page

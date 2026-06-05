@@ -184,7 +184,7 @@
         "podman.compose.cli.support.missing": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Without compose support in podman you won't be able to use compose projects using the podman CLI. :button[Setup...]{command=compose.openComposeOnboarding}",
+          "markdownDescription": "Without compose support in podman you won't be able to use compose projects using the podman CLI. :button[Set up...]{command=compose.openComposeOnboarding}",
           "when": "(isMac || isWindows) && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
           "group": "podman-desktop.podman",
           "scope": "DockerCompatibility"
