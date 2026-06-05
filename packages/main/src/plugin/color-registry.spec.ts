@@ -1318,6 +1318,45 @@ describe('initStatusColors', () => {
   test('registers exactly 5 color definitions for status backgrounds', () => {
     expect(vi.mocked(colorRegistry.registerColorDefinition)).toHaveBeenCalledTimes(5);
   });
+
+  test.each([
+    'status-running',
+    'status-terminated',
+    'status-waiting',
+    'status-starting',
+    'status-stopped',
+    'status-exited',
+    'status-not-running',
+    'status-paused',
+    'status-degraded',
+    'status-created',
+    'status-dead',
+    'status-unknown',
+    'status-connected',
+    'status-disconnected',
+    'status-updated',
+    'status-ready',
+  ])('registers %s with all four theme values', (id: string) => {
+    const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === id);
+    expect(call, `${id} should be registered`).toBeDefined();
+    const definition = call?.[1];
+    expect(definition?.dark, `${id} should have dark value`).toBeDefined();
+    expect(definition?.light, `${id} should have light value`).toBeDefined();
+    expect(definition?.hcDark, `${id} should have hcDark value`).toBeDefined();
+    expect(definition?.hcLight, `${id} should have hcLight value`).toBeDefined();
+  });
+
+  test('registers status-contrast with dark and light values', () => {
+    const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === 'status-contrast');
+    expect(call).toBeDefined();
+    const definition = call?.[1];
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toBeDefined();
+  });
+
+  test('registers exactly 17 solid status colors', () => {
+    expect(vi.mocked(colorRegistry.registerColor)).toHaveBeenCalledTimes(17);
+  });
 });
 
 describe('registerColorDefinition', () => {
