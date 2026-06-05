@@ -48,16 +48,16 @@ test.each(allStatuses)('Expect role="img" for %s status', (status: string) => {
 test.each(allStatuses)('Expect correct fill color for %s status', (status: string) => {
   render(StatusDotIcon, { status });
   const svg = screen.getByTestId('status-dot-icon');
-  const circle = svg.querySelector('circle');
-  expect(circle).not.toBeNull();
-  expect(circle).toHaveAttribute('fill', `var(--pd-status-${status})`);
+  const path = svg.querySelector('path');
+  expect(path).not.toBeNull();
+  expect(path).toHaveAttribute('fill', `var(--pd-status-${status})`);
 });
 
 test('Expect unknown status to use unknown fill color', () => {
   render(StatusDotIcon, { status: 'somethingelse' });
   const svg = screen.getByTestId('status-dot-icon');
-  const circle = svg.querySelector('circle');
-  expect(circle).toHaveAttribute('fill', 'var(--pd-status-unknown)');
+  const path = svg.querySelector('path');
+  expect(path).toHaveAttribute('fill', 'var(--pd-status-unknown)');
 });
 
 test('Expect default size to be 12', () => {
