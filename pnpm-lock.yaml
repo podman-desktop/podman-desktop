@@ -853,8 +853,8 @@ importers:
         specifier: 5.53.7
         version: 5.53.7
       svelte-check:
-        specifier: ^4.5.0
-        version: 4.5.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
+        specifier: ^4.6.0
+        version: 4.6.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
       svelte-eslint-parser:
         specifier: ^1.8.0
         version: 1.8.0(svelte@5.53.7)
@@ -950,8 +950,8 @@ importers:
         specifier: 5.53.7
         version: 5.53.7
       svelte-check:
-        specifier: ^4.5.0
-        version: 4.5.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
+        specifier: ^4.6.0
+        version: 4.6.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
       svelte-eslint-parser:
         specifier: ^1.8.0
         version: 1.8.0(svelte@5.53.7)
@@ -1061,8 +1061,8 @@ importers:
         specifier: 5.53.7
         version: 5.53.7
       svelte-check:
-        specifier: ^4.5.0
-        version: 4.5.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
+        specifier: ^4.6.0
+        version: 4.6.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.3.0
         version: 4.3.0
@@ -4355,6 +4355,10 @@ packages:
     resolution: {integrity: sha512-lVJX6qEgs/4DOcRTpo56tmKzVPtoWAaVbL4hfO7t7NVwl9AAXzQR6cihesW1BmNMPl+bK6dreu2sOKBP2Q9CIA==}
     peerDependencies:
       acorn: ^8.9.0
+
+  '@sveltejs/load-config@0.1.1':
+    resolution: {integrity: sha512-BXXm+VOH/9X4N7Dd1iZ2MqA1h7M+9i2noI8QYuLDY8QcN2WHYn7D/VK/+IJNfcAmRw7ACNJ538UT9GXIhnBTiA==}
+    engines: {node: '>= 18.0.0'}
 
   '@sveltejs/package@2.5.8':
     resolution: {integrity: sha512-zeBbsXYvHiBu56v4gJaGQoEHzg96w0E1j3dOMX8vo56s6vI5eQ57ZEZhudjwjnegnVitRRu5MrmhO0eNvaonIw==}
@@ -11589,8 +11593,8 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
-  svelte-check@4.5.0:
-    resolution: {integrity: sha512-9lNwPxCLWniFvQIcEv1LFqjIxcFtO3smb5+5BKbRJ3ttL4o2lXCej5rLF4DAnfLPI66oaA81vAxw6ILdIWI7kA==}
+  svelte-check@4.6.0:
+    resolution: {integrity: sha512-KhVnDFDSid57mmZtHz8gfW8AAGylOZ0vPnOIzVmAL+urzwK8sBYXRss953gD8T0OdgAQ11mdWhE6uadmtOz8TQ==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
     peerDependencies:
@@ -16858,6 +16862,8 @@ snapshots:
   '@sveltejs/acorn-typescript@1.0.9(acorn@8.16.0)':
     dependencies:
       acorn: 8.16.0
+
+  '@sveltejs/load-config@0.1.1': {}
 
   '@sveltejs/package@2.5.8(svelte@5.53.7)(typescript@5.9.3)':
     dependencies:
@@ -25570,9 +25576,10 @@ snapshots:
       svelte: 5.53.7
       zimmerframe: 1.1.2
 
-  svelte-check@4.5.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3):
+  svelte-check@4.6.0(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
+      '@sveltejs/load-config': 0.1.1
       chokidar: 4.0.3
       fdir: 6.5.0(picomatch@4.0.4)
       picocolors: 1.1.1
