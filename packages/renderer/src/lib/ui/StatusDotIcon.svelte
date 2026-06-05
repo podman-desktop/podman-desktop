@@ -20,6 +20,12 @@ const statusCssVars: Record<string, string> = {
   created: 'var(--pd-status-created)',
   degraded: 'var(--pd-status-degraded)',
   unknown: 'var(--pd-status-unknown)',
+  starting: 'var(--pd-status-starting)',
+  'not-running': 'var(--pd-status-not-running)',
+  connected: 'var(--pd-status-connected)',
+  disconnected: 'var(--pd-status-disconnected)',
+  updated: 'var(--pd-status-updated)',
+  ready: 'var(--pd-status-ready)',
 };
 
 let fillColor = $derived(statusCssVars[status] ?? 'var(--pd-status-unknown)');
