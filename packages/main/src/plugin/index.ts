@@ -171,6 +171,8 @@ import { TrayMenu } from '/@/tray-menu.js';
 import { createHash, isMac } from '/@/util.js';
 import product from '/@product.json' with { type: 'json' };
 
+// eslint-disable-next-line no-restricted-imports
+import rootPackage from '../../../../package.json' with { type: 'json' };
 import { MainWindowDeferred } from './api.js';
 import { AppearanceInit } from './appearance-init.js';
 import { AuthenticationImpl } from './authentication.js';
@@ -1766,6 +1768,10 @@ export class PluginSystem {
 
     this.ipcHandle('app:getTitleBarText', async (_listener): Promise<string> => {
       return product.name;
+    });
+
+    this.ipcHandle('app:getAppRepository', async (_listener): Promise<string | undefined> => {
+      return rootPackage.repository;
     });
 
     this.ipcHandle('provider-registry:getProviderInfos', async (): Promise<ProviderInfo[]> => {

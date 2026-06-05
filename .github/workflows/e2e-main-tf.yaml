@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Red Hat, Inc.
+# Copyright (C) 2025-2026 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora-version: ['Fedora-42', 'Fedora-43']
+        fedora-version: ['Fedora-43', 'Fedora-44']
     steps:
       - name: Set the default env. variables
         env:

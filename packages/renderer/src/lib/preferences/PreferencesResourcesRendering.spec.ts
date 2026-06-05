@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -961,6 +961,75 @@ test('Expect to see the no resource message when there is no providers', async (
   render(PreferencesResourcesRendering, {});
   const panel = screen.getByLabelText('no-resource-panel');
   expect(panel).toBeInTheDocument();
+});
+
+test('should display managed label when provider has locked configuration properties', async () => {
+  const customProviderInfo: ProviderInfo = { ...providerInfo, extensionId: 'podman' };
+  providerInfos.set([customProviderInfo]);
+  configurationProperties.set([
+    {
+      parentId: 'preferences.podman',
+      title: 'A locked setting',
+      description: 'locked-description',
+      extension: {
+        id: 'podman',
+      },
+      hidden: false,
+      id: 'podman.machine.cpus',
+      type: 'number',
+      scope: CONFIGURATION_DEFAULT_SCOPE,
+      locked: true,
+    },
+  ]);
+  render(PreferencesResourcesRendering, {});
+  const managedLabel = screen.getByText('Managed by your organization');
+  expect(managedLabel).toBeInTheDocument();
+});
+
+test('should not display managed label when no properties are locked', async () => {
+  const customProviderInfo: ProviderInfo = { ...providerInfo, extensionId: 'podman' };
+  providerInfos.set([customProviderInfo]);
+  configurationProperties.set([
+    {
+      parentId: 'preferences.podman',
+      title: 'An unlocked setting',
+      description: 'unlocked-description',
+      extension: {
+        id: 'podman',
+      },
+      hidden: false,
+      id: 'podman.machine.cpus',
+      type: 'number',
+      scope: CONFIGURATION_DEFAULT_SCOPE,
+      locked: false,
+    },
+  ]);
+  render(PreferencesResourcesRendering, {});
+  const managedLabel = screen.queryByText('Managed by your organization');
+  expect(managedLabel).not.toBeInTheDocument();
+});
+
+test('should not display managed label when locked properties belong to different extension', async () => {
+  const customProviderInfo: ProviderInfo = { ...providerInfo, extensionId: 'podman' };
+  providerInfos.set([customProviderInfo]);
+  configurationProperties.set([
+    {
+      parentId: 'preferences.compose',
+      title: 'A locked setting',
+      description: 'locked-description',
+      extension: {
+        id: 'compose',
+      },
+      hidden: false,
+      id: 'compose.machine.cpus',
+      type: 'number',
+      scope: CONFIGURATION_DEFAULT_SCOPE,
+      locked: true,
+    },
+  ]);
+  render(PreferencesResourcesRendering, {});
+  const managedLabel = screen.queryByText('Managed by your organization');
+  expect(managedLabel).not.toBeInTheDocument();
 });
 
 test('Expect update button to show up when an update is available to a new version', async () => {
