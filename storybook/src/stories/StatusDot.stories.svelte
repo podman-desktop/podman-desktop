@@ -79,7 +79,7 @@ function capitalize(text: string): string {
 function buildTooltip(customTooltip: string, name: string, status: string): string {
   if (customTooltip !== '') return customTooltip;
   if (name && status) return `${name}: ${capitalize(status)}`;
-  return capitalize(status);
+  return '';
 }
 
 type MockContainer = { name: string; status: string };
