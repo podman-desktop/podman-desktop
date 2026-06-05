@@ -747,12 +747,12 @@ describe('initLabel', () => {
 
     // check the first call
     expect(spyOnRegisterColor.mock.calls[8]?.[0]).toStrictEqual('label-quaternary-bg');
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(tailwindColorPalette.amber[100]);
-    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(tailwindColorPalette.amber[800]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].light).toBe(tailwindColorPalette.yellow[100]);
+    expect(spyOnRegisterColor.mock.calls[8]?.[1].dark).toBe(tailwindColorPalette.yellow[800]);
 
     expect(spyOnRegisterColor.mock.calls[9]?.[0]).toStrictEqual('label-quaternary-text');
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(tailwindColorPalette.amber[900]);
-    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(tailwindColorPalette.amber[400]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].light).toBe(tailwindColorPalette.yellow[900]);
+    expect(spyOnRegisterColor.mock.calls[9]?.[1].dark).toBe(tailwindColorPalette.yellow[400]);
   });
 });
 

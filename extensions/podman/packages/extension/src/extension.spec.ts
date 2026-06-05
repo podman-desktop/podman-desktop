@@ -1312,9 +1312,7 @@ test('test checkDefaultMachine - if user wants to change machine, check that it 
   const spyPrompt = vi.mocked(extensionApi.window.showInformationMessage);
   spyPrompt.mockResolvedValue('Yes');
 
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   await extension.checkDefaultMachine(fakeMachineJSON);
 

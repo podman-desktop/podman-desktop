@@ -86,17 +86,14 @@ function mockExtensionInstallFromImage(): {
   logCallback: (data: string) => void;
   errorCallback: (data: string) => void;
 } {
-  const resolve = vi.fn();
-  const reject = vi.fn();
+  const { promise, resolve, reject } = Promise.withResolvers<void>();
+
   const logCallback = vi.fn<(data: string) => void>();
   const errorCallback = vi.fn<(data: string) => void>();
   vi.mocked(window.extensionInstallFromImage).mockImplementation((_image, mLogCallback, mErrorCallback) => {
     logCallback.mockImplementation((content: string) => mLogCallback(content));
     errorCallback.mockImplementation((content: string) => mErrorCallback(content));
-    return new Promise((mResolve, mReject) => {
-      resolve.mockImplementation(() => mResolve());
-      reject.mockImplementation((err: unknown) => mReject(err));
-    });
+    return promise;
   });
   return { resolve, reject, logCallback, errorCallback };
 }

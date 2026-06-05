@@ -290,10 +290,8 @@ test('authentication provider send event to update settings page', async () => {
   const authentication = new AuthenticationImpl(apiSender, messageBox);
 
   const providerMock = {
-    onDidChangeSessions: vi.fn().mockImplementation(() => {
-      return {
-        dispose: vi.fn(),
-      };
+    onDidChangeSessions: vi.fn().mockReturnValue({
+      dispose: vi.fn(),
     }),
     getSessions: vi.fn().mockResolvedValue([]),
     createSession: vi.fn(),

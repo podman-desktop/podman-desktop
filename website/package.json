@@ -54,9 +54,9 @@
     "postcss": "^8.5.12",
     "tailwindcss": "^4.3.0",
     "typedoc": "^0.28.19",
-    "typedoc-plugin-markdown": "^4.11.0",
+    "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.8"
   },
   "browserslist": {
     "production": [

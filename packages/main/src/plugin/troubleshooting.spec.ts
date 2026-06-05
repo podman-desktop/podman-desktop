@@ -205,9 +205,7 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
   readFileMock.mockResolvedValue('content');
 
   // Mock exists to be true
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   const zipFile = new Troubleshooting(DIALOG_REGISTRY_MOCK, CONFIGURATION_REGISTRY_MOCK);
   const getSystemLogsSpy = vi.spyOn(zipFile, 'getSystemLogs');
@@ -227,9 +225,7 @@ test('Should return getMacSystemLogs if the platform is darwin', async () => {
 // ~/AppData/Roaming/Podman Desktop/logs/podman-desktop.log
 test('Should return getWindowsSystemLogs if the platform is win32', async () => {
   // Mock exists to be true
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   // Mock platform to be win32
   vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');

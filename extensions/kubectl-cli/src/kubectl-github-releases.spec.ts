@@ -56,9 +56,7 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kubectl-github-release-all.json'), 'utf8'),
   );
-  listReleasesMock.mockImplementation(() => {
-    return { data: resultREST };
-  });
+  listReleasesMock.mockReturnValue({ data: resultREST });
 
   const result = await kubectlGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();
@@ -75,9 +73,7 @@ describe('Grab asset id for a given release id', async () => {
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kubectl-github-release-all.json'), 'utf8'),
     );
 
-    listReleaseAssetsMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleaseAssetsMock.mockReturnValue({ data: resultREST });
   });
 
   test('macOS x86_64', async () => {
@@ -118,14 +114,10 @@ describe('Grab asset id for a given release id', async () => {
 });
 
 test('should download the file if parent folder does exist', async () => {
-  getReleaseAssetMock.mockImplementation(() => {
-    return { data: 'foo' };
-  });
+  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
   // mock fs
-  const existSyncSpy = vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   const writeFileSpy = vi.spyOn(fs.promises, 'writeFile');
 

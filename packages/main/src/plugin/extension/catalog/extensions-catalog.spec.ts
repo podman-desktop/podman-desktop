@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Configuration, ProxySettings } from '@podman-desktop/api';
+import * as nodeHttp from 'node:http';
+import type { AddressInfo } from 'node:net';
+
+import type { Configuration } from '@podman-desktop/api';
 import type { ApiSenderType } from '@podman-desktop/core-api/api-sender';
 import { delay, http, HttpResponse } from 'msw';
 import { type SetupServer, setupServer } from 'msw/node';
+import { createProxy } from 'proxy';
+import { ProxyAgent } from 'undici';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-import type { Certificates } from '/@/plugin/certificates.js';
 import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js';
-import { Emitter } from '/@/plugin/events/emitter.js';
 import type { ExtensionApiVersion } from '/@/plugin/extension/extension-api-version.js';
-import type { Proxy } from '/@/plugin/proxy.js';
 
 import { ExtensionsCatalog } from './extensions-catalog.js';
 
@@ -146,20 +148,6 @@ const fakePublishedExtension4 = {
     },
   ],
 };
-const isEnabledProxyMock = vi.fn();
-const onDidUpdateProxyEmitter = new Emitter<ProxySettings>();
-const getAllCertificatesMock = vi.fn();
-
-const certificates: Certificates = {
-  init: vi.fn(),
-  getAllCertificates: getAllCertificatesMock,
-} as unknown as Certificates;
-const proxy: Proxy = {
-  onDidStateChange: vi.fn(),
-  onDidUpdateProxy: onDidUpdateProxyEmitter.event,
-  isEnabled: isEnabledProxyMock,
-  proxy: vi.fn(),
-} as unknown as Proxy;
 
 const configurationRegistry: ConfigurationRegistry = {
   getConfiguration: vi.fn(),
@@ -168,7 +156,7 @@ const configurationRegistry: ConfigurationRegistry = {
 
 const originalConsoleError = console.error;
 beforeEach(() => {
-  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender, extensionApiVersion);
+  extensionsCatalog = new ExtensionsCatalog(configurationRegistry, apiSender, extensionApiVersion);
   vi.resetAllMocks();
   console.error = vi.fn();
   vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
@@ -179,6 +167,30 @@ beforeEach(() => {
 afterEach(() => {
   console.error = originalConsoleError;
   server?.close();
+});
+
+test('should skip extensions with only preview versions in fetchable list', async () => {
+  const previewOnlyExtension = {
+    publisher: { publisherName: 'bar', displayName: 'Bar' },
+    extensionName: 'barName',
+    displayName: 'Bar extension',
+    shortDescription: 'Bar desc',
+    categories: ['Other'],
+    versions: [
+      { version: '0.1.0', preview: true, lastUpdated: '2021-01-01T00:00:00.000Z', ociUri: 'oci://bar', files: [] },
+    ],
+  };
+
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [fakePublishedExtension1, previewOnlyExtension] }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const fetchableExtensions = await extensionsCatalog.getFetchableExtensions();
+  expect(fetchableExtensions.length).toBe(1);
+  expect(fetchableExtensions[0]?.extensionId).toBe('foo.fooName');
 });
 
 test('should fetch fetchable extensions', async () => {
@@ -202,6 +214,10 @@ test('should fetch fetchable extensions', async () => {
 });
 
 test('should not fetch fetchable extensions if internet connection is taking too much time', async () => {
+  // Use a shorter timeout for this test
+  const originalTimeout = ExtensionsCatalog.FETCH_TIMEOUT;
+  Object.defineProperty(ExtensionsCatalog, 'FETCH_TIMEOUT', { value: 1_000, writable: true });
+
   server = setupServer(
     http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, async () => {
       await delay(3_000);
@@ -215,42 +231,110 @@ test('should not fetch fetchable extensions if internet connection is taking too
   expect(fetchableExtensions).toBeDefined();
   expect(fetchableExtensions.length).toBe(0);
   // error being logged
-  expect(console.error).toBeCalledWith(
-    expect.stringContaining('Unable to fetch the available extensions: Timeout awaiting'),
+  expect(console.error).toBeCalledWith(expect.stringContaining('Unable to fetch the available extensions:'));
+
+  Object.defineProperty(ExtensionsCatalog, 'FETCH_TIMEOUT', { value: originalTimeout, writable: true });
+});
+
+test('should return empty array when catalog has no extensions', async () => {
+  server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.json({ extensions: [] })));
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const allExtensions = await extensionsCatalog.getExtensions();
+  expect(allExtensions).toStrictEqual([]);
+  expect(console.error).not.toBeCalled();
+});
+
+test('should return empty array when catalog fetch fails', async () => {
+  server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.error()));
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const allExtensions = await extensionsCatalog.getExtensions();
+  expect(allExtensions).toStrictEqual([]);
+  expect(console.error).toBeCalled();
+});
+
+test('should use cached catalog and not fetch again within cache timeout', async () => {
+  let fetchCount = 0;
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => {
+      fetchCount++;
+      return HttpResponse.json({ extensions: [fakePublishedExtension1] });
+    }),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const first = await extensionsCatalog.getExtensions();
+  expect(first.length).toBe(1);
+  expect(fetchCount).toBe(1);
+
+  const second = await extensionsCatalog.getExtensions();
+  expect(second.length).toBe(1);
+  expect(fetchCount).toBe(1);
+});
+
+test('should throw with message when fetch fails due to network error', async () => {
+  server = setupServer(http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => HttpResponse.error()));
+  server.listen({ onUnhandledRequest: 'error' });
+
+  await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow('Unable to fetch the available extensions:');
+});
+
+test('should throw with status when server returns non-ok response', async () => {
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => new HttpResponse(null, { status: 500 })),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow(
+    'Unable to fetch the available extensions: HTTP 500:',
   );
 });
 
-test('check getHttpOptions with Proxy', async () => {
-  // faked certificates
-  getAllCertificatesMock.mockReturnValue(['1', '2', '3']);
+test('should throw when server returns 404', async () => {
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => new HttpResponse(null, { status: 404 })),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
 
-  isEnabledProxyMock.mockReturnValue(true);
-  const proxy: Proxy = {
-    onDidStateChange: vi.fn(),
-    onDidUpdateProxy: vi.fn(),
-    isEnabled: isEnabledProxyMock,
-    proxy: vi.fn(),
-  } as unknown as Proxy;
-  vi.spyOn(proxy, 'proxy', 'get').mockReturnValue({
-    httpProxy: 'http://localhost',
-    httpsProxy: 'http://localhost',
-    noProxy: 'localhost',
-  });
-  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender, extensionApiVersion);
+  await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow(
+    'Unable to fetch the available extensions: HTTP 404:',
+  );
+});
 
-  const options = extensionsCatalog.getHttpOptions();
-  expect(options).toBeDefined();
-  // expect the two agents being defined
-  expect(options.agent?.http).toBeDefined();
-  expect(options.agent?.https).toBeDefined();
-  // @ts-expect-error proxy property exists on http object
-  expect(options.agent?.http?.proxy.href).toBe('http://localhost/');
-  // @ts-expect-error proxy property exists on https object
-  expect(options.agent?.https?.proxy.href).toBe('http://localhost/');
+test('should throw with stringified error when error has no message property', async () => {
+  const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue('something went wrong');
 
-  // certificates should be 1, 2, 3
-  expect(options.https?.certificateAuthority).toBeDefined();
-  expect(options.https?.certificateAuthority?.length).toBe(3);
+  await expect(extensionsCatalog.refreshCatalog()).rejects.toThrow(
+    'Unable to fetch the available extensions: something went wrong',
+  );
+
+  fetchSpy.mockRestore();
+});
+
+test('should refetch catalog after cache timeout expires', async () => {
+  let fetchCount = 0;
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () => {
+      fetchCount++;
+      return HttpResponse.json({ extensions: [fakePublishedExtension1] });
+    }),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const first = await extensionsCatalog.getExtensions();
+  expect(first.length).toBe(1);
+  expect(fetchCount).toBe(1);
+
+  // Advance time past the cache timeout
+  vi.useFakeTimers();
+  vi.setSystemTime(Date.now() + ExtensionsCatalog.CACHE_TIMEOUT + 1);
+
+  const second = await extensionsCatalog.getExtensions();
+  expect(second.length).toBe(1);
+  expect(fetchCount).toBe(2);
+
+  vi.useRealTimers();
 });
 
 test('should get all extensions', async () => {
@@ -374,32 +458,6 @@ test('should fetch alternate link', async () => {
   expect(console.error).not.toBeCalled();
 });
 
-test('Should use proxy object if proxySettings is undefined', () => {
-  isEnabledProxyMock.mockReturnValue(true);
-  const proxy: Proxy = {
-    onDidStateChange: vi.fn(),
-    onDidUpdateProxy: vi.fn(),
-    isEnabled: isEnabledProxyMock,
-    proxy: vi.fn(),
-  } as unknown as Proxy;
-  vi.spyOn(proxy, 'proxy', 'get').mockReturnValue({
-    httpProxy: 'http://localhost',
-    httpsProxy: 'https://localhost',
-    noProxy: 'localhost',
-  });
-  extensionsCatalog = new ExtensionsCatalog(certificates, proxy, configurationRegistry, apiSender, extensionApiVersion);
-  const options = extensionsCatalog.getHttpOptions();
-
-  expect(options).toBeDefined();
-  // expect the two agents being defined
-  expect(options.agent?.http).toBeDefined();
-  expect(options.agent?.https).toBeDefined();
-  // @ts-expect-error proxy property exists on http object
-  expect(options.agent?.http?.proxy.href).toBe('http://localhost/');
-  // @ts-expect-error proxy property exists on https object
-  expect(options.agent?.https?.proxy.href).toBe('https://localhost/');
-});
-
 test('should register local extensions and catalog enabled configuration properties', () => {
   extensionsCatalog.init();
 
@@ -424,4 +482,60 @@ test('should register local extensions and catalog enabled configuration propert
       }),
     }),
   ]);
+});
+
+test('should use global fetch for catalog requests so proxy settings are respected', async () => {
+  server = setupServer(
+    http.get(ExtensionsCatalog.DEFAULT_EXTENSIONS_URL, () =>
+      HttpResponse.json({ extensions: [fakePublishedExtension1] }),
+    ),
+  );
+  server.listen({ onUnhandledRequest: 'error' });
+
+  const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+  await extensionsCatalog.refreshCatalog();
+
+  expect(fetchSpy).toHaveBeenCalledWith(
+    ExtensionsCatalog.DEFAULT_EXTENSIONS_URL,
+    expect.objectContaining({ signal: expect.any(AbortSignal) }),
+  );
+  fetchSpy.mockRestore();
+});
+
+test('should route catalog request through proxy when proxy is configured', async () => {
+  const proxyServer = await new Promise<nodeHttp.Server>(resolve => {
+    const s = createProxy(nodeHttp.createServer());
+    s.listen(0, () => resolve(s));
+  });
+  const address = proxyServer.address() as AddressInfo;
+
+  let connectDone = false;
+  proxyServer.on('connect', () => {
+    connectDone = true;
+  });
+
+  const catalogUrl = 'https://registry.podman-desktop.io/api/extensions.json';
+  vi.mocked(configurationRegistry.getConfiguration).mockReturnValue({
+    get: vi.fn().mockReturnValue(catalogUrl),
+  } as unknown as Configuration);
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = function (url: URL | RequestInfo, opts?: object): Promise<Response> {
+    return originalFetch(url, {
+      ...opts,
+      dispatcher: new ProxyAgent({ uri: `http://127.0.0.1:${String(address.port)}` }),
+    } as RequestInit);
+  };
+
+  try {
+    await extensionsCatalog.refreshCatalog();
+  } catch {
+    // Expected: upstream connection may fail, we only verify the proxy was contacted
+  } finally {
+    globalThis.fetch = originalFetch;
+    proxyServer.close();
+  }
+
+  expect(connectDone).toBe(true);
 });

@@ -12,6 +12,7 @@ import { router } from 'tinro';
 import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import EngineFormPage from '/@/lib/ui/EngineFormPage.svelte';
 import { providerInfos } from '/@/stores/providers';
+import { volumeListInfos } from '/@/stores/volumes';
 
 let providers: ProviderInfo[] = [];
 let providerConnections: ProviderContainerConnectionInfo[] = [];
@@ -25,16 +26,48 @@ onMount(async () => {
     .flat()
     .filter(providerContainerConnection => providerContainerConnection.status === 'started');
 
-  const selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
+  selectedProviderConnection = providerConnections.length > 0 ? providerConnections[0] : undefined;
   selectedProvider = !selectedProvider && selectedProviderConnection ? selectedProviderConnection : selectedProvider;
 });
 
 let createVolumeInProgress = false;
 let createError: string | undefined = undefined;
+let volumeNameError: string | undefined = undefined;
+let invalidName = false;
 onDestroy(() => {});
+
+function checkVolumeName(nameValue: string, provider: ProviderContainerConnectionInfo | undefined): void {
+  if (!nameValue || !provider) {
+    volumeNameError = undefined;
+    invalidName = false;
+    return;
+  }
+
+  const parentProvider = providers.find(p => p.containerConnections.includes(provider));
+  const engineId = parentProvider ? `${parentProvider.id}.${provider.name}` : undefined;
+
+  const volumeAlreadyExists = engineId
+    ? $volumeListInfos
+        .filter(vli => vli.engineId === engineId)
+        .flatMap(vli => vli.Volumes)
+        .some(volume => volume.Name === nameValue)
+    : false;
+
+  if (volumeAlreadyExists) {
+    volumeNameError = `The name "${nameValue}" already exists. Please choose a different name.`;
+    invalidName = true;
+  } else {
+    volumeNameError = undefined;
+    invalidName = false;
+  }
+}
+
+$: checkVolumeName(volumeName, selectedProvider);
 
 async function createVolume(providerConnectionInfo: ProviderContainerConnectionInfo): Promise<void> {
   createError = undefined;
+  volumeNameError = undefined;
+  invalidName = false;
   createVolumeInProgress = true;
   try {
     await window.createVolume(providerConnectionInfo, { Name: volumeName });
@@ -68,7 +101,7 @@ export let volumeName = '';
     <div>
       <label for="containerBuildContextDirectory" class="block mb-2 font-bold text-[var(--pd-content-card-header-text)]"
         >Volume name:</label>
-      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} required />
+      <Input clearable aria-label="Volume Name" disabled={createVolumeFinished} bind:value={volumeName} error={volumeNameError} aria-invalid={invalidName || undefined} required />
     </div>
     <div class:hidden={providerConnections.length < 2}>
       {#if providerConnections.length > 1}
@@ -95,7 +128,7 @@ export let volumeName = '';
         {@const connection = selectedProvider}
         <Button
           on:click={(): Promise<void> => createVolume(connection)}
-          disabled={createVolumeInProgress}
+          disabled={createVolumeInProgress || invalidName}
           class="w-full"
           inProgress={createVolumeInProgress}
           icon={faPlusCircle}>

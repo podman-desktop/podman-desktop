@@ -222,7 +222,7 @@ describe('CertificateDetectionService', () => {
       const serviceWithTimeout = new CertificateDetectionService(mockTelemetryLogger, shortTimeoutConfig);
 
       vi.mocked(fs.access).mockResolvedValue();
-      vi.mocked(fs.readdir).mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+      vi.mocked(fs.readdir).mockReturnValue(new Promise(resolve => setTimeout(() => resolve([]), 100)));
 
       const result = await serviceWithTimeout.detectCustomCertificates();
 

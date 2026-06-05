@@ -37,7 +37,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
@@ -87,7 +87,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
@@ -136,7 +136,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
@@ -176,7 +176,7 @@ jobs:
     name: build website
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
         with:
@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
         with:
@@ -250,7 +250,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
         with:
@@ -277,7 +277,7 @@ jobs:
       matrix:
         os: [windows-2025, ubuntu-24.04, macos-15]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
         with:
@@ -317,7 +317,7 @@ jobs:
       matrix:
         mode: [production, development]
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Install Podman v5 using external action
         # Use the action from the other repository
@@ -386,7 +386,7 @@ jobs:
     name: windows sanity check e2e tests
     runs-on: windows-2025
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Install latest Podman version using external action
         uses: redhat-actions/podman-install@aea6ff44f2a4a82da13d22061ce73443a125925d
@@ -436,7 +436,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
@@ -479,7 +479,7 @@ jobs:
     runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set the default provider type variable
         env:
@@ -544,41 +544,54 @@ jobs:
 
   detect_pnpm_changes:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # name should not change since it is a required rule pattern
     name: Detect pnpm lock or pr-check files changes
     runs-on: ubuntu-24.04
     outputs:
-      pnpm_lock_changed: ${{ steps.pnpm_changed.outputs.PNPM_LOCK_CHANGED }}
+      trigger_update_tests: ${{ steps.detect_changes.outputs.TRIGGER_UPDATE_TESTS }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 2
 
       - name: Evaluate changes in files
-        id: pnpm_changed
+        id: detect_changes
         run: |
           BASE_REF="${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || 'main' }}"
           BASE_REF="${BASE_REF#refs/heads/}"  # Strip 'refs/heads/' if present
           git fetch origin ${BASE_REF}
           git diff --name-only origin/${BASE_REF} HEAD > changes.txt
-          if grep -q  -e 'pnpm-lock.yaml' -e 'pr-check.yaml' changes.txt; then
-            echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
+
+          # Read patterns from file and build grep arguments
+          PATTERNS_FILE=".github/code-change-patterns.txt"
+          GREP_ARGS=""
+          while IFS= read -r line; do
+            # Skip comments and empty lines
+            [[ "$line" =~ ^#.*$ ]] && continue
+            [[ -z "$line" ]] && continue
+            GREP_ARGS="$GREP_ARGS -e $line"
+          done < "$PATTERNS_FILE"
+
+          # Check if there are any code changes matching the include patterns
+          if grep $GREP_ARGS changes.txt | grep -q .; then
+            echo "TRIGGER_UPDATE_TESTS=true" >> $GITHUB_OUTPUT
           else
-            echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
+            echo "TRIGGER_UPDATE_TESTS=false" >> $GITHUB_OUTPUT
           fi
 
   win-update-e2e-test:
     name: ${{ matrix.os }} update e2e tests
     needs: detect_pnpm_changes
-    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.trigger_update_tests == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2025, windows-11-arm]
+        os: ["windows-2025", "windows-11-arm"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm
@@ -646,17 +659,17 @@ jobs:
   mac-update-e2e-test:
     name: ${{ matrix.os }} update e2e tests
     needs: detect_pnpm_changes
-    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.trigger_update_tests == 'true'
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-26, macos-15-intel]
+        os: ["macos-26", "macos-15-intel"]
     runs-on: ${{ matrix.os }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         name: Install pnpm

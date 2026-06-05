@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -615,6 +615,17 @@ export async function setStatusBarProvidersFeature(
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
+}
+
+export async function setEnhancedDashboardFeature(
+  page: Page,
+  navigationBar: NavigationBar,
+  enable: boolean,
+): Promise<void> {
+  await navigationBar.openSettings();
+  const settingsBar = new SettingsBar(page);
+  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+  await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {

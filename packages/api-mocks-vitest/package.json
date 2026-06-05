@@ -1,0 +1,47 @@
+{
+  "name": "@podman-desktop/api-mocks-vitest",
+  "version": "1.28.0-next",
+  "description": "Vitest mocks of the Podman Desktop extension API for use in third-party extension tests",
+  "repository": "https://github.com/podman-desktop/podman-desktop",
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/@podman-desktop/api.d.ts",
+      "default": "./dist/@podman-desktop/api.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./@podman-desktop/api": {
+      "types": "./dist/@podman-desktop/api.d.ts",
+      "default": "./dist/@podman-desktop/api.js"
+    }
+  },
+  "scripts": {
+    "prepare": "",
+    "clean": "rimraf dist src/@podman-desktop src/product.json *.tsbuildinfo",
+    "generate": "tsx -e \"import('./src/vitest-generate-api-global-setup.ts').then(module => module.default())\"",
+    "build": "pnpm generate && tsc -p tsconfig.json",
+    "watch": "",
+    "publish:next": "pnpm version 0.0.1-\"$(date +%s)\" --no-git-tag-version && pnpm publish --registry=https://registry.npmjs.org/ --tag next --no-git-checks --access public"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.6",
+    "mustache": "^4.2.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  }
+}
