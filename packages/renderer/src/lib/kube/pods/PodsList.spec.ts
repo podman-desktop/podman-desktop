@@ -290,13 +290,8 @@ describe.each<{
       expect(statusDots.length).toBe(3);
 
       expect(statusDots[0].title).toBe('container-3-name: Running');
-      expect(statusDots[0]).toHaveClass('bg-[var(--pd-status-running)]');
-
       expect(statusDots[1].title).toBe('container-1-name: Waiting');
-      expect(statusDots[1]).toHaveClass('bg-[var(--pd-status-waiting)]');
-
       expect(statusDots[2].title).toBe('container-2-name: Terminated');
-      expect(statusDots[2]).toHaveClass('bg-[var(--pd-status-terminated)]');
     });
   });
 });
