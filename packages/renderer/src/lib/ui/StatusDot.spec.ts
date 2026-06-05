@@ -22,6 +22,7 @@ import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import StatusDot from './StatusDot.svelte';
+import StatusDotIcon from './StatusDotIcon.svelte';
 
 vi.mock(import('./StatusDotIcon.svelte'));
 
@@ -88,7 +89,9 @@ test('Expect auto-generated tooltip when only name is empty', () => {
 });
 
 test('Expect StatusDotIcon to receive the status prop', () => {
-  const { container } = render(StatusDot, { status: 'stopped', name: 'test' });
-  const dotWrapper = container.querySelector('[data-testid="status-dot"]');
-  expect(dotWrapper).toBeInTheDocument();
+  render(StatusDot, { status: 'stopped', name: 'test' });
+  const calls = vi.mocked(StatusDotIcon).mock.calls;
+  expect(calls.length).toBeGreaterThan(0);
+  const propsArg = calls[0]?.[1];
+  expect(propsArg).toEqual(expect.objectContaining({ status: 'stopped' }));
 });
