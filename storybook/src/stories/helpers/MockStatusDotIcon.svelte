@@ -29,7 +29,7 @@ let label = $derived(capitalize(status));
 
 {#if status === 'running'}
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label}>
-    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m3.875 3.125a.884.884 0 0 0-1.25 0L4.75 7 3.375 5.625a.884.884 0 0 0-1.25 1.25L4.75 9.5l5.125-5.125a.884.884 0 0 0 0-1.25" />
+    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0M4.682 3.056C4.379 2.87 4 3.102 4 3.475v5.03c0 .373.379.606.682.42l4.09-2.516a.5.5 0 0 0 0-.838z" />
   </svg>
 {:else if status === 'terminated' }
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label}>
