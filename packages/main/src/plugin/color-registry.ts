@@ -1875,13 +1875,13 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${label}quaternary-bg`, {
-      dark: amber[800],
-      light: amber[100],
+      dark: yellow[800],
+      light: yellow[100],
     });
 
     this.registerColor(`${label}quaternary-text`, {
-      dark: amber[400],
-      light: amber[900],
+      dark: yellow[400],
+      light: yellow[900],
     });
   }
 
@@ -2104,8 +2104,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${state}warning`, {
-      dark: amber[500],
-      light: amber[600],
+      dark: yellow[500],
+      light: yellow[700],
     });
 
     this.registerColor(`${state}error`, {
@@ -2200,8 +2200,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${terminal}ansiYellow`, {
-      dark: amber[500],
-      light: amber[500],
+      dark: yellow[500],
+      light: yellow[500],
     });
 
     this.registerColor(`${terminal}ansiBlue`, {
@@ -2240,8 +2240,8 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${terminal}ansiBrightYellow`, {
-      dark: amber[600],
-      light: amber[600],
+      dark: yellow[600],
+      light: yellow[600],
     });
 
     this.registerColor(`${terminal}ansiBrightBlue`, {
