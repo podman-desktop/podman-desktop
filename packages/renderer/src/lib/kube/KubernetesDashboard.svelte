@@ -5,7 +5,9 @@ import { Expandable, Link } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 
 import { listenActiveResourcesCount } from '/@/lib/kube/active-resources-count-listen';
+import type { DeveloperSandboxPromptOverride } from '/@/lib/kube/developer-sandbox-prompt-prototype';
 import KubernetesCurrentContextConnectionBadge from '/@/lib/ui/KubernetesCurrentContextConnectionBadge.svelte';
+import Label from '/@/lib/ui/Label.svelte';
 import { containersInfos } from '/@/stores/containers';
 import { kubernetesContextsPermissions } from '/@/stores/kubernetes-context-permission';
 import { kubernetesContexts } from '/@/stores/kubernetes-contexts';
@@ -25,6 +27,7 @@ import {
 import { isKubernetesExperimentalModeStore } from '/@/stores/kubernetes-experimental';
 import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { kubernetesResourcesCount } from '/@/stores/kubernetes-resources-count';
+import { activePrototype, currentOverride } from '/@/stores/prototype';
 
 import deployAndTestKubernetesImage from './DeployAndTestKubernetes.png';
 import KubernetesDashboardGuideCard from './KubernetesDashboardGuideCard.svelte';
@@ -40,7 +43,46 @@ interface ExtendedKubernetesObject extends KubernetesObject {
   };
 }
 
+let prototypeOverride = $state<DeveloperSandboxPromptOverride | undefined>(undefined);
+
+let unsubscribeOverride: (() => void) | undefined;
+let disposable: IDisposable | undefined;
+
+onMount(async () => {
+  unsubscribeOverride = currentOverride.subscribe(value => {
+    prototypeOverride = value as DeveloperSandboxPromptOverride | undefined;
+  });
+
+  // listen active resources for experimental mode
+  disposable = await listenActiveResourcesCount((activeResourcesCounts: ResourceCount[]): void => {
+    kubernetesActiveResourcesCountExperimental = activeResourcesCounts;
+  });
+});
+
+onDestroy(() => {
+  unsubscribeOverride?.();
+  disposable?.dispose();
+});
+
+const isPrototypeActive = $derived($activePrototype !== undefined);
+
+const useLiveState = $derived(isPrototypeActive && prototypeOverride?.useLiveState === true);
+
+const showEmptyPage = $derived(
+  useLiveState
+    ? $kubernetesNoCurrentContext
+    : isPrototypeActive
+      ? (prototypeOverride?.showEmptyPage ?? true)
+      : $kubernetesNoCurrentContext,
+);
+
 let currentContextName = $derived($kubernetesContexts.find(context => context.currentContext)?.name);
+
+const effectiveContextName = $derived(
+  useLiveState || !prototypeOverride?.mockContextName ? currentContextName : prototypeOverride.mockContextName,
+);
+
+const useMockMetrics = $derived(isPrototypeActive && !useLiveState && prototypeOverride?.mockMetrics !== undefined);
 
 // Stores and states for non-experimental mode
 let nodeCount = $derived($kubernetesCurrentContextNodes.length);
@@ -70,8 +112,6 @@ let jobCount = $derived($kubernetesCurrentContextJobs.length);
 // state for experimental mode
 let kubernetesActiveResourcesCountExperimental = $state<ResourceCount[]>([]);
 
-let disposable: IDisposable | undefined;
-
 // permissions - experimental mode only
 // we check for *not* permitted resources, to support legacy mode
 // condition may be inverted when legacy mode is removed
@@ -87,17 +127,6 @@ const notPermittedResources = $derived(
 function isPermitted(notPermittedResources: string[], resourceName: string): boolean {
   return !notPermittedResources.includes(resourceName);
 }
-
-onMount(async () => {
-  // listen active resources for experimental mode
-  disposable = await listenActiveResourcesCount((activeResourcesCounts: ResourceCount[]): void => {
-    kubernetesActiveResourcesCountExperimental = activeResourcesCounts;
-  });
-});
-
-onDestroy(() => {
-  disposable?.dispose();
-});
 
 // get data in compatible format, from experimental mode data
 function getCountsForContext(
@@ -132,6 +161,23 @@ const initialCounts: { [key: string]: number } = {
 };
 
 const counts = $derived.by(() => {
+  if (useMockMetrics && prototypeOverride?.mockMetrics) {
+    const metrics = prototypeOverride.mockMetrics;
+    return {
+      nodes: metrics.nodes,
+      deployments: metrics.deployments,
+      pods: metrics.pods,
+      services: metrics.services,
+      ingresses: metrics.ingresses,
+      routes: metrics.routes,
+      persistentvolumeclaims: metrics.persistentvolumeclaims,
+      configmaps: metrics.configmaps,
+      secrets: metrics.secrets,
+      jobs: metrics.jobs,
+      cronjobs: metrics.cronjobs,
+    };
+  }
+
   if ($isKubernetesExperimentalModeStore === undefined) {
     return initialCounts;
   } else if ($isKubernetesExperimentalModeStore) {
@@ -159,6 +205,13 @@ const initialActiveCounts: { [key: string]: number } = {
 };
 
 const activeCounts = $derived.by(() => {
+  if (useMockMetrics && prototypeOverride?.mockMetrics) {
+    return {
+      nodes: prototypeOverride.mockMetrics.activeNodes,
+      deployments: prototypeOverride.mockMetrics.activeDeployments,
+    };
+  }
+
   if ($isKubernetesExperimentalModeStore === undefined) {
     return initialActiveCounts;
   } else if ($isKubernetesExperimentalModeStore) {
@@ -178,7 +231,7 @@ async function openKubernetesDocumentation(): Promise<void> {
 
 <div class="flex flex-col w-full h-full">
   <div class="flex flex-col w-full h-full pt-4">
-    {#if $kubernetesNoCurrentContext}
+    {#if showEmptyPage}
       <KubernetesEmptyPage />
     {:else}
       <!-- Details - collapsible -->
@@ -188,7 +241,15 @@ async function openKubernetesDocumentation(): Promise<void> {
           {#snippet title()}
             <div class="flex flex-row w-full items-center">
               <div class="text-xl font-bold capitalize text-[var(--pd-content-header)]">Dashboard</div>
-              <div class="flex grow justify-end"><KubernetesCurrentContextConnectionBadge /></div>
+              <div class="flex grow justify-end">
+                {#if prototypeOverride?.mockConnected && !prototypeOverride?.useLiveState}
+                  <Label role="status" name="Connected">
+                    <div class="w-2 h-2 bg-[var(--pd-status-connected)] rounded-full mx-1"></div>
+                  </Label>
+                {:else}
+                  <KubernetesCurrentContextConnectionBadge />
+                {/if}
+              </div>
             </div>
           {/snippet}
           <div class="flex flex-col gap-4">
@@ -204,7 +265,7 @@ async function openKubernetesDocumentation(): Promise<void> {
         <div class="flex min-w-full h-full justify-center">
           <div class="flex flex-col space-y-4 min-w-full overflow-y-auto">
             <div class="flex flex-col gap-4 bg-[var(--pd-content-card-bg)] grow p-5">
-              {#if currentContextName}
+              {#if effectiveContextName}
                 <!-- Metrics - non-collapsible -->
                 <div class="flex flex-row">
                   <div class="text-xl pt-2 grow">Metrics</div>

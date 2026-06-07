@@ -19,8 +19,9 @@
 import type { ProviderInfo } from '@podman-desktop/core-api';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
+import { writable } from 'svelte/store';
 import { router } from 'tinro';
-import { expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { extensionInfos } from '/@/stores/extensions';
 import { providerInfos } from '/@/stores/providers';
@@ -29,8 +30,27 @@ import DeveloperSandboxPrompt from './DeveloperSandboxPrompt.svelte';
 
 vi.mock(import('tinro'));
 
+vi.mock(import('/@/stores/prototype'), () => ({
+  activePrototype: writable(),
+  currentOverride: writable(),
+  registerPrototype: vi.fn(),
+  unregisterPrototype: vi.fn(),
+}));
+
+const { activePrototype, currentOverride } = await import('/@/stores/prototype');
+
 Object.defineProperty(window, 'telemetryTrack', { value: vi.fn() });
 Object.defineProperty(window, 'openExternal', { value: vi.fn() });
+
+beforeEach(() => {
+  activePrototype.set(undefined);
+  currentOverride.set(undefined);
+  providerInfos.set([]);
+  extensionInfos.set([]);
+  vi.mocked(router.goto).mockClear();
+  vi.mocked(window.telemetryTrack).mockClear();
+  vi.mocked(window.openExternal).mockClear();
+});
 
 test('expect Developer Sandbox prompt to be visible without an existing sandbox connection', async () => {
   providerInfos.set([]);
@@ -50,6 +70,18 @@ test('expect Developer Sandbox prompt to be hidden when a sandbox connection exi
       kubernetesConnections: [{ name: 'sandbox-context' }],
     } as unknown as ProviderInfo,
   ]);
+
+  render(DeveloperSandboxPrompt);
+  await tick();
+
+  expect(screen.queryByLabelText('Start your sandbox for free')).toBeNull();
+});
+
+test('expect Developer Sandbox prompt to be hidden in Current prototype state', async () => {
+  activePrototype.set({ name: 'Developer Sandbox prompt', screens: [] });
+  currentOverride.set({ useLiveState: true });
+  providerInfos.set([]);
+  extensionInfos.set([]);
 
   render(DeveloperSandboxPrompt);
   await tick();
@@ -82,5 +114,63 @@ test('expect install extension action to navigate to extension details', async (
   expect(router.goto).toHaveBeenCalledWith('/extensions/details/redhat.redhat-sandbox/');
   expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith(
     'kubernetes.nocontext.developerSandbox.installExtension',
+  );
+});
+
+test('expect connect action to navigate to Resources when extension is installed', async () => {
+  providerInfos.set([
+    {
+      id: 'redhat.sandbox',
+      internalId: 'internal-redhat-sandbox',
+      name: 'Developer Sandbox',
+      kubernetesConnections: [],
+    } as unknown as ProviderInfo,
+  ]);
+  extensionInfos.set([{ id: 'redhat.redhat-sandbox' } as never]);
+
+  render(DeveloperSandboxPrompt);
+
+  const connectButton = await screen.findByLabelText('Connect Developer Sandbox');
+  await fireEvent.click(connectButton);
+
+  expect(router.goto).toHaveBeenCalledWith('/preferences/resources?focus=redhat.sandbox');
+  expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith(
+    'kubernetes.nocontext.developerSandbox.connectFromResources',
+    { providerId: 'redhat.sandbox' },
+  );
+});
+
+test('expect connect action to navigate to Resources when extension is installed but provider is not registered yet', async () => {
+  providerInfos.set([]);
+  extensionInfos.set([{ id: 'redhat.redhat-sandbox' } as never]);
+
+  render(DeveloperSandboxPrompt);
+
+  const connectButton = await screen.findByLabelText('Connect Developer Sandbox');
+  await fireEvent.click(connectButton);
+
+  expect(router.goto).toHaveBeenCalledWith('/preferences/resources?focus=redhat.sandbox');
+  expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith(
+    'kubernetes.nocontext.developerSandbox.connectFromResources',
+    { providerId: 'redhat.sandbox' },
+  );
+  expect(router.goto).not.toHaveBeenCalledWith('/extensions/details/redhat.redhat-sandbox/');
+});
+
+test('expect connect action in prototype to navigate to Resources when extension is not live installed', async () => {
+  activePrototype.set({ name: 'Developer Sandbox prompt', screens: [] });
+  currentOverride.set({ showPrompt: true, extensionInstalled: true });
+  providerInfos.set([]);
+  extensionInfos.set([]);
+
+  render(DeveloperSandboxPrompt);
+
+  const connectButton = await screen.findByLabelText('Connect Developer Sandbox');
+  await fireEvent.click(connectButton);
+
+  expect(router.goto).toHaveBeenCalledWith('/preferences/resources?focus=redhat.sandbox');
+  expect(vi.mocked(window.telemetryTrack)).toHaveBeenCalledWith(
+    'kubernetes.nocontext.developerSandbox.connectFromResources',
+    { providerId: 'redhat.sandbox' },
   );
 });

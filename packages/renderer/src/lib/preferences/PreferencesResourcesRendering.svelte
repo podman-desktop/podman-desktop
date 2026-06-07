@@ -17,6 +17,11 @@ import type { ContextUI } from '/@/lib/context/context';
 import { ContextKeyExpr } from '/@/lib/context/contextKey';
 import Donut from '/@/lib/donut/Donut.svelte';
 import ActionsMenu from '/@/lib/image/ActionsMenu.svelte';
+import {
+  DEVELOPER_SANDBOX_PROVIDER_ID,
+  resolveDeveloperSandboxProviderForCreate,
+  resourcesProviderInfos,
+} from '/@/lib/kube/developer-sandbox-prompt-state';
 import { normalizeOnboardingWhenClause } from '/@/lib/onboarding/onboarding-utils';
 import BooleanEnumDisplay from '/@/lib/ui/BooleanEnumDisplay.svelte';
 import ConnectionErrorIndicator from '/@/lib/ui/ConnectionErrorIndicator.svelte';
@@ -27,7 +32,7 @@ import { capitalize } from '/@/lib/ui/Util';
 import { configurationProperties } from '/@/stores/configurationProperties';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
-import { providerInfos } from '/@/stores/providers';
+import { fetchProviders } from '/@/stores/providers';
 
 import {
   type ConnectionResourceMetricDisplay,
@@ -73,11 +78,17 @@ let contextsUnsubscribe: Unsubscriber;
 let contributionsContainerConnection = $state<Menu[]>([]);
 
 onMount(async () => {
+  if (focus === DEVELOPER_SANDBOX_PROVIDER_ID) {
+    await fetchProviders().catch((error: unknown) => {
+      console.error('Failed to refresh providers for Developer Sandbox connect flow', error);
+    });
+  }
+
   configurationPropertiesUnsubscribe = configurationProperties.subscribe(value => {
     properties = value;
   });
 
-  providersUnsubscribe = providerInfos.subscribe(providerInfosValue => {
+  providersUnsubscribe = resourcesProviderInfos.subscribe(providerInfosValue => {
     providers = providerInfosValue;
     const connectionNames: string[] = [];
     providers.forEach(provider => {
@@ -265,18 +276,20 @@ async function startConnectionProvider(
 }
 
 async function doCreateNew(provider: ProviderInfo, displayName: string): Promise<void> {
+  const connectionProvider = await resolveDeveloperSandboxProviderForCreate(provider);
   displayInstallModal = false;
-  if (provider.status === 'not-installed') {
-    providerInstallationInProgress.set(provider.name, true);
-    providerToBeInstalled = { provider, displayName };
-    doExecuteAfterInstallation = (): void => router.goto(`/preferences/resources/provider/${provider.internalId}`);
-    await performInstallation(provider);
+  if (connectionProvider.status === 'not-installed') {
+    providerInstallationInProgress.set(connectionProvider.name, true);
+    providerToBeInstalled = { provider: connectionProvider, displayName };
+    doExecuteAfterInstallation = (): void =>
+      router.goto(`/preferences/resources/provider/${connectionProvider.internalId}`);
+    await performInstallation(connectionProvider);
   } else {
     await window.telemetryTrack('createNewProviderConnectionPageRequested', {
-      providerId: provider.id,
-      name: provider.name,
+      providerId: connectionProvider.id,
+      name: connectionProvider.name,
     });
-    router.goto(`/preferences/resources/provider/${provider.internalId}`);
+    router.goto(`/preferences/resources/provider/${connectionProvider.internalId}`);
   }
 }
 

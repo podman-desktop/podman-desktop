@@ -8,6 +8,11 @@ import { router } from 'tinro';
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import {
+  developerSandboxPromptVisible,
+  findDeveloperSandboxProvider,
+  kubernetesEmptyCardHeaderClass,
+} from '/@/lib/kube/developer-sandbox-prompt-state';
 import DeveloperSandboxPrompt from '/@/lib/kube/DeveloperSandboxPrompt.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -32,6 +37,28 @@ async function ondetails(extensionId: string): Promise<void> {
     extension: extensionId,
   });
 }
+
+const kubernetesProviderConnections = $derived(
+  $providerInfos.filter(
+    provider => provider.kubernetesProviderConnectionCreation && findDeveloperSandboxProvider([provider]) === undefined,
+  ),
+);
+
+const developerSandboxGridColSpan = $derived.by(() => {
+  const providerCount = kubernetesProviderConnections.length;
+  if (providerCount === 0) {
+    return 'lg:col-span-3';
+  }
+
+  const remainder = providerCount % 3;
+  if (remainder === 0) {
+    return 'lg:col-span-3';
+  }
+  if (remainder === 1) {
+    return 'lg:col-span-2';
+  }
+  return 'lg:col-span-1';
+});
 </script>
 
 <div class="mt-8 flex justify-center overflow-auto">
@@ -43,33 +70,40 @@ async function ondetails(extensionId: string): Promise<void> {
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
       A Kubernetes cluster is a group of nodes (virtual or physical) that run Kubernetes, a system for automating the deployment and management of containerized applications.
     </div>
-    <DeveloperSandboxPrompt />
-    <!-- Only show the text if there are providers with p.kubernetesProviderConnectionCreation -->
-      {#if $providerInfos.some(p => p.kubernetesProviderConnectionCreation)}
+    {#if kubernetesProviderConnections.length > 0}
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
       Deploy a Kubernetes cluster of your choice below:
     </div>
-      {/if}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 justify-center">
+    {/if}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 justify-center items-stretch">
 
-      {#each $providerInfos.filter(p => p.kubernetesProviderConnectionCreation) as provider (provider.id)}
+      <DeveloperSandboxPrompt class={`${developerSandboxGridColSpan} min-w-0`} />
+
+      {#each kubernetesProviderConnections as provider (provider.id)}
         {@const label = `${provider.kubernetesProviderConnectionCreationButtonTitle ?? 'Create new'}`}
-      <div class="rounded-xl p-5 text-left bg-[var(--pd-content-card-bg)] ">
+      <div class="rounded-xl border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] h-full overflow-hidden text-left">
 
+        {#if $developerSandboxPromptVisible}
+          <div class={kubernetesEmptyCardHeaderClass} aria-hidden="true"></div>
+        {/if}
+
+        <div class="p-5 flex flex-col flex-1">
+        <div class="flex flex-col flex-1">
         <div class="flex justify-left text-[var(--pd-details-empty-icon)] py-2 mb-2">
         <IconImage image={provider?.images?.icon} class="mx-0 max-h-10" alt={provider.name}></IconImage>
         </div>
-        <h1 class="text-lg font-semibold mb-4">
+        <h1 class="text-lg font-semibold mb-4 text-[var(--pd-content-header)]">
           {provider.kubernetesProviderConnectionCreationDisplayName ?? provider.name}
         </h1>
     
-        <p class="text-sm text-[var(--pd-content-text)] mb-6">
+        <p class="text-sm text-[var(--pd-content-text)]">
         <Markdown markdown={provider.emptyConnectionMarkdownDescription} />
         </p>
+        </div>
     
-        <div class="flex justify-center">
+        <div class="flex justify-center pt-4 mt-auto">
         <Button
-          type="primary"
+          type={$developerSandboxPromptVisible ? 'secondary' : 'primary'}
           on:click={(): Promise<void> => createNew(provider)}
           class="flex items-center"
           aria-label={label}
@@ -77,6 +111,7 @@ async function ondetails(extensionId: string): Promise<void> {
           <Icon icon="{faPlusCircle}" size="1.2x" class="mr-1"/>
           {label}
         </Button>
+        </div>
         </div>
       </div>
       {/each}

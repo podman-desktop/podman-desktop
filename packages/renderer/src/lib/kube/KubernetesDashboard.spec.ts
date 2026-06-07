@@ -51,6 +51,16 @@ vi.mock(import('/@/lib/kube/active-resources-count-listen'));
 vi.mock(import('/@/stores/kubernetes-context-permission'));
 vi.mock(import('/@/stores/kubernetes-no-current-context'));
 
+vi.mock(import('/@/lib/kube/developer-sandbox-prompt-prototype'), () => ({
+  registerDeveloperSandboxPromptPrototype: vi.fn(),
+}));
+
+vi.mock(import('/@/stores/prototype'), () => ({
+  activePrototype: writable(),
+  currentOverride: readable(null),
+  unregisterPrototype: vi.fn(),
+}));
+
 const openExternalMock = vi.fn();
 
 // fake the window object

@@ -269,6 +269,20 @@ test('Check SecurityRestrictions on known domains', async () => {
   expect(shell.openExternal).toBeCalledWith('https://www.podman-desktop.io');
 });
 
+test('Check SecurityRestrictions skip confirmation for developers.redhat.com', async () => {
+  const showMessageBoxMock = vi.fn();
+  const messageBox = {
+    showMessageBox: showMessageBoxMock,
+  } as unknown as MessageBox;
+
+  await pluginSystem.setupSecurityRestrictionsOnLinks(messageBox);
+
+  const value = await securityRestrictionCurrentHandler.handler?.('https://developers.redhat.com/developer-sandbox');
+  expect(value).toBeTruthy();
+  expect(showMessageBoxMock).not.toBeCalled();
+  expect(shell.openExternal).toBeCalledWith('https://developers.redhat.com/developer-sandbox');
+});
+
 test('Check no securityRestrictions on open external files', async () => {
   const showMessageBoxMock = vi.fn();
   const messageBox = {

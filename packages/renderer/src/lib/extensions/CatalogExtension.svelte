@@ -1,5 +1,5 @@
 <script lang="ts">
-import { faCheckCircle, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faCircleInfo, faStar } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { router } from 'tinro';
@@ -25,7 +25,9 @@ function openExtensionDetails(): void {
   <!-- if featured need to display a top banner -->
 
   {#if catalogExtensionUI.isFeatured}
-    <div class="bg-[var(--pd-badge-purple)] text-[var(--pd-card-header-text)] rounded-t-md px-2 text-sm min-h-6 flex flex-row items-center">
+    <div
+      class="bg-[var(--pd-badge-purple)] text-[var(--pd-badge-dd-extension-text)] rounded-t-md px-2 text-sm min-h-6 flex flex-row items-center gap-1.5">
+      <Icon icon={faStar} size="sm" />
       Featured
     </div>
   {/if}

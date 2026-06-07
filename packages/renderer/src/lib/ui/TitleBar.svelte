@@ -3,7 +3,9 @@ import { onMount } from 'svelte';
 
 import CommandPalette from '/@/lib/dialogs/CommandPalette.svelte';
 import DesktopIcon from '/@/lib/images/DesktopIcon.svelte';
+import KubernetesPrototypeLifecycle from '/@/lib/kube/KubernetesPrototypeLifecycle.svelte';
 import NavigationButtons from '/@/lib/ui/NavigationButtons.svelte';
+import PrototypeSelector from '/@/lib/ui/PrototypeSelector.svelte';
 import WindowControlButtons from '/@/lib/window-control-buttons/ControlButtons.svelte';
 
 import SearchButton from './SearchButton.svelte';
@@ -50,7 +52,9 @@ function closeCommandPalette(): void {
     </div>
 
     <!-- right -->
-    <div class="flex flex-row grow justify-end">
+    <div class="flex flex-row grow justify-end items-center {platform === 'darwin' ? 'pr-4' : ''}">
+      <KubernetesPrototypeLifecycle />
+      <PrototypeSelector />
       {#if platform !== 'darwin'}
         <WindowControlButtons platform={platform} />
       {/if}
