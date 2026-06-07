@@ -8,6 +8,7 @@ import { router } from 'tinro';
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
+import DeveloperSandboxPrompt from '/@/lib/kube/DeveloperSandboxPrompt.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
 
@@ -42,6 +43,7 @@ async function ondetails(extensionId: string): Promise<void> {
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
       A Kubernetes cluster is a group of nodes (virtual or physical) that run Kubernetes, a system for automating the deployment and management of containerized applications.
     </div>
+    <DeveloperSandboxPrompt />
     <!-- Only show the text if there are providers with p.kubernetesProviderConnectionCreation -->
       {#if $providerInfos.some(p => p.kubernetesProviderConnectionCreation)}
     <div class="text-[var(--pd-details-empty-sub-header)] text-pretty">
