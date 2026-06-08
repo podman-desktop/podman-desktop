@@ -18,11 +18,10 @@ import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { providerInfos } from '/@/stores/providers';
 
-import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionDetailsLogs from './PreferencesConnectionDetailsLogs.svelte';
 import PreferencesKubernetesConnectionDetailsSummary from './PreferencesKubernetesConnectionDetailsSummary.svelte';
-import type { IConnectionRestart, IConnectionStatus } from './Util';
+import type { IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];
@@ -35,7 +34,6 @@ let connectionStatus: IConnectionStatus;
 let noLog = true;
 let connectionInfo: ProviderKubernetesConnectionInfo | undefined;
 let providerInfo: ProviderInfo | undefined;
-let loggerHandlerKey: symbol | undefined;
 let configurationKeys: IConfigurationPropertyRecordedSchema[];
 $: configurationKeys = properties
   .filter(property => property.scope === 'KubernetesConnection')
@@ -63,23 +61,11 @@ onMount(async () => {
     connectionName = connectionInfo.name;
     const kubernetesConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
     if (kubernetesConnectionName && connectionStatus?.status !== connectionInfo.status) {
-      if (loggerHandlerKey !== undefined) {
-        connectionStatus = {
-          inProgress: true,
-          action: 'restart',
-          status: connectionInfo.status,
-        };
-        startConnectionProvider(providerInfo, connectionInfo, loggerHandlerKey).catch((err: unknown) =>
-          console.error(`Error starting provider ${connectionInfo?.name}`, err),
-        );
-        loggerHandlerKey = undefined;
-      } else {
-        connectionStatus = {
-          inProgress: false,
-          action: undefined,
-          status: connectionInfo.status,
-        };
-      }
+      connectionStatus = {
+        inProgress: false,
+        action: undefined,
+        status: connectionInfo.status,
+      };
     }
     connectionStatus = connectionStatus;
   });
@@ -90,14 +76,6 @@ onDestroy(() => {
     providersUnsubscribe();
   }
 });
-
-async function startConnectionProvider(
-  provider: ProviderInfo,
-  connectionInfo: ProviderKubernetesConnectionInfo,
-  loggerHandlerKey: symbol,
-): Promise<void> {
-  await window.startProviderConnectionLifecycle(provider.internalId, connectionInfo, loggerHandlerKey, eventCollect);
-}
 
 function updateConnectionStatus(
   provider: ProviderInfo,
@@ -123,10 +101,6 @@ function updateConnectionStatus(
   connectionStatus = connectionStatus;
 }
 
-function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
-  loggerHandlerKey = connection.loggerHandlerKey;
-}
-
 function setNoLogs(): void {
   noLog = false;
 }
@@ -150,8 +124,7 @@ function setNoLogs(): void {
             provider={providerInfo}
             connection={connectionInfo}
             connectionStatus={connectionStatus}
-            updateConnectionStatus={updateConnectionStatus}
-            addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
+            updateConnectionStatus={updateConnectionStatus} />
         </div>
       {/if}
     {/snippet}

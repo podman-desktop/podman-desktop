@@ -13,7 +13,7 @@ import {
   eventCollect,
   registerConnectionCallback,
 } from './preferences-connection-rendering-task';
-import { type IConnectionRestart, type IConnectionStatus } from './Util';
+import { type IConnectionStatus } from './Util';
 
 interface Props {
   connectionStatus: IConnectionStatus | undefined;
@@ -26,18 +26,10 @@ interface Props {
     error?: string,
     inProgress?: boolean,
   ) => void;
-  addConnectionToRestartingQueue: (connection: IConnectionRestart) => void;
   advanced_actions?: Snippet;
 }
 
-let {
-  connectionStatus,
-  provider,
-  connection,
-  updateConnectionStatus,
-  addConnectionToRestartingQueue,
-  advanced_actions,
-}: Props = $props();
+let { connectionStatus, provider, connection, updateConnectionStatus, advanced_actions }: Props = $props();
 
 async function startConnectionProvider(
   provider: ProviderInfo,
@@ -75,11 +67,13 @@ async function restartConnectionProvider(
       loggerHandlerKey,
       eventCollect,
     );
-    addConnectionToRestartingQueue({
-      container: providerConnectionInfo.name,
-      provider: provider.internalId,
+
+    await window.startProviderConnectionLifecycle(
+      provider.internalId,
+      $state.snapshot(providerConnectionInfo),
       loggerHandlerKey,
-    });
+      eventCollect,
+    );
   }
 }
 
@@ -148,6 +142,7 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
 }
 </script>
 
+<span>inProgress? {connectionStatus?.inProgress}</span>
 {#if connectionStatus}
   {#if connection.lifecycleMethods && connection.lifecycleMethods.length > 0}
     <div class="mt-2 relative">

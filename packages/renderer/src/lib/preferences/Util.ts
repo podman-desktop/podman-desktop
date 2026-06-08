@@ -47,12 +47,6 @@ export interface IConnectionStatus extends ILoadingStatus {
   error?: string;
 }
 
-export interface IConnectionRestart {
-  provider: string;
-  container: string;
-  loggerHandlerKey: symbol;
-}
-
 export function writeToTerminal(xterm: Terminal, data: unknown, colorPrefix: string): void {
   if (Array.isArray(data)) {
     writeArrayToTerminal(xterm, data, colorPrefix);

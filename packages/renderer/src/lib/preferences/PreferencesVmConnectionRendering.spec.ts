@@ -22,13 +22,11 @@ import type { ProviderInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { router } from 'tinro';
-import { assert, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test, vi } from 'vitest';
 
 import { providerInfos } from '/@/stores/providers';
 
-import * as preferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesVmConnectionRendering from './PreferencesVmConnectionRendering.svelte';
-import type { IConnectionRestart } from './Util';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -211,66 +209,4 @@ test('Expect to see error message if action fails', async () => {
 
   // expect to see the delete failed button
   expect(deleteFailedButton).toBeInTheDocument();
-});
-
-test('startProviderConnectionLifecycle is called when addConnectionToRestartingQueue is called by sub-component', async () => {
-  vi.spyOn(preferencesConnectionActions, 'default');
-  const providerInfo: ProviderInfo = {
-    id: 'vmprovider',
-    name: 'vmp',
-    images: {
-      icon: 'img',
-    },
-    status: 'started',
-    warnings: [],
-    containerProviderConnectionCreation: true,
-    detectionChecks: [],
-    containerConnections: [],
-    installationSupport: false,
-    internalId: '0',
-    vmConnections: [
-      {
-        connectionType: 'vm',
-        name: 'vm 1',
-        status: 'stopped',
-        lifecycleMethods: ['delete'],
-        canStart: false,
-        canStop: false,
-        canEdit: false,
-        canDelete: false,
-      },
-    ],
-    vmProviderConnectionCreation: true,
-    kubernetesConnections: [],
-    kubernetesProviderConnectionCreation: false,
-    vmProviderConnectionInitialization: false,
-    links: [],
-    containerProviderConnectionInitialization: false,
-    containerProviderConnectionCreationDisplayName: 'Podman machine',
-    kubernetesProviderConnectionInitialization: false,
-    extensionId: '',
-    cleanupSupport: false,
-    canStart: false,
-    canStop: false,
-  };
-
-  providerInfos.set([providerInfo]);
-  render(PreferencesVmConnectionRendering, {
-    connectionName: 'vm 1',
-    providerInternalId: '0',
-  });
-
-  // simulate PreferencesConnectionActions is calling addConnectionToRestartingQueue
-  expect(preferencesConnectionActions.default).toHaveBeenCalledOnce();
-  const params = vi.mocked(preferencesConnectionActions.default).mock.calls[0][1];
-  assert(params);
-  const addConnectionToRestartingQueue = params['addConnectionToRestartingQueue'];
-
-  addConnectionToRestartingQueue({
-    loggerHandlerKey: (): void => {},
-  } as unknown as IConnectionRestart);
-
-  providerInfo.vmConnections[0].status = 'started';
-  providerInfos.set([providerInfo]);
-  expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
 });

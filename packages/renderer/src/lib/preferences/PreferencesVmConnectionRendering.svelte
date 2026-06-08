@@ -16,11 +16,9 @@ import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { providerInfos } from '/@/stores/providers';
 
-import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionDetailsTerminal from './PreferencesConnectionDetailsTerminal.svelte';
-import type { IConnectionRestart, IConnectionStatus } from './Util';
-import { getProviderConnectionName } from './Util';
+import { getProviderConnectionName, type IConnectionStatus } from './Util';
 
 export let providerInternalId: string | undefined = undefined;
 export let connectionName = '';
@@ -28,7 +26,6 @@ export let connectionName = '';
 let connectionStatus: IConnectionStatus;
 let connectionInfo: ProviderVmConnectionInfo | undefined;
 let providerInfo: ProviderInfo | undefined;
-let loggerHandlerKey: symbol | undefined;
 
 let providersUnsubscribe: Unsubscriber;
 onMount(async () => {
@@ -48,23 +45,11 @@ onMount(async () => {
     }
     const vmConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
     if (vmConnectionName && connectionStatus?.status !== connectionInfo.status) {
-      if (loggerHandlerKey !== undefined) {
-        connectionStatus = {
-          inProgress: true,
-          action: 'restart',
-          status: connectionInfo.status,
-        };
-        startConnectionProvider(providerInfo, connectionInfo, loggerHandlerKey).catch((err: unknown) =>
-          console.error(`Error starting provider ${connectionInfo?.name}`, err),
-        );
-        loggerHandlerKey = undefined;
-      } else {
-        connectionStatus = {
-          inProgress: false,
-          action: undefined,
-          status: connectionInfo.status,
-        };
-      }
+      connectionStatus = {
+        inProgress: false,
+        action: undefined,
+        status: connectionInfo.status,
+      };
     }
     connectionStatus = connectionStatus;
   });
@@ -76,16 +61,8 @@ onDestroy(() => {
   }
 });
 
-async function startConnectionProvider(
-  provider: ProviderInfo,
-  connectionInfo: ProviderVmConnectionInfo,
-  loggerHandlerKey: symbol,
-): Promise<void> {
-  await window.startProviderConnectionLifecycle(provider.internalId, connectionInfo, loggerHandlerKey, eventCollect);
-}
-
 function updateConnectionStatus(
-  provider: ProviderInfo,
+  _: ProviderInfo,
   connectionInfo: ProviderConnectionInfo,
   action?: string,
   error?: string,
@@ -107,10 +84,6 @@ function updateConnectionStatus(
   }
   connectionStatus = connectionStatus;
 }
-
-function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
-  loggerHandlerKey = connection.loggerHandlerKey;
-}
 </script>
 
 {#if connectionInfo}
@@ -131,8 +104,7 @@ function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
             provider={providerInfo}
             connection={connectionInfo}
             connectionStatus={connectionStatus}
-            updateConnectionStatus={updateConnectionStatus}
-            addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
+            updateConnectionStatus={updateConnectionStatus} />
         </div>
       {/if}
     {/snippet}

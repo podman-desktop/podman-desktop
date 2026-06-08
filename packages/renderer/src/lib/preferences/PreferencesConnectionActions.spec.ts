@@ -90,10 +90,6 @@ const updateConnectionStatus = (): void => {
   //nothing
 };
 
-const addConnectionToRestartingQueue = (): void => {
-  //nothing
-};
-
 const connectionStatus: IConnectionStatus = {
   status: 'started',
   inProgress: false,
@@ -113,7 +109,6 @@ test('if container connection has start lifecycle method, start button has to be
     provider: customProviderInfo,
     connection: containerConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const button = screen.getByRole('button', { name: 'Start' });
   expect(button).toBeInTheDocument();
@@ -127,7 +122,6 @@ test('if container connection has stop lifecycle method, stop button has to be v
     provider: customProviderInfo,
     connection: containerConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const button = screen.getByRole('button', { name: 'Stop' });
   expect(button).toBeInTheDocument();
@@ -141,7 +135,6 @@ test('if container connection has start and stop lifecycle methods, restart butt
     provider: customProviderInfo,
     connection: containerConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const startButton = screen.getByRole('button', { name: 'Start' });
   expect(startButton).toBeInTheDocument();
@@ -160,7 +153,6 @@ describe('delete', () => {
       provider: customProviderInfo,
       connection: containerConnection,
       updateConnectionStatus,
-      addConnectionToRestartingQueue,
     });
     const button = screen.getByRole('button', { name: 'Delete' });
     expect(button).toBeInTheDocument();
@@ -172,7 +164,6 @@ describe('delete', () => {
       provider: containerProviderInfo,
       connection: containerConnection,
       updateConnectionStatus,
-      addConnectionToRestartingQueue,
     });
     const button = getByRole('button', { name: 'Delete' });
 
@@ -201,7 +192,6 @@ describe('delete', () => {
       provider: containerProviderInfo,
       connection: stoppedConnection,
       updateConnectionStatus,
-      addConnectionToRestartingQueue,
     });
     const button = getByRole('button', { name: 'Delete' });
 
@@ -226,7 +216,6 @@ test('if kubernetes connection has start lifecycle method, start button has to b
     provider: customProviderInfo,
     connection: kubernetesConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const button = screen.getByRole('button', { name: 'Start' });
   expect(button).toBeInTheDocument();
@@ -240,7 +229,6 @@ test('if kubernetes connection has stop lifecycle method, stop button has to be 
     provider: customProviderInfo,
     connection: kubernetesConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const button = screen.getByRole('button', { name: 'Stop' });
   expect(button).toBeInTheDocument();
@@ -254,7 +242,6 @@ test('if kubernetes connection has start and stop lifecycle methods, restart but
     provider: customProviderInfo,
     connection: kubernetesConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const startButton = screen.getByRole('button', { name: 'Start' });
   expect(startButton).toBeInTheDocument();
@@ -272,7 +259,6 @@ test('if kubernetes connection has delete lifecycle method, delete button has to
     provider: customProviderInfo,
     connection: kubernetesConnection,
     updateConnectionStatus,
-    addConnectionToRestartingQueue,
   });
   const button = screen.getByRole('button', { name: 'Delete' });
   expect(button).toBeInTheDocument();

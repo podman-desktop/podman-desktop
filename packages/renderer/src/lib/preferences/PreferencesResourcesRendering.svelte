@@ -35,7 +35,6 @@ import {
   RESOURCE_FORMATS,
   toDisplayMetrics,
 } from './connection-resource-metrics';
-import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
 import PreferencesManagedInput from './PreferencesManagedInput.svelte';
@@ -46,7 +45,6 @@ import SettingsPage from './SettingsPage.svelte';
 import ThemedIcon from './ThemedIcon.svelte';
 import {
   getProviderConnectionName,
-  type IConnectionRestart,
   type IConnectionStatus,
   type IProviderConnectionConfigurationPropertyRecorded,
   isDefaultScope,
@@ -62,7 +60,6 @@ let providerToBeInstalled = $state<{ provider: ProviderInfo; displayName: string
 let doExecuteAfterInstallation: () => void;
 let preflightChecks = $state<CheckStatus[]>([]);
 
-let restartingQueue: IConnectionRestart[] = [];
 let globalContext = $state<ContextUI>();
 
 let providersUnsubscribe: Unsubscriber;
@@ -99,23 +96,11 @@ onMount(async () => {
           !containerConnectionStatus.has(containerConnectionName) ||
           containerConnectionStatus.get(containerConnectionName)?.status !== container.status
         ) {
-          const containerToRestart = getContainerRestarting(provider.internalId, container.name);
-          if (containerToRestart) {
-            containerConnectionStatus.set(containerConnectionName, {
-              inProgress: true,
-              action: 'restart',
-              status: container.status,
-            });
-            startConnectionProvider(provider, container, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
-              console.error(`Error starting connection provider ${container.name}`, err),
-            );
-          } else {
-            containerConnectionStatus.set(containerConnectionName, {
-              inProgress: false,
-              action: undefined,
-              status: container.status,
-            });
-          }
+          containerConnectionStatus.set(containerConnectionName, {
+            inProgress: false,
+            action: undefined,
+            status: container.status,
+          });
         }
       });
       provider.kubernetesConnections.forEach(connection => {
@@ -126,23 +111,11 @@ onMount(async () => {
           !containerConnectionStatus.has(containerConnectionName) ||
           containerConnectionStatus.get(containerConnectionName)?.status !== connection.status
         ) {
-          const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
-          if (containerToRestart) {
-            containerConnectionStatus.set(containerConnectionName, {
-              inProgress: true,
-              action: 'restart',
-              status: connection.status,
-            });
-            startConnectionProvider(provider, connection, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
-              console.error(`Error starting connection provider ${connection.name}`, err),
-            );
-          } else {
-            containerConnectionStatus.set(containerConnectionName, {
-              inProgress: false,
-              action: undefined,
-              status: connection.status,
-            });
-          }
+          containerConnectionStatus.set(containerConnectionName, {
+            inProgress: false,
+            action: undefined,
+            status: connection.status,
+          });
         }
       });
       provider.vmConnections.forEach(connection => {
@@ -153,23 +126,11 @@ onMount(async () => {
           !containerConnectionStatus.has(vmConnectionName) ||
           containerConnectionStatus.get(vmConnectionName)?.status !== connection.status
         ) {
-          const containerToRestart = getContainerRestarting(provider.internalId, connection.name);
-          if (containerToRestart) {
-            containerConnectionStatus.set(vmConnectionName, {
-              inProgress: true,
-              action: 'restart',
-              status: connection.status,
-            });
-            startConnectionProvider(provider, connection, containerToRestart.loggerHandlerKey).catch((err: unknown) =>
-              console.error(`Error starting connection provider ${connection.name}`, err),
-            );
-          } else {
-            containerConnectionStatus.set(vmConnectionName, {
-              inProgress: false,
-              action: undefined,
-              status: connection.status,
-            });
-          }
+          containerConnectionStatus.set(vmConnectionName, {
+            inProgress: false,
+            action: undefined,
+            status: connection.status,
+          });
         }
       });
     });
@@ -197,14 +158,6 @@ onMount(async () => {
 
   contributionsContainerConnection = await window.getContributedMenus(MenuContext.DASHBOARD_CONTAINER_CONNECTION);
 });
-
-function getContainerRestarting(provider: string, container: string): IConnectionRestart {
-  const containerToRestart = restartingQueue.filter(c => c.provider === provider && c.container === container)[0];
-  if (containerToRestart) {
-    restartingQueue = restartingQueue.filter(c => c.provider !== provider && c.container !== container);
-  }
-  return containerToRestart;
-}
 
 onDestroy(() => {
   if (providersUnsubscribe) {
@@ -245,23 +198,6 @@ function updateContainerStatus(
       status: containerConnectionInfo.status,
     });
   }
-}
-
-function addConnectionToRestartingQueue(connection: IConnectionRestart): void {
-  restartingQueue.push(connection);
-}
-
-async function startConnectionProvider(
-  provider: ProviderInfo,
-  containerConnectionInfo: ProviderConnectionInfo,
-  loggerHandlerKey: symbol,
-): Promise<void> {
-  await window.startProviderConnectionLifecycle(
-    provider.internalId,
-    $state.snapshot(containerConnectionInfo),
-    loggerHandlerKey,
-    eventCollect,
-  );
 }
 
 async function doCreateNew(provider: ProviderInfo, displayName: string): Promise<void> {
@@ -580,8 +516,7 @@ $effect(() => {
                 provider={provider}
                 connection={container}
                 connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, container))}
-                updateConnectionStatus={updateContainerStatus}
-                addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
+                updateConnectionStatus={updateContainerStatus}>
                 {#snippet advanced_actions()}
                   <span  class:hidden={providers.length === 0}>
                     <Tooltip bottom tip="More Options">
@@ -647,8 +582,7 @@ $effect(() => {
                 provider={provider}
                 connection={kubeConnection}
                 connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, kubeConnection))}
-                updateConnectionStatus={updateContainerStatus}
-                addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
+                updateConnectionStatus={updateContainerStatus} />
             </div>
           {/each}
           {#each provider.vmConnections as vmConnection, index (index)}
@@ -681,8 +615,7 @@ $effect(() => {
               provider={provider}
               connection={vmConnection}
               connectionStatus={containerConnectionStatus.get(getProviderConnectionName(provider, vmConnection))}
-              updateConnectionStatus={updateContainerStatus}
-              addConnectionToRestartingQueue={addConnectionToRestartingQueue}>
+              updateConnectionStatus={updateContainerStatus}>
               {#snippet advanced_actions()}
                 <span  class:hidden={providers.length === 0}>
                   <Tooltip bottom tip="More Options">

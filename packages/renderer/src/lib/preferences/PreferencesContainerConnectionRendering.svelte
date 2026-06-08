@@ -18,12 +18,11 @@ import { handleNavigation } from '/@/navigation';
 import Route from '/@/Route.svelte';
 import { providerInfos } from '/@/stores/providers';
 
-import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionDetailsLogs from './PreferencesConnectionDetailsLogs.svelte';
 import PreferencesConnectionDetailsTerminal from './PreferencesConnectionDetailsTerminal.svelte';
 import PreferencesContainerConnectionDetailsSummary from './PreferencesContainerConnectionDetailsSummary.svelte';
-import type { IConnectionRestart, IConnectionStatus } from './Util';
+import type { IConnectionStatus } from './Util';
 import { getProviderConnectionName } from './Util';
 
 export let properties: IConfigurationPropertyRecordedSchema[] = [];
@@ -37,7 +36,6 @@ let connectionStatus: IConnectionStatus;
 let noLog = true;
 let connectionInfo: ProviderContainerConnectionInfo | undefined;
 let providerInfo: ProviderInfo | undefined;
-let loggerHandlerKey: symbol | undefined;
 let configurationKeys: IConfigurationPropertyRecordedSchema[];
 $: configurationKeys = properties
   .filter(property => property.scope === 'ContainerConnection')
@@ -63,23 +61,11 @@ onMount(async () => {
     }
     const containerConnectionName = getProviderConnectionName(providerInfo, connectionInfo);
     if (containerConnectionName && connectionStatus?.status !== connectionInfo.status) {
-      if (loggerHandlerKey !== undefined) {
-        connectionStatus = {
-          inProgress: true,
-          action: 'restart',
-          status: connectionInfo.status,
-        };
-        startContainerProvider(providerInfo, connectionInfo, loggerHandlerKey).catch((err: unknown) =>
-          console.error(`Error starting provider ${connectionInfo?.name}`, err),
-        );
-        loggerHandlerKey = undefined;
-      } else {
-        connectionStatus = {
-          inProgress: false,
-          action: undefined,
-          status: connectionInfo.status,
-        };
-      }
+      connectionStatus = {
+        inProgress: false,
+        action: undefined,
+        status: connectionInfo.status,
+      };
     }
     connectionStatus = connectionStatus;
   });
@@ -91,18 +77,6 @@ onDestroy(() => {
   }
 });
 
-async function startContainerProvider(
-  provider: ProviderInfo,
-  containerConnectionInfo: ProviderContainerConnectionInfo,
-  loggerHandlerKey: symbol,
-): Promise<void> {
-  await window.startProviderConnectionLifecycle(
-    provider.internalId,
-    containerConnectionInfo,
-    loggerHandlerKey,
-    eventCollect,
-  );
-}
 function updateConnectionStatus(
   provider: ProviderInfo,
   containerConnectionInfo: ProviderConnectionInfo,
@@ -125,10 +99,6 @@ function updateConnectionStatus(
     };
   }
   connectionStatus = connectionStatus;
-}
-
-function addConnectionToRestartingQueue(container: IConnectionRestart): void {
-  loggerHandlerKey = container.loggerHandlerKey;
 }
 
 function setNoLogs(): void {
@@ -154,8 +124,7 @@ function setNoLogs(): void {
             provider={providerInfo}
             connection={connectionInfo}
             connectionStatus={connectionStatus}
-            updateConnectionStatus={updateConnectionStatus}
-            addConnectionToRestartingQueue={addConnectionToRestartingQueue} />
+            updateConnectionStatus={updateConnectionStatus} />
         </div>
       {/if}
     {/snippet}
