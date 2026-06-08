@@ -601,8 +601,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       electron-updater:
-        specifier: 6.8.3
-        version: 6.8.3
+        specifier: 6.8.9
+        version: 6.8.9
       electron-util:
         specifier: ^1.0.0
         version: 1.0.0
@@ -5891,6 +5891,10 @@ packages:
     resolution: {integrity: sha512-qt41tMfgHTllhResqM5DcnHyDIWNgzHvuY2jDcYP9iaGpkWxTUzV6GQjDeLnlR1/DtdlcsWQbA7sByMpmJFTLQ==}
     engines: {node: '>=12.0.0'}
 
+  builder-util-runtime@9.7.0:
+    resolution: {integrity: sha512-g/kR520giAFYkSXTzcmF3kqQq7wi8F6N6SzeDgZrqTBN+VHdmgWOyTdD1yD7AATDId/yXLvuP34CxW46/BwCdw==}
+    engines: {node: '>=12.0.0'}
+
   builder-util@26.8.1:
     resolution: {integrity: sha512-pm1lTYbGyc90DHgCDO7eo8Rl4EqKLciayNbZqGziqnH9jrlKe8ZANGdityLZU+pJh16dfzjAx2xQq9McuIPEtw==}
 
@@ -7095,8 +7099,8 @@ packages:
   electron-to-chromium@1.5.336:
     resolution: {integrity: sha512-AbH9q9J455r/nLmdNZes0G0ZKcRX73FicwowalLs6ijwOmCJSRRrLX63lcAlzy9ux3dWK1w1+1nsBJEWN11hcQ==}
 
-  electron-updater@6.8.3:
-    resolution: {integrity: sha512-Z6sgw3jgbikWKXei1ENdqFOxBP0WlXg3TtKfz0rgw2vIZFJUyI4pD7ZN7jrkm7EoMK+tcm/qTnPUdqfZukBlBQ==}
+  electron-updater@6.8.9:
+    resolution: {integrity: sha512-ZhVxM9iGONUpZGI1FxdMRgJjUFXi7AYGVa5PwKlO1tV1/4zDxQmfKpXOHVztKrd6L9rLcFjERvi1Mf2vxyTkig==}
 
   electron-util@1.0.0:
     resolution: {integrity: sha512-aOuxp70fhKAnBE7zTvgSJbtpb+GBfho3luh43oh5UZKpFViCUA+T5eQ/OY267tvmNusrcho4TNlyAZaQwucg9w==}
@@ -11038,8 +11042,8 @@ packages:
   sax@1.2.1:
     resolution: {integrity: sha512-8I2a3LovHTOpm7NV5yOyO8IHqgVsfK4+UuySrXU8YXkSRX7k6hCV9b3HrkKCr3nMpgj+0bmocaJJWpvp1oc7ZA==}
 
-  sax@1.5.0:
-    resolution: {integrity: sha512-21IYA3Q5cQf089Z6tgaUTr7lDAyzoTPx5HRtbhsME8Udispad8dC/+sziTNugOEx54ilvatQ9YCzl4KQLPcRHA==}
+  sax@1.6.0:
+    resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
     engines: {node: '>=11.0.0'}
 
   saxes@6.0.0:
@@ -14216,7 +14220,7 @@ snapshots:
       '@docusaurus/logger': 3.10.1
       '@docusaurus/utils': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       babel-plugin-dynamic-import-node: 2.3.3
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
@@ -14356,7 +14360,7 @@ snapshots:
       escape-html: 1.0.3
       estree-util-value-to-estree: 3.3.3
       file-loader: 6.2.0(webpack@5.105.0(esbuild@0.25.12))
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       image-size: 2.0.2
       mdast-util-mdx: 3.0.0
       mdast-util-to-string: 4.0.0
@@ -14447,7 +14451,7 @@ snapshots:
       cheerio: 1.0.0-rc.12
       combine-promises: 1.2.0
       feed: 4.2.2
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       lodash: 4.18.1
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
@@ -14489,7 +14493,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@types/react-router-config': 5.0.11
       combine-promises: 1.2.0
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       js-yaml: 4.2.0
       lodash: 4.18.1
       react: 18.2.0
@@ -14524,7 +14528,7 @@ snapshots:
       '@docusaurus/types': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/utils': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/utils-validation': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       tslib: 2.8.1
@@ -14581,7 +14585,7 @@ snapshots:
       '@docusaurus/core': 3.10.1(@mdx-js/react@3.1.1(@types/react@18.3.12)(react@18.2.0))(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)(typescript@5.9.3)
       '@docusaurus/types': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/utils': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       react-json-view-lite: 2.5.0(react@18.2.0)
@@ -14695,7 +14699,7 @@ snapshots:
       '@docusaurus/utils': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/utils-common': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/utils-validation': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
       sitemap: 7.1.2
@@ -14916,7 +14920,7 @@ snapshots:
       algoliasearch-helper: 3.26.0(algoliasearch@5.42.0)
       clsx: 2.1.1
       eta: 2.2.0
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       lodash: 4.18.1
       react: 18.2.0
       react-dom: 18.3.1(react@18.2.0)
@@ -14946,7 +14950,7 @@ snapshots:
 
   '@docusaurus/theme-translations@3.10.1':
     dependencies:
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       tslib: 2.8.1
 
   '@docusaurus/tsconfig@3.10.1': {}
@@ -14992,7 +14996,7 @@ snapshots:
       '@docusaurus/logger': 3.10.1
       '@docusaurus/utils': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
       '@docusaurus/utils-common': 3.10.1(acorn@8.16.0)(esbuild@0.25.12)(react-dom@18.3.1(react@18.2.0))(react@18.2.0)
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       joi: 17.13.3
       js-yaml: 4.2.0
       lodash: 4.18.1
@@ -15015,7 +15019,7 @@ snapshots:
       escape-string-regexp: 4.0.0
       execa: 5.1.1
       file-loader: 6.2.0(webpack@5.105.0(esbuild@0.25.12))
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       github-slugger: 1.5.0
       globby: 11.1.0
       gray-matter: 4.0.3
@@ -15112,7 +15116,7 @@ snapshots:
       node-gyp: 11.5.0
       ora: 5.4.1
       read-binary-file-arch: 1.0.6
-      semver: 7.7.4
+      semver: 7.8.2
       tar: 7.5.16
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -15124,7 +15128,7 @@ snapshots:
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.4.3
       dir-compare: 4.2.0
-      fs-extra: 11.3.4
+      fs-extra: 11.3.5
       minimatch: 9.0.9
       plist: 3.1.0
     transitivePeerDependencies:
@@ -15939,7 +15943,7 @@ snapshots:
 
   '@npmcli/fs@4.0.0':
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.2
 
   '@octokit/app@16.1.2':
     dependencies:
@@ -18619,7 +18623,14 @@ snapshots:
   builder-util-runtime@9.5.1:
     dependencies:
       debug: 4.4.3
-      sax: 1.5.0
+      sax: 1.6.0
+    transitivePeerDependencies:
+      - supports-color
+
+  builder-util-runtime@9.7.0:
+    dependencies:
+      debug: 4.4.3
+      sax: 1.6.0
     transitivePeerDependencies:
       - supports-color
 
@@ -19939,9 +19950,9 @@ snapshots:
 
   electron-to-chromium@1.5.336: {}
 
-  electron-updater@6.8.3:
+  electron-updater@6.8.9:
     dependencies:
-      builder-util-runtime: 9.5.1
+      builder-util-runtime: 9.7.0
       fs-extra: 10.1.0
       js-yaml: 4.2.0
       lazy-val: 1.0.5
@@ -20859,7 +20870,6 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 6.2.1
       universalify: 2.0.1
-    optional: true
 
   fs-extra@7.0.1:
     dependencies:
@@ -21018,7 +21028,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.7.4
+      semver: 7.8.2
       serialize-error: 7.0.1
     optional: true
 
@@ -23147,14 +23157,14 @@ snapshots:
 
   node-abi@4.26.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.2
 
   node-addon-api@1.7.2:
     optional: true
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.2
 
   node-emoji@2.1.3:
     dependencies:
@@ -23179,7 +23189,7 @@ snapshots:
       make-fetch-happen: 14.0.3
       nopt: 8.1.0
       proc-log: 5.0.0
-      semver: 7.7.4
+      semver: 7.8.2
       tar: 7.5.16
       tinyglobby: 0.2.17
       which: 5.0.0
@@ -24820,7 +24830,7 @@ snapshots:
 
   sax@1.2.1: {}
 
-  sax@1.5.0: {}
+  sax@1.6.0: {}
 
   saxes@6.0.0:
     dependencies:
@@ -25122,7 +25132,7 @@ snapshots:
       '@types/node': 17.0.45
       '@types/sax': 1.2.7
       arg: 5.0.2
-      sax: 1.5.0
+      sax: 1.6.0
 
   skin-tone@2.0.0:
     dependencies:
@@ -25569,7 +25579,7 @@ snapshots:
       css-what: 6.2.2
       csso: 5.0.5
       picocolors: 1.1.1
-      sax: 1.5.0
+      sax: 1.6.0
 
   symbol-tree@3.2.4: {}
 
@@ -26696,7 +26706,7 @@ snapshots:
 
   xml-js@1.6.11:
     dependencies:
-      sax: 1.5.0
+      sax: 1.6.0
 
   xml-name-validator@5.0.0: {}
 

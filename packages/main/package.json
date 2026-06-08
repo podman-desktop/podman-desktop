@@ -46,7 +46,7 @@
     "dockerode": "^5.0.0",
     "electron": "42.3.3",
     "electron-context-menu": "4.1.2",
-    "electron-updater": "6.8.3",
+    "electron-updater": "6.8.9",
     "electron-util": "^1.0.0",
     "express": "^5.2.1",
     "fzstd": "^0.1.1",
