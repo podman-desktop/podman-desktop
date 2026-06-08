@@ -56,7 +56,7 @@ import { createListener } from './micromark-listener-handler';
 import { warnings } from './micromark-warnings-directive';
 
 interface Props {
-  markdown: string;
+  markdown?: string;
 
   /**
    * Button micromark related:
@@ -73,6 +73,8 @@ let { markdown, inProgressMarkdownCommandExecutionCallback = (): void => {} }: P
 
 let urlProtocol: string = $derived(await window.getUrlProtocol());
 let html: string = $derived.by(() => {
+  if (!markdown) return '';
+
   // Provide micromark + extensions
   const html = micromark(markdown, {
     extensions: [directive()],
