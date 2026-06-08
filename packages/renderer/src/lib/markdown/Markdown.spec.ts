@@ -155,6 +155,24 @@ describe('Custom link', () => {
     expect(markdownContent).toBeInTheDocument();
     expect(markdownContent).toContainHTML('<a href="/some/link">click here to test</a>');
   });
+
+  test('expect internal protocol to be simplified', async () => {
+    await waitRender({
+      markdown: 'See <a href="podman-desktop://containers">containers</a>',
+    });
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+    expect(markdownContent).toBeInTheDocument();
+    expect(markdownContent).toContainHTML('<a href="/containers">containers</a>');
+  });
+
+  test('expect unknown protocol to be left as is', async () => {
+    await waitRender({
+      markdown: 'See <a href="foo://bar">foo</a>',
+    });
+    const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
+    expect(markdownContent).toBeInTheDocument();
+    expect(markdownContent).toContainHTML('<a href="foo://bar">foo</a>');
+  });
 });
 
 describe('Custom image', () => {

@@ -71,7 +71,7 @@ interface Props {
 
 let { markdown, inProgressMarkdownCommandExecutionCallback = (): void => {} }: Props = $props();
 
-let urlProtocol: string = $derived(await window.getUrlProtocol());
+let urlProtocol: string = $state('');
 let html: string = $derived.by(() => {
   if (!markdown) return '';
 
@@ -132,6 +132,7 @@ function decode(htmlString: string): string {
 }
 
 onMount(async () => {
+  urlProtocol = await window.getUrlProtocol();
   // We create a click listener in order to execute any internal micromark commands
   // We add the clickListener here since we're unable to add it in the directive typescript file.
   const clickListener = createListener(inProgressMarkdownCommandExecutionCallback);
