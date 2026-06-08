@@ -1346,6 +1346,16 @@ describe('initStatusColors', () => {
     expect(definition?.hcLight, `${id} should have hcLight value`).toBeDefined();
   });
 
+  test('registers status-paused with gray/charcoal values matching stopped status', () => {
+    const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === 'status-paused');
+    expect(call).toBeDefined();
+    const definition = call?.[1];
+    expect(definition?.dark).toBe(tailwindColorPalette.gray[500]);
+    expect(definition?.light).toBe(tailwindColorPalette.charcoal[300]);
+    expect(definition?.hcDark).toBe(tailwindColorPalette.white);
+    expect(definition?.hcLight).toBe(tailwindColorPalette.black);
+  });
+
   test('registers status-contrast with dark and light values', () => {
     const call = vi.mocked(colorRegistry.registerColor).mock.calls.find(c => c?.[0] === 'status-contrast');
     expect(call).toBeDefined();
