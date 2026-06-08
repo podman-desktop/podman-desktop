@@ -1942,10 +1942,10 @@ export class ColorRegistry {
     });
 
     this.registerColor(`${status}paused`, {
-      dark: yellow[500],
-      light: yellow[700],
-      hcDark: yellow[600],
-      hcLight: yellow[700],
+      dark: gray[500],
+      light: charcoal[300],
+      hcDark: white,
+      hcLight: black,
     });
 
     this.registerColor(`${status}degraded`, {
