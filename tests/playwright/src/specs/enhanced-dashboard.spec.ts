@@ -73,26 +73,12 @@ test.describe
     test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
       // assert assets state before enabling it (disabled by default for the time being)
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      let dashboardPage = await navigationBar.openDashboard();
+      const dashboardPage = await navigationBar.openDashboard();
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
       // enable the feature
       await setEnhancedDashboardFeature(page, navigationBar, true);
-      // 'System Overview' card may take a moment to load; refresh the view by navigating away and back
-      await playExpect
-        .poll(
-          async () => {
-            dashboardPage = await navigationBar.openDashboard();
-            if (await dashboardPage.systemOverviewButton.isVisible()) {
-              return true;
-            }
-            await navigationBar.openContainers();
-            return false;
-          },
-          { timeout: 30_000 },
-        )
-        .toBeTruthy();
       // assert assets state after enabling it
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled();
       await dashboardPage.systemOverviewButton.scrollIntoViewIfNeeded();
@@ -105,20 +91,6 @@ test.describe
       await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled();
       // disable the feature and assert everything went back to the expected state
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      dashboardPage = await navigationBar.openDashboard();
-      await playExpect
-        .poll(
-          async () => {
-            dashboardPage = await navigationBar.openDashboard();
-            if (await dashboardPage.podmanProvider.isVisible()) {
-              return true;
-            }
-            await navigationBar.openContainers();
-            return false;
-          },
-          { timeout: 30_000 },
-        )
-        .toBeTruthy();
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
     });
@@ -127,7 +99,8 @@ test.describe
       test.setTimeout(320_000);
 
       await test.step('Open dashboard and initialize Podman machine', async () => {
-        let dashboardPage = await navigationBar.openDashboard();
+        // enable the feature
+        let dashboardPage = await setEnhancedDashboardFeature(page, navigationBar, true);
         await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled({ timeout: 5_000 });
         await dashboardPage.setUpPodmanButton.scrollIntoViewIfNeeded();
         await dashboardPage.setUpPodmanButton.click();

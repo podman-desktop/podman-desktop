@@ -26,6 +26,7 @@ import { ResourceElementState } from '/@/model/core/states';
 import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 import { matchesProviderVariant, PodmanMachinePrivileges } from '/@/model/core/types';
 import { CLIToolsPage } from '/@/model/pages/cli-tools-page';
+import type { DashboardPage } from '/@/model/pages/dashboard-page';
 import { ExperimentalPage } from '/@/model/pages/experimental-page';
 import { PreferencesPage } from '/@/model/pages/preferences-page';
 import { RegistriesPage } from '/@/model/pages/registries-page';
@@ -621,11 +622,31 @@ export async function setEnhancedDashboardFeature(
   page: Page,
   navigationBar: NavigationBar,
   enable: boolean,
-): Promise<void> {
+): Promise<DashboardPage> {
   await navigationBar.openSettings();
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
+  //assets in the dashboard take a bit to load, poll until they do
+  // if the feature is enabled -> systemOverviewButton is expected
+  // if the feature is disabled -> podmanProvider card is expected
+  let dashboardPage!: DashboardPage;
+  const getExpectedElement = (dashboard: DashboardPage): Locator =>
+    enable ? dashboard.systemOverviewButton : dashboard.podmanProvider;
+  await playExpect
+    .poll(
+      async () => {
+        dashboardPage = await navigationBar.openDashboard();
+        if (await getExpectedElement(dashboardPage).isVisible()) {
+          return true;
+        }
+        await navigationBar.openContainers();
+        return false;
+      },
+      { timeout: 30_000 },
+    )
+    .toBeTruthy();
+  return dashboardPage;
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
