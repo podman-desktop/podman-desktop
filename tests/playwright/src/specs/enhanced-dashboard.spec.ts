@@ -16,7 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { ResourceElementActions } from '/@/model/core/operations';
 import { SystemOverviewState } from '/@/model/core/states';
+import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
+import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourceDetailsPage } from '/@/model/pages/resource-details-page';
+import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
   createPodmanMachineFromCLI,
@@ -25,9 +30,11 @@ import {
   setEnhancedDashboardFeature,
 } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
+import { getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const PODMAN_MACHINE_NAME: string = 'podman-machine-default';
+const PODMAN_MACHINE_VISIBLE_NAME: string = 'Podman Machine';
 
 test.skip(
   isLinux || process.env.TEST_PODMAN_MACHINE !== 'true',
@@ -62,7 +69,7 @@ test.afterAll(async ({ runner, page }) => {
 });
 
 test.describe
-  .serial('Enhanced dashboard experimental feature', { tag: '@experimental' }, () => {
+  .serial('Enhanced dashboard experimental feature', { tag: ['@experimental'] }, () => {
     test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
       // assert assets state before enabling it (disabled by default for the time being)
       await setEnhancedDashboardFeature(page, navigationBar, false);
@@ -114,5 +121,68 @@ test.describe
         .toBeTruthy();
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
+    });
+
+    test('Create Podman machine from Dashboard', async ({ page, navigationBar }) => {
+      test.setTimeout(320_000);
+
+      await test.step('Open dashboard and initialize Podman machine', async () => {
+        let dashboardPage = await navigationBar.openDashboard();
+        await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled({ timeout: 5_000 });
+        await dashboardPage.setUpPodmanButton.scrollIntoViewIfNeeded();
+        await dashboardPage.setUpPodmanButton.click();
+        // handle podman machine onboarding process, start the machine
+        const podmanOnboardingPage = new PodmanOnboardingPage(page);
+        await playExpect(podmanOnboardingPage.header).toBeVisible();
+        await playExpect(podmanOnboardingPage.mainPage).toBeVisible();
+        await podmanOnboardingPage.nextStepButton.click();
+        await playExpect(podmanOnboardingPage.onboardingStatusMessage).toHaveText(
+          `We could not find any Podman machine. Let's create one!`,
+          { timeout: 10_000 },
+        );
+        await podmanOnboardingPage.nextStepButton.click();
+        await podmanOnboardingPage.machineCreationForm.setupAndCreateMachine(PODMAN_MACHINE_NAME, {
+          isRootful: false,
+          enableUserNet: false,
+          startNow: true,
+          virtualizationProvider: getVirtualizationProvider(),
+        });
+        // systemOverview button -> starting up; status label -> starting (missing aria-label)
+        dashboardPage = await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Starting, { timeout: 300_000 });
+        // systemOverview button -> systems operational; status label -> running (missing aria-label)
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Operational, {
+          timeout: 300_000,
+        });
+        // click on 'status' button to go to podman machine in settings/resources
+        await playExpect(dashboardPage.statusButton).toBeEnabled();
+        await dashboardPage.statusButton.click();
+        let resourcesPage = new ResourcesPage(page);
+        await playExpect
+          .poll(async () => resourcesPage.resourceCardIsVisible('podman'), { timeout: 30_000 })
+          .toBeTruthy();
+        const resourcesPodmanConnections = new ResourceConnectionCardPage(page, 'podman', PODMAN_MACHINE_NAME);
+        await playExpect(resourcesPodmanConnections.providerConnections).toBeVisible({ timeout: 10_000 });
+        // stop machine
+        await resourcesPodmanConnections.performConnectionAction(ResourceElementActions.Stop);
+        // come back to dashboard, button -> some systems are stopped
+        await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, { timeout: 10_000 });
+        // click on 'navigate to...' button, verify it goes to machine details
+        const navigateToPodmanMachineButton = dashboardPage.getNavigateToConnectionButton('Podman Machine');
+        await playExpect(navigateToPodmanMachineButton).toBeEnabled();
+        await navigateToPodmanMachineButton.click();
+        const podmanMachine1Details = new ResourceDetailsPage(page, PODMAN_MACHINE_VISIBLE_NAME);
+        await playExpect(podmanMachine1Details.heading).toBeVisible();
+        // come back to dashboard, click on status button, verify it goes to resources
+        await navigationBar.openDashboard();
+        await dashboardPage.statusButton.scrollIntoViewIfNeeded();
+        await playExpect(dashboardPage.statusButton).toBeEnabled();
+        await dashboardPage.statusButton.click();
+        resourcesPage = new ResourcesPage(page);
+        await playExpect(resourcesPage.header).toBeVisible();
+      });
     });
   });
