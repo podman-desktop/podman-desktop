@@ -8,11 +8,7 @@ import { router } from 'tinro';
 import IconImage from '/@/lib/appearance/IconImage.svelte';
 import EmbeddableCatalogExtensionList from '/@/lib/extensions/EmbeddableCatalogExtensionList.svelte';
 import KubeIcon from '/@/lib/images/KubeIcon.svelte';
-import {
-  developerSandboxPromptVisible,
-  findDeveloperSandboxProvider,
-  kubernetesEmptyCardHeaderClass,
-} from '/@/lib/kube/developer-sandbox-prompt-state';
+import { findDeveloperSandboxProvider } from '/@/lib/kube/developer-sandbox-prompt-state';
 import DeveloperSandboxPrompt from '/@/lib/kube/DeveloperSandboxPrompt.svelte';
 import Markdown from '/@/lib/markdown/Markdown.svelte';
 import { providerInfos } from '/@/stores/providers';
@@ -43,22 +39,6 @@ const kubernetesProviderConnections = $derived(
     provider => provider.kubernetesProviderConnectionCreation && findDeveloperSandboxProvider([provider]) === undefined,
   ),
 );
-
-const developerSandboxGridColSpan = $derived.by(() => {
-  const providerCount = kubernetesProviderConnections.length;
-  if (providerCount === 0) {
-    return 'lg:col-span-3';
-  }
-
-  const remainder = providerCount % 3;
-  if (remainder === 0) {
-    return 'lg:col-span-3';
-  }
-  if (remainder === 1) {
-    return 'lg:col-span-2';
-  }
-  return 'lg:col-span-1';
-});
 </script>
 
 <div class="mt-8 flex justify-center overflow-auto">
@@ -76,17 +56,9 @@ const developerSandboxGridColSpan = $derived.by(() => {
     </div>
     {/if}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2 justify-center items-stretch">
-
-      <DeveloperSandboxPrompt class={`${developerSandboxGridColSpan} min-w-0`} />
-
-      {#each kubernetesProviderConnections as provider (provider.id)}
+      {#each kubernetesProviderConnections as provider, index (provider.id)}
         {@const label = `${provider.kubernetesProviderConnectionCreationButtonTitle ?? 'Create new'}`}
       <div class="rounded-xl border border-[var(--pd-content-bg)] flex flex-col bg-[var(--pd-content-card-bg)] h-full overflow-hidden text-left">
-
-        {#if $developerSandboxPromptVisible}
-          <div class={kubernetesEmptyCardHeaderClass} aria-hidden="true"></div>
-        {/if}
-
         <div class="p-5 flex flex-col flex-1">
         <div class="flex flex-col flex-1">
         <div class="flex justify-left text-[var(--pd-details-empty-icon)] py-2 mb-2">
@@ -95,25 +67,29 @@ const developerSandboxGridColSpan = $derived.by(() => {
         <h1 class="text-lg font-semibold mb-4 text-[var(--pd-content-header)]">
           {provider.kubernetesProviderConnectionCreationDisplayName ?? provider.name}
         </h1>
-    
+
         <p class="text-sm text-[var(--pd-content-text)]">
         <Markdown markdown={provider.emptyConnectionMarkdownDescription} />
         </p>
         </div>
-    
+
         <div class="flex justify-center pt-4 mt-auto">
         <Button
-          type={$developerSandboxPromptVisible ? 'secondary' : 'primary'}
+          type="primary"
           on:click={(): Promise<void> => createNew(provider)}
           class="flex items-center"
           aria-label={label}
         >
-          <Icon icon="{faPlusCircle}" size="1.2x" class="mr-1"/>
+          <Icon icon={faPlusCircle} size="1.2x" class="mr-1"/>
           {label}
         </Button>
         </div>
         </div>
       </div>
+
+      {#if index === 0}
+        <DeveloperSandboxPrompt />
+      {/if}
       {/each}
     </div>
     
