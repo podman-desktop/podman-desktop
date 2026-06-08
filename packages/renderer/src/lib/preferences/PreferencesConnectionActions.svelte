@@ -142,7 +142,6 @@ function getLoggerHandler(provider: ProviderInfo, containerConnectionInfo: Provi
 }
 </script>
 
-<span>inProgress? {connectionStatus?.inProgress}</span>
 {#if connectionStatus}
   {#if connection.lifecycleMethods && connection.lifecycleMethods.length > 0}
     <div class="mt-2 relative">

@@ -101,6 +101,26 @@ beforeEach(() => {
   vi.mocked(window.showMessageBox).mockResolvedValue({ response: undefined });
 });
 
+test('restarting a container should call stop then start', async () => {
+  const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'podman' };
+
+  render(PreferencesConnectionActions, {
+    connectionStatus,
+    provider: customProviderInfo,
+    connection: containerConnection,
+    updateConnectionStatus,
+  });
+  const restartButton = screen.getByRole('button', { name: 'Restart' });
+  await fireEvent.click(restartButton);
+
+  expect(window.stopProviderConnectionLifecycle).toHaveBeenCalledOnce();
+  expect(window.startProviderConnectionLifecycle).toHaveBeenCalledOnce();
+
+  expect(window.startProviderConnectionLifecycle).toHaveBeenCalledAfter(
+    vi.mocked(window.stopProviderConnectionLifecycle),
+  );
+});
+
 test('if container connection has start lifecycle method, start button has to be visible', () => {
   const customProviderInfo: ProviderInfo = { ...containerProviderInfo, name: 'podman' };
 
