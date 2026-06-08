@@ -34,7 +34,7 @@ let label = $derived(capitalize(status));
 
 {#if status === 'running'}
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
-    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0M4.682 3.056C4.379 2.87 4 3.102 4 3.475v5.03c0 .373.379.606.682.42l4.09-2.516a.5.5 0 0 0 0-.838z" />
+    <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m.767 5.53c-1.365-2.22-4.763-1.48-5.08 1.106a.901.901 0 0 0 1.787.218c.11-.895 1.287-1.152 1.76-.383 1.364 2.22 4.762 1.479 5.08-1.107a.901.901 0 0 0-1.788-.218c-.11.895-1.287 1.151-1.76.383" />
   </svg>
 {:else if status === 'terminated'}
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
