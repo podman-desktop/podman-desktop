@@ -16,7 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { isLinux } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const numberOfObjects = Number(process.env.OBJECT_NUM) || 100;
@@ -42,8 +41,8 @@ test.describe
 
       const images = await navigationBar.openImages();
       await playExpect(images.heading).toBeVisible({ timeout: 10_000 });
-      //count images => 1 original image + (1 tagged * numberOfObjects) + 1 localhost/podman-pause from pods (only ubuntu!) = numberOfObjects + 2
-      const expectedImages = isLinux ? numberOfObjects + 2 : numberOfObjects + 1;
+      //count images => 1 original image + (1 tagged * numberOfObjects) = 1 + numberOfObjects
+      const expectedImages = numberOfObjects + 1;
       await playExpect
         .poll(async () => await images.countRowsFromTable(), { timeout: 10_000 })
         .toBe(baselineImageCount + expectedImages);
