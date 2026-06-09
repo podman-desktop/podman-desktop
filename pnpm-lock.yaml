@@ -640,8 +640,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       proxy:
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.1.0
+        version: 4.1.0
       semver:
         specifier: ^7.8.3
         version: 7.8.3
@@ -5788,9 +5788,6 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  basic-auth-parser@0.0.2-1:
-    resolution: {integrity: sha512-GFj8iVxo9onSU6BnnQvVwqvxh60UcSHJEDnIk3z4B6iOjsKSmqe+ibW0Rsz7YO7IE1HG3D3tqCNIidP46SZVdQ==}
-
   batch@0.6.1:
     resolution: {integrity: sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw==}
 
@@ -10593,8 +10590,8 @@ packages:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
 
-  proxy@4.0.0:
-    resolution: {integrity: sha512-qYi7N3kisRTQW0Y13JL0upO8e9mVLpu4yuxrXvWzCsaJVA9yqVF+iQkC/rCdnx2lGPQhC+qjefWSY7M6SHclhQ==}
+  proxy@4.1.0:
+    resolution: {integrity: sha512-X3gqRNkp5dLWQolWksIfFSltI0ls8oQ01+tckxnPoz3bQ5+OUsdE7bwX/i/Q3TDEG4gx2PQjc3D07dIx90CQdg==}
     engines: {node: '>= 20'}
     hasBin: true
 
@@ -18467,8 +18464,6 @@ snapshots:
 
   baseline-browser-mapping@2.10.19: {}
 
-  basic-auth-parser@0.0.2-1: {}
-
   batch@0.6.1: {}
 
   bcp-47-match@2.0.3: {}
@@ -24218,10 +24213,9 @@ snapshots:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
 
-  proxy@4.0.0:
+  proxy@4.1.0:
     dependencies:
       args: 5.0.3
-      basic-auth-parser: 0.0.2-1
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
