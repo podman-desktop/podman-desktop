@@ -21,3 +21,4 @@ coverage:
 
 comment:
   require_changes: true  # Only post a comment if coverage changes
+
