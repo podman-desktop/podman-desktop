@@ -60,7 +60,7 @@
           "type": "boolean",
           "default": true,
           "scope": "KubernetesProviderConnectionFactory",
-          "description": "Setup an ingress controller (Contour https://projectcontour.io)"
+          "description": "Set up an ingress controller (Contour https://projectcontour.io)"
         },
         "kind.cluster.creation.controlPlaneImage": {
           "type": "string",

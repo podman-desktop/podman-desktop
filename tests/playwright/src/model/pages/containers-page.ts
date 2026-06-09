@@ -148,9 +148,13 @@ export class ContainersPage extends MainPage {
         if (row === undefined) {
           throw Error('Container cannot be podified');
         }
-        await row.getByRole('cell').nth(1).click();
+        const checkbox = row.getByRole('checkbox');
+        await checkbox.check();
+        await playExpect(checkbox).toBeChecked();
       }
-      await this.page.getByRole('button', { name: 'Create Pod' }).click();
+      const createPodButton = this.page.getByRole('button', { name: 'Create Pod' });
+      await playExpect(createPodButton).toBeVisible();
+      await createPodButton.click();
       return new CreatePodsPage(this.page);
     });
   }

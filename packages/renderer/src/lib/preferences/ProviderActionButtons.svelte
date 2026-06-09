@@ -94,10 +94,10 @@ function handleSetup(): void {
 <div class="text-center mt-10 {className}">
   {#if showOnboardingSetup}
     <Button
-      aria-label="Setup {provider.name}"
-      title="Setup {provider.name}"
+      aria-label="Set up {provider.name}"
+      title="Set up {provider.name}"
       onclick={handleSetup}>
-      Setup...
+      Set up...
     </Button>
   {:else}
     <div class="flex flex-row justify-around flex-wrap gap-2">
@@ -115,8 +115,8 @@ function handleSetup(): void {
 
       {#if showSetupButton}
         <Button
-          aria-label="Setup {provider.name}"
-          title="Setup {provider.name}"
+          aria-label="Set up {provider.name}"
+          title="Set up {provider.name}"
           onclick={handleSetup}>
           <Icon size="0.9x" icon={faGear} />
         </Button>

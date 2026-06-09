@@ -43,6 +43,7 @@ beforeEach(() => {
     thankYouMessage: 'Your input is valuable in helping us better understand and tailor Podman Desktop.',
     gitHubStarsMessage: 'Like Podman Desktop? Give us a star on GitHub',
   });
+  vi.mocked(window.getAppRepository).mockResolvedValue('https://github.com/test/test-repo');
 });
 
 test('Expect that the button is disabled when loading the page', async () => {
@@ -173,7 +174,7 @@ test('Expect GitHub dialog visible when very-happy-smiley selected', async () =>
 
   await vi.waitFor(() => {
     expect(window.telemetryTrack).toHaveBeenCalledWith('feedback.openGitHub');
-    expect(window.openExternal).toHaveBeenCalledWith('https://github.com/containers/podman-desktop');
+    expect(window.openExternal).toHaveBeenCalledWith('https://github.com/test/test-repo');
   });
 
   expect(onCloseFormMock).not.toHaveBeenCalled();
@@ -257,4 +258,32 @@ test('Expect email field has correct text', async () => {
     'Enter email address, or leave blank for anonymous feedback',
   );
   expect(emailPlaceholder).toBeInTheDocument();
+});
+
+test('Expect GitHub section hidden when repository is not a GitHub URL', async () => {
+  vi.mocked(window.getAppRepository).mockResolvedValue('https://gitlab.com/test/test-repo');
+
+  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+
+  // click on very happy smiley
+  const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
+  await fireEvent.click(smiley);
+
+  // expect the GitHub star text not to be visible
+  expect(screen.queryByLabelText('Like Podman Desktop? Give us a star on GitHub')).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'GitHub' })).not.toBeInTheDocument();
+});
+
+test('Expect GitHub section hidden when repository is undefined', async () => {
+  vi.mocked(window.getAppRepository).mockResolvedValue(undefined);
+
+  render(DirectFeedback, { category: 'developers', contentChange: vi.fn(), onCloseForm: vi.fn() });
+
+  // click on very happy smiley
+  const smiley = await screen.findByRole('button', { name: 'very-happy-smiley' });
+  await fireEvent.click(smiley);
+
+  // expect the GitHub star text not to be visible
+  expect(screen.queryByLabelText('Like Podman Desktop? Give us a star on GitHub')).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'GitHub' })).not.toBeInTheDocument();
 });
