@@ -30,7 +30,14 @@ Below is what a typical release week may look like (This is just an example of t
 1. Close the milestone for the respective release, make sure that all tasks within the milestone are completed / updated before closing. https://github.com/containers/podman-desktop/milestones
 1. If not already created, click on `New Milestone` and create a new milestone for the NEXT release.
 1. Check that https://github.com/containers/podman-desktop/actions/workflows/release.yaml has been completed. Sometimes it will flake, so you may need to re-run it.
-1. There should be an automated PR that has been created. Approve this and set to auto-merge. This will be automatically merged in after all tests have been ran (takes 10-30 minutes). The title looks like `chore: 📢 Bump version to 0.13.0`. Rerun workflow manually if some of e2e tests are failing.
+1. There should be an automated PR that has been created, the title looks like `chore: 📢 Bump version to 0.13.0`.
+
+   To get this PR merged, you can approve it, but some checks will be failing (update checks)
+   - Go to https://github.com/podman-desktop/podman-desktop/actions/workflows/daily-testing-build.yaml
+   - Click on the top right drop-down `Run workflow`
+   - Click `Run workflow`
+   - Once the workflow has completed, restart the failing tests of the bump PR
+
 1. Above PR MUST be merged before continuing with the steps.
 1. Edit the new release https://github.com/containers/podman-desktop/releases/edit/v0.12.0
 1. Select previous tag (v0.11.0) and click on `Generate release notes` and then click on `Update release`
