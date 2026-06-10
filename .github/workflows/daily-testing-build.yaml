@@ -103,7 +103,7 @@ jobs:
           token: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
 
   build:
-    name: Build / ${{ matrix.os }}
+    name: Build / ${{ matrix.os }} ${{ matrix.airgap == 'true' && '(Air Gap)' || '' }}
     needs: tag
     runs-on: ${{ matrix.os }}
     # do not run on forks
@@ -111,11 +111,19 @@ jobs:
     env:
       ELECTRON_ENABLE_INSPECT: true
       GITHUB_TOKEN: ${{ secrets.PODMAN_DESKTOP_BOT_TOKEN }}
+      AIRGAP_DOWNLOAD: ${{ matrix.airgap == 'true' && '1' || '' }}
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
-    timeout-minutes: 60
+        include:
+          - os: ubuntu-24.04
+          - os: windows-2025
+          - os: windows-2025
+            airgap: 'true'
+          - os: macos-15
+          - os: macos-15
+            airgap: 'true'
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -145,9 +153,16 @@ jobs:
           flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
           flatpak install flathub --no-static-deltas --user -y org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
 
-      - name: Run Build and Compile on all platforms
+      - name: Run Build and Compile
         timeout-minutes: 60
         run: pnpm compile:next
+
+      - name: Validate airgap assets
+        if: matrix.airgap == 'true'
+        shell: bash
+        run: |
+          chmod +x tests/playwright/scripts/validate-airgap-assets.sh
+          tests/playwright/scripts/validate-airgap-assets.sh
 
   release:
     needs: [tag, build]
@@ -157,7 +172,7 @@ jobs:
     if: github.event.repository.fork == false && always()
     steps:
       - name: id
-        run: | 
+        run: |
           echo the release id is ${{ needs.tag.outputs.releaseId }}
           echo "The result of the build jobs: ${{ needs.build.result }}"
 
