@@ -21,3 +21,5 @@ onlyBuiltDependencies:
   - ssh2
   - svelte-preprocess
   - win-ca
+
+minimumReleaseAge: 1440
