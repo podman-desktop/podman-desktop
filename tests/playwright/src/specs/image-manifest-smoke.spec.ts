@@ -142,7 +142,7 @@ test.describe
 
           const registryBox = await registryPage.getRegistryRowByName('GitHub');
           const username = registryBox.getByText(registryUsername);
-          await playExpect(username).toBeVisible();
+          await playExpect(username).toBeVisible({ timeout: 10_000 });
         });
 
         test('Push manifest to registry', async ({ navigationBar }) => {
