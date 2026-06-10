@@ -26,6 +26,9 @@ const WORKSPACE_ROOT = join(__dirname, '..');
 export default defineConfig({
   mode: process.env.MODE,
   envDir: process.cwd(),
+  resolve: {
+    mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
+  },
   build: {
     sourcemap: 'inline',
     target: 'esnext',
