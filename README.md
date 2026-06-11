@@ -67,7 +67,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full development guide.
 
 #### Multiple container engine support
 
-- [Podman container engine](https://github.com/containers/podman)
+- [Podman container engine](https://github.com/podman-container-tools/podman)
 - [crc](https://github.com/code-ready/crc)
 - [Lima: Linux Machines](https://github.com/lima-vm/lima)
 - [Docker container engine](https://github.com/docker/docker)

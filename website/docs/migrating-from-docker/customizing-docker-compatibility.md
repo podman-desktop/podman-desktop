@@ -216,4 +216,4 @@ Perform any of the following steps:
 #### Additional resources
 
 - [Managing Docker compatibility](/docs/migrating-from-docker/managing-docker-compatibility)
-- [`podman-mac-helper` source](https://github.com/containers/podman/tree/main/cmd/podman-mac-helper)
+- [`podman-mac-helper` source](https://github.com/podman-container-tools/podman/tree/main/cmd/podman-mac-helper)
