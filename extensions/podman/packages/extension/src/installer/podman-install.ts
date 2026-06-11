@@ -267,7 +267,7 @@ export class PodmanInstall {
       }
 
       // Podman github link with information that 5.3.1 cant update to 5.4.X
-      // https://github.com/containers/podman/pull/25135
+      // https://github.com/podman-container-tools/podman/pull/25135
       // Podman Desktop link with proposed solution
       // https://github.com/podman-desktop/podman-desktop/issues/11720
       if (!updateInfo.bundledVersion) return;
@@ -285,7 +285,7 @@ export class PodmanInstall {
 
         if (result === 'Yes') {
           const url = extensionApi.Uri.parse(
-            'https://github.com/containers/podman/blob/main/docs/tutorials/podman-for-windows.md',
+            'https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/podman-for-windows.md',
           );
           await extensionApi.env.openExternal(url);
         }
