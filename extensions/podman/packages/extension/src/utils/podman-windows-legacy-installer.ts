@@ -69,7 +69,7 @@ export class PodmanWindowsLegacyInstaller implements Disposable {
 
   /**
    * To detect if we have an installation of Podman made through the legacy installer, we use the
-   * same logic made inside the new podman installer (https://github.com/containers/podman/pull/27284)
+   * same logic made inside the new podman installer (https://github.com/podman-container-tools/podman/pull/27284)
    *
    * We check in {@link LEGACY_PODMAN_REGISTRY_KEY} registry the existence of {@link LEGACY_PODMAN_REGISTRY_ITEM_NAME}
    */

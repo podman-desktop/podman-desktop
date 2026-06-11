@@ -403,7 +403,7 @@ describe('performUpdate', () => {
     );
 
     expect(extensionApi.Uri.parse).toHaveBeenCalledWith(
-      'https://github.com/containers/podman/blob/main/docs/tutorials/podman-for-windows.md',
+      'https://github.com/podman-container-tools/podman/blob/main/docs/tutorials/podman-for-windows.md',
     );
     expect(extensionApi.env.openExternal).toHaveBeenCalled();
   });
