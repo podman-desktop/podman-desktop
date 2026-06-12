@@ -1,0 +1,50 @@
+# How to Read Issue Templates
+
+Do not hardcode template filenames, field names, or body headings.
+Read everything from the target repo's `.github/ISSUE_TEMPLATE/` at
+runtime.
+
+## Discover available templates
+
+```bash
+ls .github/ISSUE_TEMPLATE/*.yml
+```
+
+Or via API if the repo is not cloned locally:
+
+```bash
+gh api "repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE" --jq '.[].name'
+```
+
+## Extract metadata from a template
+
+Each template YAML file contains top-level fields and a `body:` array.
+Parse these to build the issue:
+
+| What to extract     | Where in the YAML                                                            |
+| ------------------- | ---------------------------------------------------------------------------- |
+| GitHub issue type   | `type:` (top-level)                                                          |
+| Auto-applied labels | `labels:` (top-level)                                                        |
+| Project board(s)    | `projects:` (top-level)                                                      |
+| Body sections       | `body:` array — each element with a `label:` becomes a `### <label>` heading |
+| Required fields     | Elements where `validations.required: true`                                  |
+| Dropdown options    | Elements with `type: dropdown` — read `attributes.options`                   |
+
+## Build the issue body
+
+For each element in the `body:` array (skip `type: markdown` elements):
+
+1. Read its `attributes.label` — this becomes the section heading
+2. Check `validations.required` — if true, the section must be filled
+3. For `type: dropdown`, pick from `attributes.options`
+4. For `type: textarea` or `type: input`, fill from the user's description
+
+```
+### <attributes.label from element 1>
+
+<content>
+
+### <attributes.label from element 2>
+
+<content>
+```
