@@ -181,11 +181,11 @@
     "lint-staged": "^17.0.7",
     "minimist": "^1.2.8",
     "msw": "^2.14.6",
-    "mustache": "^4.2.0",
     "prettier": "^3.8.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.61.0",
     "vite": "^8.0.16",
+    "mustache": "^4.2.0",
     "vitest": "^4.1.8",
     "xvfb-maybe": "^0.2.1"
   },
@@ -194,8 +194,8 @@
     "chokidar": "^3.6.0",
     "express": "^5.2.1",
     "isomorphic-ws": "5.0.0",
-    "ssh2": "1.17.0",
     "tar-fs": "^3.1.2",
+    "ssh2": "1.17.0",
     "ws": "8.21.0"
   },
   "pnpm": {
