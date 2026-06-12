@@ -4593,6 +4593,14 @@ declare module '@podman-desktop/api' {
      * if Podman Desktop exits. Stdout/stderr will not be captured.
      */
     detached?: boolean;
+
+    /**
+     * Optional callback invoked whenever stdout or stderr data is received from the process.
+     * This allows streaming output in real-time rather than waiting for the process to complete.
+     * @param event - Either 'stdout' or 'stderr' indicating which stream the data came from.
+     * @param data - The string data received from the process.
+     */
+    callback?: (event: 'stdout' | 'stderr', data: string) => void;
   }
 
   /**

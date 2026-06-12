@@ -165,13 +165,29 @@ export class Exec {
     childProcess.stderr.setEncoding(options?.encoding ?? 'utf8');
 
     childProcess.stdout.on('data', data => {
-      output.stdout += data.toString();
+      const str = data.toString();
+      output.stdout += str;
       options?.logger?.log(data);
+      if (options?.callback) {
+        try {
+          options.callback('stdout', str);
+        } catch (error: unknown) {
+          options?.logger?.error(`RunOptions callback failed on stdout: ${String(error)}`);
+        }
+      }
     });
 
     childProcess.stderr.on('data', data => {
-      output.stderr += data.toString();
+      const str = data.toString();
+      output.stderr += str;
       options?.logger?.warn(data);
+      if (options?.callback) {
+        try {
+          options.callback('stderr', str);
+        } catch (error: unknown) {
+          options?.logger?.error(`RunOptions callback failed on stderr: ${String(error)}`);
+        }
+      }
     });
 
     return this.awaitChildProcess(childProcess, command, output, options);
@@ -241,14 +257,18 @@ export class Exec {
           };
           resolve(result);
         } else {
-          options?.logger?.error(`Command execution failed with exit code ${exitCode}`);
+          const stderr = output.stderr.trim();
+          const message = stderr
+            ? `Command execution failed with exit code ${exitCode}: ${stderr}`
+            : `Command execution failed with exit code ${exitCode}`;
+          options?.logger?.error(message);
           const errResult: RunError = new RunErrorImpl(
-            `Command execution failed with exit code ${exitCode}`,
-            `Command execution failed with exit code ${exitCode}`,
+            message,
+            message,
             exitCode ?? 1,
             command,
             output.stdout.trim(),
-            output.stderr.trim(),
+            stderr,
             false,
             childProcess.killed,
           );

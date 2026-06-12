@@ -585,6 +585,93 @@ describe('exec', () => {
     expect(stdout).toContain('Hello, World!');
     expect(setEncodingMock).toBeCalledWith('utf16le');
   });
+
+  test('should invoke callback with stdout data', async () => {
+    const command = 'echo';
+    const args = ['Hello'];
+    const callback = vi.fn();
+
+    const stdoutOn = vi.fn().mockImplementation((event: string, cb: (arg0: string) => void) => {
+      if (event === 'data') {
+        cb('chunk1');
+        cb('chunk2');
+      }
+    }) as unknown as Readable;
+    const stderrOn = vi.fn().mockImplementation((event: string, cb: (arg0: string) => void) => {
+      if (event === 'data') {
+        cb('warn1');
+      }
+    }) as unknown as Readable;
+    vi.mocked(spawn).mockReturnValue({
+      stdout: { on: stdoutOn, setEncoding: setEncodingMock },
+      stderr: { on: stderrOn, setEncoding: setEncodingMock },
+      on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+        if (event === 'close') {
+          cb(0);
+        }
+      }),
+    } as unknown as ChildProcess);
+
+    await exec.exec(command, args, { callback });
+
+    expect(callback).toHaveBeenCalledWith('stdout', 'chunk1');
+    expect(callback).toHaveBeenCalledWith('stdout', 'chunk2');
+    expect(callback).toHaveBeenCalledWith('stderr', 'warn1');
+    expect(callback).toHaveBeenCalledTimes(3);
+  });
+
+  test('should invoke callback with stderr data on failure', async () => {
+    const command = 'failing-cmd';
+    const callback = vi.fn();
+
+    const stdoutOn = vi
+      .fn()
+      .mockImplementation((_event: string, _cb: (arg0: string) => void) => {}) as unknown as Readable;
+    const stderrOn = vi.fn().mockImplementation((event: string, cb: (arg0: string) => void) => {
+      if (event === 'data') {
+        cb('error details');
+      }
+    }) as unknown as Readable;
+    vi.mocked(spawn).mockReturnValue({
+      stdout: { on: stdoutOn, setEncoding: setEncodingMock },
+      stderr: { on: stderrOn, setEncoding: setEncodingMock },
+      on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+        if (event === 'close') {
+          cb(1);
+        }
+      }),
+    } as unknown as ChildProcess);
+
+    await expect(exec.exec(command, [], { callback })).rejects.toThrowError(/exit code 1/);
+
+    expect(callback).toHaveBeenCalledWith('stderr', 'error details');
+  });
+
+  test('should include stderr in error message on non-zero exit code', async () => {
+    const command = 'failing-cmd';
+
+    const stdoutOn = vi
+      .fn()
+      .mockImplementation((_event: string, _cb: (arg0: string) => void) => {}) as unknown as Readable;
+    const stderrOn = vi.fn().mockImplementation((event: string, cb: (arg0: string) => void) => {
+      if (event === 'data') {
+        cb('permission denied');
+      }
+    }) as unknown as Readable;
+    vi.mocked(spawn).mockReturnValue({
+      stdout: { on: stdoutOn, setEncoding: setEncodingMock },
+      stderr: { on: stderrOn, setEncoding: setEncodingMock },
+      on: vi.fn().mockImplementation((event: string, cb: (arg0: number) => void) => {
+        if (event === 'close') {
+          cb(1);
+        }
+      }),
+    } as unknown as ChildProcess);
+
+    await expect(exec.exec(command)).rejects.toThrowError(
+      'Command execution failed with exit code 1: permission denied',
+    );
+  });
 });
 
 describe('getInstallationPath', () => {
