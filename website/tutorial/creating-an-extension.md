@@ -239,7 +239,7 @@ You can build this extension by configuring `TypeScript` and `Vite`.
 
 ```javascript
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -270,12 +270,13 @@ const config = {
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
   resolve: {
+    mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
     alias: {
       '/@/': join(PACKAGE_ROOT, 'src') + '/',
     },
   },
   build: {
-    sourcemap: 'inline',
+    sourcemap: true,
     target: 'esnext',
     outDir: 'dist',
     assetsDir: '.',
@@ -285,6 +286,7 @@ const config = {
       formats: ['cjs'],
     },
     rollupOptions: {
+      platform: 'node',
       external: ['@podman-desktop/api', ...builtinModules.flatMap(p => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].js',

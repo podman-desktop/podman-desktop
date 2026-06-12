@@ -42,7 +42,7 @@ const config = {
     },
   },
   build: {
-    sourcemap: 'inline',
+    sourcemap: true,
     target: `node${node}`,
     outDir: 'dist',
     assetsDir: '.',

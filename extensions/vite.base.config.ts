@@ -30,7 +30,7 @@ export default defineConfig({
     mainFields: ['module', 'jsnext:main', 'jsnext', 'main'],
   },
   build: {
-    sourcemap: 'inline',
+    sourcemap: true,
     target: 'esnext',
     outDir: 'dist',
     assetsDir: '.',
