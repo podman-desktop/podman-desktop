@@ -14,8 +14,8 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.8f1a51aa.css">
-<script src="/assets/js/runtime~main.d6f57219.js" defer="defer"></script>
-<script src="/assets/js/main.ae1c6e69.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0f5bbff8.js" defer="defer"></script>
+<script src="/assets/js/main.7866a39d.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -40,7 +40,7 @@ Sometimes we need to call extra commands such as <code>kind load docker-image</c
 <p>In the kubernetes world, we need a container engine runtime. At the early stage, container runtimes were integrated with ad hoc solutions on top of docker, rkt, or others.</p>
 <p>But to separate concerns and to be extensible, a new interface was added: CRI for &quot;Container Runtime Interface&quot;. Using the CRI interface we can plug container engines. And there are several runtimes such as containerd, cri-o and others.
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md" target="_blank" rel="noopener noreferrer" class="">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md</a></p>
-<p>What is interesting to us is the cri-o project. This project is implementing the CRI interface but also adopting some projects of the <a href="https://github.com/containers" target="_blank" rel="noopener noreferrer" class="">containers</a> organization where <a href="https://github.com/containers/podman" target="_blank" rel="noopener noreferrer" class="">podman</a> and <a href="https://github.com/containers/podman-desktop" target="_blank" rel="noopener noreferrer" class="">podman-desktop</a> live.</p>
+<p>What is interesting to us is the cri-o project. This project is implementing the CRI interface but also adopting some projects of the <a href="https://github.com/containers" target="_blank" rel="noopener noreferrer" class="">containers</a> organization where <a href="https://github.com/podman-container-tools/podman" target="_blank" rel="noopener noreferrer" class="">podman</a> and <a href="https://github.com/containers/podman-desktop" target="_blank" rel="noopener noreferrer" class="">podman-desktop</a> live.</p>
 <p>So it means cri-o uses image management from <a href="https://github.com/containers/image" target="_blank" rel="noopener noreferrer" class="">https://github.com/containers/image</a> project and handle storage with <a href="https://github.com/containers/storage" target="_blank" rel="noopener noreferrer" class="">https://github.com/containers/storage</a> project.</p>
 <p>And this is what is really interesting as a podman user. As it is using common libraries between cri-o and podman, it means that in the same environment, podman and cri-o read and write the images at a common location in <code>/var/lib/containers</code> folder.</p>
 <p>If we move one step ahead, if we mount the <code>/var/lib/containers</code> folder of podman into the cri-o container it means that the kubernetes cluster could find the images that the podman machine is building.</p>

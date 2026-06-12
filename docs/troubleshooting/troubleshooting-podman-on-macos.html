@@ -14,8 +14,8 @@
 
 <link rel="preconnect" href="https://podman-desktop-website.goatcounter.com">
 <script async src="//gc.zgo.at/count.js" data-goatcounter="https://podman-desktop-website.goatcounter.com/count"></script><link rel="stylesheet" href="/assets/css/styles.8f1a51aa.css">
-<script src="/assets/js/runtime~main.d6f57219.js" defer="defer"></script>
-<script src="/assets/js/main.ae1c6e69.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0f5bbff8.js" defer="defer"></script>
+<script src="/assets/js/main.7866a39d.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -29,11 +29,11 @@
 <h4 class="anchor anchorTargetStickyNavbar_tleR" id="solution">Solution<a href="#solution" class="hash-link" aria-label="Direct link to Solution" title="Direct link to Solution" translate="no">​</a></h4>
 <ol>
 <li class="">Download <code>gvproxy</code> from the <a href="https://github.com/containers/gvisor-tap-vsock/releases" target="_blank" rel="noopener noreferrer" class="">gvisor-tap-vsock release page</a>.</li>
-<li class="">Build the <code>podman-mac-helper</code> from the source code on the <a href="https://github.com/containers/podman/tree/main/cmd/podman-mac-helper" target="_blank" rel="noopener noreferrer" class="">Podman GitHub page</a>.</li>
+<li class="">Build the <code>podman-mac-helper</code> from the source code on the <a href="https://github.com/podman-container-tools/podman/tree/main/cmd/podman-mac-helper" target="_blank" rel="noopener noreferrer" class="">Podman GitHub page</a>.</li>
 <li class="">Add the <code>helpers_binaries_dir</code> entry to <code>~/.config/containers/containers.conf</code>:</li>
 </ol>
 <div class="language-sh codeBlockContainer_mQmQ theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_t_Hd"><pre tabindex="0" class="prism-code language-sh codeBlock_RMoD thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_AclH"><div class="token-line" style="color:#F8F8F2"><span class="token punctuation" style="color:rgb(248, 248, 242)">[</span><span class="token plain">containers</span><span class="token punctuation" style="color:rgb(248, 248, 242)">]</span><span class="token plain"></span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain" style="display:inline-block"></span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain"></span><span class="token assign-left variable" style="color:rgb(189, 147, 249);font-style:italic">helper_binaries_dir</span><span class="token operator">=</span><span class="token punctuation" style="color:rgb(248, 248, 242)">[</span><span class="token string" style="color:rgb(255, 121, 198)">&quot;/Users/user/example_directory&quot;</span><span class="token punctuation" style="color:rgb(248, 248, 242)">]</span><br></div></code></pre></div></div>
-<p><strong>NOTE</strong>: A pre-built binary will be added to the Podman release page so you do not have to build <code>podman-mac-helper</code>. An <a href="https://github.com/containers/podman/issues/16746" target="_blank" rel="noopener noreferrer" class="">issue is open for this</a>.</p>
+<p><strong>NOTE</strong>: A pre-built binary will be added to the Podman release page so you do not have to build <code>podman-mac-helper</code>. An <a href="https://github.com/podman-container-tools/podman/issues/16746" target="_blank" rel="noopener noreferrer" class="">issue is open for this</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="unable-to-locate-podman-engine">Unable to locate Podman Engine<a href="#unable-to-locate-podman-engine" class="hash-link" aria-label="Direct link to Unable to locate Podman Engine" title="Direct link to Unable to locate Podman Engine" translate="no">​</a></h2>
 <h4 class="anchor anchorTargetStickyNavbar_tleR" id="issue-1">Issue<a href="#issue-1" class="hash-link" aria-label="Direct link to Issue" title="Direct link to Issue" translate="no">​</a></h4>
 <p>Despite having Podman Engine installed, you might receive an error as follows -
@@ -104,7 +104,7 @@ The Podman installer has a QEMU binary that has been tested with Podman.</li>
 <h4 class="anchor anchorTargetStickyNavbar_tleR" id="additional-resources">Additional resources<a href="#additional-resources" class="hash-link" aria-label="Direct link to Additional resources" title="Direct link to Additional resources" translate="no">​</a></h4>
 <ul>
 <li class=""><a href="https://github.com/Homebrew/homebrew-core/issues/140244" target="_blank" rel="noopener noreferrer" class="">Homebrew issue #140244</a>.</li>
-<li class=""><a href="https://github.com/containers/podman/issues/19708" target="_blank" rel="noopener noreferrer" class="">Podman issue #19708</a>.</li>
+<li class=""><a href="https://github.com/podman-container-tools/podman/issues/19708" target="_blank" rel="noopener noreferrer" class="">Podman issue #19708</a>.</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="on-apple-silicon-the-podman-machine-does-not-start">On Apple silicon, the Podman Machine does not start<a href="#on-apple-silicon-the-podman-machine-does-not-start" class="hash-link" aria-label="Direct link to On Apple silicon, the Podman Machine does not start" title="Direct link to On Apple silicon, the Podman Machine does not start" translate="no">​</a></h2>
 <p>On Apple silicon, when Podman Machine starts, it stays indefinitely blocked with a <em>Waiting for VM</em> message.</p>
@@ -166,7 +166,7 @@ Download <a href="https://github.com/lima-vm/edk2-patched.tmp/releases/download/
 </ol>
 <h4 class="anchor anchorTargetStickyNavbar_tleR" id="additional-resources-1">Additional resources<a href="#additional-resources-1" class="hash-link" aria-label="Direct link to Additional resources" title="Direct link to Additional resources" translate="no">​</a></h4>
 <ul>
-<li class=""><a href="https://github.com/containers/podman/issues/20776" target="_blank" rel="noopener noreferrer" class="">Issue #20776</a></li>
+<li class=""><a href="https://github.com/podman-container-tools/podman/issues/20776" target="_blank" rel="noopener noreferrer" class="">Issue #20776</a></li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_tleR" id="podman-machine-cli-commands-do-not-work-with-libkrun-provider-type-without-manual-configuration"><code>podman machine</code> CLI commands do not work with <code>libkrun</code> provider type without manual configuration<a href="#podman-machine-cli-commands-do-not-work-with-libkrun-provider-type-without-manual-configuration" class="hash-link" aria-label="Direct link to podman-machine-cli-commands-do-not-work-with-libkrun-provider-type-without-manual-configuration" title="Direct link to podman-machine-cli-commands-do-not-work-with-libkrun-provider-type-without-manual-configuration" translate="no">​</a></h2>
 <p>When you create a Podman machine with the <code>GPU enabled (LibKrun)</code> provider type, all the <code>podman machine</code> CLI commands stop working.</p>
