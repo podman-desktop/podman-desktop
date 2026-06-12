@@ -215,6 +215,12 @@ export class ContainerProviderRegistry {
       } else if (status === 'start' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been started
         this.apiSender.send('container-started-event', id);
+      } else if (status === 'pause' && jsonEvent?.Type === 'container') {
+        // need to notify that a container has been paused
+        this.apiSender.send('container-paused-event', id);
+      } else if (status === 'unpause' && jsonEvent?.Type === 'container') {
+        // need to notify that a container has been unpaused
+        this.apiSender.send('container-unpaused-event', id);
       } else if (status === 'destroy' && jsonEvent?.Type === 'container') {
         // need to notify that a container has been destroyed
         this.apiSender.send('container-stopped-event', id);
