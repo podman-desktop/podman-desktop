@@ -52,11 +52,6 @@ overrides:
   ws@^8: '>=8.20.1'
   concurrently>shell-quote: '>=1.8.4'
 
-patchedDependencies:
-  docker-modem:
-    hash: 5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e
-    path: patches/docker-modem.patch
-
 importers:
 
   .:
@@ -19752,7 +19747,7 @@ snapshots:
     dependencies:
       '@leichtgewicht/ip-codec': 2.0.5
 
-  docker-modem@5.0.7(patch_hash=5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e):
+  docker-modem@5.0.7:
     dependencies:
       debug: 4.4.3
       readable-stream: 3.6.2
@@ -19766,7 +19761,7 @@ snapshots:
       '@balena/dockerignore': 1.0.2
       '@grpc/grpc-js': 1.14.3
       '@grpc/proto-loader': 0.7.15
-      docker-modem: 5.0.7(patch_hash=5c70d772609f3932e49bceba1d646d56a515d449a1304c39c12df33f16066a9e)
+      docker-modem: 5.0.7
       protobufjs: 7.5.8
       tar-fs: 2.1.4
     transitivePeerDependencies:
