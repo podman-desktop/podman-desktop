@@ -14,6 +14,7 @@ import {
   IMAGE_VIEW_ICONS,
 } from '/@/lib/view/views';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 import { context } from '/@/stores/context';
 import { imageCheckerProviders } from '/@/stores/image-checker-providers';
@@ -74,14 +75,16 @@ let image: ImageInfoUI | undefined = $derived(
     : undefined,
 );
 let detailsPage: DetailsPage | undefined = $state();
+let hasSeenImage = $state(false);
 
 let showCheckTab: boolean = $derived($imageCheckerProviders.length > 0);
 let showFilesTab: boolean = $derived($imageFilesProviders.length > 0);
 
 $effect(() => {
-  if (!image) {
-    // the image has been deleted
-    detailsPage?.close();
+  if (image) {
+    hasSeenImage = true;
+  } else if (hasSeenImage) {
+    router.goto($lastPage.path);
   }
 });
 </script>

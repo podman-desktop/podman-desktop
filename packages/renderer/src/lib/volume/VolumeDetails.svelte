@@ -6,6 +6,7 @@ import VolumeIcon from '/@/lib/images/VolumeIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { volumeListInfos } from '/@/stores/volumes';
 
 import VolumeDetailsSummary from '././VolumeDetailsSummary.svelte';
@@ -22,6 +23,7 @@ let { volumeName, engineId }: Props = $props();
 
 const volumeUtils = new VolumeUtils();
 let detailsPage = $state<DetailsPage>();
+let hasSeenVolume = $state(false);
 
 let volume: VolumeInfoUI | undefined = $derived.by(() => {
   const allVolumes = $volumeListInfos.map(volumeListInfo => volumeListInfo.Volumes).flat();
@@ -37,7 +39,11 @@ let volume: VolumeInfoUI | undefined = $derived.by(() => {
 });
 
 $effect(() => {
-  if (!volume) detailsPage?.close();
+  if (volume) {
+    hasSeenVolume = true;
+  } else if (hasSeenVolume) {
+    router.goto($lastPage.path);
+  }
 });
 </script>
 

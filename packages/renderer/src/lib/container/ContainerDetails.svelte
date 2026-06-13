@@ -10,6 +10,7 @@ import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import StateChange from '/@/lib/ui/StateChange.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { containersInfos } from '/@/stores/containers';
 
 import { ContainerUtils } from './container-utils';
@@ -33,6 +34,7 @@ const containerUtils = new ContainerUtils();
 
 let detailsPage = $state<DetailsPage | undefined>();
 let displayTty: boolean = $state(false);
+let hasSeenContainer = $state(false);
 
 let container: ContainerInfoUI | undefined = $derived(
   getContainerInfoUI($containersInfos.find(c => c.Id === containerID)),
@@ -40,6 +42,7 @@ let container: ContainerInfoUI | undefined = $derived(
 
 $effect(() => {
   if (container) {
+    hasSeenContainer = true;
     window
       .getContainerInspect(container.engineId, container.id)
       .then(inspect => {
@@ -55,8 +58,8 @@ $effect(() => {
         }
       })
       .catch((err: unknown) => console.error(`Error getting container inspect ${container?.id}: ${err}`));
-  } else {
-    detailsPage?.close();
+  } else if (hasSeenContainer) {
+    router.goto($lastPage.path);
   }
 });
 

@@ -6,6 +6,7 @@ import NetworkIcon from '/@/lib/images/NetworkIcon.svelte';
 import DetailsPage from '/@/lib/ui/DetailsPage.svelte';
 import { getTabUrl, isTabSelected } from '/@/lib/ui/Util';
 import Route from '/@/Route.svelte';
+import { lastPage } from '/@/stores/breadcrumb';
 import { networksListInfo } from '/@/stores/networks';
 
 import { NetworkUtils } from './network-utils';
@@ -31,10 +32,13 @@ let network: NetworkInfoUI | undefined = $derived(
   matchingNetwork ? networkUtils.toNetworkInfoUI(matchingNetwork) : undefined,
 );
 let detailsPage: DetailsPage | undefined = $state();
+let hasSeenNetwork = $state(false);
 
 $effect(() => {
-  if (!network && detailsPage) {
-    detailsPage.close();
+  if (network) {
+    hasSeenNetwork = true;
+  } else if (hasSeenNetwork) {
+    router.goto($lastPage.path);
   }
 });
 </script>
