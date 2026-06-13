@@ -1,11 +1,11 @@
 {
-  "version": "5.8.2",
+  "version": "5.8.3",
   "releaseNotes": {
-    "href": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.2"
+    "href": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.3"
   },
   "platform": {
     "win32": {
-      "version": "v5.8.2",
+      "version": "v5.8.3",
       "arch": {
         "x64": {
           "fileName": "podman-installer-windows-amd64.msi"
@@ -16,16 +16,16 @@
       }
     },
     "darwin": {
-      "version": "v5.8.2",
+      "version": "v5.8.3",
       "arch": {
         "x64": {
-          "fileName": "podman-installer-macos-amd64-v5.8.2.pkg"
+          "fileName": "podman-installer-macos-amd64-v5.8.3.pkg"
         },
         "arm64": {
-          "fileName": "podman-installer-macos-aarch64-v5.8.2.pkg"
+          "fileName": "podman-installer-macos-aarch64-v5.8.3.pkg"
         },
         "universal": {
-          "fileName": "podman-installer-macos-universal-v5.8.2.pkg"
+          "fileName": "podman-installer-macos-universal-v5.8.3.pkg"
         }
       }
     }
