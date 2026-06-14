@@ -1,8 +1,9 @@
 <script lang="ts">
-import { Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { router } from 'tinro';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { buildExtensionDetailsPath } from './extension-list';
 import { ExtensionsUtils } from './extensions-utils';
 import { setInstalledTableCallbacks } from './installed-extension-table-context';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
@@ -15,72 +16,72 @@ import InstalledExtensionTableVersionColumn from './table/InstalledExtensionTabl
 
 interface Props {
   rows: InstalledExtensionTableRow[];
-  onChangeVersion: (extension: CatalogExtensionInfoUI) => void;
+  onChangeVersion: (extension: CatalogExtensionInfoUI, preferredVersion?: string) => void;
 }
 
 let { rows, onChangeVersion }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
+const gridTemplateColumns = '56px 2fr 1.5fr 1fr 1fr 2fr 140px';
+
 onMount(() => {
   setInstalledTableCallbacks({ onChangeVersion });
 });
 
-const iconColumn = new TableColumn<InstalledExtensionTableRow>(' ', {
-  width: '56px',
-  renderer: InstalledExtensionTableIconColumn,
-});
-
-const nameColumn = new TableColumn<InstalledExtensionTableRow>('Name', {
-  width: '2fr',
-  renderer: InstalledExtensionTableNameColumn,
-});
-
-const publisherColumn = new TableColumn<InstalledExtensionTableRow, string>('Publisher', {
-  width: '1.5fr',
-  renderer: TableSimpleColumn,
-  renderMapping: (row): string =>
-    extensionsUtils.resolvePublisherDisplayName(row.extension, row.catalogExtension.publisherDisplayName),
-  comparator: (a, b): number =>
-    extensionsUtils
-      .resolvePublisherDisplayName(a.extension, a.catalogExtension.publisherDisplayName)
-      .localeCompare(extensionsUtils.resolvePublisherDisplayName(b.extension, b.catalogExtension.publisherDisplayName)),
-});
-
-const versionColumn = new TableColumn<InstalledExtensionTableRow>('Version', {
-  width: '1.25fr',
-  renderer: InstalledExtensionTableVersionColumn,
-  comparator: (a, b): number => (a.extension.version ?? '').localeCompare(b.extension.version ?? ''),
-});
-
-const statusColumn = new TableColumn<InstalledExtensionTableRow>('Status', {
-  width: '1fr',
-  renderer: InstalledExtensionTableLifecycleColumn,
-});
-
-const originColumn = new TableColumn<InstalledExtensionTableRow>('Origin', {
-  width: '1.75fr',
-  renderer: InstalledExtensionTableOriginColumn,
-});
-
-const actionsColumn = new TableColumn<InstalledExtensionTableRow>('Actions', {
-  align: 'right',
-  width: '80px',
-  renderer: InstalledExtensionTableActionsColumn,
-  overflow: true,
-});
-
-const columns = [iconColumn, nameColumn, publisherColumn, versionColumn, statusColumn, originColumn, actionsColumn];
-
-const row = new TableRow<InstalledExtensionTableRow>({});
-
-function key(tableRow: InstalledExtensionTableRow): string {
-  return tableRow.extension.id;
-}
-
-function label(tableRow: InstalledExtensionTableRow): string {
-  return tableRow.name;
+function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+  if (target.closest('button, a, [role="menu"], [role="link"]')) {
+    return;
+  }
+  router.goto(buildExtensionDetailsPath(row.extension.id, 'installed'));
 }
 </script>
 
-<Table kind="extensions" data={rows} {columns} {row} defaultSortColumn="Name" key={key} label={label} />
+<div class="w-full mx-5" role="table" aria-label="installed extensions">
+  <div
+    role="rowgroup"
+    class="grid gap-x-2 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
+    style:grid-template-columns={gridTemplateColumns}>
+    <div role="columnheader"></div>
+    <div role="columnheader" class="text-sm font-semibold self-center">Name</div>
+    <div role="columnheader" class="text-sm font-semibold self-center">Publisher</div>
+    <div role="columnheader" class="text-sm font-semibold self-center">Version</div>
+    <div role="columnheader" class="text-sm font-semibold self-center">Status</div>
+    <div role="columnheader" class="text-sm font-semibold self-center">Origin</div>
+    <div role="columnheader" class="text-sm font-semibold self-center justify-self-end">Actions</div>
+  </div>
+
+  <div role="rowgroup">
+    {#each rows as row (row.extension.id)}
+      <div
+        class="grid gap-x-2 min-h-[56px] mb-2 rounded-lg border border-[var(--pd-content-table-border)] bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] cursor-pointer"
+        style:grid-template-columns={gridTemplateColumns}
+        role="row"
+        aria-label={row.name}
+        onclick={(event): void => openDetails(row, event)}>
+        <div role="cell" class="self-center pl-3 pr-1 py-2">
+          <InstalledExtensionTableIconColumn object={row} />
+        </div>
+        <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pr-2">
+          <InstalledExtensionTableNameColumn object={row} />
+        </div>
+        <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
+          {extensionsUtils.resolvePublisherDisplayName(row.extension, row.catalogExtension.publisherDisplayName)}
+        </div>
+        <div role="cell" class="self-center py-2" onclick={(event): void => event.stopPropagation()}>
+          <InstalledExtensionTableVersionColumn object={row} />
+        </div>
+        <div role="cell" class="self-center py-2">
+          <InstalledExtensionTableLifecycleColumn object={row} />
+        </div>
+        <div role="cell" class="self-center py-2">
+          <InstalledExtensionTableOriginColumn object={row} />
+        </div>
+        <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
+          <InstalledExtensionTableActionsColumn object={row} />
+        </div>
+      </div>
+    {/each}
+  </div>
+</div>

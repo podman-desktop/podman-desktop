@@ -13,11 +13,13 @@ import { buildExtensionDetailsPath } from './extension-list';
 import ExtensionCatalogMetaChips from './ExtensionCatalogMetaChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionOriginChips from './ExtensionOriginChips.svelte';
+import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
+import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
 interface Props {
   catalogExtensions: CatalogExtensionInfoUI[];
   oninstall: (extensionId: string) => void;
-  onChangeVersion: (extension: CatalogExtensionInfoUI) => void;
+  onChangeVersion: (extension: CatalogExtensionInfoUI, preferredVersion?: string) => void;
 }
 
 let { catalogExtensions, oninstall, onChangeVersion }: Props = $props();
@@ -57,7 +59,7 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
         role="row"
         aria-label={extension.displayName}
         onclick={(event): void => openDetails(extension, event)}>
-        <div role="cell" class="self-center px-1">
+        <div role="cell" class="self-center pl-3 pr-1 py-2">
           <CatalogExtensionIcon iconHref={extension.iconHref} displayName={extension.displayName} />
         </div>
         <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pr-2">
@@ -71,18 +73,26 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
         <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
           {extension.publisherDisplayName}
         </div>
-        <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
-          {#if extension.isInstalled && extension.installedVersion}
-            v{extension.installedVersion}
-          {:else}
-            {extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}
-          {/if}
+        <div role="cell" class="self-center py-2" onclick={(event): void => event.stopPropagation()}>
+          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--pd-content-text)]">
+            {#if extension.isInstalled && extension.installedVersion}
+              <span>v{extension.installedVersion}</span>
+              <ExtensionUpdateVersionLink
+                {extension}
+                onUpdate={(catalogExtension, version): void => onChangeVersion(catalogExtension, version)} />
+            {:else if extension.isInstalled}
+              <span>v{extension.installedVersion}</span>
+            {:else}
+              <span>{extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}</span>
+            {/if}
+            <ExtensionVersionUpdateStatus extensionId={extension.id} />
+          </div>
         </div>
         <div role="cell" class="self-center py-2">
           {#if extension.isInstalled && extension.installedExtension}
             <ExtensionLifecycleStatus extension={extension.installedExtension} />
           {:else}
-            <span class="text-sm text-[var(--pd-content-text)]">—</span>
+            <span class="text-sm text-[var(--pd-table-header-text)]">Not installed</span>
           {/if}
         </div>
         <div role="cell" class="self-center py-2">

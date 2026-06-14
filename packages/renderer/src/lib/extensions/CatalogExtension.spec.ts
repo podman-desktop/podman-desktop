@@ -138,11 +138,6 @@ test('Expect to have version of installed one', async () => {
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  // check catalog version is displayed
-  const catalogVersion = screen.getByText('v1.0.0');
-  expect(catalogVersion).toBeInTheDocument();
-
-  // check if installed version is displayed
-  const installedVersion = screen.getByText('(installed: v2.0.0)');
-  expect(installedVersion).toBeInTheDocument();
+  expect(screen.getByText('v2.0.0')).toBeInTheDocument();
+  expect(screen.getByText('Update to v1.0.0')).toBeInTheDocument();
 });

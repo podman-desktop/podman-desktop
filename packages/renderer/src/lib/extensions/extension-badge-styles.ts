@@ -16,23 +16,29 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 !me-0';
+export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 !m-0';
+
+export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
+
+export const EXTENSION_BUILTIN_CHIP_TOOLTIP = 'Pre-installed with Podman Desktop';
 
 export const EXTENSION_CHIP_COLORS = {
-  featured: 'bg-[var(--pd-badge-purple)]',
-  new: 'bg-[var(--pd-badge-purple)]',
+  featured: 'bg-[var(--pd-badge-sky)]',
+  new: 'bg-[var(--pd-badge-gray)]',
   update: 'bg-[var(--pd-status-warning)]',
-  installed: 'bg-[var(--pd-invert-content-info-icon)]',
-  community: 'bg-[var(--pd-badge-sky)]',
+  installed: 'bg-[var(--pd-badge-gray)]',
+  community: 'bg-[var(--pd-status-disconnected)]',
   verified: 'bg-[var(--pd-status-running)]',
-  communityOrigin: 'bg-[var(--pd-badge-sky)]',
-  builtin: 'bg-[var(--pd-badge-purple)]',
+  communityOrigin: 'bg-[var(--pd-status-disconnected)]',
+  builtin: 'bg-[var(--pd-badge-builtin-extension-bg)]',
   devMode: 'bg-[var(--pd-badge-devmode-extension-bg)]',
   dockerDesktop: 'bg-[var(--pd-badge-dd-extension-bg)]',
-  dockerDesktopText: 'text-[var(--pd-badge-dd-extension-text)]',
+  dockerDesktopText: '!text-white',
 } as const;
 
 export const EXTENSION_CHIP_TEXT_CLASS = '!text-white';
+
+export const EXTENSION_BUILTIN_CHIP_TEXT_CLASS = 'text-[var(--pd-badge-text)]';
 
 export function buildExtensionBugReportUrl(repositoryUrl?: string): string {
   const fallback = 'https://github.com/podman-desktop/podman-desktop/issues/new';

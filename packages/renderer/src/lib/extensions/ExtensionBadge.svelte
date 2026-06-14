@@ -3,7 +3,14 @@ import { Tooltip } from '@podman-desktop/ui-svelte';
 
 import Badge from '/@/lib/ui/Badge.svelte';
 
-import { EXTENSION_CHIP_BADGE_CLASS, EXTENSION_CHIP_COLORS, EXTENSION_CHIP_TEXT_CLASS } from './extension-badge-styles';
+import {
+  EXTENSION_BUILTIN_CHIP_LABEL,
+  EXTENSION_BUILTIN_CHIP_TEXT_CLASS,
+  EXTENSION_BUILTIN_CHIP_TOOLTIP,
+  EXTENSION_CHIP_BADGE_CLASS,
+  EXTENSION_CHIP_COLORS,
+  EXTENSION_CHIP_TEXT_CLASS,
+} from './extension-badge-styles';
 
 export let extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
 </script>
@@ -24,11 +31,11 @@ export let extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean 
         class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
     </Tooltip>
   {:else if !extension.removable}
-    <Tooltip right tip="Built-in extension">
+    <Tooltip right tip={EXTENSION_BUILTIN_CHIP_TOOLTIP}>
       <Badge
-        label="Built-in extension"
+        label={EXTENSION_BUILTIN_CHIP_LABEL}
         color={EXTENSION_CHIP_COLORS.builtin}
-        class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+        class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
     </Tooltip>
   {/if}
 </div>

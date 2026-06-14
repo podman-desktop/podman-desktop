@@ -15,13 +15,16 @@ export let ondetails: (extensionId: string) => void = () => {};
 
 let viewMode: CatalogViewMode = 'grid';
 let changeVersionExtension: CatalogExtensionInfoUI | undefined;
+let changeVersionPreferredVersion: string | undefined;
 
-function openChangeVersion(extension: CatalogExtensionInfoUI): void {
+function openChangeVersion(extension: CatalogExtensionInfoUI, preferredVersion?: string): void {
   changeVersionExtension = extension;
+  changeVersionPreferredVersion = preferredVersion;
 }
 
 function closeChangeVersion(): void {
   changeVersionExtension = undefined;
+  changeVersionPreferredVersion = undefined;
 }
 </script>
 
@@ -82,5 +85,8 @@ function closeChangeVersion(): void {
 </div>
 
 {#if changeVersionExtension}
-  <ChangeVersionModal extension={changeVersionExtension} closeCallback={closeChangeVersion} />
+  <ChangeVersionModal
+    extension={changeVersionExtension}
+    preferredVersion={changeVersionPreferredVersion}
+    closeCallback={closeChangeVersion} />
 {/if}

@@ -1,91 +1,105 @@
 <script lang="ts">
+import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
-import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import type { CatalogExtensionInfoUI, CatalogExtensionVersionUI } from './catalog-extension-info-ui';
+import { confirmExtensionAutoUpdateChange } from './extension-auto-update-confirm';
 import { isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { applyExtensionVersionChange, normalizeVersionValue } from './extension-version-update.svelte';
 
 interface Props {
   extension: CatalogExtensionInfoUI;
   closeCallback: () => void;
+  preferredVersion?: string;
 }
 
-let { extension, closeCallback }: Props = $props();
+let { extension, closeCallback, preferredVersion }: Props = $props();
 
-let selectedVersion = $state('');
+let selectedVersion = $state<string | undefined>(undefined);
 let autoUpdateEnabled = $state(false);
 
 $effect.pre(() => {
-  selectedVersion = extension.installedVersion ?? extension.fetchVersion;
+  const preferred = normalizeVersionValue(preferredVersion);
+  const current = normalizeVersionValue(extension.installedVersion ?? extension.fetchVersion);
+  selectedVersion = preferred && preferred !== current ? preferred : undefined;
   autoUpdateEnabled = isAutoUpdateEnabled(extension.id);
 });
-let changeInProgress = $state(false);
-let statusMessage = $state('');
-let errorMessage = $state('');
 
 const sortedVersions = $derived(
   [...extension.availableVersions].sort((a, b) => b.version.localeCompare(a.version, undefined, { numeric: true })),
 );
 
+const dialogTitle = $derived(`Change version for ${extension.displayName}`);
+
+function getCurrentVersion(): string | undefined {
+  return normalizeVersionValue(extension.installedVersion ?? extension.fetchVersion);
+}
+
 function isCurrentVersion(version: string): boolean {
-  return version === (extension.installedVersion ?? extension.fetchVersion);
+  const current = getCurrentVersion();
+  return current !== undefined && normalizeVersionValue(version) === current;
 }
 
-async function applyVersionChange(): Promise<void> {
-  if (isCurrentVersion(selectedVersion)) {
-    closeCallback();
+function isUpgrade(version: string): boolean {
+  const current = getCurrentVersion();
+  if (!current) {
+    return false;
+  }
+  return normalizeVersionValue(version).localeCompare(current, undefined, { numeric: true }) > 0;
+}
+
+function isHighlighted(version: CatalogExtensionVersionUI): boolean {
+  const normalized = normalizeVersionValue(version.version);
+  if (selectedVersion !== undefined) {
+    return normalized === selectedVersion;
+  }
+  return isCurrentVersion(normalized);
+}
+
+const hasSelectedChange = $derived(selectedVersion !== undefined && !isCurrentVersion(selectedVersion));
+
+const changeButtonLabel = $derived(hasSelectedChange && selectedVersion ? `Change to v${selectedVersion}` : 'Change');
+
+function selectVersion(version: CatalogExtensionVersionUI): void {
+  const normalized = normalizeVersionValue(version.version);
+  if (isCurrentVersion(normalized)) {
+    selectedVersion = undefined;
+    return;
+  }
+  selectedVersion = normalized;
+}
+
+function applyVersionChange(): void {
+  if (!hasSelectedChange || !selectedVersion) {
     return;
   }
 
-  const target = extension.availableVersions.find(version => version.version === selectedVersion);
-  if (!target?.ociUri) {
-    errorMessage = 'Selected version is not available for installation.';
+  applyExtensionVersionChange(extension, selectedVersion, autoUpdateEnabled).catch(console.error);
+  closeCallback();
+}
+
+async function handleAutoUpdateToggle(checked: boolean): Promise<void> {
+  if (checked === autoUpdateEnabled) {
     return;
   }
 
-  changeInProgress = true;
-  errorMessage = '';
-  statusMessage = 'Version update...';
-
-  try {
-    await window.extensionInstallFromImage(
-      target.ociUri,
-      () => {
-        statusMessage = 'Version update...';
-      },
-      (error: string) => {
-        errorMessage = error;
-        statusMessage = '';
-      },
-      extension.id,
-    );
-
-    setAutoUpdateEnabled(extension.id, autoUpdateEnabled);
-    closeCallback();
-  } catch (error) {
-    errorMessage = String(error);
-    statusMessage = '';
-  } finally {
-    changeInProgress = false;
+  const confirmed = await confirmExtensionAutoUpdateChange(extension, checked);
+  if (!confirmed) {
+    return;
   }
-}
 
-function handleAutoUpdateToggle(checked: boolean): void {
   autoUpdateEnabled = checked;
   setAutoUpdateEnabled(extension.id, checked);
 }
 </script>
 
-<Dialog title="Change version" onclose={closeCallback}>
+<Dialog title={dialogTitle} onclose={closeCallback}>
   {#snippet content()}
     <div class="flex flex-col gap-4 min-w-[420px]">
-      <div>
-        <div class="text-sm text-[var(--pd-content-text)]">Extension</div>
-        <div class="font-semibold text-[var(--pd-content-header)]">{extension.displayName}</div>
-      </div>
-
       <div>
         <div class="text-sm text-[var(--pd-content-text)] mb-1">Currently installed</div>
         <div class="font-medium">v{extension.installedVersion ?? 'Not installed'}</div>
@@ -97,17 +111,20 @@ function handleAutoUpdateToggle(checked: boolean): void {
           {#each sortedVersions as version (version.version)}
             <button
               type="button"
-              disabled={changeInProgress}
-              class="flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--pd-content-card-bg)] disabled:opacity-60 {selectedVersion === version.version
+              class="flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--pd-content-card-bg)] {isHighlighted(version)
                 ? 'bg-[var(--pd-content-card-bg)] border-l-2 border-[var(--pd-content-card-border-selected)]'
                 : ''}"
-              onclick={(): void => {
-                selectedVersion = version.version;
-              }}>
+              onclick={(): void => selectVersion(version)}>
               <span class="font-medium">v{version.version}</span>
-              {#if isCurrentVersion(version.version)}
-                <span class="text-xs text-[var(--pd-content-text)]">Current</span>
-              {/if}
+              <span class="inline-flex items-center gap-1 text-xs text-[var(--pd-content-text)]">
+                {#if isCurrentVersion(version.version)}
+                  Current
+                {:else if isUpgrade(version.version)}
+                  <Icon icon={faArrowUp} size="sm" /> Upgrade
+                {:else}
+                  <Icon icon={faArrowDown} size="sm" /> Downgrade
+                {/if}
+              </span>
             </button>
           {/each}
         </div>
@@ -116,30 +133,17 @@ function handleAutoUpdateToggle(checked: boolean): void {
       <SlideToggle
         id="auto-update-{extension.id}"
         checked={autoUpdateEnabled}
-        disabled={changeInProgress}
         on:checked={(event): void => handleAutoUpdateToggle(event.detail)}
         aria-label="Enable automatic updates for {extension.displayName}">
         Enable automatic updates for this extension
       </SlideToggle>
-
-      {#if statusMessage}
-        <div class="text-sm text-[var(--pd-content-text)]">{statusMessage}</div>
-      {/if}
-
-      {#if errorMessage}
-        <div class="text-sm text-[var(--pd-status-error)]" role="alert">{errorMessage}</div>
-      {/if}
     </div>
   {/snippet}
 
   {#snippet buttons()}
-    <Button type="secondary" disabled={changeInProgress} on:click={closeCallback}>Cancel</Button>
-    <Button
-      type="primary"
-      inProgress={changeInProgress}
-      disabled={isCurrentVersion(selectedVersion) || changeInProgress}
-      on:click={applyVersionChange}>
-      Change v{selectedVersion}
+    <Button type="secondary" on:click={closeCallback}>Cancel</Button>
+    <Button type="primary" disabled={!hasSelectedChange} on:click={applyVersionChange}>
+      {changeButtonLabel}
     </Button>
   {/snippet}
 </Dialog>

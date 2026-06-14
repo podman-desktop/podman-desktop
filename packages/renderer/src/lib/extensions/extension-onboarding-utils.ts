@@ -24,6 +24,10 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { isAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { normalizeVersionValue } from './extension-version-update.svelte';
+
 export interface ExtensionOnboardingStatus {
   enabled: boolean;
   detail: string;
@@ -77,4 +81,24 @@ export function extensionHasVersionUpdate(
     !!normalizeVersion(fetchVersion) &&
     normalizeVersion(installedVersion) !== normalizeVersion(fetchVersion)
   );
+}
+
+export function extensionRequiresManualUpdate(extension: CatalogExtensionInfoUI): boolean {
+  return (
+    extensionHasVersionUpdate(
+      extension.isInstalled,
+      extension.installedVersion,
+      extension.fetchVersion,
+      extension.hasUpdate,
+    ) && !isAutoUpdateEnabled(extension.id)
+  );
+}
+
+export function extensionHasOtherVersions(extension: CatalogExtensionInfoUI): boolean {
+  const current = normalizeVersionValue(extension.installedVersion ?? extension.fetchVersion);
+  if (!current) {
+    return extension.availableVersions.some(version => !!normalizeVersionValue(version.version));
+  }
+
+  return extension.availableVersions.some(version => normalizeVersionValue(version.version) !== current);
 }

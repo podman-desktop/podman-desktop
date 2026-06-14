@@ -19,7 +19,7 @@ let { object }: Props = $props();
       class="text-[color:var(--pd-card-header-text)] font-semibold break-words"
       extension={object.extension} />
     {#if isNewlyInstalled(object.catalogExtension.id)}
-      <span class="rounded bg-[var(--pd-badge-purple)] px-2 py-0.5 text-xs text-[var(--pd-card-header-text)]">New</span>
+      <span class="rounded bg-[var(--pd-badge-gray)] px-2 py-0.5 text-xs text-white">New</span>
     {/if}
   </div>
   {#if object.extension.description}

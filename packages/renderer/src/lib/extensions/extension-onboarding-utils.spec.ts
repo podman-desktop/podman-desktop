@@ -18,7 +18,34 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { extensionHasVersionUpdate } from './extension-onboarding-utils';
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import {
+  extensionHasOtherVersions,
+  extensionHasVersionUpdate,
+  extensionRequiresManualUpdate,
+} from './extension-onboarding-utils';
+
+function createExtension(partial: Partial<CatalogExtensionInfoUI>): CatalogExtensionInfoUI {
+  return {
+    id: 'test',
+    displayName: 'Test',
+    isFeatured: false,
+    fetchable: true,
+    fetchLink: '',
+    fetchVersion: '1.0.0',
+    publisherDisplayName: 'Publisher',
+    isInstalled: true,
+    shortDescription: '',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
+    ...partial,
+  };
+}
 
 describe('extensionHasVersionUpdate', () => {
   test('returns true when catalog versions differ even without hasUpdate flag', () => {
@@ -31,5 +58,72 @@ describe('extensionHasVersionUpdate', () => {
 
   test('returns false when installed version matches catalog version', () => {
     expect(extensionHasVersionUpdate(true, '0.4.0', '0.4.0', false)).toBe(false);
+  });
+});
+
+describe('extensionHasOtherVersions', () => {
+  test('returns true when another version is available', () => {
+    const extension = createExtension({
+      installedVersion: '1.0.0',
+      availableVersions: [
+        { version: '1.0.0', ociUri: 'oci:1.0.0', preview: false },
+        { version: '1.1.0', ociUri: 'oci:1.1.0', preview: false },
+      ],
+    });
+
+    expect(extensionHasOtherVersions(extension)).toBe(true);
+  });
+
+  test('returns false when only the current version is available', () => {
+    const extension = createExtension({
+      installedVersion: '1.0.0',
+      availableVersions: [{ version: '1.0.0', ociUri: 'oci:1.0.0', preview: false }],
+    });
+
+    expect(extensionHasOtherVersions(extension)).toBe(false);
+  });
+
+  test('returns false when no versions are available', () => {
+    const extension = createExtension({
+      installedVersion: '1.0.0',
+      availableVersions: [],
+    });
+
+    expect(extensionHasOtherVersions(extension)).toBe(false);
+  });
+
+  test('treats v-prefix versions as equivalent to current version', () => {
+    const extension = createExtension({
+      installedVersion: 'v1.0.0',
+      availableVersions: [{ version: '1.0.0', ociUri: 'oci:1.0.0', preview: false }],
+    });
+
+    expect(extensionHasOtherVersions(extension)).toBe(false);
+  });
+});
+
+describe('extensionRequiresManualUpdate', () => {
+  test('returns true when an update is available and automatic updates are disabled', () => {
+    const extension = createExtension({
+      id: 'manual-update',
+      isInstalled: true,
+      installedVersion: '1.0.0',
+      fetchVersion: '1.1.0',
+    });
+
+    expect(extensionRequiresManualUpdate(extension)).toBe(true);
+  });
+
+  test('returns false when automatic updates are enabled', () => {
+    const extension = createExtension({
+      id: 'auto-update',
+      isInstalled: true,
+      installedVersion: '1.0.0',
+      fetchVersion: '1.1.0',
+    });
+
+    setAutoUpdateEnabled('auto-update', true);
+
+    expect(extensionRequiresManualUpdate(extension)).toBe(false);
   });
 });

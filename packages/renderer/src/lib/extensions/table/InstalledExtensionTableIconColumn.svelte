@@ -9,6 +9,6 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<div class="flex items-center py-1">
+<div class="flex items-center">
   <ExtensionIcon extension={object.extension} />
 </div>

@@ -287,11 +287,21 @@ export class ExtensionsUtils {
         ? extension.fetchVersion
         : this.bumpPatchVersion(installedVersion);
 
+    const availableVersions = [...extension.availableVersions];
+    if (fetchVersion && !availableVersions.some(version => version.version === fetchVersion)) {
+      availableVersions.unshift({
+        version: fetchVersion,
+        ociUri: extension.fetchLink ?? '',
+        preview: false,
+      });
+    }
+
     return {
       ...extension,
       hasUpdate: true,
       installedVersion,
       fetchVersion,
+      availableVersions,
     };
   }
 

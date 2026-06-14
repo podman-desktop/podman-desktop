@@ -20,7 +20,7 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 
 export interface CatalogTableCallbacks {
   oninstall: (extensionId: string) => void;
-  onChangeVersion: (extension: CatalogExtensionInfoUI) => void;
+  onChangeVersion: (extension: CatalogExtensionInfoUI, preferredVersion?: string) => void;
 }
 
 export let catalogTableCallbacks: CatalogTableCallbacks = {

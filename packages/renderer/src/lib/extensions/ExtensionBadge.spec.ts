@@ -61,10 +61,9 @@ test('Expect to have badge for pd  built-in Extension', async () => {
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await fireEvent.mouseEnter(tooltipTrigger);
 
-  const labels = await screen.findAllByText('Built-in extension');
-  expect(labels).toHaveLength(2);
+  const labels = await screen.findAllByText('Pre-installed with Podman Desktop');
+  expect(labels).toHaveLength(1);
   expect(labels[0]).toBeInTheDocument();
-  expect(labels[1]).toBeInTheDocument();
 });
 
 test('Expect to have badge for devMode Extension', async () => {

@@ -17,6 +17,7 @@ let { extensionInfos = [] }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 let changeVersionExtension: CatalogExtensionInfoUI | undefined = $state(undefined);
+let changeVersionPreferredVersion: string | undefined = $state(undefined);
 
 const tableRows: InstalledExtensionTableRow[] = $derived.by(() => {
   const catalogExtensions = extensionInfos.map(extension =>
@@ -31,12 +32,14 @@ const tableRows: InstalledExtensionTableRow[] = $derived.by(() => {
   }));
 });
 
-function openChangeVersion(extension: CatalogExtensionInfoUI): void {
+function openChangeVersion(extension: CatalogExtensionInfoUI, preferredVersion?: string): void {
   changeVersionExtension = extension;
+  changeVersionPreferredVersion = preferredVersion;
 }
 
 function closeChangeVersion(): void {
   changeVersionExtension = undefined;
+  changeVersionPreferredVersion = undefined;
 }
 </script>
 
@@ -45,5 +48,8 @@ function closeChangeVersion(): void {
 </div>
 
 {#if changeVersionExtension}
-  <ChangeVersionModal extension={changeVersionExtension} closeCallback={closeChangeVersion} />
+  <ChangeVersionModal
+    extension={changeVersionExtension}
+    preferredVersion={changeVersionPreferredVersion}
+    closeCallback={closeChangeVersion} />
 {/if}

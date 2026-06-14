@@ -9,20 +9,26 @@ import { EXTENSION_DROPDOWN_MENU_CONTEXT, type ExtensionDropdownMenuContext } fr
 interface Props {
   title: string;
   detail?: string;
+  titleReserveText?: string;
+  detailReserveText?: string;
   tooltip?: string;
   icon: IconDefinition | Component | string;
   enabled?: boolean;
   hidden?: boolean;
+  keepMenuOpen?: boolean;
   onClick?: (event: Event) => void;
 }
 
 let {
   title,
   detail = '',
+  titleReserveText = '',
+  detailReserveText = '',
   tooltip = '',
   icon,
   enabled = true,
   hidden = false,
+  keepMenuOpen = false,
   onClick = (): void => {},
 }: Props = $props();
 
@@ -38,6 +44,11 @@ function handleClick(event: Event): void {
     event.stopPropagation();
     return;
   }
+  if (keepMenuOpen) {
+    event.stopPropagation();
+    onClick(event);
+    return;
+  }
   menuContext?.closeMenu();
   onClick(event);
 }
@@ -51,9 +62,22 @@ function handleClick(event: Event): void {
       tabindex="-1">
       <Icon class="w-4 text-md shrink-0 self-start mt-0.5" {icon} />
       <span class="ml-2 flex flex-col min-w-0">
-        <span>{title}</span>
+        <span class="grid [&>*]:col-start-1 [&>*]:row-start-1 {titleReserveText ? 'whitespace-nowrap' : ''}">
+          {#if titleReserveText}
+            <span class="invisible" aria-hidden="true">{titleReserveText}</span>
+          {/if}
+          <span>{title}</span>
+        </span>
         {#if detail}
-          <span class="text-xs text-[var(--pd-dropdown-disabled-item-text)]">{detail}</span>
+          <span
+            class="text-xs text-[var(--pd-dropdown-disabled-item-text)] grid [&>*]:col-start-1 [&>*]:row-start-1 {detailReserveText
+              ? 'whitespace-nowrap'
+              : ''}">
+            {#if detailReserveText}
+              <span class="invisible" aria-hidden="true">{detailReserveText}</span>
+            {/if}
+            <span>{detail}</span>
+          </span>
         {/if}
       </span>
     </span>

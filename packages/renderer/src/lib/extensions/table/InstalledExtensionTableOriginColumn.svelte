@@ -2,11 +2,13 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 
 import {
+  EXTENSION_BUILTIN_CHIP_LABEL,
+  EXTENSION_BUILTIN_CHIP_TEXT_CLASS,
+  EXTENSION_BUILTIN_CHIP_TOOLTIP,
   EXTENSION_CHIP_BADGE_CLASS,
   EXTENSION_CHIP_COLORS,
   EXTENSION_CHIP_TEXT_CLASS,
 } from '/@/lib/extensions/extension-badge-styles';
-import ExtensionPreinstalledInfoIcon from '/@/lib/extensions/ExtensionPreinstalledInfoIcon.svelte';
 import ExtensionVerifiedLabel from '/@/lib/extensions/ExtensionVerifiedLabel.svelte';
 import type { InstalledExtensionTableRow } from '/@/lib/extensions/installed-extension-table-row';
 import Badge from '/@/lib/ui/Badge.svelte';
@@ -34,13 +36,12 @@ let { object }: Props = $props();
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
     </Tooltip>
   {:else if !object.extension.removable}
-    <div class="flex items-center gap-1">
+    <Tooltip right tip={EXTENSION_BUILTIN_CHIP_TOOLTIP}>
       <Badge
-        label="Built-in extension"
+        label={EXTENSION_BUILTIN_CHIP_LABEL}
         color={EXTENSION_CHIP_COLORS.builtin}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-      <ExtensionPreinstalledInfoIcon />
-    </div>
+        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
+    </Tooltip>
   {:else}
     <Badge
       label="Community"

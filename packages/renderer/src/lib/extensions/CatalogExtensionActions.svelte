@@ -20,10 +20,18 @@ import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { confirmExtensionAutoUpdateChange } from './extension-auto-update-confirm';
 import { buildExtensionBugReportUrl } from './extension-badge-styles';
-import { isAutoUpdateEnabled, toggleAutoUpdate } from './extension-catalog-settings.svelte';
+import { isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
-import { type ExtensionOnboardingStatus, resolveExtensionOnboardingStatus } from './extension-onboarding-utils';
+import {
+  extensionHasOtherVersions,
+  extensionHasVersionUpdate,
+  type ExtensionOnboardingStatus,
+  extensionRequiresManualUpdate,
+  resolveExtensionOnboardingStatus,
+} from './extension-onboarding-utils';
+import { applyExtensionVersionChange } from './extension-version-update.svelte';
 import ExtensionDropdownMenu from './ExtensionDropdownMenu.svelte';
 import ExtensionDropdownMenuItem from './ExtensionDropdownMenuItem.svelte';
 
@@ -37,6 +45,15 @@ let { extension, returnScreen = 'catalog', onChangeVersion }: Props = $props();
 
 const autoUpdateEnabled = $derived(isAutoUpdateEnabled(extension.id));
 const installedExtension = $derived(extension.installedExtension);
+const requiresManualUpdate = $derived(extensionRequiresManualUpdate(extension));
+const autoUpdateDetail = $derived(
+  autoUpdateEnabled
+    ? 'New updates will be automatically installed'
+    : requiresManualUpdate
+      ? 'An update is available — install manually or enable automatic updates'
+      : 'Manual version installation is required',
+);
+const autoUpdateDetailReserveText = 'An update is available — install manually or enable automatic updates';
 
 let onboardingStatus = $state<ExtensionOnboardingStatus>({ enabled: false, detail: 'Not configured' });
 
@@ -58,6 +75,7 @@ $effect(() => {
 
 const showStop = $derived(installedExtension?.state === 'started' || installedExtension?.state === 'starting');
 const showReactivate = $derived(installedExtension?.state === 'stopped' || installedExtension?.state === 'failed');
+const hasOtherVersions = $derived(extensionHasOtherVersions(extension));
 
 function openDetails(event: Event): void {
   event.stopPropagation();
@@ -111,9 +129,29 @@ async function removeExtension(event: Event): Promise<void> {
   );
 }
 
-function handleToggleAutoUpdate(event: Event): void {
+async function handleToggleAutoUpdate(event: Event): Promise<void> {
   event.stopPropagation();
-  toggleAutoUpdate(extension.id);
+  const enabling = !autoUpdateEnabled;
+
+  const confirmed = await confirmExtensionAutoUpdateChange(extension, enabling);
+  if (!confirmed) {
+    return;
+  }
+
+  setAutoUpdateEnabled(extension.id, enabling);
+
+  if (
+    enabling &&
+    extensionHasVersionUpdate(
+      extension.isInstalled,
+      extension.installedVersion,
+      extension.fetchVersion,
+      extension.hasUpdate,
+    ) &&
+    extension.fetchVersion
+  ) {
+    applyExtensionVersionChange(extension, extension.fetchVersion, true).catch(console.error);
+  }
 }
 
 async function reportBug(event: Event): Promise<void> {
@@ -130,6 +168,9 @@ async function openRepository(event: Event): Promise<void> {
 
 function handleChangeVersion(event: Event): void {
   event.stopPropagation();
+  if (!hasOtherVersions) {
+    return;
+  }
   onChangeVersion();
 }
 </script>
@@ -155,9 +196,17 @@ function handleChangeVersion(event: Event): void {
         hidden={!showReactivate}
         onClick={reactivateExtension} />
       <ExtensionDropdownMenuItem title="Preferences" icon={faGear} onClick={openPreferences} />
-      <ExtensionDropdownMenuItem title="Change version" icon={faCodeBranch} onClick={handleChangeVersion} />
+      <ExtensionDropdownMenuItem
+        title="Change version"
+        detail={hasOtherVersions ? '' : 'No other versions available'}
+        icon={faCodeBranch}
+        enabled={hasOtherVersions}
+        onClick={handleChangeVersion} />
       <ExtensionDropdownMenuItem
         title={autoUpdateEnabled ? 'Disable automatic updates' : 'Enable automatic updates'}
+        titleReserveText="Disable automatic updates"
+        detail={autoUpdateDetail}
+        detailReserveText={autoUpdateDetailReserveText}
         icon={autoUpdateEnabled ? faToggleOn : faToggleOff}
         onClick={handleToggleAutoUpdate} />
       {#if extension.repositoryUrl}
