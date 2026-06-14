@@ -7,9 +7,8 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
-import ExtensionCatalogMetaChips from './ExtensionCatalogMetaChips.svelte';
+import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
-import ExtensionOriginChips from './ExtensionOriginChips.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
 import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
@@ -44,11 +43,8 @@ function handleChangeVersion(preferredVersion?: string): void {
   aria-label={catalogExtensionUI.displayName}
   onclick={handleCardClick}>
   <div class="px-3 pt-3 pb-1 flex flex-col gap-1.5">
-    <div class="flex items-center gap-x-2">
-      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-        <ExtensionCatalogMetaChips extension={catalogExtensionUI} />
-        <ExtensionOriginChips extension={catalogExtensionUI} />
-      </div>
+    <div class="flex items-center justify-between gap-x-2">
+      <ExtensionCatalogStatusChips extension={catalogExtensionUI} class="flex-none" />
       <div class="flex shrink-0 items-center gap-1">
         {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />

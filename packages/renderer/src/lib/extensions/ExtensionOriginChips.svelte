@@ -24,7 +24,7 @@ let { extension, class: className = '' }: Props = $props();
 const installed = $derived(extension.installedExtension);
 </script>
 
-<div class="flex flex-wrap items-center gap-2 {className}">
+<div class="inline-flex flex-none flex-wrap items-center gap-x-2 gap-y-1 {className}">
   {#if installed?.type === 'dd'}
     <Tooltip right tip="Docker Desktop extension">
       <Badge

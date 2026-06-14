@@ -13,7 +13,7 @@ interface Props {
 let { extension, class: className = '' }: Props = $props();
 </script>
 
-<div class="inline-flex flex-wrap items-center gap-x-2 gap-y-1 {className}">
+<div class="inline-flex flex-none flex-wrap items-center gap-x-2 gap-y-1 {className}">
   {#if extension.isFeatured}
     <Badge
       label="Featured"

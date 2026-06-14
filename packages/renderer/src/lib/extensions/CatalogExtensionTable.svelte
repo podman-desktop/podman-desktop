@@ -10,9 +10,8 @@ import { setCatalogTableCallbacks } from './catalog-extension-table-context';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
-import ExtensionCatalogMetaChips from './ExtensionCatalogMetaChips.svelte';
+import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
-import ExtensionOriginChips from './ExtensionOriginChips.svelte';
 import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
@@ -96,10 +95,7 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
           {/if}
         </div>
         <div role="cell" class="self-center py-2">
-          <div class="flex flex-wrap items-center gap-2">
-            <ExtensionOriginChips {extension} />
-            <ExtensionCatalogMetaChips {extension} />
-          </div>
+          <ExtensionCatalogStatusChips {extension} originFirst />
         </div>
         <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex shrink-0 items-center justify-end gap-1">
