@@ -116,6 +116,52 @@ test('Expect to see featured and fetch button', async () => {
   );
 });
 
+test('Expect featured and community chips in the same container', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'minikube',
+    displayName: 'minikube',
+    isFeatured: true,
+    fetchable: false,
+    fetchLink: '',
+    fetchVersion: '0.4.1',
+    installedVersion: '0.4.0',
+    publisherDisplayName: 'Podman Desktop',
+    isInstalled: true,
+    shortDescription: 'Run Kubernetes locally',
+    categories: [],
+    keywords: [],
+    availableVersions: [],
+    hasUpdate: true,
+    isVerified: false,
+    isSupportedByRedHat: false,
+    installedExtension: {
+      id: 'minikube',
+      name: 'minikube',
+      state: 'started',
+      removable: true,
+      devMode: false,
+      type: 'extension',
+    },
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  const featured = screen.getByLabelText('badge-Featured');
+  const community = screen.getByLabelText('badge-Community');
+
+  expect(featured.parentElement).toBe(community.parentElement);
+
+  const chipRow = featured.parentElement;
+  expect(chipRow).toBeTruthy();
+
+  const chipLabels = chipRow?.querySelectorAll('[aria-label^="badge-"]');
+  expect(chipLabels?.length).toBeGreaterThanOrEqual(2);
+
+  const featuredIndex = Array.from(chipLabels ?? []).indexOf(featured);
+  const communityIndex = Array.from(chipLabels ?? []).indexOf(community);
+  expect(communityIndex - featuredIndex).toBe(1);
+});
+
 test('Expect to have version of installed one', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'myId',

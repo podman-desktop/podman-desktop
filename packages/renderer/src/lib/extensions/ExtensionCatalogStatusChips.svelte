@@ -20,16 +20,18 @@ interface Props {
   extension: CatalogExtensionInfoUI;
   /** When true, origin chips render before catalog meta chips (table layout). */
   originFirst?: boolean;
+  /** When false, hides the Update chip (cards show update in the version row). */
+  showUpdateChip?: boolean;
   class?: string;
 }
 
-let { extension, originFirst = false, class: className = '' }: Props = $props();
+let { extension, originFirst = false, showUpdateChip = true, class: className = '' }: Props = $props();
 
 const installed = $derived(extension.installedExtension);
 const showUpdate = $derived(extensionRequiresManualUpdate(extension));
 </script>
 
-<div class="flex flex-none flex-wrap items-center justify-start gap-x-2 gap-y-1 {className}">
+<div class="flex flex-wrap items-center gap-x-2 gap-y-1 {className}">
   {#if originFirst}
     {#if installed?.type === 'dd'}
       <Tooltip right tip="Docker Desktop extension">
@@ -67,7 +69,7 @@ const showUpdate = $derived(extensionRequiresManualUpdate(extension));
         label="New"
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.new} ${EXTENSION_CHIP_TEXT_CLASS}`} />
     {/if}
-    {#if showUpdate}
+    {#if showUpdateChip && showUpdate}
       <Badge
         label="Update"
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.update} ${EXTENSION_CHIP_TEXT_CLASS}`} />
@@ -83,7 +85,7 @@ const showUpdate = $derived(extensionRequiresManualUpdate(extension));
         label="New"
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.new} ${EXTENSION_CHIP_TEXT_CLASS}`} />
     {/if}
-    {#if showUpdate}
+    {#if showUpdateChip && showUpdate}
       <Badge
         label="Update"
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.update} ${EXTENSION_CHIP_TEXT_CLASS}`} />

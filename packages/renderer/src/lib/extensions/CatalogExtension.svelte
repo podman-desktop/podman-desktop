@@ -43,9 +43,9 @@ function handleChangeVersion(preferredVersion?: string): void {
   aria-label={catalogExtensionUI.displayName}
   onclick={handleCardClick}>
   <div class="px-3 pt-3 pb-1 flex flex-col gap-1.5">
-    <div class="flex items-center justify-between gap-x-2">
-      <ExtensionCatalogStatusChips extension={catalogExtensionUI} class="flex-none" />
-      <div class="flex shrink-0 items-center gap-1">
+    <div class="relative min-h-8 pr-9">
+      <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} />
+      <div class="absolute right-0 top-0 flex items-center gap-1">
         {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
         {/if}
