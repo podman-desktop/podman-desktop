@@ -59,6 +59,6 @@ onDestroy(() => {
   bind:clientWidth={dropDownWidth}
   bind:this={dropDownElement}
   style={menuStyle}
-  class="fixed z-50 min-w-[15rem] rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] divide-y divide-[var(--pd-dropdown-divider)] focus:outline-hidden">
+  class="fixed z-50 w-max rounded-md shadow-lg bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)] hover:ring-[var(--pd-dropdown-hover-ring)] divide-y divide-[var(--pd-dropdown-divider)] focus:outline-hidden">
   {@render children?.()}
 </div>

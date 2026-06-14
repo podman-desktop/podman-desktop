@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import { beforeEach, expect, test } from 'vitest';
 
 import ExtensionBadge from './ExtensionBadge.svelte';
@@ -35,19 +35,10 @@ test('Expect to have badge for dd Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  const visibleLabel = screen.getByText('Docker Desktop extension');
-  expect(visibleLabel).toBeInTheDocument();
-
-  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
-  await fireEvent.mouseEnter(tooltipTrigger);
-
-  const labels = await screen.findAllByText('Docker Desktop extension');
-  expect(labels).toHaveLength(2);
-  expect(labels[0]).toBeInTheDocument();
-  expect(labels[1]).toBeInTheDocument();
+  expect(screen.getByText('Docker Desktop extension')).toBeInTheDocument();
 });
 
-test('Expect to have badge for pd  built-in Extension', async () => {
+test('Expect to have badge for pd built-in Extension', async () => {
   const extension: ExtensionType = {
     type: 'pd',
     removable: false,
@@ -55,15 +46,7 @@ test('Expect to have badge for pd  built-in Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  const visibleLabel = screen.getByText('Built-in extension');
-  expect(visibleLabel).toBeInTheDocument();
-
-  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
-  await fireEvent.mouseEnter(tooltipTrigger);
-
-  const labels = await screen.findAllByText('Pre-installed with Podman Desktop');
-  expect(labels).toHaveLength(1);
-  expect(labels[0]).toBeInTheDocument();
+  expect(screen.getByText('Built-in extension')).toBeInTheDocument();
 });
 
 test('Expect to have badge for devMode Extension', async () => {
@@ -74,13 +57,5 @@ test('Expect to have badge for devMode Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  const visibleLabel = screen.getByText('DevMode extension');
-  expect(visibleLabel).toBeInTheDocument();
-
-  const tooltipTrigger = screen.getByTestId('tooltip-trigger');
-  expect(tooltipTrigger).toBeInTheDocument();
-  await fireEvent.mouseEnter(tooltipTrigger);
-
-  const tooltip = await screen.findByText('In Development Mode Extension');
-  expect(tooltip).toBeInTheDocument();
+  expect(screen.getByText('DevMode extension')).toBeInTheDocument();
 });

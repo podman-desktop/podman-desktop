@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 !m-0 !me-0';
+export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 !m-0 !me-0 cursor-pointer';
 
 export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
 

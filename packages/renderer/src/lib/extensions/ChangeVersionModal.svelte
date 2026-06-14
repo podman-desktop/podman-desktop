@@ -78,7 +78,7 @@ function applyVersionChange(): void {
     return;
   }
 
-  applyExtensionVersionChange(extension, selectedVersion, autoUpdateEnabled).catch(console.error);
+  applyExtensionVersionChange(extension, selectedVersion, autoUpdateEnabled);
   closeCallback();
 }
 

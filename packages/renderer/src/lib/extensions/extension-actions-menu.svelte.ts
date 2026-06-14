@@ -20,6 +20,28 @@ type MenuCloser = () => void;
 
 const menuClosers = new Map<string, MenuCloser>();
 
+export const EXTENSION_ACTIONS_MENU_CHANGE_EVENT = 'extension-actions-menu-change';
+
+let openMenuId: string | undefined;
+
+export function getOpenExtensionActionsMenuId(): string | undefined {
+  return openMenuId;
+}
+
+export function setOpenExtensionActionsMenuId(menuId: string | undefined): void {
+  if (openMenuId === menuId) {
+    return;
+  }
+  openMenuId = menuId;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(EXTENSION_ACTIONS_MENU_CHANGE_EVENT));
+  }
+}
+
+export function resetOpenExtensionActionsMenuForTests(): void {
+  openMenuId = undefined;
+}
+
 export function registerExtensionActionsMenu(menuId: string, close: MenuCloser): () => void {
   menuClosers.set(menuId, close);
   return (): void => {

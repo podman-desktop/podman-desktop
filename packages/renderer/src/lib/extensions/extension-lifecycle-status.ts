@@ -16,10 +16,30 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { ExtensionCompatibilityIssue } from './extension-compatibility';
+
 export interface ExtensionLifecyclePresentation {
   statusDotStatus: string;
   label: string;
   textColorVar: string;
+}
+
+export function getExtensionCompatibilityPresentation(
+  issue: ExtensionCompatibilityIssue,
+): ExtensionLifecyclePresentation {
+  if (issue.type === 'incompatible-version') {
+    return {
+      statusDotStatus: 'degraded',
+      label: 'Incompatible',
+      textColorVar: 'var(--pd-state-warning)',
+    };
+  }
+
+  return {
+    statusDotStatus: 'degraded',
+    label: 'Missing dependency',
+    textColorVar: 'var(--pd-state-warning)',
+  };
 }
 
 export function getExtensionLifecyclePresentation(

@@ -185,5 +185,5 @@ test('Expect to have version of installed one', async () => {
   render(CatalogExtension, { catalogExtensionUI });
 
   expect(screen.getByText('v2.0.0')).toBeInTheDocument();
-  expect(screen.getByText('Update to v1.0.0')).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /Upgrade to v/i })).not.toBeInTheDocument();
 });

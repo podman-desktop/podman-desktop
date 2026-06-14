@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Tooltip } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 import { router } from 'tinro';
 
@@ -10,8 +9,14 @@ import { setCatalogTableCallbacks } from './catalog-extension-table-context';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
+import {
+  EXTENSION_VERSION_UI_CHANGE_EVENT,
+  getOptimisticInstalledVersion,
+  isExtensionVersionUpdating,
+} from './extension-version-update.svelte';
 import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
+import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
 import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
 
@@ -23,8 +28,17 @@ interface Props {
 
 let { catalogExtensions, oninstall, onChangeVersion }: Props = $props();
 
+let uiRevision = $state(0);
+
 onMount(() => {
   setCatalogTableCallbacks({ oninstall, onChangeVersion });
+  const handler = (): void => {
+    uiRevision += 1;
+  };
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  return (): void => {
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  };
 });
 
 function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void {
@@ -63,28 +77,37 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
         </div>
         <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pr-2">
           <div class="truncate font-semibold text-[var(--pd-content-header)]">{extension.displayName}</div>
-          <Tooltip top tip={extension.shortDescription} containerClass="relative block min-w-0 w-full">
-            <span class="block truncate text-sm text-[var(--pd-content-text)]">
-              {extension.shortDescription}
-            </span>
-          </Tooltip>
+          <ExtensionTruncatedText
+            text={extension.shortDescription}
+            class="text-sm text-[var(--pd-content-text)]" />
         </div>
         <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
           {extension.publisherDisplayName}
         </div>
         <div role="cell" class="self-center py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--pd-content-text)]">
-            {#if extension.isInstalled && extension.installedVersion}
-              <span>v{extension.installedVersion}</span>
-              <ExtensionUpdateVersionLink
-                {extension}
-                onUpdate={(catalogExtension, version): void => onChangeVersion(catalogExtension, version)} />
-            {:else if extension.isInstalled}
-              <span>v{extension.installedVersion}</span>
+            {#if extension.isInstalled}
+              {#key uiRevision}
+                {@const actualVersion = extension.installedVersion}
+                {@const normalizedActual = actualVersion?.replace(/^v/i, '').trim()}
+                {@const optimistic = getOptimisticInstalledVersion(extension.id)}
+                {@const displayInstalledVersion =
+                  isExtensionVersionUpdating(extension.id)
+                    ? actualVersion
+                    : optimistic && optimistic !== normalizedActual
+                      ? optimistic
+                      : actualVersion}
+                {#if displayInstalledVersion}
+                  <span>v{displayInstalledVersion}</span>
+                  <ExtensionUpdateVersionLink {extension} />
+                {:else}
+                  <span>v{extension.installedVersion}</span>
+                {/if}
+                <ExtensionVersionUpdateStatus extensionId={extension.id} />
+              {/key}
             {:else}
               <span>{extension.fetchVersion ? `v${extension.fetchVersion}` : 'N/A'}</span>
             {/if}
-            <ExtensionVersionUpdateStatus extensionId={extension.id} />
           </div>
         </div>
         <div role="cell" class="self-center py-2">

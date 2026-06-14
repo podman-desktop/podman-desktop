@@ -1,9 +1,7 @@
 <script lang="ts">
-import { faArrowRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { onMount } from 'svelte';
 
-import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
-
-import { getExtensionVersionUpdateState } from './extension-version-update.svelte';
+import { EXTENSION_VERSION_UI_CHANGE_EVENT, getExtensionVersionUpdateState } from './extension-version-update.svelte';
 
 interface Props {
   extensionId: string;
@@ -12,16 +10,24 @@ interface Props {
 
 let { extensionId, class: className = '' }: Props = $props();
 
-const updateState = $derived(getExtensionVersionUpdateState(extensionId));
+let uiRevision = $state(0);
+
+onMount(() => {
+  const handler = (): void => {
+    uiRevision += 1;
+  };
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  return (): void => {
+    window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, handler);
+  };
+});
+
+const updateState = $derived.by(() => {
+  uiRevision;
+  return getExtensionVersionUpdateState(extensionId);
+});
 </script>
 
-{#if updateState}
-  {#if updateState.status === 'updating'}
-    <span class="inline-flex items-center gap-1.5 text-sm text-[var(--pd-content-text)] {className}">
-      <LoadingIcon icon={faArrowRotateRight} loading={true} iconSize="0.75x" loadingWidthClass="w-3" loadingHeightClass="h-3" />
-      {updateState.message}
-    </span>
-  {:else if updateState.status === 'error'}
-    <span class="text-sm text-[var(--pd-status-error)] {className}" role="alert">{updateState.message}</span>
-  {/if}
+{#if updateState?.status === 'error'}
+  <span class="text-sm text-[var(--pd-state-error)] {className}" role="alert">{updateState.message}</span>
 {/if}

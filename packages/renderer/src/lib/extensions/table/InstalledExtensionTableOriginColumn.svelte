@@ -1,10 +1,7 @@
 <script lang="ts">
-import { Tooltip } from '@podman-desktop/ui-svelte';
-
 import {
   EXTENSION_BUILTIN_CHIP_LABEL,
   EXTENSION_BUILTIN_CHIP_TEXT_CLASS,
-  EXTENSION_BUILTIN_CHIP_TOOLTIP,
   EXTENSION_CHIP_BADGE_CLASS,
   EXTENSION_CHIP_COLORS,
   EXTENSION_CHIP_TEXT_CLASS,
@@ -22,26 +19,20 @@ let { object }: Props = $props();
 
 <div class="flex flex-wrap items-center gap-2 py-1">
   {#if object.extension.type === 'dd'}
-    <Tooltip right tip="Docker Desktop extension">
-      <Badge
-        label="Docker Desktop extension"
-        color={EXTENSION_CHIP_COLORS.dockerDesktop}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.dockerDesktopText}`} />
-    </Tooltip>
+    <Badge
+      label="Docker Desktop extension"
+      color={EXTENSION_CHIP_COLORS.dockerDesktop}
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.dockerDesktopText}`} />
   {:else if object.extension.devMode}
-    <Tooltip right tip="In Development Mode extension">
-      <Badge
-        label="DevMode extension"
-        color={EXTENSION_CHIP_COLORS.devMode}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-    </Tooltip>
+    <Badge
+      label="DevMode extension"
+      color={EXTENSION_CHIP_COLORS.devMode}
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {:else if !object.extension.removable}
-    <Tooltip right tip={EXTENSION_BUILTIN_CHIP_TOOLTIP}>
-      <Badge
-        label={EXTENSION_BUILTIN_CHIP_LABEL}
-        color={EXTENSION_CHIP_COLORS.builtin}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
-    </Tooltip>
+    <Badge
+      label={EXTENSION_BUILTIN_CHIP_LABEL}
+      color={EXTENSION_CHIP_COLORS.builtin}
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
   {:else}
     <Badge
       label="Community"

@@ -38,7 +38,7 @@ let enableLocalExtensions = $derived(
 let enableCatalog = $derived((await window.getConfigurationValue('extensions.catalog.enabled')) ?? true);
 
 const installedExtensionsWithDemos: CombinedExtensionInfoUI[] = $derived(
-  extensionsUtils.mergePrototypeInstalledDemos($combinedInstalledExtensions),
+  extensionsUtils.applyPrototypeUseCaseOverlays($combinedInstalledExtensions),
 );
 
 const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(

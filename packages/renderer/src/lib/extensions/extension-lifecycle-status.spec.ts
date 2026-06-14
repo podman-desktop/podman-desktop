@@ -18,7 +18,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { getExtensionLifecyclePresentation } from './extension-lifecycle-status';
+import type { ExtensionCompatibilityIssue } from './extension-compatibility';
+import { getExtensionCompatibilityPresentation, getExtensionLifecyclePresentation } from './extension-lifecycle-status';
 
 describe('getExtensionLifecyclePresentation', () => {
   test('docker desktop extension is always active', () => {
@@ -66,6 +67,36 @@ describe('getExtensionLifecyclePresentation', () => {
       statusDotStatus: 'terminated',
       label: 'Failed',
       textColorVar: 'var(--pd-status-terminated)',
+    });
+  });
+});
+
+describe('getExtensionCompatibilityPresentation', () => {
+  test('incompatible version uses warning presentation', () => {
+    const issue: ExtensionCompatibilityIssue = {
+      type: 'incompatible-version',
+      title: 'Incompatible with this Podman Desktop version',
+      detail: 'Requires v99.0.0',
+      fix: 'Upgrade Podman Desktop to v99.0.0 or later.',
+    };
+    expect(getExtensionCompatibilityPresentation(issue)).toEqual({
+      statusDotStatus: 'degraded',
+      label: 'Incompatible',
+      textColorVar: 'var(--pd-state-warning)',
+    });
+  });
+
+  test('missing dependency uses warning presentation', () => {
+    const issue: ExtensionCompatibilityIssue = {
+      type: 'missing-dependency',
+      title: 'Missing required extension',
+      detail: 'Requires minikube',
+      fix: 'Install the minikube extension from the catalog.',
+    };
+    expect(getExtensionCompatibilityPresentation(issue)).toEqual({
+      statusDotStatus: 'degraded',
+      label: 'Missing dependency',
+      textColorVar: 'var(--pd-state-warning)',
     });
   });
 });

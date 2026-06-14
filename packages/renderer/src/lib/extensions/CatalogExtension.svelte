@@ -1,4 +1,5 @@
 <script lang="ts">
+import { onDestroy, onMount } from 'svelte';
 import { router } from 'tinro';
 
 import FeaturedExtensionDownload from '/@/lib/featured/FeaturedExtensionDownload.svelte';
@@ -7,6 +8,11 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
+import {
+  EXTENSION_VERSION_UI_CHANGE_EVENT,
+  getOptimisticInstalledVersion,
+  isExtensionVersionUpdating,
+} from './extension-version-update.svelte';
 import ExtensionCatalogStatusChips from './ExtensionCatalogStatusChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
@@ -18,6 +24,20 @@ export let returnScreen: ExtensionListScreen = 'catalog';
 export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
 export let onChangeVersion: (extension: CatalogExtensionInfoUI, preferredVersion?: string) => void = () => {};
+
+let uiRevision = 0;
+
+function refreshVersionUi(): void {
+  uiRevision += 1;
+}
+
+onMount(() => {
+  window.addEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
+});
+
+onDestroy(() => {
+  window.removeEventListener(EXTENSION_VERSION_UI_CHANGE_EVENT, refreshVersionUi);
+});
 
 function openExtensionDetails(): void {
   ondetails(catalogExtensionUI.id);
@@ -75,15 +95,28 @@ function handleChangeVersion(preferredVersion?: string): void {
           {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedExtension}
             <ExtensionLifecycleStatus extension={catalogExtensionUI.installedExtension} class="shrink-0" />
           {/if}
-          {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedVersion}
-            <span>v{catalogExtensionUI.installedVersion}</span>
-            <ExtensionUpdateVersionLink extension={catalogExtensionUI} onUpdate={handleChangeVersion} />
-          {:else if catalogExtensionUI.isInstalled}
-            <span>v{catalogExtensionUI.installedVersion}</span>
+          {#if catalogExtensionUI.isInstalled}
+            {#key uiRevision}
+              {@const actualVersion = catalogExtensionUI.installedVersion}
+              {@const normalizedActual = actualVersion?.replace(/^v/i, '').trim()}
+              {@const optimistic = getOptimisticInstalledVersion(catalogExtensionUI.id)}
+              {@const displayInstalledVersion =
+                isExtensionVersionUpdating(catalogExtensionUI.id)
+                  ? actualVersion
+                  : optimistic && optimistic !== normalizedActual
+                    ? optimistic
+                    : actualVersion}
+              {#if displayInstalledVersion}
+                <span>v{displayInstalledVersion}</span>
+                <ExtensionUpdateVersionLink extension={catalogExtensionUI} />
+              {:else}
+                <span>v{catalogExtensionUI.installedVersion}</span>
+              {/if}
+              <ExtensionVersionUpdateStatus extensionId={catalogExtensionUI.id} />
+            {/key}
           {:else}
             <span>v{catalogExtensionUI.fetchVersion}</span>
           {/if}
-          <ExtensionVersionUpdateStatus extensionId={catalogExtensionUI.id} />
         </div>
       </div>
     </div>

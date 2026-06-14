@@ -9,6 +9,4 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<div class="py-1">
-  <CatalogExtensionIcon iconHref={object.iconHref} displayName={object.displayName} />
-</div>
+<CatalogExtensionIcon iconHref={object.iconHref} displayName={object.displayName} />

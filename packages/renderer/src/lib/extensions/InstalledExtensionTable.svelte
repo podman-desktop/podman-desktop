@@ -23,7 +23,7 @@ let { rows, onChangeVersion }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
-const gridTemplateColumns = '56px 2fr 1.5fr 1fr 1fr 2fr 140px';
+const gridTemplateColumns = '56px 2fr 1.5fr 1.35fr minmax(9rem, 1.25fr) 2fr 140px';
 
 onMount(() => {
   setInstalledTableCallbacks({ onChangeVersion });
@@ -41,7 +41,7 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
 <div class="w-full mx-5" role="table" aria-label="installed extensions">
   <div
     role="rowgroup"
-    class="grid gap-x-2 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
+    class="grid gap-x-4 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
     style:grid-template-columns={gridTemplateColumns}>
     <div role="columnheader"></div>
     <div role="columnheader" class="text-sm font-semibold self-center">Name</div>
@@ -55,7 +55,7 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
   <div role="rowgroup">
     {#each rows as row (row.extension.id)}
       <div
-        class="grid gap-x-2 min-h-[56px] mb-2 rounded-lg border border-[var(--pd-content-table-border)] bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] cursor-pointer"
+        class="grid gap-x-4 min-h-[56px] mb-2 rounded-lg border border-[var(--pd-content-table-border)] bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] cursor-pointer"
         style:grid-template-columns={gridTemplateColumns}
         role="row"
         aria-label={row.name}
@@ -69,10 +69,10 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
         <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
           {extensionsUtils.resolvePublisherDisplayName(row.extension, row.catalogExtension.publisherDisplayName)}
         </div>
-        <div role="cell" class="self-center py-2" onclick={(event): void => event.stopPropagation()}>
+        <div role="cell" class="self-center py-2 pr-4 min-w-0" onclick={(event): void => event.stopPropagation()}>
           <InstalledExtensionTableVersionColumn object={row} />
         </div>
-        <div role="cell" class="self-center py-2">
+        <div role="cell" class="self-center py-2 min-w-0 overflow-hidden">
           <InstalledExtensionTableLifecycleColumn object={row} />
         </div>
         <div role="cell" class="self-center py-2">

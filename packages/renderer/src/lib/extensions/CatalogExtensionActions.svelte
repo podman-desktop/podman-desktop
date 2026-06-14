@@ -26,12 +26,15 @@ import { isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-s
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
   extensionHasOtherVersions,
-  extensionHasVersionUpdate,
   type ExtensionOnboardingStatus,
   extensionRequiresManualUpdate,
   resolveExtensionOnboardingStatus,
 } from './extension-onboarding-utils';
-import { applyExtensionVersionChange } from './extension-version-update.svelte';
+import {
+  applyExtensionVersionChange,
+  getLatestAvailableVersion,
+  normalizeVersionValue,
+} from './extension-version-update.svelte';
 import ExtensionDropdownMenu from './ExtensionDropdownMenu.svelte';
 import ExtensionDropdownMenuItem from './ExtensionDropdownMenuItem.svelte';
 
@@ -39,9 +42,11 @@ interface Props {
   extension: CatalogExtensionInfoUI;
   returnScreen?: ExtensionListScreen;
   onChangeVersion: () => void;
+  /** Hide "View more details" when the actions menu is rendered on the details page. */
+  onDetailsPage?: boolean;
 }
 
-let { extension, returnScreen = 'catalog', onChangeVersion }: Props = $props();
+let { extension, returnScreen = 'catalog', onChangeVersion, onDetailsPage = false }: Props = $props();
 
 const autoUpdateEnabled = $derived(isAutoUpdateEnabled(extension.id));
 const installedExtension = $derived(extension.installedExtension);
@@ -53,7 +58,6 @@ const autoUpdateDetail = $derived(
       ? 'An update is available — install manually or enable automatic updates'
       : 'Manual version installation is required',
 );
-const autoUpdateDetailReserveText = 'An update is available — install manually or enable automatic updates';
 
 let onboardingStatus = $state<ExtensionOnboardingStatus>({ enabled: false, detail: 'Not configured' });
 
@@ -140,17 +144,13 @@ async function handleToggleAutoUpdate(event: Event): Promise<void> {
 
   setAutoUpdateEnabled(extension.id, enabling);
 
-  if (
-    enabling &&
-    extensionHasVersionUpdate(
-      extension.isInstalled,
-      extension.installedVersion,
-      extension.fetchVersion,
-      extension.hasUpdate,
-    ) &&
-    extension.fetchVersion
-  ) {
-    applyExtensionVersionChange(extension, extension.fetchVersion, true).catch(console.error);
+  if (enabling) {
+    const targetVersion = getLatestAvailableVersion(extension);
+    const installed = normalizeVersionValue(extension.installedVersion);
+    const target = normalizeVersionValue(targetVersion);
+    if (targetVersion && installed && target && target !== installed) {
+      applyExtensionVersionChange(extension, targetVersion, true);
+    }
   }
 }
 
@@ -177,7 +177,11 @@ function handleChangeVersion(event: Event): void {
 
 <div onclick={(event): void => event.stopPropagation()} role="presentation">
   <ExtensionDropdownMenu menuId={extension.id} title="{extension.displayName} actions">
-    <ExtensionDropdownMenuItem title="View more details" icon={faCircleInfo} onClick={openDetails} />
+    <ExtensionDropdownMenuItem
+      title="View more details"
+      icon={faCircleInfo}
+      hidden={onDetailsPage}
+      onClick={openDetails} />
     {#if extension.isInstalled}
       <ExtensionDropdownMenuItem
         title="Onboarding"
@@ -204,9 +208,7 @@ function handleChangeVersion(event: Event): void {
         onClick={handleChangeVersion} />
       <ExtensionDropdownMenuItem
         title={autoUpdateEnabled ? 'Disable automatic updates' : 'Enable automatic updates'}
-        titleReserveText="Disable automatic updates"
         detail={autoUpdateDetail}
-        detailReserveText={autoUpdateDetailReserveText}
         icon={autoUpdateEnabled ? faToggleOn : faToggleOff}
         onClick={handleToggleAutoUpdate} />
       {#if extension.repositoryUrl}

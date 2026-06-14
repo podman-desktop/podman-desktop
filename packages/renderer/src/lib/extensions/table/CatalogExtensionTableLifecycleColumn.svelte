@@ -11,7 +11,7 @@ let { object }: Props = $props();
 
 <div class="py-1">
   {#if object.isInstalled && object.installedExtension}
-    <ExtensionLifecycleStatus extension={object.installedExtension} />
+    <ExtensionLifecycleStatus extension={object.installedExtension} catalogExtension={object} />
   {:else}
     <span class="text-sm text-[var(--pd-content-text)]">—</span>
   {/if}

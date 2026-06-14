@@ -5,7 +5,11 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import type { Component, Snippet } from 'svelte';
 import { onDestroy, onMount, setContext } from 'svelte';
 
-import { closeOtherExtensionActionsMenus, registerExtensionActionsMenu } from './extension-actions-menu.svelte';
+import {
+  closeOtherExtensionActionsMenus,
+  registerExtensionActionsMenu,
+  setOpenExtensionActionsMenuId,
+} from './extension-actions-menu.svelte';
 import { EXTENSION_DROPDOWN_MENU_CONTEXT, type ExtensionDropdownMenuContext } from './extension-dropdown-menu-context';
 import ExtensionDropDownMenuItems from './ExtensionDropDownMenuItems.svelte';
 
@@ -56,6 +60,10 @@ function onButtonClick(e: MouseEvent): void {
   closeOtherExtensionActionsMenus(menuId);
   showMenu = !showMenu;
 }
+
+$effect(() => {
+  setOpenExtensionActionsMenuId(showMenu ? menuId : undefined);
+});
 </script>
 
 <svelte:window on:keyup={handleEscape} on:click={onWindowClick} />

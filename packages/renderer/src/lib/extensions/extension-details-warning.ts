@@ -16,11 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { expect, test } from 'vitest';
+export type ExtensionDetailsWarningSeverity = 'warning' | 'error';
 
-import { getPrototypeInstalledDemos, isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
+export interface ExtensionDetailsWarning {
+  key: string;
+  severity: ExtensionDetailsWarningSeverity;
+  title: string;
+  detail: string;
+  fix: string;
+}
 
-test('legacy demo helpers are disabled', () => {
-  expect(getPrototypeInstalledDemos()).toEqual([]);
-  expect(isPrototypeInstalledDemo('prototype-demo-test')).toBe(false);
-});
+export function formatExtensionDetailsWarningLine(warning: ExtensionDetailsWarning): string {
+  return `${warning.title}: ${warning.detail} ${warning.fix}`;
+}
+
+export function formatExtensionDetailsWarningTooltip(warning: ExtensionDetailsWarning): string {
+  return formatExtensionDetailsWarningLine(warning);
+}

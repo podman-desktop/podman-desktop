@@ -24,11 +24,8 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
-import {
-  arePrototypeInstalledDemosEnabled,
-  getPrototypeInstalledDemos,
-  isPrototypeInstalledDemo,
-} from './extension-prototype-installed-demos';
+import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
+import { applyPrototypeCatalogUseCaseOverlay, applyPrototypeUseCaseOverlays } from './extension-prototype-use-cases';
 
 export class ExtensionsUtils {
   extractExtensionDetail(
@@ -240,21 +237,15 @@ export class ExtensionsUtils {
   }
 
   /**
-   * Prototype helper (DTUX-2849): append demo installed extensions covering each origin
-   * and lifecycle state for design review.
+   * Prototype helper (DTUX-2849): overlay display states on real installed extensions.
    */
+  applyPrototypeUseCaseOverlays(extensions: CombinedExtensionInfoUI[]): CombinedExtensionInfoUI[] {
+    return applyPrototypeUseCaseOverlays(extensions);
+  }
+
+  /** @deprecated Fake demo rows are no longer merged. Applies use-case overlays only. */
   mergePrototypeInstalledDemos(extensions: CombinedExtensionInfoUI[]): CombinedExtensionInfoUI[] {
-    if (!arePrototypeInstalledDemosEnabled()) {
-      return extensions;
-    }
-
-    const existingIds = new Set(extensions.map(extension => extension.id));
-    const demos = getPrototypeInstalledDemos().filter(demo => !existingIds.has(demo.id));
-    if (demos.length === 0) {
-      return extensions;
-    }
-
-    return [...extensions, ...demos].sort((a, b) => (a.displayName || a.name).localeCompare(b.displayName || b.name));
+    return this.applyPrototypeUseCaseOverlays(extensions);
   }
 
   /**
@@ -322,13 +313,13 @@ export class ExtensionsUtils {
     const matchingCatalog = catalogExtensions.find(c => c.id === installed.id);
     if (matchingCatalog) {
       const [catalogInfo] = this.extractCatalogExtensions([matchingCatalog], featuredExtensions, [installed]);
-      return catalogInfo;
+      return applyPrototypeCatalogUseCaseOverlay(catalogInfo);
     }
 
     const publisherDisplayName = this.resolvePublisherDisplayName(installed, matchingCatalog?.publisherDisplayName);
     const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
 
-    return {
+    const baseInfo: CatalogExtensionInfoUI = {
       id: installed.id,
       displayName: installed.displayName || installed.name,
       isFeatured: false,
@@ -349,6 +340,35 @@ export class ExtensionsUtils {
       repositoryUrl: `https://github.com/podman-desktop/extensions/tree/main/extensions/${installed.id}`,
       installedExtension: installed,
     };
+
+    if (isPrototypeInstalledDemo(installed.id)) {
+      return baseInfo;
+    }
+
+    return applyPrototypeCatalogUseCaseOverlay(baseInfo);
+  }
+
+  buildCatalogExtensionInfoForId(
+    extensionId: string,
+    catalogExtensions: CatalogExtension[],
+    featuredExtensions: FeaturedExtension[],
+    installedExtensions: CombinedExtensionInfoUI[],
+  ): CatalogExtensionInfoUI | undefined {
+    const matchingCatalog = catalogExtensions.find(extension => extension.id === extensionId);
+    const installed = installedExtensions.find(extension => extension.id === extensionId);
+
+    if (!matchingCatalog && !installed) {
+      return undefined;
+    }
+
+    let catalogInfo: CatalogExtensionInfoUI;
+    if (matchingCatalog) {
+      [catalogInfo] = this.extractCatalogExtensions([matchingCatalog], featuredExtensions, installedExtensions);
+    } else {
+      catalogInfo = this.buildCatalogInfoForInstalled(installed!, catalogExtensions, featuredExtensions);
+    }
+
+    return this.ensurePrototypeUpdateDemo([catalogInfo])[0];
   }
 
   filterInstalledExtensions(extensions: CombinedExtensionInfoUI[], searchTerm: string): CombinedExtensionInfoUI[] {
