@@ -74,5 +74,5 @@ test('Expect to see a div with extension id title', async () => {
   // get role Extension Badge
   const badge = await findByRole('region', { name: 'myExtensionId' });
   expect(badge).toBeInTheDocument();
-  expect(badge).toHaveTextContent('built-in');
+  expect(badge).toHaveTextContent('Built-in extension');
 });

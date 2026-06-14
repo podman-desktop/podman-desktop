@@ -18,19 +18,16 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });
-  Object.defineProperty(window, 'refreshCatalogExtensions', { value: vi.fn() });
-});
-
-beforeEach(() => {
-  vi.resetAllMocks();
+  Object.defineProperty(window, 'openExternal', { value: vi.fn() });
+  Object.defineProperty(window, 'showMessageBox', { value: vi.fn().mockResolvedValue({ response: 0 }) });
 });
 
 const extensionA: CatalogExtensionInfoUI = {
@@ -45,6 +42,10 @@ const extensionA: CatalogExtensionInfoUI = {
   shortDescription: 'my description1',
   categories: [],
   keywords: [],
+  availableVersions: [],
+  hasUpdate: false,
+  isVerified: false,
+  isSupportedByRedHat: false,
 };
 
 const extensionB: CatalogExtensionInfoUI = {
@@ -59,61 +60,41 @@ const extensionB: CatalogExtensionInfoUI = {
   shortDescription: 'my description2',
   categories: [],
   keywords: [],
+  availableVersions: [],
+  hasUpdate: false,
+  isVerified: false,
+  isSupportedByRedHat: false,
 };
 test('Check with empty', async () => {
   render(CatalogExtensionList, { catalogExtensions: [] });
 
-  // no 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
   expect(availableExtensions).not.toBeInTheDocument();
 
-  // check we have the empty screen and the button to refresh the catalog
   const emptyScreen = screen.getByText('No extensions in the catalog');
   expect(emptyScreen).toBeInTheDocument();
 
-  const refreshButton = screen.getByRole('button', { name: 'Refresh the catalog' });
-  expect(refreshButton).toBeInTheDocument();
-
-  // make the refresh throwing an error
-  vi.mocked(window.refreshCatalogExtensions).mockRejectedValue(new Error('fake error'));
-
-  // click on the button
-  await fireEvent.click(refreshButton);
-
-  // check the function was called
-  expect(window.refreshCatalogExtensions).toHaveBeenCalled();
-
-  // check error message is displayed
-  expect(window.showMessageBox).toHaveBeenCalledWith({
-    detail: 'Error: fake error',
-    message: 'Failed to refresh the catalog',
-    title: 'Refresh Catalog Failed',
-    type: 'error',
-    buttons: ['Dismiss'],
-  });
+  const refreshButton = screen.queryByRole('button', { name: 'Refresh the catalog' });
+  expect(refreshButton).not.toBeInTheDocument();
 });
 
 test('Check with 2 extensions', async () => {
   render(CatalogExtensionList, { catalogExtensions: [extensionA, extensionB] });
 
-  // 'Available extensions' text
   const availableExtensions = screen.queryByText('Available extensions');
   expect(availableExtensions).toBeInTheDocument();
 
-  // get region role with text 'Catalog Extensions'
   const region = screen.getByRole('region', { name: 'Catalog Extensions' });
   expect(region).toBeInTheDocument();
 
-  // get div using aria-label 'This is the display name1'
   const extensionWidgetA = screen.getByRole('group', { name: 'This is the display name1' });
   expect(extensionWidgetA).toBeInTheDocument();
 
   const extensionWidgetB = screen.getByRole('group', { name: 'This is the display name2' });
   expect(extensionWidgetB).toBeInTheDocument();
 
-  // expect to see the refresh button
-  const refreshButton = screen.getByRole('button', { name: 'Refresh the catalog' });
-  expect(refreshButton).toBeInTheDocument();
+  const refreshButton = screen.queryByRole('button', { name: 'Refresh the catalog' });
+  expect(refreshButton).not.toBeInTheDocument();
 });
 
 test('non default title', async () => {

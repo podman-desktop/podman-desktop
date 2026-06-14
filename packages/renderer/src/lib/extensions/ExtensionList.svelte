@@ -1,6 +1,7 @@
 <script lang="ts">
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
+import { router } from 'tinro';
 
 import type { ExtensionListScreen } from '/@/lib/extensions/extension-list';
 import InstalledExtensionList from '/@/lib/extensions/InstalledExtensionList.svelte';
@@ -13,6 +14,7 @@ import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
+import { buildExtensionsListPath } from './extension-list';
 import { ExtensionsUtils } from './extensions-utils';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
 
@@ -35,19 +37,25 @@ let enableLocalExtensions = $derived(
 
 let enableCatalog = $derived((await window.getConfigurationValue('extensions.catalog.enabled')) ?? true);
 
-const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
-  extensionsUtils.filterInstalledExtensions($combinedInstalledExtensions, searchTerm),
+const installedExtensionsWithDemos: CombinedExtensionInfoUI[] = $derived(
+  extensionsUtils.mergePrototypeInstalledDemos($combinedInstalledExtensions),
 );
 
-let filteredInstalledItems: number = $derived($combinedInstalledExtensions.length - filteredInstalledExtensions.length);
+const filteredInstalledExtensions: CombinedExtensionInfoUI[] = $derived(
+  extensionsUtils.filterInstalledExtensions(installedExtensionsWithDemos, searchTerm),
+);
+
+let filteredInstalledItems: number = $derived(installedExtensionsWithDemos.length - filteredInstalledExtensions.length);
 // combine data from featured extensions and catalog extension
 // need to add in the catalog extension a flag to know if extension is featured or not
 // and featured extensions need to be displayed first
 const enhancedCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
-  extensionsUtils.extractCatalogExtensions(
-    $catalogExtensionInfos,
-    $featuredExtensionInfos,
-    $combinedInstalledExtensions,
+  extensionsUtils.ensurePrototypeUpdateDemo(
+    extensionsUtils.extractCatalogExtensions(
+      $catalogExtensionInfos,
+      $featuredExtensionInfos,
+      installedExtensionsWithDemos,
+    ),
   ),
 );
 
@@ -63,12 +71,13 @@ function closeModal(): void {
 
 let installManualImageModal: boolean = $state(false);
 
-function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void {
+function changeScreen(newScreen: ExtensionListScreen): void {
   if (screen === newScreen) {
     return;
   }
   screen = newScreen;
   searchTerm = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS).terms.join(' ');
+  router.goto(buildExtensionsListPath(newScreen, searchTerm));
 }
 </script>
 
@@ -89,7 +98,7 @@ function changeScreen(newScreen: 'installed' | 'catalog' | 'development'): void 
     <!-- display filter out items-->
     {#if filteredInstalledItems > 0 && screen === 'installed'}
       <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredInstalledItems} items of {$combinedInstalledExtensions.length}
+        Filtered out {filteredInstalledItems} items of {installedExtensionsWithDemos.length}
       </div>
     {:else if filteredCatalogItems > 0 && screen === 'catalog'}
       <div class="text-sm text-[var(--pd-content-text)]">

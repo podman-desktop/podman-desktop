@@ -22,8 +22,13 @@ import type { FeaturedExtension } from '@podman-desktop/core-api/featured';
 import { SearchTermParser } from '/@/lib/search/search-term-parser';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
-import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import {
+  arePrototypeInstalledDemosEnabled,
+  getPrototypeInstalledDemos,
+  isPrototypeInstalledDemo,
+} from './extension-prototype-installed-demos';
 
 export class ExtensionsUtils {
   extractExtensionDetail(
@@ -106,11 +111,10 @@ export class ExtensionsUtils {
       releaseDate = lastUpdated.toISOString().split('T')[0];
     }
 
-    let publisherDisplayName = matchingCatalogExtension?.publisherDisplayName ?? 'N/A';
-
-    if (matchingInstalledExtension && !matchingInstalledExtension.removable) {
-      publisherDisplayName = 'Pre-installed';
-    }
+    const publisherDisplayName = this.resolvePublisherDisplayName(
+      matchingInstalledExtension,
+      matchingCatalogExtension?.publisherDisplayName,
+    );
 
     const categories: string[] = matchingCatalogExtension?.categories ?? [];
     const matchingInstalledExtensionVersion = matchingInstalledExtension?.version
@@ -177,6 +181,18 @@ export class ExtensionsUtils {
         const installedVersion = installed?.version;
         const categories = catalogExtension.categories;
         const keywords = catalogExtension.keywords;
+        const availableVersions = nonPreviewVersions.map(version => ({
+          version: version.version,
+          ociUri: version.ociUri,
+          preview: version.preview,
+          lastUpdated: version.lastUpdated,
+        }));
+        const hasUpdate = isInstalled && !!installedVersion && !!fetchVersion && installedVersion !== fetchVersion;
+        const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
+        const isVerified =
+          isSupportedByRedHat || categories.some(category => category.toLowerCase().includes('verified'));
+        const repositoryUrl = `https://github.com/podman-desktop/extensions/tree/main/extensions/${catalogExtension.extensionName}`;
+
         return {
           id: catalogExtension.id,
           displayName: catalogExtension.displayName,
@@ -191,6 +207,12 @@ export class ExtensionsUtils {
           shortDescription,
           categories,
           keywords,
+          availableVersions,
+          hasUpdate,
+          isVerified,
+          isSupportedByRedHat,
+          repositoryUrl,
+          installedExtension: installed,
         };
       });
 
@@ -207,6 +229,118 @@ export class ExtensionsUtils {
     return values;
   }
 
+  resolvePublisherDisplayName(installed?: CombinedExtensionInfoUI, catalogPublisher?: string): string {
+    if (installed?.publisher) {
+      return installed.publisher;
+    }
+    if (catalogPublisher) {
+      return catalogPublisher;
+    }
+    return 'Unknown';
+  }
+
+  /**
+   * Prototype helper (DTUX-2849): append demo installed extensions covering each origin
+   * and lifecycle state for design review.
+   */
+  mergePrototypeInstalledDemos(extensions: CombinedExtensionInfoUI[]): CombinedExtensionInfoUI[] {
+    if (!arePrototypeInstalledDemosEnabled()) {
+      return extensions;
+    }
+
+    const existingIds = new Set(extensions.map(extension => extension.id));
+    const demos = getPrototypeInstalledDemos().filter(demo => !existingIds.has(demo.id));
+    if (demos.length === 0) {
+      return extensions;
+    }
+
+    return [...extensions, ...demos].sort((a, b) => (a.displayName || a.name).localeCompare(b.displayName || b.name));
+  }
+
+  /**
+   * Prototype helper (DTUX-2849): ensure at least one installed extension shows an update
+   * when no real version mismatch exists in catalog data.
+   */
+  ensurePrototypeUpdateDemo(extensions: CatalogExtensionInfoUI[]): CatalogExtensionInfoUI[] {
+    const realExtensions = extensions.filter(extension => !isPrototypeInstalledDemo(extension.id));
+    if (realExtensions.some(extension => extension.hasUpdate)) {
+      return extensions;
+    }
+
+    const candidate = realExtensions.find(extension => extension.isInstalled && extension.installedVersion);
+    if (!candidate) {
+      return extensions;
+    }
+
+    return extensions.map(extension => {
+      if (extension.id !== candidate.id) {
+        return extension;
+      }
+      return this.withPrototypeUpdate(extension);
+    });
+  }
+
+  withPrototypeUpdate(extension: CatalogExtensionInfoUI): CatalogExtensionInfoUI {
+    const installedVersion = extension.installedVersion ?? extension.fetchVersion;
+    const fetchVersion =
+      extension.fetchVersion && extension.fetchVersion !== installedVersion
+        ? extension.fetchVersion
+        : this.bumpPatchVersion(installedVersion);
+
+    return {
+      ...extension,
+      hasUpdate: true,
+      installedVersion,
+      fetchVersion,
+    };
+  }
+
+  private bumpPatchVersion(version: string): string {
+    const parts = version.split('.').map(part => parseInt(part, 10));
+    if (parts.length === 0 || parts.some(Number.isNaN)) {
+      return version;
+    }
+    parts[parts.length - 1] += 1;
+    return parts.join('.');
+  }
+
+  buildCatalogInfoForInstalled(
+    installed: CombinedExtensionInfoUI,
+    catalogExtensions: CatalogExtension[],
+    featuredExtensions: FeaturedExtension[] = [],
+  ): CatalogExtensionInfoUI {
+    const matchingCatalog = catalogExtensions.find(c => c.id === installed.id);
+    if (matchingCatalog) {
+      const [catalogInfo] = this.extractCatalogExtensions([matchingCatalog], featuredExtensions, [installed]);
+      return catalogInfo;
+    }
+
+    const publisherDisplayName = this.resolvePublisherDisplayName(installed, matchingCatalog?.publisherDisplayName);
+    const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
+
+    return {
+      id: installed.id,
+      displayName: installed.displayName || installed.name,
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: installed.version ?? '',
+      iconHref: typeof installed.icon === 'string' ? installed.icon : undefined,
+      publisherDisplayName,
+      isInstalled: true,
+      installedVersion: installed.version,
+      shortDescription: installed.description,
+      categories: [],
+      keywords: [],
+      availableVersions: installed.version ? [{ version: installed.version, ociUri: '', preview: false }] : [],
+      hasUpdate: false,
+      isVerified: isSupportedByRedHat,
+      isSupportedByRedHat,
+      repositoryUrl: `https://github.com/podman-desktop/extensions/tree/main/extensions/${installed.id}`,
+      installedExtension: installed,
+    };
+  }
+
   filterInstalledExtensions(extensions: CombinedExtensionInfoUI[], searchTerm: string): CombinedExtensionInfoUI[] {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return extensions.filter(extension => {
@@ -216,14 +350,24 @@ export class ExtensionsUtils {
 
   static readonly CATALOG_FILTERS = ['category', 'keyword', 'is', 'not'] as const;
 
-  filterCatalogExtensions(extensions: CatalogExtensionInfoUI[], searchTerm: string): CatalogExtensionInfoUI[] {
+  filterCatalogExtensions(
+    extensions: CatalogExtensionInfoUI[],
+    searchTerm: string,
+    listFilters: CatalogListFilters = {},
+  ): CatalogExtensionInfoUI[] {
     const parsed = new SearchTermParser(searchTerm, ExtensionsUtils.CATALOG_FILTERS);
     const terms = parsed.terms;
     const categories = parsed.getFilter('category');
     const keywords = parsed.getFilter('keyword');
     const isValues = parsed.getFilter('is');
     const notValues = parsed.getFilter('not');
-    const installed = isValues.includes('installed') ? true : notValues.includes('installed') ? false : undefined;
+    const installedFromSearch = isValues.includes('installed')
+      ? true
+      : notValues.includes('installed')
+        ? false
+        : undefined;
+    const installed = listFilters.installed ?? installedFromSearch;
+
     return extensions.filter(extension => {
       return (
         (terms.length === 0 ||
@@ -234,7 +378,10 @@ export class ExtensionsUtils {
           categories.every(category => extension.categories.map(c => c.toLowerCase()).includes(category))) &&
         (keywords.length === 0 ||
           keywords.every(keyword => extension.keywords.map(k => k.toLowerCase()).includes(keyword))) &&
-        (installed === undefined || installed === extension.isInstalled)
+        (installed === undefined || installed === extension.isInstalled) &&
+        (listFilters.verified !== true || extension.isVerified) &&
+        (listFilters.hasUpdate !== true || extension.hasUpdate) &&
+        (listFilters.featured !== true || extension.isFeatured)
       );
     });
   }

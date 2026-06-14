@@ -25,6 +25,40 @@ interface ExtensionListRequest {
   screen: ExtensionListScreen;
 }
 
+interface ExtensionDetailsRequest {
+  returnScreen: ExtensionListScreen;
+}
+
+export function buildExtensionsListPath(screen: ExtensionListScreen = 'installed', searchTerm = ''): string {
+  const params = new URLSearchParams();
+  if (screen !== 'installed') {
+    params.set('screen', screen);
+  }
+  if (searchTerm) {
+    params.set('searchTerm', searchTerm);
+  }
+  const query = params.toString();
+  return query ? `/extensions?${query}` : '/extensions/';
+}
+
+export function buildExtensionDetailsPath(id: string, returnScreen: ExtensionListScreen = 'installed'): string {
+  const params = new URLSearchParams();
+  if (returnScreen !== 'installed') {
+    params.set('returnScreen', returnScreen);
+  }
+  const query = params.toString();
+  const path = `/extensions/details/${encodeURIComponent(id)}/`;
+  return query ? `${path}?${query}` : path;
+}
+
+export function parseExtensionDetailsRequest(request: { query?: Record<string, string> }): ExtensionDetailsRequest {
+  return {
+    returnScreen: screens.includes(request.query?.returnScreen as ExtensionListScreen)
+      ? (request.query?.returnScreen as ExtensionListScreen)
+      : 'installed',
+  };
+}
+
 export function parseExtensionListRequest(request: { query?: Record<string, string> }): ExtensionListRequest {
   return {
     searchTerm: request.query?.searchTerm ? decodeURIComponent(request.query.searchTerm) : '',

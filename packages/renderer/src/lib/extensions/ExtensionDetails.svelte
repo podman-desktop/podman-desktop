@@ -11,6 +11,7 @@ import { combinedInstalledExtensions } from '/@/stores/all-installed-extensions'
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { buildExtensionsListPath, type ExtensionListScreen } from './extension-list';
 import ExtensionBadge from './ExtensionBadge.svelte';
 import ExtensionDetailsError from './ExtensionDetailsError.svelte';
 import ExtensionDetailsReadme from './ExtensionDetailsReadme.svelte';
@@ -19,6 +20,9 @@ import { ExtensionsUtils } from './extensions-utils';
 import InstalledExtensionActions from './InstalledExtensionActions.svelte';
 
 export let extensionId: string;
+export let returnScreen: ExtensionListScreen = 'installed';
+
+const returnPath = buildExtensionsListPath(returnScreen);
 
 let screen: 'README' | 'ERROR' = 'README';
 let detailsPage: DetailsPage;
@@ -39,7 +43,11 @@ $: extension = derived(
 </script>
 
 {#if $extension}
-  <DetailsPage title="{$extension.displayName} extension" subtitle={$extension.description} bind:this={detailsPage}>
+  <DetailsPage
+    title="{$extension.displayName} extension"
+    subtitle={$extension.description}
+    {returnPath}
+    bind:this={detailsPage}>
     {#snippet iconSnippet()}
       <div class="flex flex-col mt-1 items-baseline w-8">
         <div class="w-8 min-h-8">
@@ -105,7 +113,7 @@ $: extension = derived(
     {/snippet}
   </DetailsPage>
 {:else}
-  <DetailsPage title="{extensionId} extension" bind:this={detailsPage}>
+  <DetailsPage title="{extensionId} extension" {returnPath} bind:this={detailsPage}>
     {#snippet contentSnippet()}
       <div class="flex w-full h-full">
         <EmptyScreen

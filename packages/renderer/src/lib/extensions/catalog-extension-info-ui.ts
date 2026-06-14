@@ -16,6 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+
+export interface CatalogExtensionVersionUI {
+  version: string;
+  ociUri: string;
+  preview: boolean;
+  lastUpdated?: Date;
+}
+
 export interface CatalogExtensionInfoUI {
   id: string;
   displayName: string;
@@ -30,4 +39,19 @@ export interface CatalogExtensionInfoUI {
   shortDescription: string;
   categories: string[];
   keywords: string[];
+  availableVersions: CatalogExtensionVersionUI[];
+  hasUpdate: boolean;
+  isVerified: boolean;
+  isSupportedByRedHat: boolean;
+  repositoryUrl?: string;
+  installedExtension?: CombinedExtensionInfoUI;
 }
+
+export interface CatalogListFilters {
+  installed?: boolean;
+  verified?: boolean;
+  hasUpdate?: boolean;
+  featured?: boolean;
+}
+
+export type CatalogViewMode = 'grid' | 'table';

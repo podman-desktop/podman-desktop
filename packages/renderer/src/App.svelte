@@ -6,7 +6,7 @@ import type { KubernetesNavigationRequest, NavigationRequest } from '@podman-des
 import { tablePersistence } from '@podman-desktop/ui-svelte';
 import { router } from 'tinro';
 
-import { parseExtensionListRequest } from '/@/lib/extensions/extension-list';
+import { parseExtensionDetailsRequest, parseExtensionListRequest } from '/@/lib/extensions/extension-list';
 import KubernetesRoot from '/@/lib/kube/KubernetesRoot.svelte';
 import PinActions from '/@/lib/statusbar/PinActions.svelte';
 import { handleNavigation } from '/@/navigation';
@@ -451,7 +451,8 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             />
           </Route>
           <Route path="/details/:id/*" breadcrumb="Extension Details" let:meta navigationHint="details">
-            <ExtensionDetails extensionId={meta.params.id} />
+            {@const detailsRequest = parseExtensionDetailsRequest(meta)}
+            <ExtensionDetails extensionId={meta.params.id} returnScreen={detailsRequest.returnScreen} />
           </Route>
         </Route>
       </div>

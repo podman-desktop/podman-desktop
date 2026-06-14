@@ -18,7 +18,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { parseExtensionListRequest } from './extension-list';
+import {
+  buildExtensionDetailsPath,
+  buildExtensionsListPath,
+  parseExtensionDetailsRequest,
+  parseExtensionListRequest,
+} from './extension-list';
 
 describe('parseExtensionListRequest', () => {
   it('should return the correct query params when specified correctly', () => {
@@ -37,5 +42,21 @@ describe('parseExtensionListRequest', () => {
     const request = {};
     const result = parseExtensionListRequest(request);
     expect(result).toEqual({ searchTerm: '', screen: 'installed' });
+  });
+});
+
+describe('extension navigation helpers', () => {
+  it('builds catalog list path with screen query', () => {
+    expect(buildExtensionsListPath('catalog')).toBe('/extensions?screen=catalog');
+  });
+
+  it('builds details path with return screen query', () => {
+    expect(buildExtensionDetailsPath('my-id', 'catalog')).toBe('/extensions/details/my-id/?returnScreen=catalog');
+  });
+
+  it('parses return screen from details request', () => {
+    expect(parseExtensionDetailsRequest({ query: { returnScreen: 'catalog' } })).toEqual({
+      returnScreen: 'catalog',
+    });
   });
 });

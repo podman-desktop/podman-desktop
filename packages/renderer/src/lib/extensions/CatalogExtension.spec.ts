@@ -30,13 +30,15 @@ vi.mock(import('tinro'));
 
 beforeAll(() => {
   Object.defineProperty(window, 'extensionInstallFromImage', { value: vi.fn() });
+  Object.defineProperty(window, 'openExternal', { value: vi.fn() });
+  Object.defineProperty(window, 'showMessageBox', { value: vi.fn().mockResolvedValue({ response: 0 }) });
 });
 
 beforeEach(() => {
   vi.resetAllMocks();
 });
 
-test('Expect to have more details working', async () => {
+test('Expect card click opens extension details', async () => {
   const catalogExtensionUI: CatalogExtensionInfoUI = {
     id: 'myId',
     displayName: 'This is the display name',
@@ -49,28 +51,23 @@ test('Expect to have more details working', async () => {
     shortDescription: 'my description',
     categories: [],
     keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
   };
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  // get div using aria-label 'This is the display name'
   const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
-
   expect(extensionWidget).toBeInTheDocument();
 
-  // check publisher display name is inside
   const publisher = screen.getByText('Foo publisher');
   expect(publisher).toBeInTheDocument();
 
-  // get more details button
-  const detailsButton = screen.getByRole('button', { name: 'This is the display name details' });
-  expect(detailsButton).toBeInTheDocument();
+  await fireEvent.click(extensionWidget);
 
-  // click the button
-  await fireEvent.click(detailsButton);
-
-  // expect the router to be called
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/');
+  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/extensions/details/myId/?returnScreen=catalog');
 });
 
 test('Expect to see featured and fetch button', async () => {
@@ -86,6 +83,10 @@ test('Expect to see featured and fetch button', async () => {
     shortDescription: 'my description',
     categories: [],
     keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
   };
 
   render(CatalogExtension, { catalogExtensionUI });
@@ -129,6 +130,10 @@ test('Expect to have version of installed one', async () => {
     shortDescription: 'my description',
     categories: [],
     keywords: [],
+    availableVersions: [],
+    hasUpdate: false,
+    isVerified: false,
+    isSupportedByRedHat: false,
   };
 
   render(CatalogExtension, { catalogExtensionUI });

@@ -377,7 +377,7 @@ async function resetColumns(): Promise<void> {
   <!-- Table header -->
   <div role="rowgroup" class="relative">
     <div
-      class="grid grid-table gap-x-0.5 h-7 sticky top-0 text-[var(--pd-table-header-text)] uppercase z-2"
+      class="grid grid-table gap-x-0.5 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
       role="row">
       <div class="whitespace-nowrap justify-self-start" role="columnheader"></div>
       {#if row.info.selectable}

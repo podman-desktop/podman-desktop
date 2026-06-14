@@ -55,13 +55,13 @@ test('Expect to have badge for pd  built-in Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  const visibleLabel = screen.getByText('built-in Extension');
+  const visibleLabel = screen.getByText('Built-in extension');
   expect(visibleLabel).toBeInTheDocument();
 
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');
   await fireEvent.mouseEnter(tooltipTrigger);
 
-  const labels = await screen.findAllByText('built-in Extension');
+  const labels = await screen.findAllByText('Built-in extension');
   expect(labels).toHaveLength(2);
   expect(labels[0]).toBeInTheDocument();
   expect(labels[1]).toBeInTheDocument();
@@ -75,7 +75,7 @@ test('Expect to have badge for devMode Extension', async () => {
   };
   render(ExtensionBadge, { extension });
 
-  const visibleLabel = screen.getByText('devMode Extension');
+  const visibleLabel = screen.getByText('DevMode extension');
   expect(visibleLabel).toBeInTheDocument();
 
   const tooltipTrigger = screen.getByTestId('tooltip-trigger');

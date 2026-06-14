@@ -20,17 +20,23 @@ import '@testing-library/jest-dom/vitest';
 
 import type { CatalogExtension } from '@podman-desktop/core-api/extension-catalog';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 import { type CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
 import { extensionInfos } from '/@/stores/extensions';
 
+import { setPrototypeInstalledDemosEnabled } from './extension-prototype-installed-demos';
 import ExtensionList from './ExtensionList.svelte';
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(window.getConfigurationValue).mockResolvedValue(true);
+  setPrototypeInstalledDemosEnabled(false);
+});
+
+afterEach(() => {
+  setPrototypeInstalledDemosEnabled(true);
 });
 
 export const aFakeExtension: CatalogExtension = {
@@ -107,7 +113,7 @@ test('Expect to see extensions', async () => {
   });
 
   // get first extension
-  const myExtension1 = screen.getByRole('region', { name: 'idAInstalled' });
+  const myExtension1 = screen.getByRole('button', { name: 'A installed Extension extension details' });
   expect(myExtension1).toBeInTheDocument();
 
   // second extension should not be there as only in catalog (not installed)
@@ -191,7 +197,7 @@ test('Search extension page searches also description', async () => {
   render(ExtensionList, { searchTerm: 'bar' });
 
   await vi.waitFor(() => {
-    expect(screen.getByRole('region', { name: 'idAInstalled' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'A installed Extension extension details' })).toBeInTheDocument();
   });
 
   // second extension should not be there as only in catalog (not installed) and doesn't have "bar" in the description
@@ -209,7 +215,7 @@ test('Search extension page searches also description', async () => {
   });
 
   // The extension should not be there as it doesn't have "foo" in the description
-  const myExtension2 = screen.queryByRole('region', { name: 'idAInstalled' });
+  const myExtension2 = screen.queryByRole('button', { name: 'A installed Extension extension details' });
   expect(myExtension2).not.toBeInTheDocument();
 });
 

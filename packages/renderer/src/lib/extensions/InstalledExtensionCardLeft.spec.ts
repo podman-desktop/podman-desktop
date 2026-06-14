@@ -61,7 +61,7 @@ test('Expect to see icon, link, badge and actions', async () => {
   // get role Extension Badge
   const badge = await findByRole('region', { name: 'Extension Badge' });
   expect(badge).toBeInTheDocument();
-  expect(badge).toHaveTextContent('built-in');
+  expect(badge).toHaveTextContent('Built-in extension');
 
   // check icon
   const icon = await findByRole('img');

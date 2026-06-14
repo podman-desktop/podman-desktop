@@ -9,6 +9,7 @@ interface Props {
   title: string;
   titleDetail?: string;
   subtitle?: string;
+  returnPath?: string;
 
   contentSnippet?: Snippet;
   tabsSnippet?: Snippet;
@@ -22,6 +23,7 @@ const {
   title,
   titleDetail = undefined,
   subtitle = undefined,
+  returnPath = undefined,
   contentSnippet: localContentSnippet,
   tabsSnippet: localTabsSnippet,
   iconSnippet: localIconSnippet,
@@ -31,7 +33,7 @@ const {
 }: Props = $props();
 
 export function close(): void {
-  router.goto($lastPage.path);
+  router.goto(returnPath ?? $lastPage.path);
 }
 </script>
 

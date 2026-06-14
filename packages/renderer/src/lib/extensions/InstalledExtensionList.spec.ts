@@ -19,11 +19,20 @@
 import '@testing-library/jest-dom/vitest';
 
 import { render } from '@testing-library/svelte';
-import { expect, test } from 'vitest';
+import { beforeAll, expect, test, vi } from 'vitest';
 
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
+import { catalogExtensionInfos } from '/@/stores/catalog-extensions';
+import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import InstalledExtensionList from './InstalledExtensionList.svelte';
+
+beforeAll(() => {
+  Object.defineProperty(window, 'openExternal', { value: vi.fn() });
+  Object.defineProperty(window, 'showMessageBox', { value: vi.fn().mockResolvedValue({ response: 0 }) });
+  catalogExtensionInfos.set([]);
+  featuredExtensionInfos.set([]);
+});
 
 test('Expect to see each extension', async () => {
   const extension1: CombinedExtensionInfoUI = {
@@ -59,11 +68,9 @@ test('Expect to see each extension', async () => {
   };
   const { findByRole } = render(InstalledExtensionList, { extensionInfos: [extension1, extension2] });
 
-  // get first extension
-  const myExtension1 = await findByRole('region', { name: 'myExtensionId1' });
+  const myExtension1 = await findByRole('button', { name: 'foo1 extension details' });
   expect(myExtension1).toBeInTheDocument();
 
-  // get second extension
-  const myExtension2 = await findByRole('region', { name: 'myExtensionId2' });
+  const myExtension2 = await findByRole('button', { name: 'foo2 extension details' });
   expect(myExtension2).toBeInTheDocument();
 });
