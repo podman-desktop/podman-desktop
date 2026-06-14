@@ -16,11 +16,11 @@ import { derived, type Unsubscriber } from 'svelte/store';
 import { router } from 'tinro';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
+import { confirmExtensionAutoUpdateChange } from '/@/lib/extensions/extension-auto-update-confirm';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import { confirmExtensionAutoUpdateChange } from './extension-auto-update-confirm';
 import { buildExtensionBugReportUrl } from './extension-badge-styles';
 import { isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';

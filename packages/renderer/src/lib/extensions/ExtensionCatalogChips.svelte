@@ -18,22 +18,14 @@ let { extension, class: className = '' }: Props = $props();
   {#if extension.isFeatured}
     <Badge
       label="Featured"
-      color={EXTENSION_CHIP_COLORS.featured}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.featured} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
   {#if isNewlyInstalled(extension.id)}
     <Badge
       label="New"
-      color={EXTENSION_CHIP_COLORS.new}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.new} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
-  {#if !extension.isSupportedByRedHat}
-    <Badge
-      label="Community"
-      color={EXTENSION_CHIP_COLORS.community}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-  {/if}
-  {#if extension.isVerified}
+  {#if extension.isVerified && extension.isSupportedByRedHat}
     <ExtensionVerifiedLabel isSupportedByRedHat={extension.isSupportedByRedHat} class={EXTENSION_CHIP_BADGE_CLASS} />
   {/if}
 </div>

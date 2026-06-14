@@ -9,6 +9,7 @@ import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import ExtensionCatalogChips from './ExtensionCatalogChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
+import ExtensionOriginChips from './ExtensionOriginChips.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
 import ExtensionUpdateVersionLink from './ExtensionUpdateVersionLink.svelte';
 import ExtensionVersionUpdateStatus from './ExtensionVersionUpdateStatus.svelte';
@@ -42,13 +43,12 @@ function handleChangeVersion(preferredVersion?: string): void {
   role="group"
   aria-label={catalogExtensionUI.displayName}
   onclick={handleCardClick}>
-  <div class="px-3 pt-3 pb-2 flex flex-col gap-2">
+  <div class="px-3 pt-3 pb-1 flex flex-col gap-1.5">
     <div class="flex items-center gap-x-2">
-      <ExtensionCatalogChips extension={catalogExtensionUI} class="min-w-0" />
-      {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedExtension}
-        <ExtensionLifecycleStatus extension={catalogExtensionUI.installedExtension} class="shrink-0" />
-      {/if}
-      <div class="flex-1"></div>
+      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+        <ExtensionCatalogChips extension={catalogExtensionUI} />
+        <ExtensionOriginChips extension={catalogExtensionUI} />
+      </div>
       <div class="flex shrink-0 items-center gap-1">
         {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
@@ -71,11 +71,14 @@ function handleChangeVersion(preferredVersion?: string): void {
         </div>
         <ExtensionTruncatedText
           text={catalogExtensionUI.publisherDisplayName}
-          class="pt-1 text-sm text-[var(--pd-table-header-text)]" />
+          class="pt-0.5 text-sm text-[var(--pd-table-header-text)]" />
         <ExtensionTruncatedText
           text={catalogExtensionUI.shortDescription}
-          class="pt-1 text-sm text-[var(--pd-content-text)]" />
-        <div class="flex flex-wrap items-center gap-x-2 pt-1 text-sm text-[var(--pd-content-text)]">
+          class="pt-0.5 text-sm text-[var(--pd-content-text)]" />
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 text-sm text-[var(--pd-content-text)]">
+          {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedExtension}
+            <ExtensionLifecycleStatus extension={catalogExtensionUI.installedExtension} class="shrink-0" />
+          {/if}
           {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedVersion}
             <span>v{catalogExtensionUI.installedVersion}</span>
             <ExtensionUpdateVersionLink extension={catalogExtensionUI} onUpdate={handleChangeVersion} />

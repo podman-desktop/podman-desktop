@@ -20,19 +20,16 @@ const showUpdate = $derived(extensionRequiresManualUpdate(extension));
   {#if extension.isFeatured}
     <Badge
       label="Featured"
-      color={EXTENSION_CHIP_COLORS.featured}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.featured} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
   {#if isNewlyInstalled(extension.id)}
     <Badge
       label="New"
-      color={EXTENSION_CHIP_COLORS.new}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.new} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
   {#if showUpdate}
     <Badge
       label="Update"
-      color={EXTENSION_CHIP_COLORS.update}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.update} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   {/if}
 </div>

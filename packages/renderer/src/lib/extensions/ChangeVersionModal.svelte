@@ -4,10 +4,10 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { confirmExtensionAutoUpdateChange } from '/@/lib/extensions/extension-auto-update-confirm';
 import SlideToggle from '/@/lib/ui/SlideToggle.svelte';
 
 import type { CatalogExtensionInfoUI, CatalogExtensionVersionUI } from './catalog-extension-info-ui';
-import { confirmExtensionAutoUpdateChange } from './extension-auto-update-confirm';
 import { isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { applyExtensionVersionChange, normalizeVersionValue } from './extension-version-update.svelte';
 

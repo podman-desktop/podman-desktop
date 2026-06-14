@@ -29,28 +29,24 @@ const installed = $derived(extension.installedExtension);
     <Tooltip right tip="Docker Desktop extension">
       <Badge
         label="Docker Desktop extension"
-        color={EXTENSION_CHIP_COLORS.dockerDesktop}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.dockerDesktopText}`} />
+        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.dockerDesktop} ${EXTENSION_CHIP_COLORS.dockerDesktopText}`} />
     </Tooltip>
   {:else if installed?.devMode}
     <Tooltip right tip="In Development Mode extension">
       <Badge
         label="DevMode extension"
-        color={EXTENSION_CHIP_COLORS.devMode}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.devMode} ${EXTENSION_CHIP_TEXT_CLASS}`} />
     </Tooltip>
   {:else if installed && !installed.removable}
     <Tooltip right tip={EXTENSION_BUILTIN_CHIP_TOOLTIP}>
       <Badge
         label={EXTENSION_BUILTIN_CHIP_LABEL}
-        color={EXTENSION_CHIP_COLORS.builtin}
-        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
+        class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
     </Tooltip>
   {:else}
     <Badge
       label="Community"
-      color={EXTENSION_CHIP_COLORS.communityOrigin}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.communityOrigin} ${EXTENSION_CHIP_TEXT_CLASS}`} />
     {#if extension.isVerified}
       <ExtensionVerifiedLabel isSupportedByRedHat={extension.isSupportedByRedHat} class={EXTENSION_CHIP_BADGE_CLASS} />
     {/if}

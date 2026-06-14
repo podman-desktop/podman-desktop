@@ -19,7 +19,6 @@ const tooltip = $derived(isSupportedByRedHat ? 'Supported by Red Hat' : 'Verifie
   <span class="inline-flex cursor-help {className}">
     <Badge
       label="Verified"
-      color={EXTENSION_CHIP_COLORS.verified}
-      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
+      class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.verified} ${EXTENSION_CHIP_TEXT_CLASS}`} />
   </span>
 </Tooltip>
