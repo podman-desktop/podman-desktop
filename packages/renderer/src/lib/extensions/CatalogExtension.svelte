@@ -7,7 +7,7 @@ import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
 import CatalogExtensionIcon from './CatalogExtensionIcon.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
-import ExtensionCatalogChips from './ExtensionCatalogChips.svelte';
+import ExtensionCatalogMetaChips from './ExtensionCatalogMetaChips.svelte';
 import ExtensionLifecycleStatus from './ExtensionLifecycleStatus.svelte';
 import ExtensionOriginChips from './ExtensionOriginChips.svelte';
 import ExtensionTruncatedText from './ExtensionTruncatedText.svelte';
@@ -46,7 +46,7 @@ function handleChangeVersion(preferredVersion?: string): void {
   <div class="px-3 pt-3 pb-1 flex flex-col gap-1.5">
     <div class="flex items-center gap-x-2">
       <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-        <ExtensionCatalogChips extension={catalogExtensionUI} />
+        <ExtensionCatalogMetaChips extension={catalogExtensionUI} />
         <ExtensionOriginChips extension={catalogExtensionUI} />
       </div>
       <div class="flex shrink-0 items-center gap-1">

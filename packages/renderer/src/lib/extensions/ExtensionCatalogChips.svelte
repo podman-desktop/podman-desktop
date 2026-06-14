@@ -4,7 +4,6 @@ import Badge from '/@/lib/ui/Badge.svelte';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { EXTENSION_CHIP_BADGE_CLASS, EXTENSION_CHIP_COLORS, EXTENSION_CHIP_TEXT_CLASS } from './extension-badge-styles';
 import { isNewlyInstalled } from './extension-catalog-settings.svelte';
-import ExtensionVerifiedLabel from './ExtensionVerifiedLabel.svelte';
 
 interface Props {
   extension: CatalogExtensionInfoUI;
@@ -24,8 +23,5 @@ let { extension, class: className = '' }: Props = $props();
     <Badge
       label="New"
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.new} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-  {/if}
-  {#if extension.isVerified && extension.isSupportedByRedHat}
-    <ExtensionVerifiedLabel isSupportedByRedHat={extension.isSupportedByRedHat} class={EXTENSION_CHIP_BADGE_CLASS} />
   {/if}
 </div>
