@@ -461,10 +461,12 @@ test('check listWebviews', async () => {
   expect(webviews[0]?.id).toBe(panelImpl1.internalId);
   expect(webviews[0]?.viewType).toBe('viewTypeInfo');
   expect(webviews[0]?.html).toBe('html1');
+  expect(webviews[0]?.extensionId).toBe('extensionId1');
 
   expect(webviews[1]?.id).toBe(panelImpl2.internalId);
   expect(webviews[1]?.viewType).toBe('viewTypeInfo');
   expect(webviews[1]?.html).toBe('html2');
+  expect(webviews[1]?.extensionId).toBe('extensionId2');
 });
 
 test('check listSimpleWebviews', async () => {

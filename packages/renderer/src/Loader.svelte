@@ -6,6 +6,7 @@ import App from './App.svelte';
 import SealRocket from './lib/images/SealRocket.svelte';
 import ColorsStyle from './lib/style/ColorsStyle.svelte';
 import { lastPage } from './stores/breadcrumb';
+import { fetchWebviews } from './stores/webviews';
 
 let systemReady = false;
 
@@ -34,6 +35,9 @@ onMount(async () => {
     const extensionsStarted = await window.extensionSystemIsExtensionsStarted();
     if (extensionsStarted) {
       window.dispatchEvent(new CustomEvent('extensions-already-started', {}));
+      fetchWebviews().catch((error: unknown) => {
+        console.error('Unable to fetch webviews', error);
+      });
       clearInterval(extensionsStarterChecker);
     }
   };
@@ -84,6 +88,19 @@ window.events.receive('starting-extensions', (value: unknown) => {
   }
   clearInterval(loadingSequence);
 });
+
+if (window.events) {
+  window.events.receive('extension-started', () => {
+    fetchWebviews().catch((error: unknown) => {
+      console.error('Unable to fetch webviews', error);
+    });
+  });
+  window.events.receive('webview-create', () => {
+    fetchWebviews().catch((error: unknown) => {
+      console.error('Unable to fetch webviews', error);
+    });
+  });
+}
 </script>
 
 <ColorsStyle />

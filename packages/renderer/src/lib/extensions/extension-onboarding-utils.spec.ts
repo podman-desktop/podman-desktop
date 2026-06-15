@@ -16,7 +16,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { describe, expect, test } from 'vitest';
+import type { OnboardingInfo } from '@podman-desktop/core-api';
+import { beforeEach, describe, expect, test } from 'vitest';
+
+import { context } from '/@/stores/context';
+import { onboardingList } from '/@/stores/onboarding';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
@@ -24,7 +28,25 @@ import {
   extensionHasOtherVersions,
   extensionHasVersionUpdate,
   extensionRequiresManualUpdate,
+  resolveCatalogExtensionOnboardingStatus,
+  resolveOnboardingRouteExtensionId,
 } from './extension-onboarding-utils';
+import { setPrototypeUseCasesEnabled } from './extension-prototype-use-cases';
+
+function createPodmanOnboarding(): OnboardingInfo {
+  return {
+    extension: 'podman-desktop.podman',
+    name: 'podman',
+    displayName: 'Podman',
+    description: 'Podman',
+    icon: '',
+    welcomeMessage: 'Welcome',
+    priority: 1,
+    title: 'Podman Setup',
+    steps: [],
+    removable: false,
+  };
+}
 
 function createExtension(partial: Partial<CatalogExtensionInfoUI>): CatalogExtensionInfoUI {
   return {
@@ -125,5 +147,75 @@ describe('extensionRequiresManualUpdate', () => {
     setAutoUpdateEnabled('auto-update', true);
 
     expect(extensionRequiresManualUpdate(extension)).toBe(false);
+  });
+});
+
+describe('resolveExtensionOnboardingStatus', () => {
+  beforeEach(() => {
+    setPrototypeUseCasesEnabled(true);
+    onboardingList.set([createPodmanOnboarding()]);
+    context.set({});
+  });
+
+  test('enables onboarding for AI Lab via prototype route to Podman Setup', () => {
+    const status = resolveCatalogExtensionOnboardingStatus({
+      id: 'redhat.ai-lab',
+      displayName: 'Podman AI Lab',
+      isFeatured: true,
+      fetchable: true,
+      fetchLink: '',
+      fetchVersion: '1.9.3',
+      publisherDisplayName: 'Red Hat',
+      isInstalled: true,
+      installedVersion: '1.9.3',
+      shortDescription: '',
+      categories: [],
+      keywords: [],
+      availableVersions: [],
+      hasUpdate: false,
+      isVerified: true,
+      isSupportedByRedHat: true,
+      installedExtension: {
+        id: 'redhat.ai-lab',
+        type: 'extension',
+        state: 'started',
+        name: 'ai-lab',
+        displayName: 'Podman AI Lab',
+        description: '',
+        publisher: 'redhat',
+        removable: true,
+        devMode: false,
+        version: '1.9.3',
+        path: '',
+        readme: '',
+      },
+    });
+
+    expect(status.enabled).toBe(true);
+    expect(resolveOnboardingRouteExtensionId('redhat.ai-lab')).toBe('podman-desktop.podman');
+  });
+
+  test('enables onboarding for AI Lab even before onboarding list is populated', () => {
+    onboardingList.set([]);
+
+    const status = resolveCatalogExtensionOnboardingStatus({
+      id: 'redhat.ai-lab',
+      displayName: 'Podman AI Lab',
+      isFeatured: true,
+      fetchable: true,
+      fetchLink: '',
+      fetchVersion: '1.9.3',
+      publisherDisplayName: 'Red Hat',
+      isInstalled: true,
+      shortDescription: '',
+      categories: [],
+      keywords: [],
+      availableVersions: [],
+      hasUpdate: false,
+      isVerified: true,
+      isSupportedByRedHat: true,
+    });
+
+    expect(status.enabled).toBe(true);
   });
 });

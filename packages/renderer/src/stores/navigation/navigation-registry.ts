@@ -43,6 +43,7 @@ export interface NavigationRegistryEntry {
   link: string;
   counter: number;
   type: 'entry' | 'group' | 'submenu';
+  extensionId?: string;
   enabled?: boolean;
   items?: NavigationRegistryEntry[];
   hidden?: boolean;
@@ -62,7 +63,43 @@ let hiddenItems: string[] = [];
 
 let values: NavigationRegistryEntry[] = [];
 let initialized = false;
+
+export function isNavigationRegistryInitialized(): boolean {
+  return initialized;
+}
+
+/** Replace the Extensions group entry so sidebar getters stay in sync after HMR. */
+export function replaceExtensionNavigationGroup(entry: NavigationRegistryEntry): void {
+  if (!initialized) {
+    return;
+  }
+
+  const index = values.findIndex(
+    item => item.type === 'group' && item.name === 'Extensions' && item.link === '/extensions',
+  );
+  if (index >= 0) {
+    values[index] = entry;
+  }
+}
+
+function dedupeTopLevelNavigationEntries(): void {
+  const seen = new Set<string>();
+  values = values.filter(entry => {
+    const key = `${entry.type}:${entry.name}:${entry.link}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
 const init = (): void => {
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+
   values.push(createNavigationContainerEntry());
   values.push(createNavigationPodEntry());
   values.push(createNavigationImageEntry());
@@ -96,14 +133,24 @@ function collecItem(navigationRegistryEntry: NavigationRegistryEntry, items: Dis
 const grabList = async (): Promise<NavigationRegistryEntry[]> => {
   if (!initialized) {
     init();
-    initialized = true;
   }
+
+  dedupeTopLevelNavigationEntries();
 
   // override hidden property
   await hideItems();
 
   return values;
 };
+
+/** Re-publish the current registry so sidebar entries re-render (e.g. updated tooltips). */
+export function refreshNavigationRegistryDisplay(): void {
+  if (values.length === 0) {
+    return;
+  }
+  dedupeTopLevelNavigationEntries();
+  navigationRegistry.set([...values]);
+}
 
 const navigationRegistryEventStore = new EventStore<NavigationRegistryEntry[]>(
   'navigation-registry',

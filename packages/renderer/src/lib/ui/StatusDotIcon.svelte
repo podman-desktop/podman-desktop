@@ -40,7 +40,7 @@ let label = $derived(capitalize(status));
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
     <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m2.97 2.978a.78.78 0 0 0-1.1 0L6 4.848l-1.87-1.87a.779.779 0 0 0-1.1 1.1L4.95 6 3.03 7.921a.779.779 0 0 0 1.1 1.1L6 7.151l1.87 1.87a.779.779 0 0 0 1.1-1.1L7.05 5.999l1.922-1.92a.78.78 0 0 0 0-1.101" />
   </svg>
-{:else if status === 'waiting'}
+{:else if status === 'waiting' || status === 'starting'}
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 12 12" role="img" aria-label={label} class={className} data-testid="status-dot-icon">
     <path fill={fillColor} d="M6 0a6 6 0 1 1 0 12A6 6 0 0 1 6 0m-.25 2a.75.75 0 0 0-.75.75v3.5l2.766 2.766a.884.884 0 1 0 1.25-1.25L7 5.75v-3A.75.75 0 0 0 6.25 2z" />
   </svg>

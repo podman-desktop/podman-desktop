@@ -233,7 +233,10 @@ export function getVersionChangeLinkLabel(installedVersion: string | undefined, 
   return `Change to v${target}`;
 }
 
-function resolveVersionOciUri(extension: CatalogExtensionInfoUI, normalizedTarget: string): string | undefined {
+export function resolveExtensionVersionOciUri(
+  extension: CatalogExtensionInfoUI,
+  normalizedTarget: string,
+): string | undefined {
   const matchingVersion = extension.availableVersions.find(
     version => normalizeVersionValue(version.version) === normalizedTarget,
   );
@@ -300,7 +303,7 @@ export function applyExtensionVersionChange(
   autoUpdateEnabled?: boolean,
 ): void {
   const normalizedTarget = normalizeVersionValue(targetVersion);
-  const ociUri = resolveVersionOciUri(extension, normalizedTarget);
+  const ociUri = resolveExtensionVersionOciUri(extension, normalizedTarget);
 
   if (!ociUri && !prototypeVersionChangesEnabled) {
     setUpdateState(extension.id, {

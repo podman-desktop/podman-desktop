@@ -62,7 +62,7 @@ function handleChangeVersion(preferredVersion?: string): void {
   role="group"
   aria-label={catalogExtensionUI.displayName}
   onclick={handleCardClick}>
-  <div class="px-3 pt-3 pb-1 flex flex-col gap-1.5">
+  <div class="px-3 pt-3 pb-2 flex flex-col gap-1.5">
     <div class="relative min-h-8 pr-9">
       <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
         <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} />
@@ -92,11 +92,11 @@ function handleChangeVersion(preferredVersion?: string): void {
         </div>
         <ExtensionTruncatedText
           text={catalogExtensionUI.publisherDisplayName}
-          class="pt-0.5 text-sm text-[var(--pd-table-header-text)]" />
+          class="pt-0.5 text-sm font-medium text-[var(--pd-content-header)]" />
         <ExtensionTruncatedText
           text={catalogExtensionUI.shortDescription}
           class="pt-0.5 text-sm text-[var(--pd-content-text)]" />
-        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 text-sm text-[var(--pd-content-text)]">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 pb-1.5 text-sm text-[var(--pd-content-text)]">
           {#if catalogExtensionUI.isInstalled}
             {#key uiRevision}
               {@const actualVersion = catalogExtensionUI.installedVersion}

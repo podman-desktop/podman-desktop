@@ -77,13 +77,13 @@ test('Expect to see featured and fetch button', async () => {
     isFeatured: true,
     fetchable: true,
     fetchLink: 'myLink',
-    fetchVersion: '',
+    fetchVersion: '1.2.3',
     publisherDisplayName: 'Foo publisher',
     isInstalled: false,
     shortDescription: 'my description',
     categories: [],
     keywords: [],
-    availableVersions: [],
+    availableVersions: [{ version: '1.2.3', ociUri: 'myLink', preview: false }],
     hasUpdate: false,
     isVerified: false,
     isSupportedByRedHat: false,
@@ -91,23 +91,23 @@ test('Expect to see featured and fetch button', async () => {
 
   render(CatalogExtension, { catalogExtensionUI });
 
-  // get div using aria-label 'This is the display name'
   const extensionWidget = screen.getByRole('group', { name: 'This is the display name' });
 
   expect(extensionWidget).toBeInTheDocument();
 
-  // check featured is inside
   const featured = screen.getByText('Featured');
   expect(featured).toBeInTheDocument();
 
-  // get install button
   const installButton = screen.getByRole('button', { name: 'Install myId Extension' });
   expect(installButton).toBeInTheDocument();
 
-  // click the button
   await fireEvent.click(installButton);
 
-  // expect the router to be called
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Install v1.2.3' })).toBeEnabled();
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Install v1.2.3' }));
+
   expect(vi.mocked(window.extensionInstallFromImage)).toHaveBeenCalledWith(
     'myLink',
     expect.any(Function),
@@ -186,4 +186,44 @@ test('Expect to have version of installed one', async () => {
 
   expect(screen.getByText('v2.0.0')).toBeInTheDocument();
   expect(screen.queryByRole('link', { name: /Upgrade to v/i })).not.toBeInTheDocument();
+});
+
+test('Expect upgrade link opens change version modal with latest version preselected', async () => {
+  const catalogExtensionUI: CatalogExtensionInfoUI = {
+    id: 'minikube',
+    displayName: 'minikube',
+    isFeatured: false,
+    fetchable: false,
+    fetchLink: 'oci://minikube:0.4.1',
+    fetchVersion: '0.4.1',
+    installedVersion: '0.4.0',
+    publisherDisplayName: 'Podman Desktop',
+    isInstalled: true,
+    shortDescription: 'Run Kubernetes locally',
+    categories: [],
+    keywords: [],
+    availableVersions: [
+      { version: '0.4.1', ociUri: 'oci://minikube:0.4.1', preview: false },
+      { version: '0.4.0', ociUri: 'oci://minikube:0.4.0', preview: false },
+    ],
+    hasUpdate: true,
+    isVerified: false,
+    isSupportedByRedHat: false,
+    installedExtension: {
+      id: 'minikube',
+      name: 'minikube',
+      state: 'started',
+      removable: true,
+      devMode: false,
+      type: 'extension',
+    },
+  };
+
+  render(CatalogExtension, { catalogExtensionUI });
+
+  const upgradeLink = screen.getByRole('link', { name: 'Upgrade to v0.4.1' });
+  await fireEvent.click(upgradeLink);
+
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Upgrade to v0.4.1' })).toBeEnabled();
 });

@@ -25,7 +25,12 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
 import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
-import { applyPrototypeCatalogUseCaseOverlay, applyPrototypeUseCaseOverlays } from './extension-prototype-use-cases';
+import {
+  applyPrototypeCatalogUseCaseOverlay,
+  applyPrototypeUseCaseOverlays,
+  bumpPrototypePatchVersion,
+  USE_CASE_EXTENSION_IDS,
+} from './extension-prototype-use-cases';
 
 export class ExtensionsUtils {
   extractExtensionDetail(
@@ -186,8 +191,9 @@ export class ExtensionsUtils {
         }));
         const hasUpdate = isInstalled && !!installedVersion && !!fetchVersion && installedVersion !== fetchVersion;
         const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
-        const isVerified =
-          isSupportedByRedHat || categories.some(category => category.toLowerCase().includes('verified'));
+        const isVerified = isSupportedByRedHat
+          ? true
+          : categories.some(category => category.toLowerCase().includes('verified'));
         const repositoryUrl = `https://github.com/podman-desktop/extensions/tree/main/extensions/${catalogExtension.extensionName}`;
 
         return {
@@ -254,16 +260,31 @@ export class ExtensionsUtils {
    */
   ensurePrototypeUpdateDemo(extensions: CatalogExtensionInfoUI[]): CatalogExtensionInfoUI[] {
     const realExtensions = extensions.filter(extension => !isPrototypeInstalledDemo(extension.id));
-    if (realExtensions.some(extension => extension.hasUpdate)) {
-      return extensions;
+    const preferredDemo = realExtensions.find(
+      extension =>
+        extension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate &&
+        extension.isInstalled &&
+        extension.installedVersion,
+    );
+
+    const withKindDemo = extensions.map(extension => {
+      if (extension.isInstalled && extension.id === USE_CASE_EXTENSION_IDS.communityActiveWithUpdate) {
+        return applyPrototypeCatalogUseCaseOverlay(extension);
+      }
+      return extension;
+    });
+
+    if (withKindDemo.some(extension => extension.isInstalled && extension.hasUpdate)) {
+      return withKindDemo;
     }
 
-    const candidate = realExtensions.find(extension => extension.isInstalled && extension.installedVersion);
+    const candidate =
+      preferredDemo ?? realExtensions.find(extension => extension.isInstalled && extension.installedVersion);
     if (!candidate) {
-      return extensions;
+      return withKindDemo;
     }
 
-    return extensions.map(extension => {
+    return withKindDemo.map(extension => {
       if (extension.id !== candidate.id) {
         return extension;
       }
@@ -276,7 +297,7 @@ export class ExtensionsUtils {
     const fetchVersion =
       extension.fetchVersion && extension.fetchVersion !== installedVersion
         ? extension.fetchVersion
-        : this.bumpPatchVersion(installedVersion);
+        : bumpPrototypePatchVersion(installedVersion ?? '');
 
     const availableVersions = [...extension.availableVersions];
     if (fetchVersion && !availableVersions.some(version => version.version === fetchVersion)) {
@@ -296,15 +317,6 @@ export class ExtensionsUtils {
     };
   }
 
-  private bumpPatchVersion(version: string): string {
-    const parts = version.split('.').map(part => parseInt(part, 10));
-    if (parts.length === 0 || parts.some(Number.isNaN)) {
-      return version;
-    }
-    parts[parts.length - 1] += 1;
-    return parts.join('.');
-  }
-
   buildCatalogInfoForInstalled(
     installed: CombinedExtensionInfoUI,
     catalogExtensions: CatalogExtension[],
@@ -321,7 +333,7 @@ export class ExtensionsUtils {
 
     const baseInfo: CatalogExtensionInfoUI = {
       id: installed.id,
-      displayName: installed.displayName || installed.name,
+      displayName: installed.displayName ? installed.displayName : installed.name,
       isFeatured: false,
       fetchable: false,
       fetchLink: '',

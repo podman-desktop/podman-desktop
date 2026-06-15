@@ -1,12 +1,14 @@
 <script lang="ts">
 import { faPuzzlePiece, faTableCells, faThLarge } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { catalogTableSortState, orderCatalogTableExtensions } from './catalog-extension-table-sort.svelte';
 import CatalogExtension from './CatalogExtension.svelte';
 import CatalogExtensionTable from './CatalogExtensionTable.svelte';
 import ChangeVersionModal from './ChangeVersionModal.svelte';
-import { catalogViewMode } from './extension-catalog-settings.svelte';
+import { catalogViewMode, newBadgeRevision, refreshNewBadges } from './extension-catalog-settings.svelte';
 
 interface Props {
   catalogExtensions: CatalogExtensionInfoUI[];
@@ -24,8 +26,17 @@ let {
   ondetails = (): void => {},
 }: Props = $props();
 
+onMount(() => {
+  refreshNewBadges();
+});
+
 // Use persistent view mode that survives tab switches - access the reactive object directly
 const viewMode = $derived(catalogViewMode.mode);
+const tableCatalogExtensions = $derived.by(() => {
+  catalogTableSortState.value;
+  newBadgeRevision.value;
+  return orderCatalogTableExtensions(catalogExtensions);
+});
 let changeVersionExtension: CatalogExtensionInfoUI | undefined = $state(undefined);
 let changeVersionPreferredVersion: string | undefined = $state(undefined);
 
@@ -93,7 +104,7 @@ function closeChangeVersion(): void {
       </div>
     {:else}
       <CatalogExtensionTable
-        catalogExtensions={catalogExtensions}
+        catalogExtensions={tableCatalogExtensions}
         oninstall={oninstall}
         onChangeVersion={openChangeVersion} />
     {/if}

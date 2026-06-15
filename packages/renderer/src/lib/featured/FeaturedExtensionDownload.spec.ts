@@ -24,6 +24,24 @@ import { beforeAll, expect, test, vi } from 'vitest';
 
 import FeaturedExtensionDownload from './FeaturedExtensionDownload.svelte';
 
+vi.mock(import('/@/stores/webviews'), () => ({
+  fetchWebviews: vi.fn(async () => undefined),
+}));
+
+vi.mock(import('/@/stores/navigation/navigation-registry-extension.svelte'), () => ({
+  refreshExtensionNavigationItems: vi.fn(),
+}));
+
+vi.mock(import('/@/lib/extensions/extension-nav-pointer.svelte'), () => ({
+  syncExtensionNavigationAfterInstall: vi.fn(async () => true),
+}));
+
+vi.mock(import('/@/lib/extensions/extension-catalog-settings.svelte'), () => ({
+  markNewlyInstalled: vi.fn(),
+  setAutoUpdateEnabled: vi.fn(),
+  isAutoUpdateEnabled: vi.fn(() => false),
+}));
+
 // fake the window.events object
 beforeAll(() => {
   (window.events as unknown) = {
@@ -53,7 +71,7 @@ test('Expect that the install button is hidden if extension is not installable',
   expect(installButton).not.toBeInTheDocument();
 });
 
-test('Expect that we can see the button and click on the install', async () => {
+test('Expect that we can see the button and open the install version modal', async () => {
   let featuredExtension: FeaturedExtension = {
     builtin: true,
     id: 'foo.bar',
@@ -69,12 +87,14 @@ test('Expect that we can see the button and click on the install', async () => {
 
   const renderResult = render(FeaturedExtensionDownload, { extension: featuredExtension });
 
-  // expect to have the button if installable
   const installButton = screen.getByRole('button', { name: 'Install foo.bar Extension' });
-  // expect the button to be there
   expect(installButton).toBeInTheDocument();
 
-  // mock the install function
+  await fireEvent.click(installButton);
+
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Install v1.2.3' })).toBeEnabled();
+
   vi.mocked(window.extensionInstallFromImage).mockImplementation(async () => {
     featuredExtension.installed = true;
     featuredExtension.fetchable = false;
@@ -82,15 +102,10 @@ test('Expect that we can see the button and click on the install', async () => {
     await renderResult.rerender({ extension: featuredExtension });
   });
 
-  // click on the button
-  await fireEvent.click(installButton);
+  await fireEvent.click(screen.getByRole('button', { name: 'Install v1.2.3' }));
 
-  // install should have been called
   expect(vi.mocked(window.extensionInstallFromImage)).toHaveBeenCalled();
 
-  // now, expect the button to be gone
-  // expect the button to be there
   const installButtonAfterClick = screen.queryByRole('button', { name: 'Install foo.bar Extension' });
-  // expect the button is not there
   expect(installButtonAfterClick).not.toBeInTheDocument();
 });

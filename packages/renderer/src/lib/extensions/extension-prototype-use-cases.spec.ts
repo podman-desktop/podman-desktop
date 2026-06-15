@@ -21,10 +21,12 @@ import { afterEach, describe, expect, test } from 'vitest';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { isAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { getPrototypeInstalledDemos } from './extension-prototype-installed-demos';
 import {
   applyPrototypeCatalogUseCaseOverlay,
   applyPrototypeUseCaseOverlays,
+  ensurePrototypeManualUpdateSettings,
   setPrototypeUseCasesEnabled,
   USE_CASE_EXTENSION_IDS,
 } from './extension-prototype-use-cases';
@@ -84,7 +86,34 @@ describe('prototype use cases on real extensions', () => {
 
     const enriched = applyPrototypeCatalogUseCaseOverlay(kindCatalog);
     expect(enriched.hasUpdate).toBe(true);
-    expect(enriched.fetchVersion).toBe('1.1.0');
+    expect(enriched.fetchVersion).toBe('1.0.1');
+    expect(enriched.installedVersion).toBe('1.0.0');
+  });
+
+  test('marks Kind update relative to the installed next-channel version', () => {
+    const kindCatalog: CatalogExtensionInfoUI = {
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+      displayName: 'Kind',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: '1.28.0-next',
+      publisherDisplayName: 'podman-desktop',
+      isInstalled: true,
+      installedVersion: '1.28.0-next',
+      shortDescription: 'Kind clusters',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: '1.28.0-next', ociUri: '', preview: false }],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+
+    const enriched = applyPrototypeCatalogUseCaseOverlay(kindCatalog);
+    expect(enriched.hasUpdate).toBe(true);
+    expect(enriched.fetchVersion).toBe('1.28.1-next');
+    expect(enriched.installedVersion).toBe('1.28.0-next');
   });
 
   test('applyPrototypeUseCaseOverlays keeps list length unchanged', () => {
@@ -106,5 +135,67 @@ describe('prototype use cases on real extensions', () => {
     const result = extensionsUtils.applyPrototypeUseCaseOverlays([existing]);
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe('podman-desktop.compose');
+  });
+
+  test('ensurePrototypeManualUpdateSettings disables auto-update on the manual update demo', () => {
+    const kind: CatalogExtensionInfoUI = {
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+      displayName: 'Kind',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: '1.1.0',
+      publisherDisplayName: 'Podman Desktop',
+      isInstalled: true,
+      installedVersion: '1.0.0',
+      shortDescription: 'Kind clusters',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: '1.1.0', ociUri: '', preview: false }],
+      hasUpdate: true,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+
+    ensurePrototypeManualUpdateSettings([kind]);
+
+    expect(isAutoUpdateEnabled(kind.id)).toBe(false);
+  });
+
+  test('ensurePrototypeUpdateDemo prefers Kind when installed and no other updates exist', () => {
+    const kind: CatalogExtensionInfoUI = {
+      id: USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+      displayName: 'Kind',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: '1.0.0',
+      publisherDisplayName: 'Podman Desktop',
+      isInstalled: true,
+      installedVersion: '1.0.0',
+      shortDescription: 'Kind clusters',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: '1.0.0', ociUri: '', preview: false }],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+    const compose: CatalogExtensionInfoUI = {
+      ...kind,
+      id: 'podman-desktop.compose',
+      displayName: 'Compose',
+      installedVersion: '2.0.0',
+      fetchVersion: '2.0.0',
+    };
+
+    const [kindResult, composeResult] = extensionsUtils.ensurePrototypeUpdateDemo([kind, compose]);
+
+    expect(kindResult?.hasUpdate).toBe(true);
+    expect(kindResult?.fetchVersion).toBe('1.0.1');
+    expect(composeResult?.hasUpdate).toBe(false);
+
+    ensurePrototypeManualUpdateSettings([kindResult!, composeResult!]);
+    expect(isAutoUpdateEnabled(kind.id)).toBe(false);
   });
 });

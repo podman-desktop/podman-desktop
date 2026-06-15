@@ -2,8 +2,8 @@
 import { Link } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
 
+import ChangeVersionModal from '/@/lib/extensions/ChangeVersionModal.svelte';
 import {
-  applyResolvedVersionChange,
   EXTENSION_VERSION_UI_CHANGE_EVENT,
   getOptimisticInstalledVersion,
   getVersionChangeLinkLabel,
@@ -22,6 +22,8 @@ interface Props {
 let { object }: Props = $props();
 
 let uiRevision = $state(0);
+let changeVersionPreferredVersion: string | undefined = $state(undefined);
+let showChangeVersionModal = $state(false);
 
 onMount(() => {
   const handler = (): void => {
@@ -71,7 +73,17 @@ const targetVersion = $derived(resolveVersionChangeTarget(extensionForDisplay));
 const linkLabel = $derived(targetVersion ? getVersionChangeLinkLabel(displayVersion, targetVersion) : '');
 
 function handleUpdate(): void {
-  applyResolvedVersionChange(extensionForDisplay);
+  if (!targetVersion) {
+    return;
+  }
+
+  changeVersionPreferredVersion = targetVersion;
+  showChangeVersionModal = true;
+}
+
+function closeChangeVersionModal(): void {
+  showChangeVersionModal = false;
+  changeVersionPreferredVersion = undefined;
 }
 </script>
 
@@ -86,3 +98,10 @@ function handleUpdate(): void {
   </div>
   <ExtensionVersionUpdateStatus extensionId={object.extension.id} />
 </div>
+
+{#if showChangeVersionModal}
+  <ChangeVersionModal
+    extension={extensionForDisplay}
+    preferredVersion={changeVersionPreferredVersion}
+    closeCallback={closeChangeVersionModal} />
+{/if}

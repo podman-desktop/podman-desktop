@@ -331,6 +331,7 @@ export class WebviewRegistry {
         icon,
         name: webviewPanelImpl.title,
         uuid: webviewPanelImpl.webview.uuid,
+        extensionId: webviewPanelImpl.webview.extensionInfo.id,
         state,
       };
     });

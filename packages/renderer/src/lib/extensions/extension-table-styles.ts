@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export interface WebviewInfo {
-  id: string;
-  uuid: string;
-  viewType: string;
-  sourcePath: string;
-  icon: string | { readonly light: string; readonly dark: string } | undefined;
-  name: string;
-  html: string;
-  /** Extension that registered this webview (used for post-install navigation hints). */
-  extensionId: string;
-  // persistent state of the webview
-  state: unknown;
-}
+export const EXTENSION_TABLE_ROW_BASE_CLASS =
+  'grid gap-x-4 min-h-[56px] mb-2 rounded-lg border bg-[var(--pd-content-card-bg)] cursor-pointer transition-colors hover:bg-[var(--pd-content-card-hover-bg)]';
 
-export interface WebviewSimpleInfo {
-  id: string;
-  viewType: string;
-  title: string;
+export function extensionTableRowBorderClass(isPinned: boolean): string {
+  if (isPinned) {
+    return 'border-[var(--pd-content-card-border-selected)] hover:border-[var(--pd-content-card-border-selected)]';
+  }
+  return 'border-[var(--pd-content-table-border)] hover:border-[var(--pd-content-card-border-selected)]';
 }

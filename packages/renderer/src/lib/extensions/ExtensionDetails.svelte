@@ -162,7 +162,7 @@ function closeChangeVersion(): void {
     {#snippet actionsSnippet()}
       <div class="flex items-center gap-2">
         {#if !$extension.installedExtension && $extension.fetchable}
-          <FeaturedExtensionDownload extension={$extension} />
+          <FeaturedExtensionDownload extension={$extension} catalogExtension={catalogExtension} />
         {/if}
         {#if catalogExtension}
           <CatalogExtensionActions

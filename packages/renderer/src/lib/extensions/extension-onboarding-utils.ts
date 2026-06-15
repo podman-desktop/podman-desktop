@@ -26,11 +26,58 @@ import { onboardingList } from '/@/stores/onboarding';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { isAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import {
+  arePrototypePostInstallTooltipDemosEnabled,
+  getPrototypeOnboardingRouteExtensionId,
+  isPrototypePostInstallTooltipTarget,
+} from './extension-prototype-post-install-tooltip-demo';
 import { normalizeVersionValue } from './extension-version-update.svelte';
 
 export interface ExtensionOnboardingStatus {
   enabled: boolean;
   detail: string;
+}
+
+export function resolveExtensionOnboardingStatusById(extensionId: string): ExtensionOnboardingStatus {
+  return resolveExtensionOnboardingStatus({
+    id: extensionId,
+    type: 'extension',
+    state: 'started',
+    name: extensionId,
+    removable: true,
+    devMode: false,
+  });
+}
+
+/** Extension id used when opening onboarding (supports prototype routing for catalog demos). */
+export function resolveOnboardingRouteExtensionId(extensionId: string): string {
+  if (arePrototypePostInstallTooltipDemosEnabled() && isPrototypePostInstallTooltipTarget(extensionId)) {
+    return getPrototypeOnboardingRouteExtensionId(extensionId);
+  }
+  return extensionId;
+}
+
+function resolveOnboardingStatusForExtensionId(extensionId: string): ExtensionOnboardingStatus {
+  const matchingOnboarding = get(onboardingList).findLast(onboarding => onboarding.extension === extensionId);
+
+  if (!matchingOnboarding) {
+    return { enabled: false, detail: 'Not configured' };
+  }
+
+  const enablement = matchingOnboarding.enablement?.trim();
+  if (!enablement) {
+    return { enabled: true, detail: '' };
+  }
+
+  const normalizedEnablement = normalizeOnboardingWhenClause(enablement, extensionId);
+  const whenDeserialized = ContextKeyExpr.deserialize(normalizedEnablement);
+  const isEnabled = whenDeserialized?.evaluate(get(context));
+
+  if (!isEnabled) {
+    return { enabled: false, detail: 'Not available in the current context' };
+  }
+
+  return { enabled: true, detail: '' };
 }
 
 export function resolveExtensionOnboardingStatus(extension?: CombinedExtensionInfoUI): ExtensionOnboardingStatus {
@@ -42,23 +89,33 @@ export function resolveExtensionOnboardingStatus(extension?: CombinedExtensionIn
     return { enabled: false, detail: 'Not available for Docker Desktop extensions' };
   }
 
-  const matchingOnboarding = get(onboardingList).findLast(
-    onboarding => onboarding.extension === extension.id && onboarding.enablement,
-  );
-
-  if (!matchingOnboarding) {
-    return { enabled: false, detail: 'Not configured' };
+  const directStatus = resolveOnboardingStatusForExtensionId(extension.id);
+  if (directStatus.enabled) {
+    return directStatus;
   }
 
-  const enablement = normalizeOnboardingWhenClause(matchingOnboarding.enablement, extension.id);
-  const whenDeserialized = ContextKeyExpr.deserialize(enablement);
-  const isEnabled = whenDeserialized?.evaluate(get(context));
-
-  if (!isEnabled) {
-    return { enabled: false, detail: 'Not available in the current context' };
+  if (arePrototypePostInstallTooltipDemosEnabled() && isPrototypePostInstallTooltipTarget(extension.id)) {
+    const routedStatus = resolveOnboardingStatusForExtensionId(getPrototypeOnboardingRouteExtensionId(extension.id));
+    if (routedStatus.enabled) {
+      return { enabled: true, detail: '' };
+    }
+    return { enabled: true, detail: '' };
   }
 
-  return { enabled: true, detail: '' };
+  return directStatus;
+}
+
+/** Resolve onboarding for catalog cards using catalog id as the source of truth. */
+export function resolveCatalogExtensionOnboardingStatus(
+  catalogExtension: CatalogExtensionInfoUI,
+): ExtensionOnboardingStatus {
+  const installed = catalogExtension.installedExtension;
+  if (installed?.type === 'dd') {
+    return { enabled: false, detail: 'Not available for Docker Desktop extensions' };
+  }
+
+  const extensionId = installed?.id ?? catalogExtension.id;
+  return resolveExtensionOnboardingStatusById(extensionId);
 }
 
 function normalizeVersion(version?: string): string {

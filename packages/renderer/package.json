@@ -52,6 +52,7 @@
     "yaml": "^2.9.0"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
     "@podman-desktop/core-api": "workspace:*",
     "@podman-desktop/ui-svelte": "workspace:*",
     "@zerodevx/svelte-toast": "^0.9.6",

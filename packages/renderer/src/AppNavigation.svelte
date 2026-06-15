@@ -12,6 +12,7 @@ import type { TinroRouteMeta } from 'tinro';
 import AuthActions from './lib/authentication/AuthActions.svelte';
 import { CommandRegistry } from './lib/CommandRegistry';
 import NewContentOnDashboardBadge from './lib/dashboard/NewContentOnDashboardBadge.svelte';
+import ExtensionNewNavPointer from './lib/extensions/ExtensionNewNavPointer.svelte';
 import AccountIcon from './lib/images/AccountIcon.svelte';
 import DashboardIcon from './lib/images/DashboardIcon.svelte';
 import SettingsIcon from './lib/images/SettingsIcon.svelte';
@@ -19,7 +20,14 @@ import NavItem from './lib/ui/NavItem.svelte';
 import NavRegistryEntry from './lib/ui/NavRegistryEntry.svelte';
 import { handleNavigation } from './navigation';
 import { onDidChangeConfiguration } from './stores/configurationProperties';
-import { navigationRegistry } from './stores/navigation/navigation-registry';
+import type { NavigationRegistryEntry } from './stores/navigation/navigation-registry';
+import { fetchNavigationRegistries, navigationRegistry } from './stores/navigation/navigation-registry';
+import {
+  extensionNavigationGroupRevision,
+  extensionNavigationState,
+  refreshExtensionNavigationItems,
+} from './stores/navigation/navigation-registry-extension.svelte';
+import { fetchWebviews } from './stores/webviews';
 
 interface Props {
   exitSettingsCallback: () => void;
@@ -30,7 +38,41 @@ let { exitSettingsCallback, meta = $bindable() }: Props = $props();
 let authActions = $state<AuthActions>();
 let outsideWindow = $state<HTMLDivElement>();
 let scrollRegionEl = $state<HTMLDivElement>();
+onMount(() => {
+  fetchNavigationRegistries().catch((error: unknown) => {
+    console.error('Unable to fetch navigation registries', error);
+  });
+  fetchWebviews().catch((error: unknown) => {
+    console.error('Unable to fetch webviews', error);
+  });
+
+  if (window.events) {
+    for (const eventName of ['extension-started', 'webview-create', 'webview-update'] as const) {
+      window.events.receive(eventName, () => {
+        fetchWebviews()
+          .then(() => {
+            refreshExtensionNavigationItems();
+          })
+          .catch((error: unknown) => {
+            console.error('Unable to fetch webviews after extension event', error);
+          });
+      });
+    }
+  }
+});
+
 let iconWithTitle = $state(false);
+
+// Track extension webview/contrib nav item updates (e.g. after installing AI Lab).
+const extensionNavItemsRevision = $derived(extensionNavigationGroupRevision.value);
+
+function isExtensionNavigationGroup(entry: NavigationRegistryEntry): boolean {
+  return entry.type === 'group' && entry.name === 'Extensions' && entry.link === '/extensions';
+}
+
+function isExtensionsNavEntry(entry: NavigationRegistryEntry): boolean {
+  return entry.type === 'entry' && entry.name === 'Extensions' && entry.link === '/extensions';
+}
 
 const iconSize = '22';
 const NAV_BAR_LAYOUT = `${AppearanceSettings.SectionName}.${AppearanceSettings.NavigationAppearance}`;
@@ -180,16 +222,24 @@ function onDidChangeConfigurationCallback(e: Event): void {
       aria-label="Scrollable navigation list"
       onscroll={onScrollRegionScroll}
       onpointerdown={onScrollRegionPointerDown}>
-      {#each $navigationRegistry as navigationRegistryItem, index (index)}
-        {#if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
-          <!-- This is a group, list all items from the entry -->
-          {#each navigationRegistryItem.items as item, index (index)}
-            <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
-          {/each}
-        {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
-          <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} iconWithTitle={iconWithTitle} />
-        {/if}
-      {/each}
+      {#key extensionNavItemsRevision}
+        {#each $navigationRegistry as navigationRegistryItem (navigationRegistryItem.link + ':' + navigationRegistryItem.type)}
+          {#if isExtensionNavigationGroup(navigationRegistryItem)}
+            <!-- Extension webview/contrib items render below the Extensions nav entry -->
+          {:else if isExtensionsNavEntry(navigationRegistryItem)}
+            <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} iconWithTitle={iconWithTitle} />
+            {#each extensionNavigationState.items as item (item.link)}
+              <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
+            {/each}
+          {:else if navigationRegistryItem.items && navigationRegistryItem.type === 'group'}
+            {#each navigationRegistryItem.items as item (item.link)}
+              <NavRegistryEntry entry={item} bind:meta={meta} iconWithTitle={iconWithTitle} />
+            {/each}
+          {:else if navigationRegistryItem.type === 'entry' || navigationRegistryItem.type === 'submenu'}
+            <NavRegistryEntry entry={navigationRegistryItem} bind:meta={meta} iconWithTitle={iconWithTitle} />
+          {/if}
+        {/each}
+      {/key}
     </div>
     {#if scrollThumbVisible}
       <div
@@ -239,3 +289,4 @@ function onDidChangeConfigurationCallback(e: Event): void {
     </div>
   </NavItem>
 </nav>
+<ExtensionNewNavPointer />

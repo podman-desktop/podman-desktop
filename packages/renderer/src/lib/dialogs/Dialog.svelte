@@ -9,9 +9,18 @@ interface Props {
   content?: Snippet;
   validation?: Snippet;
   buttons?: Snippet;
+  contentClass?: string;
 }
 
-let { title, onclose, icon, content, validation, buttons }: Props = $props();
+let {
+  title,
+  onclose,
+  icon,
+  content,
+  validation,
+  buttons,
+  contentClass = 'relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 py-4',
+}: Props = $props();
 </script>
 
 <Modal name={title} onclose={onclose}>
@@ -22,7 +31,7 @@ let { title, onclose, icon, content, validation, buttons }: Props = $props();
     <CloseButton onclick={onclose} />
   </div>
 
-  <div class="relative max-h-80 overflow-auto text-[var(--pd-modal-text)] px-10 py-4">
+  <div class={contentClass}>
     {@render content?.()}
   </div>
 

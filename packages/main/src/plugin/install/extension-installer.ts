@@ -36,6 +36,7 @@ import {
 import { ExtensionsCatalog } from '/@/plugin/extension/catalog/extensions-catalog.js';
 import type { AnalyzedExtension } from '/@/plugin/extension/extension-analyzer.js';
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
+import { ensureExtensionPrerequisites } from '/@/plugin/extension/extension-prerequisites.js';
 import { ImageRegistry } from '/@/plugin/image-registry.js';
 import { TaskManager } from '/@/plugin/tasks/task-manager.js';
 import { Telemetry } from '/@/plugin/telemetry/telemetry.js';
@@ -399,7 +400,10 @@ export class ExtensionInstaller {
     }
 
     // load all extensions
-    analyzedExtensions.forEach(extension => this.extensionLoader.ensureExtensionIsEnabled(extension.id));
+    for (const extension of analyzedExtensions) {
+      await ensureExtensionPrerequisites(extension.id);
+      this.extensionLoader.ensureExtensionIsEnabled(extension.id);
+    }
 
     await this.extensionLoader.loadExtensions(analyzedExtensions);
 

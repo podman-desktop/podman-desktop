@@ -1,12 +1,21 @@
 <script lang="ts">
+import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { onMount } from 'svelte';
+import Fa from 'svelte-fa';
 import { router } from 'tinro';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
+import { isExtensionPinnedRow } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath } from './extension-list';
+import { EXTENSION_TABLE_ROW_BASE_CLASS, extensionTableRowBorderClass } from './extension-table-styles';
 import { ExtensionsUtils } from './extensions-utils';
 import { setInstalledTableCallbacks } from './installed-extension-table-context';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
+import {
+  applyInstalledTableSort,
+  type InstalledTableSortColumn,
+  installedTableSortState,
+} from './installed-extension-table-sort.svelte';
 import InstalledExtensionTableActionsColumn from './table/InstalledExtensionTableActionsColumn.svelte';
 import InstalledExtensionTableIconColumn from './table/InstalledExtensionTableIconColumn.svelte';
 import InstalledExtensionTableLifecycleColumn from './table/InstalledExtensionTableLifecycleColumn.svelte';
@@ -23,7 +32,12 @@ let { rows, onChangeVersion }: Props = $props();
 
 const extensionsUtils = new ExtensionsUtils();
 
+const sortableColumns: InstalledTableSortColumn[] = ['Name', 'Publisher', 'Version', 'Status', 'Origin'];
+
 const gridTemplateColumns = '56px 2fr 1.5fr 1.35fr minmax(9rem, 1.25fr) 2fr 140px';
+
+const currentSort = $derived(installedTableSortState.value);
+const userSortApplied = $derived(currentSort !== null);
 
 onMount(() => {
   setInstalledTableCallbacks({ onChangeVersion });
@@ -36,6 +50,21 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
   }
   router.goto(buildExtensionDetailsPath(row.extension.id, 'installed'));
 }
+
+function handleSort(column: InstalledTableSortColumn): void {
+  applyInstalledTableSort(column);
+}
+
+function sortIcon(column: InstalledTableSortColumn): typeof faSort {
+  if (currentSort?.column !== column) {
+    return faSort;
+  }
+  return currentSort.ascending ? faSortUp : faSortDown;
+}
+
+function isSorted(column: InstalledTableSortColumn): boolean {
+  return currentSort?.column === column;
+}
 </script>
 
 <div class="w-full px-5" role="table" aria-label="installed extensions">
@@ -44,18 +73,24 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
     class="grid gap-x-4 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
     style:grid-template-columns={gridTemplateColumns}>
     <div role="columnheader"></div>
-    <div role="columnheader" class="text-sm font-semibold self-center">Name</div>
-    <div role="columnheader" class="text-sm font-semibold self-center">Publisher</div>
-    <div role="columnheader" class="text-sm font-semibold self-center">Version</div>
-    <div role="columnheader" class="text-sm font-semibold self-center">Status</div>
-    <div role="columnheader" class="text-sm font-semibold self-center">Origin</div>
+    {#each sortableColumns as column (column)}
+      <div
+        role="columnheader"
+        class="flex items-center gap-1 text-sm font-semibold self-center cursor-pointer select-none"
+        onclick={(): void => handleSort(column)}>
+        <span>{column}</span>
+        <Fa
+          icon={sortIcon(column)}
+          class="text-xs {isSorted(column) ? 'text-[var(--pd-content-header)]' : 'text-[var(--pd-table-header-unsorted)]'}" />
+      </div>
+    {/each}
     <div role="columnheader" class="text-sm font-semibold self-center justify-self-end">Actions</div>
   </div>
 
   <div role="rowgroup">
     {#each rows as row (row.extension.id)}
       <div
-        class="grid gap-x-4 min-h-[56px] mb-2 rounded-lg border border-[var(--pd-content-table-border)] bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] cursor-pointer"
+        class="{EXTENSION_TABLE_ROW_BASE_CLASS} {extensionTableRowBorderClass(isExtensionPinnedRow(row.extension.id, userSortApplied))} grid items-center"
         style:grid-template-columns={gridTemplateColumns}
         role="row"
         aria-label={row.name}
@@ -63,7 +98,7 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
         <div role="cell" class="self-center pl-3 pr-1 py-2">
           <InstalledExtensionTableIconColumn object={row} />
         </div>
-        <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pr-2">
+        <div role="cell" class="self-center min-w-0 py-2 pr-2">
           <InstalledExtensionTableNameColumn object={row} />
         </div>
         <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">

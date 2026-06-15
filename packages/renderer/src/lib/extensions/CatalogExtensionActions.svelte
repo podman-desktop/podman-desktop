@@ -12,7 +12,7 @@ import {
   faToggleOn,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import { derived, type Unsubscriber } from 'svelte/store';
+import { get } from 'svelte/store';
 import { router } from 'tinro';
 
 import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
@@ -26,9 +26,9 @@ import { clearNewBadge, isAutoUpdateEnabled, setAutoUpdateEnabled } from './exte
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
   extensionHasOtherVersions,
-  type ExtensionOnboardingStatus,
   extensionRequiresManualUpdate,
-  resolveExtensionOnboardingStatus,
+  resolveCatalogExtensionOnboardingStatus,
+  resolveOnboardingRouteExtensionId,
 } from './extension-onboarding-utils';
 import {
   applyExtensionVersionChange,
@@ -59,22 +59,10 @@ const autoUpdateDetail = $derived(
       : 'Manual version installation is required',
 );
 
-let onboardingStatus = $state<ExtensionOnboardingStatus>({ enabled: false, detail: 'Not configured' });
-
-let onboardingUnsubscribe: Unsubscriber | undefined;
-
-$effect(() => {
-  onboardingUnsubscribe?.();
-  const onboardingReadable = derived([onboardingList, context], () =>
-    resolveExtensionOnboardingStatus(installedExtension),
-  );
-  onboardingUnsubscribe = onboardingReadable.subscribe(status => {
-    onboardingStatus = status;
-  });
-
-  return (): void => {
-    onboardingUnsubscribe?.();
-  };
+const onboardingStatus = $derived.by(() => {
+  get(onboardingList);
+  get(context);
+  return resolveCatalogExtensionOnboardingStatus(extension);
 });
 
 const showStop = $derived(installedExtension?.state === 'started' || installedExtension?.state === 'starting');
@@ -95,7 +83,7 @@ function openOnboarding(event: Event): void {
   if (!onboardingStatus.enabled) {
     return;
   }
-  router.goto(`/preferences/onboarding/${extension.id}`);
+  router.goto(`/preferences/onboarding/${resolveOnboardingRouteExtensionId(extension.id)}`);
 }
 
 function openPreferences(event: Event): void {

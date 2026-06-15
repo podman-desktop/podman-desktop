@@ -16,6 +16,8 @@ import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
 import { markNewlyInstalled } from './extension-catalog-settings.svelte';
 import { buildExtensionsListPath } from './extension-list';
+import { showPostInstallTooltipDemo } from './extension-prototype-post-install-tooltip-demo';
+import { arePrototypeUseCasesEnabled } from './extension-prototype-use-cases';
 import { ExtensionsUtils } from './extensions-utils';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
 
@@ -66,6 +68,14 @@ const filteredCatalogExtensions: CatalogExtensionInfoUI[] = $derived(
 
 let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - filteredCatalogExtensions.length);
 
+const showInstalledFilterEmpty = $derived(
+  screen === 'installed' && !!searchTerm && filteredInstalledExtensions.length === 0,
+);
+const showCatalogFilterEmpty = $derived(
+  screen === 'catalog' && enableCatalog && !!searchTerm && filteredCatalogExtensions.length === 0,
+);
+const showFilterEmptyScreen = $derived(showInstalledFilterEmpty || showCatalogFilterEmpty);
+
 function closeModal(): void {
   installManualImageModal = false;
 }
@@ -76,6 +86,15 @@ function handleExtensionInstalled(extensionId: string): void {
 }
 
 let installManualImageModal: boolean = $state(false);
+let prototypeTooltipDemoMessage = $state('');
+
+async function previewPostInstallTooltipDemo(): Promise<void> {
+  prototypeTooltipDemoMessage = '';
+  const result = await showPostInstallTooltipDemo();
+  if (!result.shown && result.message) {
+    prototypeTooltipDemoMessage = result.message;
+  }
+}
 
 function changeScreen(newScreen: ExtensionListScreen): void {
   if (screen === newScreen) {
@@ -89,6 +108,17 @@ function changeScreen(newScreen: ExtensionListScreen): void {
 
 <NavPage bind:searchTerm={searchTerm} title="extensions">
   {#snippet additionalActions()}
+    {#if enableCatalog && arePrototypeUseCasesEnabled() && screen === 'catalog'}
+      <Button
+        type="secondary"
+        on:click={(): void => {
+          previewPostInstallTooltipDemo().catch((error: unknown) => {
+            console.error('Unable to preview post-install tooltip demo', error);
+          });
+        }}
+        title="Preview the post-install sidebar tooltip with Learn"
+        aria-label="Preview install tooltip">Preview install tooltip</Button>
+    {/if}
     {#if enableCustomExtensions}
       <Button
         on:click={(): void => {
@@ -101,15 +131,16 @@ function changeScreen(newScreen: ExtensionListScreen): void {
   {/snippet}
 
   {#snippet bottomAdditionalActions()}
-    <!-- display filter out items-->
-    {#if filteredInstalledItems > 0 && screen === 'installed'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredInstalledItems} items of {installedExtensionsWithDemos.length}
-      </div>
-    {:else if filteredCatalogItems > 0 && screen === 'catalog'}
-      <div class="text-sm text-[var(--pd-content-text)]">
-        Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
-      </div>
+    {#if !showFilterEmptyScreen}
+      {#if filteredInstalledItems > 0 && screen === 'installed'}
+        <div class="text-sm text-[var(--pd-content-text)]">
+          Filtered out {filteredInstalledItems} items of {installedExtensionsWithDemos.length}
+        </div>
+      {:else if filteredCatalogItems > 0 && screen === 'catalog'}
+        <div class="text-sm text-[var(--pd-content-text)]">
+          Filtered out {filteredCatalogItems} items of {enhancedCatalogExtensions.length}
+        </div>
+      {/if}
     {/if}
   {/snippet}
 
@@ -139,28 +170,41 @@ function changeScreen(newScreen: ExtensionListScreen): void {
  {/snippet}
 
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full h-full flex-1">
     {#if screen === 'installed'}
-      {#if searchTerm && filteredInstalledExtensions.length === 0}
-        <FilteredEmptyScreen
-          icon={ExtensionIcon}
-          kind="extensions"
-          searchTerm={searchTerm}
-          on:resetFilter={(): string => (searchTerm = '')} />
+      {#if showInstalledFilterEmpty}
+        <div class="flex flex-1 w-full items-center justify-center">
+          <FilteredEmptyScreen
+            icon={ExtensionIcon}
+            kind="extensions"
+            bind:searchTerm={searchTerm}
+            onResetFilter={(): void => {
+              searchTerm = '';
+            }} />
+        </div>
+      {:else}
+        <InstalledExtensionList extensionInfos={filteredInstalledExtensions} />
       {/if}
-      <InstalledExtensionList extensionInfos={filteredInstalledExtensions} />
     {:else if screen === 'catalog' && enableCatalog}
-      {#if searchTerm && filteredCatalogExtensions.length === 0}
-        <FilteredEmptyScreen
-          icon={ExtensionIcon}
-          kind="extensions"
-          searchTerm={searchTerm}
-          on:resetFilter={(): string => (searchTerm = '')} />
+      {#if prototypeTooltipDemoMessage}
+        <div class="px-5 pt-3 text-sm text-[var(--pd-status-warning)]">{prototypeTooltipDemoMessage}</div>
       {/if}
-      <CatalogExtensionList
-        showEmptyScreen={!searchTerm}
-        catalogExtensions={filteredCatalogExtensions}
-        oninstall={handleExtensionInstalled} />
+      {#if showCatalogFilterEmpty}
+        <div class="flex flex-1 w-full items-center justify-center">
+          <FilteredEmptyScreen
+            icon={ExtensionIcon}
+            kind="extensions"
+            bind:searchTerm={searchTerm}
+            onResetFilter={(): void => {
+              searchTerm = '';
+            }} />
+        </div>
+      {:else}
+        <CatalogExtensionList
+          showEmptyScreen={!searchTerm}
+          catalogExtensions={filteredCatalogExtensions}
+          oninstall={handleExtensionInstalled} />
+      {/if}
     {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}

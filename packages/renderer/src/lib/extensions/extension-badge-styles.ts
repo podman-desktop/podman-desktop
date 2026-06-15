@@ -22,6 +22,21 @@ export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
 
 export const EXTENSION_BUILTIN_CHIP_TOOLTIP = 'Pre-installed with Podman Desktop';
 
+export const EXTENSION_NEW_BADGE_TOOLTIP = 'Just installed';
+
+export function buildExtensionNewNavigationTooltip(name: string): string {
+  return `Open ${name} from the sidebar to get started.`;
+}
+
+export const EXTENSION_INSTALL_TOOLTIP = 'Install';
+
+export function buildExtensionInstallingTooltip(percentage?: string): string {
+  if (percentage && percentage !== '0%') {
+    return `Installing (${percentage})`;
+  }
+  return 'Installing';
+}
+
 export const EXTENSION_CHIP_COLORS = {
   featured: 'bg-[var(--pd-badge-sky)]',
   new: 'bg-yellow-500',
