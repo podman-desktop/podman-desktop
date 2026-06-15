@@ -58,10 +58,10 @@ test('Expect to have description and version', async () => {
   expect(region).not.toHaveTextContent('Pre-installed');
 });
 
-test('Expect to have podman desktop extension info (removable = false)', async () => {
+test('Expect to show pre-installed only for built-in extensions', async () => {
   const extension: CombinedExtensionInfoUI = {
-    type: 'dd',
-    id: '',
+    type: 'pd',
+    id: 'podman-desktop.compose',
     name: 'foo',
     description: 'my description',
     displayName: '',
@@ -75,10 +75,27 @@ test('Expect to have podman desktop extension info (removable = false)', async (
   };
   render(InstalledExtensionCardRight, { extension });
 
-  // get region named Extension {extension.name} right actions
   const region = screen.getByRole('region', { name: 'Extension foo right actions' });
-  expect(region).toBeInTheDocument();
-
-  // region contains the details
   expect(region).toHaveTextContent('Pre-installed');
+});
+
+test('Expect bundled community extensions to omit pre-installed label', async () => {
+  const extension: CombinedExtensionInfoUI = {
+    type: 'pd',
+    id: 'podman-desktop.kind',
+    name: 'Kind',
+    description: 'my description',
+    displayName: '',
+    publisher: '',
+    removable: false,
+    devMode: false,
+    version: 'v1.2.3',
+    state: '',
+    path: '',
+    readme: '',
+  };
+  render(InstalledExtensionCardRight, { extension });
+
+  const region = screen.getByRole('region', { name: 'Extension Kind right actions' });
+  expect(region).not.toHaveTextContent('Pre-installed');
 });

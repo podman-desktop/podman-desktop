@@ -2,10 +2,15 @@
 import { faCloudDownload } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input } from '@podman-desktop/ui-svelte';
 import { onMount } from 'svelte';
+import { get } from 'svelte/store';
+import { router } from 'tinro';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
+import { extensionInfos } from '/@/stores/extensions';
 
 import { markNewlyInstalled } from './extension-catalog-settings.svelte';
+import { buildExtensionsListPath } from './extension-list';
+import { syncExtensionNavigationAfterInstall } from './extension-nav-pointer.svelte';
 
 interface Props {
   closeCallback: () => void;
@@ -43,26 +48,43 @@ function validateImageName(event: Event): void {
   inputfieldError = 'Invalid input';
 }
 
+function resolveInstalledExtensionId(installedBefore: Set<string>): string | undefined {
+  return get(extensionInfos).find(extension => !installedBefore.has(extension.id))?.id;
+}
+
+function extractExtensionIdFromOciImage(ociImage: string): string {
+  const parts = ociImage.split('/');
+  const lastPart = parts[parts.length - 1];
+  const [name] = lastPart.split(':');
+  return name || ociImage;
+}
+
+async function completeSuccessfulInstall(ociImage: string, installedBefore: Set<string>): Promise<void> {
+  const extensionId = resolveInstalledExtensionId(installedBefore) ?? extractExtensionIdFromOciImage(ociImage);
+  await syncExtensionNavigationAfterInstall(extensionId);
+  markNewlyInstalled(extensionId);
+  router.goto(buildExtensionsListPath('installed'));
+  closeCallback();
+}
+
 async function installExtension(): Promise<void> {
   inputfieldError = undefined;
   logs = [];
+  progressPercent = 0;
 
   installInProgress = true;
 
-  // do a trim on the image name
   const ociImage = imageName?.trim();
+  const installedBefore = new Set(get(extensionInfos).map(extension => extension.id));
 
   try {
     const percentageMatchRegexp = RegExp(/(\d+)%/);
-    // download image
     await window.extensionInstallFromImage(
       ociImage,
       (data: string) => {
         logs = [...logs, data];
         console.debug(`Installing ${ociImage}:`, data);
 
-        // try to extract percentage from string like
-        // data Downloading sha256:e8d2c9e5c69499c41ba39b7828c00e55087572884cac466b4d1b47243b085c7d.tar - 11% - (55132/521578)
         const percentageMatch = percentageMatchRegexp.exec(data);
         if (percentageMatch) {
           progressPercent = parseInt(percentageMatch[1]);
@@ -74,35 +96,26 @@ async function installExtension(): Promise<void> {
         inputfieldError = error;
       },
     );
-    logs = [...logs, '☑️ installation finished!'];
+
+    if (inputfieldError) {
+      return;
+    }
+
     progressPercent = 100;
-
-    // Extract extension ID from the OCI image name
-    // Format is typically: registry/namespace/name:version or namespace/name:version
-    const parts = ociImage.split('/');
-    const lastPart = parts[parts.length - 1];
-    const [name] = lastPart.split(':');
-    const extensionId = name || ociImage;
-
-    markNewlyInstalled(extensionId);
+    await completeSuccessfulInstall(ociImage, installedBefore);
   } catch (error) {
     console.error('error', error);
+  } finally {
+    installInProgress = false;
   }
-  installInProgress = false;
 }
 
 async function handleKeydown(e: KeyboardEvent): Promise<void> {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !installInProgress) {
     e.preventDefault();
-    if (progressPercent === 100) {
-      closeCallback();
-    } else {
-      await installExtension();
-    }
+    await installExtension();
   }
 }
-
-const showForm = $derived(installInProgress || progressPercent !== 100 || !!inputfieldError);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -115,21 +128,17 @@ const showForm = $derived(installInProgress || progressPercent !== 100 || !!inpu
       <div>
         <label for="imageName" class="block pb-2 text-[var(--pd-modal-text)]">OCI Image:</label>
         <div class="min-h-14">
-          {#if showForm}
-            <Input
-              bind:value={imageName}
-              name="imageName"
-              id="imageName"
-              placeholder="Enter OCI image name of the extension (e.g. quay.io/namespace/my-image)"
-              on:input={validateImageName}
-              disabled={installInProgress}
-              error={inputfieldError}
-              aria-invalid={inputfieldError !== ''}
-              aria-label={inputAriaLabel}
-              required />
-          {:else}
-            <div class="text-[var(--pd-modal-text)]">{imageName} successfully installed.</div>
-          {/if}
+          <Input
+            bind:value={imageName}
+            name="imageName"
+            id="imageName"
+            placeholder="Enter OCI image name of the extension (e.g. quay.io/namespace/my-image)"
+            on:input={validateImageName}
+            disabled={installInProgress}
+            error={inputfieldError}
+            aria-invalid={inputfieldError !== ''}
+            aria-label={inputAriaLabel}
+            required />
         </div>
         <div class="w-full min-h-9 h-9 py-2">
           {#if installInProgress}
@@ -154,16 +163,12 @@ const showForm = $derived(installInProgress || progressPercent !== 100 || !!inpu
       <Button
         type="link"
         on:click={closeCallback}>Cancel</Button>
-      {#if showForm}
-        <Button
-          type="primary"
-          icon={faCloudDownload}
-          disabled={inputfieldError !== undefined}
-          on:click={installExtension}
-          inProgress={installInProgress}>Install</Button>
-      {:else}
-        <Button on:click={closeCallback}>Done</Button>
-      {/if}
+      <Button
+        type="primary"
+        icon={faCloudDownload}
+        disabled={inputfieldError !== undefined}
+        on:click={installExtension}
+        inProgress={installInProgress}>Install</Button>
 
   {/snippet}
 </Dialog>

@@ -8,8 +8,9 @@ import {
   EXTENSION_CHIP_COLORS,
   EXTENSION_CHIP_TEXT_CLASS,
 } from './extension-badge-styles';
+import { isBuiltInExtension } from './extension-origin-utils';
 
-export let extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
+export let extension: { id: string; type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
 </script>
 
 <div class="flex flex-row gap-1 items-center {$$props.class}" role="region" aria-label="Extension Badge">
@@ -23,7 +24,7 @@ export let extension: { type: 'dd' | 'pd'; removable: boolean; devMode: boolean 
       label="DevMode extension"
       color={EXTENSION_CHIP_COLORS.devMode}
       class={`text-[8px] ${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-  {:else if !extension.removable}
+  {:else if isBuiltInExtension(extension)}
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
       color={EXTENSION_CHIP_COLORS.builtin}

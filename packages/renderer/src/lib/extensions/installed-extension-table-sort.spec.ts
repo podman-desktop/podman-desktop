@@ -104,6 +104,24 @@ describe('installed-extension-table-sort', () => {
     ]);
   });
 
+  test('pins newly installed extensions above manual update demo rows', () => {
+    markNewlyInstalled('podman-desktop.quadlet');
+    newlyInstalledAt.set('podman-desktop.quadlet', Date.now());
+
+    const rows = [
+      createRow(USE_CASE_EXTENSION_IDS.communityActiveWithUpdate, 'Kind', { hasUpdate: true }),
+      createRow('podman-desktop.quadlet', 'Podman Quadlet'),
+    ];
+    rows[0].catalogExtension.fetchVersion = '1.1.0';
+
+    const ordered = orderInstalledTableRows(rows, extensionsUtils);
+
+    expect(ordered.map(row => row.extension.id)).toEqual([
+      'podman-desktop.quadlet',
+      USE_CASE_EXTENSION_IDS.communityActiveWithUpdate,
+    ]);
+  });
+
   test('pins newly installed extensions to the top until user sorts', () => {
     markNewlyInstalled('new-ext');
     newlyInstalledAt.set('new-ext', Date.now());

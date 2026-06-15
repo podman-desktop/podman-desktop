@@ -24,6 +24,7 @@ import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions
 
 import type { CatalogExtensionInfoUI, CatalogListFilters } from './catalog-extension-info-ui';
 import type { ExtensionDetailsUI } from './extension-details-ui';
+import { resolveExtensionVerificationStatus } from './extension-origin-utils';
 import { isPrototypeInstalledDemo } from './extension-prototype-installed-demos';
 import {
   applyPrototypeCatalogUseCaseOverlay,
@@ -190,10 +191,10 @@ export class ExtensionsUtils {
           lastUpdated: version.lastUpdated,
         }));
         const hasUpdate = isInstalled && !!installedVersion && !!fetchVersion && installedVersion !== fetchVersion;
-        const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
-        const isVerified = isSupportedByRedHat
-          ? true
-          : categories.some(category => category.toLowerCase().includes('verified'));
+        const { isSupportedByRedHat, isVerified } = resolveExtensionVerificationStatus(
+          publisherDisplayName,
+          categories,
+        );
         const repositoryUrl = `https://github.com/podman-desktop/extensions/tree/main/extensions/${catalogExtension.extensionName}`;
 
         return {
@@ -278,8 +279,7 @@ export class ExtensionsUtils {
       return withKindDemo;
     }
 
-    const candidate =
-      preferredDemo ?? realExtensions.find(extension => extension.isInstalled && extension.installedVersion);
+    const candidate = preferredDemo;
     if (!candidate) {
       return withKindDemo;
     }
@@ -329,11 +329,14 @@ export class ExtensionsUtils {
     }
 
     const publisherDisplayName = this.resolvePublisherDisplayName(installed, matchingCatalog?.publisherDisplayName);
-    const isSupportedByRedHat = publisherDisplayName.toLowerCase().includes('red hat');
+    const { isSupportedByRedHat, isVerified } = resolveExtensionVerificationStatus(
+      publisherDisplayName,
+      matchingCatalog?.categories ?? [],
+    );
 
     const baseInfo: CatalogExtensionInfoUI = {
       id: installed.id,
-      displayName: installed.displayName ? installed.displayName : installed.name,
+      displayName: installed.displayName?.trim() ? installed.displayName : installed.name,
       isFeatured: false,
       fetchable: false,
       fetchLink: '',
@@ -347,7 +350,7 @@ export class ExtensionsUtils {
       keywords: [],
       availableVersions: installed.version ? [{ version: installed.version, ociUri: '', preview: false }] : [],
       hasUpdate: false,
-      isVerified: isSupportedByRedHat,
+      isVerified,
       isSupportedByRedHat,
       repositoryUrl: `https://github.com/podman-desktop/extensions/tree/main/extensions/${installed.id}`,
       installedExtension: installed,
@@ -380,7 +383,7 @@ export class ExtensionsUtils {
       catalogInfo = this.buildCatalogInfoForInstalled(installed!, catalogExtensions, featuredExtensions);
     }
 
-    return this.ensurePrototypeUpdateDemo([catalogInfo])[0];
+    return applyPrototypeCatalogUseCaseOverlay(catalogInfo);
   }
 
   filterInstalledExtensions(extensions: CombinedExtensionInfoUI[], searchTerm: string): CombinedExtensionInfoUI[] {

@@ -53,10 +53,10 @@ test('Expect inner div to use color-registry divider token', async () => {
   expect(innerDiv).not.toBeNull();
 });
 
-test('Expect to see a div with extension id title', async () => {
+test('Expect to see built-in badge for compose extension', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',
-    id: 'myExtensionId',
+    id: 'podman-desktop.compose',
     name: 'foo',
     description: 'my description',
     displayName: '',
@@ -72,7 +72,7 @@ test('Expect to see a div with extension id title', async () => {
   const { findByRole } = render(InstalledExtensionCard, { extension });
 
   // get role Extension Badge
-  const badge = await findByRole('region', { name: 'myExtensionId' });
+  const badge = await findByRole('region', { name: 'podman-desktop.compose' });
   expect(badge).toBeInTheDocument();
   expect(badge).toHaveTextContent('Built-in extension');
 });

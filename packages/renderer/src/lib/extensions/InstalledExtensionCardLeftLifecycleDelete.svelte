@@ -4,6 +4,8 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import LoadingIconButton from '/@/lib/ui/LoadingIconButton.svelte';
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
+import { isExtensionRemovableInUi } from './extension-origin-utils';
+
 interface Props {
   extension: CombinedExtensionInfoUI;
 }
@@ -27,4 +29,7 @@ async function deleteExtension(): Promise<void> {
     clickAction={deleteExtension}
     action="delete"
     icon={faTrash}
-    state={{ status: extension.type === 'dd' ? 'stopped' : extension.removable ? extension.state : '', inProgress }} />
+    state={{
+      status: extension.type === 'dd' ? 'stopped' : isExtensionRemovableInUi(extension) ? extension.state : '',
+      inProgress,
+    }} />

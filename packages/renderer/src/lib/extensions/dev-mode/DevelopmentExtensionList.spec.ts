@@ -62,8 +62,10 @@ test('Expect no empty screen if dev mode is enabled but table is empty', async (
   // expect the text devModeNotEnabledText is not there
   await vi.waitFor(() => expect(screen.queryByText(devModeNotEnabledText)).not.toBeInTheDocument());
 
-  // expect No extension for now to be displayed
-  expect(screen.getByText('No extension for now')).toBeInTheDocument();
+  expect(screen.getByText('No local extensions tracked')).toBeInTheDocument();
+  expect(
+    screen.getByText('Add a folder on your machine to load and test an extension during development.'),
+  ).toBeInTheDocument();
 });
 
 test('expect addLocalFolderExtension is working', async () => {

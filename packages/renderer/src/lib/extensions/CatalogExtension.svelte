@@ -23,7 +23,6 @@ export let catalogExtensionUI: CatalogExtensionInfoUI;
 export let returnScreen: ExtensionListScreen = 'catalog';
 export let oninstall: (extensionId: string) => void = () => {};
 export let ondetails: (extensionId: string) => void = () => {};
-export let onChangeVersion: (extension: CatalogExtensionInfoUI, preferredVersion?: string) => void = () => {};
 
 let uiRevision = 0;
 
@@ -51,10 +50,6 @@ function handleCardClick(event: MouseEvent): void {
   }
   openExtensionDetails();
 }
-
-function handleChangeVersion(preferredVersion?: string): void {
-  onChangeVersion(catalogExtensionUI, preferredVersion);
-}
 </script>
 
 <div
@@ -76,8 +71,7 @@ function handleChangeVersion(preferredVersion?: string): void {
         {/if}
         <CatalogExtensionActions
           extension={catalogExtensionUI}
-          {returnScreen}
-          onChangeVersion={(): void => handleChangeVersion()} />
+          {returnScreen} />
       </div>
     </div>
 

@@ -48,7 +48,7 @@ describe('resolveExtensionLifecycleWarnings', () => {
     ).toEqual([]);
   });
 
-  test('warns when extension is disabled with reactivate guidance', () => {
+  test('warns when extension is disabled with enable guidance', () => {
     const warnings = resolveExtensionLifecycleWarnings({
       state: 'stopped',
       type: 'pd',
@@ -57,7 +57,7 @@ describe('resolveExtensionLifecycleWarnings', () => {
 
     expect(warnings).toHaveLength(1);
     expect(warnings[0]?.title).toBe('Extension is disabled');
-    expect(warnings[0]?.fix).toContain('Reactivate');
+    expect(warnings[0]?.fix).toContain('Enable');
   });
 
   test('warns when extension failed and includes error detail', () => {

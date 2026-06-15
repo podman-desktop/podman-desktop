@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { CombinedExtensionInfoUI } from '/@/stores/all-installed-extensions';
 
+import { isExtensionPreinstalled } from './extension-origin-utils';
 import ExtensionDetailsLink from './ExtensionDetailsLink.svelte';
 
 interface Props {
@@ -20,7 +21,7 @@ let { extension }: Props = $props();
   </div>
   <div class="absolute bottom-0 flex flex-col text-[var(--pd-content-text)] text-sm">
     <div>
-      {extension.removable ? '' : 'Pre-installed'}
+      {isExtensionPreinstalled(extension) ? 'Pre-installed' : ''}
     </div>
     <div aria-label="Version">
       {#if extension.version}

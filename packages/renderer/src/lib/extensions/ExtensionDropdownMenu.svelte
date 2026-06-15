@@ -6,8 +6,9 @@ import type { Component, Snippet } from 'svelte';
 import { onDestroy, onMount, setContext } from 'svelte';
 
 import {
-  closeOtherExtensionActionsMenus,
-  registerExtensionActionsMenu,
+  EXTENSION_ACTIONS_MENU_CHANGE_EVENT,
+  getOpenExtensionActionsMenuId,
+  isExtensionActionsMenuOpen,
   setOpenExtensionActionsMenuId,
 } from './extension-actions-menu.svelte';
 import { EXTENSION_DROPDOWN_MENU_CONTEXT, type ExtensionDropdownMenuContext } from './extension-dropdown-menu-context';
@@ -23,19 +24,34 @@ interface Props {
 
 let { menuId, icon = faEllipsisVertical, hidden = false, title = '', children }: Props = $props();
 
-let showMenu = $state(false);
+let menuRevision = $state(0);
 let outsideWindow = $state<HTMLButtonElement>();
 let clientY = $state(0);
 let clientX = $state(0);
 
+const isOpen = $derived.by(() => {
+  menuRevision;
+  return isExtensionActionsMenuOpen(menuId);
+});
+
 function closeMenu(): void {
-  showMenu = false;
+  if (getOpenExtensionActionsMenuId() === menuId) {
+    setOpenExtensionActionsMenuId(undefined);
+  }
 }
 
 setContext<ExtensionDropdownMenuContext>(EXTENSION_DROPDOWN_MENU_CONTEXT, { closeMenu });
 
 onMount(() => {
-  return registerExtensionActionsMenu(menuId, closeMenu);
+  const onMenuChange = (): void => {
+    menuRevision += 1;
+  };
+
+  window.addEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, onMenuChange);
+
+  return (): void => {
+    window.removeEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, onMenuChange);
+  };
 });
 
 onDestroy(() => {
@@ -48,22 +64,36 @@ function handleEscape({ key }: KeyboardEvent): void {
   }
 }
 
+function isClickInsideMenuPanel(target: Node): boolean {
+  const panel = document.querySelector(`[data-extension-dropdown-menu="${menuId}"]`);
+  return !!panel?.contains(target);
+}
+
 function onWindowClick(e: MouseEvent): void {
-  if (!hidden) {
-    showMenu = outsideWindow?.contains(e.target as Node) ?? false;
+  if (!isExtensionActionsMenuOpen(menuId)) {
+    return;
   }
+
+  const target = e.target as Node;
+  if (outsideWindow?.contains(target) || isClickInsideMenuPanel(target)) {
+    return;
+  }
+
+  closeMenu();
 }
 
 function onButtonClick(e: MouseEvent): void {
+  e.stopPropagation();
   clientY = e.clientY;
   clientX = e.clientX;
-  closeOtherExtensionActionsMenus(menuId);
-  showMenu = !showMenu;
-}
 
-$effect(() => {
-  setOpenExtensionActionsMenuId(showMenu ? menuId : undefined);
-});
+  if (isExtensionActionsMenuOpen(menuId)) {
+    closeMenu();
+    return;
+  }
+
+  setOpenExtensionActionsMenuId(menuId);
+}
 </script>
 
 <svelte:window on:keyup={handleEscape} on:click={onWindowClick} />
@@ -72,6 +102,7 @@ $effect(() => {
   <div class="relative inline-block text-left">
     <button
       aria-label={title.length > 0 ? title : 'kebab menu'}
+      aria-expanded={isOpen}
       onclick={onButtonClick}
       title={title}
       bind:this={outsideWindow}
@@ -80,7 +111,7 @@ $effect(() => {
     </button>
   </div>
 
-  {#if showMenu}
+  {#if isOpen}
     <ExtensionDropDownMenuItems {menuId} {clientY} {clientX}>
       {@render children?.()}
     </ExtensionDropDownMenuItems>

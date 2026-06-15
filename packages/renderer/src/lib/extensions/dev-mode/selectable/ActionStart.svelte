@@ -15,10 +15,15 @@ async function startExtension(): Promise<void> {
   }
   await window.startExtension(extensionFolder.extension.id);
 }
+const canStart = $derived(
+  !!extensionFolder.extension &&
+    (extensionFolder.extension.state === 'stopped' || extensionFolder.extension.state === 'failed'),
+);
 </script>
 
 <ListItemButtonIcon
   title="Start the extension"
   onClick={startExtension}
-  hidden={!extensionFolder.extension || extensionFolder.extension?.state === 'started'}
+  hidden={!extensionFolder.extension}
+  enabled={canStart}
   icon={faPlay} />

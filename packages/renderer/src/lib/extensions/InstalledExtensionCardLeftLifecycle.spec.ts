@@ -30,7 +30,7 @@ beforeAll(() => {
   Object.defineProperty(window, 'removeExtension', { value: vi.fn() });
 });
 
-test('Expect to see start and delete on stopped pd Extension', async () => {
+test('Expect to see enable toggle and delete on stopped pd Extension', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',
     id: '',
@@ -52,14 +52,15 @@ test('Expect to see start and delete on stopped pd Extension', async () => {
   expect(actions).toBeInTheDocument();
 
   // should have start button and delete button
-  const start = screen.getByRole('button', { name: 'Start' });
-  expect(start).toBeInTheDocument();
+  const enable = screen.getByRole('button', { name: 'Enable' });
+  expect(enable).toBeInTheDocument();
+  expect(enable).toBeEnabled();
 
   const deleteButton = screen.getByRole('button', { name: 'Delete' });
   expect(deleteButton).toBeInTheDocument();
 });
 
-test('Expect to see stop on started pd Extension', async () => {
+test('Expect to see disable toggle on started pd Extension', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',
     id: '',
@@ -81,6 +82,7 @@ test('Expect to see stop on started pd Extension', async () => {
   expect(actions).toBeInTheDocument();
 
   // should have stop button
-  const stop = screen.getByRole('button', { name: 'Stop' });
-  expect(stop).toBeInTheDocument();
+  const disable = screen.getByRole('button', { name: 'Disable' });
+  expect(disable).toBeInTheDocument();
+  expect(disable).toBeEnabled();
 });

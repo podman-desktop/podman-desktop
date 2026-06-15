@@ -15,7 +15,5 @@ let { object }: Props = $props();
   {#if !object.isInstalled && object.fetchable}
     <FeaturedExtensionDownload oninstall={catalogTableCallbacks.oninstall} extension={object} />
   {/if}
-  <CatalogExtensionActions
-    extension={object}
-    onChangeVersion={(): void => catalogTableCallbacks.onChangeVersion(object)} />
+  <CatalogExtensionActions extension={object} />
 </div>

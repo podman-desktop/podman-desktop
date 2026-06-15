@@ -23,12 +23,13 @@ import { beforeEach, expect, test } from 'vitest';
 
 import ExtensionBadge from './ExtensionBadge.svelte';
 
-type ExtensionType = { type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
+type ExtensionType = { id: string; type: 'dd' | 'pd'; removable: boolean; devMode: boolean };
 
 beforeEach(() => {});
 
 test('Expect to have badge for dd Extension', async () => {
   const extension: ExtensionType = {
+    id: 'some.dd.ext',
     type: 'dd',
     removable: true,
     devMode: false,
@@ -40,6 +41,7 @@ test('Expect to have badge for dd Extension', async () => {
 
 test('Expect to have badge for pd built-in Extension', async () => {
   const extension: ExtensionType = {
+    id: 'podman-desktop.compose',
     type: 'pd',
     removable: false,
     devMode: false,
@@ -51,6 +53,7 @@ test('Expect to have badge for pd built-in Extension', async () => {
 
 test('Expect to have badge for devMode Extension', async () => {
   const extension: ExtensionType = {
+    id: 'local-dev',
     type: 'pd',
     removable: false,
     devMode: true,
@@ -58,4 +61,16 @@ test('Expect to have badge for devMode Extension', async () => {
   render(ExtensionBadge, { extension });
 
   expect(screen.getByText('DevMode extension')).toBeInTheDocument();
+});
+
+test('Expect bundled catalog extension with removable false to have no built-in badge', async () => {
+  const extension: ExtensionType = {
+    id: 'podman-desktop.kind',
+    type: 'pd',
+    removable: false,
+    devMode: false,
+  };
+  render(ExtensionBadge, { extension });
+
+  expect(screen.queryByText('Built-in extension')).not.toBeInTheDocument();
 });

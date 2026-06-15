@@ -1,11 +1,12 @@
 <script lang="ts">
 import type { ExtensionDevelopmentFolderInfo, ExtensionInfo } from '@podman-desktop/core-api';
 import { ExtensionLoaderSettings } from '@podman-desktop/core-api';
-import { Button } from '@podman-desktop/ui-svelte';
+import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/store';
 
 import DevelopmentExtensionListTable from '/@/lib/extensions/dev-mode/table/ListTable.svelte';
+import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { extensionDevelopmentFolders } from '/@/stores/extensionDevelopmentFolders';
 import { extensionInfos } from '/@/stores/extensions';
 
@@ -82,29 +83,25 @@ async function addLocalFolderExtension(): Promise<void> {
 }
 </script>
 
-{#if isDevelopmentModeEnabled}
-  <div class="bg-[var(--pd-content-card-bg)] m-2 w-full space-y-2 p-4 rounded-lg">
-    <div class="flex flex-col">
-      <!-- List all -->
-      <div class="bg-[var(--pd-content-bg)] rounded flex flex-col p-2">
-        <div class="flex flex-row w-full">
-          <div class="text font-medium first-letter:uppercase pb-2">Local extension folders being tracked</div>
-          <div class="flex-grow flex flex-col items-end">
-            <Button on:click={addLocalFolderExtension}>Add a local folder extension...</Button>
-          </div>
-        </div>
-
-        <!-- List of extensions in development mode -->
-        {#if selectableExtensionDevelopmentFolders.length === 0}
-          <div class="italic">No extension for now</div>
-        {:else}
-          <div class="mr-8">
-            <DevelopmentExtensionListTable extensionFolderUIInfos={selectableExtensionDevelopmentFolders} />
-          </div>
-        {/if}
-      </div>
-    </div>
+{#if !isDevelopmentModeEnabled}
+  <div class="flex flex-1 w-full items-center justify-center">
+    <DevelopmentExtensionEmptyScreen />
+  </div>
+{:else if selectableExtensionDevelopmentFolders.length === 0}
+  <div class="flex flex-1 w-full items-center justify-center">
+    <EmptyScreen
+      icon={ExtensionIcon}
+      title="No local extensions tracked"
+      message="Add a folder on your machine to load and test an extension during development."
+      detail="Tracked folders appear here with load status and actions.">
+      <Button type="primary" on:click={addLocalFolderExtension}>Add a local folder extension...</Button>
+    </EmptyScreen>
   </div>
 {:else}
-  <DevelopmentExtensionEmptyScreen />
+  <div class="flex flex-col grow px-5 py-3">
+    <div class="mb-4 flex flex-row items-center justify-end">
+      <Button on:click={addLocalFolderExtension}>Add a local folder extension...</Button>
+    </div>
+    <DevelopmentExtensionListTable extensionFolderUIInfos={selectableExtensionDevelopmentFolders} />
+  </div>
 {/if}

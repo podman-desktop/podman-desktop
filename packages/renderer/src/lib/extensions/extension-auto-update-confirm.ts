@@ -17,24 +17,19 @@
  ***********************************************************************/
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
-import { extensionHasVersionUpdate } from './extension-onboarding-utils';
+import { resolveVersionChangeTarget, withDisplayInstalledVersion } from './extension-version-update.svelte';
 
 export function getExtensionAutoUpdateConfirmDetail(extension: CatalogExtensionInfoUI, enabling: boolean): string {
-  const hasPendingUpdate = extensionHasVersionUpdate(
-    extension.isInstalled,
-    extension.installedVersion,
-    extension.fetchVersion,
-    extension.hasUpdate,
-  );
+  const targetVersion = resolveVersionChangeTarget(withDisplayInstalledVersion(extension));
 
   if (enabling) {
-    if (hasPendingUpdate && extension.fetchVersion) {
-      return `The available update to v${extension.fetchVersion} will be installed automatically. Future updates will also install without manual action.`;
+    if (targetVersion) {
+      return `The available update to v${targetVersion} will be installed automatically. Future updates will also install without manual action.`;
     }
     return 'New updates will be automatically installed when they become available.';
   }
 
-  return 'You will need to install updates manually using the Update link or Change version action.';
+  return 'You will need to install updates manually using the Update link or Version preference.';
 }
 
 export async function confirmExtensionAutoUpdateChange(

@@ -19,10 +19,8 @@ async function stopExtension(): Promise<void> {
 }
 </script>
 
-{#if extension.state === 'started' || extension.state === 'starting'}
-  <LoadingIconButton
-    clickAction={stopExtension}
-    action="stop"
-    icon={faStop}
-    state={{ status: extension.type === 'dd' ? 'unsupported' : extension.state, inProgress }} />
-{/if}
+<LoadingIconButton
+  clickAction={stopExtension}
+  action="stop"
+  icon={faStop}
+  state={{ status: extension.type === 'dd' ? 'unsupported' : extension.state, inProgress }} />

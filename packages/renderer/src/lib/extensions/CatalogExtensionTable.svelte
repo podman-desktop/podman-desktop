@@ -161,8 +161,7 @@ function isSorted(column: CatalogTableSortColumn): boolean {
             {/if}
             <CatalogExtensionActions
               {extension}
-              returnScreen="catalog"
-              onChangeVersion={(): void => onChangeVersion(extension)} />
+              returnScreen="catalog" />
           </div>
         </div>
       </div>

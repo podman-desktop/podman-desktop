@@ -194,8 +194,31 @@ describe('prototype use cases on real extensions', () => {
     expect(kindResult?.hasUpdate).toBe(true);
     expect(kindResult?.fetchVersion).toBe('1.0.1');
     expect(composeResult?.hasUpdate).toBe(false);
+  });
 
-    ensurePrototypeManualUpdateSettings([kindResult!, composeResult!]);
-    expect(isAutoUpdateEnabled(kind.id)).toBe(false);
+  test('ensurePrototypeUpdateDemo does not apply fallback update when Kind is absent', () => {
+    const compose: CatalogExtensionInfoUI = {
+      id: 'podman-desktop.compose',
+      displayName: 'Compose',
+      isFeatured: false,
+      fetchable: false,
+      fetchLink: '',
+      fetchVersion: '1.28.0-next',
+      publisherDisplayName: 'Podman Desktop',
+      isInstalled: true,
+      installedVersion: '1.28.0-next',
+      shortDescription: 'Compose',
+      categories: [],
+      keywords: [],
+      availableVersions: [{ version: '1.28.0-next', ociUri: '', preview: false }],
+      hasUpdate: false,
+      isVerified: false,
+      isSupportedByRedHat: false,
+    };
+
+    const [composeResult] = extensionsUtils.ensurePrototypeUpdateDemo([compose]);
+
+    expect(composeResult?.hasUpdate).toBe(false);
+    expect(composeResult?.fetchVersion).toBe('1.28.0-next');
   });
 });

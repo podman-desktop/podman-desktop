@@ -95,7 +95,6 @@ function closeChangeVersion(): void {
           aria-label="Catalog Extensions">
           {#each catalogExtensions as catalogExtension (catalogExtension.id)}
             <CatalogExtension
-              onChangeVersion={openChangeVersion}
               ondetails={ondetails}
               oninstall={oninstall}
               catalogExtensionUI={catalogExtension} />

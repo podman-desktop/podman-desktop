@@ -44,7 +44,7 @@ export function resolveExtensionLifecycleWarnings(
           severity: 'warning',
           title: 'Extension is disabled',
           detail: `${displayName} is installed but not running.`,
-          fix: 'Open the actions menu (⋮) and select Reactivate.',
+          fix: 'Open the actions menu (⋮) and select Enable.',
         },
       ];
     case 'failed': {
@@ -55,7 +55,7 @@ export function resolveExtensionLifecycleWarnings(
           severity: 'error',
           title: 'Extension failed to start',
           detail: errorMessage ?? `${displayName} could not be activated.`,
-          fix: 'Review the Error tab for details, then select Reactivate from the actions menu (⋮). If the problem continues, report a bug.',
+          fix: 'Review the Error tab for details, then select Enable from the actions menu (⋮). If the problem continues, report a bug.',
         },
       ];
     }
@@ -66,7 +66,7 @@ export function resolveExtensionLifecycleWarnings(
           severity: 'warning',
           title: 'Extension is activating',
           detail: `${displayName} is starting and is not fully available yet.`,
-          fix: 'Wait for activation to finish. If it remains in this state, select Reactivate from the actions menu (⋮).',
+          fix: 'Wait for activation to finish. If it remains in this state, select Enable from the actions menu (⋮).',
         },
       ];
     case 'stopping':
@@ -76,7 +76,7 @@ export function resolveExtensionLifecycleWarnings(
           severity: 'warning',
           title: 'Extension is disabling',
           detail: `${displayName} is shutting down.`,
-          fix: 'Wait for the process to finish. You can Reactivate it from the actions menu (⋮) once it is disabled.',
+          fix: 'Wait for the process to finish. You can Enable it from the actions menu (⋮) once it is disabled.',
         },
       ];
     default:
@@ -86,7 +86,7 @@ export function resolveExtensionLifecycleWarnings(
           severity: 'warning',
           title: 'Extension is not active',
           detail: `${displayName} is in the "${extension.state}" state.`,
-          fix: 'Open the actions menu (⋮) and select Reactivate to start this extension.',
+          fix: 'Open the actions menu (⋮) and select Enable to start this extension.',
         },
       ];
   }

@@ -2,62 +2,46 @@
 import {
   faBug,
   faCircleInfo,
-  faCodeBranch,
   faExternalLink,
   faGear,
   faGraduationCap,
   faPlay,
   faStop,
-  faToggleOff,
-  faToggleOn,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { get } from 'svelte/store';
 import { router } from 'tinro';
 
-import { withConfirmation } from '/@/lib/dialogs/messagebox-utils';
-import { confirmExtensionAutoUpdateChange } from '/@/lib/extensions/extension-auto-update-confirm';
 import { context } from '/@/stores/context';
 import { onboardingList } from '/@/stores/onboarding';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { buildExtensionBugReportUrl } from './extension-badge-styles';
-import { clearNewBadge, isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import {
+  canToggleExtensionLifecycle,
+  getExtensionLifecycleToggleLabel,
+  isExtensionLifecycleEnabled,
+} from './extension-lifecycle-toggle';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
-  extensionHasOtherVersions,
-  extensionRequiresManualUpdate,
   resolveCatalogExtensionOnboardingStatus,
   resolveOnboardingRouteExtensionId,
 } from './extension-onboarding-utils';
-import {
-  applyExtensionVersionChange,
-  getLatestAvailableVersion,
-  normalizeVersionValue,
-} from './extension-version-update.svelte';
+import { isExtensionRemovableInUi } from './extension-origin-utils';
+import { getExtensionRemoveBlockedReasonShort, removeExtensionWithConfirmation } from './extension-remove-preference';
 import ExtensionDropdownMenu from './ExtensionDropdownMenu.svelte';
 import ExtensionDropdownMenuItem from './ExtensionDropdownMenuItem.svelte';
 
 interface Props {
   extension: CatalogExtensionInfoUI;
   returnScreen?: ExtensionListScreen;
-  onChangeVersion: () => void;
   /** Hide "View more details" when the actions menu is rendered on the details page. */
   onDetailsPage?: boolean;
 }
 
-let { extension, returnScreen = 'catalog', onChangeVersion, onDetailsPage = false }: Props = $props();
+let { extension, returnScreen = 'catalog', onDetailsPage = false }: Props = $props();
 
-const autoUpdateEnabled = $derived(isAutoUpdateEnabled(extension.id));
 const installedExtension = $derived(extension.installedExtension);
-const requiresManualUpdate = $derived(extensionRequiresManualUpdate(extension));
-const autoUpdateDetail = $derived(
-  autoUpdateEnabled
-    ? 'New updates will be automatically installed'
-    : requiresManualUpdate
-      ? 'An update is available — install manually or enable automatic updates'
-      : 'Manual version installation is required',
-);
 
 const onboardingStatus = $derived.by(() => {
   get(onboardingList);
@@ -65,13 +49,17 @@ const onboardingStatus = $derived.by(() => {
   return resolveCatalogExtensionOnboardingStatus(extension);
 });
 
-const showStop = $derived(installedExtension?.state === 'started' || installedExtension?.state === 'starting');
-const showReactivate = $derived(installedExtension?.state === 'stopped' || installedExtension?.state === 'failed');
-const hasOtherVersions = $derived(extensionHasOtherVersions(extension));
+const lifecycleToggleLabel = $derived(
+  installedExtension ? getExtensionLifecycleToggleLabel(installedExtension.state) : 'Enable',
+);
+const canToggleLifecycle = $derived(!!installedExtension && canToggleExtensionLifecycle(installedExtension.state));
+const lifecycleToggleIcon = $derived(
+  installedExtension && isExtensionLifecycleEnabled(installedExtension.state) ? faStop : faPlay,
+);
 
-// Catalog/fetchable extensions should always be removable, even if backend says removable: false
-// True built-in extensions (like Compose, Docker, Podman) are NOT fetchable
-const isRemovable = $derived(extension.installedExtension?.removable !== false || extension.fetchable === true);
+const isRemovable = $derived(
+  !!installedExtension && isExtensionRemovableInUi(installedExtension, extension.fetchable === true),
+);
 
 function openDetails(event: Event): void {
   event.stopPropagation();
@@ -91,71 +79,23 @@ function openPreferences(event: Event): void {
   router.goto(`/preferences/default/preferences.${extension.id}`);
 }
 
-async function reactivateExtension(event: Event): Promise<void> {
+async function toggleExtensionLifecycle(event: Event): Promise<void> {
   event.stopPropagation();
-  if (!installedExtension) {
+  if (!installedExtension || !canToggleLifecycle) {
     return;
   }
-  await window.startExtension(installedExtension.id);
-}
 
-async function stopExtension(event: Event): Promise<void> {
-  event.stopPropagation();
-  if (!installedExtension) {
+  if (isExtensionLifecycleEnabled(installedExtension.state)) {
+    await window.stopExtension(installedExtension.id);
     return;
   }
-  await window.stopExtension(installedExtension.id);
+
+  await window.startExtension(installedExtension.id);
 }
 
 async function removeExtension(event: Event): Promise<void> {
   event.stopPropagation();
-  console.log(
-    '[DTUX-2854] Remove clicked for:',
-    extension.displayName,
-    'installedExtension:',
-    installedExtension,
-    'isRemovable:',
-    isRemovable,
-  );
-  if (!installedExtension) {
-    console.error('[DTUX-2854] No installedExtension found, cannot remove');
-    return;
-  }
-  withConfirmation(
-    async () => {
-      console.log('[DTUX-2854] Confirmed removal, removing extension:', installedExtension.id);
-      if (installedExtension.type === 'dd') {
-        await window.ddExtensionDelete(installedExtension.id);
-      } else {
-        await window.removeExtension(installedExtension.id);
-      }
-      // Remove from newly installed set
-      clearNewBadge(extension.id);
-    },
-    `remove ${extension.displayName}`,
-    { title: 'Remove extension?', variant: 'delete', buttonLabel: 'Remove' },
-  );
-}
-
-async function handleToggleAutoUpdate(event: Event): Promise<void> {
-  event.stopPropagation();
-  const enabling = !autoUpdateEnabled;
-
-  const confirmed = await confirmExtensionAutoUpdateChange(extension, enabling);
-  if (!confirmed) {
-    return;
-  }
-
-  setAutoUpdateEnabled(extension.id, enabling);
-
-  if (enabling) {
-    const targetVersion = getLatestAvailableVersion(extension);
-    const installed = normalizeVersionValue(extension.installedVersion);
-    const target = normalizeVersionValue(targetVersion);
-    if (targetVersion && installed && target && target !== installed) {
-      applyExtensionVersionChange(extension, targetVersion, true);
-    }
-  }
+  removeExtensionWithConfirmation(extension);
 }
 
 async function reportBug(event: Event): Promise<void> {
@@ -168,14 +108,6 @@ async function openRepository(event: Event): Promise<void> {
   if (extension.repositoryUrl) {
     await window.openExternal(extension.repositoryUrl);
   }
-}
-
-function handleChangeVersion(event: Event): void {
-  event.stopPropagation();
-  if (!hasOtherVersions) {
-    return;
-  }
-  onChangeVersion();
 }
 </script>
 
@@ -194,34 +126,18 @@ function handleChangeVersion(event: Event): void {
         enabled={onboardingStatus.enabled}
         onClick={openOnboarding} />
       <ExtensionDropdownMenuItem
-        title="Stop"
-        icon={faStop}
-        hidden={!showStop}
-        onClick={stopExtension} />
-      <ExtensionDropdownMenuItem
-        title="Reactivate"
-        icon={faPlay}
-        hidden={!showReactivate}
-        onClick={reactivateExtension} />
+        title={lifecycleToggleLabel}
+        icon={lifecycleToggleIcon}
+        enabled={canToggleLifecycle}
+        onClick={toggleExtensionLifecycle} />
       <ExtensionDropdownMenuItem title="Preferences" icon={faGear} onClick={openPreferences} />
-      <ExtensionDropdownMenuItem
-        title="Change version"
-        detail={hasOtherVersions ? '' : 'No other versions available'}
-        icon={faCodeBranch}
-        enabled={hasOtherVersions}
-        onClick={handleChangeVersion} />
-      <ExtensionDropdownMenuItem
-        title={autoUpdateEnabled ? 'Disable automatic updates' : 'Enable automatic updates'}
-        detail={autoUpdateDetail}
-        icon={autoUpdateEnabled ? faToggleOn : faToggleOff}
-        onClick={handleToggleAutoUpdate} />
       {#if extension.repositoryUrl}
         <ExtensionDropdownMenuItem title="Open repository" icon={faExternalLink} onClick={openRepository} />
       {/if}
       <ExtensionDropdownMenuItem title="Report a bug" icon={faBug} onClick={reportBug} />
       <ExtensionDropdownMenuItem
         title="Remove"
-        detail={!isRemovable ? 'Built-in extension cannot be removed' : ''}
+        detail={isRemovable ? '' : (getExtensionRemoveBlockedReasonShort(extension) ?? 'Cannot be removed')}
         icon={faTrash}
         enabled={isRemovable}
         onClick={removeExtension} />

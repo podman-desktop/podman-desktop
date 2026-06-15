@@ -16,10 +16,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-type MenuCloser = () => void;
-
-const menuClosers = new Map<string, MenuCloser>();
-
 export const EXTENSION_ACTIONS_MENU_CHANGE_EVENT = 'extension-actions-menu-change';
 
 let openMenuId: string | undefined;
@@ -32,27 +28,17 @@ export function setOpenExtensionActionsMenuId(menuId: string | undefined): void 
   if (openMenuId === menuId) {
     return;
   }
+
   openMenuId = menuId;
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(EXTENSION_ACTIONS_MENU_CHANGE_EVENT));
   }
 }
 
+export function isExtensionActionsMenuOpen(menuId: string): boolean {
+  return openMenuId === menuId;
+}
+
 export function resetOpenExtensionActionsMenuForTests(): void {
   openMenuId = undefined;
-}
-
-export function registerExtensionActionsMenu(menuId: string, close: MenuCloser): () => void {
-  menuClosers.set(menuId, close);
-  return (): void => {
-    menuClosers.delete(menuId);
-  };
-}
-
-export function closeOtherExtensionActionsMenus(activeMenuId: string): void {
-  for (const [menuId, close] of menuClosers) {
-    if (menuId !== activeMenuId) {
-      close();
-    }
-  }
 }

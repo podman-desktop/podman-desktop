@@ -13,7 +13,6 @@ import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionActions from './CatalogExtensionActions.svelte';
-import ChangeVersionModal from './ChangeVersionModal.svelte';
 import { EXTENSION_ACTIONS_MENU_CHANGE_EVENT, getOpenExtensionActionsMenuId } from './extension-actions-menu.svelte';
 import {
   mapCompatibilityIssuesToDetailsWarnings,
@@ -38,8 +37,6 @@ let screen: 'README' | 'ERROR' = 'README';
 let detailsPage: DetailsPage;
 const extensionsUtils = new ExtensionsUtils();
 
-let changeVersionExtension: CatalogExtensionInfoUI | undefined;
-let changeVersionPreferredVersion: string | undefined;
 let podmanDesktopVersion = '';
 let uiRevision = 0;
 let actionsMenuRevision = 0;
@@ -127,19 +124,6 @@ onMount(() => {
     window.removeEventListener(EXTENSION_ACTIONS_MENU_CHANGE_EVENT, actionsMenuHandler);
   };
 });
-
-function openChangeVersion(preferredVersion?: string): void {
-  if (!catalogExtension) {
-    return;
-  }
-  changeVersionExtension = catalogExtension;
-  changeVersionPreferredVersion = preferredVersion;
-}
-
-function closeChangeVersion(): void {
-  changeVersionExtension = undefined;
-  changeVersionPreferredVersion = undefined;
-}
 </script>
 
 {#if $extension}
@@ -168,8 +152,7 @@ function closeChangeVersion(): void {
           <CatalogExtensionActions
             extension={catalogExtension}
             {returnScreen}
-            onDetailsPage={true}
-            onChangeVersion={(): void => openChangeVersion()} />
+            onDetailsPage={true} />
         {/if}
       </div>
     {/snippet}
@@ -224,11 +207,4 @@ function closeChangeVersion(): void {
       </div>
     {/snippet}
   </DetailsPage>
-{/if}
-
-{#if changeVersionExtension}
-  <ChangeVersionModal
-    extension={changeVersionExtension}
-    preferredVersion={changeVersionPreferredVersion}
-    closeCallback={closeChangeVersion} />
 {/if}

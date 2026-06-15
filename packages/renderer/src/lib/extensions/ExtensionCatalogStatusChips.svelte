@@ -11,6 +11,7 @@ import {
 } from './extension-badge-styles';
 import { isNewBadgeActive } from './extension-catalog-settings.svelte';
 import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
+import { isBuiltInExtension } from './extension-origin-utils';
 import ExtensionNewBadge from './ExtensionNewBadge.svelte';
 import ExtensionVerifiedLabel from './ExtensionVerifiedLabel.svelte';
 
@@ -55,7 +56,7 @@ const isNew = $derived(isNewBadgeActive(extension.id));
       <Badge
         label="DevMode extension"
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.devMode} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-    {:else if installed && !installed.removable}
+    {:else if installed && isBuiltInExtension(installed)}
       <Badge
         label={EXTENSION_BUILTIN_CHIP_LABEL}
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />
@@ -99,7 +100,7 @@ const isNew = $derived(isNewBadgeActive(extension.id));
       <Badge
         label="DevMode extension"
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.devMode} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-    {:else if installed && !installed.removable}
+    {:else if installed && isBuiltInExtension(installed)}
       <Badge
         label={EXTENSION_BUILTIN_CHIP_LABEL}
         class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />

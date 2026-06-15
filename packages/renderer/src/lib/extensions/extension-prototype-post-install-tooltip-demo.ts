@@ -64,7 +64,7 @@ export async function findPostInstallTooltipDemoTarget(): Promise<string | undef
 
   const catalogWebview = allWebviews.find(item => {
     const extensionId = item.extensionId;
-    return extensionId !== undefined && (extensionId.startsWith('redhat.') || extensionId.includes('.'));
+    return extensionId !== undefined && (extensionId.startsWith('redhat.') ? true : extensionId.includes('.'));
   });
   return catalogWebview?.extensionId;
 }

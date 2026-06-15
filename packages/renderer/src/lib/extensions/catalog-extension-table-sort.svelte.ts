@@ -18,6 +18,7 @@
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { getNewBadgeInstalledAt, isNewBadgeActive } from './extension-catalog-settings.svelte';
+import { resolveExtensionOriginSortLabel } from './extension-origin-utils';
 
 export type CatalogTableSortColumn = 'Name' | 'Publisher' | 'Version' | 'Status' | 'Origin';
 
@@ -39,17 +40,9 @@ export function resetCatalogTableSort(): void {
 }
 
 function resolveOriginLabel(extension: CatalogExtensionInfoUI): string {
-  const installed = extension.installedExtension;
-  if (installed?.type === 'dd') {
-    return 'Docker Desktop extension';
-  }
-  if (installed?.devMode) {
-    return 'DevMode extension';
-  }
-  if (installed && !installed.removable) {
-    return 'Built-in extension';
-  }
-  return extension.isVerified ? 'Community Verified' : 'Community';
+  return resolveExtensionOriginSortLabel(extension.installedExtension, {
+    isVerified: extension.isVerified,
+  });
 }
 
 function resolveStatusLabel(extension: CatalogExtensionInfoUI): string {

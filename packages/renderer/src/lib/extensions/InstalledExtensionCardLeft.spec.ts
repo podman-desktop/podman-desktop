@@ -34,7 +34,7 @@ beforeAll(() => {
 test('Expect to see icon, link, badge and actions', async () => {
   const extension: CombinedExtensionInfoUI = {
     type: 'pd',
-    id: '',
+    id: 'podman-desktop.compose',
     name: 'foo',
     description: 'my description',
     displayName: '',

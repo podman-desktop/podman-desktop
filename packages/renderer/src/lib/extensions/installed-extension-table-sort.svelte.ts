@@ -18,6 +18,7 @@
 
 import { getNewBadgeInstalledAt, isNewBadgeActive } from './extension-catalog-settings.svelte';
 import { extensionRequiresManualUpdate } from './extension-onboarding-utils';
+import { resolveExtensionOriginSortLabel } from './extension-origin-utils';
 import { USE_CASE_EXTENSION_IDS } from './extension-prototype-use-cases';
 import type { ExtensionsUtils } from './extensions-utils';
 import type { InstalledExtensionTableRow } from './installed-extension-table-row';
@@ -46,17 +47,9 @@ export function resetInstalledTableSort(): void {
 }
 
 function resolveOriginLabel(row: InstalledExtensionTableRow): string {
-  const extension = row.extension;
-  if (extension.type === 'dd') {
-    return 'Docker Desktop extension';
-  }
-  if (extension.devMode) {
-    return 'DevMode extension';
-  }
-  if (!extension.removable) {
-    return 'Built-in extension';
-  }
-  return row.catalogExtension.isVerified ? 'Community Verified' : 'Community';
+  return resolveExtensionOriginSortLabel(row.extension, {
+    isVerified: row.catalogExtension.isVerified,
+  });
 }
 
 function compareRows(
@@ -119,7 +112,7 @@ function pinInstalledTableRows(rows: InstalledExtensionTableRow[]): InstalledExt
   pinned.sort((a, b) => (getNewBadgeInstalledAt(b.extension.id) ?? 0) - (getNewBadgeInstalledAt(a.extension.id) ?? 0));
   rest.sort((a, b) => a.name.localeCompare(b.name));
 
-  return [...manualUpdate, ...pinned, ...rest];
+  return [...pinned, ...manualUpdate, ...rest];
 }
 
 export function orderInstalledTableRows(

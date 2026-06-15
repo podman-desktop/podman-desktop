@@ -9,6 +9,7 @@ import {
   EXTENSION_CHIP_COLORS,
   EXTENSION_CHIP_TEXT_CLASS,
 } from './extension-badge-styles';
+import { isBuiltInExtension } from './extension-origin-utils';
 import ExtensionVerifiedLabel from './ExtensionVerifiedLabel.svelte';
 
 interface Props {
@@ -30,7 +31,7 @@ const installed = $derived(extension.installedExtension);
     <Badge
       label="DevMode extension"
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.devMode} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-  {:else if installed && !installed.removable}
+  {:else if installed && isBuiltInExtension(installed)}
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_COLORS.builtin} ${EXTENSION_BUILTIN_CHIP_TEXT_CLASS}`} />

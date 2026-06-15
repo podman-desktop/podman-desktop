@@ -6,6 +6,7 @@ import {
   EXTENSION_CHIP_COLORS,
   EXTENSION_CHIP_TEXT_CLASS,
 } from '/@/lib/extensions/extension-badge-styles';
+import { isBuiltInExtension } from '/@/lib/extensions/extension-origin-utils';
 import ExtensionVerifiedLabel from '/@/lib/extensions/ExtensionVerifiedLabel.svelte';
 import type { InstalledExtensionTableRow } from '/@/lib/extensions/installed-extension-table-row';
 import Badge from '/@/lib/ui/Badge.svelte';
@@ -28,7 +29,7 @@ let { object }: Props = $props();
       label="DevMode extension"
       color={EXTENSION_CHIP_COLORS.devMode}
       class={`${EXTENSION_CHIP_BADGE_CLASS} ${EXTENSION_CHIP_TEXT_CLASS}`} />
-  {:else if !object.extension.removable}
+  {:else if isBuiltInExtension(object.extension)}
     <Badge
       label={EXTENSION_BUILTIN_CHIP_LABEL}
       color={EXTENSION_CHIP_COLORS.builtin}
