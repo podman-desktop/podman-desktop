@@ -37,7 +37,7 @@ onMount(() => {
   {/if}
 {:else}
   <div
-    class="text-[var(--pd-state-error)] p-1 flex flex-row items-center {className}"
+    class="text-[var(--pd-state-error)] p-1 flex flex-row items-start {className}"
     class:opacity-0={error === undefined || error === ''}>
     <Icon icon={faExclamationCircle} size='1.1x' class="cursor-pointer text-[var(--pd-state-error)]" />
     <div role="alert" aria-label={ariaLabel ?? 'Error Message Content'} class="ml-2 min-w-0 [overflow-wrap:anywhere]">

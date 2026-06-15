@@ -42,6 +42,7 @@ test('Expect validation is defined', async () => {
 
   const element = screen.getByLabelText('validation');
   expect(element).toBeInTheDocument();
+  expect(element.parentElement?.parentElement).toHaveClass('items-end');
 });
 
 test('Expect buttons is defined', async () => {

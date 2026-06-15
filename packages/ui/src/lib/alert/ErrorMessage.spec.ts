@@ -35,4 +35,5 @@ test('Check error message', async () => {
   expect(errorMesssage).toHaveTextContent(error);
   expect(errorMesssage).toHaveClass('min-w-0');
   expect(errorMesssage).toHaveClass('[overflow-wrap:anywhere]');
+  expect(errorMesssage.parentElement).toHaveClass('items-start');
 });
