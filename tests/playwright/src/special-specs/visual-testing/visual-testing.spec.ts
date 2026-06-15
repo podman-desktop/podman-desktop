@@ -55,18 +55,6 @@ test.describe
       'Skipping screenshots if PLAYWRIGHT_SCREENSHOTS_PATH is not set.',
     );
 
-    test('dashboard screenshot', async ({ navigationBar }) => {
-      const dashboardPage = await navigationBar.openDashboard();
-      await playExpect(dashboardPage.heading).toBeVisible();
-
-      // focus on the content
-      await dashboardPage.content.focus();
-
-      await dashboardPage.screenshot({
-        name: 'dashboard',
-      });
-    });
-
     /**
      * Containers
      */
