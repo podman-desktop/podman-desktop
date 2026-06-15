@@ -83,13 +83,13 @@ async function addLocalFolderExtension(): Promise<void> {
 </script>
 
 {#if isDevelopmentModeEnabled}
-  <div class="bg-[var(--pd-content-card-bg)] m-2 w-full space-y-2 p-4 rounded-lg">
+  <div class="grow px-5 py-3">
     <div class="flex flex-col">
       <!-- List all -->
-      <div class="bg-[var(--pd-content-bg)] rounded flex flex-col p-2">
-        <div class="flex flex-row w-full">
+      <div class="bg-(--pd-content-card-bg) rounded-md flex flex-col p-4">
+        <div class="flex flex-row w-full pb-2">
           <div class="text font-medium first-letter:uppercase pb-2">Local extension folders being tracked</div>
-          <div class="flex-grow flex flex-col items-end">
+          <div class="grow flex flex-col items-end">
             <Button on:click={addLocalFolderExtension}>Add a local folder extension...</Button>
           </div>
         </div>
@@ -98,7 +98,7 @@ async function addLocalFolderExtension(): Promise<void> {
         {#if selectableExtensionDevelopmentFolders.length === 0}
           <div class="italic">No extension for now</div>
         {:else}
-          <div class="mr-8">
+          <div class="mr-5 -ml-5 mb-3">
             <DevelopmentExtensionListTable extensionFolderUIInfos={selectableExtensionDevelopmentFolders} />
           </div>
         {/if}
