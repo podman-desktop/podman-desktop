@@ -16,7 +16,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type { Page } from '@playwright/test';
+import { arch, platform } from 'node:os';
+import { join } from 'node:path';
+
+import type { Locator, Page } from '@playwright/test';
 
 export abstract class BasePage {
   readonly page: Page;
@@ -28,5 +31,14 @@ export abstract class BasePage {
 
   public getPage(): Page {
     return this.page;
+  }
+
+  public async screenshot(options: { name: string; mask?: Array<Locator> }): Promise<void> {
+    const path = process.env.PLAYWRIGHT_SCREENSHOTS_PATH;
+    if (!path) return;
+
+    await this.page.screenshot({
+      path: join(path, `${options.name}-${platform()}-${arch()}.png`),
+    });
   }
 }
