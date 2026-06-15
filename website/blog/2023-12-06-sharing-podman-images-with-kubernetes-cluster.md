@@ -46,7 +46,7 @@ In the kubernetes world, we need a container engine runtime. At the early stage,
 But to separate concerns and to be extensible, a new interface was added: CRI for "Container Runtime Interface". Using the CRI interface we can plug container engines. And there are several runtimes such as containerd, cri-o and others.
 [https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md)
 
-What is interesting to us is the cri-o project. This project is implementing the CRI interface but also adopting some projects of the [containers](https://github.com/containers) organization where [podman](https://github.com/containers/podman) and [podman-desktop](https://github.com/containers/podman-desktop) live.
+What is interesting to us is the cri-o project. This project is implementing the CRI interface but also adopting some projects of the [containers](https://github.com/containers) organization where [podman](https://github.com/podman-container-tools/podman) and [podman-desktop](https://github.com/containers/podman-desktop) live.
 
 So it means cri-o uses image management from [https://github.com/containers/image](https://github.com/containers/image) project and handle storage with [https://github.com/containers/storage](https://github.com/containers/storage) project.
 

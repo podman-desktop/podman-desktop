@@ -25,7 +25,7 @@ Consider creating a custom Podman machine to:
 
   :::note
 
-  On the macOS ARM64 platform, you might get a warning that the `krunkit` binary is unavailable on the _Create Podman machine_ page. To resolve the warning, [install `krunkit` manually](https://github.com/containers/krunkit?tab=readme-ov-file#installation) or [install Podman using the GitHub installer](https://github.com/containers/podman/releases).
+  On the macOS ARM64 platform, you might get a warning that the `krunkit` binary is unavailable on the _Create Podman machine_ page. To resolve the warning, [install `krunkit` manually](https://github.com/containers/krunkit?tab=readme-ov-file#installation) or [install Podman using the GitHub installer](https://github.com/podman-container-tools/podman/releases).
 
   :::
 
@@ -44,7 +44,7 @@ Consider creating a custom Podman machine to:
       Select the disk size.
    1. Optional: Provide a bootable image using one of the following options:
       - **Image Path**: Select an image, such as `podman-machine.aarch64.applehv.raw.zst` from your local machine.
-      - **Image URL or image reference**: Enter an image URL or a registry path. You can use an image URL from the [Podman releases page](https://github.com/containers/podman/releases) or use a valid registry path in the format `registry/repo/image:version`.
+      - **Image URL or image reference**: Enter an image URL or a registry path. You can use an image URL from the [Podman releases page](https://github.com/podman-container-tools/podman/releases) or use a valid registry path in the format `registry/repo/image:version`.
    1. **Machine with root privileges**:
       Enable to use the rootful connection by default.
       Required to use Kind on Windows.

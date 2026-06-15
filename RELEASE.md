@@ -251,7 +251,7 @@ Podman Desktop X.X is now available. [Click here to download it](/downloads)!
 
 <!-- EXAMPLE -->
 <!-- ### Podman v4.5.1 -->
-<!-- Podman Desktop 1.1 moves up to [Podman 4.5.1](https://github.com/containers/podman/releases/tag/v4.5.1). -->
+<!-- Podman Desktop 1.1 moves up to [Podman 4.5.1](https://github.com/podman-container-tools/podman/releases/tag/v4.5.1). -->
 
 <!-- WHEN DESCRIBING NAVBAR SECTIONS, INCLUDE ICON -->
 <!-- EXAMPLE -->
