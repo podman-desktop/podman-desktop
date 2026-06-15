@@ -40,7 +40,7 @@ import {
 
 const KIND_CLI_NAME = 'kind';
 const KIND_DISPLAY_NAME = 'Kind';
-const KIND_MARKDOWN = product.links?.kindMarkdown ?? '';
+const KIND_MARKDOWN = product.kindMarkdown ?? '';
 
 const API_KIND_INTERNAL_API_PORT = 6443;
 
