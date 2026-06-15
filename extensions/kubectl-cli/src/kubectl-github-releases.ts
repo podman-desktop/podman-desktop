@@ -20,8 +20,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
-import * as extensionApi from '@podman-desktop/api';
 import type { QuickPickItem } from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
 
 export interface KubectlGithubReleaseArtifactMetadata extends QuickPickItem {
   tag: string;
