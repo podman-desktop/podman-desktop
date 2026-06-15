@@ -100,7 +100,9 @@ test.describe
 
       await test.step('Open dashboard and initialize Podman machine', async () => {
         // enable the feature
-        let dashboardPage = await setEnhancedDashboardFeature(page, navigationBar, true);
+        await setEnhancedDashboardFeature(page, navigationBar, true);
+        // go to dashboard
+        let dashboardPage = await navigationBar.openDashboard();
         await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled({ timeout: 5_000 });
         await dashboardPage.setUpPodmanButton.scrollIntoViewIfNeeded();
         await dashboardPage.setUpPodmanButton.click();
