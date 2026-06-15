@@ -33,4 +33,6 @@ test('Check error message', async () => {
   const errorMesssage = screen.getByRole('alert', { name: 'Error Message Content' });
   expect(errorMesssage).toBeInTheDocument();
   expect(errorMesssage).toHaveTextContent(error);
+  expect(errorMesssage).toHaveClass('min-w-0');
+  expect(errorMesssage).toHaveClass('[overflow-wrap:anywhere]');
 });
