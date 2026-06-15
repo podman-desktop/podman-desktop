@@ -30,20 +30,23 @@ test.afterAll(async ({ runner, navigationBar }) => {
   const containersPage = await navigationBar.openContainers();
   await playExpect(containersPage.heading).toBeVisible();
 
-  // Select all containers through the checkbox
-  const toggleAll = containersPage.page.getByRole('checkbox', { name: 'Toggle all' });
-  await playExpect(toggleAll).toBeVisible();
-  await toggleAll.click();
+  const count = await containersPage.getAllTableRows();
+  if (count.length > 0) {
+    // Select all containers through the checkbox
+    const toggleAll = containersPage.page.getByRole('checkbox', { name: 'Toggle all' });
+    await playExpect(toggleAll).toBeVisible();
+    await toggleAll.click();
 
-  // Get the bulk delete button
-  const bulkDelete = containersPage.page.getByRole('button', { name: 'Delete selected containers and pods' });
-  await playExpect(bulkDelete).toBeVisible();
-  await bulkDelete.click();
+    // Get the bulk delete button
+    const bulkDelete = containersPage.page.getByRole('button', { name: 'Delete selected containers and pods' });
+    await playExpect(bulkDelete).toBeVisible();
+    await bulkDelete.click();
 
-  await handleConfirmationDialog(containersPage.page, 'Delete Containers?', true, 'Delete');
+    await handleConfirmationDialog(containersPage.page, 'Delete Containers?', true, 'Delete');
 
-  // Wait until none are remaining
-  await playExpect.poll(async () => await containersPage.getAllTableRows()).toHaveLength(0);
+    // Wait until none are remaining
+    await playExpect.poll(async () => await containersPage.getAllTableRows()).toHaveLength(0);
+  }
 
   await runner.close(45_000);
 });
