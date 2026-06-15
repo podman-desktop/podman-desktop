@@ -1,11 +1,7 @@
 {
   "version": "5.8.3",
   "releaseNotes": {
-<<<<<<< HEAD
-    "href": "https://github.com/containers/podman/releases/tag/v5.8.2"
-=======
     "href": "https://github.com/podman-container-tools/podman/releases/tag/v5.8.3"
->>>>>>> 7e1660a80 (chore: Update Podman version to v5.8.3)
   },
   "platform": {
     "win32": {
