@@ -53,7 +53,7 @@ Podman Desktop does not detect existing Podman machines
 #### Solution
 
 1. Restart Podman Desktop
-1. If the above doesnot work, restart WSL2 from the command line
+1. If the above does not work, restart WSL2 from the command line
 
    ```shell-session
    $ taskkill.exe /F /im wslservice.exe
