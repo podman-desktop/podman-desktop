@@ -16,16 +16,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { Octokit } from '@octokit/rest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ComposeGitHubReleases } from './compose-github-releases';
-import { Octokit } from '@octokit/rest';
 
 vi.mock(import('node:fs'));
-
 
 vi.mock(import('@octokit/rest'), () => {
   const Octokit = vi.fn();

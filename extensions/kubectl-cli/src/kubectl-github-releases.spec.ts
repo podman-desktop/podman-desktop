@@ -16,13 +16,15 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { Octokit } from '@octokit/rest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { KubectlGitHubReleases } from './kubectl-github-releases';
-import { Octokit } from '@octokit/rest';
 
 vi.mock(import('node:fs'));
 
@@ -71,16 +73,6 @@ test('expect grab 5 releases', async () => {
 });
 
 describe('Grab asset id for a given release id', async () => {
-  beforeEach(async () => {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    const fsActual = await vi.importActual<typeof import('node:fs')>('node:fs');
-
-    // mock the result of listReleaseAssetsMock REST API
-    const resultREST = JSON.parse(
-      fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kubectl-github-release-all.json'), 'utf8'),
-    );
-  });
-
   test('macOS x86_64', async () => {
     const result = await kubectlGitHubReleases.getReleaseAssetURL('v1.2.1', 'darwin', 'x64');
     expect(result).toBeDefined();
@@ -119,7 +111,6 @@ describe('Grab asset id for a given release id', async () => {
 });
 
 test('should download the file if parent folder does exist', async () => {
-
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
