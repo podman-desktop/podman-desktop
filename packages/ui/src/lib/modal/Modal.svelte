@@ -66,7 +66,7 @@ function handleMousedown(e: MouseEvent): void {
   <div
     class:translate-y-[-5%]={!top}
     class:my-[32px]={top}
-    class="bg-[var(--pd-modal-bg)] z-50 rounded-xl overflow-visible w-[calc(200vw-4rem)] h-fit max-w-[42rem] max-h-[calc(100vh-4rem)] border-[1px] border-[var(--pd-modal-border)]"
+    class="bg-[var(--pd-modal-bg)] z-50 rounded-xl overflow-visible w-[calc(200vw-4rem)] h-fit max-w-[32rem] max-h-[calc(100vh-4rem)] border-[1px] border-[var(--pd-modal-border)]"
     role="dialog"
     aria-label={name}
     aria-modal="true"
