@@ -19,8 +19,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Octokit } from '@octokit/rest';
+import { Octokit } from '@octokit/rest';
 import type { QuickPickItem } from '@podman-desktop/api';
+import * as extensionApi from '@podman-desktop/api';
 
 export interface ComposeGithubReleaseArtifactMetadata extends QuickPickItem {
   tag: string;
@@ -31,15 +32,22 @@ export interface ComposeGithubReleaseArtifactMetadata extends QuickPickItem {
 export class ComposeGitHubReleases {
   private static readonly COMPOSE_GITHUB_OWNER = 'docker';
   private static readonly COMPOSE_GITHUB_REPOSITORY = 'compose';
+  private octokit?: Octokit;
 
-  constructor(private readonly octokit: Octokit) {}
+  private async ensureOctokit(): Promise<void> {
+    if (!this.octokit) {
+      const OcktokitAuth = await extensionApi.authentication.getSession('github-authentication', []);
+      this.octokit = new Octokit({ auth: OcktokitAuth?.accessToken });
+    }
+  }
 
   // Provides last 5 majors releases from GitHub using the GitHub API
   // return name, tag and id of the release
   async grabLatestsReleasesMetadata(): Promise<ComposeGithubReleaseArtifactMetadata[]> {
     // Grab last 5 majors releases from GitHub using the GitHub API
+    await this.ensureOctokit();
 
-    const lastReleases = await this.octokit.repos.listReleases({
+    const lastReleases = await this.octokit!.repos.listReleases({
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
     });
@@ -63,6 +71,8 @@ export class ComposeGitHubReleases {
   // operatingSystem: win32, darwin, linux (see os.platform())
   // arch: x64, arm64 (see os.arch())
   async getReleaseAssetId(releaseId: number, operatingSystem: string, arch: string): Promise<number> {
+    await this.ensureOctokit();
+
     let extension = '';
     if (operatingSystem === 'win32') {
       operatingSystem = 'windows';
@@ -75,7 +85,7 @@ export class ComposeGitHubReleases {
       arch = 'aarch64';
     }
 
-    const listOfAssets = await this.octokit.paginate(this.octokit.repos.listReleaseAssets, {
+    const listOfAssets = await this.octokit!.paginate(this.octokit!.repos.listReleaseAssets, {
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
       release_id: releaseId,
@@ -94,7 +104,9 @@ export class ComposeGitHubReleases {
 
   // download the given asset id
   async downloadReleaseAsset(assetId: number, destination: string): Promise<void> {
-    const asset = await this.octokit.repos.getReleaseAsset({
+    await this.ensureOctokit();
+
+    const asset = await this.octokit!.repos.getReleaseAsset({
       owner: ComposeGitHubReleases.COMPOSE_GITHUB_OWNER,
       repo: ComposeGitHubReleases.COMPOSE_GITHUB_REPOSITORY,
       asset_id: assetId,

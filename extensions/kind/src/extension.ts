@@ -19,7 +19,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { Octokit } from '@octokit/rest';
 import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
@@ -458,8 +457,7 @@ async function registerCliTool(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  const octokit = new Octokit();
-  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokit);
+  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger);
 
   let binary: { path: string; version: string } | undefined = undefined;
   let installationSource: extensionApi.CliToolInstallationSource | undefined;

@@ -19,29 +19,37 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Octokit } from '@octokit/rest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ComposeGitHubReleases } from './compose-github-releases';
+import { Octokit } from '@octokit/rest';
 
 vi.mock(import('node:fs'));
 
+
+vi.mock(import('@octokit/rest'), () => {
+  const Octokit = vi.fn();
+  Octokit.prototype.repos = {
+    listReleases: vi.fn(),
+    getReleaseAsset: vi.fn(),
+  };
+  Octokit.prototype.paginate = vi.fn();
+  return { Octokit } as any;
+});
+
+vi.mock(import('@podman-desktop/api'), () => {
+  return {
+    authentication: {
+      getSession: vi.fn().mockResolvedValue({ accessToken: 'test-token' }),
+    },
+  } as any;
+});
+
 let composeGitHubReleases: ComposeGitHubReleases;
 
-const listReleaseAssetsMock = vi.fn();
-const listReleasesMock = vi.fn();
-const getReleaseAssetMock = vi.fn();
-const octokitMock: Octokit = {
-  repos: {
-    listReleases: listReleasesMock,
-    listReleaseAssets: listReleaseAssetsMock,
-    getReleaseAsset: getReleaseAssetMock,
-  },
-  paginate: vi.fn(),
-} as unknown as Octokit;
-
 beforeEach(() => {
-  composeGitHubReleases = new ComposeGitHubReleases(octokitMock);
+  vi.clearAllMocks();
+  composeGitHubReleases = new ComposeGitHubReleases();
 });
 
 afterEach(() => {
@@ -57,7 +65,8 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/compose-github-release-all.json'), 'utf8'),
   );
-  listReleasesMock.mockReturnValue({ data: resultREST });
+
+  vi.mocked((Octokit.prototype as any).repos.listReleases).mockReturnValue({ data: resultREST });
 
   const result = await composeGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();
@@ -105,7 +114,7 @@ describe.each([
     // mock the result of listReleaseAssetsMock REST API
     const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
 
-    vi.mocked(octokitMock.paginate).mockReturnValue(resultREST);
+    vi.mocked((Octokit.prototype as any).paginate).mockReturnValue(resultREST);
   });
 
   test('macOS x86_64', async () => {
@@ -152,7 +161,7 @@ describe.each([
 });
 
 test('should download the file if parent folder does exist', async () => {
-  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
+  vi.mocked((Octokit.prototype as any).repos.getReleaseAsset).mockReturnValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -170,7 +179,7 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
+  vi.mocked((Octokit.prototype as any).repos.getReleaseAsset).mockReturnValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);

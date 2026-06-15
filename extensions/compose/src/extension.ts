@@ -19,7 +19,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { Octokit } from '@octokit/rest';
 import type { Logger, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
@@ -67,10 +66,9 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   handler.handleConfigurationChanges(extensionContext);
 
   // Create new classes to handle the onboarding sequence
-  const octokit = new Octokit();
   const detect = new Detect(os, extensionContext.storagePath);
 
-  const composeGitHubReleases = new ComposeGitHubReleases(octokit);
+  const composeGitHubReleases = new ComposeGitHubReleases();
   const composeDownload = new ComposeDownload(extensionContext, composeGitHubReleases, os);
 
   // Need to "ADD" a provider so we can actually press the button!

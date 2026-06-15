@@ -19,28 +19,35 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Octokit } from '@octokit/rest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { KubectlGitHubReleases } from './kubectl-github-releases';
+import { Octokit } from '@octokit/rest';
 
 vi.mock(import('node:fs'));
 
+vi.mock(import('@octokit/rest'), () => {
+  const Octokit = vi.fn();
+  Octokit.prototype.repos = {
+    listReleases: vi.fn(),
+  };
+  Octokit.prototype.paginate = vi.fn();
+  return { Octokit } as any;
+});
+
+vi.mock(import('@podman-desktop/api'), () => {
+  return {
+    authentication: {
+      getSession: vi.fn().mockResolvedValue({ accessToken: 'test-token' }),
+    },
+  } as any;
+});
+
 let kubectlGitHubReleases: KubectlGitHubReleases;
 
-const listReleaseAssetsMock = vi.fn();
-const listReleasesMock = vi.fn();
-const getReleaseAssetMock = vi.fn();
-const octokitMock: Octokit = {
-  repos: {
-    listReleases: listReleasesMock,
-    listReleaseAssets: listReleaseAssetsMock,
-    getReleaseAsset: getReleaseAssetMock,
-  },
-} as unknown as Octokit;
-
 beforeEach(() => {
-  kubectlGitHubReleases = new KubectlGitHubReleases(octokitMock);
+  vi.clearAllMocks();
+  kubectlGitHubReleases = new KubectlGitHubReleases();
 });
 
 afterEach(() => {
@@ -56,7 +63,7 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kubectl-github-release-all.json'), 'utf8'),
   );
-  listReleasesMock.mockReturnValue({ data: resultREST });
+  vi.mocked((Octokit.prototype as any).repos.listReleases).mockReturnValue({ data: resultREST });
 
   const result = await kubectlGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();
@@ -72,8 +79,6 @@ describe('Grab asset id for a given release id', async () => {
     const resultREST = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kubectl-github-release-all.json'), 'utf8'),
     );
-
-    listReleaseAssetsMock.mockReturnValue({ data: resultREST });
   });
 
   test('macOS x86_64', async () => {
@@ -114,7 +119,6 @@ describe('Grab asset id for a given release id', async () => {
 });
 
 test('should download the file if parent folder does exist', async () => {
-  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -132,8 +136,6 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
-
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);
   const mkdirSpy = vi.spyOn(fs.promises, 'mkdir').mockResolvedValue('');
