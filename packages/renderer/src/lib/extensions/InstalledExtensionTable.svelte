@@ -38,7 +38,7 @@ function openDetails(row: InstalledExtensionTableRow, event: MouseEvent): void {
 }
 </script>
 
-<div class="w-full mx-5" role="table" aria-label="installed extensions">
+<div class="w-full px-5" role="table" aria-label="installed extensions">
   <div
     role="rowgroup"
     class="grid gap-x-4 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"

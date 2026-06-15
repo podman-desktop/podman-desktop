@@ -14,6 +14,7 @@ import { featuredExtensionInfos } from '/@/stores/featuredExtensions';
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtensionList from './CatalogExtensionList.svelte';
 import DevelopmentExtensionList from './dev-mode/DevelopmentExtensionList.svelte';
+import { markNewlyInstalled } from './extension-catalog-settings.svelte';
 import { buildExtensionsListPath } from './extension-list';
 import { ExtensionsUtils } from './extensions-utils';
 import InstallManuallyExtensionModal from './InstallManuallyExtensionModal.svelte';
@@ -67,6 +68,11 @@ let filteredCatalogItems: number = $derived(enhancedCatalogExtensions.length - f
 
 function closeModal(): void {
   installManualImageModal = false;
+}
+
+function handleExtensionInstalled(extensionId: string): void {
+  console.log(`[DTUX-2854] Extension installed from catalog: ${extensionId}`);
+  markNewlyInstalled(extensionId);
 }
 
 let installManualImageModal: boolean = $state(false);
@@ -151,7 +157,10 @@ function changeScreen(newScreen: ExtensionListScreen): void {
           searchTerm={searchTerm}
           on:resetFilter={(): string => (searchTerm = '')} />
       {/if}
-      <CatalogExtensionList showEmptyScreen={!searchTerm} catalogExtensions={filteredCatalogExtensions} />
+      <CatalogExtensionList
+        showEmptyScreen={!searchTerm}
+        catalogExtensions={filteredCatalogExtensions}
+        oninstall={handleExtensionInstalled} />
     {:else if screen === 'development' && enableLocalExtensions}
       <DevelopmentExtensionList />
     {/if}

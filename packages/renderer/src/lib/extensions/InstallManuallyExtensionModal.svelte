@@ -5,6 +5,8 @@ import { onMount } from 'svelte';
 
 import Dialog from '/@/lib/dialogs/Dialog.svelte';
 
+import { markNewlyInstalled } from './extension-catalog-settings.svelte';
+
 interface Props {
   closeCallback: () => void;
 }
@@ -74,6 +76,15 @@ async function installExtension(): Promise<void> {
     );
     logs = [...logs, '☑️ installation finished!'];
     progressPercent = 100;
+
+    // Extract extension ID from the OCI image name
+    // Format is typically: registry/namespace/name:version or namespace/name:version
+    const parts = ociImage.split('/');
+    const lastPart = parts[parts.length - 1];
+    const [name] = lastPart.split(':');
+    const extensionId = name || ociImage;
+
+    markNewlyInstalled(extensionId);
   } catch (error) {
     console.error('error', error);
   }
@@ -153,6 +164,6 @@ const showForm = $derived(installInProgress || progressPercent !== 100 || !!inpu
       {:else}
         <Button on:click={closeCallback}>Done</Button>
       {/if}
-    
+
   {/snippet}
 </Dialog>

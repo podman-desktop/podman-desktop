@@ -50,7 +50,7 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
 }
 </script>
 
-<div class="w-full mx-5" role="table" aria-label="extensions">
+<div class="w-full px-5" role="table" aria-label="extensions">
   <div
     role="rowgroup"
     class="grid gap-x-2 sticky top-0 z-10 h-7 bg-[var(--pd-content-bg)] pb-1 text-[var(--pd-table-header-text)] uppercase"
@@ -67,24 +67,24 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
   <div role="rowgroup">
     {#each catalogExtensions as extension (extension.id)}
       <div
-        class="grid gap-x-2 min-h-[56px] mb-2 rounded-lg border border-[var(--pd-content-table-border)] bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] cursor-pointer"
+        class="grid items-center gap-x-2 min-h-[56px] mb-2 rounded-lg border border-[var(--pd-content-table-border)] bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] cursor-pointer"
         style="grid-template-columns: 56px 2fr 1.5fr 1fr 1fr 2fr 140px"
         role="row"
         aria-label={extension.displayName}
         onclick={(event): void => openDetails(extension, event)}>
-        <div role="cell" class="self-center pl-3 pr-1 py-2">
+        <div role="cell" class="pl-3 pr-1 py-2">
           <CatalogExtensionIcon iconHref={extension.iconHref} displayName={extension.displayName} />
         </div>
-        <div role="cell" class="self-center min-w-0 overflow-hidden py-2 pr-2">
+        <div role="cell" class="min-w-0 overflow-hidden py-2 pr-2">
           <div class="truncate font-semibold text-[var(--pd-content-header)]">{extension.displayName}</div>
           <ExtensionTruncatedText
             text={extension.shortDescription}
             class="text-sm text-[var(--pd-content-text)]" />
         </div>
-        <div role="cell" class="self-center text-sm text-[var(--pd-content-text)] py-2">
+        <div role="cell" class="text-sm text-[var(--pd-content-text)] py-2">
           {extension.publisherDisplayName}
         </div>
-        <div role="cell" class="self-center py-2" onclick={(event): void => event.stopPropagation()}>
+        <div role="cell" class="py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--pd-content-text)]">
             {#if extension.isInstalled}
               {#key uiRevision}
@@ -110,17 +110,17 @@ function openDetails(extension: CatalogExtensionInfoUI, event: MouseEvent): void
             {/if}
           </div>
         </div>
-        <div role="cell" class="self-center py-2">
+        <div role="cell" class="py-2">
           {#if extension.isInstalled && extension.installedExtension}
             <ExtensionLifecycleStatus extension={extension.installedExtension} />
           {:else}
             <span class="text-sm text-[var(--pd-table-header-text)]">Not installed</span>
           {/if}
         </div>
-        <div role="cell" class="self-center py-2">
-          <ExtensionCatalogStatusChips {extension} originFirst />
+        <div role="cell" class="py-2">
+          <ExtensionCatalogStatusChips {extension} originFirst nowrap />
         </div>
-        <div role="cell" class="self-center justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
+        <div role="cell" class="justify-self-end py-2" onclick={(event): void => event.stopPropagation()}>
           <div class="flex shrink-0 items-center justify-end gap-1">
             {#if !extension.isInstalled && extension.fetchable}
               <FeaturedExtensionDownload {oninstall} extension={extension} />

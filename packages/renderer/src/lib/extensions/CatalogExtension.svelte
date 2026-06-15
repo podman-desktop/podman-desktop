@@ -64,7 +64,12 @@ function handleChangeVersion(preferredVersion?: string): void {
   onclick={handleCardClick}>
   <div class="px-3 pt-3 pb-1 flex flex-col gap-1.5">
     <div class="relative min-h-8 pr-9">
-      <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} />
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <ExtensionCatalogStatusChips extension={catalogExtensionUI} showUpdateChip={false} />
+        {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedExtension}
+          <ExtensionLifecycleStatus extension={catalogExtensionUI.installedExtension} class="shrink-0" />
+        {/if}
+      </div>
       <div class="absolute right-0 top-0 flex items-center gap-1">
         {#if !catalogExtensionUI.isInstalled && catalogExtensionUI.fetchable}
           <FeaturedExtensionDownload oninstall={oninstall} extension={catalogExtensionUI} />
@@ -92,9 +97,6 @@ function handleChangeVersion(preferredVersion?: string): void {
           text={catalogExtensionUI.shortDescription}
           class="pt-0.5 text-sm text-[var(--pd-content-text)]" />
         <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 text-sm text-[var(--pd-content-text)]">
-          {#if catalogExtensionUI.isInstalled && catalogExtensionUI.installedExtension}
-            <ExtensionLifecycleStatus extension={catalogExtensionUI.installedExtension} class="shrink-0" />
-          {/if}
           {#if catalogExtensionUI.isInstalled}
             {#key uiRevision}
               {@const actualVersion = catalogExtensionUI.installedVersion}

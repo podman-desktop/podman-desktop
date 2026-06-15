@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 !m-0 !me-0 cursor-pointer';
+export const EXTENSION_CHIP_BADGE_CLASS = 'shrink-0 cursor-pointer m-0';
 
 export const EXTENSION_BUILTIN_CHIP_LABEL = 'Built-in extension';
 
@@ -24,7 +24,7 @@ export const EXTENSION_BUILTIN_CHIP_TOOLTIP = 'Pre-installed with Podman Desktop
 
 export const EXTENSION_CHIP_COLORS = {
   featured: 'bg-[var(--pd-badge-sky)]',
-  new: 'bg-[var(--pd-badge-gray)]',
+  new: 'bg-yellow-500',
   update: 'bg-[var(--pd-status-warning)]',
   installed: 'bg-[var(--pd-badge-gray)]',
   community: 'bg-[var(--pd-status-disconnected)]',

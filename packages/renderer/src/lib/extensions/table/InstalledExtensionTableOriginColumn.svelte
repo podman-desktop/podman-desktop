@@ -17,7 +17,7 @@ interface Props {
 let { object }: Props = $props();
 </script>
 
-<div class="flex flex-wrap items-center gap-2 py-1">
+<div class="flex flex-nowrap items-center gap-2 py-1">
   {#if object.extension.type === 'dd'}
     <Badge
       label="Docker Desktop extension"

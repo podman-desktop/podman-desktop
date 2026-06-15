@@ -1953,7 +1953,9 @@ export class ExtensionLoader implements IAsyncDisposable {
     if (extension) {
       await this.deactivateExtension(extensionId);
       // delete the path
-      if (extension.removable) {
+      // Extensions installed from catalog (in pluginsDirectory) are always removable
+      const isInPluginsDirectory = extension.path.startsWith(this.pluginsDirectory);
+      if (extension.removable || isInPluginsDirectory) {
         await fs.promises.rm(extension.path, { recursive: true, force: true });
       } else if (!extension.devMode) {
         throw new Error(`Extension ${extensionId} is not removable`);

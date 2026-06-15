@@ -18,12 +18,19 @@
 
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
+import type { CatalogViewMode } from './catalog-extension-info-ui';
+
 /**
  * Prototype-only settings for extension catalog UX (DTUX-2849).
  * Replace with real backend persistence when implementing in main/preload.
  */
 const autoUpdateEnabled = new SvelteMap<string, boolean>();
-const newlyInstalled = new SvelteSet<string>();
+
+// Use SvelteSet for reactivity - components will re-render when this changes
+export const newlyInstalled = new SvelteSet<string>();
+
+// Catalog view mode preference (persists across tab switches)
+export const catalogViewMode = $state<{ mode: CatalogViewMode }>({ mode: 'grid' });
 
 export function isAutoUpdateEnabled(extensionId: string): boolean {
   return autoUpdateEnabled.get(extensionId) ?? false;
@@ -40,13 +47,28 @@ export function toggleAutoUpdate(extensionId: string): boolean {
 }
 
 export function markNewlyInstalled(extensionId: string): void {
+  console.log(`[DTUX-2854] markNewlyInstalled called for: ${extensionId}`);
   newlyInstalled.add(extensionId);
+  console.log(`[DTUX-2854] newlyInstalled set now contains:`, Array.from(newlyInstalled));
+  console.log(`[DTUX-2854] Set size:`, newlyInstalled.size);
 }
 
 export function isNewlyInstalled(extensionId: string): boolean {
-  return newlyInstalled.has(extensionId);
+  // Access the set directly to trigger reactivity
+  const result = newlyInstalled.has(extensionId);
+  console.log(`[DTUX-2854] isNewlyInstalled(${extensionId}): ${result}, set size: ${newlyInstalled.size}`);
+  return result;
 }
 
 export function clearNewBadge(extensionId: string): void {
+  console.log(`[DTUX-2854] clearNewBadge called for: ${extensionId}`);
   newlyInstalled.delete(extensionId);
+}
+
+export function getCatalogViewMode(): CatalogViewMode {
+  return catalogViewMode.mode;
+}
+
+export function setCatalogViewMode(mode: CatalogViewMode): void {
+  catalogViewMode.mode = mode;
 }

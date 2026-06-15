@@ -19,6 +19,7 @@
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
 import type { ContributionInfo, WebviewInfo } from '@podman-desktop/core-api';
 
+import { newlyInstalled } from '/@/lib/extensions/extension-catalog-settings.svelte';
 import ExtensionIcon from '/@/lib/images/ExtensionIcon.svelte';
 import { contributions } from '/@/stores/contribs';
 import { webviews } from '/@/stores/webviews';
@@ -57,12 +58,13 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
   };
 
   let allContribs: ContributionInfo[] = [];
-
   let allWebviews: WebviewInfo[] = [];
 
   const refresh = (): void => {
     const newItems: NavigationRegistryEntry[] = [];
     allContribs.forEach(contrib => {
+      const extensionId = contrib.extensionId;
+
       const registry: NavigationRegistryEntry = {
         name: contrib.name,
         icon: {
@@ -70,7 +72,11 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
         },
         link: `/contribs/${contrib.name}`,
         type: 'entry',
-        tooltip: contrib.name,
+        // Make tooltip a getter so it updates when newlyInstalled changes
+        get tooltip() {
+          const isNew = extensionId && newlyInstalled.has(extensionId);
+          return isNew ? `${contrib.name} ⭐ (newly installed)` : contrib.name;
+        },
         get counter() {
           return 0;
         },
@@ -80,12 +86,17 @@ export function createNavigationExtensionGroup(): NavigationRegistryEntry {
 
     allWebviews.forEach(webview => {
       const icon = webview.icon ? { iconImage: webview.icon } : { faIconImage: faPuzzlePiece, size: '1.5x' };
+      const extensionId = webview.extensionId;
 
       const registry: NavigationRegistryEntry = {
         name: webview.name,
         icon,
         link: `/webviews/${webview.id}`,
-        tooltip: webview.name,
+        // Make tooltip a getter so it updates when newlyInstalled changes
+        get tooltip() {
+          const isNew = extensionId && newlyInstalled.has(extensionId);
+          return isNew ? `${webview.name} ⭐ (newly installed)` : webview.name;
+        },
         type: 'entry',
         get counter() {
           return 0;

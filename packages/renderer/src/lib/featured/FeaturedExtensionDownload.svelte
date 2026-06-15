@@ -3,7 +3,6 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { ErrorMessage } from '@podman-desktop/ui-svelte';
 
 import { markNewlyInstalled } from '/@/lib/extensions/extension-catalog-settings.svelte';
-import ExtensionInstallSuccessDialog from '/@/lib/extensions/ExtensionInstallSuccessDialog.svelte';
 import LoadingIcon from '/@/lib/ui/LoadingIcon.svelte';
 
 export let extension: {
@@ -19,11 +18,8 @@ let installInProgress = false;
 let logs: string[] = [];
 let errorInstall = '';
 let percentage = '0%';
-let showSuccessDialog = false;
-let installedVersion = '';
 
 async function installExtension(): Promise<void> {
-  oninstall(extension.id);
   errorInstall = '';
   console.log('User asked to install the extension with the following properties', extension);
   logs = [];
@@ -62,18 +58,15 @@ async function installExtension(): Promise<void> {
     );
     logs = [...logs, '☑️ installation finished!'];
     percentage = '100%';
-    installedVersion = extension.fetchVersion ?? 'unknown';
+    console.log(`[DTUX-2854] Installation completed, marking as newly installed: ${extension.id}`);
     markNewlyInstalled(extension.id);
-    showSuccessDialog = true;
+    // Notify parent after successful installation
+    oninstall(extension.id);
   } catch (error) {
     console.log('error', error);
     errorInstall = String(error);
   }
   installInProgress = false;
-}
-
-function closeSuccessDialog(): void {
-  showSuccessDialog = false;
 }
 </script>
 
@@ -93,26 +86,3 @@ function closeSuccessDialog(): void {
     class="absolute -top-[15px] right-0 text-[var(--pd-action-button-spinner)]"
     style="font-size: 8px">{percentage}</span>
 </button>
-
-{#if showSuccessDialog}
-  <ExtensionInstallSuccessDialog
-    extension={{
-      id: extension.id,
-      displayName: extension.displayName,
-      isFeatured: false,
-      fetchable: extension.fetchable,
-      fetchLink: extension.fetchLink ?? '',
-      fetchVersion: extension.fetchVersion ?? '',
-      publisherDisplayName: '',
-      isInstalled: true,
-      shortDescription: '',
-      categories: [],
-      keywords: [],
-      availableVersions: [],
-      hasUpdate: false,
-      isVerified: false,
-      isSupportedByRedHat: false,
-    }}
-    installedVersion={installedVersion}
-    closeCallback={closeSuccessDialog} />
-{/if}

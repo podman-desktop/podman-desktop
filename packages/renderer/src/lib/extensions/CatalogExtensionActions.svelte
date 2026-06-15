@@ -22,7 +22,7 @@ import { onboardingList } from '/@/stores/onboarding';
 
 import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import { buildExtensionBugReportUrl } from './extension-badge-styles';
-import { isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
+import { clearNewBadge, isAutoUpdateEnabled, setAutoUpdateEnabled } from './extension-catalog-settings.svelte';
 import { buildExtensionDetailsPath, type ExtensionListScreen } from './extension-list';
 import {
   extensionHasOtherVersions,
@@ -81,6 +81,10 @@ const showStop = $derived(installedExtension?.state === 'started' || installedEx
 const showReactivate = $derived(installedExtension?.state === 'stopped' || installedExtension?.state === 'failed');
 const hasOtherVersions = $derived(extensionHasOtherVersions(extension));
 
+// Catalog/fetchable extensions should always be removable, even if backend says removable: false
+// True built-in extensions (like Compose, Docker, Podman) are NOT fetchable
+const isRemovable = $derived(extension.installedExtension?.removable !== false || extension.fetchable === true);
+
 function openDetails(event: Event): void {
   event.stopPropagation();
   router.goto(buildExtensionDetailsPath(extension.id, returnScreen));
@@ -117,16 +121,28 @@ async function stopExtension(event: Event): Promise<void> {
 
 async function removeExtension(event: Event): Promise<void> {
   event.stopPropagation();
+  console.log(
+    '[DTUX-2854] Remove clicked for:',
+    extension.displayName,
+    'installedExtension:',
+    installedExtension,
+    'isRemovable:',
+    isRemovable,
+  );
   if (!installedExtension) {
+    console.error('[DTUX-2854] No installedExtension found, cannot remove');
     return;
   }
   withConfirmation(
     async () => {
+      console.log('[DTUX-2854] Confirmed removal, removing extension:', installedExtension.id);
       if (installedExtension.type === 'dd') {
         await window.ddExtensionDelete(installedExtension.id);
       } else {
         await window.removeExtension(installedExtension.id);
       }
+      // Remove from newly installed set
+      clearNewBadge(extension.id);
     },
     `remove ${extension.displayName}`,
     { title: 'Remove extension?', variant: 'delete', buttonLabel: 'Remove' },
@@ -215,9 +231,12 @@ function handleChangeVersion(event: Event): void {
         <ExtensionDropdownMenuItem title="Open repository" icon={faExternalLink} onClick={openRepository} />
       {/if}
       <ExtensionDropdownMenuItem title="Report a bug" icon={faBug} onClick={reportBug} />
-      {#if extension.installedExtension?.removable !== false}
-        <ExtensionDropdownMenuItem title="Remove" icon={faTrash} onClick={removeExtension} />
-      {/if}
+      <ExtensionDropdownMenuItem
+        title="Remove"
+        detail={!isRemovable ? 'Built-in extension cannot be removed' : ''}
+        icon={faTrash}
+        enabled={isRemovable}
+        onClick={removeExtension} />
     {:else}
       {#if extension.repositoryUrl}
         <ExtensionDropdownMenuItem title="Open repository" icon={faExternalLink} onClick={openRepository} />

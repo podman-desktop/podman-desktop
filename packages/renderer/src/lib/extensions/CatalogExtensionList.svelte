@@ -2,20 +2,32 @@
 import { faPuzzlePiece, faTableCells, faThLarge } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 
-import type { CatalogExtensionInfoUI, CatalogViewMode } from './catalog-extension-info-ui';
+import type { CatalogExtensionInfoUI } from './catalog-extension-info-ui';
 import CatalogExtension from './CatalogExtension.svelte';
 import CatalogExtensionTable from './CatalogExtensionTable.svelte';
 import ChangeVersionModal from './ChangeVersionModal.svelte';
+import { catalogViewMode } from './extension-catalog-settings.svelte';
 
-export let catalogExtensions: CatalogExtensionInfoUI[];
-export let title: string = 'Available extensions';
-export let showEmptyScreen: boolean = true;
-export let oninstall: (extensionId: string) => void = () => {};
-export let ondetails: (extensionId: string) => void = () => {};
+interface Props {
+  catalogExtensions: CatalogExtensionInfoUI[];
+  title?: string;
+  showEmptyScreen?: boolean;
+  oninstall?: (extensionId: string) => void;
+  ondetails?: (extensionId: string) => void;
+}
 
-let viewMode: CatalogViewMode = 'grid';
-let changeVersionExtension: CatalogExtensionInfoUI | undefined;
-let changeVersionPreferredVersion: string | undefined;
+let {
+  catalogExtensions,
+  title = '',
+  showEmptyScreen = true,
+  oninstall = (): void => {},
+  ondetails = (): void => {},
+}: Props = $props();
+
+// Use persistent view mode that survives tab switches - access the reactive object directly
+const viewMode = $derived(catalogViewMode.mode);
+let changeVersionExtension: CatalogExtensionInfoUI | undefined = $state(undefined);
+let changeVersionPreferredVersion: string | undefined = $state(undefined);
 
 function openChangeVersion(extension: CatalogExtensionInfoUI, preferredVersion?: string): void {
   changeVersionExtension = extension;
@@ -28,11 +40,15 @@ function closeChangeVersion(): void {
 }
 </script>
 
-<div class="flex flex-col grow px-5 py-3">
+<div class="flex flex-col grow py-3">
   {#if catalogExtensions.length > 0}
-    <div class="mb-4 flex flex-row items-center">
-      <div class="flex items-center text-[var(--pd-content-header)]">{title}</div>
-      <div class="flex-1"></div>
+    <div class="mb-4 flex flex-row items-center px-5">
+      {#if title}
+        <div class="flex items-center text-[var(--pd-content-header)]">{title}</div>
+        <div class="flex-1"></div>
+      {:else}
+        <div class="flex-1"></div>
+      {/if}
       <Button
         type="tab"
         icon={faThLarge}
@@ -40,7 +56,7 @@ function closeChangeVersion(): void {
         title="Grid view"
         aria-label="Grid view"
         on:click={(): void => {
-          viewMode = 'grid';
+          catalogViewMode.mode = 'grid';
         }} />
       <Button
         type="tab"
@@ -49,7 +65,7 @@ function closeChangeVersion(): void {
         title="Table view"
         aria-label="Table view"
         on:click={(): void => {
-          viewMode = 'table';
+          catalogViewMode.mode = 'table';
         }} />
     </div>
   {:else if showEmptyScreen}
@@ -61,7 +77,7 @@ function closeChangeVersion(): void {
 
   {#if catalogExtensions.length > 0}
     {#if viewMode === 'grid'}
-      <div class="flex flex-col w-full">
+      <div class="flex flex-col w-full px-5">
         <div
           class="grid min-[920px]:grid-cols-2 min-[1180px]:grid-cols-3 gap-3"
           role="region"
