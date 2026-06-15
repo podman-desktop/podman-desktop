@@ -1,7 +1,0 @@
-import{i as e}from"./preload-helper-xPQekRTU.js";import{It as t,Lt as n,Sn as r,St as i,X as a,Yt as o,Z as s,b as c,dt as l,ft as u,hn as d,nn as f,p,pn as m,pt as h,rn as g,s as _,un as v,yn as y}from"./iframe-DNaK6a44.js";import{a as b,i as x,n as S,r as C,t as w}from"./create-runtime-stories-bGFx-yCp.js";import{L as T,N as E,k as D,s as O}from"./Icon-CC7c8-cE.js";import{S as k,t as A}from"./dist-Dx-HUUuN.js";function j(e,t){g(t,!1),c();{let t=o(()=>({items:[{title:`Item 1`,icon:O},{title:`Item 2`,icon:D},{title:`Item 3`,icon:E}]}));P(e,{name:`Basic`,get args(){return i(t)},parameters:{__svelteCsf:{rawCode:`<div class="flex min-h-52 justify-center p-10">
-  <DropdownMenu>
-    {#each args.items as item, index (index)}
-      <DropdownMenu.Item {...item} />
-    {/each}
-  </DropdownMenu>
-</div>`}}})}f()}var M,N,P,F,I,L,R;e((()=>{r(),b(),y(),T(),A(),x(),_(),S(),M=(e,r,o=d)=>{let c=()=>m(r?.(),[`_children`]);var f=F();k(t(f),{children:(e,t)=>{var r=u();a(n(r),1,()=>c().items,s,(e,t)=>{k.Item(e,p(()=>i(t)))}),l(e,r)},$$slots:{default:!0}}),v(f),l(e,f)},N={component:k,render:M,title:`DropdownMenu`,tags:[`autodocs`],args:{},parameters:{docs:{description:{component:"These are the stories for the `DropdownMenu` component.\nInteract with a drop down from a kebab menu."}}}},{Story:P}=C(N),F=h(`<div class="flex min-h-52 justify-center p-10"><!></div>`),j.__docgen={data:[],name:`DropdownMenu.stories.svelte`},I=w(j,N),L=[`Basic`],R={...I.Basic,tags:[`svelte-csf-v5`]}}))();export{R as Basic,L as __namedExportsOrder,N as default};
