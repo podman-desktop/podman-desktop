@@ -44,6 +44,20 @@ You can find here troubleshooting help for issues specific to Windows.
 
 - [WSL documentation: Uninstall a Linux distribution](https://learn.microsoft.com/en-us/windows/wsl/basic-commands#unregister-or-uninstall-a-linux-distribution)
 
+## Podman Desktop can't find Podman machine
+
+#### Issue
+
+Podman Desktop does not detect existing Podman machines
+
+#### Solution
+
+1. Restart WSL2 from the command line
+
+   ```shell-session
+   $ taskkill.exe /F /im wslservice.exe
+   ```
+
 ## The terminal session attaches to Podman Desktop when launching it from the command line
 
 #### Issue
