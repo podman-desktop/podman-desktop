@@ -129,6 +129,7 @@ export class DashboardPage extends BasePage {
     } = {},
   ): Promise<void> {
     return test.step(`Create Podman machine '${machineName}' from System Overview`, async () => {
+      await this.expandSystemOverview(true);
       await playExpect(this.setUpPodmanButton).toBeEnabled();
       await this.setUpPodmanButton.scrollIntoViewIfNeeded();
       await this.setUpPodmanButton.click();
@@ -151,6 +152,7 @@ export class DashboardPage extends BasePage {
   }
 
   public async checkSystemOverviewResourceDetails(resourceName: string): Promise<void> {
+    await this.expandSystemOverview(true);
     const navigateToResourceButton = this.getNavigateToConnectionButton(resourceName);
     await playExpect(navigateToResourceButton).toBeEnabled();
     await navigateToResourceButton.click();
