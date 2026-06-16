@@ -81,7 +81,7 @@ describe.each<{
   });
 
   test('Expect redirect to previous page if ingress is deleted', async () => {
-    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+    vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
     const routerGotoSpy = vi.spyOn(router, 'goto');
 
     // mock object store

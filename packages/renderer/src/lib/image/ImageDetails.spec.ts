@@ -89,8 +89,8 @@ afterEach(() => {
 });
 
 test('Expect redirect to previous page if image is deleted', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Delete' (confirm)
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
 
   const routerGotoSpy = vi.spyOn(router, 'goto');
   listImagesMock.mockResolvedValue([myImage]);

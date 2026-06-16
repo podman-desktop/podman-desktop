@@ -129,8 +129,8 @@ test('Expect no error and status restarting pod', async () => {
 });
 
 test('Expect no error and status deleting pod', async () => {
-  // Mock the showMessageBox to return 0 (yes)
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  // Mock the showMessageBox to return 'Delete' (confirmed)
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   listContainersMock.mockResolvedValue([]);
 
   render(PodActions, { pod: podmanPod, onUpdate: updateMock });

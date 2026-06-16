@@ -211,7 +211,7 @@ export class Updater {
         detail: detailMessage,
         buttons: ['View Release Notes'],
       });
-      if (result.response === 0) {
+      if (result.response === 'View Release Notes') {
         await this.configurationRegistry.updateConfigurationValue(`releaseNotesBanner.show`, 'show');
         this.apiSender.send('show-release-notes');
       }
@@ -231,7 +231,7 @@ export class Updater {
           cancelId: 1,
           buttons: ['Restart', 'Cancel'],
         });
-        if (result.response === 0) {
+        if (result.response === 'Restart') {
           setImmediate(() => autoUpdater.quitAndInstall());
         }
         return;
@@ -264,11 +264,11 @@ export class Updater {
         buttons: buttons,
         cancelId: 2,
       });
-      if (result.response === 3) {
+      if (result.response === `Don't show again`) {
         this.updateConfigurationValue('never');
-      } else if (result.response === 1) {
+      } else if (result.response === `What's new`) {
         await this.openReleaseNotes(updateVersion);
-      } else if (result.response === 0) {
+      } else if (result.response === 'Update now') {
         this.#updateInProgress = true;
         this.#updateAlreadyDownloaded = false;
 
@@ -409,7 +409,7 @@ export class Updater {
         buttons: ['Restart', 'Cancel'],
       })
       .then(result => {
-        if (result.response === 0) {
+        if (result.response === 'Restart') {
           setImmediate(() => autoUpdater.quitAndInstall());
         }
       })

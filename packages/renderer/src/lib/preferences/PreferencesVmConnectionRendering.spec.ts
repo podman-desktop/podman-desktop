@@ -34,7 +34,7 @@ beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.showMessageBox).mockResolvedValue({
-    response: 0,
+    response: 'Delete',
   });
 });
 

@@ -50,10 +50,8 @@ describe('containers', () => {
       ],
     });
 
-    // mock the window.showMessageBox method to return "all"
-    const response = 1;
     vi.mocked(window.showMessageBox).mockResolvedValue({
-      response,
+      response: 'Prune',
     });
 
     // search for the button
@@ -95,10 +93,8 @@ describe('images', () => {
   test('prune all untagged images', async () => {
     imageRender();
 
-    // mock the window.showMessageBox method to return "all untaged images"
-    const response = IMAGE_BUTTONS.indexOf(ALL_UNTAGGED_IMAGES);
     vi.mocked(window.showMessageBox).mockResolvedValue({
-      response,
+      response: ALL_UNTAGGED_IMAGES,
     });
 
     // search for the button
@@ -120,10 +116,8 @@ describe('images', () => {
   test('prune all unused images', async () => {
     imageRender();
 
-    // mock the window.showMessageBox method to return "all unused images"
-    const response = IMAGE_BUTTONS.indexOf(ALL_UNUSED_IMAGES);
     vi.mocked(window.showMessageBox).mockResolvedValue({
-      response,
+      response: ALL_UNUSED_IMAGES,
     });
 
     // search for the button
@@ -145,10 +139,8 @@ describe('images', () => {
   test('prune nothing (click cancel)', async () => {
     imageRender();
 
-    // mock the window.showMessageBox method to return "Cancel"
-    const response = IMAGE_BUTTONS.indexOf(CANCEL_BUTTON);
     vi.mocked(window.showMessageBox).mockResolvedValue({
-      response,
+      response: CANCEL_BUTTON,
     });
 
     // search for the button

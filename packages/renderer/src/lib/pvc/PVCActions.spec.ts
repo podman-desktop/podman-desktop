@@ -63,7 +63,7 @@ afterEach(() => {
 });
 
 test('Expect no error and status deleting PVC', async () => {
-  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 0 });
+  vi.mocked(window.showMessageBox).mockResolvedValue({ response: 'Delete' });
   render(PVCActions, { pvc: fakePVC });
 
   // click on delete buttons

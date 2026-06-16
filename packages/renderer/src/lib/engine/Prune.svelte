@@ -44,9 +44,8 @@ async function openPruneDialog(): Promise<void> {
     buttons,
   });
 
-  const selectedItemLabel = buttons[result.response ?? 0];
-  if (selectedItemLabel !== cancel) {
-    await prune(type, selectedItemLabel);
+  if (result.response !== undefined && result.response !== cancel) {
+    await prune(type, result.response);
   }
 }
 

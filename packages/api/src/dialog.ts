@@ -75,6 +75,6 @@ export interface MessageBoxOptions {
 }
 
 export interface MessageBoxReturnValue {
-  response: number | undefined;
+  response: string | undefined;
   dropdownIndex?: number;
 }

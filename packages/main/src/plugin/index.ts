@@ -471,12 +471,10 @@ export class PluginSystem {
         cancelId: 2,
       });
 
-      if (result.response === 0) {
-        // open externally the URL
+      if (result.response === 'Open') {
         await shell.openExternal(url);
         return true;
-      } else if (result.response === 1) {
-        // copy to clipboard
+      } else if (result.response === 'Copy Link') {
         clipboard.writeText(url);
       }
       return false;

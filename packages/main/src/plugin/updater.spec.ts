@@ -100,6 +100,7 @@ const configurationMock = {
 const configurationRegistryMock = {
   registerConfigurations: vi.fn(),
   getConfiguration: vi.fn(),
+  updateConfigurationValue: vi.fn(),
 } as unknown as ConfigurationRegistry;
 
 const statusBarRegistryMock = {
@@ -600,7 +601,7 @@ test('expect command update not to be called when configuration value on never',
 
 test('clicking on "Update Never" should set the configuration value to never', async () => {
   vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
-    response: 3, // Update never
+    response: `Don't show again`,
   });
 
   let mListener: (() => Promise<void>) | undefined;
@@ -630,7 +631,7 @@ describe('expect update command to depends on context', async () => {
   type UpdateCommandListener = (context: 'startup' | 'status-bar-entry') => Promise<void>;
   const getUpdateListener = async (): Promise<UpdateCommandListener> => {
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
-      response: 2, // Update never
+      response: 'Cancel',
     });
 
     vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue({
@@ -754,7 +755,7 @@ describe('download task and progress', async () => {
 
     // call the update command callback
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
-      response: 0,
+      response: 'Update now',
     });
 
     await updateCommandCallback?.('status-bar-entry');
@@ -775,7 +776,7 @@ describe('download task and progress', async () => {
 
     // user click on restart
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
-      response: 0,
+      response: 'Restart',
     });
 
     onUpdateDownloadedCallback?.(updatedDownloadedEvent);
@@ -820,7 +821,7 @@ describe('download task and progress', async () => {
 
     // call the update command callback
     vi.mocked(messageBoxMock.showMessageBox).mockResolvedValueOnce({
-      response: 0,
+      response: 'Update now',
     });
 
     // simulate download failure
@@ -1156,4 +1157,75 @@ test('versions are not numbered versions', async () => {
   await vi.waitFor(() => expect(autoUpdater.checkForUpdates).toBeCalled());
 
   expect(updater.updateAvailable()).toBeTruthy();
+});
+
+test('clicking View Release Notes in version command should show release notes', async () => {
+  vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
+    response: 'View Release Notes',
+  });
+
+  vi.mocked(configurationRegistryMock.updateConfigurationValue).mockResolvedValue(undefined);
+
+  let versionListener: (() => Promise<void>) | undefined;
+  vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
+    (channel: string, listener: () => Promise<void>) => {
+      if (channel === 'version') versionListener = listener;
+      return Disposable.noop();
+    },
+  );
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+  expect(versionListener).toBeDefined();
+
+  await versionListener?.();
+
+  expect(configurationRegistryMock.updateConfigurationValue).toHaveBeenCalledWith('releaseNotesBanner.show', 'show');
+  expect(apiSenderMock.send).toHaveBeenCalledWith('show-release-notes');
+});
+
+test(`clicking What's new in update command should open release notes`, async () => {
+  vi.mocked(messageBoxMock.showMessageBox).mockResolvedValue({
+    response: `What's new`,
+  });
+
+  vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue({
+    updateInfo: {
+      version: '2.0.0',
+    },
+  } as unknown as UpdateCheckResult);
+
+  type UpdateCommandListener = (context?: 'startup' | 'status-bar-entry') => Promise<void>;
+  let updateListener: UpdateCommandListener | undefined;
+  vi.mocked(commandRegistryMock.registerCommand).mockImplementation(
+    (channel: string, listener: () => Promise<void>) => {
+      if (channel === 'update') updateListener = listener;
+      return Disposable.noop();
+    },
+  );
+
+  vi.mocked(shell.openExternal).mockResolvedValue();
+
+  const updater = new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  );
+  updater.init();
+
+  await vi.waitUntil(() => updater.updateAvailable(), { interval: 500, timeout: 2000 });
+
+  expect(updateListener).toBeDefined();
+  await updateListener?.('status-bar-entry');
+
+  expect(shell.openExternal).toHaveBeenCalled();
 });
