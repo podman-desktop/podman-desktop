@@ -15,7 +15,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Argos CI Screenshots
+name: Visual Testing
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}
@@ -36,7 +36,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/argos.yaml'
+      - 'argos-website.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'storybook/**'
@@ -47,8 +47,8 @@ permissions:
   contents: read
 
 jobs:
-  take-screenshots:
-    name: take screenshots
+  website:
+    name: website
     runs-on: ubuntu-22.04
     # disable on forks as secrets are not available
     if: github.event.repository.fork == false
