@@ -79,6 +79,7 @@ test.describe
       // enable the feature
       await setEnhancedDashboardFeature(page, navigationBar, true);
       // assert assets state after enabling it
+      await navigationBar.openDashboard();
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled();
       await dashboardPage.expandSystemOverview(true);
       await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
@@ -89,6 +90,7 @@ test.describe
       await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled();
       // disable the feature and assert everything went back to the expected state
       await setEnhancedDashboardFeature(page, navigationBar, false);
+      await navigationBar.openDashboard();
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
     });
