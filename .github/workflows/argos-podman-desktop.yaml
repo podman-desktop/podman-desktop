@@ -31,6 +31,7 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'extensions/**'
+      - 'tests/playwright/**'
       - 'packages/**'
   pull_request:
     branches:
@@ -40,6 +41,7 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'extensions/**'
+      - 'tests/playwright/**'
       - 'packages/**'
 
 permissions:
