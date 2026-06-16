@@ -29,6 +29,14 @@ const PODMAN_DESKTOP_EXCLUDED = [
  */
 export default defineConfig({
   test: {
+    onUnhandledError(error) {
+      // Suppress Vitest v4 RPC teardown race condition (vitest-dev/vitest#9458).
+      // The worker shuts down before pending console log messages are flushed,
+      // causing spurious CI failures on Ubuntu where coverage adds teardown latency.
+      if (error.message?.includes('Closing rpc while')) {
+        return false;
+      }
+    },
     projects: [
       '{extensions,packages,tools,storybook,website,scripts}/**/{vitest,vite}.config.{js,ts}',
       '!**/builtin/**',
