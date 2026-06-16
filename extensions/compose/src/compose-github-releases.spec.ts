@@ -22,6 +22,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { Octokit } from '@octokit/rest';
+import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ComposeGitHubReleases } from './compose-github-releases';
@@ -38,13 +39,7 @@ vi.mock(import('@octokit/rest'), () => {
   return { Octokit } as any;
 });
 
-vi.mock(import('@podman-desktop/api'), () => {
-  return {
-    authentication: {
-      getSession: vi.fn().mockResolvedValue({ accessToken: 'test-token' }),
-    },
-  } as any;
-});
+vi.mock(import('@podman-desktop/api'));
 
 let composeGitHubReleases: ComposeGitHubReleases;
 
@@ -56,6 +51,28 @@ beforeEach(() => {
 afterEach(() => {
   vi.resetAllMocks();
   vi.restoreAllMocks();
+});
+
+test.each([
+  {
+    id: 'session1',
+    accessToken: '12345ABC',
+    account: {
+      id: 'account1',
+      label: 'Account 1',
+    },
+    scopes: [],
+  },
+  undefined,
+])('Auth token is passed to Octokit instance from github-authentication if there is one', async authToken => {
+  vi.mocked(extensionApi.authentication.getSession).mockResolvedValue(authToken);
+
+  vi.mocked((Octokit.prototype as any).repos.listReleases).mockReturnValue({ data: [] });
+
+  await composeGitHubReleases.grabLatestsReleasesMetadata();
+
+  expect(extensionApi.authentication.getSession).toHaveBeenCalledWith('github-authentication', []);
+  expect(Octokit).toHaveBeenCalledWith({ auth: authToken?.accessToken });
 });
 
 test('expect grab 5 releases', async () => {

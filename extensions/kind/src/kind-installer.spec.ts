@@ -68,6 +68,28 @@ beforeEach(async () => {
   (extensionApi.env.isMac as unknown as boolean) = false;
 });
 
+test.each([
+  {
+    id: 'session1',
+    accessToken: '12345ABC',
+    account: {
+      id: 'account1',
+      label: 'Account 1',
+    },
+    scopes: [],
+  },
+  undefined,
+])('Auth token is passed to Octokit instance from github-authentication if there is one', async authToken => {
+  vi.mocked(extensionApi.authentication.getSession).mockResolvedValue(authToken);
+
+  vi.mocked((Octokit.prototype as any).repos.listReleases).mockReturnValue({ data: [] });
+
+  await installer.grabLatestsReleasesMetadata();
+
+  expect(extensionApi.authentication.getSession).toHaveBeenCalledWith('github-authentication', []);
+  expect(Octokit).toHaveBeenCalledWith({ auth: authToken?.accessToken });
+});
+
 test.skip('expect installBinaryToSystem to succesfully pass with a binary', async () => {
   (extensionApi.env.isLinux as unknown as boolean) = true;
 
