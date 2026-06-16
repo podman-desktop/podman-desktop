@@ -87,7 +87,7 @@ let html: string = $derived.by(() => {
   // remove href values in each anchor using # for links
   // and set the attribute data-pd-jump-in-page
   const parser = new DOMParser();
-  const doc = parser.parseFromString(DOMPurify.sanitize(decode(html)), 'text/html');
+  const doc = parser.parseFromString(decode(DOMPurify.sanitize(html)), 'text/html');
   const links = doc.querySelectorAll('a');
   links.forEach(link => {
     const currentHref = link.getAttribute('href');
