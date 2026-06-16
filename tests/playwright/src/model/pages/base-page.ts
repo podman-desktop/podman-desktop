@@ -39,6 +39,7 @@ export abstract class BasePage {
 
     await this.page.screenshot({
       path: join(path, `${options.name}-${platform()}-${arch()}.png`),
+      mask: options.mask,
     });
   }
 }
