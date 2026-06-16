@@ -23,6 +23,7 @@ import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 
 import { BasePage } from './base-page';
 import { PodmanOnboardingPage } from './podman-onboarding-page';
+import { ResourceDetailsPage } from './resource-details-page';
 
 export class DashboardPage extends BasePage {
   readonly mainPage: Locator;
@@ -147,6 +148,14 @@ export class DashboardPage extends BasePage {
         virtualizationProvider,
       });
     });
+  }
+
+  public async checkSystemOverviewResourceDetails(resourceName: string): Promise<void> {
+    const navigateToResourceButton = this.getNavigateToConnectionButton(resourceName);
+    await playExpect(navigateToResourceButton).toBeEnabled();
+    await navigateToResourceButton.click();
+    const resourceDetails = new ResourceDetailsPage(this.page, resourceName);
+    await playExpect(resourceDetails.heading).toBeVisible();
   }
 
   public getPodmanStatusLocator(): Locator {

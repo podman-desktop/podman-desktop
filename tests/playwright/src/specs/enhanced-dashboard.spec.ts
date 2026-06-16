@@ -19,7 +19,6 @@
 import { ResourceElementActions } from '/@/model/core/operations';
 import { SystemOverviewState } from '/@/model/core/states';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
-import { ResourceDetailsPage } from '/@/model/pages/resource-details-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import {
@@ -133,11 +132,7 @@ test.describe
         await dashboardPage.statusButton.scrollIntoViewIfNeeded();
         await playExpect(dashboardPage.statusButton).toHaveText(SystemOverviewState.Stopped, { timeout: 10_000 });
         // click on 'navigate to...' button, verify it goes to machine details
-        const navigateToPodmanMachineButton = dashboardPage.getNavigateToConnectionButton('Podman Machine');
-        await playExpect(navigateToPodmanMachineButton).toBeEnabled();
-        await navigateToPodmanMachineButton.click();
-        const podmanMachine1Details = new ResourceDetailsPage(page, PODMAN_MACHINE_VISIBLE_NAME);
-        await playExpect(podmanMachine1Details.heading).toBeVisible();
+        await dashboardPage.checkSystemOverviewResourceDetails(PODMAN_MACHINE_VISIBLE_NAME);
         // come back to dashboard, click on status button, verify it goes to resources
         await navigationBar.openDashboard();
         await dashboardPage.statusButton.scrollIntoViewIfNeeded();
