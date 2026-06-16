@@ -36,7 +36,7 @@ on:
     branches:
       - main
     paths:
-      - 'argos-website.yaml'
+      - '.github/workflows/argos-website.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'storybook/**'
