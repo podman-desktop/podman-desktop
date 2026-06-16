@@ -25,3 +25,4 @@ export const archType = os.arch();
 
 // powershell $true value is 'True', we need to make it a lowercase first
 export const isCI = String(process.env.CI).toLowerCase() === 'true';
+export const isRHEL = String(process.env.IS_RHEL).toLowerCase() === 'true';

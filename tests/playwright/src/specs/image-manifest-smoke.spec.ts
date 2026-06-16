@@ -31,7 +31,7 @@ import { NavigationBar } from '/@/model/workbench/navigation';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteImage, deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
-import { archType, isWindows } from '/@/utility/platform';
+import { archType, isCI, isRHEL, isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
@@ -49,6 +49,11 @@ let registryUrl: string;
 let registryUsername: string;
 let registryPswdSecret: string;
 const manifestLabelComplex: string = `localhost/${imageNameComplex}`;
+
+test.skip(
+  !!isCI && isRHEL,
+  'Cross-architecture image builds are not supported on RHEL — qemu-user-static is unavailable',
+);
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(180_000);
