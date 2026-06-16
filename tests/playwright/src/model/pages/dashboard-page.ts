@@ -17,8 +17,12 @@
  ***********************************************************************/
 
 import type { Locator, Page } from '@playwright/test';
+import test, { expect as playExpect } from '@playwright/test';
+
+import type { PodmanVirtualizationProviders } from '/@/model/core/types';
 
 import { BasePage } from './base-page';
+import { PodmanOnboardingPage } from './podman-onboarding-page';
 
 export class DashboardPage extends BasePage {
   readonly mainPage: Locator;
@@ -97,6 +101,51 @@ export class DashboardPage extends BasePage {
     return this.systemOverview.getByRole('button', {
       name: `Navigate to ${connectionName}`,
       exact: true,
+    });
+  }
+
+  public async expandSystemOverview(expanded: boolean): Promise<void> {
+    const isExpanded = (await this.systemOverviewButton.getAttribute('aria-expanded')) === 'true';
+    if (isExpanded !== expanded) {
+      await this.systemOverviewButton.scrollIntoViewIfNeeded();
+      await this.systemOverviewButton.click();
+      await playExpect(this.systemOverviewButton).toHaveAttribute('aria-expanded', String(expanded));
+    }
+  }
+
+  public async createPodmanMachineFromSystemOverview(
+    machineName: string,
+    {
+      isRootful = false,
+      enableUserNet = false,
+      startNow = true,
+      virtualizationProvider,
+    }: {
+      isRootful?: boolean;
+      enableUserNet?: boolean;
+      startNow?: boolean;
+      virtualizationProvider?: PodmanVirtualizationProviders;
+    } = {},
+  ): Promise<void> {
+    return test.step(`Create Podman machine '${machineName}' from System Overview`, async () => {
+      await playExpect(this.setUpPodmanButton).toBeEnabled();
+      await this.setUpPodmanButton.scrollIntoViewIfNeeded();
+      await this.setUpPodmanButton.click();
+      const podmanOnboardingPage = new PodmanOnboardingPage(this.page);
+      await playExpect(podmanOnboardingPage.header).toBeVisible();
+      await playExpect(podmanOnboardingPage.mainPage).toBeVisible();
+      await podmanOnboardingPage.nextStepButton.click();
+      await playExpect(podmanOnboardingPage.onboardingStatusMessage).toHaveText(
+        `We could not find any Podman machine. Let's create one!`,
+        { timeout: 10_000 },
+      );
+      await podmanOnboardingPage.nextStepButton.click();
+      await podmanOnboardingPage.machineCreationForm.setupAndCreateMachine(machineName, {
+        isRootful,
+        enableUserNet,
+        startNow,
+        virtualizationProvider,
+      });
     });
   }
 

@@ -18,7 +18,6 @@
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { SystemOverviewState } from '/@/model/core/states';
-import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourceDetailsPage } from '/@/model/pages/resource-details-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
@@ -81,8 +80,7 @@ test.describe
       await setEnhancedDashboardFeature(page, navigationBar, true);
       // assert assets state after enabling it
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled();
-      await dashboardPage.systemOverviewButton.scrollIntoViewIfNeeded();
-      await dashboardPage.systemOverviewButton.click();
+      await dashboardPage.expandSystemOverview(true);
       await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
       await playExpect(dashboardPage.podmanProvider).not.toBeVisible();
       await playExpect(dashboardPage.statusButton).toBeEnabled();
@@ -103,20 +101,7 @@ test.describe
         await setEnhancedDashboardFeature(page, navigationBar, true);
         // go to dashboard
         let dashboardPage = await navigationBar.openDashboard();
-        await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled({ timeout: 5_000 });
-        await dashboardPage.setUpPodmanButton.scrollIntoViewIfNeeded();
-        await dashboardPage.setUpPodmanButton.click();
-        // handle podman machine onboarding process, start the machine
-        const podmanOnboardingPage = new PodmanOnboardingPage(page);
-        await playExpect(podmanOnboardingPage.header).toBeVisible();
-        await playExpect(podmanOnboardingPage.mainPage).toBeVisible();
-        await podmanOnboardingPage.nextStepButton.click();
-        await playExpect(podmanOnboardingPage.onboardingStatusMessage).toHaveText(
-          `We could not find any Podman machine. Let's create one!`,
-          { timeout: 10_000 },
-        );
-        await podmanOnboardingPage.nextStepButton.click();
-        await podmanOnboardingPage.machineCreationForm.setupAndCreateMachine(PODMAN_MACHINE_NAME, {
+        await dashboardPage.createPodmanMachineFromSystemOverview(PODMAN_MACHINE_NAME, {
           isRootful: false,
           enableUserNet: false,
           startNow: true,
