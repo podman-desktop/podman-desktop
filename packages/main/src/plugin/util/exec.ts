@@ -241,14 +241,18 @@ export class Exec {
           };
           resolve(result);
         } else {
-          options?.logger?.error(`Command execution failed with exit code ${exitCode}`);
+          const stderr = output.stderr.trim();
+          const message = stderr
+            ? `Command execution failed with exit code ${exitCode}: ${stderr}`
+            : `Command execution failed with exit code ${exitCode}`;
+          options?.logger?.error(message);
           const errResult: RunError = new RunErrorImpl(
-            `Command execution failed with exit code ${exitCode}`,
-            `Command execution failed with exit code ${exitCode}`,
+            message,
+            message,
             exitCode ?? 1,
             command,
             output.stdout.trim(),
-            output.stderr.trim(),
+            stderr,
             false,
             childProcess.killed,
           );
