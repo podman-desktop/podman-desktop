@@ -74,7 +74,7 @@ function navigateToConnection(): void {
 </script>
 
 <div class="relative flex-shrink-0 inline-flex">
-  <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full {STATUS_DOT_CLASS[connectionStatus.status]} z-10"></span>
+  <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full {STATUS_DOT_CLASS[connectionStatus.status]} z-1"></span>
 
   {#if expanded}
     <Button type="secondary" onclick={navigateToConnection} title="Navigate to {connectionName}" aria-label="Navigate to {connectionName}" padding="px-2 py-[3px]">
