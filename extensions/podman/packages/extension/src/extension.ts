@@ -150,6 +150,14 @@ export function isIncompatibleMachineOutput(output: string | undefined): boolean
   }
 }
 
+export function isWSLServiceError(output: string | undefined): boolean {
+  if (!output) {
+    return false;
+  }
+  const lower = output.toLowerCase();
+  return lower.includes('wsl/service/') || lower.includes('exit status 0xffffffff') || lower.includes('wsl_e_');
+}
+
 export async function updateMachines(
   provider: extensionApi.Provider,
   podmanConfiguration: PodmanConfiguration,
@@ -173,9 +181,16 @@ async function doUpdateMachines(
     if (runError.stderr) {
       shouldCleanMachine = isIncompatibleMachineOutput(runError.stderr);
     }
-    extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
 
-    extensionNotifications.notifySetupPodmanNotLinux();
+    if (isWSLServiceError(runError.stderr ?? runError.message)) {
+      await extensionApi.window.showWarningMessage(
+        `Podman machines cannot be listed due to a WSL error. Try running 'wsl --shutdown' in a terminal and restarting the machine from Podman Desktop. Error: ${runError.stderr ?? runError.message}`,
+      );
+    } else {
+      extensionNotifications.notifySetupPodmanNotLinux();
+    }
+
+    extensionApi.context.setValue(CLEANUP_REQUIRED_MACHINE_KEY, shouldCleanMachine);
     throw error;
   }
 
@@ -190,6 +205,13 @@ async function doUpdateMachines(
   // check if the machine needs to be cleaned for v4 --> v5 format
   if (!shouldCleanMachine) {
     shouldCleanMachine = isIncompatibleMachineOutput(machineListOutput.error);
+  }
+
+  // check if there are WSL service errors in the accumulated error output
+  if (isWSLServiceError(machineListOutput.error)) {
+    await extensionApi.window.showWarningMessage(
+      `Some Podman machines may not be visible due to a WSL error. Try running 'wsl --shutdown' in a terminal. Error: ${machineListOutput.error.trim()}`,
+    );
   }
 
   // invalid machines is not making the provider working properly so always notify
@@ -648,7 +670,7 @@ export async function monitorMachines(
     try {
       await updateMachines(provider, podmanConfiguration);
     } catch (error) {
-      // ignore the update of machines
+      console.warn('Error updating podman machines', error);
     }
 
     await timeout(5000);
@@ -1848,9 +1870,14 @@ export async function getJSONMachineList(): Promise<MachineJSONListOutput> {
   const list: MachineJSON[] = [];
   let error = '';
   for (const provider of containerMachineProviders) {
-    const machineListOutput = await getJSONMachineListByProvider(provider);
-    list.push(...(JSON.parse(machineListOutput.stdout) as MachineJSON[]));
-    error += machineListOutput.stderr + '\n';
+    try {
+      const machineListOutput = await getJSONMachineListByProvider(provider);
+      list.push(...(JSON.parse(machineListOutput.stdout) as MachineJSON[]));
+      error += machineListOutput.stderr + '\n';
+    } catch (err) {
+      const runError = err as RunError;
+      error += (runError.stderr ?? runError.message ?? String(err)) + '\n';
+    }
   }
 
   return { list, error };
