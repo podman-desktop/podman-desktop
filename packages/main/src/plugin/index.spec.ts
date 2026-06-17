@@ -28,7 +28,7 @@ import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
-import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -82,6 +82,11 @@ vi.mock(import('electron'), () => {
 let pluginSystem: TestPluginSystem;
 
 class TestPluginSystem extends PluginSystem {
+  override redirectLogging(): void {
+    // no-op: prevent replacing global console methods with async wrappers
+    // that create floating promises during Vitest worker teardown
+  }
+
   override async initConfigurationRegistry(
     container: InversifyContainer,
     notifications: NotificationCardOptions[],
@@ -142,6 +147,10 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
+});
+
+afterAll(() => {
+  vi.restoreAllMocks();
 });
 
 beforeEach(() => {
@@ -543,7 +552,7 @@ describe.each<{
     handler: 'provider-registry:createVmProviderConnection',
     methodName: 'createVmProviderConnection',
   },
-])('$handler', async ({ handler, methodName }) => {
+])('$handler', ({ handler, methodName }) => {
   let originalTask: Task;
 
   beforeEach(() => {
@@ -652,7 +661,7 @@ describe.each<{
     expectedActionName: 'Go to resources',
     expectedError: 'Something went wrong while trying to delete name1',
   },
-])('$handler', async ({ handler, methodName, expectedTitle, expectedActionName, expectedError }) => {
+])('$handler', ({ handler, methodName, expectedTitle, expectedActionName, expectedError }) => {
   let originalTask: Task;
 
   beforeEach(() => {
@@ -735,7 +744,7 @@ describe.each<{
     handler: 'provider-registry:editProviderConnectionLifecycle',
     methodName: 'editProviderConnection',
   },
-])('$handler', async ({ handler, methodName }) => {
+])('$handler', ({ handler, methodName }) => {
   let originalTask: Task;
 
   beforeEach(() => {
