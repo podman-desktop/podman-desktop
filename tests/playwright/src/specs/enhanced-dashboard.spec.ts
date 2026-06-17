@@ -26,6 +26,7 @@ import {
   deletePodmanMachine,
   resetPodmanMachinesFromCLI,
   setEnhancedDashboardFeature,
+  waitForDashboardState,
 } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
 import { getVirtualizationProvider } from '/@/utility/provider';
@@ -71,14 +72,14 @@ test.describe
     test('Enable/disable experimental feature', async ({ navigationBar, page }) => {
       // assert assets state before enabling it (disabled by default for the time being)
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      const dashboardPage = await navigationBar.openDashboard();
+      let dashboardPage = await waitForDashboardState(navigationBar, false);
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 10_000 });
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
       // enable the feature
       await setEnhancedDashboardFeature(page, navigationBar, true);
+      dashboardPage = await waitForDashboardState(navigationBar, true);
       // assert assets state after enabling it
-      await navigationBar.openDashboard();
       await playExpect(dashboardPage.systemOverviewButton).toBeEnabled();
       await dashboardPage.expandSystemOverview(true);
       await playExpect(dashboardPage.systemOverview).toBeVisible({ timeout: 10_000 });
@@ -89,7 +90,7 @@ test.describe
       await playExpect(dashboardPage.setUpPodmanButton).toBeEnabled();
       // disable the feature and assert everything went back to the expected state
       await setEnhancedDashboardFeature(page, navigationBar, false);
-      await navigationBar.openDashboard();
+      dashboardPage = await waitForDashboardState(navigationBar, false);
       await playExpect(dashboardPage.systemOverviewButton).not.toBeVisible();
       await dashboardPage.podmanProvider.scrollIntoViewIfNeeded();
     });
@@ -100,8 +101,7 @@ test.describe
       await test.step('Open dashboard and initialize Podman machine', async () => {
         // enable the feature
         await setEnhancedDashboardFeature(page, navigationBar, true);
-        // go to dashboard
-        let dashboardPage = await navigationBar.openDashboard();
+        let dashboardPage = await waitForDashboardState(navigationBar, true);
         await dashboardPage.createPodmanMachineFromSystemOverview(PODMAN_MACHINE_NAME, {
           isRootful: false,
           enableUserNet: false,

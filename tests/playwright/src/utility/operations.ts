@@ -622,27 +622,24 @@ export async function setEnhancedDashboardFeature(
   page: Page,
   navigationBar: NavigationBar,
   enable: boolean,
-): Promise<ExperimentalPage> {
+): Promise<void> {
   await navigationBar.openSettings();
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
-
-  await waitForDashboardState(navigationBar, enable);
-  await navigationBar.openSettings();
-  return settingsBar.openTabPage(ExperimentalPage);
 }
 
-export async function waitForDashboardState(navigationBar: NavigationBar, enable: boolean): Promise<void> {
+export async function waitForDashboardState(navigationBar: NavigationBar, enable: boolean): Promise<DashboardPage> {
   // Assets in the dashboard take a bit to load, poll until they do.
   // If the enhanced dashboard feature is enabled -> systemOverviewButton is expected.
   // If the enhanced dashboard feature is disabled -> podmanProvider card is expected.
   const getExpectedElement = (dashboard: DashboardPage): Locator =>
     enable ? dashboard.systemOverviewButton : dashboard.podmanProvider;
+  let dashboardPage!: DashboardPage;
   await playExpect
     .poll(
       async () => {
-        const dashboardPage = await navigationBar.openDashboard();
+        dashboardPage = await navigationBar.openDashboard();
         if (await getExpectedElement(dashboardPage).isVisible()) {
           return true;
         }
@@ -652,6 +649,7 @@ export async function waitForDashboardState(navigationBar: NavigationBar, enable
       { timeout: 30_000 },
     )
     .toBeTruthy();
+  return dashboardPage;
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {

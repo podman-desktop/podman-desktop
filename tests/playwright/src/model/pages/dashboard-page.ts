@@ -134,15 +134,7 @@ export class DashboardPage extends BasePage {
       await this.setUpPodmanButton.scrollIntoViewIfNeeded();
       await this.setUpPodmanButton.click();
       const podmanOnboardingPage = new PodmanOnboardingPage(this.page);
-      await playExpect(podmanOnboardingPage.header).toBeVisible();
-      await playExpect(podmanOnboardingPage.mainPage).toBeVisible();
-      await podmanOnboardingPage.nextStepButton.click();
-      await playExpect(podmanOnboardingPage.onboardingStatusMessage).toHaveText(
-        `We could not find any Podman machine. Let's create one!`,
-        { timeout: 10_000 },
-      );
-      await podmanOnboardingPage.nextStepButton.click();
-      await podmanOnboardingPage.machineCreationForm.setupAndCreateMachine(machineName, {
+      await podmanOnboardingPage.createMachine(machineName, {
         isRootful,
         enableUserNet,
         startNow,
@@ -152,12 +144,14 @@ export class DashboardPage extends BasePage {
   }
 
   public async checkSystemOverviewResourceDetails(resourceName: string): Promise<void> {
-    await this.expandSystemOverview(true);
-    const navigateToResourceButton = this.getNavigateToConnectionButton(resourceName);
-    await playExpect(navigateToResourceButton).toBeEnabled();
-    await navigateToResourceButton.click();
-    const resourceDetails = new ResourceDetailsPage(this.page, resourceName);
-    await playExpect(resourceDetails.heading).toBeVisible();
+    return test.step(`Check System Overview resource details for '${resourceName}'`, async () => {
+      await this.expandSystemOverview(true);
+      const navigateToResourceButton = this.getNavigateToConnectionButton(resourceName);
+      await playExpect(navigateToResourceButton).toBeEnabled();
+      await navigateToResourceButton.click();
+      const resourceDetails = new ResourceDetailsPage(this.page, resourceName);
+      await playExpect(resourceDetails.heading).toBeVisible();
+    });
   }
 
   public getPodmanStatusLocator(): Locator {
