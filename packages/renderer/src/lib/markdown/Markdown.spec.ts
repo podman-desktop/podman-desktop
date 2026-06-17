@@ -185,6 +185,18 @@ describe('Custom image', () => {
     );
   });
 
+  test('Expect base64 image to be rendered as a image', async () => {
+    const src = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+    const alt = 'Base 64 Image';
+
+    await waitRender({ markdown: `:image[${alt}]{src="${src}"}` });
+
+    const img = screen.getByRole('img', { name: alt });
+    expect(img).toBeInTheDocument();
+
+    expect(img).toHaveAttribute('src', src);
+  });
+
   test('Expect image to be rendered as a image with all attributes', async () => {
     await waitRender({
       markdown: ':image[Name of the image]{src=path/to/image.png title="Image title" width="300" height="200"}',
