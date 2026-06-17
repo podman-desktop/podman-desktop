@@ -126,6 +126,8 @@ function setupMocks(): void {
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
+  vi.mocked(ipcMain.emit).mockReturnValue(true);
+  vi.mocked(app.getAppPath).mockReturnValue('a-custom-appPath');
   vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
     {
       isDestroyed: () => false,
