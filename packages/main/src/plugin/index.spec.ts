@@ -28,7 +28,7 @@ import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
-import { afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -122,10 +122,7 @@ webContents.send = vi.fn();
 const mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
 const handlers = new Map<string, any>();
 
-beforeAll(async () => {
-  const trayMenuMock = {} as unknown as TrayMenu;
-  pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
-
+function setupMocks(): void {
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
@@ -138,9 +135,15 @@ beforeAll(async () => {
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.spyOn(Updater.prototype, 'init').mockReturnValue(new Disposable(vi.fn()));
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);
-  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
-  // to avoid port conflict when tests are running on windows host
   vi.spyOn(HttpServer.prototype, 'start').mockImplementation(vi.fn());
+}
+
+beforeAll(async () => {
+  const trayMenuMock = {} as unknown as TrayMenu;
+  pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
+
+  setupMocks();
+  await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
 
   inversifyContainer = new InversifyContainer();
 });
@@ -149,12 +152,9 @@ afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
 });
 
-afterAll(() => {
-  vi.restoreAllMocks();
-});
-
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  setupMocks();
 });
 
 test('Should queue events until we are ready', async () => {
