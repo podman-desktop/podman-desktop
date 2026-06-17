@@ -154,6 +154,35 @@ let visibleTabs = $derived(panelState?.showOverflow ? panelState.tabs.slice(0, 6
 let overflowTabs = $derived(panelState?.showOverflow ? panelState.tabs.slice(6) : []);
 let showOverflowMenu = $state(false);
 
+const MIN_PANEL_HEIGHT = 120;
+const MAX_PANEL_HEIGHT = 600;
+const DEFAULT_PANEL_HEIGHT = 280;
+let panelHeight = $state(DEFAULT_PANEL_HEIGHT);
+let isResizing = $state(false);
+
+function onResizePointerDown(event: PointerEvent): void {
+  event.preventDefault();
+  isResizing = true;
+  const startY = event.clientY;
+  const startHeight = panelHeight;
+  const target = event.currentTarget as HTMLElement;
+  target.setPointerCapture(event.pointerId);
+
+  function onPointerMove(e: PointerEvent): void {
+    const delta = startY - e.clientY;
+    panelHeight = Math.min(MAX_PANEL_HEIGHT, Math.max(MIN_PANEL_HEIGHT, startHeight + delta));
+  }
+
+  function onPointerUp(): void {
+    isResizing = false;
+    target.removeEventListener('pointermove', onPointerMove);
+    target.removeEventListener('pointerup', onPointerUp);
+  }
+
+  target.addEventListener('pointermove', onPointerMove);
+  target.addEventListener('pointerup', onPointerUp);
+}
+
 export function togglePanel(): void {
   if (panelState?.visible) {
     currentScreen.set('closed');
@@ -199,19 +228,27 @@ onDestroy((): void => {
 
 {#if panelState?.visible}
   <div
-    class="flex flex-col border-t border-[var(--pd-content-divider)]"
-    class:h-[280px]={!panelState.minimized}
-    class:h-auto={panelState.minimized}
+    class="flex flex-col relative"
+    style={panelState.minimized ? '' : `height: ${panelHeight}px`}
     role="complementary"
     aria-label="Terminal and log panel">
 
+    <!-- #region Resize handle -->
+    <div
+      class="absolute top-0 left-0 right-0 h-[3px] -translate-y-1/2 cursor-row-resize z-50 hover:bg-[var(--pd-global-nav-icon-selected-highlight)] transition-colors {isResizing ? 'bg-[var(--pd-global-nav-icon-selected-highlight)]' : ''}"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize panel"
+      onpointerdown={onResizePointerDown}></div>
+    <!-- #endregion -->
+
     <!-- #region Tab bar -->
-    <div class="flex items-center h-[36px] min-h-[36px] bg-[var(--pd-content-bg)] border-b border-[var(--pd-content-divider)] select-none">
+    <div class="flex items-center h-[36px] min-h-[36px] bg-[var(--pd-content-bg)] border-t border-b border-[var(--pd-content-divider)] select-none">
 
       <!-- Panel label -->
       <Tooltip top tip="Toggle terminal panel (`)">
         <button
-          class="flex items-center gap-1.5 px-3 h-[35px] text-xs font-medium text-[var(--pd-content-text)] opacity-60 uppercase tracking-wider whitespace-nowrap hover:opacity-100 transition-opacity"
+          class="flex items-center gap-1.5 px-3 h-[35px] text-xs font-medium text-[var(--pd-content-text)] opacity-60 whitespace-nowrap hover:opacity-100 transition-opacity"
           aria-label="Toggle terminal panel"
           onclick={togglePanel}>
           <i class="fa-solid fa-terminal text-[10px]"></i>
@@ -225,18 +262,16 @@ onDestroy((): void => {
           {@const isActive = tab.id === panelState.activeTabId}
           <Tooltip top tip="{tab.type === 'terminal' ? 'Terminal' : 'Log'}: {tab.label}">
             <button
-              class="flex items-center gap-1.5 px-3 h-[35px] text-xs whitespace-nowrap border-r border-[var(--pd-content-divider)] transition-colors {isActive ? 'bg-[var(--pd-global-nav-icon-selected-bg)] text-[var(--pd-content-header)] font-medium' : 'text-[var(--pd-content-text)]/60 hover:bg-[var(--pd-content-card-hover-bg)]'}"
+              class="group flex items-center gap-1.5 px-3 h-[35px] text-xs whitespace-nowrap border-r border-[var(--pd-content-divider)] transition-colors {isActive ? 'bg-[var(--pd-global-nav-icon-selected-bg)] text-[var(--pd-content-header)] font-medium' : 'text-[var(--pd-content-text)]/60 hover:bg-[var(--pd-content-card-hover-bg)]'}"
               aria-selected={isActive}
               aria-label="{tab.type === 'terminal' ? 'Terminal' : 'Log'}: {tab.label}"
               role="tab">
               <i class="{tab.icon} text-[10px]"
                  class:text-[var(--pd-status-running)]={tab.type === 'terminal' && !isActive}></i>
               <span class="max-w-[120px] truncate">{tab.label}</span>
-              <Tooltip top tip="Close tab">
-                <i class="fa-solid fa-xmark text-[9px] opacity-0 hover:opacity-100 transition-opacity ml-1"
-                   role="button"
-                   aria-label="Close {tab.label}"></i>
-              </Tooltip>
+              <i class="fa-solid fa-xmark text-[9px] transition-opacity ml-1 {isActive ? 'opacity-60 hover:opacity-100' : 'opacity-0 group-hover:opacity-60 hover:!opacity-100'}"
+                 role="button"
+                 aria-label="Close {tab.label}"></i>
             </button>
           </Tooltip>
         {/each}
@@ -264,7 +299,7 @@ onDestroy((): void => {
                     <i class="{tab.icon} text-[10px]"
                        class:text-[var(--pd-status-running)]={tab.type === 'terminal'}></i>
                     <span class="truncate">{tab.label}</span>
-                    <span class="ml-auto text-[var(--pd-content-text)]/30 text-[10px] uppercase">{tab.type}</span>
+                    <span class="ml-auto text-[var(--pd-content-text)]/30 text-[10px]">{tab.type}</span>
                   </button>
                 {/each}
               </div>
