@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import * as fs from 'node:fs';
 import * as os from 'node:os';
 
 export const isLinux = os.platform() === 'linux';
@@ -25,4 +26,16 @@ export const archType = os.arch();
 
 // powershell $true value is 'True', we need to make it a lowercase first
 export const isCI = String(process.env.CI).toLowerCase() === 'true';
-export const isRHEL = String(process.env.IS_RHEL).toLowerCase() === 'true';
+
+function detectRHEL(): boolean {
+  if (os.platform() !== 'linux') return false;
+  try {
+    // eslint-disable-next-line n/no-sync
+    const content = fs.readFileSync('/etc/os-release', 'utf-8');
+    return /^ID="?rhel"?$/m.test(content);
+  } catch {
+    return false;
+  }
+}
+
+export const isRHEL = detectRHEL();
