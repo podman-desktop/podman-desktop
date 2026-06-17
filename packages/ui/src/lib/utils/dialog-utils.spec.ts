@@ -55,9 +55,9 @@ test('check tabbing order', async () => {
   event.preventDefault = vi.fn();
 
   const container = {} as HTMLDivElement;
-  container.querySelectorAll = vi.fn().mockImplementation(() => {
-    return [{ name: 'a component' }, button1, button2, { name: 'another component' }, button3];
-  });
+  container.querySelectorAll = vi
+    .fn()
+    .mockReturnValue([{ name: 'a component' }, button1, button2, { name: 'another component' }, button3]);
 
   // expect tabbing order to be 1 -> 2 -> 3 -> 1
   vi.spyOn(document, 'activeElement', 'get').mockReturnValue(button1);

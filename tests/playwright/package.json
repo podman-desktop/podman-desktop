@@ -22,11 +22,11 @@
     "publish:next": "pnpm publish --registry=https://registry.npmjs.org/ --no-git-tag-version --new-version 0.0.1-\"$(date +%s)\""
   },
   "devDependencies": {
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.0",
     "@types/node": "^24",
-    "electron": "42.0.1",
+    "electron": "42.4.0",
     "typescript": "^5.9.3",
-    "unplugin-dts": "1.0.0",
-    "vitest": "^4.1.6"
+    "unplugin-dts": "1.0.2",
+    "vitest": "^4.1.9"
   }
 }

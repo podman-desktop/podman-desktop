@@ -78,9 +78,7 @@ test('expect notification added to the queue', async () => {
 });
 
 test('expect notification is disposed correctly', async () => {
-  vi.spyOn(notificationRegistry, 'showNotification').mockImplementation(() => {
-    return Disposable.create(() => {});
-  });
+  vi.spyOn(notificationRegistry, 'showNotification').mockReturnValue(Disposable.create(() => {}));
   const notificationDisposeMock = vi.fn();
   const notificationTask = {
     id: `main-1`,
@@ -89,7 +87,7 @@ test('expect notification is disposed correctly', async () => {
     description: 'description',
     dispose: notificationDisposeMock,
   };
-  createNotificationtaskMock.mockImplementation(() => notificationTask);
+  createNotificationtaskMock.mockReturnValue(notificationTask);
   let queue = notificationRegistry.getNotifications();
 
   expect(queue.length).toEqual(0);
@@ -282,7 +280,7 @@ test('expect correct notification is disposed when multiple are added', async ()
     description: 'description',
     dispose: notificationDisposeMock,
   };
-  createNotificationtaskMock.mockImplementation(() => notificationTask);
+  createNotificationtaskMock.mockReturnValue(notificationTask);
   const disposable1 = notificationRegistry.addNotification({
     extensionId,
     title: 'notification 1',

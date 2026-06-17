@@ -112,8 +112,8 @@ export interface InternalContainerProvider {
 
 interface JSONEvent {
   type: string;
-  status: string;
-  id: string;
+  status?: string;
+  id?: string;
   Type?: string;
   Action?: string;
   Actor?: { ID: string };
@@ -121,8 +121,8 @@ interface JSONEvent {
 
 @injectable()
 export class ContainerProviderRegistry {
-  private readonly _onEvent = new Emitter<JSONEvent>();
-  readonly onEvent: Event<JSONEvent> = this._onEvent.event;
+  private readonly _onEvent = new Emitter<containerDesktopAPI.ContainerJSONEvent>();
+  readonly onEvent: Event<containerDesktopAPI.ContainerJSONEvent> = this._onEvent.event;
 
   private readonly _onApiAttached = new Emitter<string>();
   readonly onApiAttached: Event<string> = this._onApiAttached.event;
@@ -764,12 +764,12 @@ export class ContainerProviderRegistry {
 
   async pruneImages(engineId: string, all: boolean): Promise<void> {
     // We have to use two different API calls for pruning images, because the Podman API does not respect the 'dangling' filter
-    // and instead uses 'all' and 'external'. See: https://github.com/containers/podman/issues/11576
+    // and instead uses 'all' and 'external'. See: https://github.com/podman-container-tools/podman/issues/11576
     // so for Dockerode we'll have to call pruneImages with the 'dangling' filter, and for Podman we'll have to call pruneImages
 
     // PODMAN:
     // Have to use podman API directly for pruning images
-    // TODO: Remove this once the Podman API respects the 'dangling' filter: https://github.com/containers/podman/issues/17614
+    // TODO: Remove this once the Podman API respects the 'dangling' filter: https://github.com/podman-container-tools/podman/issues/17614
     let telemetryOptions = {};
     try {
       const provider = this.internalProviders.get(engineId);
@@ -1584,7 +1584,7 @@ export class ContainerProviderRegistry {
   }
 
   /**
-   * @see https://github.com/containers/podman/issues/23337#issuecomment-2238704510
+   * @see https://github.com/podman-container-tools/podman/issues/23337#issuecomment-2238704510
    * @param containerToReplicate
    * @param updatedEnv
    * @private

@@ -124,14 +124,12 @@ beforeAll(async () => {
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
-  vi.mocked(BrowserWindow.getAllWindows).mockImplementation(() => {
-    return [
-      {
-        isDestroyed: () => false,
-        webContents,
-      } as unknown as BrowserWindow,
-    ];
-  });
+  vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+    {
+      isDestroyed: () => false,
+      webContents,
+    } as unknown as BrowserWindow,
+  ]);
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.spyOn(Updater.prototype, 'init').mockReturnValue(new Disposable(vi.fn()));
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);

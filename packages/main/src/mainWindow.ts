@@ -64,8 +64,12 @@ async function createWindow(): Promise<BrowserWindow> {
     },
   };
 
-  // frameless window
-  if (isLinux()) {
+  // On Wayland, frame: false strips all native decorations and the compositor has no
+  // server-side decoration protocol to fall back on, so the window appears borderless.
+  // Use titleBarStyle: 'hidden' instead to keep the native compositor frame (border,
+  // resize handles, shadow) while still letting the app render its own title bar chrome.
+  // On X11 Linux, frame: false is fine because the window manager draws decorations.
+  if (isLinux() && !isWayland()) {
     browserWindowConstructorOptions.frame = false;
   } else {
     browserWindowConstructorOptions.titleBarStyle = 'hidden';
@@ -104,7 +108,8 @@ async function createWindow(): Promise<BrowserWindow> {
   // to check the preferences.login.minimize setting.
   let deferredShow = false;
 
-  browserWindow.on('ready-to-show', () => {
+  // Shared show logic used by both ready-to-show and the Wayland did-finish-load fallback.
+  const handleWindowShow = (): void => {
     // If started with --minimize flag (Windows login item or manual CLI), hide the window
     if (isStartedMinimize()) {
       if (isMac()) {
@@ -116,7 +121,16 @@ async function createWindow(): Promise<BrowserWindow> {
     } else {
       browserWindow.show();
     }
-  });
+  };
+
+  // On Linux, ready-to-show is not reliably fired by Electron (affects both X11 and Wayland).
+  // On Wayland specifically, calling show() from within ready-to-show also re-triggers the
+  // event causing a feedback loop. Use did-finish-load for all Linux sessions to avoid both.
+  if (isLinux()) {
+    browserWindow.webContents.once('did-finish-load', handleWindowShow);
+  } else {
+    browserWindow.on('ready-to-show', handleWindowShow);
+  }
 
   let configurationRegistry: ConfigurationRegistry;
   ipcMain.on('configuration-registry', (_, data) => {
@@ -280,4 +294,11 @@ function isStartedMinimize(): boolean {
   // environment, so instead of checking each element, simply convert to string and see if --minimize was included.
   const argv = process.argv.toString();
   return argv.includes('--minimize');
+}
+
+// Detects whether the current session is running under Wayland.
+// XDG_SESSION_TYPE is checked first as it can be overridden by the user;
+// WAYLAND_DISPLAY is used as a fallback (set by the Wayland compositor).
+function isWayland(): boolean {
+  return process.env['XDG_SESSION_TYPE'] === 'wayland' || !!process.env['WAYLAND_DISPLAY'];
 }

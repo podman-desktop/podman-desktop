@@ -77,9 +77,7 @@ afterEach(() => {
 });
 
 test('expect getLatestVersionAsset to return the first release from a list of releases', async () => {
-  grabLatestsReleasesMetadataMock.mockImplementation(() => {
-    return releases;
-  });
+  grabLatestsReleasesMetadataMock.mockReturnValue(releases);
 
   // Expect the test to return the first release from the list (as the function simply returns the first one)
   const composeDownload = new ComposeDownload(extensionContext, composeGitHubReleasesMock, os);
@@ -89,9 +87,7 @@ test('expect getLatestVersionAsset to return the first release from a list of re
 });
 
 test('pick the 4th option option in the quickpickmenu and expect it to return the github release information', async () => {
-  grabLatestsReleasesMetadataMock.mockImplementation(() => {
-    return releases;
-  });
+  grabLatestsReleasesMetadataMock.mockReturnValue(releases);
   const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick');
 
   showQuickPickMock.mockResolvedValue({
@@ -114,9 +110,7 @@ test('test download of compose passes and that mkdir and executable mocks are ca
   const downloadReleaseAssetMock = vi.spyOn(composeGitHubReleasesMock, 'downloadReleaseAsset');
 
   // Mock that the storage path does not exist
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   // Mock the mkdir to return "success"
   mkdirMock.mockResolvedValue(undefined);

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Red Hat, Inc.
+# Copyright (C) 2025-2026 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,13 +46,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora-version: ['Fedora-42', 'Fedora-43']
+        fedora-version: ['Fedora-43', 'Fedora-44']
     steps:
       - name: Set the default env. variables
         env:
           DEFAULT_NPM_TARGET: 'all'
           DEFAULT_PODMAN_VERSION: 'latest'
-          DEFAULT_NODE_VERSION: 'v24.11.1'
+          DEFAULT_NODE_VERSION: 'v24.15.0'
         run: |
           echo "NPM_TARGET=${{ github.event.inputs.npm_target || env.DEFAULT_NPM_TARGET }}" >> $GITHUB_ENV
           echo "PODMAN_VERSION=${{ github.event.inputs.podman_version || env.DEFAULT_PODMAN_VERSION }}" >> $GITHUB_ENV
@@ -60,7 +60,7 @@ jobs:
 
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
         id: run-e2e-tf
-        uses: sclorg/testing-farm-as-github-action@b23f0de29ac969d12411215a983da264b4ced149
+        uses: sclorg/testing-farm-as-github-action@230555baceb860aa468d216f1822974836b965d1
         with:
           api_key: ${{ secrets.TF_TOKEN }}
           create_github_summary: "false"
@@ -88,7 +88,7 @@ jobs:
 
       - name: Publish test report to PR
         if: always()
-        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d
         with:
           fail_on_failure: true
           include_passed: true

@@ -26,7 +26,7 @@ import tar from 'tar-fs';
 
 /**
  * This function is a re-implementation of the imageNamePrefix on the podman repository
- * https://github.com/containers/podman/blob/de856dab99ef8816392972347678fcb49ae57e50/pkg/domain/infra/abi/play.go#L1606
+ * https://github.com/podman-container-tools/podman/blob/de856dab99ef8816392972347678fcb49ae57e50/pkg/domain/infra/abi/play.go#L1606
  * @param content
  */
 export function getImageNamePrefix(content: string): string {

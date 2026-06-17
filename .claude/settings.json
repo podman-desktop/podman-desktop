@@ -1,5 +1,13 @@
 {
   "permissions": {
-    "allow": ["mcp__podman-desktop-mcp__*"]
+    "allow": ["mcp__podman-desktop-mcp__*", "Bash(gh issue view:*)", "Bash(gh pr view:*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [{ "type": "command", "command": "npx eslint --cache --fix $FILEPATH 2>/dev/null || true" }]
+      }
+    ]
   }
 }

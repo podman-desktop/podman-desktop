@@ -99,13 +99,14 @@ export class ImageUtils {
       return false;
     }
 
-    // if there is a container with the same image id and the same repository tag, it's in use
-    // else check if we have an untagged ilmage and in that case we check that container is matching the image id
     return containersInfo.some(container => {
-      return (
-        (container.ImageID === imageInfo.Id && container.Image === repositoryTag) ||
-        (!!repositoryTag === false && imageInfo.Id.includes(container.Image) && (imageInfo.RepoTags ?? []).length === 0)
-      );
+      if (container.ImageID !== imageInfo.Id) {
+        return false;
+      }
+      if (repositoryTag) {
+        return container.Image === repositoryTag;
+      }
+      return (imageInfo.RepoTags ?? []).length === 0;
     });
   }
 

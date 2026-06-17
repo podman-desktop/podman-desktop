@@ -74,9 +74,7 @@ rosetta = false
     `;
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   await podmanConfiguration.updateRosettaSetting(true);
 
@@ -95,9 +93,7 @@ rosetta = true
     `;
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue(configFileContent);
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   await podmanConfiguration.updateRosettaSetting(false);
 
@@ -110,9 +106,7 @@ rosetta = true
 test('if rosetta is set to true and the file does NOT exist, do not try and create the file.', async () => {
   vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
   vi.spyOn(podmanConfiguration, 'readContainersConfigFile').mockResolvedValue('');
-  vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return false;
-  });
+  vi.spyOn(fs, 'existsSync').mockReturnValue(false);
 
   await podmanConfiguration.updateRosettaSetting(true);
 

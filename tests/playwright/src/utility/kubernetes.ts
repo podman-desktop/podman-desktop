@@ -61,14 +61,14 @@ export async function createKubernetesResource(
     // workaround for missing option to deploy kube yaml into cluster via UI
     // test kubectl is present
     try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
       const version = execSync('kubectl version').toString();
       console.log(`Kubectl version stdout: ${version}`);
     } catch (error) {
       throw new Error(`Kubectl is not installed: ${error}`);
     }
     try {
-      // eslint-disable-next-line sonarjs/os-command
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
       const kubectlApply = execSync(`kubectl apply -f ${resourceYamlPath}`).toString();
       console.log(`Kube yaml ${resourceYamlPath} applied successfully via cli: ${kubectlApply}`);
     } catch (error) {
@@ -119,6 +119,25 @@ function kubernetesResourceDialogTitle(resourceType: KubernetesResources): strin
     );
   }
   return title;
+}
+
+export async function applyKubernetesYaml(
+  page: Page,
+  resourceType: KubernetesResources,
+  resourceName: string,
+  resourceYamlPath: string,
+  timeout = 30_000,
+): Promise<void> {
+  return test.step(`Apply YAML for ${resourceType} resource: ${resourceName}`, async () => {
+    const navigationBar = new NavigationBar(page);
+    const kubernetesBar = await navigationBar.openKubernetes();
+    const kubernetesResourcePage = await kubernetesBar.openTabPage(resourceType);
+    await kubernetesResourcePage.applyYaml(resourceYamlPath, timeout);
+    await playExpect(kubernetesResourcePage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => kubernetesResourcePage.getRowByName(resourceName), { timeout: timeout })
+      .toBeTruthy();
+  });
 }
 
 export async function checkDeploymentReplicasInfo(

@@ -187,7 +187,9 @@ const kubernetesClient: KubernetesClient = {
   dispose: vi.fn(),
 } as unknown as KubernetesClient;
 
-const fileSystemMonitoring: FilesystemMonitoring = {} as unknown as FilesystemMonitoring;
+const fileSystemMonitoring: FilesystemMonitoring = {
+  asyncDispose: vi.fn().mockResolvedValue(undefined),
+} as unknown as FilesystemMonitoring;
 
 const proxy: Proxy = {} as unknown as Proxy;
 
@@ -1866,7 +1868,7 @@ describe('Navigation', async () => {
 
     // Mock listSimpleContainer implementation
     const listContributionsSpy = vi.spyOn(contributionManager, 'listContributions');
-    listContributionsSpy.mockImplementation(() => [
+    listContributionsSpy.mockReturnValue([
       {
         name: 'valid-name',
       } as unknown as ContributionInfo,
@@ -1893,7 +1895,7 @@ describe('Navigation', async () => {
 
     // Mock listContributions implementation
     const listContributionsSpy = vi.spyOn(contributionManager, 'listContributions');
-    listContributionsSpy.mockImplementation(() => []);
+    listContributionsSpy.mockReturnValue([]);
     // Spy send method
     const sendMock = vi.spyOn(apiSender, 'send');
 
@@ -3040,6 +3042,13 @@ test('ExtensionLoader async dispose should stop all extensions', async () => {
   await extensionLoader.asyncDispose();
 
   expect(deactivateMock).toHaveBeenCalledOnce();
+  expect(fileSystemMonitoring.asyncDispose).toHaveBeenCalledOnce();
+});
+
+test('asyncDispose should call fileSystemMonitoring.asyncDispose', async () => {
+  await extensionLoader.asyncDispose();
+
+  expect(fileSystemMonitoring.asyncDispose).toHaveBeenCalledOnce();
 });
 
 describe('env API', () => {

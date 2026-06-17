@@ -38,10 +38,12 @@ import {
 import { eventCollect } from './preferences-connection-rendering-task';
 import PreferencesConnectionActions from './PreferencesConnectionActions.svelte';
 import PreferencesConnectionsEmptyRendering from './PreferencesConnectionsEmptyRendering.svelte';
+import PreferencesManagedInput from './PreferencesManagedInput.svelte';
 import PreferencesProviderInstallationModal from './PreferencesProviderInstallationModal.svelte';
 import PreferencesResourcesRenderingCopyButton from './PreferencesResourcesRenderingCopyButton.svelte';
 import ProviderActionButtons from './ProviderActionButtons.svelte';
 import SettingsPage from './SettingsPage.svelte';
+import ThemedIcon from './ThemedIcon.svelte';
 import {
   getProviderConnectionName,
   type IConnectionRestart,
@@ -343,6 +345,12 @@ function hasAnyConfiguration(provider: ProviderInfo): boolean {
   );
 }
 
+// Goes through the provider to see if there are any properties which are "locked" and provide a simple true/false
+// this helps us determine if we should have a UI indicator if there is anything locked or not
+function hasLockedConfiguration(provider: ProviderInfo): boolean {
+  return properties.some(property => property.locked === true && property.extension?.id === provider.extensionId);
+}
+
 function handleUpdatePreflightChecks(checks: CheckStatus[]): CheckStatus[] {
   preflightChecks = checks;
   return checks;
@@ -476,18 +484,11 @@ $effect(() => {
         class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 flex"
         role="region"
         aria-label={provider.id}>
-        <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)]">
+        <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)] flex flex-col">
           <!-- left col - provider icon/name + "create new" button -->
-          <div class="min-w-[170px] max-w-[200px] pr-5 py-2">
+          <div class="min-w-[170px] max-w-[200px] pr-5 py-2 flex flex-col flex-1">
             <div class="flex">
-              {#if provider.images.icon}
-                {#if typeof provider.images.icon === 'string'}
-                  <img src={provider.images.icon} alt={provider.name} class="max-w-[40px] h-full" />
-                  <!-- TODO check theme used for image, now use dark by default -->
-                {:else}
-                  <img src={provider.images.icon.dark} alt={provider.name} class="max-w-[40px]" />
-                {/if}
-              {/if}
+              <ThemedIcon icon={provider.images.icon} alt={provider.name} class="max-w-[40px]" />
               <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words"
                 >{provider.name}</span>
               {#if provider.version}
@@ -503,6 +504,11 @@ $effect(() => {
               onUpdatePreflightChecks={handleUpdatePreflightChecks}
               isOnboardingEnabled={isOnboardingEnabled}
               hasAnyConfiguration={hasAnyConfiguration} />
+            {#if hasLockedConfiguration(provider)}
+              <div class="mt-auto text-(--pd-content-text)">
+                <PreferencesManagedInput />
+              </div>
+            {/if}
           </div>
         </div>
         <!-- providers columns -->
@@ -563,9 +569,7 @@ $effect(() => {
                   role="group"
                   aria-label="Provider Configuration">
                   {#each displayMetrics as metric (metric.title)}
-                    <div class="mr-4">
-                      <Donut title={metric.title} value={metric.value} percent={metric.percent} />
-                    </div>
+                    <Donut title={metric.title} value={metric.value} percent={metric.percent} />
                   {/each}
                   {#each nonResourceConfigs as connectionSetting (connectionSetting.id)}
                     {connectionSetting.description}: {connectionSetting.value}

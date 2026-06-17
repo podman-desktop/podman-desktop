@@ -25,6 +25,7 @@ interface Props {
 let smileyRating = $state(0);
 let tellUsWhyFeedback = $state('');
 let contactInformation = $state('');
+let repository = $derived(await window.getAppRepository());
 let hasFeedback = $derived(
   (tellUsWhyFeedback && tellUsWhyFeedback.trim().length > 4) ||
     (contactInformation && contactInformation.trim().length > 4),
@@ -70,8 +71,10 @@ async function sendFeedback(): Promise<void> {
 }
 
 async function openGitHub(): Promise<void> {
-  await window.telemetryTrack('feedback.openGitHub');
-  await window.openExternal('https://github.com/containers/podman-desktop');
+  if (repository) {
+    await window.telemetryTrack('feedback.openGitHub');
+    await window.openExternal(repository);
+  }
 }
 </script>
 
@@ -84,32 +87,32 @@ async function openGitHub(): Promise<void> {
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 1
-            ? 'text-[var(--pd-button-primary-bg)]'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            ? 'text-(--pd-action-button-primary-text)'
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faFrown} />
       </button>
       <button aria-label="sad-smiley" onclick={(): void => selectSmiley(2)}>
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 2
-            ? 'text-[var(--pd-button-primary-bg)]'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            ? 'text-(--pd-action-button-primary-text)'
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faMeh} />
       </button>
       <button aria-label="happy-smiley" onclick={(): void => selectSmiley(3)}>
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 3
-            ? 'text-[var(--pd-button-primary-bg)]'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            ? 'text-(--pd-action-button-primary-text)'
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faSmile} />
       </button>
       <button aria-label="very-happy-smiley" onclick={(): void => selectSmiley(4)}>
         <Icon
           size="1.5x"
           class="cursor-pointer {smileyRating === 4
-            ? 'text-[var(--pd-button-primary-bg)]'
-            : 'text-[var(--pd-button-disabled-text)]'}"
+            ? 'text-(--pd-action-button-primary-text)'
+            : 'text-(--pd-button-disabled-text)'}"
           icon={faGrinStars} />
       </button>
     </div>
@@ -145,7 +148,7 @@ async function openGitHub(): Promise<void> {
       <ErrorMessage class="text-xs" error="Please share contact info or details on how we can improve" />
     {:else if smileyRating === 2 && !hasFeedback}
       <WarningMessage class="text-xs" error="We would really appreciate knowing how we can improve" />
-    {:else if smileyRating > 2}
+    {:else if smileyRating > 2 && repository?.toLowerCase().includes('github.com')}
       <div class="text-[var(--pd-modal-text)] p-1 flex flex-row items-center text-xs">
         <Icon size="1.125x" class="cursor-pointer" icon={faQuestionCircle} />
         <span aria-label="{feedbackMessages?.gitHubStarsMessage}" class="flex items-center">

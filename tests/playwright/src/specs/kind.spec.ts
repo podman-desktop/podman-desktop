@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024-2025 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { ContainerState, ExtensionState, ResourceElementState } from '/@/model/core/states';
-import type { ContainerInteractiveParams } from '/@/model/core/types';
+import { type ContainerInteractiveParams, PodmanVirtualizationProviders } from '/@/model/core/types';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import { canRunKindTests } from '/@/setupFiles/setup-kind';
@@ -36,6 +36,7 @@ import {
 import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deployContainerToCluster } from '/@/utility/kubernetes';
 import { deleteContainer, deleteImage, ensureCliInstalled } from '/@/utility/operations';
+import { getVirtualizationProvider } from '/@/utility/provider';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const RESOURCE_NAME: string = 'kind';
@@ -71,6 +72,9 @@ let kindResourceCard: ResourceConnectionCardPage;
 
 const skipKindInstallation = process.env.SKIP_KIND_INSTALL === 'true';
 const providerTypeGHA = process.env.KIND_PROVIDER_GHA ?? '';
+
+const skipKindClusterLifecycleOnWsl =
+  'Kind cluster stop/start/restart is not working on Podman/WSL -> https://github.com/podman-desktop/podman-desktop/issues/4801 ';
 
 test.skip(!canRunKindTests(), `This test can't run on a windows rootless machine`);
 
@@ -155,27 +159,40 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         await deployContainerToCluster(page, CONTAINER_NAME, KUBERNETES_CONTEXT, DEPLOYED_POD_NAME);
       });
 
-      test('Kind cluster operations - STOP', async ({ page }) => {
-        await resourceConnectionAction(page, kindResourceCard, ResourceElementActions.Stop, ResourceElementState.Off);
-      });
+      test.describe
+        .serial('Kind cluster lifecycle', () => {
+          test.skip(
+            () => getVirtualizationProvider() === PodmanVirtualizationProviders.WSL,
+            skipKindClusterLifecycleOnWsl,
+          );
 
-      test('Kind cluster operations - START', async ({ page }) => {
-        await resourceConnectionAction(
-          page,
-          kindResourceCard,
-          ResourceElementActions.Start,
-          ResourceElementState.Running,
-        );
-      });
+          test('Kind cluster operations - STOP', async ({ page }) => {
+            await resourceConnectionAction(
+              page,
+              kindResourceCard,
+              ResourceElementActions.Stop,
+              ResourceElementState.Off,
+            );
+          });
 
-      test('Kind cluster operations - RESTART', async ({ page }) => {
-        await resourceConnectionAction(
-          page,
-          kindResourceCard,
-          ResourceElementActions.Restart,
-          ResourceElementState.Running,
-        );
-      });
+          test('Kind cluster operations - START', async ({ page }) => {
+            await resourceConnectionAction(
+              page,
+              kindResourceCard,
+              ResourceElementActions.Start,
+              ResourceElementState.Running,
+            );
+          });
+
+          test('Kind cluster operations - RESTART', async ({ page }) => {
+            await resourceConnectionAction(
+              page,
+              kindResourceCard,
+              ResourceElementActions.Restart,
+              ResourceElementState.Running,
+            );
+          });
+        });
 
       test('Kind cluster operations - DELETE', async ({ page }) => {
         await deleteCluster(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);
@@ -192,35 +209,43 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
         });
       });
 
-      test('Kind cluster operations details - STOP', async ({ page }) => {
-        await resourceConnectionActionDetails(
-          page,
-          kindResourceCard,
-          CLUSTER_NAME,
-          ResourceElementActions.Stop,
-          ResourceElementState.Off,
-        );
-      });
+      test.describe
+        .serial('Kind cluster lifecycle details', () => {
+          test.skip(
+            () => getVirtualizationProvider() === PodmanVirtualizationProviders.WSL,
+            skipKindClusterLifecycleOnWsl,
+          );
 
-      test('Kind cluster operations details - START', async ({ page }) => {
-        await resourceConnectionActionDetails(
-          page,
-          kindResourceCard,
-          CLUSTER_NAME,
-          ResourceElementActions.Start,
-          ResourceElementState.Running,
-        );
-      });
+          test('Kind cluster operations details - STOP', async ({ page }) => {
+            await resourceConnectionActionDetails(
+              page,
+              kindResourceCard,
+              CLUSTER_NAME,
+              ResourceElementActions.Stop,
+              ResourceElementState.Off,
+            );
+          });
 
-      test('Kind cluster operations details - RESTART', async ({ page }) => {
-        await resourceConnectionActionDetails(
-          page,
-          kindResourceCard,
-          CLUSTER_NAME,
-          ResourceElementActions.Restart,
-          ResourceElementState.Running,
-        );
-      });
+          test('Kind cluster operations details - START', async ({ page }) => {
+            await resourceConnectionActionDetails(
+              page,
+              kindResourceCard,
+              CLUSTER_NAME,
+              ResourceElementActions.Start,
+              ResourceElementState.Running,
+            );
+          });
+
+          test('Kind cluster operations details - RESTART', async ({ page }) => {
+            await resourceConnectionActionDetails(
+              page,
+              kindResourceCard,
+              CLUSTER_NAME,
+              ResourceElementActions.Restart,
+              ResourceElementState.Running,
+            );
+          });
+        });
 
       test('Kind cluster operations details - DELETE', async ({ page }) => {
         await deleteClusterFromDetails(page, RESOURCE_NAME, KIND_CONTAINER, CLUSTER_NAME);

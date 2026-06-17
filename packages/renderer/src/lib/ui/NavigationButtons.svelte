@@ -192,7 +192,7 @@ function handleKeyDown(e: KeyboardEvent): void {
 
 onMount(() => {
   window.addEventListener('mouseup', handleGlobalMouseUp);
-  window.addEventListener('wheel', handleWheel);
+  window.addEventListener('wheel', handleWheel, { passive: true });
   window.addEventListener('click', handleClickOutside);
   window.addEventListener('keydown', handleKeyDown);
 

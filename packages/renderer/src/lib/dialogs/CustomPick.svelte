@@ -136,7 +136,7 @@ function dragMe(node: HTMLElement): void {
       class="fixed top-0 left-0 w-full h-full bg-[var(--pd-modal-fade)] bg-blend-multiply opacity-60 z-40">
     </div>
     <div
-      class="flex flex-col place-self-center w-[650px] rounded-xl bg-[var(--pd-card-bg)] shadow-xl shadow-black z-50"
+      class="flex flex-col place-self-center w-[650px] rounded-xl bg-[var(--pd-card-bg)] shadow-xl shadow-(--pd-modal-shadow) z-50"
       class:w-[650px]={colsPerRow === 2}
       class:w-[800px]={colsPerRow === 3}>
       <div class="flex flex-col items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-content-card-text)]">

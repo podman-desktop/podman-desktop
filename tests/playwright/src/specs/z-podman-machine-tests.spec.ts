@@ -23,6 +23,7 @@ import { PodmanMachinePrivileges } from '/@/model/core/types';
 import { PodmanMachineDetails } from '/@/model/pages/podman-machine-details-page';
 import { PodmanOnboardingPage } from '/@/model/pages/podman-onboarding-page';
 import { ResourceConnectionCardPage } from '/@/model/pages/resource-connection-card-page';
+import { ResourceCreationPage } from '/@/model/pages/resource-creation-page';
 import { ResourcesPage } from '/@/model/pages/resources-page';
 import type { NavigationBar } from '/@/model/workbench/navigation';
 import { expect as playExpect, test } from '/@/utility/fixtures';
@@ -83,6 +84,21 @@ test.afterAll(async ({ runner, page }) => {
 
   await runner.close();
 });
+
+test.describe
+  .serial('Podman provider creation page navigation', { tag: ['@pdmachine'] }, () => {
+    test('Resources breadcrumb navigates back to Resources page', async ({ page, navigationBar }) => {
+      await openPodmanCreationPage(page, navigationBar);
+      const creationPage = new ResourceCreationPage(page);
+      await creationPage.navigateToResourcesViaBreadcrumb();
+    });
+
+    test('Close button navigates back to Resources page', async ({ page, navigationBar }) => {
+      await openPodmanCreationPage(page, navigationBar);
+      const creationPage = new ResourceCreationPage(page);
+      await creationPage.navigateToResourcesViaCloseButton();
+    });
+  });
 
 test.describe
   .serial('Podman machine switching validation ', { tag: '@pdmachine' }, () => {
@@ -259,6 +275,21 @@ async function handlePodmanConfirmationDialogs(page: Page): Promise<void> {
 async function openResourcesPage(navigationBar: NavigationBar): Promise<void> {
   const settingsBar = await navigationBar.openSettings();
   await settingsBar.resourcesTab.click();
+}
+
+/**
+ * Navigates to the Podman machine creation page from the Resources page
+ */
+async function openPodmanCreationPage(page: Page, navigationBar: NavigationBar): Promise<void> {
+  await test.step('Open resources page and go to podman creation page', async () => {
+    await openResourcesPage(navigationBar);
+    const resourcesPage = new ResourcesPage(page);
+    await playExpect(resourcesPage.heading).toBeVisible();
+    await playExpect
+      .poll(async () => await resourcesPage.resourceCardIsVisible(RESOURCE_NAME), { timeout: 25_000 })
+      .toBeTruthy();
+    await resourcesPage.goToCreateNewResourcePage(RESOURCE_NAME);
+  });
 }
 
 /**

@@ -409,9 +409,10 @@ Below are brief descriptions on the architecture on each folder of Podman Deskto
 
 If you're unsure where to add code (renderer, UI, extensions, plugins) see the below TLDR:
 
-- `__mocks__/`: Mock packages for Vitest.
+- `__mocks__/`: Mock packages for Vitest (non-extension-api mocks such as `@floating-ui/dom`).
 - `buildResources`: Podman Desktop logo location / build resources for electron
 - `extensions`: We separate functionality into separate "extensions" to keep Podman Desktop modular. Here you'll find extensions such as Kubernetes, CRC, Podman and Docker functionality that Podman Desktop interacts with and integrates into the API (see `packages/extension-api`). Examples include `extensions/crc`, `extensions/podman`, `extensions/docker`.
+- `packages/api-mocks-vitest`: Auto-generated vitest mocks for `@podman-desktop/api`, published as `@podman-desktop/api-mocks-vitest` so third-party extensions can use them in their own tests.
 - `packages/extension-api`: The extension API for extensions such as `extensions/podman` to interact with the Podman Desktop GUI. This API acts as a "middleware" to the main Electron functionality such as displaying notifications, progress messages, configuration changes, etc.
 - `packages/main`: Electron process code that is responsible for creating the app's main windows, setting up system events and communicating with other processes
 - `packages/preload`: Electron code that runs before the page gets rendered. Typically has access to APIs and used to setup communication processes between the main and renderer code.

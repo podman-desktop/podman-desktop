@@ -19,6 +19,8 @@
 import test, { expect as playExpect, type Locator, type Page } from '@playwright/test';
 
 import { KubernetesResourceAttributes, KubernetesResources } from '/@/model/core/types';
+import { withMockedOpenFileDialog } from '/@/utility/dialog';
+import { handleConfirmationDialog } from '/@/utility/operations';
 
 import { KubernetesResourceDetailsPage } from './kubernetes-resource-details-page';
 import { MainPage } from './main-page';
@@ -68,6 +70,19 @@ export class KubernetesResourcePage extends MainPage {
       await resourceRowName.click();
 
       return new KubernetesResourceDetailsPage(this.page, resourceName);
+    });
+  }
+
+  async applyYaml(yamlPath: string, timeout = 30_000): Promise<KubernetesResourcePage> {
+    return test.step(`Apply YAML: ${yamlPath}`, async () => {
+      await playExpect(this.applyYamlButton).toBeEnabled();
+
+      await withMockedOpenFileDialog([yamlPath], async () => {
+        await this.applyYamlButton.click();
+      });
+
+      await handleConfirmationDialog(this.page, 'Apply Kubernetes YAML', true, 'Dismiss', 'Cancel', timeout);
+      return this;
     });
   }
 

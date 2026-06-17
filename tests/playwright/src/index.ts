@@ -92,6 +92,7 @@ export * from './model/pages/registries-page';
 export * from './model/pages/resource-card-page';
 export * from './model/pages/resource-cli-card-page';
 export * from './model/pages/resource-connection-card-page';
+export * from './model/pages/resource-creation-page';
 export * from './model/pages/resource-details-page';
 export * from './model/pages/resources-page';
 export * from './model/pages/run-image-page';

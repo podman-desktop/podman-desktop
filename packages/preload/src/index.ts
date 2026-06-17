@@ -1395,6 +1395,10 @@ export function initExposure(): void {
     return ipcInvoke('app:getTitleBarText');
   });
 
+  contextBridge.exposeInMainWorld('getAppRepository', async (): Promise<string | undefined> => {
+    return ipcInvoke('app:getAppRepository');
+  });
+
   contextBridge.exposeInMainWorld('getProviderInfos', async (): Promise<ProviderInfo[]> => {
     return ipcInvoke('provider-registry:getProviderInfos');
   });

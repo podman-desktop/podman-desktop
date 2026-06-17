@@ -287,7 +287,7 @@ export class ImagesPage extends MainPage {
     await handleConfirmationDialog(this.page, 'Delete Manifest?', true, 'Delete');
   }
 
-  async pushManifest(manifestName: string): Promise<void> {
+  async pushManifest(manifestName: string, timeout = 120_000): Promise<void> {
     return test.step(`Push manifest: ${manifestName}`, async () => {
       const manifest = await this.getImageRowByName(manifestName);
       if (!manifest) {
@@ -303,7 +303,17 @@ export class ImagesPage extends MainPage {
       await playExpect(pushManifestButton).toBeVisible();
       await pushManifestButton.click();
 
-      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', 120_000, true);
+      await handleConfirmationDialog(this.page, 'Push manifest', true, 'Push manifest', '', timeout, true);
+    });
+  }
+
+  async getImageArch(name: string): Promise<string> {
+    return test.step(`Get architecture for image: ${name}`, async () => {
+      const imageRow = await this.getImageRowByName(name);
+      if (imageRow === undefined) {
+        throw Error(`Image: '${name}' does not exist`);
+      }
+      return (await imageRow.getByRole('cell').nth(7).innerText()).trim().toLowerCase();
     });
   }
 

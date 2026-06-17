@@ -23,8 +23,13 @@ async function removeNetwork(): Promise<void> {
   try {
     await window.removeNetwork(object.engineId, object.id);
   } catch (error) {
-    console.error(`error while removing network ${object.name}`, error);
     object.status = oldStatus;
+    await window.showMessageBox({
+      title: 'Delete Network Failed',
+      message: `Error while deleting network ${object.name}: ${error instanceof Error ? error.message : String(error)}`,
+      type: 'error',
+      buttons: ['Dismiss'],
+    });
   }
 }
 

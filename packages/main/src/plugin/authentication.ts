@@ -32,6 +32,18 @@ import { inject, injectable } from 'inversify';
 import { Emitter } from './events/emitter.js';
 import { MessageBox } from './message-box.js';
 
+// Sign Out dialog buttons
+export const SIGN_OUT_CANCEL = 0;
+export const SIGN_OUT_CONFIRM = 1;
+
+// Allow Access dialog buttons
+export const ALLOW_ACCESS_ALLOW = 0;
+export const ALLOW_ACCESS_DENY = 1;
+
+// Sign In dialog buttons
+export const SIGN_IN_CANCEL = 0;
+export const SIGN_IN_ALLOW = 1;
+
 /**
  * Structure to save authentication provider information
  * with additional metadata
@@ -168,7 +180,7 @@ export class AuthenticationImpl {
           message,
           buttons: ['Cancel', 'Sign Out'],
         });
-        if (choice.response) {
+        if (choice.response === SIGN_OUT_CONFIRM) {
           await this.removeSession(providerId, sessionId);
           this.removeAccountUsage(providerId, sessionId);
         }
@@ -338,7 +350,7 @@ export class AuthenticationImpl {
           type: 'info',
         });
 
-        const isAllowed = allowRsp.response === 0;
+        const isAllowed = allowRsp.response === ALLOW_ACCESS_ALLOW;
 
         // Only store allowance when user allows, not when they deny
         // This way, denying will prompt again next time instead of permanently blocking
@@ -363,7 +375,7 @@ export class AuthenticationImpl {
           buttons: ['Cancel', 'Allow'],
           type: 'info',
         });
-        if (!allowRsp.response) {
+        if (allowRsp.response === SIGN_IN_CANCEL) {
           return;
         }
         const newSession = await providerData.provider.createSession(sortedScopes);

@@ -22,7 +22,7 @@ import { autoUpdate, computePosition } from '@floating-ui/dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { tooltipHidden } from './tooltip-store';
+import { resetTooltipHideCount } from './tooltip-store';
 import TooltipTestComponent from './TooltipTestComponent.svelte';
 import TooltipTestWithSnippet from './TooltipTestWithSnippet.svelte';
 
@@ -45,13 +45,11 @@ beforeEach(() => {
 
 describe('Tooltip', () => {
   beforeEach(() => {
-    tooltipHidden.set(false);
+    resetTooltipHideCount();
     vi.clearAllMocks();
   });
 
   test('tooltip is hidden when tooltipHidden is true', async () => {
-    tooltipHidden.set(false);
-
     render(TooltipTestComponent, { tip: 'test 1' });
 
     const slot = screen.getByTestId('tooltip-trigger');
@@ -62,13 +60,15 @@ describe('Tooltip', () => {
       expect(screen.queryByText('test 1')).toBeInTheDocument();
     });
 
-    tooltipHidden.set(true);
+    // Simulate dropdown opening (hides tooltips)
+    window.dispatchEvent(new Event('tooltip-hide'));
 
     await waitFor(() => {
       expect(screen.queryByText('test 1')).not.toBeInTheDocument();
     });
 
-    tooltipHidden.set(false);
+    // Simulate dropdown closing (shows tooltips)
+    window.dispatchEvent(new Event('tooltip-show'));
     await fireEvent.mouseEnter(slot);
 
     await waitFor(() => {
@@ -105,6 +105,63 @@ describe('Tooltip', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('hover text')).not.toBeInTheDocument();
+    });
+  });
+
+  test('tooltip shows on focusin and hides on focusout', async () => {
+    render(TooltipTestComponent, { tip: 'focus text' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+
+    expect(screen.queryByText('focus text')).not.toBeInTheDocument();
+
+    await fireEvent.focusIn(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('focus text')).toBeInTheDocument();
+    });
+
+    await fireEvent.focusOut(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('focus text')).not.toBeInTheDocument();
+    });
+  });
+
+  test('tooltip stays visible when focus moves between descendants inside trigger', async () => {
+    render(TooltipTestComponent, { tip: 'stay text' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+    const child = screen.getByText('Hover me');
+
+    await fireEvent.focusIn(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('stay text')).toBeInTheDocument();
+    });
+
+    await fireEvent.focusOut(slot, { relatedTarget: child });
+
+    await waitFor(() => {
+      expect(screen.queryByText('stay text')).toBeInTheDocument();
+    });
+  });
+
+  test('tooltip shows on keyboard focus and hides on mouse leave', async () => {
+    render(TooltipTestComponent, { tip: 'cross text' });
+
+    const slot = screen.getByTestId('tooltip-trigger');
+
+    await fireEvent.focusIn(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('cross text')).toBeInTheDocument();
+    });
+
+    await fireEvent.mouseLeave(slot);
+
+    await waitFor(() => {
+      expect(screen.queryByText('cross text')).not.toBeInTheDocument();
     });
   });
 

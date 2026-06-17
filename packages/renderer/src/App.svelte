@@ -95,8 +95,8 @@ router.mode.memory();
 const LAST_ROUTE_KEY = 'last-route';
 const SETTINGS_PAGE_KEY = 'settings-page';
 
-const savedRoute = sessionStorage.getItem(LAST_ROUTE_KEY);
-const savedSettingsPage = sessionStorage.getItem(SETTINGS_PAGE_KEY);
+let savedRoute: string | undefined = sessionStorage.getItem(LAST_ROUTE_KEY) ?? undefined;
+let savedSettingsPage: string | undefined = sessionStorage.getItem(SETTINGS_PAGE_KEY) ?? undefined;
 
 //remember from where we come to preference pages
 let nonSettingsPage = savedRoute ?? '/';
@@ -112,9 +112,15 @@ router.subscribe(function (navigation) {
   if (navigation.url === undefined || navigation.url.includes('.html')) return;
   if (!navigation.url.startsWith('/')) return;
 
-  if ((savedRoute !== null || savedSettingsPage !== null) && navigation.url === '/') {
-    if (savedRoute) router.goto(savedRoute);
-    if (savedSettingsPage) router.goto(savedSettingsPage);
+  if ((savedRoute !== undefined || savedSettingsPage !== undefined) && navigation.url === '/') {
+    if (savedRoute) {
+      router.goto(savedRoute);
+      savedRoute = undefined;
+    }
+    if (savedSettingsPage) {
+      router.goto(savedSettingsPage);
+      savedSettingsPage = undefined;
+    }
     return;
   }
 

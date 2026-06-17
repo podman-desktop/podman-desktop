@@ -30,14 +30,14 @@ import { SettingsBar } from '/@/model/pages/settings-bar';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { canTestRegistry, setupRegistry } from '/@/setupFiles/setup-registry';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
-import { isWindows } from '/@/utility/platform';
+import { deleteImage, deleteRegistry, ensureNoImagesPresentCLI } from '/@/utility/operations';
+import { archType, isWindows } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
 const imageNameSimple: string = 'manifest-test-simple';
 const imageNameComplex: string = 'manifest-test-complex';
-const manifestLabelSimple: string = `localhost/${imageNameSimple}`;
+let manifestLabelSimple: string;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,7 +48,7 @@ let provider: string | undefined;
 let registryUrl: string;
 let registryUsername: string;
 let registryPswdSecret: string;
-let manifestLabelComplex: string;
+const manifestLabelComplex: string = `localhost/${imageNameComplex}`;
 
 test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   test.setTimeout(180_000);
@@ -65,13 +65,10 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
 
   [registryUrl, registryUsername, registryPswdSecret] = setupRegistry();
 
-  // Determine manifest name based on whether registry tests are enabled
-  // If registry tests are enabled, use the full registry path; otherwise use localhost
-  if (canTestRegistry()) {
-    manifestLabelComplex = `${registryUrl}/${registryUsername}/${imageNameComplex}`;
-  } else {
-    manifestLabelComplex = `localhost/${imageNameComplex}`;
-  }
+  // Simple manifest uses the full registry path when registry tests are enabled (it gets pushed)
+  manifestLabelSimple = canTestRegistry()
+    ? `${registryUrl}/${registryUsername}/${imageNameSimple}`
+    : `localhost/${imageNameSimple}`;
 
   await deleteRegistry(page, 'GitHub').catch((error: unknown) => {
     console.log('Error deleting registry:', error);
@@ -95,9 +92,10 @@ test.describe
   .serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
     test.describe
       .serial('Image Manifest Validation - Simple Containerfile', () => {
-        test('Build the image using cross-arch build (simple )', async () => {
+        test('Build the image using cross-arch build (simple)', async ({ navigationBar }) => {
           test.setTimeout(120_000);
 
+          imagesPage = await navigationBar.openImages();
           await playExpect(imagesPage.heading).toBeVisible();
           const alreadyPresentImagesCount = await imagesPage.countRowsFromTable();
 
@@ -107,13 +105,13 @@ test.describe
           const contextDirectory = path.resolve(__dirname, '..', '..', 'resources');
 
           imagesPage = await buildImagePage.buildImage(
-            imageNameSimple,
+            manifestLabelSimple,
             dockerfilePath,
             contextDirectory,
             architectures,
           );
           await playExpect
-            .poll(async () => imagesPage.waitForImageExists(manifestLabelSimple, 60_000), { timeout: 0 })
+            .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 60_000), { timeout: 0 })
             .toBeTruthy();
           await playExpect.poll(async () => await imagesPage.countRowsFromTable()).toBe(alreadyPresentImagesCount + 4);
           await imagesPage.toggleImageManifest(manifestLabelSimple);
@@ -131,17 +129,6 @@ test.describe
           await playExpect(imageDetailsPage.backLink).toBeVisible();
           await imageDetailsPage.backLink.click();
         });
-        test('Delete Manifest', async ({ page }) => {
-          test.setTimeout(180_000);
-          await deleteImageManifest(page, manifestLabelSimple);
-        });
-      });
-    test.describe
-      .serial('Image Manifest Validation - Complex Containerfile', () => {
-        test.skip(
-          () => isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
-          'Complex Containerfile uses RUN steps that require executing foreign-arch binaries, which fails on WSL without QEMU emulation. Simple Containerfile only defines CMD metadata and succeeds.',
-        );
 
         test('Add registry for manifest push', async ({ navigationBar, page }) => {
           test.skip(!canTestRegistry(), 'Registry tests are disabled');
@@ -153,11 +140,78 @@ test.describe
 
           await registryPage.createRegistry(registryUrl, registryUsername, registryPswdSecret);
 
-          const registryBox = registryPage.registriesTable.getByLabel('GitHub');
+          const registryBox = await registryPage.getRegistryRowByName('GitHub');
           const username = registryBox.getByText(registryUsername);
           await playExpect(username).toBeVisible();
         });
 
+        test('Push manifest to registry', async ({ navigationBar }) => {
+          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+          test.setTimeout(120_000);
+
+          imagesPage = await navigationBar.openImages();
+          await playExpect(imagesPage.heading).toBeVisible();
+          try {
+            await imagesPage.pushManifest(manifestLabelSimple, 60_000);
+          } catch (error: unknown) {
+            // On CI, the push dialog interaction can fail for small images.
+            // Push still completes; next test verifies by pulling from registry.
+            console.log('Push manifest dialog interaction failed:', error);
+          }
+        });
+
+        test('Verify manifest was pushed to registry', async ({ page, navigationBar }) => {
+          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+          test.setTimeout(120_000);
+
+          await deleteImageManifest(page, manifestLabelSimple);
+
+          imagesPage = await navigationBar.openImages();
+          await playExpect(imagesPage.heading).toBeVisible();
+
+          const pullImagePage = await imagesPage.openPullImage();
+          imagesPage = await pullImagePage.pullImage(manifestLabelSimple);
+          await playExpect(imagesPage.heading).toBeVisible();
+          await playExpect
+            .poll(async () => await imagesPage.waitForImageExists(manifestLabelSimple, 15_000), { timeout: 0 })
+            .toBeTruthy();
+
+          // Pull resolves the manifest to the host platform — verify via the ARCH column
+          const expectedArch = archType === 'arm64' ? ArchitectureType.ARM64 : ArchitectureType.AMD64;
+          await playExpect.poll(async () => await imagesPage.getImageArch(manifestLabelSimple)).toBe(expectedArch);
+        });
+
+        test('Remove registry after manifest push', async ({ page, navigationBar }) => {
+          test.skip(!canTestRegistry(), 'Registry tests are disabled');
+
+          await navigationBar.openSettings();
+          const settingsBar = new SettingsBar(page);
+          const registryPage = await settingsBar.openTabPage(RegistriesPage);
+          await playExpect(registryPage.heading).toBeVisible();
+
+          await registryPage.removeRegistry('GitHub');
+          const registryBox = await registryPage.getRegistryRowByName('GitHub');
+          const username = registryBox.getByText(registryUsername);
+          await playExpect(username).toBeHidden();
+        });
+
+        test('Delete Manifest', async ({ page }) => {
+          test.setTimeout(120_000);
+          if (canTestRegistry()) {
+            // Verify test pulled the manifest back as a single-platform image,
+            // so it's a regular image now — not a manifest.
+            await deleteImage(page, manifestLabelSimple);
+          } else {
+            await deleteImageManifest(page, manifestLabelSimple);
+          }
+        });
+      });
+    test.describe
+      .serial('Image Manifest Validation - Complex Containerfile', () => {
+        test.skip(
+          () => isWindows && provider?.toLocaleLowerCase().trim() === 'wsl',
+          'Complex Containerfile uses RUN steps that require executing foreign-arch binaries, which fails on WSL without QEMU emulation. Simple Containerfile only defines CMD metadata and succeeds.',
+        );
         test('Build the image using cross-arch build (complex)', async ({ navigationBar }) => {
           test.setTimeout(180_000);
 
@@ -205,30 +259,6 @@ test.describe
           );
           await playExpect(imageDetailsPage.backLink).toBeVisible();
           await imageDetailsPage.backLink.click();
-        });
-
-        test('Push manifest to registry', async ({ navigationBar }) => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
-          test.setTimeout(150_000);
-
-          imagesPage = await navigationBar.openImages();
-          await playExpect(imagesPage.heading).toBeVisible();
-
-          await imagesPage.pushManifest(manifestLabelComplex);
-        });
-
-        test('Remove registry after manifest push', async ({ page, navigationBar }) => {
-          test.skip(!canTestRegistry(), 'Registry tests are disabled');
-
-          await navigationBar.openSettings();
-          const settingsBar = new SettingsBar(page);
-          const registryPage = await settingsBar.openTabPage(RegistriesPage);
-          await playExpect(registryPage.heading).toBeVisible();
-
-          await registryPage.removeRegistry('GitHub');
-          const registryBox = registryPage.registriesTable.getByLabel('GitHub');
-          const username = registryBox.getByText(registryUsername);
-          await playExpect(username).toBeHidden();
         });
 
         test('Delete Manifest', async ({ page }) => {

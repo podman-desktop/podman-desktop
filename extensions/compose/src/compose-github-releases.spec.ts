@@ -57,9 +57,7 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/compose-github-release-all.json'), 'utf8'),
   );
-  listReleasesMock.mockImplementation(() => {
-    return { data: resultREST };
-  });
+  listReleasesMock.mockReturnValue({ data: resultREST });
 
   const result = await composeGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();
@@ -107,9 +105,7 @@ describe.each([
     // mock the result of listReleaseAssetsMock REST API
     const resultREST = JSON.parse(fsActual.readFileSync(path.resolve(__dirname, resource), 'utf8'));
 
-    vi.mocked(octokitMock.paginate).mockImplementation(() => {
-      return resultREST;
-    });
+    vi.mocked(octokitMock.paginate).mockReturnValue(resultREST);
   });
 
   test('macOS x86_64', async () => {
@@ -156,14 +152,10 @@ describe.each([
 });
 
 test('should download the file if parent folder does exist', async () => {
-  getReleaseAssetMock.mockImplementation(() => {
-    return { data: 'foo' };
-  });
+  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
   // mock fs
-  const existSyncSpy = vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-    return true;
-  });
+  const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
   const writeFileSpy = vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
@@ -178,9 +170,7 @@ test('should download the file if parent folder does exist', async () => {
 });
 
 test('should download the file if parent folder does not exist', async () => {
-  getReleaseAssetMock.mockImplementation(() => {
-    return { data: 'foo' };
-  });
+  getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
   // mock fs
   const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);

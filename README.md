@@ -40,9 +40,21 @@ Podman Desktop installs, configures, and keeps Podman up to date on your local e
 
 Podman Desktop supports [multiple container engines](#multiple-container-engine-support), and extends its capabilities through [extensions](https://podman-desktop.io/extensions)!
 
-## Download
+## Installation
 
-Check the downloads page on [podman-desktop.io/downloads](https://podman-desktop.io/downloads).
+Download from [podman-desktop.io/downloads](https://podman-desktop.io/downloads).
+
+## Usage
+
+See the [documentation](https://podman-desktop.io/docs) for guides on managing containers, images, pods, Kubernetes clusters, and extensions.
+
+## Development
+
+```bash
+pnpm install && pnpm watch
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full development guide.
 
 ## Features
 
@@ -55,7 +67,7 @@ Check the downloads page on [podman-desktop.io/downloads](https://podman-desktop
 
 #### Multiple container engine support
 
-- [Podman container engine](https://github.com/containers/podman)
+- [Podman container engine](https://github.com/podman-container-tools/podman)
 - [crc](https://github.com/code-ready/crc)
 - [Lima: Linux Machines](https://github.com/lima-vm/lima)
 - [Docker container engine](https://github.com/docker/docker)

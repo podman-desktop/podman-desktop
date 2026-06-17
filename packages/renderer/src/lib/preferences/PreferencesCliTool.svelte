@@ -12,6 +12,7 @@ import {
   eventCollect,
   registerConnectionCallback,
 } from './preferences-connection-rendering-task';
+import ThemedIcon from './ThemedIcon.svelte';
 import type { ILoadingStatus } from './Util';
 
 export let cliTool: CliToolInfo;
@@ -149,10 +150,9 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
       <div class="min-w-[170px] max-w-[200px] h-full flex flex-col justify-between">
         <div class="flex flex-row">
           {#if cliTool?.images?.icon ?? cliTool?.extensionInfo.icon}
-            {#if typeof cliTool.images?.icon === 'string'}
-              <img
-                src={cliTool.images.icon}
-                aria-label="cli-logo"
+            {#if cliTool?.images?.icon}
+              <ThemedIcon
+                icon={cliTool.images.icon}
                 alt="{cliTool.name} logo"
                 class="max-w-[40px] max-h-[40px] h-full" />
             {:else if typeof cliTool.extensionInfo.icon === 'string'}
@@ -238,7 +238,7 @@ function getLoggerHandler(_cliToolId: string): ConnectionCallback {
         {#if cliTool.version}
           <div
             class="flex flex-row justify-between align-center bg-[var(--pd-invert-content-bg)] p-2 rounded-lg min-w-[320px] w-fit">
-            <Tooltip aria-label="cli-full-path" bottomRight={true} tip="Path: {cliTool.path}">
+            <Tooltip containerClass="relative inline-block my-auto" aria-label="cli-full-path" bottomRight={true} tip="Path: {cliTool.path}">
               <div
                 class="flex text-[var(--pd-invert-content-card-text)] font-bold text-sm items-center"
                 aria-label="cli-version">

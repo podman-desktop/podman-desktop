@@ -214,7 +214,7 @@ export class DownloadAndCheck {
     tagVersion: string,
     fileName: string,
     artifactName: string,
-    owner: string = 'containers',
+    owner: string = 'podman-container-tools',
     repo: string = 'podman',
   ): Promise<void> {
     if (this.#downloadAttempt >= this.MAX_DOWNLOAD_ATTEMPT) {

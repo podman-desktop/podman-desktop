@@ -1,7 +1,6 @@
 <script lang="ts">
 import type { WebviewInfo } from '@podman-desktop/core-api';
-import { onDestroy, onMount } from 'svelte';
-import { get, type Unsubscriber } from 'svelte/store';
+import { onDestroy } from 'svelte';
 
 import Route from '/@/Route.svelte';
 import { webviews } from '/@/stores/webviews';
@@ -9,33 +8,33 @@ import { webviews } from '/@/stores/webviews';
 import { webviewLifecycle } from './webview-directive';
 
 // webview id
-export let id: string;
+interface Props {
+  id: string;
+}
+let { id }: Props = $props();
 
 // script to load for the webview
-let preloadPath: string;
+let preloadPath = $derived(await window.getWebviewPreloadPath());
 
 // exposed port of the server providing pages for the webview
-let webViewPort: number | undefined;
+let webViewPort = $derived(await window.getWebviewRegistryHttpPort());
+
+// webview HTML element used to communicate
+let webviewElement = $state<HTMLElement | undefined>(undefined);
 
 // info about the webview retrieved from the id
-let webviewInfo: WebviewInfo | undefined;
+let webviewInfo: WebviewInfo | undefined = $derived($webviews.find(webview => webview.id === id));
 
-$: webviewInfo = get(webviews).find(webview => webview.id === id);
+// reactive options for webview lifecycle directive - updates when webviewInfo changes
+let lifecycleOptions = $derived({ webviewInfo });
 
-const notifyNewWebwievState = (): void => {
+$effect(() => {
   if (webviewInfo) {
     window
       .makeDefaultWebviewVisible(webviewInfo.id)
       .catch((err: unknown) => console.error(`Error make default webview visible ${webviewInfo?.id}`, err));
   }
-};
-
-$: webviewInfo && notifyNewWebwievState();
-// webview HTML element used to communicate
-let webviewElement: HTMLElement | undefined;
-
-// reactive options for webview lifecycle directive - updates when webviewInfo changes
-$: lifecycleOptions = { webviewInfo };
+});
 
 // function to notify webview when messages are coming
 const postMessageToWebview = (webviewEvent: unknown): void => {
@@ -78,22 +77,10 @@ const openDevtoolsDisposable = window.events?.receive('dev-tools:open-webview', 
   }
 });
 
-let unsubscriber: Unsubscriber | undefined;
-onMount(async () => {
-  preloadPath = await window.getWebviewPreloadPath();
-  webViewPort = await window.getWebviewRegistryHttpPort();
-
-  // subscribe to webviews
-  unsubscriber = webviews.subscribe(webviews => {
-    webviewInfo = webviews.find(webview => webview.id === id);
-  });
-});
-
 onDestroy(() => {
   webviewPostMessageDisposable.dispose();
   webviewUpdateHtmlDisposable.dispose();
   openDevtoolsDisposable.dispose();
-  unsubscriber?.();
 
   // no webviews are visible anymore
   window

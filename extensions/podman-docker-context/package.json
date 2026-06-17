@@ -3,10 +3,16 @@
   "name": "podman-docker-context",
   "displayName": "Podman Docker Context",
   "description": "Synchronize Docker Contexts with Podman",
-  "version": "1.28.0-next",
+  "version": "1.29.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/podman-desktop/podman-desktop.git",
+    "directory": "extensions/podman-docker-context"
+  },
+  "homepage": "https://github.com/podman-desktop/podman-desktop/tree/main/extensions/podman-docker-context#readme",
   "engines": {
     "podman-desktop": "^0.0.1"
   },
@@ -25,7 +31,7 @@
   "devDependencies": {
     "adm-zip": "^0.5.17",
     "mkdirp": "^3.0.1",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.6"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }

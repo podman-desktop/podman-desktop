@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2025 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
  ***********************************************************************/
 
 import { execSync } from 'node:child_process';
-import * as os from 'node:os';
 
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
@@ -35,7 +34,7 @@ import { ResourcesPage } from '/@/model/pages/resources-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { VolumeDetailsPage } from '/@/model/pages/volume-details-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
-import { isLinux, isMac, isWindows } from '/@/utility/platform';
+import { isLinux } from '/@/utility/platform';
 import { waitUntil, waitWhile } from '/@/utility/wait';
 
 /**
@@ -374,9 +373,9 @@ async function ensurePodmanMachineStopped(
 }
 
 async function stopPodmanMachineViaCLI(machineVisibleName: string): Promise<void> {
-  // eslint-disable-next-line sonarjs/os-command
-  execSync(`podman machine stop ${machineVisibleName}`);
-  console.log(`Podman machine stopped via CLI: ${machineVisibleName}`);
+  // eslint-disable-next-line sonarjs/os-command, n/no-sync
+  const stopOutput = execSync(`podman machine stop ${machineVisibleName}`).toString();
+  console.log(`podman machine stop output: ${stopOutput}`);
 }
 
 async function waitForPodmanMachineStoppedState(podmanResourceCard: ResourceConnectionCardPage): Promise<void> {
@@ -448,8 +447,9 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
     const userModeNetworking = process.env.PODMAN_NETWORKING === '1' ? '--user-networking' : '';
 
     try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command
-      execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`);
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command, n/no-sync
+      const initOutput = execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`).toString();
+      console.log(`podman machine init output: ${initOutput}`);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM already exists')) {
         console.log('Podman machine already exists, skipping creation.');
@@ -457,9 +457,9 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
     }
 
     try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
-      execSync('podman machine start');
-      console.log('Default podman machine started');
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+      const startOutput = execSync('podman machine start').toString();
+      console.log(`podman machine start output: ${startOutput}`);
     } catch (error) {
       if (error instanceof Error && error.message.includes('already running')) {
         console.log('Default podman machine already started, skipping start.');
@@ -471,8 +471,9 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
 export async function deletePodmanMachineFromCLI(podmanMachineName: string): Promise<void> {
   return test.step('Delete Podman machine from CLI', () => {
     try {
-      // eslint-disable-next-line sonarjs/os-command
-      execSync(`podman machine rm ${podmanMachineName} -f`);
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
+      const rmOutput = execSync(`podman machine rm ${podmanMachineName} -f`).toString();
+      console.log(`podman machine rm output: ${rmOutput}`);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM does not exist')) {
         console.log(`Podman machine [${podmanMachineName}] does not exist, skipping deletion.`);
@@ -483,8 +484,9 @@ export async function deletePodmanMachineFromCLI(podmanMachineName: string): Pro
 
 export async function resetPodmanMachinesFromCLI(): Promise<void> {
   return test.step('Reset Podman machine from CLI', () => {
-    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
     execSync('podman machine reset -f');
+    console.log('podman machine reset completed successfully');
   });
 }
 
@@ -499,8 +501,9 @@ export async function fillTextbox(textbox: Locator, text: string): Promise<void>
 export async function runComposeUpFromCLI(composeFilePath: string): Promise<void> {
   return test.step('Run Compose up from CLI', async () => {
     try {
-      // eslint-disable-next-line sonarjs/os-command
-      execSync(`podman compose -f ${composeFilePath} up -d`);
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
+      const composeOutput = execSync(`podman compose -f ${composeFilePath} up -d`).toString();
+      console.log(`podman compose up output: ${composeOutput}`);
     } catch (error) {
       throw new Error(`Error running podman compose up from CLI: ${error}`);
     }
@@ -516,9 +519,9 @@ export async function removeAllImagesCLI(engine: 'podman' | 'docker' = 'podman',
 
     try {
       const command = engine === 'podman' ? 'podman rmi --all --force' : 'docker image prune --all --force';
-      // eslint-disable-next-line sonarjs/os-command
-      execSync(command, { timeout });
-      console.log(`All ${engine} images removed via CLI`);
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
+      const rmiOutput = execSync(command, { timeout }).toString();
+      console.log(`${engine} image removal output: ${rmiOutput}`);
     } catch (error) {
       console.log(
         `No ${engine} images to remove or command not available:`,
@@ -548,13 +551,10 @@ export async function ensureNoImagesPresentCLI(page: Page): Promise<void> {
 export async function untagImagesFromPodman(name: string, tag = ''): Promise<void> {
   return test.step('Untag images from Podman', async () => {
     try {
-      if (tag) {
-        // eslint-disable-next-line sonarjs/os-command
-        execSync(`podman untag ${name}:${tag}`);
-      } else {
-        // eslint-disable-next-line sonarjs/os-command
-        execSync(`podman untag ${name}`);
-      }
+      const command = tag ? `podman untag ${name}:${tag}` : `podman untag ${name}`;
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
+      const untagOutput = execSync(command).toString();
+      console.log(`podman untag output: ${untagOutput}`);
     } catch (error) {
       throw new Error(`Error untagging images from Podman: ${error}`);
     }
@@ -617,55 +617,29 @@ export async function setStatusBarProvidersFeature(
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
 }
 
-function isRootlessPodman(): boolean {
-  try {
-    let output: string;
-
-    if (isMac || isWindows) {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
-      output = execSync('podman machine ssh podman info --format json').toString();
-    } else if (isLinux) {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
-      output = execSync('podman info --format json').toString();
-    } else {
-      throw new Error('Unsupported platform');
-    }
-    const info = JSON.parse(output);
-    return info?.host?.security?.rootless === true;
-  } catch (err) {
-    throw new Error(`Failed to determine Podman rootless mode: ${err}`);
-  }
-}
-
-function getPodmanVolumePath(volumeName: string, fileName: string): string {
-  const relativePath = `${volumeName}/_data/${fileName}`;
-  const isRootless = isRootlessPodman();
-
-  if (isMac || isWindows) {
-    const base = isRootless ? '.local/share/containers/storage/volumes' : '/var/lib/containers/storage/volumes';
-    return `${base}/${relativePath}`;
-  }
-
-  if (isLinux) {
-    const base = isRootless
-      ? `${os.homedir()}/.local/share/containers/storage/volumes`
-      : '/var/lib/containers/storage/volumes';
-    return `${base}/${relativePath}`;
-  }
-
-  throw new Error('Unsupported platform');
+export async function setEnhancedDashboardFeature(
+  page: Page,
+  navigationBar: NavigationBar,
+  enable: boolean,
+): Promise<void> {
+  await navigationBar.openSettings();
+  const settingsBar = new SettingsBar(page);
+  const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
+  await experimentalPage.setExperimentalCheckbox(experimentalPage.enhancedDashboardCheckbox, enable);
 }
 
 export async function readFileInVolumeFromCLI(volumeName: string, fileName: string): Promise<string> {
   return test.step('Read file in volume from CLI', async () => {
     try {
-      const fullPath = getPodmanVolumePath(volumeName, fileName);
+      // Use a temporary container to read the file directly from the volume.
+      // This avoids platform-specific path resolution and SSH access issues
+      // (e.g., rootful vs rootless paths, HyperV admin context, CI runner environments).
+      const command = `podman run --rm -v ${volumeName}:/volume-read:ro alpine cat /volume-read/${fileName}`;
 
-      const command = isMac || isWindows ? `podman machine ssh sudo cat ${fullPath}` : `cat ${fullPath}`;
-
-      // eslint-disable-next-line sonarjs/os-command
-      const output = execSync(command);
-      return output.toString();
+      // eslint-disable-next-line sonarjs/os-command, n/no-sync
+      const output = execSync(command).toString();
+      console.log(`readFileInVolume output: ${output}`);
+      return output;
     } catch (error) {
       throw new Error(`Error reading file: ${fileName} in volume: ${volumeName} from CLI: ${error}`);
     }
@@ -766,7 +740,7 @@ function compareVersions(current: number[], reference: number[]): boolean {
  */
 export function getPodmanCliVersion(): string {
   try {
-    // eslint-disable-next-line sonarjs/no-os-command-from-path
+    // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
     const output = execSync('podman -v').toString().trim();
     // Output format: "podman version 5.7.0"
     const versionRegex = /podman version (\d+(?:\.\d+)*)/i;
