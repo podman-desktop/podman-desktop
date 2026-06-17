@@ -27,6 +27,6 @@
     "electron": "42.4.0",
     "typescript": "^5.9.3",
     "unplugin-dts": "1.0.2",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   }
 }
