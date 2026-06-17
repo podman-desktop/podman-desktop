@@ -182,10 +182,9 @@ async function loginToRegistry(registry: containerDesktopAPI.Registry): Promise<
 
   const newRegistry = registry === newRegistryRequest;
   if (newRegistry) {
-    registry.serverUrl = registry.serverUrl.trim();
+    registry.serverUrl = registry.serverUrl.trim().replace(/^https?:\/\//, '');
     registry.username = registry.username.trim();
     registry.secret = registry.secret.trim();
-    registry.serverUrl = registry.serverUrl.replace(/^https?:\/\//, '');
   }
 
   // Always check credentials before creating image / updating to see if they pass.
