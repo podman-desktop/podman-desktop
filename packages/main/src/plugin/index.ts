@@ -279,7 +279,7 @@ export class PluginSystem {
   private uiReady = false;
 
   // true if the application is quitting
-  private isQuitting = false;
+  protected isQuitting = false;
 
   // The yet to be init ExtensionLoader
   private extensionLoader!: ExtensionLoader;
