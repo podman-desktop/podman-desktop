@@ -280,6 +280,17 @@ function toggleMinimize(): void {
   }
 }
 
+function selectOverflowTab(selectedTab: PanelTab): void {
+  if (!panelState) return;
+  const tabs = [...panelState.tabs];
+  const selectedIndex = tabs.findIndex(t => t.id === selectedTab.id);
+  const lastVisibleIndex = visibleTabs.length - 1;
+  // Swap the chosen overflow tab into the last visible slot
+  [tabs[selectedIndex], tabs[lastVisibleIndex]] = [tabs[lastVisibleIndex], tabs[selectedIndex]];
+  panelState = { ...panelState, tabs, activeTabId: selectedTab.id };
+  showOverflowMenu = false;
+}
+
 function toggleOverflowMenu(): void {
   showOverflowMenu = !showOverflowMenu;
   if (showOverflowMenu) {
@@ -463,12 +474,10 @@ onMount((): void => {
                 {#each overflowTabs as tab (tab.id)}
                   <button
                     class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-(--pd-content-text) hover:bg-(--pd-content-card-hover-bg) transition-colors"
-                    role="menuitem">
-                    <i
-                      class="{tab.icon} text-[10px]"
-                      class:text-[var(--pd-status-running)]={tab.type === 'terminal'}></i>
+                    role="menuitem"
+                    onclick={(): void => selectOverflowTab(tab)}>
+                    <i class="{tab.icon} text-[10px]"></i>
                     <span class="truncate">{tab.label}</span>
-                    <span class="ml-auto text-(--pd-content-text)/30 text-[10px]">{tab.type}</span>
                   </button>
                 {/each}
               </div>
