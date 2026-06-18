@@ -57,6 +57,7 @@ overrides:
   '@docusaurus/types>joi': ^17.13.4
   markdown-it: '>=14.2.0'
   launch-editor: '>=2.14.1'
+  webpack-dev-server: '>=5.2.5'
 
 importers:
 
@@ -12581,8 +12582,8 @@ packages:
       webpack:
         optional: true
 
-  webpack-dev-server@5.2.4:
-    resolution: {integrity: sha512-GqDPGZN9bRqKBTkp4aWkobDDHMsrXKoGSdOH56smIri8qR0JG8gfL8/v/f/OZR3/OKXjG8uwJbFVhKm/FNU/UA==}
+  webpack-dev-server@5.2.5:
+    resolution: {integrity: sha512-4wZtCquSuv9CKX8oybo+mqxtxZqWz47uM1Ch94lxowBztOhWCbhqvRbfC/mODOwxgV2brY+JGZpHq58/SuVFYg==}
     engines: {node: '>= 18.12.0'}
     hasBin: true
     peerDependencies:
@@ -14513,7 +14514,7 @@ snapshots:
       update-notifier: 6.0.2
       webpack: 5.105.0(esbuild@0.28.1)
       webpack-bundle-analyzer: 4.10.2
-      webpack-dev-server: 5.2.4(webpack@5.105.0(esbuild@0.28.1))
+      webpack-dev-server: 5.2.5(webpack@5.105.0(esbuild@0.28.1))
       webpack-merge: 6.0.1
     transitivePeerDependencies:
       - '@parcel/css'
@@ -17524,7 +17525,7 @@ snapshots:
   '@types/express-serve-static-core@4.19.6':
     dependencies:
       '@types/node': 24.10.11
-      '@types/qs': 6.9.18
+      '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
 
@@ -17702,7 +17703,7 @@ snapshots:
 
   '@types/serve-index@1.9.4':
     dependencies:
-      '@types/express': 4.17.25
+      '@types/express': 5.0.6
 
   '@types/serve-static@1.15.7':
     dependencies:
@@ -26889,7 +26890,7 @@ snapshots:
     optionalDependencies:
       webpack: 5.105.0(esbuild@0.28.1)
 
-  webpack-dev-server@5.2.4(webpack@5.105.0(esbuild@0.28.1)):
+  webpack-dev-server@5.2.5(webpack@5.105.0(esbuild@0.28.1)):
     dependencies:
       '@types/bonjour': 3.5.13
       '@types/connect-history-api-fallback': 1.5.4
