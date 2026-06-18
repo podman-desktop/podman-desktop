@@ -6,12 +6,19 @@ import { currentScreen, registerPrototype, unregisterPrototype } from '/@/stores
 
 // #region Types
 
+interface ContainerOption {
+  name: string;
+  status: 'running' | 'exited';
+}
+
 interface PanelTab {
   id: string;
   label: string;
   type: 'log' | 'terminal';
   icon: string;
   content: string;
+  containers?: ContainerOption[];
+  selectedContainer?: string;
 }
 
 interface TabbedPanelOverride {
@@ -107,6 +114,25 @@ const TABS_OVERFLOW: PanelTab[] = [
   { id: 'log-alertmgr', label: 'alertmanager', type: 'log', icon: 'fa-solid fa-scroll', content: MOCK_LOG_CONTENT_2 },
 ];
 
+const TABS_MULTI_CONTAINER: PanelTab[] = [
+  {
+    id: 'stack-myapp',
+    label: 'my-app-stack',
+    type: 'terminal',
+    icon: 'fa-solid fa-cubes',
+    content: MOCK_TERMINAL_CONTENT_HTML,
+    containers: [
+      { name: 'backend', status: 'running' },
+      { name: 'frontend', status: 'running' },
+      { name: 'postgres', status: 'running' },
+      { name: 'redis', status: 'exited' },
+    ],
+    selectedContainer: 'backend',
+  },
+  { id: 'log-nginx', label: 'nginx-frontend', type: 'log', icon: 'fa-solid fa-scroll', content: MOCK_LOG_CONTENT_1 },
+  { id: 'log-redis', label: 'redis-cache', type: 'log', icon: 'fa-solid fa-scroll', content: MOCK_LOG_CONTENT_2 },
+];
+
 // #endregion
 
 // #region Content formatters
@@ -139,6 +165,7 @@ const override = registerPrototype<TabbedPanelOverride>({
     { value: 'mixed', label: 'Mixed tabs (logs + terminal)' },
     { value: 'overflow', label: 'Tab overflow (10 tabs)' },
     { value: 'minimized', label: 'Panel minimized' },
+    { value: 'multi-container', label: 'Multi-container (pod/stack dropdown)' },
   ],
   overrides: {
     closed: { visible: false, minimized: false, tabs: [], activeTabId: '', showOverflow: false },
@@ -146,6 +173,13 @@ const override = registerPrototype<TabbedPanelOverride>({
     mixed: { visible: true, minimized: false, tabs: TABS_MIXED, activeTabId: 'term-app', showOverflow: false },
     overflow: { visible: true, minimized: false, tabs: TABS_OVERFLOW, activeTabId: 'term-app', showOverflow: true },
     minimized: { visible: true, minimized: true, tabs: TABS_MIXED, activeTabId: 'term-app', showOverflow: false },
+    'multi-container': {
+      visible: true,
+      minimized: false,
+      tabs: TABS_MULTI_CONTAINER,
+      activeTabId: 'stack-myapp',
+      showOverflow: false,
+    },
   },
 });
 
@@ -174,6 +208,27 @@ let activeTab = $derived(panelState?.tabs.find(t => t.id === panelState?.activeT
 let visibleTabs = $derived(panelState?.showOverflow ? panelState.tabs.slice(0, 6) : (panelState?.tabs ?? []));
 let overflowTabs = $derived(panelState?.showOverflow ? panelState.tabs.slice(6) : []);
 let showOverflowMenu = $state(false);
+
+let containerDropdownTabId: string | null = $state(null);
+let containerDropdownLeft: number = $state(0);
+let containerDropdownTop: number = $state(0);
+
+function openContainerDropdown(event: MouseEvent, tabId: string): void {
+  event.stopPropagation();
+  if (containerDropdownTabId === tabId) {
+    containerDropdownTabId = null;
+    return;
+  }
+  containerDropdownTabId = tabId;
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  containerDropdownLeft = rect.left;
+  containerDropdownTop = rect.bottom;
+}
+
+function selectContainer(tab: PanelTab, containerName: string): void {
+  tab.selectedContainer = containerName;
+  containerDropdownTabId = null;
+}
 
 const MIN_PANEL_HEIGHT = 120;
 const PANEL_HEIGHT_MARGIN = 120;
@@ -312,7 +367,17 @@ onMount((): void => {
                 <span class="absolute top-0 inset-x-0 h-[4px] bg-(--pd-global-nav-icon-selected-highlight)"></span>
               {/if}
               <i class="{tab.icon} text-[10px]"></i>
-              <span class="max-w-[120px] truncate">{tab.label}</span>
+              <span class="max-w-[80px] truncate">{tab.label}</span>
+              <!-- Multi-container selector: shown inline when tab has container options -->
+              {#if tab.containers && tab.containers.length > 0}
+                <button
+                  class="flex items-center gap-0.5 pl-1 opacity-70 hover:opacity-100"
+                  aria-label="Select container for {tab.label}"
+                  onclick={(e: MouseEvent): void => openContainerDropdown(e, tab.id)}>
+                  <span class="text-[10px] -ml-1.5">· {tab.selectedContainer}</span>
+                  <i class="fa-solid fa-chevron-down text-[7px]"></i>
+                </button>
+              {/if}
               <i
                 class="fa-solid fa-xmark text-[9px] ml-1 {isActive
                   ? 'opacity-60 hover:opacity-100'
@@ -322,6 +387,43 @@ onMount((): void => {
             </button>
           </Tooltip>
         {/each}
+
+        <!-- Container dropdown popup (fixed, appears below tab bar) -->
+        {#if containerDropdownTabId}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div
+            class="fixed inset-0"
+            style="z-index: 9998;"
+            onclick={(): void => {
+              containerDropdownTabId = null;
+            }}></div>
+          {@const dropdownTab = panelState.tabs.find(t => t.id === containerDropdownTabId)}
+          {#if dropdownTab?.containers}
+            <div
+              class="fixed bg-(--pd-content-card-bg) border border-(--pd-content-divider) rounded shadow-lg min-w-[180px] py-1"
+              style="z-index: 9999; left: {containerDropdownLeft}px; top: {containerDropdownTop}px;">
+              <div class="px-3 py-1 text-[10px] font-medium text-(--pd-content-text)/40 uppercase tracking-wide border-b border-(--pd-content-divider) mb-1">
+                {dropdownTab.label}
+              </div>
+              {#each dropdownTab.containers as container (container.name)}
+                <button
+                  class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-(--pd-content-text) hover:bg-(--pd-content-card-hover-bg) transition-colors"
+                  role="menuitem"
+                  onclick={(): void => selectContainer(dropdownTab, container.name)}>
+                  <span
+                    class="w-1.5 h-1.5 rounded-full shrink-0 {container.status === 'running'
+                      ? 'bg-(--pd-status-running)'
+                      : 'bg-(--pd-content-text)/25'}"></span>
+                  <span class="flex-1 text-left">{container.name}</span>
+                  {#if container.name === dropdownTab.selectedContainer}
+                    <i class="fa-solid fa-check text-[9px] text-(--pd-global-nav-icon-selected-highlight)"></i>
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {/if}
+        {/if}
 
         <!-- New tab button -->
         <Tooltip top tip="New terminal">
