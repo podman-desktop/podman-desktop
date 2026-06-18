@@ -16,42 +16,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import type Electron from 'electron';
 import { BrowserWindow } from 'electron';
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { findWindow } from './electron-util.js';
 
-vi.mock(import('electron'), async () => {
-  class MyCustomWindow {
-    static readonly singleton = new MyCustomWindow();
-
-    loadURL(): void {}
-    setBounds(): void {}
-
-    on(): void {}
-
-    show(): void {}
-    focus(): void {}
-    isMinimized(): boolean {
-      return false;
-    }
-    isDestroyed(): boolean {
-      return false;
-    }
-
-    static getAllWindows(): unknown[] {
-      return [MyCustomWindow.singleton];
-    }
-  }
-
-  return {
-    BrowserWindow: MyCustomWindow,
-  } as unknown as typeof Electron;
-});
+class MyCustomWindow extends BrowserWindow {}
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([new MyCustomWindow()]);
 });
 
 test('findWindow - return window', () => {

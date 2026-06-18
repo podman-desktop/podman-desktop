@@ -26,15 +26,6 @@ import type { ConfigurationRegistry } from '/@/plugin/configuration-registry.js'
 
 import { WindowsStartup } from './windows-startup.js';
 
-vi.mock(import('electron'), async () => {
-  return {
-    app: {
-      getPath: vi.fn(),
-      setLoginItemSettings: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
-
 vi.mock(import('node:fs'));
 
 const minimizeOnStatup = vi.fn();

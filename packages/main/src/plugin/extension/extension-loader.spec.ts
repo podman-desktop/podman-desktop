@@ -338,14 +338,6 @@ const createApi = (disposables?: { dispose(): unknown }[]): typeof containerDesk
   return extensionLoader.createApi(analyzedExtension);
 };
 
-vi.mock(import('electron'), () => {
-  return {
-    app: {
-      getVersion: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
-
 vi.mock(import('/@/util.js'));
 
 vi.mock(import('node:fs/promises'));
