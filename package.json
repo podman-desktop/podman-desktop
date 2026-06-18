@@ -158,7 +158,7 @@
     "@vitest/eslint-plugin": "^1.6.20",
     "cross-env": "10.1.0",
     "dts-for-context-bridge": "0.7.1",
-    "electron": "42.4.0",
+    "electron": "42.4.1",
     "electron-builder": "26.8.2",
     "electron-builder-notarize": "^1.5.2",
     "eslint": "^10.4.1",
