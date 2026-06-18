@@ -208,7 +208,7 @@
       "express>cookie": "^0.7.0",
       "qs": "^6.15.2",
       "dompurify@^3": "^3.4.10",
-      "webpack-dev-server>http-proxy-middleware": "^2.0.9",
+      "webpack-dev-server>http-proxy-middleware": "^3.0.6",
       "esbuild-register>esbuild": ">=0.28.1",
       "tsx>esbuild": ">=0.28.1",
       "vite>esbuild": ">=0.28.1",
