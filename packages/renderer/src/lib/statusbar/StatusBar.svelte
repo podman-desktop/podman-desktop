@@ -101,12 +101,12 @@ onDestroy(() => {
   aria-label="Status Bar"
   data-pd-force-theme={$isHighContrast ? 'hc-dark' : 'dark'}>
   <div class="flex flex-nowrap gap-x-1.5 h-full text-ellipsis whitespace-nowrap items-center">
-    <Tooltip top tip="Toggle terminal panel (`)">
+    <Tooltip top tip="Toggle terminal panel (`)" containerClass="-ml-1 relative self-stretch flex items-stretch">
       <button
-        class="px-1.5 py-px flex h-full items-center hover:cursor-pointer transition-colors {panelVisible ? 'bg-[var(--pd-statusbar-hover-bg)] text-[var(--pd-statusbar-text)]' : 'text-[var(--pd-statusbar-text)] opacity-60 hover:bg-[var(--pd-statusbar-hover-bg)]'}"
+        class="pl-3 pr-1.5 flex h-full items-center hover:cursor-pointer hover:bg-(--pd-statusbar-hover-bg)"
         aria-label="Toggle terminal panel"
         onclick={togglePanel}>
-        <i class="fa-solid fa-terminal text-[11px]"></i>
+        <i class="fa-solid fa-terminal text-[11px] text-(--pd-global-nav-icon)"></i>
       </button>
     </Tooltip>
     {#if experimentalProvidersStatusBar}
