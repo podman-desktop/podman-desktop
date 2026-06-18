@@ -42,7 +42,7 @@
     "test:unit": "pnpm run build:preload:types && pnpm run build:ui && vitest --run",
     "test:unit:coverage": "pnpm run test:unit --coverage",
     "test:e2e": "pnpm run test:e2e:build && pnpm run test:e2e:run",
-    "test:e2e:build": "cross-env NODE_ENV=development MODE=development DEBUG=pw:browser pnpm run build",
+    "test:e2e:build": "playwright install chromium && cross-env NODE_ENV=development MODE=development DEBUG=pw:browser pnpm run build",
     "test:e2e:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/ --grep-invert @k8s_e2e",
     "test:e2e:all": "pnpm run test:e2e:build && pnpm run test:e2e:all:run",
     "test:e2e:all:run": "xvfb-maybe --auto-servernum --server-args='-screen 0 1280x960x24' -- npx playwright test tests/playwright/src/specs/",
@@ -128,7 +128,7 @@
     "storybook:dev": "pnpm run storybook:css && cd storybook && pnpm run dev",
     "storybook:build": "pnpm run build:ui && pnpm run storybook:css && cd storybook && pnpm run build",
     "prepare": "husky install",
-    "postinstall": "pnpm run build:core-api && playwright install chromium"
+    "postinstall": "pnpm run build:core-api"
   },
   "lint-staged": {
     "*.{js,ts,tsx,svelte}": [

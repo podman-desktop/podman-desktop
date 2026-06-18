@@ -606,6 +606,9 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      - name: Install Playwright browser
+        run: npx playwright install chromium
+
       - name: Adjust/Downgrade local podman desktop version Windows
         run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
@@ -684,6 +687,8 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
+      - name: Install Playwright browser
+        run: npx playwright install chromium
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
