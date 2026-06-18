@@ -230,6 +230,59 @@ function selectContainer(tab: PanelTab, containerName: string): void {
   containerDropdownTabId = null;
 }
 
+// #region Tab drag-and-drop reordering (pointer-based for horizontal-only movement)
+
+let draggingTabId: string | null = $state(null);
+let dragOverTabId: string | null = $state(null);
+let dragTranslateX: number = $state(0);
+
+function onTabPointerDown(event: PointerEvent, tabId: string): void {
+  // Don't intercept clicks on the close button or container selector
+  const target = event.target as HTMLElement;
+  if (target.closest('[aria-label^="Close"]') || target.closest('[aria-label^="Select container"]')) return;
+
+  event.preventDefault();
+  draggingTabId = tabId;
+  dragTranslateX = 0;
+
+  const el = event.currentTarget as HTMLElement;
+  const startX = event.clientX;
+  const midY = el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2;
+
+  el.setPointerCapture(event.pointerId);
+
+  function onPointerMove(e: PointerEvent): void {
+    dragTranslateX = e.clientX - startX;
+    // Use elementsFromPoint at the pointer X but at a fixed tab-bar Y so only
+    // horizontal position matters for the drop target calculation.
+    const hit = document
+      .elementsFromPoint(e.clientX, midY)
+      .find(el => (el as HTMLElement).dataset.tabId && (el as HTMLElement).dataset.tabId !== draggingTabId);
+    dragOverTabId = hit ? ((hit as HTMLElement).dataset.tabId ?? null) : null;
+  }
+
+  function onPointerUp(): void {
+    if (panelState && draggingTabId && dragOverTabId && Math.abs(dragTranslateX) > 4) {
+      const tabs = [...panelState.tabs];
+      const fromIndex = tabs.findIndex(t => t.id === draggingTabId);
+      const toIndex = tabs.findIndex(t => t.id === dragOverTabId);
+      const [moved] = tabs.splice(fromIndex, 1);
+      tabs.splice(toIndex, 0, moved);
+      panelState = { ...panelState, tabs };
+    }
+    draggingTabId = null;
+    dragOverTabId = null;
+    dragTranslateX = 0;
+    el.removeEventListener('pointermove', onPointerMove);
+    el.removeEventListener('pointerup', onPointerUp);
+  }
+
+  el.addEventListener('pointermove', onPointerMove);
+  el.addEventListener('pointerup', onPointerUp);
+}
+
+// #endregion
+
 const MIN_PANEL_HEIGHT = 120;
 const PANEL_HEIGHT_MARGIN = 120;
 const DEFAULT_PANEL_HEIGHT = 280;
@@ -367,9 +420,16 @@ onMount((): void => {
           {@const isActive = tab.id === panelState.activeTabId}
           <Tooltip top tip="{tab.type === 'terminal' ? 'Terminal' : 'Log'}: {tab.label}">
             <button
-              class="group relative flex items-center gap-1.5 px-3 h-[35px] text-xs whitespace-nowrap border-r border-(--pd-content-divider) transition-colors {isActive
-                ? 'bg-(--pd-global-nav-icon-selected-bg) text-(--pd-content-header) font-medium'
-                : 'text-(--pd-global-nav-icon)'}"
+              data-tab-id={tab.id}
+              onpointerdown={(e: PointerEvent): void => onTabPointerDown(e, tab.id)}
+              class="group relative flex items-center gap-1.5 px-3 h-[35px] text-xs whitespace-nowrap border-r border-(--pd-content-divider) transition-colors select-none
+                {isActive
+                  ? 'bg-(--pd-global-nav-icon-selected-bg) text-(--pd-content-header) font-medium'
+                  : 'text-(--pd-global-nav-icon)'}
+                {draggingTabId === tab.id ? 'opacity-80 cursor-grabbing pointer-events-none z-50' : 'cursor-grab'}
+                {draggingTabId === tab.id && !isActive ? 'bg-(--pd-content-bg)' : ''}
+                {dragOverTabId === tab.id ? 'border-l-2 border-l-(--pd-global-nav-icon-selected-highlight)' : ''}"
+              style={draggingTabId === tab.id ? `transform: translateX(${dragTranslateX}px)` : ''}
               aria-selected={isActive}
               aria-label="{tab.type === 'terminal' ? 'Terminal' : 'Log'}: {tab.label}"
               role="tab">
