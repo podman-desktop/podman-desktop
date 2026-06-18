@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -165,13 +165,15 @@ describe('Custom link', () => {
     expect(markdownContent).toContainHTML('<a href="/containers">containers</a>');
   });
 
-  test('expect unknown protocol to be left as is', async () => {
+  test('expect unknown protocol to be removed', async () => {
     await waitRender({
-      markdown: 'See <a href="foo://bar">foo</a>',
+      markdown: 'See <a title="Foo link" href="foo://bar">foo</a>',
     });
     const markdownContent = screen.getByRole('region', { name: 'markdown-content' });
-    expect(markdownContent).toBeInTheDocument();
-    expect(markdownContent).toContainHTML('<a href="foo://bar">foo</a>');
+
+    const link = within(markdownContent).getByTitle('Foo link');
+    expect(link).toBeInTheDocument();
+    expect(link).not.toHaveAttribute('href');
   });
 });
 
