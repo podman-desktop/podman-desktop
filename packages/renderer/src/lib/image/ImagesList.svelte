@@ -87,22 +87,21 @@ function updateImages(globalContext: ContextUI): void {
       image.selected = matchingImage.selected;
     }
   });
-  computedImages.sort((first, second) => second.createdAt - first.createdAt);
+  images = computedImages.toSorted((first, second) => second.createdAt - first.createdAt);
 
-  // Go through each image and if it has a children, remove the "children" from computedImages so they do not show up
+  // Go through each image and if it has a children, remove the "children" from images so they do not show up
   // in the table
-  computedImages.forEach(image => {
+  images.forEach(image => {
     if (image.children) {
       image.children.forEach(child => {
-        const index = computedImages.findIndex(computedImage => computedImage.id === child.id);
+        const index = images.findIndex(computedImage => computedImage.id === child.id);
         if (index !== -1) {
-          computedImages.splice(index, 1);
+          images.splice(index, 1);
         }
       });
     }
   });
 
-  images = computedImages;
   if (imageEngineId) {
     images = images.filter(image => image.engineId === imageEngineId);
   }

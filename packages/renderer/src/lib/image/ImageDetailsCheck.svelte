@@ -48,7 +48,7 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
     info: p,
     state: 'running',
   }));
-  const sortedProvidersIds = providers.map(p => p.info.id).sort();
+  const sortedProvidersIds = providers.map(p => p.info.id).toSorted();
   cancellableTokenId = await window.getCancellableTokenSource();
   remainingProviders = providers.length;
 
@@ -75,7 +75,7 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
             check,
           });
         });
-        results.sort((a, b) => {
+        results = results.toSorted((a, b) => {
           const statusA = orderStatus.indexOf(a.check.status);
           const statusB = orderStatus.indexOf(b.check.status);
           if (statusA !== statusB) {
@@ -95,7 +95,6 @@ async function callProviders(_providers: readonly ImageCheckerInfo[]): Promise<v
           }
           return 0;
         });
-        results = [...results];
       })
       .catch((error: unknown) => {
         if (error instanceof Error) {

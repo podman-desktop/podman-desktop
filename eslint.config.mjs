@@ -290,6 +290,7 @@ export default [
       'sonarjs/no-nested-assignment': 'off',
       'sonarjs/no-alphabetical-sort': 'off',
       'svelte/no-reactive-literals': 'error',
+      'unicorn/no-array-sort': 'error',
     },
   },
 
