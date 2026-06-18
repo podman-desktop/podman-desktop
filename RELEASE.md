@@ -52,6 +52,15 @@ Below is what a typical release week may look like (This is just an example of t
    - Check `npmjs-publish.yaml` then click on `Approve and Deploy`
    - Cancel any other pending run (If you did one or several re-spin, previous release tag will also wait, we should not publish them).
 
+1. Approve `schemastore-sync-extension-schema.yaml` workflow
+
+   The workflow will be waiting for manual approval
+   - Go to https://github.com/podman-desktop/podman-desktop/actions/workflows/schemastore-sync-extension-schema.yaml?query=is%3Awaiting
+   - Click on `View details` of the run corresponding to the release you wish to sync
+   - Click on `Review Deployment`
+   - Check `schemastore-sync-extension-schema.yaml` then click on `Approve and Deploy`
+   - Cancel any other pending run (If you did one or several re-spin, previous release tag will also wait, we should not sync them).
+
 ## Test release before it is rolling out.
 
 The release is a **pre-release**, it means it is not yet the latest version, so no clients will automatically update to this version.
