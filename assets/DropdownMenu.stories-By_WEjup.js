@@ -1,7 +1,0 @@
-import{i as e}from"./preload-helper-xPQekRTU.js";import{At as t,G as n,Sn as r,Ut as i,W as a,at as o,gt as s,hn as c,jt as l,m as u,nn as d,ot as f,p,pn as m,rn as h,s as g,st as _,un as v,yn as y}from"./iframe-DcOQFD4R.js";import{a as b,i as x,n as S,r as C,t as w}from"./create-runtime-stories-CcEIEDit.js";import{L as T,N as E,k as D,s as O}from"./Icon-DBLaU-SM.js";import{S as k,t as A}from"./dist-CSMb2sCr.js";function j(e,t){h(t,!1),u();{let t=i(()=>({items:[{title:`Item 1`,icon:O},{title:`Item 2`,icon:D},{title:`Item 3`,icon:E}]}));P(e,{name:`Basic`,get args(){return s(t)},parameters:{__svelteCsf:{rawCode:`<div class="flex min-h-52 justify-center p-10">
-  <DropdownMenu>
-    {#each args.items as item, index (index)}
-      <DropdownMenu.Item {...item} />
-    {/each}
-  </DropdownMenu>
-</div>`}}})}d()}var M,N,P,F,I,L,R;e((()=>{r(),b(),y(),T(),A(),x(),g(),S(),M=(e,r,i=c)=>{let u=()=>m(r?.(),[`_children`]);var d=F();k(t(d),{children:(e,t)=>{var r=f();a(l(r),1,()=>u().items,n,(e,t)=>{k.Item(e,p(()=>s(t)))}),o(e,r)},$$slots:{default:!0}}),v(d),o(e,d)},N={component:k,render:M,title:`DropdownMenu`,tags:[`autodocs`],args:{},parameters:{docs:{description:{component:"These are the stories for the `DropdownMenu` component.\nInteract with a drop down from a kebab menu."}}}},{Story:P}=C(N),F=_(`<div class="flex min-h-52 justify-center p-10"><!></div>`),j.__docgen={data:[],name:`DropdownMenu.stories.svelte`},I=w(j,N),L=[`Basic`],R={...I.Basic,tags:[`svelte-csf-v5`]}}))();export{R as Basic,L as __namedExportsOrder,N as default};
