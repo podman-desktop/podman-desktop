@@ -9,9 +9,8 @@ interface Props {
 let { extensionDetails }: Props = $props();
 </script>
 
-<div class="order-first lg:order-last w-full lg:w-48 flex flex-row grow justify-end pb-4 lg:pb-0">
-  <div
-    class="bg-[var(--pd-details-card-bg)] lg:w-40 h-fit lg:ml-4 p-4 rounded-md flex flex-row lg:flex-col w-full space-x-4 lg:space-x-0">
+<div class="w-full pb-4">
+  <div class="bg-[var(--pd-details-card-bg)] h-fit p-4 rounded-md flex flex-row w-full space-x-4">
     <ExtensionDetailsSummaryCardEntry label="version" value={extensionDetails.version} />
 
     <ExtensionDetailsSummaryCardEntry label="released" value={extensionDetails.releaseDate} />
