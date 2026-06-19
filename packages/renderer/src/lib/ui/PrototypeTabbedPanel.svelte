@@ -377,7 +377,7 @@ onMount((): void => {
 
 {#if panelState?.visible}
   <div
-    class="flex flex-col relative shrink-0 border-b border-(--pd-content-divider)"
+    class="flex flex-col relative shrink-0"
     style={panelState.minimized ? '' : `height: ${panelHeight}px`}
     role="complementary"
     aria-label="Terminal and log panel">
@@ -401,18 +401,7 @@ onMount((): void => {
 
     <!-- #region Tab bar -->
     <div
-      class="flex items-center h-[36px] min-h-[36px] bg-(--pd-content-bg) border-t border-t-(--panel-top-border) border-b border-b-(--pd-content-divider) select-none">
-
-      <!-- Panel label — right border separates label from tab strip -->
-      <Tooltip top tip="Toggle terminal panel (`)">
-        <button
-          class="flex items-center gap-1.5 px-3 h-[35px] text-xs font-medium text-(--pd-global-nav-icon) whitespace-nowrap border-r border-(--pd-content-divider)"
-          aria-label="Toggle terminal panel"
-          onclick={togglePanel}>
-          <i class="fa-solid fa-terminal text-[10px]"></i>
-          Terminal
-        </button>
-      </Tooltip>
+      class="flex items-center h-[36px] min-h-[36px] bg-(--pd-content-bg) border-t border-t-(--pd-global-nav-bg-border) select-none">
 
       <!-- Tabs -->
       <div class="flex items-center gap-0 overflow-x-auto flex-1 min-w-0">
@@ -422,7 +411,7 @@ onMount((): void => {
             <button
               data-tab-id={tab.id}
               onpointerdown={(e: PointerEvent): void => onTabPointerDown(e, tab.id)}
-              class="group relative flex items-center gap-1.5 px-3 h-[35px] text-xs whitespace-nowrap border-r border-(--pd-content-divider) transition-colors select-none
+              class="group relative flex items-center gap-1.5 px-3 h-[35px] text-xs whitespace-nowrap border-r border-(--pd-global-nav-bg-border) transition-colors select-none
                 {isActive
                   ? 'bg-(--pd-global-nav-icon-selected-bg) text-(--pd-content-header) font-medium'
                   : 'text-(--pd-global-nav-icon)'}
@@ -499,7 +488,7 @@ onMount((): void => {
         <!-- New tab button -->
         <Tooltip top tip="New terminal">
           <button
-            class="flex items-center justify-center px-2.5 h-[35px] border-r border-(--pd-content-divider) text-(--pd-global-nav-icon)"
+            class="flex items-center justify-center px-2.5 h-[35px] border-r border-(--pd-global-nav-bg-border) text-(--pd-global-nav-icon)"
             aria-label="New terminal tab">
             <i class="fa-solid fa-plus text-[10px]"></i>
           </button>
@@ -589,15 +578,6 @@ onMount((): void => {
 {/if}
 
 <style>
-  /* Top border of the tab bar: black in light themes, white in dark themes */
-  :global(:root) {
-    --panel-top-border: #000;
-  }
-  :global(.dark),
-  :global(.hc-dark) {
-    --panel-top-border: #fff;
-  }
-
   .overflow-menu-popup {
     position: fixed;
     transform: translateY(calc(-100% - 40px));

@@ -455,11 +455,11 @@ tablePersistence.storage = new PodmanDesktopStoragePersist();
             <ExtensionDetails extensionId={meta.params.id} />
           </Route>
         </Route>
+        <PrototypeTabbedPanel />
       </div>
     </div>
     <HelpActions/>
     <PinActions/>
-    <PrototypeTabbedPanel />
     <StatusBar />
   </main>
 </Route>

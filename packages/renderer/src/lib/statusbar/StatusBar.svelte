@@ -106,7 +106,7 @@ onDestroy(() => {
         class="pl-3 pr-1.5 flex h-full items-center hover:cursor-pointer hover:bg-(--pd-statusbar-hover-bg)"
         aria-label="Toggle terminal panel"
         onclick={togglePanel}>
-        <i class="fa-solid fa-terminal text-[11px] text-(--pd-global-nav-icon)"></i>
+        <i class="fa-solid fa-terminal text-[11px] text-(--pd-statusbar-text)"></i>
       </button>
     </Tooltip>
     {#if experimentalProvidersStatusBar}
