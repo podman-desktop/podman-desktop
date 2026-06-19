@@ -127,6 +127,16 @@ jobs:
           echo "Docker images after cleanup:"
           docker image ls
 
+      - name: Setup insecure test registry
+        run: |
+          chmod +x tests/playwright/scripts/setup-insecure-registry.sh
+          tests/playwright/scripts/setup-insecure-registry.sh start
+          echo "Insecure registry started on localhost:5443"
+          # Install self-signed cert into Ubuntu system trust store
+          sudo cp /tmp/pd-test-registry/registry.crt /usr/local/share/ca-certificates/pd-test-registry.crt
+          sudo update-ca-certificates
+          echo "Self-signed cert installed into system trust store"
+
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         name: Install pnpm
         with:
@@ -156,6 +166,9 @@ jobs:
           SKIP_KIND_INSTALL: 'true'
           KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
           ELECTRON_ENABLE_INSPECT: true
+          INSECURE_REGISTRY_URL: 'localhost:5443'
+          INSECURE_REGISTRY_USERNAME: 'testuser'
+          INSECURE_REGISTRY_PASSWORD: 'testpassword123'
         run: |
           echo "Compiling the Podman Desktop in production mode"
           pnpm compile:current --linux dir
@@ -173,6 +186,9 @@ jobs:
           SKIP_KIND_INSTALL: 'true'
           KIND_PROVIDER_GHA: ${{ env.KIND_PROVIDER }}
           ELECTRON_ENABLE_INSPECT: true
+          INSECURE_REGISTRY_URL: 'localhost:5443'
+          INSECURE_REGISTRY_USERNAME: 'testuser'
+          INSECURE_REGISTRY_PASSWORD: 'testpassword123'
         run: |
           echo "Building Podman Desktop flatpak bundle"
           pnpm compile:current --linux flatpak
@@ -201,6 +217,13 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
+
+      - name: Cleanup insecure test registry
+        if: always()
+        run: |
+          tests/playwright/scripts/setup-insecure-registry.sh cleanup || true
+          sudo rm -f /usr/local/share/ca-certificates/pd-test-registry.crt
+          sudo update-ca-certificates || true
 
   win-update-e2e-test:
     name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
