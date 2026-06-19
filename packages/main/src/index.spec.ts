@@ -86,6 +86,7 @@ const extensionLoader = {
 vi.mock(import('./index.js'), async importOriginal => {
   const electron = await import('electron');
   vi.mocked(electron.app.whenReady).mockReturnValue(constants.appReadyDeferredPromise);
+  vi.mocked(electron.app.requestSingleInstanceLock).mockReturnValue(true);
   return importOriginal();
 });
 vi.mock(import('./plugin/index.js'));
@@ -102,6 +103,7 @@ beforeEach(() => {
   vi.mocked(PluginSystem.prototype.initExtensions).mockResolvedValue(extensionLoader);
 
   vi.mocked(app.whenReady).mockReturnValue(constants.appReadyDeferredPromise);
+  vi.mocked(app.getPath).mockReturnValue('');
   vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([fakeWindow]);
   const newDefer = Promise.withResolvers<BrowserWindow>();
   if (mainWindowDeferred.promise !== undefined) {

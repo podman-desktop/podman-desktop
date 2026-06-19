@@ -25,8 +25,8 @@ vi.mock(import('electron'), async () => {
     on = vi.fn();
     show = vi.fn();
     focus = vi.fn();
-    isMinimized = vi.fn().mockReturnValue(false);
-    isDestroyed = vi.fn().mockReturnValue(false);
+    isMinimized = vi.fn();
+    isDestroyed = vi.fn();
     webContents = {
       send: vi.fn(),
       on: vi.fn(),
@@ -38,7 +38,7 @@ vi.mock(import('electron'), async () => {
     setImage = vi.fn();
     setToolTip = vi.fn();
     setContextMenu = vi.fn();
-    isDestroyed = vi.fn().mockReturnValue(false);
+    isDestroyed = vi.fn();
     on = vi.fn();
   }
 
@@ -50,16 +50,16 @@ vi.mock(import('electron'), async () => {
   return {
     app: {
       getAppPath: vi.fn().mockReturnValue(''),
-      getVersion: vi.fn().mockReturnValue(''),
-      getPath: vi.fn().mockReturnValue(''),
-      getName: vi.fn().mockReturnValue(''),
+      getVersion: vi.fn(),
+      getPath: vi.fn(),
+      getName: vi.fn(),
       on: vi.fn(),
       once: vi.fn(),
       quit: vi.fn(),
-      whenReady: vi.fn().mockResolvedValue(undefined),
+      whenReady: vi.fn(),
       disableHardwareAcceleration: vi.fn(),
-      requestSingleInstanceLock: vi.fn().mockReturnValue(true),
-      getLoginItemSettings: vi.fn().mockReturnValue({ wasOpenedAtLogin: false }),
+      requestSingleInstanceLock: vi.fn(),
+      getLoginItemSettings: vi.fn(),
       setLoginItemSettings: vi.fn(),
       setAppUserModelId: vi.fn(),
       dock: {
@@ -69,11 +69,11 @@ vi.mock(import('electron'), async () => {
     },
     ipcMain: {
       handle: vi.fn(),
-      on: vi.fn().mockReturnThis(),
-      emit: vi.fn().mockReturnValue(true),
+      on: vi.fn(),
+      emit: vi.fn(),
     },
     BrowserWindow: Object.assign(vi.fn(BrowserWindowMock), {
-      getAllWindows: vi.fn().mockReturnValue([]),
+      getAllWindows: vi.fn(),
     }),
     shell: {
       openExternal: vi.fn(),
@@ -94,13 +94,11 @@ vi.mock(import('electron'), async () => {
     },
     nativeImage: {
       createFromDataURL: vi.fn(),
-      createFromBuffer: vi.fn().mockReturnValue({ isEmpty: vi.fn().mockReturnValue(false) }),
+      createFromBuffer: vi.fn(),
     },
     screen: {
       getCursorScreenPoint: vi.fn(),
-      getDisplayNearestPoint: vi.fn().mockReturnValue({
-        workArea: { x: 0, y: 0, width: 1920, height: 1080 },
-      }),
+      getDisplayNearestPoint: vi.fn(),
       getDisplayMatching: vi.fn(),
     },
     Menu: Object.assign(vi.fn(), {
@@ -112,7 +110,7 @@ vi.mock(import('electron'), async () => {
     Tray: TrayMock,
     Notification: NotificationMock,
     safeStorage: {
-      isEncryptionAvailable: vi.fn().mockReturnValue(false),
+      isEncryptionAvailable: vi.fn(),
       encryptString: vi.fn(),
       decryptString: vi.fn(),
     },
@@ -120,7 +118,7 @@ vi.mock(import('electron'), async () => {
       on: vi.fn(),
     },
     webContents: {
-      getAllWebContents: vi.fn().mockReturnValue([]),
+      getAllWebContents: vi.fn(),
       fromId: vi.fn(),
     },
   } as unknown as typeof Electron;
