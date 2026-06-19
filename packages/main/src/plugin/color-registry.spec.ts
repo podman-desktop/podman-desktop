@@ -118,6 +118,10 @@ class TestColorRegistry extends ColorRegistry {
   override initActionButton(): void {
     super.initActionButton();
   }
+
+  override initInvertContent(): void {
+    super.initInvertContent();
+  }
 }
 
 const _onDidChangeConfiguration = new Emitter<IConfigurationChangeEvent>();
@@ -1822,5 +1826,44 @@ describe('initActionButton', () => {
       hcDark: tailwindColorPalette.accent1[500],
       hcLight: tailwindColorPalette.accent1[700],
     });
+  });
+});
+
+describe('initInvertContent', () => {
+  let spyOnRegisterColor: MockInstance<(colorId: string, definition: ColorDefinition) => void>;
+  let spyOnRegisterColorDefinition: MockInstance<(definition: ColorDefinitionWithId) => void>;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    spyOnRegisterColor = vi.spyOn(colorRegistry, 'registerColor');
+    spyOnRegisterColor.mockReturnValue(undefined);
+    spyOnRegisterColorDefinition = vi.spyOn(colorRegistry, 'registerColorDefinition');
+    spyOnRegisterColorDefinition.mockReturnValue(undefined);
+    colorRegistry.initInvertContent();
+  });
+
+  test('registers invert-content-table-row-stripe with alpha transparency', () => {
+    const stripeCall = spyOnRegisterColorDefinition.mock.calls.find(
+      call => call?.[0]?.id === 'invert-content-table-row-stripe',
+    );
+    expect(stripeCall).toBeDefined();
+
+    const definition = stripeCall?.[0];
+    expect(definition?.id).toBe('invert-content-table-row-stripe');
+    expect(definition?.dark).toBeDefined();
+    expect(definition?.light).toBeDefined();
+    expect(definition?.hcDark).toBeDefined();
+    expect(definition?.hcLight).toBeDefined();
+
+    // verify 4% opacity applied across all themes
+    expect(definition?.dark).toContain('0.04');
+    expect(definition?.light).toContain('0.04');
+    expect(definition?.hcDark).toContain('0.04');
+    expect(definition?.hcLight).toContain('0.04');
+  });
+
+  test('registers solid invert-content colors via registerColor', () => {
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('invert-content-bg', expect.any(Object));
+    expect(spyOnRegisterColor).toHaveBeenCalledWith('invert-content-divider', expect.any(Object));
   });
 });
