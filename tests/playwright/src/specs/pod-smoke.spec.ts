@@ -28,8 +28,8 @@ import { waitForPodmanMachineStartup, waitUntil, waitWhile } from '/@/utility/wa
 let backendPort: string;
 let frontendPort: string;
 
-const backendImage = 'quay.io/podman-desktop-demo/podify-demo-backend';
-const frontendImage = 'quay.io/podman-desktop-demo/podify-demo-frontend';
+const backendImage = 'ghcr.io/podmandesktop-ci/podify-demo-backend';
+const frontendImage = 'ghcr.io/podmandesktop-ci/podify-demo-frontend';
 const imagesTag = 'v1';
 const backendContainer = 'backend';
 const frontendContainer = 'frontend';
