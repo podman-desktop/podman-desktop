@@ -27,15 +27,6 @@ import { MacosStartup } from './macos-startup.js';
 
 type AppGetPathParam = Parameters<typeof app.getPath>[0];
 
-vi.mock(import('electron'), async () => {
-  return {
-    app: {
-      getPath: vi.fn(),
-      setLoginItemSettings: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
-
 vi.mock(import('node:fs'), async () => {
   return {
     existsSync: vi.fn(),

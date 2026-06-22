@@ -31,7 +31,7 @@ export class PodmanOnboardingPage extends OnboardingPage {
   constructor(page: Page) {
     super(page);
     this.podmanAutostartToggle = this.mainPage.getByRole('checkbox', {
-      name: 'Autostart Podman engine when launching Podman Desktop',
+      name: /Autostart Podman engine when launching .*Podman Desktop/,
     });
     this.createMachinePageTitle = this.onboardingComponent.getByLabel('title');
     this.machineCreationForm = new MachineCreationForm(this.page);

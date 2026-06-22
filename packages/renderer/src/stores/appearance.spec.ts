@@ -20,7 +20,7 @@ import { AppearanceSettings } from '@podman-desktop/core-api/appearance';
 import { get } from 'svelte/store';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import { isDark } from './appearance';
+import { isDark, isHighContrast } from './appearance';
 import { configurationProperties } from './configurationProperties';
 
 // mock window.getConfigurationValue
@@ -89,4 +89,32 @@ test('Expect dark mode using hc-dark configuration', async () => {
   configurationProperties.set([]);
 
   await vi.waitFor(() => expect(get(isDark)).toBe(true));
+});
+
+test('Expect not high contrast using light configuration', async () => {
+  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightEnumValue);
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
+});
+
+test('Expect not high contrast using dark configuration', async () => {
+  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkEnumValue);
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(false));
+});
+
+test('Expect high contrast using hc-light configuration', async () => {
+  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.LightHCEnumValue);
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
+});
+
+test('Expect high contrast using hc-dark configuration', async () => {
+  getConfigurationValueMock.mockResolvedValue(AppearanceSettings.DarkHCEnumValue);
+  configurationProperties.set([]);
+
+  await vi.waitFor(() => expect(get(isHighContrast)).toBe(true));
 });

@@ -104,9 +104,7 @@ test('Expect redirect to previous page if image is deleted', async () => {
   deleteImageMock.mockImplementation(() => {
     imagesInfos.update(images => images.filter(image => image.Id !== myImage.Id));
   });
-  hasAuthMock.mockImplementation(() => {
-    return new Promise(() => false);
-  });
+  hasAuthMock.mockReturnValue(new Promise(() => false));
 
   // defines a fake lastPage so we can check where we will be redirected
   lastPage.set({ name: 'Fake Previous', path: '/last' });
@@ -145,9 +143,7 @@ test('expect delete image called with image id when image name is <none>', async
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  hasAuthMock.mockImplementation(() => {
-    return new Promise(() => false);
-  });
+  hasAuthMock.mockReturnValue(new Promise(() => false));
 
   // render the component
   render(ImageDetails, {
@@ -183,9 +179,7 @@ describe('expect display usage of an image', () => {
     } as unknown as ImageInfo;
     imagesInfos.set([myImage]);
 
-    hasAuthMock.mockImplementation(() => {
-      return new Promise(() => false);
-    });
+    hasAuthMock.mockReturnValue(new Promise(() => false));
 
     // render the component
     render(ImageDetails, {
@@ -215,9 +209,7 @@ describe('expect display usage of an image', () => {
     } as unknown as ImageInfo;
     imagesInfos.set([myImage]);
 
-    hasAuthMock.mockImplementation(() => {
-      return new Promise(() => false);
-    });
+    hasAuthMock.mockReturnValue(new Promise(() => false));
 
     // render the component
     render(ImageDetails, {
@@ -242,9 +234,7 @@ test('expect Check tab is not displayed by default', () => {
   } as unknown as ImageInfo;
   imagesInfos.set([myImage]);
 
-  hasAuthMock.mockImplementation(() => {
-    return new Promise(() => false);
-  });
+  hasAuthMock.mockReturnValue(new Promise(() => false));
 
   render(ImageDetails, {
     imageID,
@@ -267,9 +257,7 @@ test('expect Check tab is displayed when an image checker provider exists', () =
   } as unknown as ImageInfo;
   imagesInfos.set([myImage]);
 
-  hasAuthMock.mockImplementation(() => {
-    return new Promise(() => false);
-  });
+  hasAuthMock.mockReturnValue(new Promise(() => false));
 
   imageCheckerProviders.set([
     {
@@ -306,9 +294,7 @@ test.each([
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  hasAuthMock.mockImplementation(() => {
-    return new Promise(() => false);
-  });
+  hasAuthMock.mockReturnValue(new Promise(() => false));
 
   const contribs = [
     {
@@ -363,9 +349,7 @@ test.each([
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  hasAuthMock.mockImplementation(() => {
-    return new Promise(() => false);
-  });
+  hasAuthMock.mockReturnValue(new Promise(() => false));
 
   const contribs = [
     {

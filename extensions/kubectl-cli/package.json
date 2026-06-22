@@ -3,7 +3,7 @@
   "name": "kubectl-cli",
   "displayName": "kubectl CLI",
   "description": "Install and update kubectl CLI Tools without leaving Podman Desktop",
-  "version": "1.28.0-next",
+  "version": "1.29.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -155,7 +155,7 @@
   "dependencies": {
     "@octokit/rest": "^22.0.1",
     "@podman-desktop/api": "workspace:*",
-    "semver": "^7.8.1",
+    "semver": "^7.8.5",
     "shell-path": "^3.1.0"
   },
   "devDependencies": {
@@ -164,7 +164,7 @@
     "byline": "^5.0.0",
     "copyfiles": "^2.4.1",
     "mkdirp": "^3.0.1",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.7"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }

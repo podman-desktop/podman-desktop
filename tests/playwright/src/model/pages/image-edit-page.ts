@@ -67,6 +67,7 @@ export class ImageEditPage extends BasePage {
 
       await playExpect(this.saveButton).toBeEnabled();
       await this.saveButton.click();
+      await playExpect(this.editDialog).not.toBeVisible({ timeout: 10_000 });
       return new ImagesPage(this.page);
     });
   }

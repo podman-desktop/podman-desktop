@@ -177,9 +177,7 @@ export class ElectronRunner extends Runner {
       );
     } catch (err: unknown) {
       console.log(`Caught exception in closing: ${err}`);
-      if (pid) {
-        this.forceKillProcess(pid);
-      }
+      this.ensureElectronProcessesStopped(pid);
     }
 
     this._running = false;
@@ -199,12 +197,23 @@ export class ElectronRunner extends Runner {
   }
 
   /**
-   * Force-kill a process by PID. On Windows, uses `taskkill /F /T` to ensure
-   * the entire process tree is terminated and OS-level resources (such as
-   * Electron's single-instance lock) are released.
+   * Ensure no Electron processes survive after close. Tries a targeted kill by
+   * PID first; if no PID is available (e.g. the process already crashed with
+   * STATUS_STACK_BUFFER_OVERRUN and the handle is gone), falls back to killing
+   * all Electron processes by image name. This prevents a stale
+   * single-instance lock from blocking subsequent test launches.
    */
-  protected forceKillProcess(pid: number): void {
-    console.log(`Force-killing the electron app process with PID: ${pid}`);
+  protected ensureElectronProcessesStopped(pid: number | undefined): void {
+    if (pid) {
+      this.forceKillByPid(pid);
+    } else {
+      console.log('No PID available (process may have crashed) — falling back to image-name kill');
+      this.forceKillByName();
+    }
+  }
+
+  protected forceKillByPid(pid: number): void {
+    console.log(`Force-killing Electron process tree by PID: ${pid}`);
     try {
       if (process.platform === 'win32') {
         // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
@@ -213,7 +222,30 @@ export class ElectronRunner extends Runner {
         process.kill(pid, 'SIGKILL');
       }
     } catch (error: unknown) {
-      console.log(`Exception thrown when force-killing process ${pid}: ${error}`);
+      console.log(`Exception killing PID ${pid}: ${error}`);
+    }
+  }
+
+  protected forceKillByName(): void {
+    console.log('Force-killing Electron processes by image name');
+    try {
+      if (process.platform === 'win32') {
+        // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+        execFileSync('taskkill', ['/F', '/IM', 'electron.exe', '/T'], {
+          timeout: 15_000,
+          stdio: 'pipe',
+        });
+      } else {
+        // eslint-disable-next-line sonarjs/no-os-command-from-path, n/no-sync
+        execFileSync('pkill', ['-9', '-f', 'electron'], {
+          timeout: 15_000,
+          stdio: 'pipe',
+        });
+      }
+      console.log('Orphaned Electron processes killed');
+    } catch (error: unknown) {
+      // Non-zero exit is expected when no matching processes exist
+      console.log(`No orphaned Electron processes found or cleanup skipped: ${error}`);
     }
   }
 

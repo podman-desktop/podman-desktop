@@ -94,9 +94,7 @@ describe('grabLatestsReleasesMetadata', () => {
     const resultREST = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleasesMock.mockReturnValue({ data: resultREST });
     const releases = await installer.grabLatestsReleasesMetadata();
     expect(releases).toBeDefined();
     expect(releases.length).toBe(5);
@@ -112,9 +110,7 @@ describe('promptUserForVersion', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleasesMock.mockReturnValue({ data: resultREST });
     const showQuickPickMock = vi.spyOn(extensionApi.window, 'showQuickPick').mockResolvedValue(resultREST[0]);
     const release = await installer.promptUserForVersion();
 
@@ -132,9 +128,7 @@ describe('promptUserForVersion', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleasesMock.mockReturnValue({ data: resultREST });
     vi.spyOn(extensionApi.window, 'showQuickPick').mockResolvedValue(undefined);
     await expect(() => installer.promptUserForVersion()).rejects.toThrowError('No version selected');
   });
@@ -150,9 +144,7 @@ describe('getReleaseAssetId', () => {
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-assets.json'), 'utf8'),
     );
 
-    listReleaseAssetsMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleaseAssetsMock.mockReturnValue({ data: resultREST });
   });
 
   test('macOS x86_64', async () => {
@@ -222,9 +214,7 @@ describe('install', () => {
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-assets.json'), 'utf8'),
     );
 
-    listReleaseAssetsMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleaseAssetsMock.mockReturnValue({ data: resultREST });
   });
   test('should download file on win system', async () => {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -234,9 +224,7 @@ describe('install', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleasesMock.mockReturnValue({ data: resultREST });
     vi.mocked(os.platform).mockReturnValue('win32');
     vi.mocked(os.arch).mockReturnValue('x64');
 
@@ -257,9 +245,7 @@ describe('install', () => {
     const resultREST: KindGithubReleaseArtifactMetadata[] = JSON.parse(
       fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kind-github-release-all.json'), 'utf8'),
     );
-    listReleasesMock.mockImplementation(() => {
-      return { data: resultREST };
-    });
+    listReleasesMock.mockReturnValue({ data: resultREST });
     vi.mocked(os.platform).mockReturnValue('darwin');
     vi.mocked(os.arch).mockReturnValue('x64');
     vi.mocked(fs.existsSync).mockReturnValue(true);
@@ -273,14 +259,10 @@ describe('install', () => {
 
 describe('downloadReleaseAsset', () => {
   test('should download the file if parent folder does exist', async () => {
-    getReleaseAssetMock.mockImplementation(() => {
-      return { data: 'foo' };
-    });
+    getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
     // mock fs
-    const existSyncSpy = vi.spyOn(fs, 'existsSync').mockImplementation(() => {
-      return true;
-    });
+    const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     const writeFileSpy = vi.spyOn(fs.promises, 'writeFile').mockResolvedValue();
 
@@ -295,9 +277,7 @@ describe('downloadReleaseAsset', () => {
   });
 
   test('should download the file if parent folder does not exist', async () => {
-    getReleaseAssetMock.mockImplementation(() => {
-      return { data: 'foo' };
-    });
+    getReleaseAssetMock.mockReturnValue({ data: 'foo' });
 
     // mock fs
     const existSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);

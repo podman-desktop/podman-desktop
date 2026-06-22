@@ -32,10 +32,8 @@ beforeEach(() => {
 });
 
 test('renders the route with request parser', async () => {
-  vi.mocked(createRouteObject).mockImplementation(() => {
-    return {
-      update: vi.fn(),
-    };
+  vi.mocked(createRouteObject).mockReturnValue({
+    update: vi.fn(),
   });
   const myParser = (request: {
     query: Record<string, string>;
@@ -68,10 +66,8 @@ test('renders the route with request parser', async () => {
 });
 
 test('renders the route without request parser', async () => {
-  vi.mocked(createRouteObject).mockImplementation(() => {
-    return {
-      update: vi.fn(),
-    };
+  vi.mocked(createRouteObject).mockReturnValue({
+    update: vi.fn(),
   });
   render(RouteSpec, {});
 

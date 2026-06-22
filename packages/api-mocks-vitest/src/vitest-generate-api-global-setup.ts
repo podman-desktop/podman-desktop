@@ -16,11 +16,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import path from 'node:path';
 import fs from 'node:fs/promises';
-import typescript from 'typescript';
-import Mustache from 'mustache';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import Mustache from 'mustache';
+import typescript from 'typescript';
 
 type Namespaces = { [key: string]: string[] };
 type Classes = { [key: string]: string[] };
@@ -87,7 +88,10 @@ async function extractNamespacesAndClassesFromAPI(
   return { namespaces, classes };
 }
 
-function toTemplateData(data: { namespaces: Namespaces; classes: Classes }) {
+function toTemplateData(data: { namespaces: Namespaces; classes: Classes }): {
+  namespaces: { name: string; functions: string[] }[];
+  classes: { name: string; methods: string[] }[];
+} {
   const namespaces = Object.entries(data.namespaces).map(([name, functions]) => ({ name, functions }));
   const classes = Object.entries(data.classes).map(([name, methods]) => ({ name, methods }));
   return { namespaces, classes };
@@ -96,30 +100,40 @@ function toTemplateData(data: { namespaces: Namespaces; classes: Classes }) {
 export default async function setup(): Promise<void> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const repoRoot = path.resolve(__dirname, '..');
+  const packageRoot = path.resolve(__dirname, '..');
+  const repoRoot = path.resolve(packageRoot, '..', '..');
   const extensionApiTypePath = path.join(repoRoot, 'packages', 'extension-api', 'src', 'extension-api.d.ts');
-  const podmanDesktopApiMocksDir = path.join(repoRoot, '__mocks__', '@podman-desktop');
+  const podmanDesktopApiMocksDir = path.join(packageRoot, 'src', '@podman-desktop');
   const apiGeneratedFile = path.join(podmanDesktopApiMocksDir, 'api.ts');
-  const templatePath = path.join(repoRoot, '__mocks__', 'api.mustache');
+  const templatePath = path.join(packageRoot, 'src', 'api.mustache');
+  const productJsonPath = path.join(repoRoot, 'product.json');
+  const packageProductJsonPath = path.join(packageRoot, 'src', 'product.json');
 
   // skip if api.ts is already newer (from template or extension-api.d.ts file)
   const extensionApiPathStats = await fs.stat(extensionApiTypePath);
   const templatePathStats = await fs.stat(templatePath);
+  const productJsonPathStats = await fs.stat(productJsonPath);
   try {
     const outputStats = await fs.stat(apiGeneratedFile);
-    const newestInputMtime = Math.max(extensionApiPathStats.mtimeMs, templatePathStats.mtimeMs);
+    await fs.stat(packageProductJsonPath);
+    const newestInputMtime = Math.max(
+      extensionApiPathStats.mtimeMs,
+      templatePathStats.mtimeMs,
+      productJsonPathStats.mtimeMs,
+    );
     if (outputStats.mtimeMs >= newestInputMtime) {
-      console.debug(' 🚀 __mocks__/@podman-desktop/api.ts up-to-date; skipping regeneration');
+      console.debug(' 🚀 packages/api-mocks-vitest/src/@podman-desktop/api.ts up-to-date; skipping regeneration');
       return;
     }
   } catch {
-    console.debug(' ⚙️ __mocks__/@podman-desktop/api.ts does not exist yet; generating it now…');
+    console.debug(' ⚙️ packages/api-mocks-vitest/src/@podman-desktop/api.ts does not exist yet; generating it now…');
   }
   const data = await extractNamespacesAndClassesFromAPI(extensionApiTypePath);
   const template = await fs.readFile(templatePath, 'utf-8');
   const content = Mustache.render(template, toTemplateData(data));
 
   await fs.mkdir(podmanDesktopApiMocksDir, { recursive: true });
+  await fs.copyFile(productJsonPath, packageProductJsonPath);
   await fs.writeFile(apiGeneratedFile, content, 'utf-8');
-  console.debug(' ✅ __mocks__/@podman-desktop/api.ts has been generated.');
+  console.debug(' ✅ packages/api-mocks-vitest/src/@podman-desktop/api.ts has been generated.');
 }

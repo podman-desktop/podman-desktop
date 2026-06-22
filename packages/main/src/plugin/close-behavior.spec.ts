@@ -54,13 +54,13 @@ test('should register a configuration', async () => {
 });
 
 test('should set default value of configuraton registry on Linux and FreeBSD to true', async () => {
-  vi.spyOn(util, 'isUnixLike').mockImplementation(() => true);
+  vi.spyOn(util, 'isUnixLike').mockReturnValue(true);
   await closeBehavior.init();
   expect(configurationRegistry.getConfigurationProperties()['preferences.ExitOnClose']?.default).toBeTruthy();
 });
 
 test('should set default value of configuraton registry if not Linux or FreeBSD', async () => {
-  vi.spyOn(util, 'isUnixLike').mockImplementation(() => false);
+  vi.spyOn(util, 'isUnixLike').mockReturnValue(false);
   await closeBehavior.init();
   expect(configurationRegistry.getConfigurationProperties()['preferences.ExitOnClose']?.default).toBeFalsy();
 });

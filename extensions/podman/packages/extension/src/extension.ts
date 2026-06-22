@@ -759,15 +759,33 @@ export async function registerProviderFor(
 
   const lifecycle: extensionApi.ProviderConnectionLifecycle = {
     start: async (context, logger): Promise<void> => {
-      await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
+      try {
+        await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, false);
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
     stop: async (context, logger): Promise<void> => {
-      await stopMachine(provider, machineInfo, context, logger);
+      try {
+        await stopMachine(provider, machineInfo, context, logger);
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
     delete: async (logger): Promise<void> => {
-      await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
-        logger,
-      });
+      try {
+        await execPodman(['machine', 'rm', '-f', machineInfo.name], machineInfo.vmType, {
+          logger,
+        });
+        containerProviderConnection.error = undefined;
+      } catch (err) {
+        containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+        throw err;
+      }
     },
   };
   // support edit only on MacOS and Windows with limited editing capabilities for HyperV and WSL machines
@@ -807,6 +825,10 @@ export async function registerProviderFor(
           if (isRootful !== undefined) {
             telemetryLogger.logUsage('podman.machine.edit.rootful', { isRootful });
           }
+          containerProviderConnection.error = undefined;
+        } catch (err) {
+          containerProviderConnection.error = err instanceof Error ? err.message : String(err);
+          throw err;
         } finally {
           if (state === 'started') {
             await lifecycle.start?.(context, logger);

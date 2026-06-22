@@ -80,7 +80,16 @@ function registerProvider(
         return extensionApi.window.withProgress(
           { location: ProgressLocation.TASK_WIDGET, title: `Loading ${image.name} to lima.` },
           async progress => {
-            await imageHandler.moveImage(image, instanceName, getLimactl());
+            try {
+              await imageHandler.moveImage(image, instanceName, getLimactl());
+              if (connection.error !== undefined) {
+                connection.error = undefined;
+              }
+            } catch (err) {
+              connection.error = err instanceof Error ? err.message : String(err);
+              console.error(err);
+              throw err;
+            }
             // Mark the task as completed
             progress.report({ increment: -1 });
           },

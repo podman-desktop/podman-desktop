@@ -497,7 +497,7 @@ let globalOnboarding = $derived(global);
   <!-- Create overlay-->
   <div class="fixed top-0 left-0 right-0 bottom-0 bg-(--pd-modal-fade) bg-opacity-60 bg-blend-multiply h-full grid z-50">
     <div
-      class="flex flex-col place-self-center w-[550px] rounded-xl bg-[var(--pd-modal-bg)] shadow-xl shadow-black"
+      class="flex flex-col place-self-center w-[550px] rounded-xl bg-[var(--pd-modal-bg)] shadow-xl shadow-(--pd-modal-shadow)"
       role="dialog"
       aria-label="Skip Setup Popup">
       <div class="flex items-center justify-between pl-4 pr-3 py-3 space-x-2 text-[var(--pd-modal-header-text)]">

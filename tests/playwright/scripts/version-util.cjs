@@ -42,7 +42,7 @@ function decreaseMinorVersion(packageJsonPath, shouldUpdate) {
   const originalVersion = packageJson.version;
   const versionParts = parseVersion(originalVersion);
   const [major, minor] = versionParts;
-  const newMinor = minor - 1;
+  const newMinor = minor - 2;
   let newVersion = `${major}.${newMinor}.0`;
   if (newMinor < 0) {
     console.log(`Minor cannot be less than 0, defaults to 1.20.0`);

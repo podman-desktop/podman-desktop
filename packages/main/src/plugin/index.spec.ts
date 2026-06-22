@@ -55,29 +55,6 @@ import { Disposable } from './types/disposable.js';
 import { HttpServer } from './webview/webview-registry.js';
 
 vi.mock(import('./extension/extension-api-version.js'));
-vi.mock(import('electron'), () => {
-  return {
-    shell: {
-      openExternal: vi.fn(),
-    },
-    app: {
-      on: vi.fn(),
-      getVersion: vi.fn(),
-      getAppPath: vi.fn().mockReturnValue('a-custom-appPath'),
-    },
-    clipboard: {
-      writeText: vi.fn(),
-    },
-    ipcMain: {
-      handle: vi.fn(),
-      emit: vi.fn().mockReturnValue(true),
-      on: vi.fn(),
-    },
-    BrowserWindow: {
-      getAllWindows: vi.fn(),
-    },
-  } as unknown as typeof Electron;
-});
 
 let pluginSystem: TestPluginSystem;
 
@@ -124,14 +101,12 @@ beforeAll(async () => {
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: any) => {
     handlers.set(channel, listener);
   });
-  vi.mocked(BrowserWindow.getAllWindows).mockImplementation(() => {
-    return [
-      {
-        isDestroyed: () => false,
-        webContents,
-      } as unknown as BrowserWindow,
-    ];
-  });
+  vi.mocked(BrowserWindow.getAllWindows).mockReturnValue([
+    {
+      isDestroyed: () => false,
+      webContents,
+    } as unknown as BrowserWindow,
+  ]);
   vi.mocked(app.getVersion).mockReturnValue('100.0.0');
   vi.spyOn(Updater.prototype, 'init').mockReturnValue(new Disposable(vi.fn()));
   vi.spyOn(ExtensionLoader.prototype, 'readDevelopmentFolders').mockResolvedValue([]);

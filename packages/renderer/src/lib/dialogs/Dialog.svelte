@@ -26,7 +26,7 @@ let { title, onclose, icon, content, validation, buttons }: Props = $props();
     {@render content?.()}
   </div>
 
-  <div class="px-5 py-5 mt-2 flex flex-row w-full space-x-5">
+  <div class="px-5 py-5 mt-2 flex flex-row w-full justify-start space-x-5">
     {#if validation}
       <div class="grow">
         {@render validation?.()}

@@ -3,7 +3,7 @@
   "name": "compose",
   "displayName": "Compose",
   "description": "Install Compose binary to work with Podman",
-  "version": "1.28.0-next",
+  "version": "1.29.0-next",
   "icon": "icon.png",
   "publisher": "podman-desktop",
   "license": "Apache-2.0",
@@ -184,7 +184,7 @@
         "podman.compose.cli.support.missing": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Without compose support in podman you won't be able to use compose projects using the podman CLI. :button[Setup...]{command=compose.openComposeOnboarding}",
+          "markdownDescription": "Without compose support in podman you won't be able to use compose projects using the podman CLI. :button[Set up...]{command=compose.openComposeOnboarding}",
           "when": "(isMac || isWindows) && !compose.isComposeInstalledSystemWide && !compose.isPodmanComposeInstalledSystemWide",
           "group": "podman-desktop.podman",
           "scope": "DockerCompatibility"
@@ -216,7 +216,7 @@
     "@types/mustache": "^4.2.6",
     "adm-zip": "^0.5.17",
     "mkdirp": "^3.0.1",
-    "vite": "^7.3.2",
-    "vitest": "^4.1.7"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   }
 }
