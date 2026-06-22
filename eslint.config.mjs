@@ -29,7 +29,6 @@ import { FlatCompat } from '@eslint/eslintrc';
 import unicorn from 'eslint-plugin-unicorn';
 import noNull from 'eslint-plugin-no-null';
 import sonarjs from 'eslint-plugin-sonarjs';
-import etc from 'eslint-plugin-etc';
 import svelte from 'eslint-plugin-svelte';
 import redundantUndefined from 'eslint-plugin-redundant-undefined';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -91,9 +90,7 @@ export default [
   ...typescriptLint.configs.recommended,
   sonarjs.configs.recommended,
   ...svelte.configs['flat/recommended'],
-  ...fixupConfigRules(
-    compat.extends('plugin:import/recommended', 'plugin:import/typescript', 'plugin:etc/recommended'),
-  ),
+  ...fixupConfigRules(compat.extends('plugin:import/recommended', 'plugin:import/typescript')),
   {
     plugins: {
       // compliant v10 plug-ins
@@ -101,7 +98,6 @@ export default [
       n: nodePlugin,
       // non-compliant v10 plug-ins
       'file-progress': fixupPluginRules(fileProgress),
-      etc: fixupPluginRules(etc),
       import: fixupPluginRules(importPlugin),
       'no-null': fixupPluginRules(noNull),
       'redundant-undefined': fixupPluginRules(redundantUndefined),
@@ -249,14 +245,7 @@ export default [
       'sonarjs/sonar-no-fallthrough': 'off',
       'sonarjs/prefer-enum-initializers': 'off',
 
-      // etc custom rules
-      'etc/no-deprecated': 'off',
-      // disable this rule as it's not compliant with eslint v9
-      'etc/no-commented-out-code': 'off',
       'sonarjs/no-unused-expressions': 'off',
-
-      // disable as it's consuming too much time
-      'etc/no-internal': 'off',
 
       // redundant-undefined custom rules
       'redundant-undefined/redundant-undefined': 'error',
