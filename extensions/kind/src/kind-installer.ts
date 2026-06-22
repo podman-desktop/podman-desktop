@@ -19,7 +19,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { Octokit } from '@octokit/rest';
+import type { Octokit } from '@octokit/rest';
 import * as extensionApi from '@podman-desktop/api';
 
 export interface AssetInfo {
@@ -56,24 +56,24 @@ export class KindInstaller {
   private readonly KIND_GITHUB_OWNER = 'kubernetes-sigs';
   private readonly KIND_GITHUB_REPOSITORY = 'kind';
   private assetNames = new Map<string, string>();
+  private octokitFactory: () => Promise<Octokit>;
   private octokit?: Octokit;
 
   constructor(
     private readonly storagePath: string,
     private telemetryLogger: extensionApi.TelemetryLogger,
+    octokitFactory: () => Promise<Octokit>,
   ) {
     this.assetNames.set(WINDOWS_X64_PLATFORM, WINDOWS_X64_ASSET_NAME);
     this.assetNames.set(LINUX_X64_PLATFORM, LINUX_X64_ASSET_NAME);
     this.assetNames.set(LINUX_ARM64_PLATFORM, LINUX_ARM64_ASSET_NAME);
     this.assetNames.set(MACOS_X64_PLATFORM, MACOS_X64_ASSET_NAME);
     this.assetNames.set(MACOS_ARM64_PLATFORM, MACOS_ARM64_ASSET_NAME);
+    this.octokitFactory = octokitFactory;
   }
 
   private async ensureOctokit(): Promise<Octokit> {
-    if (!this.octokit) {
-      const OcktokitAuth = await extensionApi.authentication.getSession('github-authentication', []);
-      this.octokit = new Octokit({ auth: OcktokitAuth?.accessToken });
-    }
+    this.octokit ??= await this.octokitFactory();
     return this.octokit;
   }
 

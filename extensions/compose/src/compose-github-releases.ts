@@ -19,9 +19,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { Octokit } from '@octokit/rest';
+import type { Octokit } from '@octokit/rest';
 import type { QuickPickItem } from '@podman-desktop/api';
-import * as extensionApi from '@podman-desktop/api';
 
 export interface ComposeGithubReleaseArtifactMetadata extends QuickPickItem {
   tag: string;
@@ -32,13 +31,15 @@ export interface ComposeGithubReleaseArtifactMetadata extends QuickPickItem {
 export class ComposeGitHubReleases {
   private static readonly COMPOSE_GITHUB_OWNER = 'docker';
   private static readonly COMPOSE_GITHUB_REPOSITORY = 'compose';
+  private octokitFactory: () => Promise<Octokit>;
   private octokit?: Octokit;
 
+  constructor(octokitFactory: () => Promise<Octokit>) {
+    this.octokitFactory = octokitFactory;
+  }
+
   private async ensureOctokit(): Promise<Octokit> {
-    if (!this.octokit) {
-      const OcktokitAuth = await extensionApi.authentication.getSession('github-authentication', []);
-      this.octokit = new Octokit({ auth: OcktokitAuth?.accessToken });
-    }
+    this.octokit ??= await this.octokitFactory();
     return this.octokit;
   }
 

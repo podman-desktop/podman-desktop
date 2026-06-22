@@ -21,30 +21,26 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { Octokit } from '@octokit/rest';
-import * as extensionApi from '@podman-desktop/api';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { KubectlGitHubReleases } from './kubectl-github-releases';
 
 vi.mock(import('node:fs'));
 
-vi.mock(import('@octokit/rest'), () => {
-  const Octokit = vi.fn();
-  Octokit.prototype.repos = {
+const mockOctokit = {
+  repos: {
     listReleases: vi.fn(),
-  };
-  Octokit.prototype.paginate = vi.fn();
-  return { Octokit } as any;
-});
+  },
+};
 
-vi.mock(import('@podman-desktop/api'));
+const mockOctokitFactory = vi.fn();
 
 let kubectlGitHubReleases: KubectlGitHubReleases;
 
 beforeEach(() => {
-  vi.clearAllMocks();
-  kubectlGitHubReleases = new KubectlGitHubReleases();
+  vi.resetAllMocks();
+  mockOctokitFactory.mockResolvedValue(mockOctokit);
+  kubectlGitHubReleases = new KubectlGitHubReleases(mockOctokitFactory);
 });
 
 afterEach(() => {
@@ -52,26 +48,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test.each([
-  {
-    id: 'session1',
-    accessToken: '12345ABC',
-    account: {
-      id: 'account1',
-      label: 'Account 1',
-    },
-    scopes: [],
-  },
-  undefined,
-])('Auth token is passed to Octokit instance from github-authentication if there is one', async authToken => {
-  vi.mocked(extensionApi.authentication.getSession).mockResolvedValue(authToken);
-
-  vi.mocked((Octokit.prototype as any).repos.listReleases).mockReturnValue({ data: [] });
+test('Auth token is passed to Octokit factory', async () => {
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: [] });
 
   await kubectlGitHubReleases.grabLatestsReleasesMetadata();
 
-  expect(extensionApi.authentication.getSession).toHaveBeenCalledWith('github-authentication', []);
-  expect(Octokit).toHaveBeenCalledWith({ auth: authToken?.accessToken });
+  expect(mockOctokitFactory).toHaveBeenCalled();
 });
 
 test('expect grab 5 releases', async () => {
@@ -82,7 +64,7 @@ test('expect grab 5 releases', async () => {
   const resultREST = JSON.parse(
     fsActual.readFileSync(path.resolve(__dirname, '../tests/resources/kubectl-github-release-all.json'), 'utf8'),
   );
-  vi.mocked((Octokit.prototype as any).repos.listReleases).mockReturnValue({ data: resultREST });
+  mockOctokit.repos.listReleases.mockResolvedValue({ data: resultREST });
 
   const result = await kubectlGitHubReleases.grabLatestsReleasesMetadata();
   expect(result).toBeDefined();

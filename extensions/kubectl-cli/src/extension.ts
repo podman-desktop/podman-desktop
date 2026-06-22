@@ -19,6 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { Octokit } from '@octokit/rest';
 import type { CliTool, Logger, ProviderUpdate } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
@@ -84,7 +85,13 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   // Create new classes to handle the onboarding sequence
   const detect = new Detect(os, extensionContext.storagePath);
 
-  const kubectlGitHubReleases = new KubectlGitHubReleases();
+  // Create the Octokit factory for GitHub authentication
+  const octokitFactory = async (): Promise<Octokit> => {
+    const auth = await extensionApi.authentication.getSession('github-authentication', []);
+    return new Octokit({ auth: auth?.accessToken });
+  };
+
+  const kubectlGitHubReleases = new KubectlGitHubReleases(octokitFactory);
   const kubectlDownload = new KubectlDownload(extensionContext, kubectlGitHubReleases, os);
 
   // ONBOARDING: Command to check kubectl is downloaded

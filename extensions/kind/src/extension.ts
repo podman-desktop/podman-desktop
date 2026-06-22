@@ -19,6 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { Octokit } from '@octokit/rest';
 import type { AuditRequestItems, CancellationToken, CliTool, Logger } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 import { window } from '@podman-desktop/api';
@@ -457,7 +458,13 @@ async function registerCliTool(
   extensionContext: extensionApi.ExtensionContext,
   telemetryLogger: extensionApi.TelemetryLogger,
 ): Promise<void> {
-  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger);
+  // Create the Octokit factory for GitHub authentication
+  const octokitFactory = async (): Promise<Octokit> => {
+    const auth = await extensionApi.authentication.getSession('github-authentication', []);
+    return new Octokit({ auth: auth?.accessToken });
+  };
+
+  installer = new KindInstaller(extensionContext.storagePath, telemetryLogger, octokitFactory);
 
   let binary: { path: string; version: string } | undefined = undefined;
   let installationSource: extensionApi.CliToolInstallationSource | undefined;
