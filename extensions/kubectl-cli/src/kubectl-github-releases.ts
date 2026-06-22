@@ -35,24 +35,21 @@ export class KubectlGitHubReleases {
   private static readonly DOWNLOAD_URL_PREFIX = 'https://dl.k8s.io/release';
   private octokit?: Octokit;
 
-  private async ensureOctokit(): Promise<void> {
+  private async ensureOctokit(): Promise<Octokit> {
     if (!this.octokit) {
       const OcktokitAuth = await extensionApi.authentication.getSession('github-authentication', []);
       this.octokit = new Octokit({ auth: OcktokitAuth?.accessToken });
     }
+    return this.octokit;
   }
 
   // Provides last 5 majors releases from GitHub using the GitHub API
   // return name, tag and id of the release
   async grabLatestsReleasesMetadata(): Promise<KubectlGithubReleaseArtifactMetadata[]> {
     // Grab last 5 majors releases from GitHub using the GitHub API
-    await this.ensureOctokit();
+    const octokit = await this.ensureOctokit();
 
-    if (!this.octokit) {
-      throw new Error('Octokit instance not initialized');
-    }
-
-    const lastReleases = await this.octokit.repos.listReleases({
+    const lastReleases = await octokit.repos.listReleases({
       owner: KubectlGitHubReleases.KUBECTL_GITHUB_OWNER,
       repo: KubectlGitHubReleases.KUBECTL_GITHUB_REPOSITORY,
       per_page: 10, // limit to last 5 releases
