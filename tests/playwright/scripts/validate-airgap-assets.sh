@@ -24,6 +24,171 @@ ASSETS_DIR="${REPO_ROOT}/extensions/podman/packages/extension/assets"
 PODMAN_JSON="${REPO_ROOT}/extensions/podman/packages/extension/src/podman5.json"
 
 ERRORS=0
+CHECKSUM_DETAILS=()
+
+compute_sha256() {
+  local file="$1"
+  if command -v sha256sum &>/dev/null; then
+    sha256sum "$file" | awk '{print $1}'
+  else
+    shasum -a 256 "$file" | awk '{print $1}'
+  fi
+}
+
+verify_checksum() {
+  local file="$1"
+  local expected="$2"
+  local label="$3"
+
+  local actual
+  actual=$(compute_sha256 "$file")
+
+  if [ "${actual}" = "${expected}" ]; then
+    echo "OK:   ${label}  (sha256 verified)"
+  else
+    echo "FAIL: ${label}  checksum mismatch"
+    CHECKSUM_DETAILS+=("  ${label}: expected ${expected}, got ${actual}")
+    ERRORS=$((ERRORS + 1))
+  fi
+}
+
+installer_shasums_name() {
+  local filename="$1"
+  local name="${filename}"
+  name=$(echo "${name}" | sed -E 's/-v[0-9]+\.[0-9]+\.[0-9]+(\.pkg|\.msi)/\1/')
+  name="${name//aarch64/arm64}"
+  echo "${name}"
+}
+
+verify_installer_checksums() {
+  local version="$1"
+  local shasums_url="https://github.com/podman-container-tools/podman/releases/download/v${version}/shasums"
+
+  echo "Fetching shasums from GitHub release v${version}..."
+  local shasums_content
+  shasums_content=$(curl -sL "${shasums_url}")
+
+  if [ -z "${shasums_content}" ]; then
+    echo "FAIL: could not fetch shasums from GitHub"
+    ERRORS=$((ERRORS + 1))
+    return
+  fi
+
+  local files=()
+  case "${OS}" in
+    Darwin)
+      while IFS= read -r fname; do
+        files+=("${fname}")
+      done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
+      ;;
+    MINGW*|MSYS*|CYGWIN*|Windows_NT)
+      while IFS= read -r fname; do
+        files+=("${fname}")
+      done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
+      ;;
+    *)
+      echo "SKIP: no installer checksums to verify on ${OS}"
+      return
+      ;;
+  esac
+
+  for local_name in "${files[@]}"; do
+    local path="${ASSETS_DIR}/${local_name}"
+    if [ ! -f "${path}" ]; then
+      continue
+    fi
+
+    local shasums_name
+    shasums_name=$(installer_shasums_name "${local_name}")
+
+    local expected
+    expected=$(echo "${shasums_content}" | grep -F "${shasums_name}" | awk '{print $1}')
+
+    if [ -z "${expected}" ]; then
+      echo "WARN: no shasums entry found for ${shasums_name} (local: ${local_name})"
+      continue
+    fi
+
+    verify_checksum "${path}" "${expected}" "${local_name}"
+  done
+}
+
+verify_oci_checksums() {
+  local version="$1"
+  local major_minor
+  major_minor=$(echo "${version}" | cut -d. -f1,2)
+
+  local registry_url="https://quay.io/v2/podman/machine-os"
+  local manifest_url="${registry_url}/manifests/${major_minor}"
+
+  local disktype
+  case "${OS}" in
+    Darwin)
+      disktype="applehv"
+      ;;
+    MINGW*|MSYS*|CYGWIN*|Windows_NT)
+      disktype="wsl"
+      ;;
+    *)
+      echo "SKIP: no OCI image checksums to verify on ${OS}"
+      return
+      ;;
+  esac
+
+  echo "Fetching OCI manifest from ${manifest_url} (disktype: ${disktype})..."
+  local index_manifest
+  index_manifest=$(curl -sL \
+    -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
+    "${manifest_url}")
+
+  if [ -z "${index_manifest}" ] || echo "${index_manifest}" | jq -e '.errors' &>/dev/null; then
+    echo "FAIL: could not fetch OCI manifest index from ${manifest_url}"
+    ERRORS=$((ERRORS + 1))
+    return
+  fi
+
+  local arch_digests
+  arch_digests=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" '
+    .manifests[] | select(.annotations.disktype == $dt) |
+    "\(.platform.architecture) \(.digest)"
+  ')
+
+  if [ -z "${arch_digests}" ]; then
+    echo "WARN: no manifests found for disktype ${disktype}"
+    return
+  fi
+
+  while IFS=' ' read -r arch digest; do
+    [ -z "${arch}" ] && continue
+
+    local local_name
+    case "${arch}" in
+      aarch64) local_name="podman-image-arm64.zst" ;;
+      x86_64)  local_name="podman-image-x64.zst" ;;
+      *)       local_name="podman-image-${arch}.zst" ;;
+    esac
+
+    local path="${ASSETS_DIR}/${local_name}"
+    if [ ! -f "${path}" ]; then
+      continue
+    fi
+
+    local arch_manifest
+    arch_manifest=$(curl -sL \
+      -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
+      "${registry_url}/manifests/${digest}")
+
+    local layer_digest
+    layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' | sed 's/sha256://')
+
+    if [ -z "${layer_digest}" ] || [ "${layer_digest}" = "null" ]; then
+      echo "WARN: could not extract layer digest for ${arch} (${local_name})"
+      continue
+    fi
+
+    verify_checksum "${path}" "${layer_digest}" "${local_name}"
+  done <<< "${arch_digests}"
+}
 
 validate_file() {
   local file="$1"
@@ -97,8 +262,21 @@ case "${OS}" in
 esac
 
 echo ""
+echo "--- Checksum verification ---"
+verify_installer_checksums "${VERSION}"
+echo ""
+verify_oci_checksums "${VERSION}"
+
+echo ""
 if [ "${ERRORS}" -gt 0 ]; then
   echo "FAILED: ${ERRORS} asset(s) missing or invalid"
+  if [ ${#CHECKSUM_DETAILS[@]} -gt 0 ]; then
+    echo ""
+    echo "Checksum mismatches:"
+    for detail in "${CHECKSUM_DETAILS[@]}"; do
+      echo "${detail}"
+    done
+  fi
   exit 1
 fi
 
