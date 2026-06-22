@@ -155,7 +155,7 @@ describe('inUse', () => {
     ImageID: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
   } as unknown as ContainerInfo;
 
-  test('should expect inUsed with an untagged image', async () => {
+  test('should expect inUse with an untagged image', async () => {
     const containerInfo = {
       Id: 'container1',
       Image: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
@@ -163,13 +163,11 @@ describe('inUse', () => {
     } as unknown as ContainerInfo;
 
     const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerInfo]);
-    // image should be used
     expect(isUsed).toBeTruthy();
   });
 
-  test('should not expect inUsed without a containerInfo', async () => {
+  test('should not expect inUse without a containerInfo', async () => {
     const isUsed = imageUtils.getInUse(imageInfoHello);
-    // image should not be used
     expect(isUsed).toBeFalsy();
   });
 
@@ -177,9 +175,8 @@ describe('inUse', () => {
     ['quay.io/podman/hello:latest', true],
     ['quay.io/podman/hello2:latest', false],
     ['quay.io/podman/hello3:latest', false],
-  ])('should expect different inUsed based on repoTag %s', async (repoTag: string, expected: boolean) => {
+  ])('should expect different inUse based on repoTag %s', async (repoTag: string, expected: boolean) => {
     const isUsed = imageUtils.getInUse(imageInfoHello, repoTag, [containerInfo]);
-    // image should be used
     expect(isUsed).toBe(expected);
   });
 
@@ -192,6 +189,32 @@ describe('inUse', () => {
 
     const isUsed = imageUtils.getInUse(untaggedImageInfo, undefined, [containerWithTag]);
     expect(isUsed).toBeTruthy();
+  });
+
+  test('should expect inUse for retagged image when container still references old tag', async () => {
+    const retaggedImage = {
+      Id: 'sha256:1b10fa0fd8d184d9de22a553688af8f9f8adbabb11f5dfc15f1a0fdd21873db2',
+      RepoTags: ['quay.io/podman/hello:custom-tag'],
+    } as unknown as ImageInfo;
+
+    const isUsed = imageUtils.getInUse(retaggedImage, 'quay.io/podman/hello:custom-tag', [containerInfo]);
+    expect(isUsed).toBeTruthy();
+  });
+
+  test('should not expect inUse when no container matches the ImageID', async () => {
+    const differentContainer = {
+      Id: 'container2',
+      Image: 'quay.io/podman/hello:latest',
+      ImageID: 'sha256:different_image_id',
+    } as unknown as ContainerInfo;
+
+    const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', [differentContainer]);
+    expect(isUsed).toBeFalsy();
+  });
+
+  test('should not expect inUse with empty containers list', async () => {
+    const isUsed = imageUtils.getInUse(imageInfoHello, 'quay.io/podman/hello:latest', []);
+    expect(isUsed).toBeFalsy();
   });
 });
 
