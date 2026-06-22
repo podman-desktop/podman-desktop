@@ -26,7 +26,7 @@ import type { PlayKubeInfo } from '@podman-desktop/core-api/libpod';
 import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
-import type { Mock } from 'vitest';
+import type { MockInstance } from 'vitest';
 import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
@@ -71,12 +71,30 @@ async function mockOriginalClass<T extends Record<string, unknown>>(
   return mod;
 }
 
+function getHandler<T>(name: string): T {
+  const handler = handlers.get(name);
+  assert(handler, `handler '${name}' should be registered`);
+  return handler as T;
+}
+
 vi.mock(import('/@/plugin/updater.js'), importOriginal => mockOriginalClass(importOriginal, 'Updater'));
 vi.mock(import('/@/plugin/extension/extension-loader.js'), importOriginal =>
   mockOriginalClass(importOriginal, 'ExtensionLoader'),
 );
+vi.mock(import('/@/plugin/extension/catalog/extensions-catalog.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'ExtensionsCatalog'),
+);
 vi.mock(import('./webview/webview-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'HttpServer'));
 vi.mock(import('./extension/extension-api-version.js'));
+vi.mock(import('./container-registry.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'ContainerProviderRegistry'),
+);
+vi.mock(import('./tasks/task-manager.js'), importOriginal => mockOriginalClass(importOriginal, 'TaskManager'));
+vi.mock(import('./navigation/navigation-manager.js'), importOriginal =>
+  mockOriginalClass(importOriginal, 'NavigationManager'),
+);
+vi.mock(import('./provider-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ProviderRegistry'));
+vi.mock(import('./image-registry.js'), importOriginal => mockOriginalClass(importOriginal, 'ImageRegistry'));
 
 let pluginSystem: TestPluginSystem;
 
@@ -112,16 +130,17 @@ class TestPluginSystem extends PluginSystem {
 let inversifyContainer: InversifyContainer;
 let mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
 let handlers: Map<string, unknown>;
-const emitter = new EventEmitter();
-const webContents = emitter as unknown as WebContents;
-webContents.isDestroyed = vi.fn();
-
-// add send method
-webContents.send = vi.fn();
+let emitter: EventEmitter;
+let webContents: WebContents;
 
 beforeEach(async () => {
   vi.resetAllMocks();
   handlers = new Map<string, unknown>();
+
+  emitter = new EventEmitter();
+  webContents = emitter as unknown as WebContents;
+  webContents.isDestroyed = vi.fn();
+  webContents.send = vi.fn();
 
   mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
   pluginSystem = new TestPluginSystem({} as unknown as TrayMenu, mainWindowDeferred);
@@ -139,6 +158,17 @@ beforeEach(async () => {
   vi.mocked(Updater.prototype.init).mockReturnValue(new Disposable(vi.fn()));
   vi.mocked(ExtensionLoader.prototype.readDevelopmentFolders).mockResolvedValue([]);
   vi.mocked(ExtensionLoader.prototype.listExtensions).mockResolvedValue([]);
+
+  vi.mocked(ProviderRegistry.prototype.getProviderInfos).mockReturnValue([]);
+  vi.mocked(ContainerProviderRegistry.prototype.listContainers).mockResolvedValue([]);
+  vi.mocked(TaskManager.prototype.createTask).mockReturnValue({
+    status: 'in-progress',
+    error: '',
+  } as unknown as Task);
+  vi.mocked(NavigationManager.prototype.navigateToResources).mockResolvedValue(undefined);
+  vi.mocked(NavigationManager.prototype.navigateToProviderTask).mockResolvedValue(undefined);
+  vi.mocked(NavigationManager.prototype.navigateToImageBuild).mockResolvedValue(undefined);
+
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
   vi.mocked(webContents.send).mockClear();
 
@@ -368,14 +398,13 @@ const pushImageHandlerId = 'container-provider-registry:pushImage';
 const pushImageHandlerOnDataEvent = `${pushImageHandlerId}-onData`;
 
 test('push image command sends onData message with callbackId, event name and data, mark task as success on end event', async () => {
-  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-  const handle = handlers.get(pushImageHandlerId) as
-    | ((_event: unknown, _engine: string, _imageId: string, _callbackId: number) => Promise<void>)
-    | undefined;
-  assert(handle, 'handle should be defined');
+  const handle =
+    getHandler<(_event: unknown, _engine: string, _imageId: string, _callbackId: number) => Promise<void>>(
+      pushImageHandlerId,
+    );
   const defaultCallback = vi.fn();
   let registeredCallback: (name: string, data: string) => void = defaultCallback;
-  vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
+  vi.mocked(ContainerProviderRegistry.prototype.pushImage).mockImplementation(
     (_engine, _imageId, callback: (name: string, data: string) => void) => {
       registeredCallback = callback;
       return Promise.resolve();
@@ -384,21 +413,21 @@ test('push image command sends onData message with callbackId, event name and da
   await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
   expect(registeredCallback).not.equal(defaultCallback);
   registeredCallback('data', 'push image output');
-  expect(createTaskSpy).toHaveBeenCalledOnce();
-  expect(createTaskSpy).toHaveBeenCalledWith({ title: `Push image '${'registry.com/repo/image:latest'}'` });
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledWith({
+    title: `Push image '${'registry.com/repo/image:latest'}'`,
+  });
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'data', 'push image output');
   registeredCallback('end', '');
-  expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
+  expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.status).toBe('success');
 });
 
 test('push image sends data event with error, "end" event when fails and set task error value', async () => {
-  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
   const pushError = new Error('push error');
-  const handle = handlers.get('container-provider-registry:pushImage') as
-    | ((_event: unknown, _engine: string, _imageId: string, _callbackId: number) => Promise<void>)
-    | undefined;
-  assert(handle, 'handle should be defined');
-  vi.spyOn(ContainerProviderRegistry.prototype, 'pushImage').mockImplementation(
+  const handle = getHandler<(_event: unknown, _engine: string, _imageId: string, _callbackId: number) => Promise<void>>(
+    'container-provider-registry:pushImage',
+  );
+  vi.mocked(ContainerProviderRegistry.prototype.pushImage).mockImplementation(
     (_engine, _imageId, _callback: (name: string, data: string) => void) => {
       return Promise.reject(pushError);
     },
@@ -407,18 +436,16 @@ test('push image sends data event with error, "end" event when fails and set tas
   await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'error', String(pushError));
   expect(webContents.send).toBeCalledWith(pushImageHandlerOnDataEvent, 1, 'end');
-  expect(createTaskSpy.mock.results[0]?.value.error).toBe(String(pushError));
+  expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.error).toBe(String(pushError));
 });
 
 test('Pull image creates a task', async () => {
-  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-  const handle = handlers.get('container-provider-registry:pullImage') as
-    | ((_event: unknown, _engine: string, _imageName: string, _callbackId: number) => Promise<void>)
-    | undefined;
-  assert(handle, 'handle should be defined');
+  const handle = getHandler<
+    (_event: unknown, _engine: string, _imageName: string, _callbackId: number) => Promise<void>
+  >('container-provider-registry:pullImage');
   const defaultCallback = vi.fn();
   let registeredCallback: (event: PullEvent) => void = defaultCallback;
-  vi.spyOn(ContainerProviderRegistry.prototype, 'pullImage').mockImplementation(
+  vi.mocked(ContainerProviderRegistry.prototype.pullImage).mockImplementation(
     (_engine, _imageName, callback: (event: PullEvent) => void) => {
       registeredCallback = callback;
       return Promise.resolve();
@@ -427,8 +454,8 @@ test('Pull image creates a task', async () => {
   await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1);
   expect(registeredCallback).not.equal(defaultCallback);
   registeredCallback({ id: 'pullEvent1' } as PullEvent);
-  expect(createTaskSpy).toHaveBeenCalledOnce();
-  expect(createTaskSpy).toHaveBeenCalledWith({
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledWith({
     title: 'Pulling registry.com/repo/image:latest',
     cancellable: false,
     cancellationTokenSourceId: undefined,
@@ -436,57 +463,52 @@ test('Pull image creates a task', async () => {
   expect(webContents.send).toBeCalledWith('container-provider-registry:pullImage-onData', 1, {
     id: 'pullEvent1',
   } as PullEvent);
-  expect(createTaskSpy.mock.results[0]?.value.status).toBe('success');
+  expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.status).toBe('success');
 });
 
 test('Pull image creates a cancellable task and marks task as canceled on cancellation', async () => {
-  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
-  const createTokenHandler = handlers.get('cancellableTokenSource:create') as () => Promise<
-    number | { result: number }
-  >;
-  const cancelTokenHandler = handlers.get('cancellableToken:cancel') as (_event: unknown, id: number) => Promise<void>;
-  const handle = handlers.get('container-provider-registry:pullImage') as (
-    _event: unknown,
-    _providerId: string,
-    _imageName: string,
-    _callbackId: number,
-    _platform?: string,
-    _cancellationTokenSourceId?: number,
-  ) => Promise<{ error?: Error }>;
-  expect(handle).not.equal(undefined);
+  const createTokenHandler = getHandler<() => Promise<number | { result: number }>>('cancellableTokenSource:create');
+  const cancelTokenHandler = getHandler<(_event: unknown, id: number) => Promise<void>>('cancellableToken:cancel');
+  const handle = getHandler<
+    (
+      _event: unknown,
+      _providerId: string,
+      _imageName: string,
+      _callbackId: number,
+      _platform?: string,
+      _cancellationTokenSourceId?: number,
+    ) => Promise<{ error?: Error }>
+  >('container-provider-registry:pullImage');
 
   const tokenCreationResult = await createTokenHandler();
   const tokenId = typeof tokenCreationResult === 'number' ? tokenCreationResult : tokenCreationResult.result;
-  const pullImageSpy = vi
-    .spyOn(ContainerProviderRegistry.prototype, 'pullImage')
-    .mockImplementation(async (_engine, _imageName, _callback, _platform, abortController) => {
+  vi.mocked(ContainerProviderRegistry.prototype.pullImage).mockImplementation(
+    async (_engine, _imageName, _callback, _platform, abortController) => {
       await Promise.resolve();
       abortController?.abort();
       throw new Error('aborted');
-    });
+    },
+  );
 
   await cancelTokenHandler(undefined, tokenId);
   const handleReturn = await handle(undefined, 'podman', 'registry.com/repo/image:latest', 1, undefined, tokenId);
   expect(handleReturn.error).toBeInstanceOf(Error);
   expect(handleReturn.error?.message).toBe('aborted');
 
-  expect(pullImageSpy).toHaveBeenCalled();
-  expect(createTaskSpy).toHaveBeenCalledWith({
+  expect(ContainerProviderRegistry.prototype.pullImage).toHaveBeenCalled();
+  expect(TaskManager.prototype.createTask).toHaveBeenCalledWith({
     title: 'Pulling registry.com/repo/image:latest',
     cancellable: true,
     cancellationTokenSourceId: tokenId,
   });
-  expect(createTaskSpy.mock.results[0]?.value.status).toBe('canceled');
+  expect(vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value.status).toBe('canceled');
 });
 
 test('ipcMain.handle returns caught error as is if it is instance of Error', async () => {
-  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
-  const handle = handlers.get('tasks:execute') as (
-    event?: IpcMainInvokeEvent,
-    taskId?: string,
-  ) => Promise<{ error?: Error }>;
+  const handle =
+    getHandler<(event?: IpcMainInvokeEvent, taskId?: string) => Promise<{ error?: Error }>>('tasks:execute');
   const errorInstance = new Error('error');
-  createTaskSpy.mockImplementation(() => {
+  vi.mocked(TaskManager.prototype.execute).mockImplementation(() => {
     throw errorInstance;
   });
 
@@ -495,13 +517,10 @@ test('ipcMain.handle returns caught error as is if it is instance of Error', asy
 });
 
 test('ipcMain.handle returns caught error as objects message property if it is not instance of error', async () => {
-  const createTaskSpy = vi.spyOn(TaskManager.prototype, 'execute');
-  const handle = handlers.get('tasks:execute') as (
-    event?: IpcMainInvokeEvent,
-    taskId?: string,
-  ) => Promise<{ error?: Error }>;
+  const handle =
+    getHandler<(event?: IpcMainInvokeEvent, taskId?: string) => Promise<{ error?: Error }>>('tasks:execute');
   const nonErrorInstance = 'error';
-  createTaskSpy.mockImplementation(() => {
+  vi.mocked(TaskManager.prototype.execute).mockImplementation(() => {
     throw nonErrorInstance;
   });
 
@@ -510,18 +529,12 @@ test('ipcMain.handle returns caught error as objects message property if it is n
 });
 
 test('container-provider-registry:logsContainer calls logsContainer without abortController if no tokenId is passed', async () => {
-  const handle = handlers.get('container-provider-registry:logsContainer') as (
-    _event: unknown,
-    _params: {
-      engineId: string;
-      containerId: string;
-      onDataId: number;
-      cancellableTokenId?: number;
-    },
-  ) => Promise<void>;
-  expect(handle).not.equal(undefined);
-
-  const logsContainerSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'logsContainer');
+  const handle = getHandler<
+    (
+      _event: unknown,
+      _params: { engineId: string; containerId: string; onDataId: number; cancellableTokenId?: number },
+    ) => Promise<void>
+  >('container-provider-registry:logsContainer');
 
   await handle(undefined, {
     engineId: 'engine1',
@@ -529,8 +542,8 @@ test('container-provider-registry:logsContainer calls logsContainer without abor
     onDataId: 1,
   });
 
-  expect(logsContainerSpy).toHaveBeenCalled();
-  const params = vi.mocked(logsContainerSpy).mock.calls[0]?.[0];
+  expect(ContainerProviderRegistry.prototype.logsContainer).toHaveBeenCalled();
+  const params = vi.mocked(ContainerProviderRegistry.prototype.logsContainer).mock.calls[0]?.[0];
   const abortController = params?.abortController;
   expect(abortController).toBeUndefined();
 });
@@ -539,18 +552,12 @@ test('container-provider-registry:logsContainer calls logsContainer with abortCo
   const cancellationTokenRegistry = new CancellationTokenRegistry();
   const tokenId = cancellationTokenRegistry.createCancellationTokenSource();
 
-  const handle = handlers.get('container-provider-registry:logsContainer') as (
-    _event: unknown,
-    _params: {
-      engineId: string;
-      containerId: string;
-      onDataId: number;
-      cancellableTokenId?: number;
-    },
-  ) => Promise<void>;
-  expect(handle).not.equal(undefined);
-
-  const logsContainerSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'logsContainer');
+  const handle = getHandler<
+    (
+      _event: unknown,
+      _params: { engineId: string; containerId: string; onDataId: number; cancellableTokenId?: number },
+    ) => Promise<void>
+  >('container-provider-registry:logsContainer');
 
   await handle(undefined, {
     engineId: 'engine1',
@@ -559,8 +566,8 @@ test('container-provider-registry:logsContainer calls logsContainer with abortCo
     cancellableTokenId: tokenId,
   });
 
-  expect(logsContainerSpy).toHaveBeenCalled();
-  const params = vi.mocked(logsContainerSpy).mock.calls[0]?.[0];
+  expect(ContainerProviderRegistry.prototype.logsContainer).toHaveBeenCalled();
+  const params = vi.mocked(ContainerProviderRegistry.prototype.logsContainer).mock.calls[0]?.[0];
   const abortController = params?.abortController;
   expect(abortController).toBeDefined();
 });
@@ -589,23 +596,24 @@ describe.each<{
       status: 'in-progress',
       error: '',
     } as unknown as Task;
-    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
-    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
-    vi.spyOn(ProviderRegistry.prototype, 'getProviderInfo').mockReturnValue({
+    vi.mocked(TaskManager.prototype.createTask).mockReturnValue(originalTask);
+    vi.mocked(ProviderRegistry.prototype.getProviderInfo).mockReturnValue({
       name: 'provider1',
     } as ProviderInfo);
   });
 
   test('createTask is called', async () => {
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _loggerId: string,
-      _tokenId: string,
-      _taskId: string,
-    ) => Promise<void>;
-    expect(handle).not.equal(undefined);
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _loggerId: string,
+          _tokenId: string,
+          _taskId: string,
+        ) => Promise<void>
+      >(handler);
     await handle(
       undefined,
       'internal1',
@@ -616,26 +624,19 @@ describe.each<{
     );
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
-    if (!params) {
-      // this is already expected
-      throw new Error('param should be defined');
-    }
+    assert(params, 'params should be defined');
     expect(params.title).toEqual('Creating provider1 provider');
     expect(params.action?.name).toEqual('Open task');
 
-    // check that action.execute passed to createTask is calling navigateToProviderTask
     const execute = params.action?.execute;
-    expect(execute).toBeDefined();
-    if (!execute) {
-      throw new Error('execute should be defined');
-    }
+    assert(execute, 'execute should be defined');
     execute(new TaskImpl('task1id', 'task1name'));
     expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledOnce();
     expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledWith('internal1', 'task1');
   });
 
   test(`${methodName} is called and is resolved`, async () => {
-    vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
+    (ProviderRegistry.prototype[methodName] as unknown as MockInstance).mockResolvedValue(undefined);
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
     vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
@@ -643,15 +644,17 @@ describe.each<{
       error: errorMock,
     } as unknown as LoggerWithEnd);
     await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _loggerId: string,
-      _tokenId: string,
-      _taskId: string,
-    ) => Promise<void> | undefined;
-    assert(handle, 'handle should be defined');
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _loggerId: string,
+          _tokenId: string,
+          _taskId: string,
+        ) => Promise<void>
+      >(handler);
     const result = await handle(
       undefined,
       'internal1',
@@ -669,7 +672,7 @@ describe.each<{
 
   test(`${methodName} is called and is rejected`, async () => {
     const rejectError = new Error('an error');
-    vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
+    (ProviderRegistry.prototype[methodName] as unknown as MockInstance).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
     vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
@@ -677,15 +680,17 @@ describe.each<{
       error: errorMock,
     } as unknown as LoggerWithEnd);
     await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _loggerId: string,
-      _tokenId: string,
-      _taskId: string,
-    ) => Promise<void> | undefined;
-    assert(handle, 'handle should be defined');
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _loggerId: string,
+          _tokenId: string,
+          _taskId: string,
+        ) => Promise<void>
+      >(handler);
     const result = await handle(
       undefined,
       'internal1',
@@ -740,53 +745,49 @@ describe.each<{
       status: 'in-progress',
       error: '',
     } as unknown as Task;
-    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
-    vi.spyOn(NavigationManager.prototype, 'navigateToResources');
+    vi.mocked(TaskManager.prototype.createTask).mockReturnValue(originalTask);
   });
 
   test('createTask is called', async () => {
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _loggerId: string,
-    ) => Promise<void>;
-    expect(handle).not.equal(undefined);
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _loggerId: string,
+        ) => Promise<void>
+      >(handler);
     await handle(undefined, 'internal1', { name: 'name1' } as unknown as PlayKubeInfo, 'logger');
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
-    if (!params) {
-      // this is already expected
-      throw new Error('param should be defined');
-    }
+    assert(params, 'params should be defined');
     expect(params.title).toEqual(expectedTitle);
     expect(params.action?.name).toEqual(expectedActionName);
 
-    // check that action.execute passed to createTask is calling navigateToProviderTask
     const execute = params.action?.execute;
-    expect(execute).toBeDefined();
-    if (!execute) {
-      throw new Error('execute should be defined');
-    }
+    assert(execute, 'execute should be defined');
     execute(new TaskImpl('task1id', 'task1name'));
     expect(NavigationManager.prototype.navigateToResources).toHaveBeenCalledOnce();
   });
 
   test(`${methodName} is called and is resolved`, async () => {
-    vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
+    (ProviderRegistry.prototype[methodName] as unknown as MockInstance).mockResolvedValue(undefined);
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
     vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _loggerId: string,
-    ) => Promise<void> | undefined;
-    assert(handle, 'handle should be defined');
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _loggerId: string,
+        ) => Promise<void>
+      >(handler);
     const result = await handle(undefined, 'internal1', { name: 'name1' } as unknown as PlayKubeInfo, 'logger');
     expect(result).toEqual({ result: undefined });
     expect(onEndMock).toHaveBeenCalled();
@@ -797,20 +798,22 @@ describe.each<{
 
   test(`${methodName} is called and is rejected`, async () => {
     const rejectError = new Error('an error');
-    vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
+    (ProviderRegistry.prototype[methodName] as unknown as MockInstance).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
     vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _loggerId: string,
-    ) => Promise<void>;
-    expect(handle).not.equal(undefined);
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _loggerId: string,
+        ) => Promise<void>
+      >(handler);
     const result = await handle(undefined, 'internal1', { name: 'name1' } as unknown as PlayKubeInfo, 'logger');
     expect(result).toEqual({
       error: rejectError,
@@ -838,21 +841,22 @@ describe.each<{
       status: 'in-progress',
       error: '',
     } as unknown as Task;
-    vi.spyOn(TaskManager.prototype, 'createTask').mockReturnValue(originalTask);
-    vi.spyOn(NavigationManager.prototype, 'navigateToProviderTask');
+    vi.mocked(TaskManager.prototype.createTask).mockReturnValue(originalTask);
   });
 
   test('createTask is called', async () => {
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _options: unknown,
-      _loggerId: string,
-      _tokenId: string,
-      _taskId: string,
-    ) => Promise<void>;
-    expect(handle).not.equal(undefined);
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _options: unknown,
+          _loggerId: string,
+          _tokenId: string,
+          _taskId: string,
+        ) => Promise<void>
+      >(handler);
     await handle(
       undefined,
       'internal1',
@@ -864,42 +868,37 @@ describe.each<{
     );
     expect(TaskManager.prototype.createTask).toHaveBeenCalledOnce();
     const params = vi.mocked(TaskManager.prototype.createTask).mock.calls[0]?.[0];
-    if (!params) {
-      // this is already expected
-      throw new Error('param should be defined');
-    }
+    assert(params, 'params should be defined');
     expect(params.title).toEqual('Creating name1 provider');
     expect(params.action?.name).toEqual('Open task');
 
-    // check that action.execute passed to createTask is calling navigateToProviderTask
     const execute = params.action?.execute;
-    expect(execute).toBeDefined();
-    if (!execute) {
-      throw new Error('execute should be defined');
-    }
+    assert(execute, 'execute should be defined');
     execute(new TaskImpl('task1id', 'task1name'));
     expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledOnce();
     expect(NavigationManager.prototype.navigateToProviderTask).toHaveBeenCalledWith('internal1', 'task1');
   });
 
   test(`${methodName} is called and is resolved`, async () => {
-    vi.spyOn(ProviderRegistry.prototype, methodName).mockResolvedValue();
+    (ProviderRegistry.prototype[methodName] as unknown as MockInstance).mockResolvedValue(undefined);
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
     vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _options: unknown,
-      _loggerId: string,
-      _tokenId: string,
-      _taskId: string,
-    ) => Promise<void> | undefined;
-    assert(handle, 'handle should be defined');
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _options: unknown,
+          _loggerId: string,
+          _tokenId: string,
+          _taskId: string,
+        ) => Promise<void>
+      >(handler);
     const result = await handle(
       undefined,
       'internal1',
@@ -918,23 +917,25 @@ describe.each<{
 
   test(`${methodName} is called and is rejected`, async () => {
     const rejectError = new Error('an error');
-    vi.spyOn(ProviderRegistry.prototype, methodName).mockRejectedValue(rejectError);
+    (ProviderRegistry.prototype[methodName] as unknown as MockInstance).mockRejectedValue(rejectError);
     const onEndMock = vi.fn();
     const errorMock = vi.fn();
     vi.spyOn(pluginSystem, 'getLogHandler').mockReturnValue({
       onEnd: onEndMock,
       error: errorMock,
     } as unknown as LoggerWithEnd);
-    const handle = handlers.get(handler) as (
-      _event: unknown,
-      _providerId: string,
-      _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
-      _options: unknown,
-      _loggerId: string,
-      _tokenId: string,
-      _taskId: string,
-    ) => Promise<void> | undefined;
-    assert(handle, 'handle should be defined');
+    const handle =
+      getHandler<
+        (
+          _event: unknown,
+          _providerId: string,
+          _connectionInfo: ProviderContainerConnectionInfo | PlayKubeInfo,
+          _options: unknown,
+          _loggerId: string,
+          _tokenId: string,
+          _taskId: string,
+        ) => Promise<void>
+      >(handler);
     const result = await handle(
       undefined,
       'internal1',
@@ -987,17 +988,15 @@ describe('container-provider-registry:buildImage', () => {
   ) => Promise<unknown>;
 
   let handle: BuildImageHandler;
-  let createTaskSpy: Mock;
+  let createTaskMock: MockInstance;
 
   beforeEach(() => {
-    handle = handlers.get('container-provider-registry:buildImage') as BuildImageHandler;
-    expect(handle).not.equal(undefined);
-
-    createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+    handle = getHandler<BuildImageHandler>('container-provider-registry:buildImage');
+    createTaskMock = vi.mocked(TaskManager.prototype.createTask);
   });
 
   test('handler should create a task', async () => {
-    expect(createTaskSpy).not.toHaveBeenCalled();
+    expect(createTaskMock).not.toHaveBeenCalled();
 
     await handle(
       {} as unknown as IpcMainInvokeEvent,
@@ -1009,7 +1008,7 @@ describe('container-provider-registry:buildImage', () => {
       1,
     );
 
-    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith(
+    expect(createTaskMock).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
         title: expect.any(String),
         action: {
@@ -1031,7 +1030,7 @@ describe('container-provider-registry:buildImage', () => {
       1,
     );
 
-    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith(
+    expect(createTaskMock).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
         title: 'Building image imageName',
       }),
@@ -1053,7 +1052,7 @@ describe('container-provider-registry:buildImage', () => {
       'dummy-target',
     );
 
-    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith(
+    expect(createTaskMock).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
         title: 'Building image imageName (dummy-target)',
       }),
@@ -1061,7 +1060,7 @@ describe('container-provider-registry:buildImage', () => {
   });
 
   test('task created should have correct action', async () => {
-    const navigateToImageBuildMock = vi.spyOn(NavigationManager.prototype, 'navigateToImageBuild');
+    const navigateToImageBuildMock = vi.mocked(NavigationManager.prototype.navigateToImageBuild);
 
     await handle(
       {} as unknown as IpcMainInvokeEvent,
@@ -1078,7 +1077,7 @@ describe('container-provider-registry:buildImage', () => {
 
     expect(navigateToImageBuildMock).not.toHaveBeenCalled();
 
-    const action: TaskAction | undefined = createTaskSpy.mock.calls[0]?.[0]?.action;
+    const action: TaskAction | undefined = createTaskMock.mock.calls[0]?.[0]?.action;
     assert(action, 'task action should be defined');
 
     action.execute({} as Task);
@@ -1098,14 +1097,13 @@ describe('checkImageUpdateStatus handler', () => {
   ) => Promise<{ result: { status: string; updateAvailable: boolean; remoteDigest?: string; message: string } }>;
 
   test('should check image update status and return result', async () => {
-    const handle = handlers.get('image-registry:checkImageUpdateStatus') as CheckImageUpdateStatusHandler;
-    expect(handle).not.equal(undefined);
+    const handle = getHandler<CheckImageUpdateStatusHandler>('image-registry:checkImageUpdateStatus');
 
     const imageReference = 'docker.io/library/alpine:latest';
     const imageTag = 'latest';
     const localDigests = ['alpine@sha256:abc123'];
 
-    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+    vi.mocked(ImageRegistry.prototype.checkImageUpdateStatus).mockResolvedValue({
       status: 'normal',
       updateAvailable: true,
       remoteDigest: 'sha256:def456',
@@ -1124,14 +1122,13 @@ describe('checkImageUpdateStatus handler', () => {
   });
 
   test('should return update not available when image is latest', async () => {
-    const handle = handlers.get('image-registry:checkImageUpdateStatus') as CheckImageUpdateStatusHandler;
-    expect(handle).not.equal(undefined);
+    const handle = getHandler<CheckImageUpdateStatusHandler>('image-registry:checkImageUpdateStatus');
 
     const imageReference = 'docker.io/library/alpine:latest';
     const imageTag = 'latest';
     const localDigests = ['alpine@sha256:abc123'];
 
-    vi.spyOn(ImageRegistry.prototype, 'checkImageUpdateStatus').mockResolvedValue({
+    vi.mocked(ImageRegistry.prototype.checkImageUpdateStatus).mockResolvedValue({
       status: 'normal',
       updateAvailable: false,
       message: 'Image is already the latest version',
@@ -1183,102 +1180,83 @@ describe('container-provider-registry:playKube', () => {
   };
 
   test('should call ContainerProviderRegistry#playKube', async () => {
-    const handle = handlers.get('container-provider-registry:playKube') as PlayKubeHandler;
-    expect(handle).not.equal(undefined);
+    const handle = getHandler<PlayKubeHandler>('container-provider-registry:playKube');
 
-    const playKubeSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'playKube');
-    playKubeSpy.mockResolvedValue(PLAY_KUBE_INFO_MOCK);
+    vi.mocked(ContainerProviderRegistry.prototype.playKube).mockResolvedValue(PLAY_KUBE_INFO_MOCK);
 
-    // Call the handler
     const result = await handle(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK, {
       replace: true,
     });
     assert(!('error' in result));
 
-    // validate call
     expect(result.result).toEqual(PLAY_KUBE_INFO_MOCK);
-    expect(playKubeSpy).toHaveBeenCalledExactlyOnceWith('/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK, {
-      replace: true,
-    });
+    expect(ContainerProviderRegistry.prototype.playKube).toHaveBeenCalledExactlyOnceWith(
+      '/foo/bar.yaml',
+      PROVIDER_CONTAINER_CONNECTION_INFO_MOCK,
+      { replace: true },
+    );
   });
 
   test('should create a task', async () => {
-    const handle = handlers.get('container-provider-registry:playKube') as PlayKubeHandler;
-    expect(handle).not.equal(undefined);
+    const handle = getHandler<PlayKubeHandler>('container-provider-registry:playKube');
 
-    vi.spyOn(ContainerProviderRegistry.prototype, 'playKube').mockResolvedValue(PLAY_KUBE_INFO_MOCK);
-
-    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+    vi.mocked(ContainerProviderRegistry.prototype.playKube).mockResolvedValue(PLAY_KUBE_INFO_MOCK);
 
     await handle(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK);
 
-    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
       title: 'Podman Play Kube',
       cancellable: false,
       cancellationTokenSourceId: undefined,
     });
 
-    // Verify the task was marked as success and name was updated
-    const createdTask = createTaskSpy.mock.results[0]?.value;
+    const createdTask = vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value;
     expect(createdTask.status).toBe('success');
   });
 
   test('should create a cancellable task if cancellableTokenId is provided', async () => {
-    // let's create a cancellation token
-    const createTokenHandler = handlers.get('cancellableTokenSource:create') as () => Promise<{ result: number }>;
-    expect(createTokenHandler).not.equal(undefined);
+    const createTokenHandler = getHandler<() => Promise<{ result: number }>>('cancellableTokenSource:create');
     const { result: cancellationTokenId } = await createTokenHandler();
 
-    // Let's run the platKube logic
-    const playKubeHandler = handlers.get('container-provider-registry:playKube') as PlayKubeHandler;
-    expect(playKubeHandler).not.equal(undefined);
+    const playKubeHandler = getHandler<PlayKubeHandler>('container-provider-registry:playKube');
 
-    const playKubeSpy = vi.spyOn(ContainerProviderRegistry.prototype, 'playKube');
-    playKubeSpy.mockResolvedValue(PLAY_KUBE_INFO_MOCK);
-
-    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+    vi.mocked(ContainerProviderRegistry.prototype.playKube).mockResolvedValue(PLAY_KUBE_INFO_MOCK);
 
     await playKubeHandler(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK, {
       cancellableTokenId: cancellationTokenId,
     });
 
-    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
       title: 'Podman Play Kube',
       cancellable: true,
       cancellationTokenSourceId: cancellationTokenId,
     });
 
-    // Verify the task was marked as success and name was updated
-    const createdTask = createTaskSpy.mock.results[0]?.value;
+    const createdTask = vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value;
     expect(createdTask.status).toBe('success');
 
-    // ensure the internal logic nicely created an AbortSignal
-    const kubePlayOptions = playKubeSpy.mock.calls[0]?.[2];
+    const kubePlayOptions = vi.mocked(ContainerProviderRegistry.prototype.playKube).mock.calls[0]?.[2];
     expect(kubePlayOptions?.abortSignal).toBeDefined();
     expect(kubePlayOptions?.abortSignal).toBeInstanceOf(AbortSignal);
   });
 
   test('task should be failed if ContainerProviderRegistry#kubePlay throw an error', async () => {
-    const handle = handlers.get('container-provider-registry:playKube') as PlayKubeHandler;
-    expect(handle).not.equal(undefined);
+    const handle = getHandler<PlayKubeHandler>('container-provider-registry:playKube');
 
-    vi.spyOn(ContainerProviderRegistry.prototype, 'playKube').mockRejectedValue(new Error('Dummy Foo'));
-
-    const createTaskSpy = vi.spyOn(TaskManager.prototype, 'createTask');
+    vi.mocked(ContainerProviderRegistry.prototype.playKube).mockRejectedValue(new Error('Dummy Foo'));
 
     const result = await handle(undefined, '/foo/bar.yaml', PROVIDER_CONTAINER_CONNECTION_INFO_MOCK);
     assert('error' in result);
     assert(result.error instanceof Error);
     expect(result?.error?.message).toBe('Dummy Foo');
 
-    expect(createTaskSpy).toHaveBeenCalledExactlyOnceWith({
+    expect(TaskManager.prototype.createTask).toHaveBeenCalledExactlyOnceWith({
       title: 'Podman Play Kube',
       cancellable: false,
       cancellationTokenSourceId: undefined,
     });
 
-    // Verify the task was marked as success and name was updated
-    const createdTask = createTaskSpy.mock.results[0]?.value;
+    const createdTask = vi.mocked(TaskManager.prototype.createTask).mock.results[0]?.value;
     expect(createdTask.status).toBe('failure');
     expect(createdTask.error).toBe('Error: Dummy Foo');
   });
