@@ -102,7 +102,7 @@ verify_installer_checksums() {
     shasums_name=$(installer_shasums_name "${local_name}")
 
     local expected
-    expected=$(echo "${shasums_content}" | grep -F "${shasums_name}" | awk '{print $1}')
+    expected=$(echo "${shasums_content}" | grep -F "${shasums_name}" | awk '{print $1}' || true)
 
     if [ -z "${expected}" ]; then
       echo "WARN: no shasums entry found for ${shasums_name} (local: ${local_name})"
@@ -141,17 +141,14 @@ verify_oci_checksums() {
     -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
     "${manifest_url}")
 
-  if [ -z "${index_manifest}" ] || echo "${index_manifest}" | jq -e '.errors' &>/dev/null; then
+  if [ -z "${index_manifest}" ] || (echo "${index_manifest}" | jq -e '.errors' &>/dev/null); then
     echo "FAIL: could not fetch OCI manifest index from ${manifest_url}"
     ERRORS=$((ERRORS + 1))
     return
   fi
 
   local arch_digests
-  arch_digests=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" '
-    .manifests[] | select(.annotations.disktype == $dt) |
-    "\(.platform.architecture) \(.digest)"
-  ')
+  arch_digests=$(echo "${index_manifest}" | jq -r --arg dt "${disktype}" '.manifests[] | select(.annotations.disktype == $dt) | "\(.platform.architecture) \(.digest)"' || true)
 
   if [ -z "${arch_digests}" ]; then
     echo "WARN: no manifests found for disktype ${disktype}"
@@ -179,7 +176,7 @@ verify_oci_checksums() {
       "${registry_url}/manifests/${digest}")
 
     local layer_digest
-    layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' | sed 's/sha256://')
+    layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' 2>/dev/null | sed 's/sha256://' || true)
 
     if [ -z "${layer_digest}" ] || [ "${layer_digest}" = "null" ]; then
       echo "WARN: could not extract layer digest for ${arch} (${local_name})"
