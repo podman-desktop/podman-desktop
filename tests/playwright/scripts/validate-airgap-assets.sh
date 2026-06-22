@@ -66,10 +66,14 @@ verify_installer_checksums() {
 
   echo "Fetching shasums from GitHub release v${version}..."
   local shasums_content
-  shasums_content=$(curl -sL "${shasums_url}")
+  if ! shasums_content=$(curl -sL --fail "${shasums_url}"); then
+    echo "FAIL: could not fetch shasums from GitHub (curl failed)"
+    ERRORS=$((ERRORS + 1))
+    return
+  fi
 
   if [ -z "${shasums_content}" ]; then
-    echo "FAIL: could not fetch shasums from GitHub"
+    echo "FAIL: shasums response was empty"
     ERRORS=$((ERRORS + 1))
     return
   fi
@@ -77,20 +81,18 @@ verify_installer_checksums() {
   local files=()
   case "${OS}" in
     Darwin)
-      while IFS= read -r fname; do
-        files+=("${fname}")
-      done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
+      mapfile -t files < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
       ;;
     MINGW*|MSYS*|CYGWIN*|Windows_NT)
-      while IFS= read -r fname; do
-        files+=("${fname}")
-      done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
+      mapfile -t files < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
       ;;
     *)
       echo "SKIP: no installer checksums to verify on ${OS}"
       return
       ;;
   esac
+
+  echo "Files to verify: ${files[*]:-none}"
 
   for local_name in "${files[@]}"; do
     local path="${ASSETS_DIR}/${local_name}"
@@ -137,12 +139,23 @@ verify_oci_checksums() {
 
   echo "Fetching OCI manifest from ${manifest_url} (disktype: ${disktype})..."
   local index_manifest
-  index_manifest=$(curl -sL \
+  if ! index_manifest=$(curl -sL --fail \
     -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
-    "${manifest_url}")
+    "${manifest_url}"); then
+    echo "FAIL: could not fetch OCI manifest index (curl failed)"
+    ERRORS=$((ERRORS + 1))
+    return
+  fi
 
-  if [ -z "${index_manifest}" ] || (echo "${index_manifest}" | jq -e '.errors' &>/dev/null); then
-    echo "FAIL: could not fetch OCI manifest index from ${manifest_url}"
+  if [ -z "${index_manifest}" ]; then
+    echo "FAIL: OCI manifest response was empty"
+    ERRORS=$((ERRORS + 1))
+    return
+  fi
+
+  if echo "${index_manifest}" | jq -e '.errors' &>/dev/null; then
+    echo "FAIL: OCI manifest returned errors"
+    echo "${index_manifest}" | jq '.errors' 2>/dev/null || true
     ERRORS=$((ERRORS + 1))
     return
   fi
@@ -154,6 +167,8 @@ verify_oci_checksums() {
     echo "WARN: no manifests found for disktype ${disktype}"
     return
   fi
+
+  echo "Found OCI entries for: $(echo "${arch_digests}" | awk '{printf "%s ", $1}')"
 
   while IFS=' ' read -r arch digest; do
     [ -z "${arch}" ] && continue
@@ -171,9 +186,12 @@ verify_oci_checksums() {
     fi
 
     local arch_manifest
-    arch_manifest=$(curl -sL \
+    if ! arch_manifest=$(curl -sL --fail \
       -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
-      "${registry_url}/manifests/${digest}")
+      "${registry_url}/manifests/${digest}"); then
+      echo "WARN: could not fetch arch manifest for ${arch}"
+      continue
+    fi
 
     local layer_digest
     layer_digest=$(echo "${arch_manifest}" | jq -r '.layers[0].digest' 2>/dev/null | sed 's/sha256://' || true)
