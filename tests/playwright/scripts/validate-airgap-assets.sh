@@ -66,7 +66,7 @@ verify_installer_checksums() {
 
   echo "Fetching shasums from GitHub release v${version}..."
   local shasums_content
-  if ! shasums_content=$(curl -sL --fail "${shasums_url}"); then
+  if ! shasums_content=$(curl -sL --fail "${shasums_url}" | tr -d '\r'); then
     echo "FAIL: could not fetch shasums from GitHub (curl failed)"
     ERRORS=$((ERRORS + 1))
     return
@@ -81,10 +81,14 @@ verify_installer_checksums() {
   local files=()
   case "${OS}" in
     Darwin)
-      mapfile -t files < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
+      while IFS= read -r fname; do
+        files+=("${fname}")
+      done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
       ;;
     MINGW*|MSYS*|CYGWIN*|Windows_NT)
-      mapfile -t files < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}")
+      while IFS= read -r fname; do
+        files+=("${fname}")
+      done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
       ;;
     *)
       echo "SKIP: no installer checksums to verify on ${OS}"
@@ -141,7 +145,7 @@ verify_oci_checksums() {
   local index_manifest
   if ! index_manifest=$(curl -sL --fail \
     -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json' \
-    "${manifest_url}"); then
+    "${manifest_url}" | tr -d '\r'); then
     echo "FAIL: could not fetch OCI manifest index (curl failed)"
     ERRORS=$((ERRORS + 1))
     return
@@ -188,7 +192,7 @@ verify_oci_checksums() {
     local arch_manifest
     if ! arch_manifest=$(curl -sL --fail \
       -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
-      "${registry_url}/manifests/${digest}"); then
+      "${registry_url}/manifests/${digest}" | tr -d '\r'); then
       echo "WARN: could not fetch arch manifest for ${arch}"
       continue
     fi
@@ -240,7 +244,7 @@ if [ ! -d "${ASSETS_DIR}" ]; then
   exit 1
 fi
 
-VERSION=$(jq -r '.version' "${PODMAN_JSON}")
+VERSION=$(jq -r '.version' "${PODMAN_JSON}" | tr -d '\r')
 echo "Podman version: ${VERSION}"
 
 OS="$(uname -s)"
@@ -248,16 +252,29 @@ ARCH="$(uname -m)"
 echo "Platform: ${OS} / ${ARCH}"
 echo ""
 
+echo "--- DEBUG: assets directory listing ---"
+ls -la "${ASSETS_DIR}/" 2>&1 || echo "(empty or inaccessible)"
+echo ""
+
+echo "--- DEBUG: podman5.json platform structure ---"
+jq '.platform' "${PODMAN_JSON}"
+echo ""
+
+echo "--- DEBUG: dist directory listing ---"
+ls -la "${REPO_ROOT}/dist/" 2>&1 || echo "(no dist directory)"
+echo ""
+
 echo "--- Installer assets ---"
 case "${OS}" in
   Darwin)
-    validate_file "podman-installer-macos-amd64-v${VERSION}.pkg"
-    validate_file "podman-installer-macos-aarch64-v${VERSION}.pkg"
-    validate_file "podman-installer-macos-universal-v${VERSION}.pkg"
+    while IFS= read -r fname; do
+      validate_file "${fname}"
+    done < <(jq -r '.platform.darwin.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
     ;;
   MINGW*|MSYS*|CYGWIN*|Windows_NT)
-    validate_file "podman-installer-windows-amd64.msi"
-    validate_file "podman-installer-windows-arm64.msi"
+    while IFS= read -r fname; do
+      validate_file "${fname}"
+    done < <(jq -r '.platform.win32.arch | to_entries[].value.fileName' "${PODMAN_JSON}" | tr -d '\r')
     ;;
   *)
     echo "SKIP: no installer assets expected on ${OS}"
