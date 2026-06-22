@@ -52,7 +52,7 @@ async function performUpdate(provider: ProviderInfo): Promise<void> {
 {#if provider?.version && provider?.updateInfo?.version && provider.version !== provider.updateInfo.version}
   <Button
     inProgress={updateInProgress}
-    disabled={preflightChecksFailed}
+    disabled={preflightChecksFailed || provider.status === 'starting'}
     icon={faBoxOpen}
     padding="px-3 py-0.5"
     on:click={(): Promise<void> => performUpdate(provider)}>
