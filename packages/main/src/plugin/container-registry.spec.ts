@@ -2859,6 +2859,50 @@ test('container logs callback notified when messages arrive', async () => {
   expect(telemetry.track).toHaveBeenCalled();
 });
 
+test('container logs reassembles multi-byte UTF-8 characters split across chunks', async () => {
+  const stream = new EventEmitter();
+  const dockerodeContainer = {
+    logs: vi.fn().mockResolvedValue(stream),
+  } as unknown as Dockerode.Container;
+
+  vi.spyOn(containerRegistry, 'getMatchingContainer').mockReturnValue(dockerodeContainer);
+
+  const dataChunks: string[] = [];
+  let ended = false;
+  const endPromise = new Promise<void>(resolve => {
+    const callback = (name: string, data: string): void => {
+      if (name === 'data') {
+        dataChunks.push(data);
+      } else if (name === 'end') {
+        ended = true;
+        resolve();
+      }
+    };
+    containerRegistry
+      .logsContainer({ engineId: 'podman', id: 'containerId', callback })
+      .catch((err: unknown) => console.error(err));
+  });
+
+  // "🚀" (U+1F680) is four UTF-8 bytes: F0 9F 9A 80. Split it across two
+  // chunks so neither chunk holds a complete character on its own.
+  const rocketBytes = Buffer.from('🚀', 'utf-8');
+  const firstHalf = rocketBytes.subarray(0, 2);
+  const secondHalf = rocketBytes.subarray(2);
+
+  setTimeout(() => {
+    stream.emit('data', Buffer.concat([Buffer.from('start '), firstHalf]));
+    stream.emit('data', Buffer.concat([secondHalf, Buffer.from(' end')]));
+    stream.emit('end', '');
+  });
+
+  await endPromise;
+
+  expect(ended).toBe(true);
+  // No U+FFFD replacement character should leak; the rocket is reassembled.
+  expect(dataChunks.join('')).toBe('start 🚀 end');
+  expect(dataChunks.join('')).not.toContain('\uFFFD');
+});
+
 describe('createContainer', () => {
   test('test create and start Container', async () => {
     const createdId = '1234';

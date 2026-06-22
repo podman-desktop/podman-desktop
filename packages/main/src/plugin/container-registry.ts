@@ -23,6 +23,7 @@ import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { StringDecoder } from 'node:string_decoder';
 
 import type * as containerDesktopAPI from '@podman-desktop/api';
 import type {
@@ -1829,7 +1830,18 @@ export class ContainerProviderRegistry {
         ...optionalParams,
       })
       .then(containerStream => {
+        // A single multi-byte UTF-8 character can be split across two stream
+        // chunks. Decoding each chunk independently with `toString('utf-8')`
+        // would emit a replacement character (U+FFFD, shown as `�`) for the
+        // partial bytes. StringDecoder buffers incomplete byte sequences until
+        // the rest of the character arrives in a later chunk.
+        const decoder = new StringDecoder('utf-8');
         containerStream.on('end', () => {
+          // Flush any bytes still buffered by the decoder before signalling end.
+          const remaining = decoder.end();
+          if (remaining) {
+            logsParams.callback('data', remaining);
+          }
           logsParams.callback('end', '');
         });
         containerStream.on('data', chunk => {
@@ -1837,7 +1849,7 @@ export class ContainerProviderRegistry {
             firstMessage = false;
             logsParams.callback('first-message', '');
           }
-          logsParams.callback('data', chunk.toString('utf-8'));
+          logsParams.callback('data', decoder.write(chunk));
         });
       })
       .catch((error: unknown) => {
