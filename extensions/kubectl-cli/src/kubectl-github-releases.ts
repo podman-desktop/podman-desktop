@@ -48,7 +48,11 @@ export class KubectlGitHubReleases {
     // Grab last 5 majors releases from GitHub using the GitHub API
     await this.ensureOctokit();
 
-    const lastReleases = await this.octokit!.repos.listReleases({
+    if (!this.octokit) {
+      throw new Error('Octokit instance not initialized');
+    }
+
+    const lastReleases = await this.octokit.repos.listReleases({
       owner: KubectlGitHubReleases.KUBECTL_GITHUB_OWNER,
       repo: KubectlGitHubReleases.KUBECTL_GITHUB_REPOSITORY,
       per_page: 10, // limit to last 5 releases
