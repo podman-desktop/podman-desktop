@@ -178,7 +178,7 @@
     "globals": "^17.6.0",
     "husky": "^9.1.7",
     "jsonc-parser": "^3.3.1",
-    "lint-staged": "^17.0.7",
+    "lint-staged": "^17.0.8",
     "minimist": "^1.2.8",
     "msw": "^2.14.6",
     "prettier": "^3.8.4",
