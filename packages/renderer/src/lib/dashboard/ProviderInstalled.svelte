@@ -1,9 +1,10 @@
 <script lang="ts">
 import '@xterm/xterm/css/xterm.css';
 
+import { faList } from '@fortawesome/free-solid-svg-icons';
 import type { CheckStatus, ProviderInfo } from '@podman-desktop/core-api';
 import { TerminalSettings } from '@podman-desktop/core-api/terminal';
-import { Spinner } from '@podman-desktop/ui-svelte';
+import { Button, Spinner } from '@podman-desktop/ui-svelte';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { onDestroy, onMount } from 'svelte';
@@ -40,6 +41,30 @@ let resizeObserver: ResizeObserver;
 let termFit: FitAddon;
 let installationOptionsMenuVisible = false;
 let installationOptionSelected = InitializeAndStartMode;
+let checksInProgress = false;
+
+async function runChecks(): Promise<void> {
+  checksInProgress = true;
+  preflightChecks = [];
+  let currentCheck: CheckStatus;
+  try {
+    await window.runInstallPreflightChecks(provider.internalId, {
+      startCheck: (status: CheckStatus): void => {
+        currentCheck = status;
+        preflightChecks = [...preflightChecks, currentCheck];
+      },
+      endCheck: (status: CheckStatus): void => {
+        if (currentCheck) {
+          currentCheck = status;
+        }
+        preflightChecks = [...preflightChecks.slice(0, -1), currentCheck];
+      },
+    });
+  } catch (err) {
+    console.error(err);
+  }
+  checksInProgress = false;
+}
 
 // no initialize support, hide the button
 $: initializationButtonVisible =
@@ -142,6 +167,17 @@ async function onInstallationClick(): Promise<void> {
     <p class="text-sm text-[var(--pd-content-text)] w-2/3 text-center" aria-label="Suggested Actions">
       To start working with containers, {provider.name} needs to be initialized.
     </p>
+
+    <div class="flex space-x-2 mb-2">
+      {#if provider.installationSupport}
+        <Button
+          icon={faList}
+          inProgress={checksInProgress}
+          on:click={runChecks}>
+          Run checks
+        </Button>
+      {/if}
+    </div>
 
     <div class="min-w-[230px] w-1/3 flex justify-center" class:hidden={!initializationButtonVisible}>
       <div class="w-[212px] relative">

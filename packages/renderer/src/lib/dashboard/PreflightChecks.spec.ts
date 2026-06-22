@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,4 +89,42 @@ test('Expect preCheck to be displayed when having all props', async () => {
   await fireEvent.click(docLinks);
   // check openExternal is called
   expect(window.openExternal).toHaveBeenCalledWith('url');
+});
+
+test('Expect warning icon for check with warning severity', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'WSL check',
+        description: 'WSL not enabled',
+        successful: false,
+        severity: 'warning',
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  expect(title).toBeInTheDocument();
+  expect(title.textContent).equals('WSL check');
+  const container = title.parentElement;
+  expect(container?.textContent).toContain('⚠️');
+  expect(container?.textContent).not.toContain('❌');
+});
+
+test('Expect error icon for failed check without severity', async () => {
+  render(PreflightChecks, {
+    preflightChecks: [
+      {
+        name: 'Bit check',
+        description: '32-bit OS',
+        successful: false,
+      },
+    ],
+  });
+
+  const title = screen.getByLabelText('precheck-title');
+  expect(title).toBeInTheDocument();
+  const container = title.parentElement;
+  expect(container?.textContent).toContain('❌');
+  expect(container?.textContent).not.toContain('⚠️');
 });
