@@ -459,7 +459,7 @@
     "inversify": "^8.1.1",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "semver": "^7.8.4",
+    "semver": "^7.8.5",
     "smol-toml": "1.6.1",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
