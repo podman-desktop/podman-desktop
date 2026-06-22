@@ -651,57 +651,66 @@ const envDialogOptions: OpenDialogOptions = {
 <Route path="/*">
   {#if dataReady}
     <EngineFormPage title="Create a container from image {imageDisplayName}:{image.tag}">
-      {#snippet icon()}
-        <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-      {/snippet}
-      {#snippet content()}
-      <div class="space-y-2">
-        <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
-          <Tab title="Basic" selected={isTabSelected($router.path, 'basic')} url={getTabUrl($router.path, 'basic')} />
-          <Tab
-            title="Advanced"
-            selected={isTabSelected($router.path, 'advanced')}
-            url={getTabUrl($router.path, 'advanced')} />
-          <Tab
-            title="Networking"
-            selected={isTabSelected($router.path, 'networking')}
-            url={getTabUrl($router.path, 'networking')} />
-          <Tab
-            title="Security"
-            selected={isTabSelected($router.path, 'security')}
-            url={getTabUrl($router.path, 'security')} />
-        </div>
-        <div>
-          <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
-              <label
-                for="modalContainerName"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
-              <Input
-                on:input={checkContainerName}
-                bind:value={containerName}
-                name="modalContainerName"
-                id="modalContainerName"
-                placeholder="Leave blank to generate a name"
-                aria-label="Container Name"
-                error={containerNameError} />
-              <label
-                for="modalEntrypoint"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Entrypoint:</label>
-              <Input bind:value={entrypoint} name="modalEntrypoint" id="modalEntrypoint" aria-label="Entrypoint" />
+    {#snippet icon()}
+      <i class="fas fa-play fa-2x" aria-hidden="true"></i>
+    {/snippet}
+    {#snippet content()}
+    <div class="space-y-2">
+      <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
+        <Tab title="Basic" selected={isTabSelected($router.path, 'basic')} url={getTabUrl($router.path, 'basic')} />
+        <Tab
+          title="Advanced"
+          selected={isTabSelected($router.path, 'advanced')}
+          url={getTabUrl($router.path, 'advanced')} />
+        <Tab
+          title="Networking"
+          selected={isTabSelected($router.path, 'networking')}
+          url={getTabUrl($router.path, 'networking')} />
+        <Tab
+          title="Security"
+          selected={isTabSelected($router.path, 'security')}
+          url={getTabUrl($router.path, 'security')} />
+      </div>
+      <div class="pt-4">
+        <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
+          <div class="pr-4 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="modalContainerName"
+                  class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Container name</label>
+                <Input
+                  on:input={checkContainerName}
+                  bind:value={containerName}
+                  name="modalContainerName"
+                  id="modalContainerName"
+                  placeholder="Leave blank to generate a name"
+                  aria-label="Container Name"
+                  error={containerNameError} />
+              </div>
+              <div>
+                <label
+                  for="modalEntrypoint"
+                  class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Entrypoint</label>
+                <Input bind:value={entrypoint} name="modalEntrypoint" id="modalEntrypoint" aria-label="Entrypoint" />
+              </div>
+            </div>
+
+            <div>
               <label
                 for="modalCommand"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Command:</label>
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Command</label>
               <Input bind:value={command} name="modalCommand" id="modalCommand" aria-label="Command" />
-              <label for="volumes" class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Volumes:</label>
+            </div>
+
+            <div>
+              <label for="volumes" class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Volumes</label>
               <!-- Display the list of volumes -->
               {#each volumeMounts as volumeMount, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <FileInput
                     id="volumeMount.{index}"
-                    placeholder="Path on the host"
+                    placeholder="Path on host"
                     bind:value={volumeMount.source}
                     options={volumeDialogOptions}
                     aria-label="volumeMount.{index}" />
@@ -720,34 +729,28 @@ const envDialogOptions: OpenDialogOptions = {
                     icon={faPlusCircle} />
                 </div>
               {/each}
+            </div>
 
-              <!-- add a label for each port-->
+            <!-- add a label for each port-->
+            <div>
               <label
-                for="modalContainerName"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Port mapping:</label>
+                for="portMapping"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Port mapping</label>
               {#each exposedPorts as port, index (index)}
-                <div class="flex flex-row justify-center items-center w-full">
+                <div class="flex flex-row items-center w-full py-1">
                   <span
-                    class="text-sm flex-1 inline-block align-middle whitespace-nowrap text-[var(--pd-content-card-text)]"
+                    class="text-sm whitespace-nowrap text-[var(--pd-content-card-text)] mr-3"
                     >Local port for {port}:</span>
                   <Input
                     bind:value={containerPortMapping[index].port}
                     on:input={(event): void => onContainerPortMappingInput(event, index)}
                     placeholder="Enter value for port {port}"
                     error={containerPortMapping[index].error}
-                    class="ml-2 w-full"
+                    class="w-36"
                     title={containerPortMapping[index].error} />
                 </div>
               {/each}
 
-              <Button
-                on:click={addHostContainerPorts}
-                icon={faPlusCircle}
-                type="link"
-                aria-label="Add custom port mapping">
-                Add custom port mapping
-              </Button>
               <!-- Display the list of existing hostContainerPortMappings -->
               {#each hostContainerPortMappings as hostContainerPortMapping, index (index)}
                 <div class="flex flex-row justify-center w-full py-1">
@@ -766,15 +769,24 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button type="link" on:click={async (): Promise<void> => await deleteHostContainerPorts(index)} icon={faMinusCircle} aria-label="Remove port mapping" />
                 </div>
               {/each}
+
+              <Button
+                on:click={addHostContainerPorts}
+                icon={faPlusCircle}
+                type="link"
+                aria-label="Add custom port mapping">
+                Add custom port mapping
+              </Button>
+            </div>
+
+            <div>
               <label
                 for="modalEnvironmentVariables"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Environment variables:</label>
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Environment variables</label>
               <!-- Display the list of existing environment variables -->
               {#each environmentVariables as environmentVariable, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
                   <Input bind:value={environmentVariable.key} placeholder="Name" class="w-full" />
-
                   <Input
                     bind:value={environmentVariable.value}
                     placeholder="Value (leave blank for empty)"
@@ -793,11 +805,12 @@ const envDialogOptions: OpenDialogOptions = {
                     icon={faPlusCircle} />
                 </div>
               {/each}
+            </div>
 
+            <div>
               <label
                 for="modalEnvironmentFiles"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
-                >Environment files:</label>
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Environment files</label>
               <!-- Display the list of existing environment files -->
               {#each environmentFiles as _, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
@@ -822,11 +835,13 @@ const envDialogOptions: OpenDialogOptions = {
                 </div>
               {/each}
             </div>
-          </Route>
-          <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
-              <!-- Use tty -->
-              <label for="containerTty" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+          </div>
+        </Route>
+        <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
+          <div class="pr-4 space-y-4">
+            <!-- Use tty -->
+            <div>
+              <label for="containerTty" class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Use TTY:</label>
               <div class="flex flex-col text-[var(--pd-content-card-text)] text-sm ml-2">
                 <Checkbox bind:checked={useTty} title="Attach a pseudo terminal">Attach a pseudo terminal</Checkbox>
@@ -834,11 +849,13 @@ const envDialogOptions: OpenDialogOptions = {
                   Interactive: Keep STDIN open even if not attached
                 </Checkbox>
               </div>
+            </div>
 
-              <!-- Specify user-->
+            <!-- Specify user-->
+            <div>
               <label
                 for="containerUser"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Specify user to run container as:</label>
               <div class="flex flex-row justify-center items-center w-full">
                 <Input
@@ -846,20 +863,24 @@ const envDialogOptions: OpenDialogOptions = {
                   placeholder="If you specify a username, user must exist in /etc/passwd file (use user id instead)"
                   class="ml-2" />
               </div>
+            </div>
 
-              <!-- Autoremove-->
+            <!-- Autoremove-->
+            <div>
               <label
                 for="containerAutoRemove"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Auto removal of container:</label>
               <Checkbox class="text-[var(--pd-content-card-text)] text-sm ml-2" bind:checked={autoRemove}>
                 Automatically remove the container when the process exits
               </Checkbox>
+            </div>
 
-              <!-- RestartPolicy-->
+            <!-- RestartPolicy-->
+            <div>
               <label
                 for="containerRestartPolicy"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Restart policy:</label>
               <div
                 class="p-0 flex flex-row justify-start items-center align-middle w-full text-[var(--pd-content-card-text)]">
@@ -888,11 +909,13 @@ const envDialogOptions: OpenDialogOptions = {
                   class="w-24 p-2"
                   disabled={restartPolicyName !== 'on-failure'} />
               </div>
+            </div>
 
-              <!-- devices -->
+            <!-- devices -->
+            <div>
               <label
                 for="modalDevices"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Devices:</label>
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Devices:</label>
               <!-- Display the list of existing devices -->
               {#each devices as device, index (index)}
                 <div class="flex flex-row justify-center items-center w-full py-1">
@@ -926,29 +949,35 @@ const envDialogOptions: OpenDialogOptions = {
                 </div>
               {/each}
             </div>
-          </Route>
+          </div>
+        </Route>
 
-          <Route path="/security" breadcrumb="Security" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
-              <!-- Privileged-->
+        <Route path="/security" breadcrumb="Security" navigationHint="tab">
+          <div class="pr-4 space-y-4">
+            <!-- Privileged-->
+            <div>
               <label
                 for="containerPrivileged"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Privileged:</label>
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Privileged:</label>
               <Checkbox bind:checked={privileged} class="text-[var(--pd-content-card-text)] text-sm mx-2">
                 Turn off security<i class="pl-1 fas fa-exclamation-triangle"></i>
               </Checkbox>
+            </div>
 
-              <!-- Read-Only -->
+            <!-- Read-Only -->
+            <div>
               <label
                 for="containerReadOnly"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Read only:</label>
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]">Read only:</label>
               <Checkbox bind:checked={readOnly} class="text-[var(--pd-content-card-text)] text-sm mx-2">
                 Make containers root filesystem read-only
               </Checkbox>
+            </div>
 
+            <div>
               <label
                 for="ContainerSecurityOptions"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Security options (security-opt):</label>
               <!-- Display the list of existing security options -->
               {#each securityOpts as _, index (index)}
@@ -972,15 +1001,17 @@ const envDialogOptions: OpenDialogOptions = {
                     icon={faPlusCircle} />
                 </div>
               {/each}
+            </div>
 
+            <div>
               <label
                 for="ContainerSecurityCapabilitiesAdd"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Capabilities:</label>
 
               <label
                 for="ContainerSecurityCapabilitiesAdd"
-                class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="pl-4 pt-2 block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Add to the container (CapAdd):</label>
               <!-- Display the list of existing capAdd -->
               {#each capAdds as _, index (index)}
@@ -998,7 +1029,7 @@ const envDialogOptions: OpenDialogOptions = {
               {/each}
               <label
                 for="ContainerSecurityCapabilitiesDrop"
-                class="pl-4 pt-2 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="pl-4 pt-2 block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Drop from the container (CapDrop):</label>
               <!-- Display the list of existing capDrop -->
               {#each capDrops as _, index (index)}
@@ -1014,33 +1045,39 @@ const envDialogOptions: OpenDialogOptions = {
                   <Button type="link" hidden={index < capDrops.length - 1} on:click={addCapDrop} icon={faPlusCircle} aria-label="Add capability" />
                 </div>
               {/each}
+            </div>
 
-              <!-- Specify user namespace-->
+            <!-- Specify user namespace-->
+            <div>
               <label
                 for="containerUserNamespace"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Specify user namespace to use:</label>
               <div class="flex flex-row justify-center items-center w-full">
                 <Input bind:value={userNamespace} placeholder="Enter a user namespace" class="ml-2 w-full" />
               </div>
             </div>
-          </Route>
+          </div>
+        </Route>
 
-          <Route path="/networking" breadcrumb="Networking" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
-              <!-- hostname-->
+        <Route path="/networking" breadcrumb="Networking" navigationHint="tab">
+          <div class="pr-4 space-y-4">
+            <!-- hostname-->
+            <div>
               <label
                 for="containerHostname"
-                class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Defines container hostname:</label>
               <div class="flex flex-row justify-center items-center w-full">
                 <Input bind:value={hostname} placeholder="Must be a valid RFC 1123 hostname" class="ml-2" />
               </div>
+            </div>
 
-              <!-- DNS -->
+            <!-- DNS -->
+            <div>
               <label
                 for="ContainerDns"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Custom DNS server(s):</label>
 
               {#each dnsServers as _, index (index)}
@@ -1061,10 +1098,12 @@ const envDialogOptions: OpenDialogOptions = {
                     icon={faPlusCircle} />
                 </div>
               {/each}
+            </div>
 
+            <div>
               <label
                 for="containerExtraHosts"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Add extra hosts (appends to /etc/hosts file):</label>
               <!-- Display the list of extra hosts -->
               {#each extraHosts as extraHost, index (index)}
@@ -1086,11 +1125,13 @@ const envDialogOptions: OpenDialogOptions = {
                     icon={faPlusCircle} />
                 </div>
               {/each}
+            </div>
 
-              <!-- Select network -->
+            <!-- Select network -->
+            <div>
               <label
                 for="containerNetwork"
-                class="pt-4 block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
+                class="block mb-2 text-sm font-bold text-[var(--pd-content-card-header-text)]"
                 >Select container networking:</label>
               <div
                 class="p-0 flex flex-row justify-start items-center align-middle w-full text-[var(--pd-content-card-text)]">
@@ -1140,25 +1181,32 @@ const envDialogOptions: OpenDialogOptions = {
                 </div>
               {/if}
             </div>
-          </Route>
-        </div>
+          </div>
+        </Route>
+      </div>
 
-        <div class="pt-2 border-[var(--pd-content-divider)] border-t-2"></div>
+      <div class="pt-8 flex items-center justify-end gap-3">
+        <Button
+          type="link"
+          on:click={(): void => router.goto('/images/')}
+          aria-label="Cancel">
+          Cancel
+        </Button>
         <Button
           on:click={startContainer}
-          class="w-full"
           icon={faPlay}
           aria-label="Start Container"
           disabled={invalidFields}>
-          Start Container
+          Start container
         </Button>
-        <div aria-label="createError">
-          {#if createError}
-            <ErrorMessage class="py-2 text-sm" error={createError} />
-          {/if}
-        </div>
       </div>
-      {/snippet}
+      <div aria-label="createError">
+        {#if createError}
+          <ErrorMessage class="py-2 text-sm" error={createError} />
+        {/if}
+      </div>
+    </div>
+    {/snippet}
     </EngineFormPage>
   {/if}
 </Route>
