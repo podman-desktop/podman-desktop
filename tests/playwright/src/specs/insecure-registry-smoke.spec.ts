@@ -16,6 +16,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
+import { TaskState } from '/@/model/core/states';
 import { CommandPalette } from '/@/model/pages/command-palette';
 import { ImagesPage } from '/@/model/pages/images-page';
 import { canTestInsecureRegistry, setupInsecureRegistry } from '/@/setupFiles/setup-registry';
@@ -29,6 +30,9 @@ import {
 } from '/@/utility/operations';
 import { isLinux } from '/@/utility/platform';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
+
+const SYNC_TIMEOUT = 180_000;
+const POLL_INTERVAL = 2_000;
 
 const sourceImage = 'ghcr.io/podmandesktop-ci/hello';
 let registryUrl: string;
@@ -95,7 +99,9 @@ test.describe
       await imagesPage.waitForRowToExists(fullImageName, 30_000);
     });
 
-    test('Push image to insecure registry', async ({ navigationBar, page }) => {
+    test('Push image to insecure registry', async ({ navigationBar, page, statusBar }) => {
+      test.setTimeout(SYNC_TIMEOUT + 60_000);
+
       const imagesPage = new ImagesPage(page);
       await playExpect(imagesPage.heading).toBeVisible();
 
@@ -111,11 +117,29 @@ test.describe
           `Expected TLS/certificate error in push output, got: ${errorText.substring(0, 200)}`,
         ).toBeTruthy();
 
+        const tasksPage = await statusBar.openTasksPage();
+        await playExpect(tasksPage.heading).toBeVisible();
+
         const commandPalette = new CommandPalette(page);
         await commandPalette.executeCommand('Podman: Synchronize certificates to all VMs');
 
-        // TODO: replace with readiness polling (e.g. podman info) once basic flow is validated.
-        await page.waitForTimeout(15_000);
+        await playExpect
+          .poll(
+            async () => {
+              try {
+                const status = await tasksPage.getStatusForLatestTask();
+                if (status && !status.includes(TaskState.Success)) {
+                  console.log(`Poll: certificate sync task status = "${status}"`);
+                }
+                return status;
+              } catch (error: unknown) {
+                console.log('Poll: task status not yet available —', error instanceof Error ? error.message : error);
+                return '';
+              }
+            },
+            { timeout: SYNC_TIMEOUT, intervals: [POLL_INTERVAL] },
+          )
+          .toContain(TaskState.Success);
 
         const imagesPageAfterSync = await navigationBar.openImages();
         const imageDetailsAfterSync = await imagesPageAfterSync.openImageDetails(fullImageName);
@@ -124,17 +148,11 @@ test.describe
       }
     });
 
-    test('Verify push by re-pulling from insecure registry', async ({ navigationBar }) => {
+    test('Verify push by re-pulling from insecure registry', async ({ navigationBar, page }) => {
+      await deleteImage(page, fullImageName);
+
       let imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
-
-      const imageDetailPage = await imagesPage.openImageDetails(fullImageName);
-      await playExpect(imageDetailPage.heading).toBeVisible();
-
-      imagesPage = await imageDetailPage.deleteImage();
-      await playExpect(imagesPage.heading).toBeVisible({ timeout: 30_000 });
-
-      await imagesPage.waitForRowToBeDelete(fullImageName, 60_000);
 
       const pullImagePage = await imagesPage.openPullImage();
       imagesPage = await pullImagePage.pullImage(fullImageName, 'latest');

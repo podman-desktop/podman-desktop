@@ -171,7 +171,7 @@ export async function pushImageExpectFailure(page: Page, pushButton: Locator): P
     await playExpect(pushButton).toBeEnabled();
     await pushButton.click();
 
-    await waitUntil(async () => await dialog.isVisible(), { timeout: 10_000 });
+    await playExpect(dialog).toBeVisible({ timeout: 10_000 });
 
     const pushConfirmButton = dialog.getByRole('button', { name: 'Push image' });
     await playExpect(pushConfirmButton).toBeEnabled();
@@ -183,7 +183,7 @@ export async function pushImageExpectFailure(page: Page, pushButton: Locator): P
     const dialogContent = (await dialog.textContent()) ?? '';
 
     await doneButton.click();
-    await waitUntil(async () => !(await dialog.isVisible()), { timeout: 10_000 });
+    await playExpect(dialog).toBeHidden({ timeout: 10_000 });
 
     return dialogContent;
   });
