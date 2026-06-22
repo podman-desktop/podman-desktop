@@ -12,6 +12,5 @@ jobs:
   managed-configuration:
     permissions:
       contents: read
-      checks: write
     uses: ./.github/workflows/managed-configuration-template.yaml
     secrets: inherit

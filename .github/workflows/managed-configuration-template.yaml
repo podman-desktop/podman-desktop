@@ -19,11 +19,6 @@ name: Managed configuration tests (template)
 
 on:
   workflow_call:
-    inputs:
-      allow-failure:
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -32,8 +27,6 @@ jobs:
   managed-configuration:
     permissions:
       contents: read
-      checks: write
-    continue-on-error: ${{ inputs.allow-failure }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     name: Managed configuration tests - ${{ matrix.os }}

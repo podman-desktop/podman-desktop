@@ -546,10 +546,7 @@ jobs:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     permissions:
       contents: read
-      checks: write
     uses: ./.github/workflows/managed-configuration-template.yaml
-    with:
-      allow-failure: true
     secrets: inherit
 
   detect_pnpm_changes:
