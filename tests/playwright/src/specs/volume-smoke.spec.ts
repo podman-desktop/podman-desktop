@@ -23,7 +23,7 @@ import { expect as playExpect, test } from '/@/utility/fixtures';
 import { deleteContainer, deleteImage, readFileInVolumeFromCLI } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
-const imageToPull = 'ghcr.io/osbuild/bootc-image-builder:latest';
+const imageToPull = 'ghcr.io/osbuild/bootc-image-builder';
 const imageTag = 'latest';
 const noVolumeImageToPull = 'ghcr.io/linuxcontainers/alpine';
 const containerName = 'alpine';
@@ -234,7 +234,7 @@ test.describe
         })
         .toBeTruthy();
 
-      //pull image from ghcr.io/podmandesktop-ci/podify-demo-backend
+      //pull image from ghcr.io/linuxcontainers/alpine
       let images = await navigationBar.openImages();
       const pullImagePage = await images.openPullImage();
       images = await pullImagePage.pullImage(noVolumeImageToPull, imageTag, 120_000);
