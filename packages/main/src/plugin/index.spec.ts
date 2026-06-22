@@ -27,7 +27,7 @@ import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron';
 import { Container as InversifyContainer } from 'inversify';
 import type { Mock } from 'vitest';
-import { afterEach, assert, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ExtensionLoader } from '/@/plugin/extension/extension-loader.js';
 import { Updater } from '/@/plugin/updater.js';
@@ -110,6 +110,8 @@ class TestPluginSystem extends PluginSystem {
 }
 
 let inversifyContainer: InversifyContainer;
+let mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
+let handlers: Map<string, unknown>;
 const emitter = new EventEmitter();
 const webContents = emitter as unknown as WebContents;
 webContents.isDestroyed = vi.fn();
@@ -117,13 +119,12 @@ webContents.isDestroyed = vi.fn();
 // add send method
 webContents.send = vi.fn();
 
-let mainWindowDeferred: PromiseWithResolvers<BrowserWindow>;
-const handlers = new Map<string, unknown>();
+beforeEach(async () => {
+  vi.resetAllMocks();
+  handlers = new Map<string, unknown>();
 
-beforeAll(async () => {
-  const trayMenuMock = {} as unknown as TrayMenu;
   mainWindowDeferred = Promise.withResolvers<BrowserWindow>();
-  pluginSystem = new TestPluginSystem(trayMenuMock, mainWindowDeferred);
+  pluginSystem = new TestPluginSystem({} as unknown as TrayMenu, mainWindowDeferred);
 
   vi.mocked(ipcMain.handle).mockImplementation((channel: string, listener: unknown) => {
     handlers.set(channel, listener);
@@ -139,6 +140,7 @@ beforeAll(async () => {
   vi.mocked(ExtensionLoader.prototype.readDevelopmentFolders).mockResolvedValue([]);
   vi.mocked(ExtensionLoader.prototype.listExtensions).mockResolvedValue([]);
   await pluginSystem.initExtensions(new Emitter<ConfigurationRegistry>());
+  vi.mocked(webContents.send).mockClear();
 
   inversifyContainer = new InversifyContainer();
 });
@@ -147,12 +149,7 @@ afterEach(async () => {
   await inversifyContainer.unbindAllAsync();
 });
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
-
 test('Should queue events until we are ready', async () => {
-  vi.mocked(webContents.send).mockClear();
   const apiSender = pluginSystem.getApiSender(webContents);
   expect(apiSender).toBeDefined();
 
@@ -958,21 +955,13 @@ describe.each<{
 });
 
 describe('Log race condition fix', () => {
-  let localPluginSystem: TestPluginSystem;
-
-  beforeEach(() => {
-    const trayMenu = {} as unknown as TrayMenu;
-    const deferred = Promise.withResolvers<BrowserWindow>();
-    localPluginSystem = new TestPluginSystem(trayMenu, deferred);
-  });
-
   test('should not throw error when window is destroyed during shutdown', () => {
-    vi.spyOn(localPluginSystem, 'getWebContentsSender').mockImplementation(() => {
+    vi.spyOn(pluginSystem, 'getWebContentsSender').mockImplementation(() => {
       throw new Error('Unable to find the main window');
     });
-    localPluginSystem.setQuitting(false);
+    pluginSystem.setQuitting(false);
 
-    const logger = localPluginSystem.getLogHandler('test-channel', 'test-logger');
+    const logger = pluginSystem.getLogHandler('test-channel', 'test-logger');
     expect(() => {
       logger.log('test');
       logger.warn('test');
