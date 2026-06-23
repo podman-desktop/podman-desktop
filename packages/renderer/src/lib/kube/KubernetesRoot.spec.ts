@@ -37,19 +37,19 @@ describe('KubernetesRoot component', () => {
     lastSubmenuPages.set({ Kubernetes: '/kubernetes/deployments' });
     render(KubernetesRoot);
 
-    expect(router.goto).toHaveBeenCalledWith('/kubernetes/deployments');
+    expect(router.goto).toHaveBeenCalledWith('/kubernetes/deployments', true);
   });
 
   test('go to dashboard page when last kubernetes page is /kubernetes', async () => {
     lastSubmenuPages.set({ Kubernetes: '/kubernetes' });
     render(KubernetesRoot);
 
-    expect(router.goto).toHaveBeenCalledWith('/kubernetes/dashboard');
+    expect(router.goto).toHaveBeenCalledWith('/kubernetes/dashboard', true);
   });
 
   test('go to dashboard page when last kubernetes page not available', async () => {
     lastSubmenuPages.set({});
     render(KubernetesRoot);
-    expect(router.goto).toHaveBeenCalledWith('/kubernetes/dashboard');
+    expect(router.goto).toHaveBeenCalledWith('/kubernetes/dashboard', true);
   });
 });

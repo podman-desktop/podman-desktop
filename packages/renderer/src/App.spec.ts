@@ -91,6 +91,15 @@ beforeEach(() => {
   vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
 });
 
+test('should use hash routing mode to create browser history entries', () => {
+  const hashSpy = vi.spyOn(router.mode, 'hash');
+  render(App);
+  expect(hashSpy).toHaveBeenCalled();
+
+  // Hash mode produces hash-based URLs that Electron's NavigationHistory tracks
+  expect(window.location.hash).toBe('#/');
+});
+
 test('test /images/run/* route', async () => {
   render(App);
   expect(mocks.RunImage).not.toHaveBeenCalled();

@@ -182,6 +182,17 @@ async function createWindow(): Promise<BrowserWindow> {
     navigationItemsMenuBuilder?.receiveNavigationItems(data);
   });
 
+  // Expose Electron NavigationHistory API to the renderer via IPC
+  ipcMain.handle('navigation:canGoBack', () => browserWindow.webContents.navigationHistory.canGoBack());
+  ipcMain.handle('navigation:canGoForward', () => browserWindow.webContents.navigationHistory.canGoForward());
+  ipcMain.handle('navigation:getAllEntries', () => browserWindow.webContents.navigationHistory.getAllEntries());
+  ipcMain.handle('navigation:getActiveIndex', () => browserWindow.webContents.navigationHistory.getActiveIndex());
+  ipcMain.handle('navigation:goToIndex', (_, index: number) =>
+    browserWindow.webContents.navigationHistory.goToIndex(index),
+  );
+  ipcMain.handle('navigation:goBack', () => browserWindow.webContents.navigationHistory.goBack());
+  ipcMain.handle('navigation:goForward', () => browserWindow.webContents.navigationHistory.goForward());
+
   // receive the message because an update is in progress and we need to quit the app
   let quitAfterUpdate = false;
   autoUpdater.on('before-quit-for-update', () => {
@@ -261,6 +272,18 @@ async function createWindow(): Promise<BrowserWindow> {
       : new URL('../renderer/dist/index.html', 'file://' + __dirname).toString();
 
   await browserWindow.loadURL(pageUrl);
+
+  // When tinro's hash routing initializes, it pushes #/ which creates a second entry.
+  // Remove the bare-URL entry so the hash entry becomes the sole starting point.
+  browserWindow.webContents.once('did-navigate-in-page', () => {
+    const entries = browserWindow.webContents.navigationHistory.getAllEntries();
+    // entries should be: 
+    // "http://localhost:5173/"   -> registered by await browserWindow.loadURL(pageUrl);
+    // "http://localhost:5173/#/" -> registered by tinro's hash routing
+    if (entries.length >= 2 && !entries[0].url.includes('#') && entries[1].url.includes('#')) {
+      browserWindow.webContents.navigationHistory.removeEntryAtIndex(0);
+    }
+  });
 
   return browserWindow;
 }

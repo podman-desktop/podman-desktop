@@ -73,10 +73,6 @@ beforeEach(() => {
   BrowserWindow.prototype.isDestroyed = vi.fn().mockReturnValue(false);
   BrowserWindow.prototype.destroy = vi.fn();
   BrowserWindow.prototype.hide = vi.fn();
-  Object.defineProperty(BrowserWindow.prototype, 'webContents', {
-    value: { send: vi.fn(), on: vi.fn(), once: vi.fn() },
-    configurable: true,
-  });
 
   // Re-setup auto-mocked class prototypes after reset
   DevelopmentModeTracker.prototype.onDidChangeDevelopmentMode = vi.fn();
@@ -255,6 +251,47 @@ describe('createNewWindow', () => {
     expect(app.quit).toHaveBeenCalled();
   });
 
+  test('should remove bare-URL entry when tinro hash routing creates duplicate', async () => {
+    const { createNewWindow } = await import('./mainWindow.js');
+    await createNewWindow();
+
+    const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+    assert(bwInstance);
+
+    const navHistoryMock = {
+      getAllEntries: vi.fn().mockReturnValue([
+        { url: 'http://localhost:5173/', title: '' },
+        { url: 'http://localhost:5173/#/', title: '' },
+      ]),
+      removeEntryAtIndex: vi.fn(),
+    };
+    bwInstance.webContents.navigationHistory = navHistoryMock;
+
+    const handler = getHandler(bwInstance.webContents.once, 'did-navigate-in-page');
+    handler();
+
+    expect(navHistoryMock.removeEntryAtIndex).toHaveBeenCalledWith(0);
+  });
+
+  test('should not remove entry when first entry already has hash', async () => {
+    const { createNewWindow } = await import('./mainWindow.js');
+    await createNewWindow();
+
+    const bwInstance = vi.mocked(BrowserWindow).mock.results[0]?.value;
+    assert(bwInstance);
+
+    const navHistoryMock = {
+      getAllEntries: vi.fn().mockReturnValue([{ url: 'http://localhost:5173/#/', title: '' }]),
+      removeEntryAtIndex: vi.fn(),
+    };
+    bwInstance.webContents.navigationHistory = navHistoryMock;
+
+    const handler = getHandler(bwInstance.webContents.once, 'did-navigate-in-page');
+    handler();
+
+    expect(navHistoryMock.removeEntryAtIndex).not.toHaveBeenCalled();
+  });
+
   describe('Linux did-finish-load (replaces ready-to-show)', () => {
     beforeEach(() => {
       vi.mocked(util.isLinux).mockReturnValue(true);
@@ -333,6 +370,23 @@ describe('createNewWindow', () => {
       didFinishLoad();
 
       expect(bwInstance.show).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('navigation history IPC handlers', () => {
+    test('should register all NavigationHistory IPC channels', async () => {
+      const { createNewWindow } = await import('./mainWindow.js');
+      await createNewWindow();
+
+      const registeredChannels = vi.mocked(ipcMain.handle).mock.calls.map((c: unknown[]) => c[0]);
+
+      expect(registeredChannels).toContain('navigation:canGoBack');
+      expect(registeredChannels).toContain('navigation:canGoForward');
+      expect(registeredChannels).toContain('navigation:getAllEntries');
+      expect(registeredChannels).toContain('navigation:getActiveIndex');
+      expect(registeredChannels).toContain('navigation:goToIndex');
+      expect(registeredChannels).toContain('navigation:goBack');
+      expect(registeredChannels).toContain('navigation:goForward');
     });
   });
 });

@@ -281,6 +281,38 @@ export function initExposure(): void {
     return ipcRenderer.invoke('navigation:navigateToRoute', routeId, ...args);
   });
 
+  contextBridge.exposeInMainWorld('navigationHistoryCanGoBack', async (): Promise<boolean> => {
+    return ipcRenderer.invoke('navigation:canGoBack');
+  });
+
+  contextBridge.exposeInMainWorld('navigationHistoryCanGoForward', async (): Promise<boolean> => {
+    return ipcRenderer.invoke('navigation:canGoForward');
+  });
+
+  contextBridge.exposeInMainWorld(
+    'navigationHistoryGetAllEntries',
+    async (): Promise<{ url: string; title: string }[]> => {
+      return ipcRenderer.invoke('navigation:getAllEntries');
+    },
+  );
+
+  contextBridge.exposeInMainWorld('navigationHistoryGetActiveIndex', async (): Promise<number> => {
+    return ipcRenderer.invoke('navigation:getActiveIndex');
+  });
+
+  contextBridge.exposeInMainWorld('navigationHistoryGoToIndex', async (index: number): Promise<void> => {
+    return ipcRenderer.invoke('navigation:goToIndex', index);
+  });
+
+  contextBridge.exposeInMainWorld('navigationHistoryGoBack', async (): Promise<void> => {
+    return ipcRenderer.invoke('navigation:goBack');
+  });
+
+  contextBridge.exposeInMainWorld('navigationHistoryGoForward', async (): Promise<void> => {
+    return ipcRenderer.invoke('navigation:goForward');
+  });
+
+
   contextBridge.exposeInMainWorld('listContainers', async (): Promise<ContainerInfo[]> => {
     return ipcInvoke('container-provider-registry:listContainers');
   });

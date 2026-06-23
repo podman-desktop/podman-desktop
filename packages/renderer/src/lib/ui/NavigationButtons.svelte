@@ -19,7 +19,7 @@ import {
   goToHistoryIndex,
   type HistoryEntry,
   type HistoryEntryIcon,
-  navigationHistory,
+  navigationState,
 } from '/@/stores/navigation-history.svelte';
 
 import { longPress } from './attachments/longpress';
@@ -35,8 +35,8 @@ let dropdownEntries: HistoryEntry[] = $state([]);
 let timeout: ReturnType<typeof setTimeout> | undefined = $state(undefined);
 let navContainer: HTMLElement;
 
-let canGoBack = $derived(navigationHistory.index > 0);
-let canGoForward = $derived(navigationHistory.index < navigationHistory.stack.length - 1);
+let canGoBack = $derived(navigationState.canGoBack);
+let canGoForward = $derived(navigationState.canGoForward);
 
 interface NavButton {
   direction: Direction;
@@ -101,8 +101,8 @@ function handleGlobalMouseUp(event: MouseEvent): void {
   }
 }
 
-function onLongPress(direction: Direction): void {
-  const entries = direction === BACK ? getBackEntries() : getForwardEntries();
+async function onLongPress(direction: Direction): Promise<void> {
+  const entries = direction === BACK ? await getBackEntries() : await getForwardEntries();
   if (entries.length > 0) {
     dropdownEntries = entries;
     showDropdown = direction;
@@ -119,7 +119,7 @@ function onClick(direction: Direction): void {
 function handleHistorySelect(val: string): void {
   window.telemetryTrack('navigation.historySelect', { direction: showDropdown }).catch(console.error);
   closeDropdown();
-  goToHistoryIndex(Number(val));
+  goToHistoryIndex(Number(val)).catch(console.error);
 }
 
 function closeDropdown(): void {
@@ -216,7 +216,7 @@ onMount(() => {
           title={btn.label}
           aria-label={btn.label}
           onclick={onClick.bind(undefined, btn.direction)}
-          disabled={!btn.canNavigate()}
+          disabled={!btn.canNavigate()}          
           {@attach longPress(onLongPress.bind(undefined, btn.direction))}>
           <Icon icon={btn.icon} />
         </button>
@@ -226,7 +226,7 @@ onMount(() => {
           opened={showDropdown === btn.direction}
           options={dropdownOptions}
           ariaLabel={btn.ariaLabel}
-          onChange={handleHistorySelect}
+          onChange={(val: string): void => { handleHistorySelect(val) }}
           class="absolute left-0 top-full z-50 mt-1" />
       </div>
     {/each}

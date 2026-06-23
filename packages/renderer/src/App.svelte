@@ -89,7 +89,7 @@ import Route from './Route.svelte';
 import { navigationRegistry } from './stores/navigation/navigation-registry';
 import SubmenuNavigation from './SubmenuNavigation.svelte';
 
-router.mode.memory();
+router.mode.hash();
 
 const LAST_ROUTE_KEY = 'last-route';
 const SETTINGS_PAGE_KEY = 'settings-page';

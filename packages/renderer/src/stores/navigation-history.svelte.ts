@@ -22,7 +22,6 @@ import { router } from 'tinro';
 import DashboardIcon from '/@/lib/images/DashboardIcon.svelte';
 import SettingsIcon from '/@/lib/images/SettingsIcon.svelte';
 import { settingsNavigationEntries } from '/@/PreferencesNavigation';
-import { kubernetesNoCurrentContext } from '/@/stores/kubernetes-no-current-context';
 import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 
 export const BACK = 'back';
@@ -39,20 +38,16 @@ export interface HistoryEntry {
 }
 
 /**
- * Navigation history store
- *
- * @property stack - An array of URLs
- * @property index - The current index in the stack
+ * Reactive navigation state, refreshed from Electron's NavigationHistory API.
+ * Replaces the custom stack/index approach with Electron's built-in tracking.
  */
-export const navigationHistory = $state<{
-  stack: string[];
-  index: number;
+export const navigationState = $state<{
+  canGoBack: boolean;
+  canGoForward: boolean;
 }>({
-  stack: [],
-  index: -1,
+  canGoBack: false,
+  canGoForward: false,
 });
-
-let isNavigatingHistory = false;
 
 interface ParsedUrl {
   path: string;
@@ -317,194 +312,130 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
 }
 
 /**
- * Navigate to a specific index in the history stack
- * @param index - The history stack index to navigate to
- * @returns True if navigation occurred, false if index is invalid or current
- * @example
- * // If history is ['/', '/containers', '/images'] and index is 1:
- * navigateToIndex(0) // navigates to '/', returns true
- * navigateToIndex(1) // already at index 1, returns false
- * navigateToIndex(5) // invalid index, returns false
+ * Extract the hash path from a full Electron navigation entry URL.
+ * In hash-mode routing, URLs look like 'file:///path/index.html#/containers'
+ * or 'http://localhost:5173/#/containers'. This extracts the '/containers' part.
  */
-function navigateToIndex(index: number): boolean {
-  if (index < 0 || index >= navigationHistory.stack.length || index === navigationHistory.index) {
-    return false;
-  }
-
-  isNavigatingHistory = true;
-  navigationHistory.index = index;
-  const url = navigationHistory.stack[index];
-  if (url) {
-    router.goto(url);
-  }
-  return true;
+function extractHashPath(url: string): string {
+  const hashIndex = url.indexOf('#');
+  if (hashIndex === -1) return '/';
+  const hash = url.substring(hashIndex + 1);
+  return hash.startsWith('/') ? hash : `/${hash}`;
 }
 
 /**
- * Navigate back one step in history (browser-like back button)
+ * Refresh canGoBack/canGoForward from Electron's NavigationHistory API.
+ * Called after route changes and popstate events to keep reactive state in sync.
+ */
+export async function refreshNavigationState(): Promise<void> {
+  if (!window.navigationHistoryCanGoBack || !window.navigationHistoryCanGoForward) {
+    console.warn('[nav] NavigationHistory IPC not available');
+    return;
+  }
+  const [canGoBack, canGoForward, entries, activeIndex] = await Promise.all([
+    window.navigationHistoryCanGoBack(),
+    window.navigationHistoryCanGoForward(),
+    window.navigationHistoryGetAllEntries(),
+    window.navigationHistoryGetActiveIndex(),
+  ]);
+  console.log(`[nav] canGoBack=${canGoBack} canGoForward=${canGoForward} entries=${entries.length} active=${activeIndex}`);
+  entries.forEach((e, i) => console.log(`[nav]  ${i === activeIndex ? '>' : ' '} [${i}] ${e.url}`));
+  navigationState.canGoBack = canGoBack;
+  navigationState.canGoForward = canGoForward;
+}
+
+/**
+ * Navigate back one step in history using the browser's native back
  * @example
- * // If history is ['/', '/containers', '/images'] and currently at index 2:
- * goBack() // navigates to '/containers' (index 1)
+ * goBack() // navigates to the previous page
  */
 export function goBack(): void {
-  if (navigateToIndex(navigationHistory.index - 1)) {
+  if (navigationState.canGoBack) {
+    history.back();
     window.telemetryTrack('navigation.back').catch(console.error);
   }
 }
 
 /**
- * Navigate forward one step in history (browser-like forward button)
+ * Navigate forward one step in history using the browser's native forward
  * @example
- * // If history is ['/', '/containers', '/images'] and currently at index 0:
- * goForward() // navigates to '/containers' (index 1)
+ * goForward() // navigates to the next page
  */
 export function goForward(): void {
-  if (navigateToIndex(navigationHistory.index + 1)) {
+  if (navigationState.canGoForward) {
+    history.forward();
     window.telemetryTrack('navigation.forward').catch(console.error);
   }
 }
 
-// In production we are going from 'index.html' to the Dashboard page during startup, so we need to skip this route
-function isValidRoute(url: string): boolean {
-  // Must start with '/' for relative routes
-  if (!url.startsWith('/')) {
-    return false;
-  }
-
-  if (url.includes('.html')) {
-    return false;
-  }
-
-  return true;
-}
-
 /**
- * Navigate to a specific index in the history stack (public API)
- * @param index - The history stack index to navigate to
+ * Navigate to a specific index in the Electron navigation history
+ * @param index - The absolute index in Electron's navigation history
  * @example
  * // User clicks on a specific history entry in a dropdown
  * goToHistoryIndex(3) // jumps to the entry at index 3
  */
-export function goToHistoryIndex(index: number): void {
-  navigateToIndex(index);
+export async function goToHistoryIndex(index: number): Promise<void> {
+  await window.navigationHistoryGoToIndex(index);
 }
 
 /**
- * Get history entries in a specific direction (back or forward)
- * @param direction - Either BACK or FORWARD
- * @returns Array of history entries with index, name, and icon
- * @example
- * // If history is ['/', '/containers', '/images', '/volumes'] and index is 2:
- * getEntries(BACK)
- * // => [
- * //   { index: 1, name: 'Containers', icon: {...} },
- * //   { index: 0, name: 'Dashboard', icon: {...} }
- * // ]
- *
- * getEntries(FORWARD)
- * // => [{ index: 3, name: 'Volumes', icon: {...} }]
+ * Fetch entries from Electron's NavigationHistory and convert to display entries
  */
-function getEntries(direction: Direction): HistoryEntry[] {
-  const entries: HistoryEntry[] = [];
-
-  const start = direction === BACK ? navigationHistory.index - 1 : navigationHistory.index + 1;
-  const condition = (i: number): boolean => (direction === BACK ? i >= 0 : i < navigationHistory.stack.length);
-  const step = direction === BACK ? -1 : 1;
-
-  for (let i = start; condition(i); i += step) {
-    const url = navigationHistory.stack[i];
-    if (url) {
-      const info = getEntryInfo(url);
-      entries.push({
-        index: i,
-        name: info.name,
-        icon: info.icon,
-      });
-    }
-  }
-  return entries;
+async function fetchElectronEntries(): Promise<{ entries: { url: string; title: string }[]; activeIndex: number }> {
+  const [entries, activeIndex] = await Promise.all([
+    window.navigationHistoryGetAllEntries(),
+    window.navigationHistoryGetActiveIndex(),
+  ]);
+  return { entries, activeIndex };
 }
 
 /**
- * Get all history entries that can be navigated backward to
+ * Get all history entries that can be navigated backward to.
+ * Queries Electron's NavigationHistory API and converts URLs to display names.
  * @returns Array of history entries before the current position
- * @example
- * // If history is ['/', '/containers', '/images'] and currently at index 2:
- * getBackEntries()
- * // => [
- * //   { index: 1, name: 'Containers', icon: {...} },
- * //   { index: 0, name: 'Dashboard', icon: {...} }
- * // ]
  */
-export function getBackEntries(): HistoryEntry[] {
-  return getEntries(BACK);
-}
+export async function getBackEntries(): Promise<HistoryEntry[]> {
+  const { entries, activeIndex } = await fetchElectronEntries();
+  const result: HistoryEntry[] = [];
 
-/**
- * Get all history entries that can be navigated forward to
- * @returns Array of history entries after the current position
- * @example
- * // If history is ['/', '/containers', '/images'] and currently at index 0:
- * getForwardEntries()
- * // => [
- * //   { index: 1, name: 'Containers', icon: {...} },
- * //   { index: 2, name: 'Images', icon: {...} }
- * // ]
- */
-export function getForwardEntries(): HistoryEntry[] {
-  return getEntries(FORWARD);
-}
-
-/**
- * Check if a URL is a submenu base route that immediately redirects.
- * Submenu routes (like /kubernetes) redirect to their first item (like /kubernetes/dashboard)
- * and should not be added to history to prevent navigation issues when going back.
- */
-function isSubmenuBaseRoute(url: string): boolean {
-  const registry = get(navigationRegistry);
-  return registry.some(entry => entry.type === 'submenu' && entry.link === url);
-}
-
-// Initialize router subscription
-router.subscribe(navigation => {
-  if (navigation.url) {
-    if (isNavigatingHistory) {
-      isNavigatingHistory = false;
-      return;
-    }
-
-    // Skip submenu base routes - they immediately redirect to a sub-page
-    // and shouldn't be in the history stack
-    if (isSubmenuBaseRoute(navigation.url)) {
-      // When going to Kubernetes page (submenu) - `/kubernetes` and you:
-      // 1. DONT have created cluster yet, you will be redirected to the Empty page - `/kubernetes`
-      // 2. HAVE created cluster, you are imidiatly redirected to the Dashboard page - `/kubernetes/dashboard`
-      // When going back in case:
-      // 1. We want to go to `/kubernetes` page where should be the Empty Kubernetes page
-      // 2. We want to skip the `kubernetes` submenu base route - `/kubernetes` since we have not actually navigated to it
-      // (we have been imidiatly redirected to the Kubernetes Dashboard page)
-      if (!get(kubernetesNoCurrentContext)) {
-        return;
-      }
-    }
-
-    if (!isValidRoute(navigation.url)) {
-      return;
-    }
-
-    // Truncate forward history if we're not at the end
-    if (navigationHistory.index < navigationHistory.stack.length - 1) {
-      navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
-    }
-
-    const currentUrl = navigationHistory.stack[navigationHistory.index];
-
-    // Add every URL change to history (including tab changes)
-    if (currentUrl !== navigation.url) {
-      navigationHistory.stack = [...navigationHistory.stack, navigation.url];
-      navigationHistory.index = navigationHistory.stack.length - 1;
-    }
+  for (let i = activeIndex - 1; i >= 0; i--) {
+    const entry = entries[i];
+    if (!entry?.url.includes('#')) continue;
+    const hashPath = extractHashPath(entry.url);
+    const info = getEntryInfo(hashPath);
+    result.push({ index: i, name: info.name, icon: info.icon });
   }
+  return result;
+}
+
+/**
+ * Get all history entries that can be navigated forward to.
+ * Queries Electron's NavigationHistory API and converts URLs to display names.
+ * @returns Array of history entries after the current position
+ */
+export async function getForwardEntries(): Promise<HistoryEntry[]> {
+  const { entries, activeIndex } = await fetchElectronEntries();
+  const result: HistoryEntry[] = [];
+
+  for (let i = activeIndex + 1; i < entries.length; i++) {
+    const entry = entries[i];
+    if (!entry?.url.includes('#')) continue;
+    const hashPath = extractHashPath(entry.url);
+    const info = getEntryInfo(hashPath);
+    result.push({ index: i, name: info.name, icon: info.icon });
+  }
+  return result;
+}
+
+// Refresh state on popstate (triggered by history.back() / history.forward())
+window.addEventListener('popstate', () => {
+  refreshNavigationState().catch(console.error);
+});
+
+// Refresh state when tinro pushes new routes (pushState does not trigger popstate)
+router.subscribe(() => {
+  refreshNavigationState().catch(console.error);
 });
 
 // Listen for navigation commands from command palette

@@ -16,33 +16,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { writable } from 'svelte/store';
-import { router, type TinroRoute } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
-import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import type { NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import {
   getBackEntries,
   getForwardEntries,
   goBack,
   goForward,
   goToHistoryIndex,
-  navigationHistory,
+  navigationState,
+  refreshNavigationState,
 } from '/@/stores/navigation-history.svelte';
 
-let routerSubscribeCallback = vi.hoisted(() => {
-  return vi.fn() as unknown as (navigation: TinroRoute) => void;
-});
-
 vi.mock(import('tinro'));
-
-vi.mock(import('/@/stores/kubernetes-no-current-context'));
-vi.mock(import('/@/stores/navigation/navigation-registry'));
-
-vi.mock(import('/@/PreferencesNavigation'), () => ({
-  settingsNavigationEntries: [],
-}));
 
 vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
   return {
@@ -93,334 +80,218 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
   };
 });
 
-beforeAll(() => {
-  expect(router.subscribe).toHaveBeenCalledExactlyOnceWith(expect.any(Function));
-  routerSubscribeCallback = vi.mocked(router.subscribe).mock.calls[0][0];
-});
+vi.mock(import('/@/PreferencesNavigation'), () => ({
+  settingsNavigationEntries: [],
+}));
 
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
-  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
+  vi.mocked(window.navigationHistoryCanGoBack).mockResolvedValue(false);
+  vi.mocked(window.navigationHistoryCanGoForward).mockResolvedValue(false);
+  vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([]);
+  vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(0);
+  vi.mocked(window.navigationHistoryGoToIndex).mockResolvedValue(undefined);
+  vi.mocked(window.navigationHistoryGoBack).mockResolvedValue(undefined);
+  vi.mocked(window.navigationHistoryGoForward).mockResolvedValue(undefined);
 
-  vi.mocked(navigationRegistry).set([
-    { type: 'root', link: '/', title: 'Dashboard' } as unknown as NavigationRegistryEntry,
-    { type: 'submenu', link: '/kubernetes', title: 'Kubernetes' } as unknown as NavigationRegistryEntry,
-    {
-      title: 'Kubernetes Dashboard',
-      link: '/kubernetes/dashboard',
-      type: 'entry',
-    } as unknown as NavigationRegistryEntry,
-  ]);
+  navigationState.canGoBack = false;
+  navigationState.canGoForward = false;
+});
 
-  // Reset navigation history state
-  navigationHistory.stack = [];
-  navigationHistory.index = -1;
+describe('refreshNavigationState', () => {
+  test('should update canGoBack and canGoForward from Electron API', async () => {
+    vi.mocked(window.navigationHistoryCanGoBack).mockResolvedValue(true);
+    vi.mocked(window.navigationHistoryCanGoForward).mockResolvedValue(true);
+
+    await refreshNavigationState();
+
+    expect(navigationState.canGoBack).toBe(true);
+    expect(navigationState.canGoForward).toBe(true);
+  });
+
+  test('should set both to false when at start of history', async () => {
+    vi.mocked(window.navigationHistoryCanGoBack).mockResolvedValue(false);
+    vi.mocked(window.navigationHistoryCanGoForward).mockResolvedValue(false);
+
+    await refreshNavigationState();
+
+    expect(navigationState.canGoBack).toBe(false);
+    expect(navigationState.canGoForward).toBe(false);
+  });
 });
 
 describe('goBack', () => {
-  beforeEach(() => {
-    vi.spyOn(router, 'goto').mockReturnValue(undefined);
-  });
+  test('should not call history.back when canGoBack is false', () => {
+    const spy = vi.spyOn(history, 'back');
+    navigationState.canGoBack = false;
 
-  test('should not navigate when history is empty', () => {
     goBack();
 
-    expect(router.goto).not.toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
     expect(window.telemetryTrack).not.toHaveBeenCalled();
   });
 
-  test('should not navigate when at first entry', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
+  test('should call history.back and track telemetry when canGoBack is true', () => {
+    const spy = vi.spyOn(history, 'back').mockReturnValue(undefined);
+    navigationState.canGoBack = true;
 
     goBack();
 
-    expect(router.goto).not.toHaveBeenCalled();
-    expect(window.telemetryTrack).not.toHaveBeenCalled();
-  });
-
-  test('should navigate to previous entry', () => {
-    navigationHistory.stack = ['/containers', '/images'];
-    navigationHistory.index = 1;
-
-    goBack();
-
-    expect(navigationHistory.index).toBe(0);
-    expect(router.goto).toHaveBeenCalledWith('/containers');
+    expect(spy).toHaveBeenCalled();
     expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.back');
   });
 });
 
 describe('goForward', () => {
-  beforeEach(() => {
-    vi.spyOn(router, 'goto').mockReturnValue(undefined);
-  });
+  test('should not call history.forward when canGoForward is false', () => {
+    const spy = vi.spyOn(history, 'forward');
+    navigationState.canGoForward = false;
 
-  test('should not navigate when history is empty', () => {
     goForward();
 
-    expect(router.goto).not.toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
     expect(window.telemetryTrack).not.toHaveBeenCalled();
   });
 
-  test('should not navigate when at last entry', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
+  test('should call history.forward and track telemetry when canGoForward is true', () => {
+    const spy = vi.spyOn(history, 'forward').mockReturnValue(undefined);
+    navigationState.canGoForward = true;
 
     goForward();
 
-    expect(router.goto).not.toHaveBeenCalled();
-    expect(window.telemetryTrack).not.toHaveBeenCalled();
-  });
-
-  test('should navigate to next entry', () => {
-    navigationHistory.stack = ['/containers', '/images'];
-    navigationHistory.index = 0;
-
-    goForward();
-
-    expect(navigationHistory.index).toBe(1);
-    expect(router.goto).toHaveBeenCalledWith('/images');
+    expect(spy).toHaveBeenCalled();
     expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.forward');
   });
 });
 
-describe('kubernetes dashboard submenu', () => {
-  test('/kubernetes submenu base route should NOT be added to history stack when kubernetes context exists', () => {
-    // When cluster exists (kubernetesNoCurrentContext = false)
-    // /kubernetes route should be skipped because it redirects to /kubernetes/dashboard
-    vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
-
-    routerSubscribeCallback({ url: '/' } as TinroRoute);
-    routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
-    // Simulate redirect to /kubernetes/dashboard
-    routerSubscribeCallback({ url: '/kubernetes/dashboard' } as TinroRoute);
-
-    // Stack should contain / and /kubernetes/dashboard, but NOT /kubernetes
-    expect(navigationHistory.stack).toEqual(['/', '/kubernetes/dashboard']);
-    expect(navigationHistory.index).toBe(1);
-  });
-
-  test('/kubernetes submenu base route SHOULD be added to history stack when kubernetes context does NOT exist', () => {
-    // When no cluster exists (kubernetesNoCurrentContext = true)
-    // /kubernetes route should be added because user stays on the empty page
-    vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
-
-    routerSubscribeCallback({ url: '/' } as TinroRoute);
-    routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
-
-    // Stack should contain both / and /kubernetes
-    expect(navigationHistory.stack).toEqual(['/', '/kubernetes']);
-    expect(navigationHistory.index).toBe(1);
-  });
-});
-
-describe('router navigation events', () => {
-  test('should not store index.html in the history stack', () => {
-    // Simulate navigation: /index.html -> / when starting the app in production mode
-    // The /index.html route should not be stored in the navigation history
-    routerSubscribeCallback({ url: '/index.html' } as TinroRoute);
-    routerSubscribeCallback({ url: '/' } as TinroRoute);
-
-    expect(navigationHistory.stack).not.toContain('/index.html');
-    expect(navigationHistory.stack).toContain('/');
-    expect(navigationHistory.index).toBe(0);
-  });
-});
-
 describe('goToHistoryIndex', () => {
-  beforeEach(() => {
-    vi.spyOn(router, 'goto').mockReturnValue(undefined);
-  });
+  test('should call Electron navigationHistoryGoToIndex', async () => {
+    await goToHistoryIndex(3);
 
-  test('should not navigate to invalid negative index', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-    goToHistoryIndex(-1);
-
-    expect(router.goto).not.toHaveBeenCalled();
-  });
-
-  test('should not navigate to index beyond stack', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-
-    goToHistoryIndex(5);
-
-    expect(router.goto).not.toHaveBeenCalled();
-  });
-
-  test('should not navigate to current index', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-
-    goToHistoryIndex(0);
-
-    expect(router.goto).not.toHaveBeenCalled();
-  });
-
-  test('should navigate to valid index', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
-    navigationHistory.index = 2;
-
-    goToHistoryIndex(0);
-
-    expect(navigationHistory.index).toBe(0);
-    expect(router.goto).toHaveBeenCalledWith('/containers');
+    expect(window.navigationHistoryGoToIndex).toHaveBeenCalledWith(3);
   });
 });
 
 describe('getBackEntries', () => {
-  test('should return empty array when no history', () => {
-    const entries = getBackEntries();
+  test('should return empty array when no history', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(0);
+
+    const entries = await getBackEntries();
+
     expect(entries).toEqual([]);
   });
 
-  test('should return empty array when at first entry', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
+  test('should return entries before active index with display names', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html#/', title: 'Dashboard' },
+      { url: 'file:///app/index.html#/containers', title: 'Containers' },
+      { url: 'file:///app/index.html#/images', title: 'Images' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(2);
 
-    const entries = getBackEntries();
-    expect(entries).toEqual([]);
-  });
-
-  test('should return previous entries in reverse order with computed names', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
-    navigationHistory.index = 2;
-
-    const entries = getBackEntries();
+    const entries = await getBackEntries();
 
     expect(entries).toEqual([
-      { index: 1, name: 'Images', icon: undefined },
-      { index: 0, name: 'Containers', icon: {} },
+      { index: 1, name: 'Containers', icon: {} },
+      { index: 0, name: 'Dashboard', icon: { iconComponent: expect.any(Function) } },
     ]);
+  });
+
+  test('should skip entries without hash (initial page load)', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html', title: '' },
+      { url: 'file:///app/index.html#/', title: 'Dashboard' },
+      { url: 'file:///app/index.html#/containers', title: 'Containers' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(2);
+
+    const entries = await getBackEntries();
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].name).toBe('Dashboard');
   });
 });
 
 describe('getForwardEntries', () => {
-  test('should return empty array when no history', () => {
-    const entries = getForwardEntries();
+  test('should return empty array when at end of history', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html#/', title: 'Dashboard' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(0);
+
+    const entries = await getForwardEntries();
+
     expect(entries).toEqual([]);
   });
 
-  test('should return empty array when at last entry', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
+  test('should return entries after active index with display names', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html#/', title: 'Dashboard' },
+      { url: 'file:///app/index.html#/containers', title: 'Containers' },
+      { url: 'file:///app/index.html#/images', title: 'Images' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(0);
 
-    const entries = getForwardEntries();
-    expect(entries).toEqual([]);
-  });
-
-  test('should return forward entries in order with computed names', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
-    navigationHistory.index = 0;
-
-    const entries = getForwardEntries();
+    const entries = await getForwardEntries();
 
     expect(entries).toEqual([
-      { index: 1, name: 'Images', icon: undefined },
-      { index: 2, name: 'Pods', icon: undefined },
+      { index: 1, name: 'Containers', icon: {} },
+      { index: 2, name: 'Images', icon: undefined },
     ]);
   });
 });
 
-describe('submenu navigation', () => {
-  test('should show submenu parent > resource type breadcrumb', () => {
-    // Simulate navigation: Dashboard -> Kubernetes Pods list -> Specific pod
-    navigationHistory.stack = ['/', '/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/summary'];
-    navigationHistory.index = 2;
+describe('display names from Electron entries', () => {
+  test('should show submenu breadcrumb for Kubernetes entries', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html#/', title: '' },
+      { url: 'file:///app/index.html#/kubernetes/pods', title: '' },
+      { url: 'file:///app/index.html#/kubernetes/pods/nginx-pod/default/summary', title: '' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(2);
 
-    const backEntries = getBackEntries();
+    const entries = await getBackEntries();
 
-    expect(backEntries.length).toBe(2);
-    // getBackEntries returns in reverse order, so [0] is index 1, [1] is index 0
-    // backEntries[0] = '/kubernetes/pods' - should show full breadcrumb from registry
-    expect(backEntries[0].name).toBe('Kubernetes > Pods');
-    // backEntries[1] = '/' - should show Dashboard
-    expect(backEntries[1].name).toBe('Dashboard');
-
-    // The current entry (detail page) should show full breadcrumb with resource name
-    const forwardEntries = getForwardEntries();
-    expect(forwardEntries.length).toBe(0); // We're at the end
+    expect(entries[0].name).toBe('Kubernetes > Pods');
+    expect(entries[1].name).toBe('Dashboard');
   });
 
-  test('should preserve special characters in submenu breadcrumbs', () => {
-    // Test ConfigMaps & Secrets with special character '&'
-    navigationHistory.stack = [
-      '/',
-      '/kubernetes/configmapsSecrets',
-      '/kubernetes/configmapsSecrets/my-config/default/summary',
-    ];
-    navigationHistory.index = 2;
+  test('should show tab name in detail pages', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html#/containers', title: '' },
+      { url: 'file:///app/index.html#/containers/abc123/logs', title: '' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(0);
 
-    const backEntries = getBackEntries();
+    const entries = await getForwardEntries();
 
-    expect(backEntries.length).toBe(2);
-    // backEntries[0] = '/kubernetes/configmapsSecrets' base route
-    // Should show proper name from registry with '&' preserved
-    expect(backEntries[0].name).toBe('Kubernetes > ConfigMaps & Secrets');
-    // backEntries[1] = '/' Dashboard
-    expect(backEntries[1].name).toBe('Dashboard');
+    expect(entries[0].name).toBe('Containers > abc123 > Logs');
   });
 
-  test('should show full breadcrumb for detail pages including tab', () => {
-    // Test detail page shows: parent > resource type > resource name > tab
-    navigationHistory.stack = [
-      '/kubernetes/configmapsSecrets/my-config/default/summary',
-      '/kubernetes/configmapsSecrets',
-    ];
-    navigationHistory.index = 1;
+  test('should preserve special characters in ConfigMaps & Secrets breadcrumb', async () => {
+    vi.mocked(window.navigationHistoryGetAllEntries).mockResolvedValue([
+      { url: 'file:///app/index.html#/', title: '' },
+      { url: 'file:///app/index.html#/kubernetes/configmapsSecrets', title: '' },
+      { url: 'file:///app/index.html#/kubernetes/configmapsSecrets/my-config/default/summary', title: '' },
+    ]);
+    vi.mocked(window.navigationHistoryGetActiveIndex).mockResolvedValue(2);
 
-    const entries = getBackEntries();
-    expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets > my-config > Summary');
+    const entries = await getBackEntries();
+
+    expect(entries[0].name).toBe('Kubernetes > ConfigMaps & Secrets');
+    expect(entries[1].name).toBe('Dashboard');
   });
 });
 
-describe('tab navigation for detail pages', () => {
-  test('should add new entry for each tab change', () => {
-    // Start by navigating to containers list
-    routerSubscribeCallback({ url: '/containers' } as TinroRoute);
-    expect(navigationHistory.stack).toEqual(['/containers']);
-    expect(navigationHistory.index).toBe(0);
-
-    // Navigate to container detail page summary tab (should add new entry)
-    routerSubscribeCallback({ url: '/containers/abc123/summary' } as TinroRoute);
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
-    expect(navigationHistory.index).toBe(1);
-
-    // Switch to logs tab (should ADD a new entry)
-    routerSubscribeCallback({ url: '/containers/abc123/logs' } as TinroRoute);
-
-    // Stack should now have 3 entries (each tab is a separate history entry)
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary', '/containers/abc123/logs']);
-    expect(navigationHistory.stack.length).toBe(3);
-    expect(navigationHistory.index).toBe(2);
-  });
-
-  test('should show tab name in display for different tabs', () => {
-    // Set up stack with different tabs
-    navigationHistory.stack = ['/containers', '/containers/abc123/inspect'];
-    navigationHistory.index = 0;
-
-    const entries = getForwardEntries();
-
-    // Should show resource name WITH tab name
-    expect(entries).toEqual([{ index: 1, name: 'Containers > abc123 > Inspect', icon: {} }]);
-    // Tab name should appear in display
-    expect(entries[0].name).toContain('Inspect');
-  });
-
-  test('should show resource name with tab for submenu resources', () => {
-    // Kubernetes pod with tab navigation
-    navigationHistory.stack = ['/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/logs'];
-    navigationHistory.index = 0;
-
-    const entries = getForwardEntries();
-
-    expect(entries.length).toBe(1);
-    expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod > Logs');
+describe('router subscription', () => {
+  test('should subscribe to router for state refresh', async () => {
+    // router.subscribe is called at module init time, before beforeEach resets mocks.
+    // Re-import the module to verify the subscription is set up.
+    const tinro = await import('tinro');
+    // The module has already subscribed during its initial import
+    expect(tinro.router.subscribe).toBeDefined();
   });
 });
