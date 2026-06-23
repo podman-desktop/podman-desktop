@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023 Red Hat, Inc.
+ * Copyright (C) 2023-2026 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,20 @@ import '@testing-library/jest-dom/vitest';
 import type { WebviewInfo } from '@podman-desktop/core-api';
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import {
+  consumePendingWebviewSubRoute,
+  extractSubPath,
+  pushWebviewSubRoute,
+  replaceWebviewSubRoute,
+  titleFromSubPath,
+} from '/@/stores/navigation-history.svelte';
 import { webviews } from '/@/stores/webviews';
 
 import Webview from './Webview.svelte';
+
+vi.mock(import('/@/stores/navigation-history.svelte'));
 
 const makeDefaultWebviewVisibleMock = vi.fn();
 const getWebviewPreloadPathMock = vi.fn();
@@ -73,11 +82,15 @@ beforeEach(() => {
     }),
   };
 
-  // provide preload path
   getWebviewPreloadPathMock.mockResolvedValue('/path/to/preload');
-
-  // provide registry port
   getWebviewRegistryHttpPortMock.mockResolvedValue(5678);
+
+  vi.mocked(consumePendingWebviewSubRoute).mockReturnValue(undefined);
+  vi.mocked(extractSubPath).mockImplementation(url => url.split('#')[1] ?? '');
+  vi.mocked(titleFromSubPath).mockImplementation(path => {
+    const last = path.split('/').filter(Boolean).pop();
+    return last ? last.charAt(0).toUpperCase() + last.slice(1) : 'Home';
+  });
 
   webviews.set(webviewTestList);
 });
@@ -165,4 +178,110 @@ test('check open devtools', async () => {
 
   //  check if send method has been called
   expect(openDevtoolsMock).toHaveBeenCalled();
+});
+
+describe('did-navigate-in-page integration', () => {
+  test('should register did-navigate-in-page listener when webview element appears', async () => {
+    await waitRender({ id: webviewTestList[0].id });
+
+    const webview = screen.getByRole('document', { name: 'Webview Podman Desktop1' });
+
+    const navEvent = Object.assign(new Event('did-navigate-in-page'), {
+      url: 'http://uuid1.webview.localhost:5678/#/home',
+      isMainFrame: true,
+    });
+    webview.dispatchEvent(navEvent);
+
+    expect(replaceWebviewSubRoute).toHaveBeenCalled();
+  });
+
+  test('should call pushWebviewSubRoute on did-navigate-in-page after initial recording', async () => {
+    await waitRender({ id: webviewTestList[0].id });
+
+    const webview = screen.getByRole('document', { name: 'Webview Podman Desktop1' });
+    webview.dispatchEvent(new Event('dom-ready'));
+
+    const navEvent1 = Object.assign(new Event('did-navigate-in-page'), {
+      url: 'http://uuid1.webview.localhost:5678/#/home',
+      isMainFrame: true,
+    });
+    webview.dispatchEvent(navEvent1);
+
+    expect(replaceWebviewSubRoute).toHaveBeenCalledWith(
+      'webviewId1',
+      '/home',
+      'Home',
+      'Podman Desktop1',
+      'http://uuid1.webview.localhost:5678/#/home',
+    );
+
+    const navEvent2 = Object.assign(new Event('did-navigate-in-page'), {
+      url: 'http://uuid1.webview.localhost:5678/#/services',
+      isMainFrame: true,
+    });
+    webview.dispatchEvent(navEvent2);
+
+    expect(pushWebviewSubRoute).toHaveBeenCalledWith(
+      'webviewId1',
+      '/services',
+      'Services',
+      'Podman Desktop1',
+      'http://uuid1.webview.localhost:5678/#/services',
+    );
+  });
+
+  test('should use page-title-updated title for history entries', async () => {
+    await waitRender({ id: webviewTestList[0].id });
+
+    const webview = screen.getByRole('document', { name: 'Webview Podman Desktop1' });
+    webview.dispatchEvent(new Event('dom-ready'));
+
+    const initialNav = Object.assign(new Event('did-navigate-in-page'), {
+      url: 'http://uuid1.webview.localhost:5678/#/home',
+      isMainFrame: true,
+    });
+    webview.dispatchEvent(initialNav);
+
+    expect(replaceWebviewSubRoute).toHaveBeenCalled();
+    vi.mocked(replaceWebviewSubRoute).mockClear();
+    vi.mocked(pushWebviewSubRoute).mockClear();
+
+    const titleEvent = Object.assign(new Event('page-title-updated'), {
+      title: 'My Custom Page',
+    });
+    webview.dispatchEvent(titleEvent);
+
+    const navEvent = Object.assign(new Event('did-navigate-in-page'), {
+      url: 'http://uuid1.webview.localhost:5678/#/custom-page',
+      isMainFrame: true,
+    });
+    webview.dispatchEvent(navEvent);
+
+    expect(pushWebviewSubRoute).toHaveBeenCalledWith(
+      'webviewId1',
+      '/custom-page',
+      'My Custom Page',
+      'Podman Desktop1',
+      'http://uuid1.webview.localhost:5678/#/custom-page',
+    );
+  });
+
+  test('should ignore did-navigate-in-page for non-main frame', async () => {
+    await waitRender({ id: webviewTestList[0].id });
+
+    const webview = screen.getByRole('document', { name: 'Webview Podman Desktop1' });
+    webview.dispatchEvent(new Event('dom-ready'));
+
+    vi.mocked(pushWebviewSubRoute).mockClear();
+    vi.mocked(replaceWebviewSubRoute).mockClear();
+
+    const navEvent = Object.assign(new Event('did-navigate-in-page'), {
+      url: 'http://uuid1.webview.localhost:5678/#/services',
+      isMainFrame: false,
+    });
+    webview.dispatchEvent(navEvent);
+
+    expect(pushWebviewSubRoute).not.toHaveBeenCalled();
+    expect(replaceWebviewSubRoute).not.toHaveBeenCalled();
+  });
 });

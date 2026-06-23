@@ -16,28 +16,23 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import { writable } from 'svelte/store';
-import { router, type TinroRoute } from 'tinro';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as kubernetesNoCurrentContext from '/@/stores/kubernetes-no-current-context';
-import { navigationRegistry, type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
+import { type NavigationRegistryEntry } from '/@/stores/navigation/navigation-registry';
 import {
+  consumePendingWebviewSubRoute,
   getBackEntries,
   getForwardEntries,
+  getWebviewSubRouteMetadata,
   goBack,
   goForward,
   goToHistoryIndex,
   navigationHistory,
+  parseWebviewSubRoute,
+  pushWebviewSubRoute,
+  replaceWebviewSubRoute,
 } from '/@/stores/navigation-history.svelte';
 
-let routerSubscribeCallback = vi.hoisted(() => {
-  return vi.fn() as unknown as (navigation: TinroRoute) => void;
-});
-
-vi.mock(import('tinro'));
-
-vi.mock(import('/@/stores/kubernetes-no-current-context'));
 vi.mock(import('/@/stores/navigation/navigation-registry'));
 
 vi.mock(import('/@/PreferencesNavigation'), () => ({
@@ -93,187 +88,93 @@ vi.mock(import('/@/stores/navigation/navigation-registry'), async () => {
   };
 });
 
-beforeAll(() => {
-  expect(router.subscribe).toHaveBeenCalledExactlyOnceWith(expect.any(Function));
-  routerSubscribeCallback = vi.mocked(router.subscribe).mock.calls[0][0];
-});
-
 beforeEach(() => {
   vi.resetAllMocks();
 
   vi.mocked(window.telemetryTrack).mockResolvedValue(undefined);
-  vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
 
-  vi.mocked(navigationRegistry).set([
-    { type: 'root', link: '/', title: 'Dashboard' } as unknown as NavigationRegistryEntry,
-    { type: 'submenu', link: '/kubernetes', title: 'Kubernetes' } as unknown as NavigationRegistryEntry,
-    {
-      title: 'Kubernetes Dashboard',
-      link: '/kubernetes/dashboard',
-      type: 'entry',
-    } as unknown as NavigationRegistryEntry,
-  ]);
-
-  // Reset navigation history state
   navigationHistory.stack = [];
   navigationHistory.index = -1;
 });
 
 describe('goBack', () => {
-  beforeEach(() => {
-    vi.spyOn(router, 'goto').mockReturnValue(undefined);
-  });
+  test('should navigate back and track telemetry', () => {
+    navigationHistory.stack = ['/', '/containers', '/images'];
+    navigationHistory.index = 2;
 
-  test('should not navigate when history is empty', () => {
     goBack();
 
-    expect(router.goto).not.toHaveBeenCalled();
-    expect(window.telemetryTrack).not.toHaveBeenCalled();
+    expect(navigationHistory.index).toBe(1);
+    expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.back');
   });
 
-  test('should not navigate when at first entry', () => {
-    navigationHistory.stack = ['/containers'];
+  test('should not navigate when at start of history', () => {
+    navigationHistory.stack = ['/'];
     navigationHistory.index = 0;
 
     goBack();
 
-    expect(router.goto).not.toHaveBeenCalled();
-    expect(window.telemetryTrack).not.toHaveBeenCalled();
-  });
-
-  test('should navigate to previous entry', () => {
-    navigationHistory.stack = ['/containers', '/images'];
-    navigationHistory.index = 1;
-
-    goBack();
-
     expect(navigationHistory.index).toBe(0);
-    expect(router.goto).toHaveBeenCalledWith('/containers');
-    expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.back');
+    expect(window.telemetryTrack).not.toHaveBeenCalled();
   });
 });
 
 describe('goForward', () => {
-  beforeEach(() => {
-    vi.spyOn(router, 'goto').mockReturnValue(undefined);
-  });
-
-  test('should not navigate when history is empty', () => {
-    goForward();
-
-    expect(router.goto).not.toHaveBeenCalled();
-    expect(window.telemetryTrack).not.toHaveBeenCalled();
-  });
-
-  test('should not navigate when at last entry', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-
-    goForward();
-
-    expect(router.goto).not.toHaveBeenCalled();
-    expect(window.telemetryTrack).not.toHaveBeenCalled();
-  });
-
-  test('should navigate to next entry', () => {
-    navigationHistory.stack = ['/containers', '/images'];
+  test('should navigate forward and track telemetry', () => {
+    navigationHistory.stack = ['/', '/containers', '/images'];
     navigationHistory.index = 0;
 
     goForward();
 
     expect(navigationHistory.index).toBe(1);
-    expect(router.goto).toHaveBeenCalledWith('/images');
     expect(window.telemetryTrack).toHaveBeenCalledWith('navigation.forward');
   });
-});
 
-describe('kubernetes dashboard submenu', () => {
-  test('/kubernetes submenu base route should NOT be added to history stack when kubernetes context exists', () => {
-    // When cluster exists (kubernetesNoCurrentContext = false)
-    // /kubernetes route should be skipped because it redirects to /kubernetes/dashboard
-    vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(false);
+  test('should not navigate when at end of history', () => {
+    navigationHistory.stack = ['/', '/containers'];
+    navigationHistory.index = 1;
 
-    routerSubscribeCallback({ url: '/' } as TinroRoute);
-    routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
-    // Simulate redirect to /kubernetes/dashboard
-    routerSubscribeCallback({ url: '/kubernetes/dashboard' } as TinroRoute);
+    goForward();
 
-    // Stack should contain / and /kubernetes/dashboard, but NOT /kubernetes
-    expect(navigationHistory.stack).toEqual(['/', '/kubernetes/dashboard']);
     expect(navigationHistory.index).toBe(1);
-  });
-
-  test('/kubernetes submenu base route SHOULD be added to history stack when kubernetes context does NOT exist', () => {
-    // When no cluster exists (kubernetesNoCurrentContext = true)
-    // /kubernetes route should be added because user stays on the empty page
-    vi.mocked(kubernetesNoCurrentContext).kubernetesNoCurrentContext = writable(true);
-
-    routerSubscribeCallback({ url: '/' } as TinroRoute);
-    routerSubscribeCallback({ url: '/kubernetes' } as TinroRoute);
-
-    // Stack should contain both / and /kubernetes
-    expect(navigationHistory.stack).toEqual(['/', '/kubernetes']);
-    expect(navigationHistory.index).toBe(1);
-  });
-});
-
-describe('router navigation events', () => {
-  test('should not store index.html in the history stack', () => {
-    // Simulate navigation: /index.html -> / when starting the app in production mode
-    // The /index.html route should not be stored in the navigation history
-    routerSubscribeCallback({ url: '/index.html' } as TinroRoute);
-    routerSubscribeCallback({ url: '/' } as TinroRoute);
-
-    expect(navigationHistory.stack).not.toContain('/index.html');
-    expect(navigationHistory.stack).toContain('/');
-    expect(navigationHistory.index).toBe(0);
+    expect(window.telemetryTrack).not.toHaveBeenCalled();
   });
 });
 
 describe('goToHistoryIndex', () => {
-  beforeEach(() => {
-    vi.spyOn(router, 'goto').mockReturnValue(undefined);
-  });
-
-  test('should not navigate to invalid negative index', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-    goToHistoryIndex(-1);
-
-    expect(router.goto).not.toHaveBeenCalled();
-  });
-
-  test('should not navigate to index beyond stack', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-
-    goToHistoryIndex(5);
-
-    expect(router.goto).not.toHaveBeenCalled();
-  });
-
-  test('should not navigate to current index', () => {
-    navigationHistory.stack = ['/containers'];
-    navigationHistory.index = 0;
-
-    goToHistoryIndex(0);
-
-    expect(router.goto).not.toHaveBeenCalled();
-  });
-
-  test('should navigate to valid index', () => {
-    navigationHistory.stack = ['/containers', '/images', '/pods'];
+  test('should navigate to the given index', () => {
+    navigationHistory.stack = ['/', '/containers', '/images'];
     navigationHistory.index = 2;
 
     goToHistoryIndex(0);
 
     expect(navigationHistory.index).toBe(0);
-    expect(router.goto).toHaveBeenCalledWith('/containers');
+  });
+
+  test('should not navigate to invalid index', () => {
+    navigationHistory.stack = ['/', '/containers'];
+    navigationHistory.index = 1;
+
+    goToHistoryIndex(5);
+
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('should not navigate to current index', () => {
+    navigationHistory.stack = ['/', '/containers'];
+    navigationHistory.index = 1;
+
+    goToHistoryIndex(1);
+
+    expect(navigationHistory.index).toBe(1);
   });
 });
 
 describe('getBackEntries', () => {
   test('should return empty array when no history', () => {
+    navigationHistory.stack = [];
+    navigationHistory.index = -1;
+
     const entries = getBackEntries();
     expect(entries).toEqual([]);
   });
@@ -297,10 +198,24 @@ describe('getBackEntries', () => {
       { index: 0, name: 'Containers', icon: {} },
     ]);
   });
+
+  test('should include all previous entries without filtering', () => {
+    navigationHistory.stack = ['/', '/kubernetes/pods', '/containers'];
+    navigationHistory.index = 2;
+
+    const entries = getBackEntries();
+
+    expect(entries).toHaveLength(2);
+    expect(entries[0].name).toBe('Kubernetes > Pods');
+    expect(entries[1].name).toBe('Dashboard');
+  });
 });
 
 describe('getForwardEntries', () => {
   test('should return empty array when no history', () => {
+    navigationHistory.stack = [];
+    navigationHistory.index = -1;
+
     const entries = getForwardEntries();
     expect(entries).toEqual([]);
   });
@@ -326,28 +241,22 @@ describe('getForwardEntries', () => {
   });
 });
 
-describe('submenu navigation', () => {
+describe('submenu navigation display names', () => {
   test('should show submenu parent > resource type breadcrumb', () => {
-    // Simulate navigation: Dashboard -> Kubernetes Pods list -> Specific pod
     navigationHistory.stack = ['/', '/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/summary'];
     navigationHistory.index = 2;
 
     const backEntries = getBackEntries();
 
     expect(backEntries.length).toBe(2);
-    // getBackEntries returns in reverse order, so [0] is index 1, [1] is index 0
-    // backEntries[0] = '/kubernetes/pods' - should show full breadcrumb from registry
     expect(backEntries[0].name).toBe('Kubernetes > Pods');
-    // backEntries[1] = '/' - should show Dashboard
     expect(backEntries[1].name).toBe('Dashboard');
 
-    // The current entry (detail page) should show full breadcrumb with resource name
     const forwardEntries = getForwardEntries();
-    expect(forwardEntries.length).toBe(0); // We're at the end
+    expect(forwardEntries.length).toBe(0);
   });
 
   test('should preserve special characters in submenu breadcrumbs', () => {
-    // Test ConfigMaps & Secrets with special character '&'
     navigationHistory.stack = [
       '/',
       '/kubernetes/configmapsSecrets',
@@ -358,15 +267,11 @@ describe('submenu navigation', () => {
     const backEntries = getBackEntries();
 
     expect(backEntries.length).toBe(2);
-    // backEntries[0] = '/kubernetes/configmapsSecrets' base route
-    // Should show proper name from registry with '&' preserved
     expect(backEntries[0].name).toBe('Kubernetes > ConfigMaps & Secrets');
-    // backEntries[1] = '/' Dashboard
     expect(backEntries[1].name).toBe('Dashboard');
   });
 
   test('should show full breadcrumb for detail pages including tab', () => {
-    // Test detail page shows: parent > resource type > resource name > tab
     navigationHistory.stack = [
       '/kubernetes/configmapsSecrets/my-config/default/summary',
       '/kubernetes/configmapsSecrets',
@@ -379,42 +284,18 @@ describe('submenu navigation', () => {
   });
 });
 
-describe('tab navigation for detail pages', () => {
-  test('should add new entry for each tab change', () => {
-    // Start by navigating to containers list
-    routerSubscribeCallback({ url: '/containers' } as TinroRoute);
-    expect(navigationHistory.stack).toEqual(['/containers']);
-    expect(navigationHistory.index).toBe(0);
-
-    // Navigate to container detail page summary tab (should add new entry)
-    routerSubscribeCallback({ url: '/containers/abc123/summary' } as TinroRoute);
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary']);
-    expect(navigationHistory.index).toBe(1);
-
-    // Switch to logs tab (should ADD a new entry)
-    routerSubscribeCallback({ url: '/containers/abc123/logs' } as TinroRoute);
-
-    // Stack should now have 3 entries (each tab is a separate history entry)
-    expect(navigationHistory.stack).toEqual(['/containers', '/containers/abc123/summary', '/containers/abc123/logs']);
-    expect(navigationHistory.stack.length).toBe(3);
-    expect(navigationHistory.index).toBe(2);
-  });
-
+describe('tab navigation display names', () => {
   test('should show tab name in display for different tabs', () => {
-    // Set up stack with different tabs
     navigationHistory.stack = ['/containers', '/containers/abc123/inspect'];
     navigationHistory.index = 0;
 
     const entries = getForwardEntries();
 
-    // Should show resource name WITH tab name
     expect(entries).toEqual([{ index: 1, name: 'Containers > abc123 > Inspect', icon: {} }]);
-    // Tab name should appear in display
     expect(entries[0].name).toContain('Inspect');
   });
 
   test('should show resource name with tab for submenu resources', () => {
-    // Kubernetes pod with tab navigation
     navigationHistory.stack = ['/kubernetes/pods', '/kubernetes/pods/nginx-pod/default/logs'];
     navigationHistory.index = 0;
 
@@ -422,5 +303,150 @@ describe('tab navigation for detail pages', () => {
 
     expect(entries.length).toBe(1);
     expect(entries[0].name).toBe('Kubernetes > Pods > nginx-pod > Logs');
+  });
+});
+
+describe('parseWebviewSubRoute', () => {
+  test('should return undefined for non-webview URLs', () => {
+    expect(parseWebviewSubRoute('/containers')).toBeUndefined();
+    expect(parseWebviewSubRoute('/images')).toBeUndefined();
+    expect(parseWebviewSubRoute('/')).toBeUndefined();
+  });
+
+  test('should return undefined for webview URL without hash', () => {
+    expect(parseWebviewSubRoute('/webviews/0')).toBeUndefined();
+  });
+
+  test('should parse webview sub-route with hash', () => {
+    const result = parseWebviewSubRoute('/webviews/0#/services');
+    expect(result).toEqual({
+      baseUrl: '/webviews/0',
+      subPath: '/services',
+      webviewId: '0',
+    });
+  });
+
+  test('should parse webview sub-route with nested path', () => {
+    const result = parseWebviewSubRoute('/webviews/2#/catalog/models');
+    expect(result).toEqual({
+      baseUrl: '/webviews/2',
+      subPath: '/catalog/models',
+      webviewId: '2',
+    });
+  });
+
+  test('should return undefined for hash in non-webview URL', () => {
+    expect(parseWebviewSubRoute('/containers#something')).toBeUndefined();
+  });
+});
+
+describe('pushWebviewSubRoute', () => {
+  test('should add entry to stack and store metadata', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    pushWebviewSubRoute('0', '/services', 'Services', 'AI Lab');
+
+    expect(navigationHistory.stack).toEqual(['/containers', '/webviews/0#/services']);
+    expect(navigationHistory.index).toBe(1);
+
+    const metadata = getWebviewSubRouteMetadata('/webviews/0#/services');
+    expect(metadata).toEqual({ title: 'Services', webviewName: 'AI Lab', webviewUrl: undefined });
+  });
+
+  test('should not push duplicate entry', () => {
+    navigationHistory.stack = ['/containers', '/webviews/0#/catalog'];
+    navigationHistory.index = 1;
+
+    pushWebviewSubRoute('0', '/catalog', 'Catalog', 'AI Lab');
+
+    expect(navigationHistory.stack).toEqual(['/containers', '/webviews/0#/catalog']);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('should truncate forward history when pushing', () => {
+    navigationHistory.stack = ['/containers', '/images', '/pods'];
+    navigationHistory.index = 0;
+
+    pushWebviewSubRoute('0', '/services', 'Services', 'AI Lab');
+
+    expect(navigationHistory.stack).toEqual(['/containers', '/webviews/0#/services']);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('should clean up orphaned metadata when truncating forward history', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    pushWebviewSubRoute('0', '/page1', 'Page 1', 'AI Lab');
+    pushWebviewSubRoute('0', '/page2', 'Page 2', 'AI Lab');
+
+    expect(getWebviewSubRouteMetadata('/webviews/0#/page1')).toBeDefined();
+    expect(getWebviewSubRouteMetadata('/webviews/0#/page2')).toBeDefined();
+
+    navigationHistory.index = 0;
+    pushWebviewSubRoute('1', '/new-page', 'New Page', 'Bootc');
+
+    expect(getWebviewSubRouteMetadata('/webviews/0#/page1')).toBeUndefined();
+    expect(getWebviewSubRouteMetadata('/webviews/0#/page2')).toBeUndefined();
+    expect(getWebviewSubRouteMetadata('/webviews/1#/new-page')).toBeDefined();
+  });
+});
+
+describe('replaceWebviewSubRoute', () => {
+  test('should replace current entry when same webview', () => {
+    navigationHistory.stack = ['/containers', '/webviews/0#/home'];
+    navigationHistory.index = 1;
+
+    replaceWebviewSubRoute('0', '/catalog', 'Catalog', 'AI Lab');
+
+    expect(navigationHistory.stack).toEqual(['/containers', '/webviews/0#/catalog']);
+    expect(navigationHistory.index).toBe(1);
+
+    const metadata = getWebviewSubRouteMetadata('/webviews/0#/catalog');
+    expect(metadata).toEqual({ title: 'Catalog', webviewName: 'AI Lab', webviewUrl: undefined });
+  });
+
+  test('should replace base webview URL', () => {
+    navigationHistory.stack = ['/containers', '/webviews/0'];
+    navigationHistory.index = 1;
+
+    replaceWebviewSubRoute('0', '/catalog', 'Catalog', 'AI Lab');
+
+    expect(navigationHistory.stack).toEqual(['/containers', '/webviews/0#/catalog']);
+    expect(navigationHistory.index).toBe(1);
+  });
+
+  test('should clean up old metadata when replacing', () => {
+    navigationHistory.stack = ['/containers', '/webviews/0#/services'];
+    navigationHistory.index = 1;
+
+    pushWebviewSubRoute('0', '/services', 'Services', 'AI Lab');
+    replaceWebviewSubRoute('0', '/catalog', 'Catalog', 'AI Lab');
+
+    expect(getWebviewSubRouteMetadata('/webviews/0#/services')).toBeUndefined();
+    expect(getWebviewSubRouteMetadata('/webviews/0#/catalog')).toBeDefined();
+  });
+
+  test('should push when current entry is different webview', () => {
+    navigationHistory.stack = ['/containers'];
+    navigationHistory.index = 0;
+
+    replaceWebviewSubRoute('0', '/catalog', 'Catalog', 'AI Lab');
+
+    expect(navigationHistory.stack).toEqual(['/containers', '/webviews/0#/catalog']);
+    expect(navigationHistory.index).toBe(1);
+  });
+});
+
+describe('consumePendingWebviewSubRoute', () => {
+  test('should return undefined when no pending sub-route', () => {
+    const pending = consumePendingWebviewSubRoute('0');
+    expect(pending).toBeUndefined();
+  });
+
+  test('should return undefined for wrong webview id', () => {
+    const pending = consumePendingWebviewSubRoute('1');
+    expect(pending).toBeUndefined();
   });
 });

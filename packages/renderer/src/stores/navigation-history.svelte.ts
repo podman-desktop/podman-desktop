@@ -54,6 +54,160 @@ export const navigationHistory = $state<{
 
 let isNavigatingHistory = false;
 
+export interface WebviewSubRouteMetadata {
+  title: string;
+  webviewName: string;
+  webviewUrl?: string;
+}
+
+const webviewSubRouteMetadata = new Map<string, WebviewSubRouteMetadata>();
+
+let pendingWebviewSubRoute: { webviewId: string; path: string; webviewUrl?: string } | undefined;
+
+/**
+ * Parse a history URL that may contain a webview sub-route fragment.
+ * @returns The base URL and optional sub-path, or undefined if not a webview sub-route.
+ * @example
+ * parseWebviewSubRoute('/webviews/0#/services')
+ * // => { baseUrl: '/webviews/0', subPath: '/services', webviewId: '0' }
+ *
+ * parseWebviewSubRoute('/containers')
+ * // => undefined
+ */
+export function parseWebviewSubRoute(url: string): { baseUrl: string; subPath: string; webviewId: string } | undefined {
+  const hashIndex = url.indexOf('#');
+  if (hashIndex === -1) return undefined;
+  const baseUrl = url.substring(0, hashIndex);
+  const subPath = url.substring(hashIndex + 1);
+  const match = /^\/webviews\/(.+)$/.exec(baseUrl);
+  if (!match) return undefined;
+  return { baseUrl, subPath, webviewId: match[1] };
+}
+
+function getCurrentBaseUrl(): string {
+  const currentUrl = navigationHistory.stack[navigationHistory.index];
+  if (!currentUrl) return '';
+  const hashIndex = currentUrl.indexOf('#');
+  return hashIndex === -1 ? currentUrl : currentUrl.substring(0, hashIndex);
+}
+
+/**
+ * Truncate forward history from the current position, clean up orphaned
+ * metadata, and append a new entry.
+ */
+function truncateAndPush(entry: string): void {
+  if (navigationHistory.index < navigationHistory.stack.length - 1) {
+    for (let i = navigationHistory.index + 1; i < navigationHistory.stack.length; i++) {
+      webviewSubRouteMetadata.delete(navigationHistory.stack[i]);
+    }
+    navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
+  }
+  navigationHistory.stack = [...navigationHistory.stack, entry];
+  navigationHistory.index = navigationHistory.stack.length - 1;
+}
+
+/**
+ * Push a webview internal navigation entry onto the history stack.
+ * Called when an extension webview notifies us of an internal page change.
+ */
+export function pushWebviewSubRoute(
+  webviewId: string,
+  path: string,
+  title: string,
+  webviewName: string,
+  webviewUrl?: string,
+): void {
+  const entry = `/webviews/${webviewId}#${path}`;
+  if (navigationHistory.stack[navigationHistory.index] === entry) return;
+
+  truncateAndPush(entry);
+  webviewSubRouteMetadata.set(entry, { title, webviewName, webviewUrl });
+}
+
+/**
+ * Replace the current history entry with a webview sub-route.
+ * Only replaces if the current entry belongs to the same webview.
+ */
+export function replaceWebviewSubRoute(
+  webviewId: string,
+  path: string,
+  title: string,
+  webviewName: string,
+  webviewUrl?: string,
+): void {
+  const entry = `/webviews/${webviewId}#${path}`;
+  const currentUrl = navigationHistory.stack[navigationHistory.index];
+  const currentParsed = currentUrl ? parseWebviewSubRoute(currentUrl) : undefined;
+  const isBaseWebviewUrl = currentUrl === `/webviews/${webviewId}`;
+
+  if (currentParsed?.webviewId === webviewId || isBaseWebviewUrl) {
+    webviewSubRouteMetadata.delete(currentUrl);
+    navigationHistory.stack[navigationHistory.index] = entry;
+    navigationHistory.stack = [...navigationHistory.stack];
+  } else {
+    truncateAndPush(entry);
+  }
+  webviewSubRouteMetadata.set(entry, { title, webviewName, webviewUrl });
+}
+
+/**
+ * Update only the stored webviewUrl for the current history entry without
+ * creating or replacing any entry. Used when the webview redirects to the
+ * same logical page with different query parameters (e.g. adding providerId).
+ */
+export function updateCurrentWebviewSubRouteUrl(webviewId: string, webviewUrl: string): void {
+  const currentUrl = navigationHistory.stack[navigationHistory.index];
+  if (!currentUrl) return;
+  const parsed = parseWebviewSubRoute(currentUrl);
+  if (parsed?.webviewId !== webviewId) return;
+  const existing = webviewSubRouteMetadata.get(currentUrl);
+  if (existing) {
+    webviewSubRouteMetadata.set(currentUrl, { ...existing, webviewUrl });
+  }
+}
+
+/**
+ * Consume the pending webview sub-route (set when navigating back/forward to a
+ * webview from a different page). Called by Webview.svelte after mount.
+ */
+export function consumePendingWebviewSubRoute(webviewId: string): { path: string; webviewUrl?: string } | undefined {
+  if (pendingWebviewSubRoute?.webviewId === webviewId) {
+    const result = { path: pendingWebviewSubRoute.path, webviewUrl: pendingWebviewSubRoute.webviewUrl };
+    pendingWebviewSubRoute = undefined;
+    return result;
+  }
+  return undefined;
+}
+
+export function getWebviewSubRouteMetadata(url: string): WebviewSubRouteMetadata | undefined {
+  return webviewSubRouteMetadata.get(url);
+}
+
+export function extractSubPath(fullUrl: string): string {
+  const hashIndex = fullUrl.indexOf('#');
+  if (hashIndex !== -1) return fullUrl.substring(hashIndex + 1);
+  try {
+    return fullUrl.split('?')[0].replace(/^https?:\/\/[^/]+/, '');
+  } catch {
+    return fullUrl;
+  }
+}
+
+export function titleFromSubPath(path: string, webviewName?: string): string {
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length === 0) {
+    return webviewName ? `${webviewName} - Home` : 'Home';
+  }
+  // Replace hyphens/underscores with spaces for readability, then capitalize
+  const raw = segments[segments.length - 1].replace(/[-_]+/g, ' ');
+  const label = truncate(capitalize(raw), 20);
+  return webviewName ? `${webviewName} - ${label}` : label;
+}
+
+// ---------------------------------------------------------------------------
+// Display-name resolution utilities
+// ---------------------------------------------------------------------------
+
 interface ParsedUrl {
   path: string;
   parts: string[];
@@ -265,22 +419,41 @@ function matchesRoute(url: string, routeHref: string): boolean {
 
 /**
  * Get display name and icon for a URL from navigation registry or fallback to URL parsing
- * @param url - The URL to get entry info for
- * @returns Object with display name and optional icon
- * @example
- * getEntryInfo('/')
- * // => { name: 'Dashboard', icon: { iconComponent: DashboardIcon } }
- *
- * getEntryInfo('/containers')
- * // => { name: 'Containers', icon: { ... } }
- *
- * getEntryInfo('/containers/abc123/logs')
- * // => { name: 'Containers > abc123', icon: { ... } }
- *
- * getEntryInfo('/preferences/default/resources')
- * // => { name: 'Resources', icon: { iconComponent: SettingsIcon } }
  */
-function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
+export function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
+  // Handle webview sub-routes (e.g. /webviews/0#/services)
+  const subRoute = parseWebviewSubRoute(url);
+  if (subRoute) {
+    const registry = get(navigationRegistry);
+    const webviewEntry = findNavigationEntry(subRoute.baseUrl, registry);
+    const icon = webviewEntry?.entry.icon;
+    const webviewBreadcrumb = webviewEntry?.breadcrumb ?? [];
+    const webviewDisplayName =
+      (webviewBreadcrumb[0] === 'Extensions' && webviewBreadcrumb.length > 1
+        ? webviewBreadcrumb.slice(1)
+        : webviewBreadcrumb
+      ).join(' > ') || `Webview ${subRoute.webviewId}`;
+
+    const isHome = subRoute.subPath === '/' || subRoute.subPath === '';
+
+    const metadata = webviewSubRouteMetadata.get(url);
+    if (metadata) {
+      const titleMatchesName =
+        metadata.title === metadata.webviewName || metadata.title === `${metadata.webviewName} - Home`;
+      if (isHome || titleMatchesName) {
+        return { name: webviewDisplayName, icon };
+      }
+      return { name: `${webviewDisplayName} > ${truncate(metadata.title, 20)}`, icon };
+    }
+
+    if (isHome) {
+      return { name: webviewDisplayName, icon };
+    }
+    const segments = subRoute.subPath.split('/').filter(Boolean);
+    const subLabel = segments.length > 0 ? truncate(capitalize(segments[segments.length - 1]), 20) : undefined;
+    return { name: subLabel ? `${webviewDisplayName} > ${subLabel}` : webviewDisplayName, icon };
+  }
+
   const { path } = parseUrl(url);
 
   // Handle Dashboard
@@ -288,17 +461,55 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
     return { name: 'Dashboard', icon: { iconComponent: DashboardIcon } };
   }
 
-  // Handle Preferences
+  // Handle Preferences — include the specific settings page name
   if (path.startsWith('/preferences/default/')) {
+    const sortedSettings = [...settingsNavigationEntries].toSorted((a, b) => b.href.length - a.href.length);
+    for (const route of sortedSettings) {
+      if (matchesRoute(path, route.href)) {
+        return { name: `Preferences > ${route.title}`, icon: { iconComponent: SettingsIcon } };
+      }
+    }
     return { name: 'Preferences', icon: { iconComponent: SettingsIcon } };
+  }
+
+  // Handle Extension detail pages: show "extensionId > Tab" without the "Extensions" prefix
+  if (path.startsWith('/extensions/details/')) {
+    const { parts } = parseUrl(url);
+    const extensionId = parts[2] ? decodeURIComponent(parts[2]) : 'Extension';
+    const tab = parts[3] ? capitalize(parts[3]) : undefined;
+    return { name: tab ? `${extensionId} > ${tab}` : extensionId, icon: undefined };
   }
 
   // Check navigation registry
   const registry = get(navigationRegistry);
   const result = findNavigationEntry(url, registry);
   if (result) {
-    // Always use urlToDisplayName, passing registry breadcrumb for base routes
-    return { name: urlToDisplayName(url, result.breadcrumb), icon: result.entry.icon };
+    // Drop the "Extensions" prefix from breadcrumbs for extension-contributed pages
+    // (webviews, contributions) so "Extensions > AI Lab" becomes just "AI Lab"
+    const breadcrumb =
+      result.breadcrumb[0] === 'Extensions' && result.breadcrumb.length > 1
+        ? result.breadcrumb.slice(1)
+        : result.breadcrumb;
+
+    // Exact match: the breadcrumb already fully describes this page.
+    // Avoids appending the URL resource segment (e.g. numeric webview IDs like "2")
+    // to the breadcrumb when it adds no useful information.
+    if (path === result.entry.link) {
+      return { name: breadcrumb.join(' > '), icon: result.entry.icon };
+    }
+
+    const displayName = urlToDisplayName(url, breadcrumb);
+    // If urlToDisplayName only returned the breadcrumb (no resource info added),
+    // append the first path segment beyond the matched entry's link as a sub-page
+    // (e.g. /kubernetes/dashboard → "Kubernetes > Dashboard")
+    if (displayName === breadcrumb.join(' > ') && path.length > result.entry.link.length) {
+      const remaining = path.substring(result.entry.link.length + 1);
+      const subPage = remaining.split('/')[0];
+      if (subPage) {
+        return { name: `${displayName} > ${capitalize(subPage)}`, icon: result.entry.icon };
+      }
+    }
+    return { name: displayName, icon: result.entry.icon };
   }
 
   // Check settings navigation entries (sorted by specificity)
@@ -317,26 +528,47 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
 }
 
 /**
- * Navigate to a specific index in the history stack
- * @param index - The history stack index to navigate to
- * @returns True if navigation occurred, false if index is invalid or current
- * @example
- * // If history is ['/', '/containers', '/images'] and index is 1:
- * navigateToIndex(0) // navigates to '/', returns true
- * navigateToIndex(1) // already at index 1, returns false
- * navigateToIndex(5) // invalid index, returns false
+ * Navigate to a specific index in the history stack.
+ * Handles webview sub-route entries by dispatching custom events.
  */
 function navigateToIndex(index: number): boolean {
   if (index < 0 || index >= navigationHistory.stack.length || index === navigationHistory.index) {
     return false;
   }
 
+  const url = navigationHistory.stack[index];
+  if (!url) return false;
+
+  const subRoute = parseWebviewSubRoute(url);
+  const baseWebviewMatch = !subRoute ? /^\/webviews\/(.+)$/.exec(url) : undefined;
+
+  if (subRoute || baseWebviewMatch) {
+    const webviewId = subRoute ? subRoute.webviewId : baseWebviewMatch![1];
+    const baseUrl = subRoute ? subRoute.baseUrl : url;
+    const subPath = subRoute ? subRoute.subPath : '/';
+    const metadata = webviewSubRouteMetadata.get(url);
+    const webviewUrl = metadata?.webviewUrl;
+    const currentBase = getCurrentBaseUrl();
+
+    isNavigatingHistory = true;
+    navigationHistory.index = index;
+
+    if (currentBase === baseUrl) {
+      window.dispatchEvent(
+        new CustomEvent('webview-navigate-to-subroute', {
+          detail: { webviewId, path: subPath, webviewUrl },
+        }),
+      );
+    } else {
+      pendingWebviewSubRoute = { webviewId, path: subPath, webviewUrl };
+      router.goto(baseUrl);
+    }
+    return true;
+  }
+
   isNavigatingHistory = true;
   navigationHistory.index = index;
-  const url = navigationHistory.stack[index];
-  if (url) {
-    router.goto(url);
-  }
+  router.goto(url);
   return true;
 }
 
@@ -492,17 +724,8 @@ router.subscribe(navigation => {
       return;
     }
 
-    // Truncate forward history if we're not at the end
-    if (navigationHistory.index < navigationHistory.stack.length - 1) {
-      navigationHistory.stack = navigationHistory.stack.slice(0, navigationHistory.index + 1);
-    }
-
-    const currentUrl = navigationHistory.stack[navigationHistory.index];
-
-    // Add every URL change to history (including tab changes)
-    if (currentUrl !== navigation.url) {
-      navigationHistory.stack = [...navigationHistory.stack, navigation.url];
-      navigationHistory.index = navigationHistory.stack.length - 1;
+    if (navigationHistory.stack[navigationHistory.index] !== navigation.url) {
+      truncateAndPush(navigation.url);
     }
   }
 });
