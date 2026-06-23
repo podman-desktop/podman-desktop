@@ -302,7 +302,7 @@ function getEntryInfo(url: string): { name: string; icon?: HistoryEntryIcon } {
   }
 
   // Check settings navigation entries (sorted by specificity)
-  const sortedEntries = [...settingsNavigationEntries].sort((a, b) => b.href.length - a.href.length);
+  const sortedEntries = settingsNavigationEntries.toSorted((a, b) => b.href.length - a.href.length);
   for (const route of sortedEntries) {
     if (matchesRoute(path, route.href)) {
       return {

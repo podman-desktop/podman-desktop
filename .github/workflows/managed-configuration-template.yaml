@@ -1,0 +1,121 @@
+#
+# Copyright (C) 2026 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Managed configuration tests (template)
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  managed-configuration:
+    permissions:
+      contents: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: Managed configuration tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'ubuntu-latest', 'macos-latest', 'windows-2025' ]
+        timeout: [ 15 ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup testenv using external action
+        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # --- OS-specific administrative setup ---
+      - name: Linux managed configuration files
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          echo "Managed configuration set-up for Linux"
+          sudo mkdir -p /usr/share/podman-desktop
+          sudo cp tests/playwright/resources/managed-configuration/default-settings.json /usr/share/podman-desktop/default-settings.json
+          sudo cp tests/playwright/resources/managed-configuration/locked.json /usr/share/podman-desktop/locked.json
+          echo "Default settings:" && sudo cat /usr/share/podman-desktop/default-settings.json
+          echo "Locked settings:" && sudo cat /usr/share/podman-desktop/locked.json
+      - name: MacOS managed configuration files
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        run: |
+          echo "Managed configuration set-up for macOS"
+          sudo mkdir -p /Library/Application\ Support/io.podman_desktop.PodmanDesktop/
+          sudo cp tests/playwright/resources/managed-configuration/default-settings.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/default-settings.json"
+          sudo cp tests/playwright/resources/managed-configuration/locked.json "/Library/Application Support/io.podman_desktop.PodmanDesktop/locked.json"
+          echo "Default settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/default-settings.json
+          echo "Locked settings:" && sudo cat /Library/Application\ Support/io.podman_desktop.PodmanDesktop/locked.json
+      - name: Windows managed configuration files
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        shell: pwsh
+        run: |
+          Write-Host "Managed configuration set-up for Windows"
+          $managedDir = Join-Path $env:ProgramData 'Podman Desktop'
+          New-Item -Path $managedDir -ItemType Directory -Force | Out-Null
+          Copy-Item -Path 'tests\playwright\resources\managed-configuration\default-settings.json' -Destination (Join-Path $managedDir 'default-settings.json') -Force
+          Copy-Item -Path 'tests\playwright\resources\managed-configuration\locked.json' -Destination (Join-Path $managedDir 'locked.json') -Force
+          Write-Host "Default settings:"
+          Get-Content -Path (Join-Path $managedDir 'default-settings.json')
+          Write-Host "Locked settings:"
+          Get-Content -Path (Join-Path $managedDir 'locked.json')
+      # ========================================
+
+      - name: Run managed configuration spec
+        shell: bash
+        run: |
+          echo "Runner OS: $RUNNER_OS, matrix.os: ${{ matrix.os }}"
+          pnpm test:e2e:managed-configuration
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
+        if: always()
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests: true
+          report_paths: '**/*results.xml'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: managed-configuration-${{ matrix.os }}
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw

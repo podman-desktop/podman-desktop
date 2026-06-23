@@ -90,7 +90,7 @@ onMount(async () => {
   }
 
   // sort the default cards using current arch as first
-  DEFAULT_CARDS.sort((a, b) => {
+  sortedCards = DEFAULT_CARDS.toSorted((a, b) => {
     if (a.value.includes(arch)) {
       return -1;
     }
@@ -99,7 +99,6 @@ onMount(async () => {
     }
     return 0;
   });
-  sortedCards = DEFAULT_CARDS;
 
   advancedCards = ADVANCED_CARDS;
   sortedCards[0].isDefault = true;

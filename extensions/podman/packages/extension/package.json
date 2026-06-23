@@ -459,7 +459,7 @@
     "inversify": "^8.1.1",
     "mustache": "^4.2.0",
     "ps-list": "^9.0.0",
-    "semver": "^7.8.4",
+    "semver": "^7.8.5",
     "smol-toml": "1.6.1",
     "ssh2": "^1.17.0",
     "winreg": "^1.2.5"
@@ -467,7 +467,7 @@
   "devDependencies": {
     "@types/mustache": "^4.2.6",
     "@types/ssh2": "^1.15.5",
-    "@types/sshpk": "^1.17.4",
+    "@types/sshpk": "^1.17.5",
     "adm-zip": "^0.5.17",
     "hasha": "^7.0.0",
     "mkdirp": "^3.0.1",

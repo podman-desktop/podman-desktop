@@ -41,7 +41,7 @@ let loggerHandlerKey: symbol | undefined;
 let configurationKeys: IConfigurationPropertyRecordedSchema[];
 $: configurationKeys = properties
   .filter(property => property.scope === 'ContainerConnection')
-  .sort((a, b) => (a.id ?? '').localeCompare(b.id ?? ''));
+  .toSorted((a, b) => (a.id ?? '').localeCompare(b.id ?? ''));
 
 let providersUnsubscribe: Unsubscriber;
 onMount(async () => {
