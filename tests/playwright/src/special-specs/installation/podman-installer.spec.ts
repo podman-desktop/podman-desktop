@@ -53,7 +53,11 @@ test.describe
         !isCI || process.env.GITHUB_ACTIONS !== 'true' || isLinux,
         'Only run on macOS and Windows in GitHub Actions',
       );
-      const dashboardPage = await new NavigationBar(page).openDashboard();
+      const navigationBar = new NavigationBar(page);
+      // IPC handlers may still be registering after the welcome page dismissal;
+      // wait for the navigation bar to render before interacting with it.
+      await playExpect.poll(async () => navigationBar.navigationLocator.isVisible(), { timeout: 30_000 }).toBe(true);
+      const dashboardPage = await navigationBar.openDashboard();
       await playExpect(dashboardPage.heading).toBeVisible();
       await playExpect(dashboardPage.podmanProvider).toBeVisible({ timeout: 25_000 });
       await playExpect(dashboardPage.podmanStatusLabel).toBeVisible({ timeout: 5_000 });
