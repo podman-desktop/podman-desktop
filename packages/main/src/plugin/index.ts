@@ -1149,6 +1149,12 @@ export class PluginSystem {
       },
     );
     this.ipcHandle(
+      'container-provider-registry:unpauseContainer',
+      async (_listener, engine: string, containerId: string): Promise<void> => {
+        return containerProviderRegistry.unpauseContainer(engine, containerId);
+      },
+    );
+    this.ipcHandle(
       'container-provider-registry:stopContainer',
       async (_listener, engine: string, containerId: string): Promise<void> => {
         return containerProviderRegistry.stopContainer(engine, containerId);
