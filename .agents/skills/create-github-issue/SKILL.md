@@ -16,18 +16,13 @@ the `gh` CLI. Issues conform to the target repository's YAML form templates
 and are automatically assigned to the correct project board.
 
 This skill is repo-agnostic — it reads template metadata (projects, labels,
-required fields) from the repo's `.github/ISSUE_TEMPLATE/*.yml` files at
+required fields) from the repo's `.github/ISSUE_TEMPLATE/` files at
 runtime rather than hardcoding them.
 
 ## Prerequisites
 
-The `gh` CLI must be authenticated:
-
-```bash
-gh auth status
-```
-
-If not authenticated, prompt the user to run `gh auth login`.
+The `gh` CLI must be authenticated (`gh auth status`). If not, prompt the
+user to run `gh auth login`.
 
 ## Input
 
@@ -48,14 +43,9 @@ Follow these steps in order. Do not skip any step.
 
 ### Step 1: Determine the target repository
 
-Detect the repo from the current working directory:
-
-```bash
-gh repo view --json nameWithOwner --jq '.nameWithOwner'
-```
-
-If the user specified a repo explicitly, use that instead. Confirm the repo
-with the user before proceeding.
+Detect the repo from the current working directory using `gh repo view`.
+If the user specified a repo explicitly, use that instead. Confirm the
+repo with the user before proceeding.
 
 ### Step 2: Classify the issue type
 
@@ -77,10 +67,7 @@ For bug reports, perform a brief code analysis before drafting to help
 identify the root cause. This adds valuable context to the issue:
 
 1. If the user mentions specific UI elements, file paths, or error
-   messages, search the codebase for related code:
-   ```bash
-   rg "<error message or keyword>" --type ts --type svelte -l
-   ```
+   messages, search the codebase for related code
 2. Read the relevant source files to understand the current behavior
 3. Summarize your findings in the bug description — include:
    - Which file(s) and function(s) are likely involved
@@ -95,29 +82,23 @@ Skip this step for feature requests, tasks, and epics.
 
 ### Step 4: Search for duplicates
 
-Before drafting, search for existing issues that might cover the same topic:
-
-```bash
-gh search issues "<3-5 keywords from description>" --repo <owner/repo> --limit 5 --json number,title,state,url
-```
-
-Present any matches to the user. If a duplicate exists, ask whether to
-proceed, reference the existing issue, or abandon.
+Before drafting, search for existing issues that might cover the same
+topic. Present any matches to the user. If a duplicate exists, ask
+whether to proceed, reference the existing issue, or abandon.
 
 ### Step 5: Read the repo's issue templates
 
 Read the `.github/ISSUE_TEMPLATE/` directory from the repo to identify
-the correct template and its metadata:
+the correct template and its metadata. Support both `.yml` and `.yaml`
+extensions.
 
-```bash
-ls .github/ISSUE_TEMPLATE/*.yml
-```
+**Matching template to type:**
 
-If the repo is not cloned locally, fetch templates via API:
-
-```bash
-gh api "repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE" --jq '.[].name'
-```
+1. List all template files in `.github/ISSUE_TEMPLATE/`
+2. Read the top-level `type:` field from each template file
+3. Select the template whose `type:` field matches the issue type
+   classified in Step 2
+4. If no exact match is found, ask the user which template to use
 
 From the matching template file, extract:
 
@@ -131,31 +112,21 @@ See `references/repo-templates.md` for the shared template structure.
 
 ### Step 6: Gather metadata
 
-**Labels** — fetch available labels and suggest matches:
+**Labels** — Fetch available labels from the repo and suggest matches
+based on the description. See Label Guidance below for rules on which
+labels to suggest. Never apply labels blindly — present suggestions and
+let the user confirm. Do not duplicate labels that the template already
+applies via its `labels:` field.
 
-```bash
-gh label list --repo <owner/repo> --json name --jq '.[].name'
-```
+**Milestone** — Suggest the most recent open milestone unless the user
+specified one.
 
-Suggest labels based on the description content and known domain mappings
-(see Label Heuristics below). Never apply labels blindly — present
-suggestions and let the user confirm. Do not duplicate labels that the
-template already applies via its `labels:` field.
-
-**Milestone** — fetch open milestones and suggest:
-
-```bash
-gh api "repos/<owner>/<repo>/milestones?state=open" --jq '.[].title'
-```
-
-Suggest the most recent open milestone unless the user specified one.
-
-**Project** — use the project(s) from the template's `projects:` field.
+**Project** — Use the project(s) from the template's `projects:` field.
 
 ### Step 7: Draft the issue — STOP and show to the user
 
 Compose the title and body matching the template structure for the chosen
-type (see Issue Body Templates below). Present the full draft to the user:
+type (see Issue Body Format below). Present the full draft to the user:
 
 ```
 ## Draft Issue — please review before I create it
@@ -174,7 +145,7 @@ type (see Issue Body Templates below). Present the full draft to the user:
 
 **CRITICAL: You MUST stop here and wait for the user's response.**
 Do NOT proceed to Step 8 in the same turn. End your turn after presenting
-the draft. Use the AskQuestion tool to ask the user:
+the draft. Ask the user:
 
 - "Create this issue" — proceed to Step 8
 - "Edit the draft" — ask what to change, revise, and present again
@@ -189,30 +160,12 @@ and explicitly confirmed.** If the user has not yet confirmed, go back to
 Step 7.
 
 Build the `gh issue create` command with all metadata. Include one
-`--project` flag per project listed in the template:
-
-```bash
-gh issue create \
-  --repo <owner/repo> \
-  --title "<title>" \
-  --label "<label1>" --label "<label2>" \
-  --milestone "<milestone>" \
-  --assignee "<user1>" \
-  --project "<project1>" --project "<project2>" \
-  --body "$(cat <<'EOF'
-<body content>
-EOF
-)"
-```
+`--project` flag per project listed in the template. Use a HEREDOC for
+the body content.
 
 ### Step 9: Display the result
 
-The `gh issue create` command outputs the issue URL. Display it as a
-clickable markdown link:
-
-```
-Created issue [#123](https://github.com/owner/repo/issues/123)
-```
+Display the created issue URL as a clickable markdown link.
 
 ## Issue Body Format
 
@@ -220,26 +173,6 @@ Build the issue body dynamically from the template file read in Step 5.
 For each form element in the template's `body:` array that has a `label:`
 field, create a markdown section heading (`### <label>`) followed by the
 content derived from the user's description.
-
-General format:
-
-```bash
-gh issue create \
-  --repo <owner/repo> \
-  --title "<concise title>" \
-  --body "$(cat <<'EOF'
-### <label from first form field>
-
-<content for this field>
-
-### <label from second form field>
-
-<content for this field>
-
-...
-EOF
-)"
-```
 
 **How to fill each field type:**
 
@@ -253,29 +186,26 @@ EOF
 For bug reports, include any code-analysis findings from Step 3 in the
 appropriate section (typically "Bug description" or "Additional context").
 
-## Label Heuristics
-
-When suggesting labels, scan the user's description for these patterns.
-Only suggest labels that actually exist in the target repo (verified via
-`gh label list`).
+## Label Guidance
 
 ### Domain labels
 
-Fetch all labels from the target repo:
+Many repos use domain labels with a `domain/<name>` prefix to categorize
+issues by area of the codebase. When suggesting labels:
 
-```bash
-gh label list -L 300 --repo <owner/repo> --json name --jq '.[].name'
-```
-
-Filter for labels with a `domain/` prefix. Match the user's description
-against these domain label names and suggest the best match. Only suggest
-labels that actually exist in the repo.
+1. Fetch all labels from the target repo
+2. Filter for labels with a `domain/` prefix
+3. **Only suggest base domain labels** (e.g. `domain/kubernetes`,
+   `domain/containers`, `domain/ui-components`) — never suggest labels
+   with `/inreview` or `/reviewed` suffixes, as those are used for PR
+   review workflow, not issue triage
+4. Match the user's description against the domain label names and
+   suggest the best match
 
 ### Priority labels
 
 Suggest a priority label based on severity and impact cues in the
-description. Only suggest if the repo has matching labels (check via
-`gh label list`).
+description. Only suggest if the repo has matching labels.
 
 | Signal words                                                         | Suggested priority  |
 | -------------------------------------------------------------------- | ------------------- |
@@ -305,3 +235,5 @@ create` in the same turn as presenting the draft.
    sets the GitHub issue type automatically.
 8. **Respect the template structure.** Use the section headings from the
    repo's actual template — do not substitute your own.
+9. **Never suggest `/inreview` or `/reviewed` domain labels.** These are
+   for PR review workflow and must not appear on issues.

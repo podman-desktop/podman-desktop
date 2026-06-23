@@ -2,19 +2,15 @@
 
 Do not hardcode template filenames, field names, or body headings.
 Read everything from the target repo's `.github/ISSUE_TEMPLATE/` at
-runtime.
+runtime. Support both `.yml` and `.yaml` extensions.
 
-## Discover available templates
+## Match template to issue type
 
-```bash
-ls .github/ISSUE_TEMPLATE/*.yml
-```
+When the directory contains multiple templates, select the right one:
 
-Or via API if the repo is not cloned locally:
-
-```bash
-gh api "repos/<owner>/<repo>/contents/.github/ISSUE_TEMPLATE" --jq '.[].name'
-```
+1. Read the top-level `type:` field from each template file
+2. Select the template whose `type:` matches the classified issue type
+3. If no exact match, ask the user which template to use
 
 ## Extract metadata from a template
 
@@ -38,13 +34,3 @@ For each element in the `body:` array (skip `type: markdown` elements):
 2. Check `validations.required` — if true, the section must be filled
 3. For `type: dropdown`, pick from `attributes.options`
 4. For `type: textarea` or `type: input`, fill from the user's description
-
-```
-### <attributes.label from element 1>
-
-<content>
-
-### <attributes.label from element 2>
-
-<content>
-```
