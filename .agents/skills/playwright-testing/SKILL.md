@@ -239,8 +239,8 @@ test.afterAll(async ({ runner }) => {
   await runner.close();
 });
 
-test.describe.serial('Feature name', { tag: '@smoke' }, () => {
-  test.describe.configure({ retries: 1 });
+test.describe('Feature name', { tag: '@smoke' }, () => {
+  test.describe.configure({ mode: 'serial', retries: 1 });
 
   test('first test', async ({ navigationBar }) => {
     const imagesPage = await navigationBar.openImages();
@@ -252,7 +252,7 @@ test.describe.serial('Feature name', { tag: '@smoke' }, () => {
 
 ### Key Patterns
 
-- **Serial suites**: Use `test.describe.serial()` — most Podman Desktop E2E tests share Electron state
+- **Serial suites**: Use `test.describe.configure({ mode: 'serial' })` inside the describe block — most Podman Desktop E2E tests share Electron state
 - **Tags**: `{ tag: '@smoke' }`, `{ tag: '@k8s_e2e' }`, `{ tag: ['@smoke', '@windows_sanity'] }`
 - **Retries**: `test.describe.configure({ retries: 1 })` inside the describe block
 - **Timeouts**: `test.setTimeout(180_000)` per test or in `beforeAll`

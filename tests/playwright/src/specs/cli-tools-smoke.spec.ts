@@ -41,38 +41,38 @@ test.afterAll(async ({ runner }) => {
 });
 
 toolsToTest.forEach(tool => {
-  test.describe
-    .serial('CLI tools tests', () => {
-      test.beforeAll(async ({ navigationBar, page }) => {
-        settingsBar = await navigationBar.openSettings();
-        await settingsBar.cliToolsTab.click();
+  test.describe('CLI tools tests', () => {
+    test.describe.configure({ mode: 'serial' });
+    test.beforeAll(async ({ navigationBar, page }) => {
+      settingsBar = await navigationBar.openSettings();
+      await settingsBar.cliToolsTab.click();
 
-        cliToolsPage = new CLIToolsPage(page);
-        await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
-        await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
-        await cliToolsPage.uninstallTool(tool);
-        await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
-          .toBeFalsy();
-      });
-
-      test.beforeEach(async () => {
-        if (cliToolsPage.wasRateLimitReached()) {
-          test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
-          test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
-        }
-      });
-
-      test(`Install ${tool} -> downgrade -> upgrade -> uninstall`, async () => {
-        test.setTimeout(180_000);
-
-        await cliToolsPage.installTool(tool);
-        await cliToolsPage.downgradeTool(tool);
-        await cliToolsPage.updateTool(tool);
-        await cliToolsPage.uninstallTool(tool);
-        await playExpect
-          .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
-          .toBeFalsy();
-      });
+      cliToolsPage = new CLIToolsPage(page);
+      await playExpect(cliToolsPage.toolsTable).toBeVisible({ timeout: 10_000 });
+      await playExpect.poll(async () => await cliToolsPage.toolsTable.count()).toBeGreaterThan(0);
+      await cliToolsPage.uninstallTool(tool);
+      await playExpect
+        .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 60_000 })
+        .toBeFalsy();
     });
+
+    test.beforeEach(async () => {
+      if (cliToolsPage.wasRateLimitReached()) {
+        test.info().annotations.push({ type: 'skip', description: 'Rate limit exceeded for current environment' });
+        test.skip(true, 'Rate limit exceeded; skipping remaining CLI tools checks');
+      }
+    });
+
+    test(`Install ${tool} -> downgrade -> upgrade -> uninstall`, async () => {
+      test.setTimeout(180_000);
+
+      await cliToolsPage.installTool(tool);
+      await cliToolsPage.downgradeTool(tool);
+      await cliToolsPage.updateTool(tool);
+      await cliToolsPage.uninstallTool(tool);
+      await playExpect
+        .poll(async () => await cliToolsPage.getCurrentToolVersion(tool), { timeout: 90_000 })
+        .toBeFalsy();
+    });
+  });
 });
