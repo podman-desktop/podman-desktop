@@ -451,6 +451,10 @@ export function initExposure(): void {
     return ipcInvoke('container-provider-registry:startContainer', engine, containerId);
   });
 
+  contextBridge.exposeInMainWorld('unpauseContainer', async (engine: string, containerId: string): Promise<void> => {
+    return ipcInvoke('container-provider-registry:unpauseContainer', engine, containerId);
+  });
+
   contextBridge.exposeInMainWorld(
     'pingContainerEngine',
     async (providerContainerConnectionInfo: ProviderContainerConnectionInfo): Promise<unknown> => {
