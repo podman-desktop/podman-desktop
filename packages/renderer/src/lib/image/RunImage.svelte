@@ -651,11 +651,11 @@ const envDialogOptions: OpenDialogOptions = {
 <Route path="/*">
   {#if dataReady}
     <EngineFormPage title="Create a container from image {imageDisplayName}:{image.tag}">
-      {#snippet icon()}
-        <i class="fas fa-play fa-2x" aria-hidden="true"></i>
-      {/snippet}
-      {#snippet content()}
-      <div class="space-y-2">
+    {#snippet icon()}
+      <i class="fas fa-play fa-2x" aria-hidden="true"></i>
+    {/snippet}
+    {#snippet content()}
+    <div class="space-y-2">
         <div class="flex flex-row px-2 border-b border-[var(--pd-content-divider)]">
           <Tab title="Basic" selected={isTabSelected($router.path, 'basic')} url={getTabUrl($router.path, 'basic')} />
           <Tab
@@ -671,9 +671,9 @@ const envDialogOptions: OpenDialogOptions = {
             selected={isTabSelected($router.path, 'security')}
             url={getTabUrl($router.path, 'security')} />
         </div>
-        <div>
+        <div class="pt-4">
           <Route path="/basic" breadcrumb="Basic" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <label
                 for="modalContainerName"
                 class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]">Container name:</label>
@@ -824,7 +824,7 @@ const envDialogOptions: OpenDialogOptions = {
             </div>
           </Route>
           <Route path="/advanced" breadcrumb="Advanced" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <!-- Use tty -->
               <label for="containerTty" class="block mb-2 text-sm font-medium text-[var(--pd-content-card-header-text)]"
                 >Use TTY:</label>
@@ -929,7 +929,7 @@ const envDialogOptions: OpenDialogOptions = {
           </Route>
 
           <Route path="/security" breadcrumb="Security" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <!-- Privileged-->
               <label
                 for="containerPrivileged"
@@ -1027,7 +1027,7 @@ const envDialogOptions: OpenDialogOptions = {
           </Route>
 
           <Route path="/networking" breadcrumb="Networking" navigationHint="tab">
-            <div class="h-96 overflow-y-auto pr-4">
+            <div class="pr-4">
               <!-- hostname-->
               <label
                 for="containerHostname"
@@ -1143,22 +1143,30 @@ const envDialogOptions: OpenDialogOptions = {
           </Route>
         </div>
 
-        <div class="pt-2 border-[var(--pd-content-divider)] border-t-2"></div>
-        <Button
-          on:click={startContainer}
-          class="w-full"
-          icon={faPlay}
-          aria-label="Start Container"
-          disabled={invalidFields}>
-          Start Container
-        </Button>
+      <div class="pt-4 pb-2">
+        <div class="flex items-center justify-end gap-3">
+          <Button
+            type="link"
+            on:click={(): void => router.goto('/images/')}
+            aria-label="Cancel">
+            Cancel
+          </Button>
+          <Button
+            on:click={startContainer}
+            icon={faPlay}
+            aria-label="Start Container"
+            disabled={invalidFields}>
+            Start Container
+          </Button>
+        </div>
         <div aria-label="createError">
           {#if createError}
             <ErrorMessage class="py-2 text-sm" error={createError} />
           {/if}
         </div>
       </div>
-      {/snippet}
+    </div>
+    {/snippet}
     </EngineFormPage>
   {/if}
 </Route>
