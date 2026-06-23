@@ -31,7 +31,7 @@ async function runProvider(): Promise<void> {
   try {
     await window.startProvider(provider.internalId);
     await new Promise<void>(resolve => {
-      window.events.receive('provider-change', () => {
+      window.events?.receive('provider-change', () => {
         resolve();
       });
     });

@@ -76,14 +76,23 @@ window.events?.receive('install-extension:from-id', (extensionId: unknown) => {
   }
 });
 
-// Wait that the server-side is ready
-window.events.receive('starting-extensions', (value: unknown) => {
-  systemReady = value === 'true';
-  if (systemReady) {
-    window.dispatchEvent(new CustomEvent('system-ready', {}));
+// Wait that the server-side is ready.
+// The preload bridge (window.events) may not be exposed yet on slow
+// Windows CI runners; retry until it becomes available.
+function registerStartingExtensionsListener(): void {
+  if (window.events) {
+    window.events.receive('starting-extensions', (value: unknown) => {
+      systemReady = value === 'true';
+      if (systemReady) {
+        window.dispatchEvent(new CustomEvent('system-ready', {}));
+      }
+      clearInterval(loadingSequence);
+    });
+  } else {
+    setTimeout(registerStartingExtensionsListener, 50);
   }
-  clearInterval(loadingSequence);
-});
+}
+registerStartingExtensionsListener();
 </script>
 
 <ColorsStyle />
