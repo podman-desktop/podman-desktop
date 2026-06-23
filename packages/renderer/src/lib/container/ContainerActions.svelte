@@ -86,6 +86,17 @@ async function startContainer(): Promise<void> {
   }
 }
 
+async function unpauseContainer(): Promise<void> {
+  inProgress(true, 'STARTING');
+  try {
+    await window.unpauseContainer(container.engineId, container.id);
+  } catch (error) {
+    handleError(String(error));
+  } finally {
+    inProgress(false);
+  }
+}
+
 async function restartContainer(): Promise<void> {
   inProgress(true, 'RESTARTING');
   try {
@@ -186,7 +197,7 @@ if (dropdownMenu) {
 
 <ListItemButtonIcon
   title="Start Container"
-  onClick={startContainer}
+  onClick={container.state === 'PAUSED' ? unpauseContainer : startContainer}
   hidden={container.state === 'RUNNING' || container.state === 'STOPPING'}
   detailed={detailed}
   inProgress={container.actionInProgress && container.state === 'STARTING'}
