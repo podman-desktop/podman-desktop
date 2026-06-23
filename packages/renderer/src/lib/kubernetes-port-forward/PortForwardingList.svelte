@@ -56,7 +56,7 @@ function key(config: ForwardConfig): string {
 
 <NavPage searchEnabled={false} title="Port forwarding">
   {#snippet content()}
-  <div class="flex min-w-full h-full">
+  <div class="flex min-w-full grow">
     {#if $kubernetesCurrentContextPortForwards.length > 0}
       <Table
         kind="port"
