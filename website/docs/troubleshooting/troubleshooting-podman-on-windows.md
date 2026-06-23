@@ -52,7 +52,7 @@ Podman Desktop does not detect existing Podman machines.
 
 #### Solution
 
-When running Podman Desktop as admin, you will be able to see Hyper-V Podman machines. When running in a non-privileged mode, you should see your WSL Podman machines.
+When running Podman Desktop as admin, you will be able to see Hyper-V Podman machines. When running in non-privileged mode, you should see your WSL Podman machines.
 
 To check that your Podman machine is discoverable, run `wsl --list` and `podman system connection list`. Once this is verified, check the machine's status using `podman machine ls`, and if it is stuck, reset it with `podman machine reset`.
 
