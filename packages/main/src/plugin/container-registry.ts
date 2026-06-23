@@ -1393,6 +1393,18 @@ export class ContainerProviderRegistry {
     }
   }
 
+  async unpauseContainer(engineId: string, id: string, abortController?: AbortController): Promise<void> {
+    let telemetryOptions = {};
+    try {
+      return await this.getMatchingContainer(engineId, id).unpause({ abortSignal: abortController?.signal });
+    } catch (error) {
+      telemetryOptions = { error: error };
+      throw error;
+    } finally {
+      this.telemetryService.track('unpauseContainer', telemetryOptions);
+    }
+  }
+
   async generatePodmanKube(engineId: string, names: string[]): Promise<string> {
     let telemetryOptions = {};
     try {
